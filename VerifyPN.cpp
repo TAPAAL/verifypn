@@ -103,7 +103,7 @@ int main(int argc, char* argv[]){
 			}else
 				memorylimit *= 1024;
 		}else if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0){
-			printf(	"Usage: PeTAPAAL [options] model-file query-file\n"
+			printf(	"Usage: VerifyPN [options] model-file query-file\n"
 					"Determine untimed reachability of a query for a Petri net.\n"
 					"\n"
 					"Options:\n"
@@ -129,7 +129,7 @@ int main(int argc, char* argv[]){
 					"PeTe project page: <https://github.com/jopsen/PeTe>\n");
 			return 0;
 		}else if(strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0){
-			printf("PeTAPAAL (PeTe for TAPAAL) %s\n", VERSION);
+			printf("VerifyPN (PeTe for TAPAAL) %s\n", VERSION);
 			printf("Copyright (C) 2011 Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
 			printf("                   Thomas Søndersø Nielsen <primogens@gmail.com>,\n");
 			printf("                   Lars Kærlund Østergaard <larsko@gmail.com>\n");

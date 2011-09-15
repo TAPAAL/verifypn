@@ -1,21 +1,31 @@
-PeTAPAAL
+VerifyPN
 ===========================
 This is a hack on PeTe sources to create a fast untimed engine for TAPAAL.
 
-Building PeTAPAAL
--------------
-PeTAPAAL is build using a simple makefile, depending on you platform and configuration of it,
+Building VerifyPN
+-----------------
+VerifyPN is build using a simple makefile, depending on you platform and configuration of it,
 you might need to modify the makefile in order link correctly against following dependencies: 
 
   * GNU Bison (>= 2.4)
   * flex (>= 2.5)
   * lp_solve (>= 5.5)
 
-To cross compile for Windows, using mingw32, run `make -f makefile.mingw32`.
+To cross compile for Windows, using mingw32 on Linux, run `make -f makefile.mingw32`.
+To build on OS X run `make -f makefile.osx`, as cross compilers for OS X are not readily
+available (e.g. in package manager) cross compilation for OS X is not supported.
+
+Testing
+-------
+VerifyPN builds can be validated with `make check` (for the respective makefiles).
+This executes a simple script that iterates over the files in the Tests/ folder,
+the tested Petri net is <test-name>-<exit-code>.xml and queries for this network is in
+<test-name>-<exit-code>.xml.q, here <test-name> is and identifier for the test and
+<exit-code> is the exit code expected by VerifyPN when given the Petri net and query.
 
 License
 -------
-PeTAPAAL is available under the terms of the GNU GPL versoin 3 or (at your option) any later version.
+VerifyPN is available under the terms of the GNU GPL versoin 3 or (at your option) any later version.
 If this license doesn't suit you're welcome to contact us, and purpose an alternative license.
 
 Authors

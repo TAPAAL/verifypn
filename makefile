@@ -12,7 +12,7 @@ CFLAGS			= -O3 -I.
 LDFLAGS			= -static -O3 -llpsolve55 -lcolamd -ldl
 
 #Target
-TARGET			= PeTAPAAL
+TARGET			= VerifyPN
 
 #Source files
 FLEX_SOURCES	= $(shell $(FIND) * -name "*.l")
