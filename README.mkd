@@ -1,0 +1,25 @@
+PeTAPAAL
+===========================
+This is a hack on PeTe sources to create a fast untimed engine for TAPAAL.
+
+Building PeTAPAAL
+-------------
+PeTAPAAL is build using a simple makefile, depending on you platform and configuration of it,
+you might need to modify the makefile in order link correctly against following dependencies: 
+
+  * GNU Bison (>= 2.4)
+  * flex (>= 2.5)
+  * lp_solve (>= 5.5)
+
+To cross compile for Windows, using mingw32, run `make -f makefile.mingw32`.
+
+License
+-------
+PeTAPAAL is available under the terms of the GNU GPL versoin 3 or (at your option) any later version.
+If this license doesn't suit you're welcome to contact us, and purpose an alternative license.
+
+Authors
+-------
+  * Jonas Finnemann Jensen
+  * Thomas Søndersø Nielsen
+  * Lars Kærlund Østergaard

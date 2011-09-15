@@ -1,0 +1,60 @@
+<pnml>
+<net id="ComposedModel" type="P/T net">
+<place id="P0" name="P0" invariant="&lt; inf" initialMarking="0" />
+<place id="P1" name="P1" invariant="&lt; inf" initialMarking="0" />
+<place id="P2" name="P2" invariant="&lt; inf" initialMarking="1000" />
+<place id="P3" name="P3" invariant="&lt; inf" initialMarking="0" />
+<place id="P4" name="P4" invariant="&lt; inf" initialMarking="0" />
+<place id="P5" name="P5" invariant="&lt; inf" initialMarking="0" />
+<place id="P6" name="P6" invariant="&lt; inf" initialMarking="1000" />
+<place id="P7" name="P7" invariant="&lt; inf" initialMarking="0" />
+<place id="P8" name="P8" invariant="&lt; inf" initialMarking="0" />
+<place id="P9" name="P9" invariant="&lt; inf" initialMarking="0" />
+<place id="P10" name="P10" invariant="&lt; inf" initialMarking="0" />
+<place id="P11" name="P11" invariant="&lt; inf" initialMarking="1000" />
+<place id="P12" name="P12" invariant="&lt; inf" initialMarking="0" />
+<place id="P13" name="P13" invariant="&lt; inf" initialMarking="0" />
+<place id="P14" name="P14" invariant="&lt; inf" initialMarking="0" />
+<place id="P15" name="P15" invariant="&lt; inf" initialMarking="1000" />
+<transition id="T0" name="T0"/><transition id="T1" name="T1"/><transition id="T2" name="T2"/><transition id="T3" name="T3"/><transition id="T4" name="T4"/><transition id="T5" name="T5"/><transition id="T6" name="T6"/><transition id="T7" name="T7"/><transition id="T8" name="T8"/><transition id="T9" name="T9"/><transition id="T10" name="T10"/><transition id="T11" name="T11"/><transition id="T12" name="T12"/><transition id="T13" name="T13"/><transition id="T14" name="T14"/><transition id="T15" name="T15"/><inputArc inscription="[0,inf)" source="P15" target="T4"/>
+<inputArc inscription="[0,inf)" source="P8" target="T4"/>
+<inputArc inscription="[0,inf)" source="P2" target="T4"/>
+<inputArc inscription="[0,inf)" source="P7" target="T5"/>
+<inputArc inscription="[0,inf)" source="P5" target="T6"/>
+<inputArc inscription="[0,inf)" source="P6" target="T7"/>
+<inputArc inscription="[0,inf)" source="P12" target="T7"/>
+<inputArc inscription="[0,inf)" source="P1" target="T7"/>
+<inputArc inscription="[0,inf)" source="P0" target="T1"/>
+<inputArc inscription="[0,inf)" source="P3" target="T0"/>
+<inputArc inscription="[0,inf)" source="P7" target="T3"/>
+<inputArc inscription="[0,inf)" source="P4" target="T2"/>
+<inputArc inscription="[0,inf)" source="P14" target="T14"/>
+<inputArc inscription="[0,inf)" source="P13" target="T15"/>
+<inputArc inscription="[0,inf)" source="P14" target="T12"/>
+<inputArc inscription="[0,inf)" source="P3" target="T13"/>
+<inputArc inscription="[0,inf)" source="P11" target="T10"/>
+<inputArc inscription="[0,inf)" source="P10" target="T11"/>
+<inputArc inscription="[0,inf)" source="P9" target="T8"/>
+<inputArc inscription="[0,inf)" source="P10" target="T9"/>
+<outputArc inscription="1" source="T4" target="P3"/>
+<outputArc inscription="1" source="T4" target="P14"/>
+<outputArc inscription="1" source="T4" target="P11"/>
+<outputArc inscription="1" source="T5" target="P5"/>
+<outputArc inscription="1" source="T6" target="P6"/>
+<outputArc inscription="1" source="T7" target="P2"/>
+<outputArc inscription="1" source="T7" target="P7"/>
+<outputArc inscription="1" source="T7" target="P15"/>
+<outputArc inscription="1" source="T1" target="P3"/>
+<outputArc inscription="1" source="T0" target="P1"/>
+<outputArc inscription="1" source="T3" target="P4"/>
+<outputArc inscription="1" source="T2" target="P7"/>
+<outputArc inscription="1" source="T14" target="P13"/>
+<outputArc inscription="1" source="T15" target="P14"/>
+<outputArc inscription="1" source="T12" target="P12"/>
+<outputArc inscription="1" source="T13" target="P0"/>
+<outputArc inscription="1" source="T10" target="P10"/>
+<outputArc inscription="1" source="T11" target="P9"/>
+<outputArc inscription="1" source="T8" target="P10"/>
+<outputArc inscription="1" source="T9" target="P8"/>
+</net>
+</pnml>

@@ -1,0 +1,1 @@
+EF (!(P7=2) and P14=2 and P3=1 and P10=0 and P4=1 and P9=2 and P1=3 and P5=1 and P0=1 and P8=3 and P12=1 and P13=1 and P11=0 and P15=1 and P2=0 and P6=1)

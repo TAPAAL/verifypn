@@ -1,0 +1,1 @@
+EF (P8=0 and P1=400 and P12=800 and P5=200 and P11=800 and P6=400 and P14=200 and P10=0 and P15=0 and P7=400 and P3=200 and P2=0 and P4=0 and P0=400 and P13=0 and P9=200)
