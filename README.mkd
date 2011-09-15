@@ -1,6 +1,6 @@
 VerifyPN
 ===========================
-This is a hack on PeTe sources to create a fast untimed engine for TAPAAL.
+This is a hack on [PeTe](https://github.com/jopsen/PeTe) sources to create a fast untimed engine for TAPAAL.
 
 Building VerifyPN
 -----------------
