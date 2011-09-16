@@ -12,6 +12,9 @@ you might need to modify the makefile in order link correctly against following 
   * flex (>= 2.5)
   * lp_solve (>= 5.5)
 
+Before running make, install lp-solve (on Ubuntu using sudo apt-get install liblpsolve55-dev).
+
+
 To cross compile for Windows, using mingw32 on Linux, run `make -f makefile.mingw32`.
 To build on OS X run `make -f makefile.osx`, as cross compilers for OS X are not readily
 available (e.g. in package manager) cross compilation for OS X is not supported.
