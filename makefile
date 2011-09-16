@@ -12,7 +12,7 @@ CFLAGS			= -O3 -I.
 LDFLAGS			= -static -O3 -llpsolve55 -lcolamd -ldl
 
 #Target
-TARGET			= VerifyPN
+TARGET			= verifypn
 
 #Source files
 FLEX_SOURCES	= $(shell $(FIND) * -name "*.l")
@@ -39,7 +39,7 @@ $(TARGET): $(SOURCES:.cpp=.o)
 
 all: $(TARGET)
 clean:
-	$(RM) -f $(OBJECTS) $(TARGET)
+	$(RM) -f $(OBJECTS) 
 
 #Check the build
 check: all

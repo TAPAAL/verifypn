@@ -15,7 +15,7 @@ CFLAGS			= -O3 -I.
 LDFLAGS			= -L./lpsolve -static -O3 -llpsolve55
 
 #Target
-TARGET			= VerifyPN.exe
+TARGET			= verifypn.exe
 
 #Source files
 FLEX_SOURCES	= $(shell $(FIND) * -name "*.l")
@@ -49,7 +49,7 @@ all: $(TARGET)
 clean:
 	$(RM) -rf lpsolve
 	$(RM) -f lpsolve55.dll
-	$(RM) -f $(OBJECTS) $(TARGET)
+	$(RM) -f $(OBJECTS) 
 
 #Check the build
 check: $(TARGET)
