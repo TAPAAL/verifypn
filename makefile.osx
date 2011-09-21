@@ -38,15 +38,15 @@ OBJECTS			= $(SOURCES:.cpp=.o)															\
 
 #Build rules
 %.lexer.cpp: %.l
-	$(LEX) -o $@ $<
+##	$(LEX) -o $@ $<
 %.parser.cpp: %.y
-	$(YACC) -d -o $@ $<
+##	$(YACC) -d -o $@ $<
 %.o: %.cpp
 	$(CC) -c $(CFLAGS) -o $@ $<
 $(TARGET): lpsolve $(SOURCES:.cpp=.o)
 	$(CC) $(SOURCES:.cpp=.o) $(LDFLAGS) -o $@
 lpsolve:
-#	$(WGET) http://sourceforge.net/projects/lpsolve/files/lpsolve/5.5.2.0/lp_solve_5.5.2.0_dev_osx32.tar.gz/download
+	$(WGET) http://sourceforge.net/projects/lpsolve/files/lpsolve/5.5.2.0/lp_solve_5.5.2.0_dev_osx32.tar.gz/download
 	$(MKDIR) lpsolve
 	$(TAR) -xzf download -C lpsolve
 #	$(RM) download
