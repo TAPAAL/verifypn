@@ -13,7 +13,7 @@ TAR				= tar
 
 #Compiler and linker flags
 CFLAGS			= -m32 -O3 -I.
-LDFLAGS			= -L./lpsolve -O3 -lliblpsolve55.dylib -ldl
+LDFLAGS			= -L./lpsolve -O3 -llpsolve55 -ldl
 
 #Target
 TARGET			= verifypn
