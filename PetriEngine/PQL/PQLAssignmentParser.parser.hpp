@@ -67,7 +67,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 16 "PetriEngine/PQL/PQLAssignmentParser.y"
+#line 16 "PQLAssignmentParser.y"
 
 	PetriEngine::PQL::Expr* expr;
 	PetriEngine::PQL::AssignmentExpression* assExpr;
@@ -77,7 +77,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 81 "PetriEngine/PQL/PQLAssignmentParser.parser.hpp"
+#line 81 "PQLAssignmentParser.parser.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
