@@ -51,7 +51,6 @@ lpsolve:
 #Clean rule
 clean:
 	$(RM) -rf lpsolve
-	$(RM) -f lpsolve55.dll
 	$(RM) -f $(OBJECTS) 
 
 #Check the build
