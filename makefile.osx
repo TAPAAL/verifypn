@@ -12,11 +12,11 @@ CP				= cp
 TAR				= tar
 
 #Compiler and linker flags
-CFLAGS			= -O3 -I.
-LDFLAGS			= -L./lpsolve -O3 -llpsolve55 -lcolamd -ldl
+CFLAGS			= -m32 -O3 -I.
+LDFLAGS			= -L./lpsolve -O3 -lliblpsolve55.dylib -ldl
 
 #Target
-TARGET			= VerifyPN
+TARGET			= verifypn
 
 #Source files
 FLEX_SOURCES	= $(shell $(FIND) * -name "*.l")
