@@ -7,7 +7,7 @@ FIND			= find
 GREP			= grep
 SED				= sed
 MKDIR			= mkdir
-WGET			= wget
+WGET			= curl -L -O
 CP				= cp
 TAR				= tar
 
@@ -46,10 +46,10 @@ OBJECTS			= $(SOURCES:.cpp=.o)															\
 $(TARGET): lpsolve $(SOURCES:.cpp=.o)
 	$(CC) $(SOURCES:.cpp=.o) $(LDFLAGS) -o $@
 lpsolve:
-	$(WGET) http://sourceforge.net/projects/lpsolve/files/lpsolve/5.5.2.0/lp_solve_5.5.2.0_dev_osx32.tar.gz/download
+#	$(WGET) http://sourceforge.net/projects/lpsolve/files/lpsolve/5.5.2.0/lp_solve_5.5.2.0_dev_osx32.tar.gz/download
 	$(MKDIR) lpsolve
 	$(TAR) -xzf download -C lpsolve
-	$(RM) download
+#	$(RM) download
 
 all: $(TARGET)
 clean:
