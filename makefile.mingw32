@@ -15,26 +15,29 @@ CFLAGS			= -O3 -I.
 LDFLAGS			= -L./lpsolve -static -O3 -llpsolve55
 
 #Target
-TARGET			= verifypn.exe
+TARGET			= VerifyPN.exe
 
 #Source files
 FLEX_SOURCES	= $(shell $(FIND) * -name "*.l")
 BISON_SOURCES	= $(shell $(FIND) * -name "*.y")
-SOURCES			= $(shell $(FIND) * -name "*.cpp" | $(GREP) -v ".\\(parser\\|lexer\\).cpp")	\
+SOURCES			= $(shell $(FIND) * -name "*.cpp" | $(GREP) -v ".\\(parser\\|lexer\\).cpp")		\
 				  $(BISON_SOURCES:.y=.parser.cpp)												\
 				  $(FLEX_SOURCES:.l=.lexer.cpp)
 
 #Intermediate files
-OBJECTS			= $(SOURCES:.cpp=.o)															\
-				  $(FLEX_SOURCES:.l=.lexer.cpp)													\
-				  $(BISON_SOURCES:.y=.parser.cpp)												\
-				  $(BISON_SOURCES:.y=.parser.hpp)
+OBJECTS			= $(SOURCES:.cpp=.o)
 
-#Build rules
+#Default target
+all: $(TARGET)
+
+#Rules for updating lexer and parser
 %.lexer.cpp: %.l
 	$(LEX) -o $@ $<
 %.parser.cpp: %.y
 	$(YACC) -d -o $@ $<
+generate: $(BISON_SOURCES:.y=.parser.cpp) $(FLEX_SOURCES:.l=.lexer.cpp)
+
+#Build rules
 %.o: %.cpp
 	$(CC) -c $(CFLAGS) -o $@ $<
 $(TARGET): lpsolve $(SOURCES:.cpp=.o)
@@ -45,7 +48,7 @@ lpsolve:
 	$(UNZIP) download -d lpsolve
 	$(RM) download
 
-all: $(TARGET)
+#Clean rule
 clean:
 	$(RM) -rf lpsolve
 	$(RM) -f lpsolve55.dll
@@ -55,7 +58,7 @@ clean:
 check: $(TARGET)
 	@for f in Tests/*.xml; do																	\
 		echo "Testing $$f:";																	\
-		./$(TARGET) -m 256 $$f $$f.q;																	\
+		./$(TARGET) -m 256 $$f $$f.q;															\
 		if [ `echo $$f | $(SED) -e "s/.*-\([0-9]\)\.xml/\1/"` -ne $$? ]; then 					\
 			echo " --- Test Failed!"; 															\
 		else																					\
@@ -63,4 +66,4 @@ check: $(TARGET)
 		fi 																						\
 	done 
 
-.PHONY: all clean check
+.PHONY: all generate clean check

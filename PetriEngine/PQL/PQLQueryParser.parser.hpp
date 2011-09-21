@@ -43,20 +43,18 @@
      INT = 259,
      LPAREN = 260,
      RPAREN = 261,
-     ASSIGN = 262,
-     SEMI = 263,
-     AND = 264,
-     OR = 265,
-     NOT = 266,
-     EQUAL = 267,
-     NEQUAL = 268,
-     LESS = 269,
-     LESSEQUAL = 270,
-     GREATER = 271,
-     GREATEREQUAL = 272,
-     PLUS = 273,
-     MINUS = 274,
-     MULTIPLY = 275
+     AND = 262,
+     OR = 263,
+     NOT = 264,
+     EQUAL = 265,
+     NEQUAL = 266,
+     LESS = 267,
+     LESSEQUAL = 268,
+     GREATER = 269,
+     GREATEREQUAL = 270,
+     PLUS = 271,
+     MINUS = 272,
+     MULTIPLY = 273
    };
 #endif
 
@@ -67,24 +65,24 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 16 "PetriEngine/PQL/PQLAssignmentParser.y"
+#line 16 "PetriEngine/PQL/PQLQueryParser.y"
 
 	PetriEngine::PQL::Expr* expr;
-	PetriEngine::PQL::AssignmentExpression* assExpr;
+	PetriEngine::PQL::Condition* cond;
 	std::string *string;
 	int token;
 
 
 
 /* Line 1676 of yacc.c  */
-#line 81 "PetriEngine/PQL/PQLAssignmentParser.parser.hpp"
+#line 79 "PetriEngine/PQL/PQLQueryParser.parser.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
-extern YYSTYPE pqlalval;
+extern YYSTYPE pqlqlval;
 
 #if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
 typedef struct YYLTYPE
@@ -99,5 +97,5 @@ typedef struct YYLTYPE
 # define YYLTYPE_IS_TRIVIAL 1
 #endif
 
-extern YYLTYPE pqlalloc;
+extern YYLTYPE pqlqlloc;
 

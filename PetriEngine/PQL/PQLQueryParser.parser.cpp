@@ -64,32 +64,32 @@
 #define YYLSP_NEEDED 1
 
 /* Substitute the variable and function names.  */
-#define yyparse         pqlaparse
-#define yylex           pqlalex
-#define yyerror         pqlaerror
-#define yylval          pqlalval
-#define yychar          pqlachar
-#define yydebug         pqladebug
-#define yynerrs         pqlanerrs
-#define yylloc          pqlalloc
+#define yyparse         pqlqparse
+#define yylex           pqlqlex
+#define yyerror         pqlqerror
+#define yylval          pqlqlval
+#define yychar          pqlqchar
+#define yydebug         pqlqdebug
+#define yynerrs         pqlqnerrs
+#define yylloc          pqlqlloc
 
 /* Copy the first part of user declarations.  */
 
 /* Line 189 of yacc.c  */
-#line 1 "PetriEngine/PQL/PQLAssignmentParser.y"
+#line 1 "PetriEngine/PQL/PQLQueryParser.y"
 
 #include <stdio.h>
 #include "PQL.h"
 #include "Expressions.h"
 using namespace PetriEngine::PQL;
 
-AssignmentExpression* assignment;
-extern int pqlalex();
-void pqlaerror(const char *s) {printf("ERROR: %s\n", s);}
+Condition* query;
+extern int pqlqlex();
+void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 
 /* Line 189 of yacc.c  */
-#line 93 "PetriEngine/PQL/PQLAssignmentParser.parser.cpp"
+#line 93 "PetriEngine/PQL/PQLQueryParser.parser.cpp"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -120,20 +120,18 @@ void pqlaerror(const char *s) {printf("ERROR: %s\n", s);}
      INT = 259,
      LPAREN = 260,
      RPAREN = 261,
-     ASSIGN = 262,
-     SEMI = 263,
-     AND = 264,
-     OR = 265,
-     NOT = 266,
-     EQUAL = 267,
-     NEQUAL = 268,
-     LESS = 269,
-     LESSEQUAL = 270,
-     GREATER = 271,
-     GREATEREQUAL = 272,
-     PLUS = 273,
-     MINUS = 274,
-     MULTIPLY = 275
+     AND = 262,
+     OR = 263,
+     NOT = 264,
+     EQUAL = 265,
+     NEQUAL = 266,
+     LESS = 267,
+     LESSEQUAL = 268,
+     GREATER = 269,
+     GREATEREQUAL = 270,
+     PLUS = 271,
+     MINUS = 272,
+     MULTIPLY = 273
    };
 #endif
 
@@ -144,17 +142,17 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 16 "PetriEngine/PQL/PQLAssignmentParser.y"
+#line 16 "PetriEngine/PQL/PQLQueryParser.y"
 
 	PetriEngine::PQL::Expr* expr;
-	PetriEngine::PQL::AssignmentExpression* assExpr;
+	PetriEngine::PQL::Condition* cond;
 	std::string *string;
 	int token;
 
 
 
 /* Line 214 of yacc.c  */
-#line 158 "PetriEngine/PQL/PQLAssignmentParser.parser.cpp"
+#line 156 "PetriEngine/PQL/PQLQueryParser.parser.cpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -179,7 +177,7 @@ typedef struct YYLTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 183 "PetriEngine/PQL/PQLAssignmentParser.parser.cpp"
+#line 181 "PetriEngine/PQL/PQLQueryParser.parser.cpp"
 
 #ifdef short
 # undef short
@@ -394,22 +392,22 @@ union yyalloc
 #endif
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  6
+#define YYFINAL  18
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   26
+#define YYLAST   67
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  21
+#define YYNTOKENS  19
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  6
+#define YYNNTS  7
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  15
+#define YYNRULES  23
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  25
+#define YYNSTATES  44
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   275
+#define YYMAXUTOK   273
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -444,7 +442,7 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
-      15,    16,    17,    18,    19,    20
+      15,    16,    17,    18
 };
 
 #if YYDEBUG
@@ -452,25 +450,30 @@ static const yytype_uint8 yytranslate[] =
    YYRHS.  */
 static const yytype_uint8 yyprhs[] =
 {
-       0,     0,     3,     5,     7,    13,    18,    22,    26,    30,
-      33,    35,    39,    41,    45,    47
+       0,     0,     3,     5,     7,    11,    15,    18,    22,    24,
+      28,    32,    36,    40,    44,    48,    52,    56,    59,    61,
+      65,    67,    71,    73
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-      22,     0,    -1,    23,    -1,     1,    -1,     3,     7,    24,
-       8,    23,    -1,     3,     7,    24,     8,    -1,     3,     7,
-      24,    -1,    24,    18,    25,    -1,    24,    19,    25,    -1,
-      19,    24,    -1,    25,    -1,    25,    20,    26,    -1,    26,
-      -1,     5,    24,     6,    -1,     4,    -1,     3,    -1
+      20,     0,    -1,    21,    -1,     1,    -1,    21,     7,    21,
+      -1,    21,     8,    21,    -1,     9,    21,    -1,     5,    21,
+       6,    -1,    22,    -1,    23,    10,    23,    -1,    23,    11,
+      23,    -1,    23,    12,    23,    -1,    23,    13,    23,    -1,
+      23,    14,    23,    -1,    23,    15,    23,    -1,    23,    16,
+      24,    -1,    23,    17,    24,    -1,    17,    23,    -1,    24,
+      -1,    24,    18,    25,    -1,    25,    -1,     5,    23,     6,
+      -1,     4,    -1,     3,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    40,    40,    41,    44,    46,    49,    54,    55,    56,
-      57,    60,    61,    64,    65,    66
+       0,    44,    44,    45,    48,    49,    50,    51,    52,    55,
+      56,    57,    58,    59,    60,    63,    64,    65,    66,    69,
+      70,    73,    74,    75
 };
 #endif
 
@@ -479,10 +482,10 @@ static const yytype_uint8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "ID", "INT", "LPAREN", "RPAREN",
-  "ASSIGN", "SEMI", "AND", "OR", "NOT", "EQUAL", "NEQUAL", "LESS",
-  "LESSEQUAL", "GREATER", "GREATEREQUAL", "PLUS", "MINUS", "MULTIPLY",
-  "$accept", "root", "assignment", "expr", "term", "factor", 0
+  "$end", "error", "$undefined", "ID", "INT", "LPAREN", "RPAREN", "AND",
+  "OR", "NOT", "EQUAL", "NEQUAL", "LESS", "LESSEQUAL", "GREATER",
+  "GREATEREQUAL", "PLUS", "MINUS", "MULTIPLY", "$accept", "query", "logic",
+  "compare", "expr", "term", "factor", 0
 };
 #endif
 
@@ -492,23 +495,24 @@ static const char *const yytname[] =
 static const yytype_uint16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
-     265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
-     275
+     265,   266,   267,   268,   269,   270,   271,   272,   273
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    21,    22,    22,    23,    23,    23,    24,    24,    24,
-      24,    25,    25,    26,    26,    26
+       0,    19,    20,    20,    21,    21,    21,    21,    21,    22,
+      22,    22,    22,    22,    22,    23,    23,    23,    23,    24,
+      24,    25,    25,    25
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     1,     1,     5,     4,     3,     3,     3,     2,
-       1,     3,     1,     3,     1,     1
+       0,     2,     1,     1,     3,     3,     2,     3,     1,     3,
+       3,     3,     3,     3,     3,     3,     3,     2,     1,     3,
+       1,     3,     1,     1
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -516,31 +520,35 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       0,     3,     0,     0,     2,     0,     1,    15,    14,     0,
-       0,     6,    10,    12,     0,     9,     5,     0,     0,     0,
-      13,     4,     7,     8,    11
+       0,     3,    23,    22,     0,     0,     0,     0,     2,     8,
+       0,    18,    20,     0,     0,     6,     0,    17,     1,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       7,    21,     0,     4,     5,     9,    10,    11,    12,    13,
+      14,    15,    16,    19
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     3,     4,    11,    12,    13
+      -1,     7,     8,     9,    10,    11,    12
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -11
+#define YYPACT_NINF -22
 static const yytype_int8 yypact[] =
 {
-       8,   -11,     5,     4,   -11,    -3,   -11,   -11,   -11,    -3,
-      -3,    -5,   -10,   -11,    -1,     1,    22,     3,     3,     3,
-     -11,   -11,   -10,   -10,   -11
+       6,   -22,   -22,   -22,    21,    21,    28,     1,    32,   -22,
+      46,   -12,   -22,    -3,    36,   -22,    28,    48,   -22,    21,
+      21,    28,    28,    28,    28,    28,    28,    31,    31,    31,
+     -22,   -22,    38,   -22,   -22,    48,    48,    48,    48,    48,
+      48,   -12,   -12,   -22
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -11,   -11,    10,    12,     6,    -4
+     -22,   -22,     9,   -22,    -4,    39,   -21
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -550,25 +558,35 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-       7,     8,     9,    16,     6,    20,     7,     8,     9,     1,
-      19,     2,     5,    17,    18,    24,    10,    17,    18,    17,
-      18,    14,    15,    22,    23,     2,    21
+      14,    18,    17,    30,    19,    20,    29,     1,    43,     2,
+       3,     4,    32,    13,    15,     5,     0,    35,    36,    37,
+      38,    39,    40,     6,     2,     3,     4,     0,    33,    34,
+       5,     2,     3,    16,     2,     3,    16,     0,     6,    19,
+      20,     0,    31,     0,    31,     6,    21,    22,    23,    24,
+      25,    26,    27,    28,    27,    28,    21,    22,    23,    24,
+      25,    26,    27,    28,    27,    28,    41,    42
 };
 
-static const yytype_uint8 yycheck[] =
+static const yytype_int8 yycheck[] =
 {
-       3,     4,     5,     8,     0,     6,     3,     4,     5,     1,
-      20,     3,     7,    18,    19,    19,    19,    18,    19,    18,
-      19,     9,    10,    17,    18,     3,    16
+       4,     0,     6,     6,     7,     8,    18,     1,    29,     3,
+       4,     5,    16,     4,     5,     9,    -1,    21,    22,    23,
+      24,    25,    26,    17,     3,     4,     5,    -1,    19,    20,
+       9,     3,     4,     5,     3,     4,     5,    -1,    17,     7,
+       8,    -1,     6,    -1,     6,    17,    10,    11,    12,    13,
+      14,    15,    16,    17,    16,    17,    10,    11,    12,    13,
+      14,    15,    16,    17,    16,    17,    27,    28
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     1,     3,    22,    23,     7,     0,     3,     4,     5,
-      19,    24,    25,    26,    24,    24,     8,    18,    19,    20,
-       6,    23,    25,    25,    26
+       0,     1,     3,     4,     5,     9,    17,    20,    21,    22,
+      23,    24,    25,    21,    23,    21,     5,    23,     0,     7,
+       8,    10,    11,    12,    13,    14,    15,    16,    17,    18,
+       6,     6,    23,    21,    21,    23,    23,    23,    23,    23,
+      23,    24,    24,    25
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1417,110 +1435,161 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 40 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { assignment = (AssignmentExpression*)(yyvsp[(1) - (1)].assExpr); ;}
+#line 44 "PetriEngine/PQL/PQLQueryParser.y"
+    { query = (yyvsp[(1) - (1)].cond); ;}
     break;
 
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 41 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { assignment = NULL; yyerrok; ;}
+#line 45 "PetriEngine/PQL/PQLQueryParser.y"
+    { yyerrok; ;}
     break;
 
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 44 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { ((AssignmentExpression*)(yyvsp[(5) - (5)].assExpr))->prepend(*(yyvsp[(1) - (5)].string), (yyvsp[(3) - (5)].expr)); delete (yyvsp[(1) - (5)].string);
-												  (yyval.assExpr) = ((AssignmentExpression*)(yyvsp[(5) - (5)].assExpr));}
+#line 48 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.cond) = new AndCondition((yyvsp[(1) - (3)].cond), (yyvsp[(3) - (3)].cond)); ;}
     break;
 
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 46 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { AssignmentExpression* a = new AssignmentExpression();
-												  a->prepend(*(yyvsp[(1) - (4)].string), (yyvsp[(3) - (4)].expr)); delete (yyvsp[(1) - (4)].string);
-												  (yyval.assExpr) = a;;}
+#line 49 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.cond) = new OrCondition((yyvsp[(1) - (3)].cond), (yyvsp[(3) - (3)].cond)); ;}
     break;
 
   case 6:
 
 /* Line 1455 of yacc.c  */
-#line 49 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { AssignmentExpression* a = new AssignmentExpression();
-												  a->prepend(*(yyvsp[(1) - (3)].string), (yyvsp[(3) - (3)].expr)); delete (yyvsp[(1) - (3)].string);
-												  (yyval.assExpr) = a;;}
+#line 50 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.cond) = new NotCondition((yyvsp[(2) - (2)].cond)); ;}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 54 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { (yyval.expr) = new PlusExpr((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)); ;}
+#line 51 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.cond) = (yyvsp[(2) - (3)].cond); ;}
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 55 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { (yyval.expr) = new SubtractExpr((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)); ;}
+#line 52 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.cond) = (yyvsp[(1) - (1)].cond); ;}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 56 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { (yyval.expr) = new MinusExpr((yyvsp[(2) - (2)].expr)); ;}
+#line 55 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.cond) = new EqualCondition((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)); ;}
     break;
 
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 57 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { (yyval.expr) = (yyvsp[(1) - (1)].expr); ;}
+#line 56 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.cond) = new NotEqualCondition((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)); ;}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 60 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { (yyval.expr) = new MultiplyExpr((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)); ;}
+#line 57 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.cond) = new LessThanCondition((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)); ;}
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 61 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { (yyval.expr) = (yyvsp[(1) - (1)].expr); ;}
+#line 58 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.cond) = new LessThanOrEqualCondition((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)); ;}
     break;
 
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 64 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { (yyval.expr) = (yyvsp[(2) - (3)].expr); ;}
+#line 59 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.cond) = new GreaterThanCondition((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)); ;}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 65 "PetriEngine/PQL/PQLAssignmentParser.y"
-    { (yyval.expr) = new LiteralExpr(atol((yyvsp[(1) - (1)].string)->c_str())); delete (yyvsp[(1) - (1)].string); ;}
+#line 60 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.cond) = new GreaterThanOrEqualCondition((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)); ;}
     break;
 
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 66 "PetriEngine/PQL/PQLAssignmentParser.y"
+#line 63 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.expr) = new PlusExpr((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)); ;}
+    break;
+
+  case 16:
+
+/* Line 1455 of yacc.c  */
+#line 64 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.expr) = new SubtractExpr((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)); ;}
+    break;
+
+  case 17:
+
+/* Line 1455 of yacc.c  */
+#line 65 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.expr) = new MinusExpr((yyvsp[(2) - (2)].expr)); ;}
+    break;
+
+  case 18:
+
+/* Line 1455 of yacc.c  */
+#line 66 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.expr) = (yyvsp[(1) - (1)].expr); ;}
+    break;
+
+  case 19:
+
+/* Line 1455 of yacc.c  */
+#line 69 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.expr) = new MultiplyExpr((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)); ;}
+    break;
+
+  case 20:
+
+/* Line 1455 of yacc.c  */
+#line 70 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.expr) = (yyvsp[(1) - (1)].expr); ;}
+    break;
+
+  case 21:
+
+/* Line 1455 of yacc.c  */
+#line 73 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.expr) = (yyvsp[(2) - (3)].expr); ;}
+    break;
+
+  case 22:
+
+/* Line 1455 of yacc.c  */
+#line 74 "PetriEngine/PQL/PQLQueryParser.y"
+    { (yyval.expr) = new LiteralExpr(atol((yyvsp[(1) - (1)].string)->c_str())); delete (yyvsp[(1) - (1)].string); ;}
+    break;
+
+  case 23:
+
+/* Line 1455 of yacc.c  */
+#line 75 "PetriEngine/PQL/PQLQueryParser.y"
     { (yyval.expr) = new IdentifierExpr(*(yyvsp[(1) - (1)].string), (yylsp[(1) - (1)]).first_column); delete (yyvsp[(1) - (1)].string); ;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 1524 "PetriEngine/PQL/PQLAssignmentParser.parser.cpp"
+#line 1593 "PetriEngine/PQL/PQLQueryParser.parser.cpp"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);

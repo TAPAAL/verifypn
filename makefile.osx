@@ -14,11 +14,6 @@ TAR				= tar
 #Compiler and linker flags
 CFLAGS			= -O3 -I.
 LDFLAGS			= -L./lpsolve -static -O3 -llpsolve55 -lcolamd -ldl
-#I don't know if -lcolamd and -ldl is necessary, also -lm might be needed
-#if not readily available in path or by download some of these might be disabled by:
-#CFLAS		   += -DLoadInverseLib=0 -DLoadLanguageLib=0
-#We can also try to link against the dynamic library, just remember to copy it out,
-#and remove the -static flag, maybe also hardcode the link flag to the liblpsolve.dylib
 
 #Target
 TARGET			= VerifyPN
@@ -26,21 +21,24 @@ TARGET			= VerifyPN
 #Source files
 FLEX_SOURCES	= $(shell $(FIND) * -name "*.l")
 BISON_SOURCES	= $(shell $(FIND) * -name "*.y")
-SOURCES			= $(shell $(FIND) * -name "*.cpp" | $(GREP) -v ".\\(parser\\|lexer\\).cpp")	\
+SOURCES			= $(shell $(FIND) * -name "*.cpp" | $(GREP) -v ".\\(parser\\|lexer\\).cpp")		\
 				  $(BISON_SOURCES:.y=.parser.cpp)												\
 				  $(FLEX_SOURCES:.l=.lexer.cpp)
 
 #Intermediate files
-OBJECTS			= $(SOURCES:.cpp=.o)															\
-				  $(FLEX_SOURCES:.l=.lexer.cpp)													\
-				  $(BISON_SOURCES:.y=.parser.cpp)												\
-				  $(BISON_SOURCES:.y=.parser.hpp)
+OBJECTS			= $(SOURCES:.cpp=.o)
+
+#Default target
+all: $(TARGET)
+
+#Rules for updating lexer and parser
+%.lexer.cpp: %.l
+	@echo "You must run flex on Linux using the generate target."
+%.parser.cpp: %.y
+	@echo "You must run bison on Linux using the generate target."
+generate: $(BISON_SOURCES:.y=.parser.cpp) $(FLEX_SOURCES:.l=.lexer.cpp)
 
 #Build rules
-%.lexer.cpp: %.l
-##	$(LEX) -o $@ $<
-%.parser.cpp: %.y
-##	$(YACC) -d -o $@ $<
 %.o: %.cpp
 	$(CC) -c $(CFLAGS) -o $@ $<
 $(TARGET): lpsolve $(SOURCES:.cpp=.o)
@@ -49,9 +47,9 @@ lpsolve:
 	$(WGET) http://sourceforge.net/projects/lpsolve/files/lpsolve/5.5.2.0/lp_solve_5.5.2.0_dev_osx32.tar.gz/download
 	$(MKDIR) lpsolve
 	$(TAR) -xzf download -C lpsolve
-#	$(RM) download
+	$(RM) download
 
-all: $(TARGET)
+#Clean rule
 clean:
 	$(RM) -rf lpsolve
 	$(RM) -f $(OBJECTS) $(TARGET)
@@ -68,4 +66,4 @@ check: $(TARGET)
 		fi 																						\
 	done 
 
-.PHONY: all clean check
+.PHONY: all generate clean check
