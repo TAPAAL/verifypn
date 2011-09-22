@@ -9,7 +9,7 @@ SED				= sed
 
 #Compiler and linker flags
 CFLAGS			= -O3 -I.
-LDFLAGS			= -static -O3 -llpsolve55 -lcolamd -ldl
+LDFLAGS			= -O3 /usr/lib/liblpsolve55.a -lcolamd -ldl
 
 #Target
 TARGET			= verifypn
@@ -49,7 +49,7 @@ check: $(TARGET)
 	@for f in Tests/*.xml; do																	\
 		echo "Testing $$f:";																	\
 		./$(TARGET) -m 256 $$f $$f.q;															\
-		if [ `echo $$f | $(SED) -e "s/.*-\([0-9]\)\.xml/\1/"` -ne $$? ]; then 					\
+		if [ $$? -ne `echo $$f | $(SED) -e "s/.*-\([0-9]\)\.xml/\1/"` ]; then 					\
 			echo " --- Test Failed!"; 															\
 		else																					\
 			echo " +++ Test Succeeded"; 														\

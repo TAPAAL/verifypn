@@ -13,7 +13,7 @@ TAR				= tar
 
 #Compiler and linker flags
 CFLAGS			= -m32 -O3 -I.
-LDFLAGS			= -m32 -L./lpsolve -O3 -llpsolve55 -ldl
+LDFLAGS			= -m32 -O3 lpsolve/lpsolve55.a -lstdc++
 
 #Target
 TARGET			= verifypn
@@ -43,7 +43,6 @@ generate: $(BISON_SOURCES:.y=.parser.cpp) $(FLEX_SOURCES:.l=.lexer.cpp)
 	$(CC) -c $(CFLAGS) -o $@ $<
 $(TARGET): lpsolve $(SOURCES:.cpp=.o)
 	$(CC) $(SOURCES:.cpp=.o) $(LDFLAGS) -o $@
-	$(CP) lpsolve/liblpsolve55.dylib liblpsolve55.dylib
 lpsolve:
 	$(WGET) http://sourceforge.net/projects/lpsolve/files/lpsolve/5.5.2.0/lp_solve_5.5.2.0_dev_osx32.tar.gz/download
 	$(MKDIR) lpsolve
@@ -60,7 +59,7 @@ check: $(TARGET)
 	@for f in Tests/*.xml; do																	\
 		echo "Testing $$f:";																	\
 		./$(TARGET) -m 256 $$f $$f.q;															\
-		if [ `echo $$f | $(SED) -e "s/.*-\([0-9]\)\.xml/\1/"` -ne $$? ]; then 					\
+		if [ $$? -ne `echo $$f | $(SED) -e "s/.*-\([0-9]\)\.xml/\1/"` ]; then 					\
 			echo " --- Test Failed!"; 															\
 		else																					\
 			echo " +++ Test Succeeded"; 														\
