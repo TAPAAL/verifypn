@@ -13,7 +13,7 @@ TAR				= tar
 
 #Compiler and linker flags
 CFLAGS			= -m32 -O3 -I.
-LDFLAGS			= -m32 -O3 lpsolve/lpsolve55.a -lstdc++
+LDFLAGS			= -m32 -O3 lpsolve/liblpsolve55.a -lstdc++
 
 #Target
 TARGET			= verifypn
