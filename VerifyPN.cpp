@@ -315,11 +315,11 @@ int main(int argc, char* argv[]){
 
 	//Print result
 	if(retval == UnknownCode)
-		fprintf(stdout, "Unable to decide if query is satisfyable.\n");
+		fprintf(stdout, "Unable to decide if query is satisfied.\n");
 	else if(retval == SuccessCode)
-		fprintf(stdout, "Query is satisfyable.\n");
+		fprintf(stdout, "Query is satisfied.\n");
 	else if(retval == FailedCode)
-		fprintf(stdout, "Query is not satisfyable.\n");
+		fprintf(stdout, "Query is NOT satisfied.\n");
 
 	return retval;
 }
