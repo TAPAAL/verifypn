@@ -68,6 +68,4 @@ check: $(TARGET)
 		echo "----------------------------------------------------------------------"; 			\
 	fi
 
-
-
 .PHONY: all generate clean check
