@@ -44,19 +44,25 @@ $(TARGET): $(OBJECTS)
 clean:
 	$(RM) -f $(OBJECTS) $(TARGET)
 
+# Extract search strategy and expected return value from test file name
+EXTRACT_STRATEGY	:= "s/.*-\([0-9]\)-\(All\|BestFS\|BFS\|DFS\|RDFS\)\.xml/\2/"
+EXTRACT_RETVAL		:= "s/.*-\([0-9]\)-\(All\|BestFS\|BFS\|DFS\|RDFS\)\.xml/\1/"
+
 #Check the build
 check: $(TARGET)
 	@failed=0; \
 	for f in Tests/*.xml; do																	\
-		echo "----------------------------------------------------------------------";			\
-		echo "Testing $$f:";																	\
-		./$(TARGET) -m 256 $$f $$f.q;															\
-		if [ $$? -ne `echo $$f | $(SED) -e "s/.*-\([0-9]\)\.xml/\1/"` ]; then 					\
-			echo " --- Test Failed!"; 															\
-			failed=$$(($$failed + 1));															\
-		else																					\
-			echo " +++ Test Succeeded"; 														\
-		fi 																						\
+		for s in `echo $$f | $(SED) -e $(EXTRACT_STRATEGY) -e "s/All/BestFS BFS DFS RDFS/"`; do \
+			echo "----------------------------------------------------------------------";		\
+			echo "Testing $$f using $$s";														\
+			./$(TARGET) -s $$s -m 256 $$f $$f.q;												\
+			if [ $$? -ne `echo $$f | $(SED) -e $(EXTRACT_RETVAL)` ]; then 						\
+				echo " --- Test Failed!"; 														\
+				failed=$$(($$failed + 1));														\
+			else																				\
+				echo " +++ Test Succeeded"; 													\
+			fi 																					\
+		done																					\
 	done; 																						\
 	if [ "$$failed" -ne "0" ]; then 															\
 		echo "----------------------------------------------------------------------"; 			\
