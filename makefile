@@ -42,18 +42,32 @@ $(TARGET): $(OBJECTS)
 
 #Clean rule
 clean:
-	$(RM) -f $(OBJECTS)
+	$(RM) -f $(OBJECTS) $(TARGET)
 
 #Check the build
 check: $(TARGET)
-	@for f in Tests/*.xml; do																	\
+	@failed=0; \
+	for f in Tests/*.xml; do																	\
+		echo "----------------------------------------------------------------------";			\
 		echo "Testing $$f:";																	\
 		./$(TARGET) -m 256 $$f $$f.q;															\
 		if [ $$? -ne `echo $$f | $(SED) -e "s/.*-\([0-9]\)\.xml/\1/"` ]; then 					\
 			echo " --- Test Failed!"; 															\
+			failed=$$(($$failed + 1));															\
 		else																					\
 			echo " +++ Test Succeeded"; 														\
 		fi 																						\
-	done 
+	done; 																						\
+	if [ "$$failed" -ne "0" ]; then 															\
+		echo "----------------------------------------------------------------------"; 			\
+		echo "\033[1m                      $$failed test(s) Failed \033[0m"; 					\
+		echo "----------------------------------------------------------------------"; 			\
+	else 																						\
+		echo "----------------------------------------------------------------------"; 			\
+		echo "\033[1m                      All tests was successful \033[0m"; 					\
+		echo "----------------------------------------------------------------------"; 			\
+	fi
+
+
 
 .PHONY: all generate clean check

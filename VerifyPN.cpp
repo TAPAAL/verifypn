@@ -44,7 +44,7 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
-/** Enumeration of return values from PeTAPAAL */
+/** Enumeration of return values from VerifyPN */
 enum ReturnValues{
 	SuccessCode	= 0,
 	FailedCode	= 1,
@@ -52,7 +52,7 @@ enum ReturnValues{
 	ErrorCode	= 3
 };
 
-/** Enumeration of search-strategies in PeTAPAAL */
+/** Enumeration of search-strategies in VerifyPN */
 enum SearchStrategies{
 	BestFS,		//LinearOverAproxx + UltimateSearch
 	BFS,		//LinearOverAproxx + BreadthFirstReachabilitySearch
@@ -125,7 +125,7 @@ int main(int argc, char* argv[]){
 					"  2   Unknown, algorithm was unable to answer the question\n"
 					"  3   Error, see stderr for error message\n"
 					"\n"
-					"PeTAPAAL is a compilation of PeTe as untimed backend for TAPAAL.\n"
+					"VerifyPN is a compilation of PeTe as untimed backend for TAPAAL.\n"
 					"PeTe project page: <https://github.com/jopsen/PeTe>\n");
 			return 0;
 		}else if(strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0){
