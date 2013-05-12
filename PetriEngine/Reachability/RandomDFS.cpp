@@ -105,13 +105,13 @@ ReachabilityResult RandomDFS::reachable(const PetriNet &net,
 					ns->setTransition(t);
 					if(query && query->evaluate(*ns, &net))
 						return ReachabilityResult(ReachabilityResult::Satisfied,
-												"A state satisfying the query was found", expandedStates, exploredStates, ns->pathLength(), ns->trace());
+												"A state satisfying the query was found", expandedStates, exploredStates, states.discovered(), ns->pathLength(), ns->trace());
 					succ[t] = ns;
 					ns = allocator.createState();
 					if(!ns)
 						return ReachabilityResult(ReachabilityResult::Unknown,
 												   "Memory bound exceeded",
-												   expandedStates, exploredStates);
+												   expandedStates, exploredStates, states.discovered());
 				}
 			}
 		}
@@ -145,7 +145,7 @@ ReachabilityResult RandomDFS::reachable(const PetriNet &net,
 
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-						"No state satisfying the query exists.", expandedStates, exploredStates);
+						"No state satisfying the query exists.", expandedStates, exploredStates, states.discovered());
 }
 
 }} // Namespaces

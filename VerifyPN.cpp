@@ -308,8 +308,9 @@ int main(int argc, char* argv[]){
 
 	//Print statistics
 	fprintf(stdout, "STATS:\n");
-	fprintf(stdout, "\texplored states: %lli\n", result.exploredStates());
-	fprintf(stdout, "\texpanded states: %lli\n", result.expandedStates());
+	fprintf(stdout, "\tdiscovered states: %lli\n", result.discoveredStates());
+	fprintf(stdout, "\texplored states:   %lli\n", result.exploredStates());
+	fprintf(stdout, "\texpanded states:   %lli\n", result.expandedStates());
 
 	//----------------------- Output Result -----------------------//
 

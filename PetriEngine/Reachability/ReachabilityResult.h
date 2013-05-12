@@ -44,12 +44,14 @@ public:
 					   const std::string& explanation = "",
 					   BigInt expandedStates = 0,
 					   BigInt exploredStates = 0,
+					   BigInt discoveredStates = 0,
 					   int pathLength = 0,
 					   const std::vector<unsigned int>& trace = std::vector<unsigned int>()){
 		_result = result;
 		_explanation = explanation;
 		_expandedStates = expandedStates;
 		_exploredStates = exploredStates;
+		_discoveredStates = discoveredStates;
 		_pathLength = pathLength;
 		_trace = trace;
 	}
@@ -64,6 +66,9 @@ public:
 	/** Gets the number of explored states.
 		A state is explored when it is visited. */
 	BigInt exploredStates() const { return _exploredStates; }
+	/** Gets the number of times a state was discovered,
+		A state is discovered every time it's seen, but only explore the first time */
+	BigInt discoveredStates() const { return _discoveredStates; }
 	/** Gets the length of the trace path. */
 	int pathLength() const { return _pathLength; }
 	/** Get trace, empty if no trace available or not provided by strategy */
@@ -73,6 +78,7 @@ private:
 	Result _result;
 	BigInt _expandedStates;
 	BigInt _exploredStates;
+	BigInt _discoveredStates;
 	int _pathLength;
 	std::vector<unsigned int> _trace;
 };

@@ -26,6 +26,9 @@
 namespace PetriEngine{
 namespace Structures{
 
+// Big int used for state space statistics
+typedef unsigned long long int BigInt;
+
 /** Hash set for a collection of SmartStates */
 class SmartStateSet{
 	/** SmartState specialisation of std::hash */
@@ -88,6 +91,7 @@ public:
 		cachedValuation1 = new VarVal[net.numberOfVariables()];
 		cachedValuation2 = new VarVal[net.numberOfVariables()];
 		constCachedState = NULL;
+		_discovered = 0;
 	}
 	~SmartStateSet(){
 		if(cachedMarking1){
@@ -109,6 +113,7 @@ public:
 	}
 	/** Add a new state, returns true if state didn't exist */
 	bool add(SmartState* state, const MarkVal* marking, const VarVal* valuation){
+		_discovered++;
 		//Set state reference
 		constCachedState = state;
 		constCachedMarking = marking;
@@ -117,6 +122,7 @@ public:
 		std::pair<Iter, bool> result = set.insert(state);
 		return result.second;
 	}
+	BigInt discovered() const {return _discovered;}
 private:
 	void getState(const SmartState* state, MarkVal const *& marking, VarVal const *& valuation){
 		if(constCachedState == state){
@@ -157,6 +163,7 @@ private:
 	VarVal* cachedValuation2;
 
 	Set set;
+	BigInt _discovered;
 };
 
 } // Structures

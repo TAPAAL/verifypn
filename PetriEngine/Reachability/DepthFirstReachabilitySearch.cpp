@@ -89,7 +89,7 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 					ns->setTransition(t);
 					if(query->evaluate(PQL::EvaluationContext(ns->marking(), ns->valuation(), &net)))
 						return ReachabilityResult(ReachabilityResult::Satisfied,
-									  "A state satisfying the query was found", expandedStates, exploredStates, ns->pathLength(), ns->trace());
+									  "A state satisfying the query was found", expandedStates, exploredStates, states.discovered(), ns->pathLength(), ns->trace());
 					stack.back().t = t + 1;
 					stack.push_back(Step(ns, 0));
 					exploredStates++;
@@ -98,7 +98,7 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 					if(!ns)
 						return ReachabilityResult(ReachabilityResult::Unknown,
 												   "Memory bound exceeded",
-												   expandedStates, exploredStates);
+												   expandedStates, exploredStates, states.discovered());
 					break;
 				}
 			}
@@ -109,7 +109,7 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 		}
 	}
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-							"No state satisfying the query exists.", expandedStates, count);
+							"No state satisfying the query exists.", expandedStates, count, states.discovered());
 }
 
 } // Reachability

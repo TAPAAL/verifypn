@@ -25,28 +25,39 @@
 
 namespace PetriEngine { namespace Structures {
 
+// Big int used for state space statistics
+typedef unsigned long long int BigInt;
+
 class StateSet : std::tr1::unordered_set<State*, State::hash, State::equal_to>{
 public:
 	StateSet(const PetriNet& net)
 		: std::tr1::unordered_set<State*, State::hash, State::equal_to>
 			(8, State::hash(net.numberOfPlaces(), net.numberOfVariables()),
-			 State::equal_to(net.numberOfPlaces(),net.numberOfVariables()))
-		{}
+			 State::equal_to(net.numberOfPlaces(),net.numberOfVariables())){
+		_discovered = 0;
+	}
 	StateSet(unsigned int places, unsigned int variables)
 		: std::tr1::unordered_set<State*, State::hash, State::equal_to>
 			(8, State::hash(places, variables),
-			 State::equal_to(places, variables))
-		{}
+			 State::equal_to(places, variables)){
+		_discovered = 0;
+	}
 	bool add(State* state) {
+		_discovered++;
 		std::pair<iter, bool> result = this->insert(state);
 		return result.second;
 	}
-	bool contains(State* state) const {
+	bool contains(State* state) {
+		_discovered++;
 		return this->count(state) > 0;
+	}
+	BigInt discovered() const {
+		return _discovered;
 	}
 private:
 	typedef std::tr1::unordered_set<State*, State::hash, State::equal_to>::const_iterator const_iter;
 	typedef std::tr1::unordered_set<State*, State::hash, State::equal_to>::iterator iter;
+	BigInt _discovered;
 };
 
 }}

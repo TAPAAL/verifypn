@@ -93,7 +93,7 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 				if(query->evaluate(*ns, &net)){
 					return ReachabilityResult(ReachabilityResult::Satisfied,
 											  "Query was satisfied",
-											  expanded, explored, ns->pathLength(), ns->trace());
+											  expanded, explored, states.discovered(), ns->pathLength(), ns->trace());
 				}
 
 				// Push new state on the queue
@@ -109,14 +109,14 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 				if(!ns)
 					return ReachabilityResult(ReachabilityResult::Unknown,
 											  "Memory bound exceeded",
-											  expanded, explored);
+											  expanded, explored, states.discovered());
 			}
 		}
 	}
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
 							  "Query cannot be satisfied",
-							  expanded, explored);
+							  expanded, explored, states.discovered());
 }
 
 } // Reachability
