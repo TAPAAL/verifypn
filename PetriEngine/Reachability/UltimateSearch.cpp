@@ -39,29 +39,6 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 											 const MarkVal *m0,
 											 const VarVal *v0,
 											 PQL::Condition *query){
-	// Test if it initally satisfied
-	{
-		if(query->evaluate(EvaluationContext(m0, v0, &net)))
-			return ReachabilityResult(ReachabilityResult::Satisfied, "Satisifed initially", 0, 0, 0);
-	}
-
-	// Attempt to exclude by over-approx
-	{
-		ConstraintAnalysisContext context(net);
-		query->findConstraints(context);
-		if(context.canAnalyze){
-			bool isImpossible = true;
-			for(size_t i = 0; i < context.retval.size(); i++){
-				isImpossible &= context.retval[i]->isImpossible(net, m0, v0);
-				if(!isImpossible) break;
-			}
-			if(isImpossible)
-				return ReachabilityResult(ReachabilityResult::NotSatisfied,
-										  "Excluded by over-approximation",
-										  0, 0, 0);
-		}
-	}
-
 	// Create allocator, stateset and queue
 	LimitedStateAllocator<> allocator(net, _memorylimit);
 	StateSet states(net);

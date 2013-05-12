@@ -29,6 +29,13 @@ ReachabilityResult LinearOverApprox::reachable(const PetriNet &net,
 											   const MarkVal *m0,
 											   const VarVal *ia,
 											   PQL::Condition *query){
+
+	// Test if it initally satisfied
+	{
+		if(query->evaluate(PetriEngine::PQL::EvaluationContext(m0, ia, &net)))
+			return ReachabilityResult(ReachabilityResult::Satisfied, "Satisifed initially", 0, 0, 0);
+	}
+
 	PQL::ConstraintAnalysisContext context(net);
 	query->findConstraints(context);
 
@@ -39,7 +46,6 @@ ReachabilityResult LinearOverApprox::reachable(const PetriNet &net,
 			isImpossible &= context.retval[i]->isImpossible(net, m0, ia);
 			if(!isImpossible) break;
 		}
-		assert(context.retval.size() > 0);
 
 		if(isImpossible){
 			return ReachabilityResult(ReachabilityResult::NotSatisfied,

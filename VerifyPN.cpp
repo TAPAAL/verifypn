@@ -33,6 +33,7 @@
 #include <PetriEngine/Reachability/BestFirstReachabilitySearch.h>
 #include <PetriEngine/PQL/Contexts.h>
 
+#include <PetriEngine/Reachability/LinearOverApprox.h>
 #include <PetriEngine/Reachability/UltimateSearch.h>
 #include <PetriEngine/Reachability/RandomDFS.h>
 #include <PetriEngine/Reachability/DepthFirstReachabilitySearch.h>
@@ -54,13 +55,14 @@ enum ReturnValues{
 
 /** Enumeration of search-strategies in VerifyPN */
 enum SearchStrategies{
-	BestFS,		//LinearOverAproxx + UltimateSearch
-	BFS,		//LinearOverAproxx + BreadthFirstReachabilitySearch
-	DFS,		//LinearOverAproxx + DepthFirstReachabilitySearch
-	RDFS		//LinearOverAproxx + RandomDFS
+	BestFS,			//LinearOverAprox + UltimateSearch
+	BFS,			//LinearOverAprox + BreadthFirstReachabilitySearch
+	DFS,			//LinearOverAprox + DepthFirstReachabilitySearch
+	RDFS,			//LinearOverAprox + RandomDFS
+	OverApprox		//LinearOverApprx
 };
 
-#define VERSION		"0.1"
+#define VERSION		"1.0"
 
 int main(int argc, char* argv[]){
 	// Commandline arguments
@@ -92,6 +94,8 @@ int main(int argc, char* argv[]){
 				searchstrategy = DFS;
 			else if(strcmp(s, "RDFS") == 0)
 				searchstrategy = RDFS;
+			else if(strcmp(s, "OverApprox") == 0)
+				searchstrategy = OverApprox;
 			else{
 				fprintf(stderr, "Argument Error: Unrecognized search strategy \"%s\"\n", s);
 				return ErrorCode;
@@ -110,10 +114,11 @@ int main(int argc, char* argv[]){
 					"  -k, --k-bound <number of tokens>   Token bound, 0 to ignore (default)\n"
 					"  -t, --trace                        Provide XML-trace to stderr\n"
 					"  -s, --search-strategy <strategy>   Search strategy:\n"
-					"                                     - BestFS   Heuristic search (default)\n"
-					"                                     - BFS      Best first search\n"
-					"                                     - DFS      Depth first search\n"
-					"                                     - RDFS     Random depth first search\n"
+					"                                     - BestFS       Heuristic search (default)\n"
+					"                                     - BFS          Best first search\n"
+					"                                     - DFS          Depth first search\n"
+					"                                     - RDFS         Random depth first search\n"
+					"                                     - OverApprox   Linear Over Approx.\n"
 					"  -m, --memory-limit <megabyte>      Memory limit for state space in MB,\n"
 					"                                     0 for unlimited (1 GB default)\n"
 					"  -h, --help                         Display this help message\n"
@@ -266,10 +271,15 @@ int main(int argc, char* argv[]){
 		strategy = new DepthFirstReachabilitySearch(kbound, memorylimit);
 	else if(searchstrategy == RDFS)
 		strategy = new RandomDFS(kbound, memorylimit);
+	else if(searchstrategy == OverApprox)
+		strategy = NULL;
 	else{
 		fprintf(stderr, "Error: Search strategy selection out of range.\n");
 		return ErrorCode;
 	}
+
+	// Wrap in linear over-approximation
+	strategy = new LinearOverApprox(strategy);
 
 	//Reachability search
 	ReachabilityResult result = strategy->reachable(*net, m0, v0, query);
