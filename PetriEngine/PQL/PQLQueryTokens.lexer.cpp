@@ -388,8 +388,8 @@ static void yy_fatal_error (yyconst char msg[]  );
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
 
-#define YY_NUM_RULES 26
-#define YY_END_OF_BUFFER 27
+#define YY_NUM_RULES 29
+#define YY_END_OF_BUFFER 30
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -397,13 +397,15 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[45] =
+static yyconst flex_int16_t yy_accept[62] =
     {   0,
-        0,    0,   27,   25,    1,    1,   12,   25,   19,   20,
-       23,   21,   22,    9,   15,   24,   17,    8,    8,    8,
-        8,    8,    8,    8,   25,   14,   10,    9,   16,   13,
-       18,    8,    8,    8,    5,    8,    8,    4,   11,    3,
-        7,    2,    6,    0
+        0,    0,   30,   28,    1,    1,   15,   28,   22,   23,
+       26,   24,   25,   12,   18,   27,   20,   11,   11,   11,
+       11,   11,   11,   11,   11,   11,   11,   28,   17,   13,
+       12,   19,   16,   21,   11,   11,   11,    8,   11,   11,
+       11,   11,    7,   11,   14,    6,   10,    5,   11,   11,
+        9,   11,   11,   11,    2,   11,    3,   11,   11,    4,
+        0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
@@ -417,11 +419,11 @@ static yyconst flex_int32_t yy_ec[256] =
        13,   14,    1,    1,   15,   16,   16,   17,   16,   16,
        16,   16,   16,   16,   16,   16,   16,   18,   19,   16,
        16,   20,   16,   21,   16,   16,   16,   16,   16,   16,
-        1,    1,    1,    1,   16,    1,   22,   16,   16,   23,
+        1,    1,    1,    1,   16,    1,   22,   16,   23,   24,
 
-       16,   16,   16,   16,   16,   16,   16,   16,   16,   24,
-       25,   16,   16,   26,   16,   27,   16,   16,   16,   16,
-       16,   16,    1,   28,    1,    1,    1,    1,    1,    1,
+       25,   26,   16,   16,   16,   16,   27,   28,   16,   29,
+       30,   16,   16,   31,   32,   33,   34,   16,   16,   16,
+       16,   16,    1,   35,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -438,53 +440,66 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst flex_int32_t yy_meta[29] =
+static yyconst flex_int32_t yy_meta[36] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         2,    1,    1,    1,    2,    2,    2,    2,    2,    2,
-        2,    2,    2,    2,    2,    2,    2,    1
+        2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+        2,    2,    2,    2,    1
     } ;
 
-static yyconst flex_int16_t yy_base[46] =
+static yyconst flex_int16_t yy_base[63] =
     {   0,
-        0,    0,   48,   49,   49,   49,   34,   41,   49,   49,
-       49,   49,   49,   34,   31,   30,   29,   23,    0,   21,
-       19,   14,   12,   10,    7,   49,   49,   23,   49,   49,
-       49,    0,   16,   11,    0,    8,    3,    0,   49,    0,
-        0,    0,    0,   49,   27
+        0,    0,   69,   70,   70,   70,   55,   62,   70,   70,
+       70,   70,   70,   55,   52,   51,   50,   44,    0,   42,
+       40,   30,   33,   35,   26,   24,   23,   18,   70,   70,
+       41,   70,   70,   70,    0,   34,   29,    0,   25,   26,
+       19,   13,    0,   11,   70,    0,    0,    0,   20,   11,
+        0,   17,   13,   15,    0,    9,    0,   15,   10,    0,
+       70,   34
     } ;
 
-static yyconst flex_int16_t yy_def[46] =
+static yyconst flex_int16_t yy_def[63] =
     {   0,
-       44,    1,   44,   44,   44,   44,   44,   44,   44,   44,
-       44,   44,   44,   44,   44,   44,   44,   45,   45,   45,
-       45,   45,   45,   45,   44,   44,   44,   44,   44,   44,
-       44,   45,   45,   45,   45,   45,   45,   45,   44,   45,
-       45,   45,   45,    0,   44
+       61,    1,   61,   61,   61,   61,   61,   61,   61,   61,
+       61,   61,   61,   61,   61,   61,   61,   62,   62,   62,
+       62,   62,   62,   62,   62,   62,   62,   61,   61,   61,
+       61,   61,   61,   61,   62,   62,   62,   62,   62,   62,
+       62,   62,   62,   62,   61,   62,   62,   62,   62,   62,
+       62,   62,   62,   62,   62,   62,   62,   62,   62,   62,
+        0,   61
     } ;
 
-static yyconst flex_int16_t yy_nxt[78] =
+static yyconst flex_int16_t yy_nxt[106] =
     {   0,
         4,    5,    6,    7,    8,    9,   10,   11,   12,   13,
        14,   15,   16,   17,   18,   19,   19,   20,   21,   19,
-       19,   22,   19,   23,   24,   19,   19,   25,   32,   43,
-       42,   41,   40,   28,   39,   38,   37,   36,   35,   34,
-       33,   31,   30,   29,   28,   27,   26,   44,    3,   44,
-       44,   44,   44,   44,   44,   44,   44,   44,   44,   44,
-       44,   44,   44,   44,   44,   44,   44,   44,   44,   44,
-       44,   44,   44,   44,   44,   44,   44
+       19,   22,   19,   23,   19,   24,   19,   19,   25,   26,
+       19,   19,   27,   19,   28,   35,   60,   59,   58,   57,
+       56,   55,   54,   53,   52,   51,   50,   49,   48,   47,
+       46,   31,   45,   44,   43,   42,   41,   40,   39,   38,
+       37,   36,   34,   33,   32,   31,   30,   29,   61,    3,
+       61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
+       61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
+       61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
+
+       61,   61,   61,   61,   61
     } ;
 
-static yyconst flex_int16_t yy_chk[78] =
+static yyconst flex_int16_t yy_chk[106] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,   45,   37,
-       36,   34,   33,   28,   25,   24,   23,   22,   21,   20,
-       18,   17,   16,   15,   14,    8,    7,    3,   44,   44,
-       44,   44,   44,   44,   44,   44,   44,   44,   44,   44,
-       44,   44,   44,   44,   44,   44,   44,   44,   44,   44,
-       44,   44,   44,   44,   44,   44,   44
+        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    1,    1,    1,   62,   59,   58,   56,   54,
+       53,   52,   50,   49,   44,   42,   41,   40,   39,   37,
+       36,   31,   28,   27,   26,   25,   24,   23,   22,   21,
+       20,   18,   17,   16,   15,   14,    8,    7,    3,   61,
+       61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
+       61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
+       61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
+
+       61,   61,   61,   61,   61
     } ;
 
 static yy_state_type yy_last_accepting_state;
@@ -511,7 +526,7 @@ char *pqlqtext;
 extern "C" int pqlqwrap(){return 1;}
 extern PetriEngine::PQL::Condition* query;
 extern int pqlqparse();
-#line 515 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 530 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 
 #define INITIAL 0
 
@@ -699,7 +714,7 @@ YY_DECL
 #line 17 "PetriEngine/PQL/PQLQueryTokens.l"
 
 
-#line 703 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 718 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 
 	if ( !(yy_init) )
 		{
@@ -752,13 +767,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 45 )
+				if ( yy_current_state >= 62 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 49 );
+		while ( yy_base[yy_current_state] != 70 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -791,129 +806,144 @@ YY_RULE_SETUP
 case 2:
 YY_RULE_SETUP
 #line 20 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(AND);}
+{return TOKEN(TRUE);}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
 #line 21 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(AND);}
+{return TOKEN(FALSE);}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
 #line 22 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(OR);}
+{return TOKEN(DEADLOCK);}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
 #line 23 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(OR);}
+{return TOKEN(AND);}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
 #line 24 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(NOT);}
+{return TOKEN(AND);}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
 #line 25 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(NOT);}
+{return TOKEN(OR);}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
 #line 26 "PetriEngine/PQL/PQLQueryTokens.l"
-{SAVE_TOKEN; return ID;}
+{return TOKEN(OR);}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
 #line 27 "PetriEngine/PQL/PQLQueryTokens.l"
-{SAVE_TOKEN; return INT;}
+{return TOKEN(NOT);}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
 #line 28 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(AND);}
+{return TOKEN(NOT);}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
 #line 29 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(OR);}
+{SAVE_TOKEN; return ID;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
 #line 30 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(NOT);}
+{SAVE_TOKEN; return INT;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
 #line 31 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(EQUAL);}
+{return TOKEN(AND);}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
 #line 32 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(NEQUAL);}
+{return TOKEN(OR);}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
 #line 33 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(LESS);}
+{return TOKEN(NOT);}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
 #line 34 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(LESSEQUAL);}
+{return TOKEN(EQUAL);}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
 #line 35 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(GREATER);}
+{return TOKEN(NEQUAL);}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
 #line 36 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(GREATEREQUAL);}
+{return TOKEN(LESS);}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
 #line 37 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(LPAREN);}
+{return TOKEN(LESSEQUAL);}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
 #line 38 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(RPAREN);}
+{return TOKEN(GREATER);}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
 #line 39 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(PLUS);}
+{return TOKEN(GREATEREQUAL);}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
 #line 40 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(MINUS);}
+{return TOKEN(LPAREN);}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
 #line 41 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(MULTIPLY);}
+{return TOKEN(RPAREN);}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
 #line 42 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(EQUAL);}
+{return TOKEN(PLUS);}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
 #line 43 "PetriEngine/PQL/PQLQueryTokens.l"
-{printf("Unknown token %s!\n", pqlqtext); yyterminate();}
+{return TOKEN(MINUS);}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
+#line 44 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(MULTIPLY);}
+	YY_BREAK
+case 27:
+YY_RULE_SETUP
 #line 45 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(EQUAL);}
+	YY_BREAK
+case 28:
+YY_RULE_SETUP
+#line 46 "PetriEngine/PQL/PQLQueryTokens.l"
+{printf("Unknown token %s!\n", pqlqtext); yyterminate();}
+	YY_BREAK
+case 29:
+YY_RULE_SETUP
+#line 48 "PetriEngine/PQL/PQLQueryTokens.l"
 ECHO;
 	YY_BREAK
-#line 917 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 947 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1205,7 +1235,7 @@ static int yy_get_next_buffer (void)
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 45 )
+			if ( yy_current_state >= 62 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1233,11 +1263,11 @@ static int yy_get_next_buffer (void)
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 45 )
+		if ( yy_current_state >= 62 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 44);
+	yy_is_jam = (yy_current_state == 61);
 
 	return yy_is_jam ? 0 : yy_current_state;
 }
@@ -1874,7 +1904,7 @@ void pqlqfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 45 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 48 "PetriEngine/PQL/PQLQueryTokens.l"
 
 
 namespace PetriEngine{ namespace PQL {

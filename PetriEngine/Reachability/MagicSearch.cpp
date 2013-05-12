@@ -120,7 +120,7 @@ ReachabilityResult MagicSearch::reachable(const PetriNet &net,
 					explored++; //Count explored states
 
 					//Test the query
-					if(query->evaluate(EvaluationContext(ns->marking(), ns->valuation()))){
+					if(query->evaluate(EvaluationContext(ns->marking(), ns->valuation(), &net))){
 						printf("\nmemory usage: %f\n",allocator.percentMemoryUsed());
 						return ReachabilityResult(ReachabilityResult::Satisfied,
 												  "Query was satified!",

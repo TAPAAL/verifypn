@@ -45,7 +45,7 @@ ReachabilityResult BestFSCooling::reachable(const PetriNet &net,
 	memcpy(s0->marking(), m0, sizeof(MarkVal) * net.numberOfPlaces());
 	memcpy(s0->valuation(), v0, sizeof(VarVal) * net.numberOfVariables());
 
-	if(query->evaluate(*s0))
+	if(query->evaluate(*s0, &net))
 		return ReachabilityResult(ReachabilityResult::Satisfied, "Satisfied initially", 0, 0);
 
 	//Initialize subclasses
@@ -95,7 +95,7 @@ ReachabilityResult BestFSCooling::reachable(const PetriNet &net,
 					ns->setTransition(t);
 
 					//Test query
-					if(query->evaluate(*ns))
+					if(query->evaluate(*ns, &net))
 						return ReachabilityResult(ReachabilityResult::Satisfied,
 												  "Query was satified!",
 												  expandedStates,

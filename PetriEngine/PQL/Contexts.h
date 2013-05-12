@@ -90,16 +90,21 @@ public:
 /** Context provided for evalation */
 class EvaluationContext{
 public:
-	/** Create evaluation context, this doesn't take ownershop */
-	EvaluationContext(const MarkVal* marking, const VarVal* assignment){
+	/** Create evaluation context, this doesn't take ownership */
+	EvaluationContext(const MarkVal* marking,
+					  const VarVal* assignment,
+					  const PetriNet* net){
 		_marking = marking;
 		_assignment = assignment;
+		_net = net;
 	}
 	const MarkVal* marking() const {return _marking;}
 	const VarVal* assignment() const {return _assignment;}
+	const PetriNet* net() const {return _net;}
 private:
 	const MarkVal* _marking;
 	const VarVal* _assignment;
+	const PetriNet* _net;
 };
 
 /** Context for distance computation */
@@ -121,7 +126,7 @@ public:
 					const MarkVal* marking,
 					const VarVal* valuation,
 					Structures::DistanceMatrix* dm)
-		: EvaluationContext(marking, valuation), _net(net) {
+		: EvaluationContext(marking, valuation, &net), _net(net) {
 		_strategy = strategy;
 		_negated = false;
 		_dm = dm;

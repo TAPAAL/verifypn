@@ -113,7 +113,7 @@ public:
 	/** Virtual destructor */
 	virtual ~Condition();
 	/** Evaluate condition */
-	bool evaluate(Structures::State& state) const;
+	bool evaluate(Structures::State& state, const PetriNet* net) const;
 	/** Perform context analysis  */
 	virtual void analyze(AnalysisContext& context) = 0;
 	/** Evaluate condition */

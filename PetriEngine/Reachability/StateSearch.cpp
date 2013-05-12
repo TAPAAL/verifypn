@@ -42,7 +42,7 @@ ReachabilityResult StateSearch::reachable(const PetriNet &net,
 										  PQL::Condition *query){
 	// Test if it initally satisfied
 	{
-		if(query->evaluate(EvaluationContext(m0, v0)))
+		if(query->evaluate(EvaluationContext(m0, v0, &net)))
 			return ReachabilityResult(ReachabilityResult::Satisfied, "Satisifed initially", 0, 0, 0);
 	}
 
@@ -113,7 +113,7 @@ ReachabilityResult StateSearch::reachable(const PetriNet &net,
 				ns->setTransition(t);
 
 				// Test query
-				if(query->evaluate(*ns)){
+				if(query->evaluate(*ns, &net)){
 					return ReachabilityResult(ReachabilityResult::Satisfied,
 											  "Query was satisfied",
 											  expanded, explored, ns->pathLength(), ns->trace());

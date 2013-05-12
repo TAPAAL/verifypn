@@ -22,6 +22,7 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 /* Terminal type definition */
 %token <string> ID INT
+%token <token> DEADLOCK TRUE FALSE
 %token <token> LPAREN RPAREN
 %token <token> AND OR NOT
 %token <token> EQUAL NEQUAL LESS LESSEQUAL GREATER GREATEREQUAL
@@ -41,29 +42,32 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 %%
 
-query	: logic				{ query = $1; }
-		| error				{ yyerrok; }
+query	: logic						{ query = $1; }
+		| error						{ yyerrok; }
 		;
 
-logic	: logic AND logic	{ $$ = new AndCondition($1, $3); }
-		| logic OR logic 	{ $$ = new OrCondition($1, $3); }
-		| NOT logic			{ $$ = new NotCondition($2); }
-		| LPAREN logic RPAREN	{ $$ = $2; }
-		| compare			{ $$ = $1; }
+logic	: logic AND logic			{ $$ = new AndCondition($1, $3); }
+		| logic OR logic 			{ $$ = new OrCondition($1, $3); }
+		| NOT logic					{ $$ = new NotCondition($2); }
+		| LPAREN logic RPAREN		{ $$ = $2; }
+		| compare					{ $$ = $1; }
+		| TRUE						{ $$ = new BooleanCondition(true);}
+		| FALSE						{ $$ = new BooleanCondition(false);}
+		| DEADLOCK					{ $$ = new DeadlockCondition();}
 		;
 
-compare	: expr EQUAL expr		{ $$ = new EqualCondition($1, $3); }
-		| expr NEQUAL expr		{ $$ = new NotEqualCondition($1, $3); }
+compare	: expr EQUAL expr			{ $$ = new EqualCondition($1, $3); }
+		| expr NEQUAL expr			{ $$ = new NotEqualCondition($1, $3); }
 		| expr LESS expr			{ $$ = new LessThanCondition($1, $3); }
-		| expr LESSEQUAL expr 	{ $$ = new LessThanOrEqualCondition($1, $3); }
-		| expr GREATER expr		{ $$ = new GreaterThanCondition($1, $3); }
+		| expr LESSEQUAL expr 		{ $$ = new LessThanOrEqualCondition($1, $3); }
+		| expr GREATER expr			{ $$ = new GreaterThanCondition($1, $3); }
 		| expr GREATEREQUAL expr	{ $$ = new GreaterThanOrEqualCondition($1, $3); }
 		;
 
-expr	: expr PLUS term	{ $$ = new PlusExpr($1, $3); }
-		| expr MINUS term	{ $$ = new SubtractExpr($1, $3); }
-		| MINUS expr		{ $$ = new MinusExpr($2); }
-		| term				{ $$ = $1; }
+expr	: expr PLUS term			{ $$ = new PlusExpr($1, $3); }
+		| expr MINUS term			{ $$ = new SubtractExpr($1, $3); }
+		| MINUS expr				{ $$ = new MinusExpr($2); }
+		| term						{ $$ = $1; }
 		;
 
 term	: term MULTIPLY factor	{ $$ = new MultiplyExpr($1, $3); }

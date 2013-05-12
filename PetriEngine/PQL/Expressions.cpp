@@ -102,6 +102,16 @@ std::string NotCondition::toString() const {
 	return "(not " + _cond->toString() + ")";
 }
 
+std::string BooleanCondition::toString() const {
+  if(_value)
+    return "true";
+  return "false";
+}
+
+std::string DeadlockCondition::toString() const {
+	return "deadlock";
+}
+
 /******************** To TAPAAL Query ********************/
 
 std::string LogicalCondition::toTAPAALQuery(TAPAALConditionExportContext& context) const{
@@ -127,6 +137,16 @@ std::string NotEqualCondition::toTAPAALQuery(TAPAALConditionExportContext& conte
 
 std::string NotCondition::toTAPAALQuery(TAPAALConditionExportContext& context) const{
 	return " !( " + _cond->toTAPAALQuery(context) + " ) ";
+}
+
+std::string BooleanCondition::toTAPAALQuery(TAPAALConditionExportContext&) const{
+  if(_value)
+    return "true";
+  return "false";
+}
+
+std::string DeadlockCondition::toTAPAALQuery(TAPAALConditionExportContext&) const{
+	return "deadlock";
 }
 
 /******************** opTAPAAL ********************/
@@ -184,9 +204,13 @@ void CompareCondition::analyze(AnalysisContext& context){
 	_expr2->analyze(context);
 }
 
-void NotCondition::analyze(AnalysisContext &context){
+void NotCondition::analyze(AnalysisContext& context){
 	_cond->analyze(context);
 }
+
+void BooleanCondition::analyze(AnalysisContext&){}
+
+void DeadlockCondition::analyze(AnalysisContext&){}
 
 /******************** Evaluation ********************/
 
@@ -228,6 +252,23 @@ bool NotCondition::evaluate(const EvaluationContext& context) const{
 	return !(_cond->evaluate(context));
 }
 
+bool BooleanCondition::evaluate(const EvaluationContext&) const{
+	return _value;
+}
+
+bool DeadlockCondition::evaluate(const EvaluationContext& context) const{
+	if(!context.net())
+		return false;
+	MarkVal rm[context.net()->numberOfPlaces()];
+	VarVal ra[context.net()->numberOfVariables()];
+	for(unsigned int t = 0; t < context.net()->numberOfTransitions(); t++){
+		if(context.net()->fire(t, context.marking(), context.assignment(), rm, ra)){
+			return false;
+		}
+	}
+	return true;
+}
+
 void AssignmentExpression::evaluate(const MarkVal* m,
 									const VarVal *a,
 									VarVal* result_a,
@@ -238,12 +279,12 @@ void AssignmentExpression::evaluate(const MarkVal* m,
 		VarVal acpy[nvars];
 		memcpy(acpy, a, sizeof(VarVal) * nvars);
 		memcpy(result_a, acpy, sizeof(VarVal) * nvars);
-		EvaluationContext context(m, acpy);
+		EvaluationContext context(m, acpy, NULL);
 		for(const_iter it = assignments.begin(); it != assignments.end(); it++)
 			result_a[it->offset] = it->expr->evaluate(context) % (ranges[it->offset]+1);
 	}else{
 		memcpy(result_a, a, sizeof(VarVal) * nvars);
-		EvaluationContext context(m, a);
+		EvaluationContext context(m, a, NULL);
 		for(const_iter it = assignments.begin(); it != assignments.end(); it++)
 			result_a[it->offset] = it->expr->evaluate(context) % (ranges[it->offset]+1);
 	}
@@ -317,6 +358,8 @@ void IdentifierExpr::scale(int)		{}
 void LogicalCondition::scale(int factor)	{_cond1->scale(factor);_cond2->scale(factor);}
 void CompareCondition::scale(int factor)	{_expr1->scale(factor);_expr2->scale(factor);}
 void NotCondition::scale(int factor)		{_cond->scale(factor);}
+void BooleanCondition::scale(int)		{}
+void DeadlockCondition::scale(int)		{}
 
 /******************** Constraint Analysis ********************/
 
@@ -368,6 +411,22 @@ void NotCondition::findConstraints(ConstraintAnalysisContext& context) const{
 		this->_cond->findConstraints(context);
 		context.negated = !context.negated;
 	}
+}
+
+void BooleanCondition::findConstraints(ConstraintAnalysisContext& context) const{
+  if(context.canAnalyze){
+    context.retval.clear();
+    if(context.negated != _value){
+      Structures::StateConstraints* s = new Structures::StateConstraints(context.net());
+      context.retval.push_back(s);
+    }
+  }
+}
+
+void DeadlockCondition::findConstraints(ConstraintAnalysisContext& context) const{
+  //TODO: Come up with an over-approximation
+  context.canAnalyze = false;
+  context.retval.clear();
 }
 
 /******************** CompareCondition::addConstraints ********************/
@@ -586,6 +645,16 @@ double NotCondition::distance(DistanceContext& context) const{
 	double retval = _cond->distance(context);
 	context.negate();
 	return retval;
+}
+
+double BooleanCondition::distance(DistanceContext& context) const{
+	if(context.negated() != _value)
+		return 0;
+	return INFINITE_DISTANCE;
+}
+
+double DeadlockCondition::distance(DistanceContext& context) const{
+	return 0;
 }
 
 double LogicalCondition::distance(DistanceContext& context) const{

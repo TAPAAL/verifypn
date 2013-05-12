@@ -36,7 +36,7 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 														   const VarVal *v0,
 														   PQL::Condition *query){
 	//Do we initially satisfy query?
-	if(query->evaluate(PQL::EvaluationContext(m0, v0)))
+	if(query->evaluate(PQL::EvaluationContext(m0, v0, &net)))
 		return ReachabilityResult(ReachabilityResult::Satisfied,
 								  "A state satisfying the query was found");
 	//Create StateSet
@@ -87,7 +87,7 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 			if(net.fire(t, s, ns, 1, _kbound)){
 				if(states.add(ns)){
 					ns->setTransition(t);
-					if(query->evaluate(PQL::EvaluationContext(ns->marking(), ns->valuation())))
+					if(query->evaluate(PQL::EvaluationContext(ns->marking(), ns->valuation(), &net)))
 						return ReachabilityResult(ReachabilityResult::Satisfied,
 									  "A state satisfying the query was found", expandedStates, exploredStates, ns->pathLength(), ns->trace());
 					stack.back().t = t + 1;

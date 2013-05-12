@@ -17,6 +17,9 @@ letter        [a-zA-Z_]
 %%
 
 [ \t\n\r]					;
+"true"						{return TOKEN(TRUE);}
+"false"						{return TOKEN(FALSE);}
+"deadlock"					{return TOKEN(DEADLOCK);}
 "and"						{return TOKEN(AND);}
 "AND"						{return TOKEN(AND);}
 "or"						{return TOKEN(OR);}

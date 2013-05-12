@@ -38,7 +38,7 @@ ReachabilityResult HashUnderApproximation::reachable(const PetriNet &net,
 													 PQL::Condition *query){
 
 	// Check for initial satisfying query
-	if(query->evaluate(PQL::EvaluationContext(m0,v0)))
+	if(query->evaluate(PQL::EvaluationContext(m0,v0, &net)))
 		return ReachabilityResult(ReachabilityResult::Satisfied,
 								  "A state satisfying the query was found");
 
@@ -83,7 +83,7 @@ ReachabilityResult HashUnderApproximation::reachable(const PetriNet &net,
 				std::pair<HashSetIter,bool> result = states.insert(hasher(ns));
 				if(result.second){
 					ns->setTransition(t);
-					if(query->evaluate(PQL::EvaluationContext(ns->marking(), ns->valuation())))
+					if(query->evaluate(PQL::EvaluationContext(ns->marking(), ns->valuation(), &net)))
 						return ReachabilityResult(ReachabilityResult::Satisfied,
 									  "A state satisfying the query was found", expanded, explored, ns->pathLength(), ns->trace());
 					stack.back().t = t + 1;

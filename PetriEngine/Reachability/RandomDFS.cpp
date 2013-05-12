@@ -38,7 +38,7 @@ ReachabilityResult RandomDFS::reachable(const PetriNet &net,
 										const VarVal *v0,
 										PQL::Condition *query){
 	//Do we initially satisfy query?
-	if(query && query->evaluate(PQL::EvaluationContext(m0, v0)))
+	if(query && query->evaluate(PQL::EvaluationContext(m0, v0, &net)))
 		return ReachabilityResult(ReachabilityResult::Satisfied,
 								  "A state satisfying the query was found");
 
@@ -103,7 +103,7 @@ ReachabilityResult RandomDFS::reachable(const PetriNet &net,
 					exploredStates++;
 					ns->setParent(s);
 					ns->setTransition(t);
-					if(query && query->evaluate(*ns))
+					if(query && query->evaluate(*ns, &net))
 						return ReachabilityResult(ReachabilityResult::Satisfied,
 												"A state satisfying the query was found", expandedStates, exploredStates, ns->pathLength(), ns->trace());
 					succ[t] = ns;

@@ -72,7 +72,7 @@ bool PetriNet::fire(unsigned int t,
 					VarVal* result_a) const{
 	//Check the condition
 	if(_conditions[t] &&
-	   !_conditions[t]->evaluate(PQL::EvaluationContext(m, a)))
+	   !_conditions[t]->evaluate(PQL::EvaluationContext(m, a, NULL)))
 		return false;
 
 	const MarkVal* tv = _tv(t);
@@ -102,7 +102,7 @@ bool PetriNet::fire(unsigned int t,
 					int kbound) const{
 	//Check the condition
 	if(_conditions[t] &&
-	   !_conditions[t]->evaluate(PQL::EvaluationContext(s->marking(), s->valuation())))
+	   !_conditions[t]->evaluate(PQL::EvaluationContext(s->marking(), s->valuation(), NULL)))
 		return false;
 
 	// We can handle multiplicity if there's conditions or assignments on the transition
@@ -164,7 +164,7 @@ bool PetriNet::fireWithMarkInf(unsigned int t,
 							   VarVal* result_a) const{
 	//Check the condition
 	if(_conditions[t] && //TODO: Use evaluate that respects MarkInf
-	   !_conditions[t]->evaluate(PQL::EvaluationContext(m, a)))
+	   !_conditions[t]->evaluate(PQL::EvaluationContext(m, a, NULL)))
 		return false;
 
 	const MarkVal* tv = _tv(t);

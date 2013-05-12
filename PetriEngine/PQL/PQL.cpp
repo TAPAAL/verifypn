@@ -25,8 +25,8 @@ namespace PQL {
 
 Expr::~Expr(){}
 
-bool Condition::evaluate(Structures::State &state) const{
-	return evaluate(EvaluationContext(state.marking(), state.valuation()));
+bool Condition::evaluate(Structures::State &state, const PetriNet* net) const{
+	return evaluate(EvaluationContext(state.marking(), state.valuation(), net));
 }
 
 Condition::~Condition(){}

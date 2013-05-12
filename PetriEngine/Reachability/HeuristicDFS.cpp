@@ -38,7 +38,7 @@ ReachabilityResult HeuristicDFS::reachable(const PetriNet& net,
 										   const VarVal* v0,
 										   PQL::Condition* query){
 	//Do we initially satisfy query?
-	if(query->evaluate(PQL::EvaluationContext(m0, v0)))
+	if(query->evaluate(PQL::EvaluationContext(m0, v0, &net)))
 		return ReachabilityResult(ReachabilityResult::Satisfied,
 								  "A state satisfying the query was found");
 
@@ -84,7 +84,7 @@ ReachabilityResult HeuristicDFS::reachable(const PetriNet& net,
 					exploredStates++;
 					ns->setParent(s);
 					ns->setTransition(t);
-					if(query->evaluate(*ns))
+					if(query->evaluate(*ns, &net))
 						return ReachabilityResult(ReachabilityResult::Satisfied,
 												"A state satisfying the query was found", expandedStates, exploredStates, ns->pathLength(), ns->trace());
 					PQL::DistanceContext context(net,

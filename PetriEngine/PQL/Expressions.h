@@ -345,6 +345,36 @@ private:
 	Condition* _cond;
 };
 
+/* Bool condition */
+class BooleanCondition : public Condition{
+public:
+	BooleanCondition(bool value){
+		_value = value;
+	}
+	void analyze(AnalysisContext& context);
+	bool evaluate(const EvaluationContext& context) const;
+	void findConstraints(ConstraintAnalysisContext& context) const;
+	double distance(DistanceContext& context) const;
+	std::string toString() const;
+	std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+	void scale(int factor);
+private:
+	bool _value;
+};
+
+/* Deadlock condition */
+class DeadlockCondition : public Condition{
+public:
+	DeadlockCondition(){}
+	void analyze(AnalysisContext& context);
+	bool evaluate(const EvaluationContext& context) const;
+	void findConstraints(ConstraintAnalysisContext& context) const;
+	double distance(DistanceContext& context) const;
+	std::string toString() const;
+	std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+	void scale(int factor);
+};
+
 }}
 
 

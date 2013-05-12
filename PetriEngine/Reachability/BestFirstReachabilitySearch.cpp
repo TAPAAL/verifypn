@@ -42,7 +42,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 	memcpy(s0->marking(), m0, sizeof(MarkVal) * net.numberOfPlaces());
 	memcpy(s0->valuation(), v0, sizeof(VarVal) * net.numberOfVariables());
 
-	if(query->evaluate(*s0))
+	if(query->evaluate(*s0, &net))
 		return ReachabilityResult(ReachabilityResult::Satisfied, "Satisfied initially", 0, 0);
 
 	//Initialize subclasses
@@ -89,7 +89,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 					ns->setTransition(t);
 
 					//Test query
-					if(query->evaluate(*ns)){
+					if(query->evaluate(*ns, &net)){
 						//ns->dumpTrace(net);
 						return ReachabilityResult(ReachabilityResult::Satisfied,
 												  "Query was satified!", expandedStates, exploredStates, ns->pathLength(), ns->trace());
@@ -101,7 +101,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 
 
 					if(fireUntillNoBetter && net.fire(t, ns, ns2)){
-						if(query->evaluate(*ns2)){
+						if(query->evaluate(*ns2, &net)){
 							ns2->setTransition(t);
 							ns2->setParent(ns);
 							return ReachabilityResult(ReachabilityResult::Satisfied,
@@ -118,7 +118,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 								ns2 = ns3;
 								ns3 = tmp;
 								exploredStates++;
-								if(query->evaluate(*ns2)){
+								if(query->evaluate(*ns2, &net)){
 									return ReachabilityResult(ReachabilityResult::Satisfied,
 													  "Query was satisfied!", expandedStates, exploredStates, ns2->pathLength(), ns2->trace());
 								}

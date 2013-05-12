@@ -5,19 +5,22 @@ a fast untimed engine for TAPAAL.
 
 Building VerifyPN
 -----------------
-VerifyPN is build using a simple makefile, depending on you platform and configuration of it,
-you might need to modify the makefile in order link correctly against following dependencies: 
+VerifyPN is build using a simple makefile, depending on you platform and
+configuration of it, you might need to modify the makefile in order link
+correctly against following dependencies: 
 
   * GNU Bison (>= 2.4)
   * flex (>= 2.5)
   * lp_solve (>= 5.5)
 
-Before running make, install lp-solve (on Ubuntu using sudo apt-get install liblpsolve55-dev).
+Before running make, install lp-solve
+(on Ubuntu using sudo apt-get install liblpsolve55-dev).
 
-
-To cross compile for Windows, using mingw32 on Linux, run `make -f makefile.mingw32`.
-To build on OS X run `make -f makefile.osx`, as cross compilers for OS X are not readily
-available (e.g. in package manager) cross compilation for OS X is not supported.
+To cross compile for Windows, using mingw32 on Linux, run
+`make -f makefile.mingw32`.
+To build on OS X run `make -f makefile.osx`, as cross compilers for OS X are not
+readily available (e.g. in package manager) cross compilation for OS X is not
+supported.
 
 Testing
 -------
@@ -31,8 +34,10 @@ verification, `All` if all strategies should be tested.
 
 License
 -------
-VerifyPN is available under the terms of the GNU GPL versoin 3 or (at your option) any later version.
-If this license doesn't suit you're welcome to contact us, and purpose an alternative license.
+VerifyPN is available under the terms of the GNU GPL versoin 3 or
+(at your option) any later version.
+If this license doesn't suit you're welcome to contact us, and purpose an
+alternative license.
 
 Authors
 -------

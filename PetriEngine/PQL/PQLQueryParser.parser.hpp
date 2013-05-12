@@ -1,10 +1,8 @@
+/* A Bison parser, made by GNU Bison 2.5.  */
 
-/* A Bison parser, made by GNU Bison 2.4.1.  */
-
-/* Skeleton interface for Bison's Yacc-like parsers in C
+/* Bison interface for Yacc-like parsers in C
    
-      Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
-   Free Software Foundation, Inc.
+      Copyright (C) 1984, 1989-1990, 2000-2011 Free Software Foundation, Inc.
    
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -41,20 +39,23 @@
    enum yytokentype {
      ID = 258,
      INT = 259,
-     LPAREN = 260,
-     RPAREN = 261,
-     AND = 262,
-     OR = 263,
-     NOT = 264,
-     EQUAL = 265,
-     NEQUAL = 266,
-     LESS = 267,
-     LESSEQUAL = 268,
-     GREATER = 269,
-     GREATEREQUAL = 270,
-     PLUS = 271,
-     MINUS = 272,
-     MULTIPLY = 273
+     DEADLOCK = 260,
+     TRUE = 261,
+     FALSE = 262,
+     LPAREN = 263,
+     RPAREN = 264,
+     AND = 265,
+     OR = 266,
+     NOT = 267,
+     EQUAL = 268,
+     NEQUAL = 269,
+     LESS = 270,
+     LESSEQUAL = 271,
+     GREATER = 272,
+     GREATEREQUAL = 273,
+     PLUS = 274,
+     MINUS = 275,
+     MULTIPLY = 276
    };
 #endif
 
@@ -64,7 +65,7 @@
 typedef union YYSTYPE
 {
 
-/* Line 1676 of yacc.c  */
+/* Line 2068 of yacc.c  */
 #line 16 "PetriEngine/PQL/PQLQueryParser.y"
 
 	PetriEngine::PQL::Expr* expr;
@@ -74,8 +75,8 @@ typedef union YYSTYPE
 
 
 
-/* Line 1676 of yacc.c  */
-#line 79 "PetriEngine/PQL/PQLQueryParser.parser.hpp"
+/* Line 2068 of yacc.c  */
+#line 80 "PetriEngine/PQL/PQLQueryParser.parser.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
