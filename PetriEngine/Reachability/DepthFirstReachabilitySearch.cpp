@@ -53,6 +53,7 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 	memcpy(s0->marking(), m0, sizeof(MarkVal)*net.numberOfPlaces());
 	memcpy(s0->valuation(), v0, sizeof(VarVal)*net.numberOfVariables());
 
+  states.add(s0);
 	stack.push_back(Step(s0, 0));
 
 	unsigned int max = 0;
@@ -109,7 +110,7 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 		}
 	}
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-							"No state satisfying the query exists.", expandedStates, count, states.discovered());
+							"No state satisfying the query exists.", expandedStates, exploredStates, states.discovered());
 }
 
 } // Reachability
