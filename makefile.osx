@@ -1,3 +1,6 @@
+# For se bash on OS X, as /bin/sh is compiled with --enable-strict-posix-default
+SHELL    := /bin/bash
+
 #Programs for processing
 LEX				= flex
 YACC			= bison
