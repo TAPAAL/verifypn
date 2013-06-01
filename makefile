@@ -6,6 +6,7 @@ RM				= rm
 FIND			= find
 GREP			= grep
 SED				= sed
+CUT				= cut
 
 #Compiler and linker flags
 CFLAGS			= -O3 -I.
@@ -44,19 +45,18 @@ $(TARGET): $(OBJECTS)
 clean:
 	$(RM) -f $(OBJECTS) $(TARGET)
 
-# Extract search strategy and expected return value from test file name
-EXTRACT_STRATEGY	:= "s/.*-\([0-9]\)-\(All\|BestFS\|BFS\|DFS\|RDFS\)\.xml/\2/"
-EXTRACT_RETVAL		:= "s/.*-\([0-9]\)-\(All\|BestFS\|BFS\|DFS\|RDFS\)\.xml/\1/"
+# Pattern to replace All with strategies using sed
+REPLACE_ALL := "s/All/BestFS BFS DFS RDFS/"
 
 #Check the build
 check: $(TARGET)
 	@failed=0; \
 	for f in Tests/*.xml; do																	\
-		for s in `echo $$f | $(SED) -e $(EXTRACT_STRATEGY) -e "s/All/BestFS BFS DFS RDFS/"`; do \
+		for s in `echo $$f | $(CUT) -d- -f3 | $(CUT) -d. -f1 | $(SED) -e $(REPLACE_ALL)`; do 	\
 			echo "----------------------------------------------------------------------";		\
 			echo "Testing $$f using $$s";														\
 			./$(TARGET) -s $$s -m 256 $$f $$f.q;												\
-			if [ $$? -ne `echo $$f | $(SED) -e $(EXTRACT_RETVAL)` ]; then 						\
+			if [ $$? -ne `echo $$f | $(CUT) -d- -f2` ]; then 									\
 				echo " --- Test Failed!"; 														\
 				failed=$$(($$failed + 1));														\
 			else																				\
@@ -74,4 +74,4 @@ check: $(TARGET)
 		echo "----------------------------------------------------------------------"; 			\
 	fi
 
-.PHONY: all generate clean check
+.PHONY: all generate clean check test
