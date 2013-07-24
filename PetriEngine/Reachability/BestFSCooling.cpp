@@ -46,7 +46,7 @@ ReachabilityResult BestFSCooling::reachable(const PetriNet &net,
 	memcpy(s0->valuation(), v0, sizeof(VarVal) * net.numberOfVariables());
 
 	if(query->evaluate(*s0, &net))
-		return ReachabilityResult(ReachabilityResult::Satisfied, "Satisfied initially", 0, 0);
+		return ReachabilityResult(ReachabilityResult::Satisfied, "Satisfied initially", 0, 0, 0, -1);
 
 	//Initialize subclasses
 	initialize(query, net);
@@ -101,6 +101,7 @@ ReachabilityResult BestFSCooling::reachable(const PetriNet &net,
 												  expandedStates,
 												  exploredStates,
 												  states.discovered(),
+												  states.maxTokens(),
 												  ns->pathLength(),
 												  ns->trace());
 
@@ -126,7 +127,7 @@ ReachabilityResult BestFSCooling::reachable(const PetriNet &net,
 	}
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-							  "Query cannot be satisfied!", expandedStates, exploredStates, states.discovered());
+							  "Query cannot be satisfied!", expandedStates, exploredStates, states.discovered(), states.maxTokens());
 }
 
 double BestFSCooling::priority(const Structures::State *state,

@@ -40,7 +40,7 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 		return ReachabilityResult(ReachabilityResult::Satisfied,
 								  "A state satisfying the query was found");
 	//Create StateSet
-	StateSet states(net);
+	StateSet states(net, _kbound);
 	std::list<Step> stack;
 
 	LimitedStateAllocator<> allocator(net, _memorylimit);
@@ -85,12 +85,13 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 		ns->setParent(s);
 		bool foundSomething = false;
 		for(unsigned int t = stack.back().t; t < net.numberOfTransitions(); t++){
-			if(net.fire(t, s, ns, 1, _kbound)){
+			if(net.fire(t, s, ns, 1)){
 				if(states.add(ns)){
 					ns->setTransition(t);
 					if(query->evaluate(PQL::EvaluationContext(ns->marking(), ns->valuation(), &net)))
 						return ReachabilityResult(ReachabilityResult::Satisfied,
-									  "A state satisfying the query was found", expandedStates, exploredStates, states.discovered(), ns->pathLength(), ns->trace());
+									  "A state satisfying the query was found", expandedStates, exploredStates,
+									  states.discovered(), states.maxTokens(), ns->pathLength(), ns->trace());
 					stack.back().t = t + 1;
 					stack.push_back(Step(ns, 0));
 					exploredStates++;
@@ -99,7 +100,7 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 					if(!ns)
 						return ReachabilityResult(ReachabilityResult::Unknown,
 												   "Memory bound exceeded",
-												   expandedStates, exploredStates, states.discovered());
+												   expandedStates, exploredStates, states.discovered(), states.maxTokens());
 					break;
 				}
 			}

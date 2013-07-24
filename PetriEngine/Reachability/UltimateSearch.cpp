@@ -41,7 +41,7 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 											 PQL::Condition *query){
 	// Create allocator, stateset and queue
 	LimitedStateAllocator<> allocator(net, _memorylimit);
-	StateSet states(net);
+	StateSet states(net, _kbound);
 	EnhancedPriorityQueue<State*> queue;
 
 	// Create s0
@@ -83,7 +83,7 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 
 		// Try firing each transition
 		for(unsigned int t = 0; t < net.numberOfTransitions(); t++){
-			if(net.fire(t, s, ns, 1, _kbound) && states.add(ns)){
+			if(net.fire(t, s, ns, 1) && states.add(ns)){
 				// Update statistics
 				explored++;
 				ns->setParent(s);
@@ -93,7 +93,7 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 				if(query->evaluate(*ns, &net)){
 					return ReachabilityResult(ReachabilityResult::Satisfied,
 											  "Query was satisfied",
-											  expanded, explored, states.discovered(), ns->pathLength(), ns->trace());
+											  expanded, explored, states.discovered(), states.maxTokens(), ns->pathLength(), ns->trace());
 				}
 
 				// Push new state on the queue
@@ -109,14 +109,14 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 				if(!ns)
 					return ReachabilityResult(ReachabilityResult::Unknown,
 											  "Memory bound exceeded",
-											  expanded, explored, states.discovered());
+											  expanded, explored, states.discovered(), states.maxTokens());
 			}
 		}
 	}
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
 							  "Query cannot be satisfied",
-							  expanded, explored, states.discovered());
+							  expanded, explored, states.discovered(), states.maxTokens());
 }
 
 } // Reachability

@@ -311,6 +311,7 @@ int main(int argc, char* argv[]){
 	fprintf(stdout, "\tdiscovered states: %lli\n", result.discoveredStates());
 	fprintf(stdout, "\texplored states:   %lli\n", result.exploredStates());
 	fprintf(stdout, "\texpanded states:   %lli\n", result.expandedStates());
+	fprintf(stdout, "\tmax tokens:        %i\n", result.maxTokens());
 
 	//----------------------- Output Result -----------------------//
 

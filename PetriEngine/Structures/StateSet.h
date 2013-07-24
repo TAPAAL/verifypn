@@ -30,20 +30,41 @@ typedef unsigned long long int BigInt;
 
 class StateSet : std::tr1::unordered_set<State*, State::hash, State::equal_to>{
 public:
-	StateSet(const PetriNet& net)
+	StateSet(const PetriNet& net, int kbound = 0)
 		: std::tr1::unordered_set<State*, State::hash, State::equal_to>
 			(8, State::hash(net.numberOfPlaces(), net.numberOfVariables()),
 			 State::equal_to(net.numberOfPlaces(),net.numberOfVariables())){
 		_discovered = 0;
+		_kbound = kbound;
+		_maxTokens = 0;
+		_places = net.numberOfPlaces();
+		_variables = net.numberOfVariables();
 	}
-	StateSet(unsigned int places, unsigned int variables)
+	StateSet(unsigned int places, unsigned int variables, int kbound = 0)
 		: std::tr1::unordered_set<State*, State::hash, State::equal_to>
 			(8, State::hash(places, variables),
 			 State::equal_to(places, variables)){
 		_discovered = 0;
+		_kbound = kbound;
+		_maxTokens = 0;
+		_places = places;
+		_variables = variables;
 	}
 	bool add(State* state) {
 		_discovered++;
+		
+		//Check that we can take from the marking
+		MarkVal sum = 0;
+		for(size_t i = 0; i < _places; i++)
+			sum += state->marking()[i];
+		
+		if(_maxTokens < sum)
+			_maxTokens = sum;
+		
+		//Check that we're within k-bound
+		if(_kbound != 0 && sum > _kbound)
+			return false;
+		
 		std::pair<iter, bool> result = this->insert(state);
 		return result.second;
 	}
@@ -54,10 +75,17 @@ public:
 	BigInt discovered() const {
 		return _discovered;
 	}
+	int maxTokens() const {
+	  return _maxTokens;
+	}
 private:
 	typedef std::tr1::unordered_set<State*, State::hash, State::equal_to>::const_iterator const_iter;
 	typedef std::tr1::unordered_set<State*, State::hash, State::equal_to>::iterator iter;
 	BigInt _discovered;
+	int _kbound;
+	int _maxTokens;
+	unsigned int _places;
+	unsigned int _variables;
 };
 
 }}

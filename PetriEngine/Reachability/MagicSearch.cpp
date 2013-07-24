@@ -127,6 +127,7 @@ ReachabilityResult MagicSearch::reachable(const PetriNet &net,
 												  expanded,
 												  explored,
 												  states.discovered(),
+												  -1,
 												  storeState->pathLength(),
 												  storeState->trace());
 					}
@@ -158,7 +159,8 @@ ReachabilityResult MagicSearch::reachable(const PetriNet &net,
 							  "Query cannot be satisfied!",
 							  expanded,
 							  explored,
-							  states.discovered());
+							  states.discovered(),
+							  -1);
 }
 
 double MagicSearch::priority(const MarkVal *marking,

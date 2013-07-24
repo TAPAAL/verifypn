@@ -98,8 +98,7 @@ bool PetriNet::fire(unsigned int t,
 bool PetriNet::fire(unsigned int t,
 					const Structures::State* s,
 					Structures::State* ns,
-					int multiplicity,
-					int kbound) const{
+					int multiplicity) const{
 	//Check the condition
 	if(_conditions[t] &&
 	   !_conditions[t]->evaluate(PQL::EvaluationContext(s->marking(), s->valuation(), NULL)))
@@ -111,21 +110,15 @@ bool PetriNet::fire(unsigned int t,
 
 	const MarkVal* tv = _tv(t);
 	//Check that we can take from the marking
-	MarkVal sum = 0;
 	for(size_t i = 0; i < _nPlaces; i++){
 		ns->marking()[i] = s->marking()[i] - tv[i] * multiplicity;
-		sum += ns->marking()[i];
 		if(ns->marking()[i] < 0)
 			return false;
 	}
-	//Check that we're within k-bound
-	if(kbound != 0 && sum > kbound)
-		return false;
-
+	
 	//Add stuff that the marking gives us
 	for(size_t i = 0; i < _nPlaces; i++)
 		ns->marking()[i] += tv[i+_nPlaces] * multiplicity;
-
 
 	if(_assignments[t])
 		_assignments[t]->evaluate(s->marking(), s->valuation(), ns->valuation(), _ranges, _nVariables);

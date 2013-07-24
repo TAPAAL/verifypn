@@ -43,7 +43,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 	memcpy(s0->valuation(), v0, sizeof(VarVal) * net.numberOfVariables());
 
 	if(query->evaluate(*s0, &net))
-		return ReachabilityResult(ReachabilityResult::Satisfied, "Satisfied initially", 0, 0, 0);
+		return ReachabilityResult(ReachabilityResult::Satisfied, "Satisfied initially", 0, 0, 0, 0);
 
 	//Initialize subclasses
 	initialize(query, net);
@@ -92,7 +92,8 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 					if(query->evaluate(*ns, &net)){
 						//ns->dumpTrace(net);
 						return ReachabilityResult(ReachabilityResult::Satisfied,
-												  "Query was satified!", expandedStates, exploredStates, states.discovered(), ns->pathLength(), ns->trace());
+												  "Query was satified!", expandedStates, exploredStates,
+												  states.discovered(), states.maxTokens(), ns->pathLength(), ns->trace());
 					}
 
 					// Insert in queue, with given priority
@@ -105,7 +106,8 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 							ns2->setTransition(t);
 							ns2->setParent(ns);
 							return ReachabilityResult(ReachabilityResult::Satisfied,
-												  "Query was satified!", expandedStates, exploredStates, states.discovered(), ns2->pathLength(), ns2->trace());
+												  "Query was satified!", expandedStates, exploredStates,
+												  states.discovered(), states.maxTokens(), ns2->pathLength(), ns2->trace());
 						}
 						double p = priority(ns2, query, net);
 						if(p <= bestp){
@@ -120,7 +122,8 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 								exploredStates++;
 								if(query->evaluate(*ns2, &net)){
 									return ReachabilityResult(ReachabilityResult::Satisfied,
-													  "Query was satisfied!", expandedStates, exploredStates, states.discovered(), ns2->pathLength(), ns2->trace());
+													  "Query was satisfied!", expandedStates, exploredStates,
+													  states.discovered(), states.maxTokens(), ns2->pathLength(), ns2->trace());
 								}
 							}
 							if(states.add(ns2)){
@@ -138,7 +141,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 	}
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-							  "Query cannot be satisfied!", expandedStates, exploredStates, states.discovered());
+							  "Query cannot be satisfied!", expandedStates, exploredStates, states.discovered(), states.maxTokens());
 }
 
 double BestFirstReachabilitySearch::priority(const Structures::State *state,

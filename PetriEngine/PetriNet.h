@@ -55,7 +55,7 @@ public:
 			  const VarVal* assignment,
 			  MarkVal* resultMarking,
 			  VarVal* resultAssignment) const;
-	bool fire(unsigned int transition, const Structures::State* s, Structures::State* ns, int multiplicity = 1, int kbound = 0) const;
+	bool fire(unsigned int transition, const Structures::State* s, Structures::State* ns, int multiplicity = 1) const;
 	/** Fire without checkings conditions */
 	void fireWithoutCheck(unsigned int transition,
 						  const MarkVal* marking,

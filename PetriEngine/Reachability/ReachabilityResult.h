@@ -45,6 +45,7 @@ public:
 					   BigInt expandedStates = 0,
 					   BigInt exploredStates = 0,
 					   BigInt discoveredStates = 0,
+					   int maxTokens = 0,
 					   int pathLength = 0,
 					   const std::vector<unsigned int>& trace = std::vector<unsigned int>()){
 		_result = result;
@@ -54,6 +55,7 @@ public:
 		_discoveredStates = discoveredStates;
 		_pathLength = pathLength;
 		_trace = trace;
+		_maxTokens = maxTokens;
 	}
 
 	/** Gets a human readable explanation */
@@ -73,6 +75,8 @@ public:
 	int pathLength() const { return _pathLength; }
 	/** Get trace, empty if no trace available or not provided by strategy */
 	const std::vector<unsigned int>& trace() const { return _trace; };
+	/** Get maximum number of tokens, non-zero, if supported by strategy */
+	int maxTokens() { return _maxTokens; }
 private:
 	std::string _explanation;
 	Result _result;
@@ -81,6 +85,7 @@ private:
 	BigInt _discoveredStates;
 	int _pathLength;
 	std::vector<unsigned int> _trace;
+	int _maxTokens;
 };
 
 } // Reachability
