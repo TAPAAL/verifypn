@@ -289,7 +289,7 @@ int main(int argc, char* argv[]){
 	const std::vector<std::string>& pnames = net->placeNames();
 
 	//Print result to stderr
-	if(outputtrace && trace.size() != 0){
+	if(outputtrace && result.result() == ReachabilityResult::Satisfied){
 		fprintf(stderr, "Trace:\n<trace>\n");
 		for(size_t i = 0; i < trace.size(); i++){
 			fprintf(stderr, "\t<transition id=\"%s\">\n", tnames[trace[i]].c_str());
