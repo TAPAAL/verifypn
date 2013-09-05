@@ -34,10 +34,6 @@ ReachabilityResult BreadthFirstReachabilitySearch::reachable(const PetriNet &net
 															 const MarkVal *m0,
 															 const VarVal *v0,
 															 PQL::Condition *query){
-	//Do we initially satisfy query?
-	if(query->evaluate(PQL::EvaluationContext(m0, v0, &net)))
-		return ReachabilityResult(ReachabilityResult::Satisfied,
-								  "A state satisfying the query was found");
 	//Create StateSet
 	StateSet states(net, _kbound);
 	std::list<State*> queue;
@@ -50,13 +46,19 @@ ReachabilityResult BreadthFirstReachabilitySearch::reachable(const PetriNet &net
 	memcpy(s0->marking(), m0, sizeof(MarkVal)*net.numberOfPlaces());
 	memcpy(s0->valuation(), v0, sizeof(VarVal)*net.numberOfVariables());
 
-  states.add(s0);
+	states.add(s0);
 	queue.push_back(s0);
 
 	unsigned int max = 0;
 	int count = 0;
 	BigInt expandedStates = 0;
-	BigInt exploredStates = 0;
+	BigInt exploredStates = 1;
+	
+	if(query->evaluate(*s0, &net)){
+		return ReachabilityResult(ReachabilityResult::Satisfied, "Query was satisfied",
+								  expandedStates, exploredStates, states.discovered(), states.maxTokens(), s0->pathLength(), s0->trace());
+	}
+	
 	State* ns = allocator.createState();
 	if(!ns)
 		return ReachabilityResult(ReachabilityResult::Unknown, "Memory bound exceeded");

@@ -37,11 +37,6 @@ ReachabilityResult RandomDFS::reachable(const PetriNet &net,
 										const MarkVal *m0,
 										const VarVal *v0,
 										PQL::Condition *query){
-	//Do we initially satisfy query?
-	if(query && query->evaluate(PQL::EvaluationContext(m0, v0, &net)))
-		return ReachabilityResult(ReachabilityResult::Satisfied,
-								  "A state satisfying the query was found");
-
 	StateSet states(net, _kbound);
 	LimitedStateAllocator<> allocator(net, _memorylimit);
 	std::list<State*> stack;
@@ -64,8 +59,14 @@ ReachabilityResult RandomDFS::reachable(const PetriNet &net,
 	int countdown = rand() % 800000;
 	unsigned int max = 0;
 	int count = 0;
-	BigInt exploredStates = 0;
+	BigInt exploredStates = 1;
 	BigInt expandedStates = 0;
+	
+	if(query->evaluate(*s0, &net)){
+		return ReachabilityResult(ReachabilityResult::Satisfied, "Query was satisfied",
+								  expandedStates, exploredStates, states.discovered(), states.maxTokens(), s0->pathLength(), s0->trace());
+	}
+	
 	State* s = s0;
 	while(!stack.empty()){
 		// Progress reporting and abort checking

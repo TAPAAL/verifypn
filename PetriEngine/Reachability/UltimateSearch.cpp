@@ -56,13 +56,18 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 	states.add(&s0);
 
 	// Statistics
-	BigInt expanded = 0, explored = 0;
+	BigInt expanded = 0, explored = 1;
 	size_t max = 1;
 	int count = 0;
 
 	State* ns = allocator.createState();
 
 	DistanceContext::DistanceStrategy flags = (DistanceContext::DistanceStrategy)(DistanceContext::AndSum | DistanceContext::OrExtreme);
+
+	if(query->evaluate(s0, &net)){
+		return ReachabilityResult(ReachabilityResult::Satisfied, "Query was satisfied",
+								  expanded, explored, states.discovered(), states.maxTokens(), s0.pathLength(), s0.trace());
+	}
 
 	// Main-loop
 	while(!queue.empty()){
@@ -79,7 +84,6 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 
 		// Pop from queue
 		State* s = queue.pop(depthFirst);
-		expanded++;
 
 		// Try firing each transition
 		for(unsigned int t = 0; t < net.numberOfTransitions(); t++){
@@ -112,6 +116,7 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 											  expanded, explored, states.discovered(), states.maxTokens());
 			}
 		}
+	  expanded++;
 	}
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,

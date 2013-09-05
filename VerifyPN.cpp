@@ -29,8 +29,6 @@
 #include <map>
 
 #include <PetriEngine/PQL/PQLParser.h>
-#include <PetriEngine/Reachability/LinearOverApprox.h>
-#include <PetriEngine/Reachability/BestFirstReachabilitySearch.h>
 #include <PetriEngine/PQL/Contexts.h>
 
 #include <PetriEngine/Reachability/LinearOverApprox.h>
