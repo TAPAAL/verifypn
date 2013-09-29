@@ -70,6 +70,7 @@ int main(int argc, char* argv[]){
 	int memorylimit = 1024*1024*1024;
 	char* modelfile = NULL;
 	char* queryfile = NULL;
+	bool disableoverapprox = false;
 
 	//----------------------- Parse Arguments -----------------------//
 
@@ -104,6 +105,8 @@ int main(int argc, char* argv[]){
 				return ErrorCode;
 			}else
 				memorylimit *= 1024;
+		}else if(strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable-overapprox") == 0){
+			disableoverapprox = true;
 		}else if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0){
 			printf(	"Usage: VerifyPN [options] model-file query-file\n"
 					"Determine untimed reachability of a query for a Petri net.\n"
@@ -119,6 +122,7 @@ int main(int argc, char* argv[]){
 					"                                     - OverApprox   Linear Over Approx.\n"
 					"  -m, --memory-limit <megabyte>      Memory limit for state space in MB,\n"
 					"                                     0 for unlimited (1 GB default)\n"
+					"  -d, --disable-over-approximation   Disable linear over approximation\n"
 					"  -h, --help                         Display this help message\n"
 					"  -v, --version                      Display version information\n"
 					"\n"
@@ -276,8 +280,15 @@ int main(int argc, char* argv[]){
 		return ErrorCode;
 	}
 
-	// Wrap in linear over-approximation
-	strategy = new LinearOverApprox(strategy);
+	// Wrap in linear over-approximation, if not disabled
+	if(!disableoverapprox)
+		strategy = new LinearOverApprox(strategy);
+
+	// If no strategy is provided
+	if(!strategy){
+		fprintf(stderr, "Error: No search strategy provided!\n");
+		return ErrorCode;
+	}
 
 	//Reachability search
 	ReachabilityResult result = strategy->reachable(*net, m0, v0, query);
