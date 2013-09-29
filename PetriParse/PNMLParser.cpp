@@ -64,10 +64,15 @@ void PNMLParser::parse(const std::string& xml,
 		//Find target transition
 		for(TransitionIter it = transitions.begin(); it != transitions.end(); it++){
 			if(it->name == target.name){
-				if(it->cond.empty())
-					it->cond = source.name + " == 0";
-				else
-					it->cond = source.name + " == 0 and ( " + it->cond + " )";
+				// Convert integer weight to string
+				char weight[sizeof(int) * 8 + 1];
+				sprintf(weight, "%i", inhb->weight);
+				
+				if(it->cond.empty()){
+					it->cond = source.name + " < " + string(weight);
+				}else{
+					it->cond = source.name + " < " + string(weight) + " and ( " + it->cond + " )";
+				}
 			}
 		}
 	}
@@ -199,6 +204,16 @@ void PNMLParser::parseTransportArc(DOMElement* element){
 		   target		= element->getAttribute("target");
 	int weight = 1;
 
+	DOMElements elements = element->getChilds();
+	DOMElements::iterator it;
+	for(it = elements.begin(); it != elements.end(); it++){
+		if((*it)->getElementName() == "inscription"){
+			string text;
+			parseValue(*it, text);
+			weight = atoi(text.c_str());
+		}
+	}
+
 	Arc inArc;
 	inArc.source = source;
 	inArc.target = transiton;
@@ -216,6 +231,17 @@ void PNMLParser::parseInhibitorArc(DOMElement* element){
 	InhibitorArc arc;
 	arc.source = element->getAttribute("source");
 	arc.target = element->getAttribute("target");
+	arc.weight = 1;
+
+	DOMElements elements = element->getChilds();
+	DOMElements::iterator it;
+	for(it = elements.begin(); it != elements.end(); it++){
+		if((*it)->getElementName() == "inscription"){
+			string text;
+			parseValue(*it, text);
+			arc.weight = atoi(text.c_str());
+		}
+	}
 
 	inhibarcs.push_back(arc);
 }

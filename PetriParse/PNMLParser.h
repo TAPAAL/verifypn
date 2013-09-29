@@ -46,6 +46,7 @@ class PNMLParser
 	struct InhibitorArc{
 		std::string source,
 					target;
+		int			weight;
 	};
 	typedef std::vector<InhibitorArc> InhibitorArcList;
 	typedef InhibitorArcList::iterator InhibitorArcIter;
