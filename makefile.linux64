@@ -1,0 +1,21 @@
+# Programs for processing
+LEX				= flex
+YACC			= bison
+CC				= g++
+CUT				= cut
+
+# Compiler and linker flags
+CFLAGS			= -m64 -O3 -I.
+LDFLAGS			= -m64 -O3 /usr/lib/liblpsolve55.a -lcolamd -ldl
+
+# Input files
+FLEX_SOURCES	= $(shell find * -name "*.l")
+BISON_SOURCES	= $(shell find * -name "*.y")
+SOURCES			= $(shell find * -name "*.cpp" | grep -v ".\\(parser\\|lexer\\).cpp")		\
+				  $(BISON_SOURCES:.y=.parser.cpp)											\
+				  $(FLEX_SOURCES:.l=.lexer.cpp)
+OBJECTS			= $(SOURCES:.cpp=.o)
+TARGET			= verifypn-linux64
+
+include rules.mk
+

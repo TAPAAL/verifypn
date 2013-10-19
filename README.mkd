@@ -16,13 +16,12 @@ correctly against following dependencies:
 Before running make, install lp-solve
 (on Ubuntu using sudo apt-get install liblpsolve55-dev).
 
-To cross compile for Windows, using mingw32 on Linux, run
-`make -f makefile.mingw32msvc`. You can also compile with w64-mingw32 using
-`make -f makefile.w64-mingw32`. Your choice of cross compiler probably depends
+To cross compile for Windows on linux using w64-mingw32 with
+`make -f makefile.win32`. Your choice of cross compiler probably depends
 on what is readily available on your platform of choice.
-To build on OS X run `make -f makefile.osx`, as cross compilers for OS X are not
-readily available (e.g. in package manager) cross compilation for OS X is not
-supported.
+To build on OS X run `make -f makefile.osx32` or `make -f makefile.osx64`,
+as cross compilers for OS X are not readily available (e.g. in package manager)
+cross compilation for OS X is not supported.
 
 Testing
 -------

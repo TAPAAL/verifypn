@@ -1,71 +1,35 @@
-#Programs for processing
-LEX				= flex
-YACC			= bison
-CC				= i586-mingw32msvc-g++
-RM				= rm
-FIND			= find
-GREP			= grep
-SED				= sed
-WGET			= wget
-UNZIP			= unzip
-CP				= cp
-CUT				= cut
-
-#Compiler and linker flags
-CFLAGS			= -O3 -I.
-LDFLAGS			= -L./lpsolve -O3 -llpsolve55
-
-#Target
-TARGET			= verifypn.exe
-
-#Source files
-FLEX_SOURCES	= $(shell $(FIND) * -name "*.l")
-BISON_SOURCES	= $(shell $(FIND) * -name "*.y")
-SOURCES			= $(shell $(FIND) * -name "*.cpp" | $(GREP) -v ".\\(parser\\|lexer\\).cpp")		\
-				  $(BISON_SOURCES:.y=.parser.cpp)												\
-				  $(FLEX_SOURCES:.l=.lexer.cpp)
-
-#Intermediate files
-OBJECTS			= $(SOURCES:.cpp=.o)
-
-#Default target
+# Default target
 all: $(TARGET)
 
-#Rules for updating lexer and parser
+# Build rules
+%.o: %.cpp
+	$(CC) -c $(CFLAGS) -o $@ $<
+$(TARGET): $(DEPS) $(OBJECTS)
+	$(CC) $^ $(LDFLAGS) -o $@
+
+# Rules for updating lexer and parser
 %.lexer.cpp: %.l
 	$(LEX) -o $@ $<
 %.parser.cpp: %.y
 	$(YACC) -d -o $@ $<
 generate: $(BISON_SOURCES:.y=.parser.cpp) $(FLEX_SOURCES:.l=.lexer.cpp)
 
-#Build rules
-%.o: %.cpp
-	$(CC) -c $(CFLAGS) -o $@ $<
-$(TARGET): lpsolve $(SOURCES:.cpp=.o)
-	$(CC) $(SOURCES:.cpp=.o) $(LDFLAGS) -o $@
-	$(CP) lpsolve/lpsolve55.dll lpsolve55.dll
-lpsolve:
-	$(WGET) http://sourceforge.net/projects/lpsolve/files/lpsolve/5.5.2.0/lp_solve_5.5.2.0_dev_win32.zip/download
-	$(UNZIP) download -d lpsolve
-	$(RM) download
-
-#Clean rule
+# Clean rule
 clean:
-	$(RM) -rf lpsolve
-	$(RM) -f $(OBJECTS) 
+	rm -f $(OBJECTS) $(DEPS) $(TARGET)
 
 # Pattern to replace All with strategies using sed
 REPLACE_ALL := "s/All/BestFS BFS DFS RDFS/"
 
-#Check the build
+# Check the build
 check: $(TARGET)
 	@failed=0; \
 	for f in Tests/*.xml; do																	\
-		for s in `echo $$f | $(CUT) -d- -f3 | $(CUT) -d. -f1 | $(SED) -e $(REPLACE_ALL)`; do 	\
+		for s in `echo $$f | cut -d- -f3 | cut -d. -f1 | sed -e $(REPLACE_ALL)`; do 			\
 			echo "----------------------------------------------------------------------";		\
 			echo "Testing $$f using $$s";														\
 			./$(TARGET) -s $$s -m 256 $$f $$f.q;												\
-			if [ $$? -ne `echo $$f | $(CUT) -d- -f2` ]; then 									\
+			if [ $$? -ne `echo $$f | cut -d- -f2` ]; then	 									\
 				echo " --- Test Failed!"; 														\
 				failed=$$(($$failed + 1));														\
 			else																				\
@@ -83,4 +47,4 @@ check: $(TARGET)
 		echo "----------------------------------------------------------------------"; 			\
 	fi
 
-.PHONY: all generate clean check
+.PHONY: all generate clean check test

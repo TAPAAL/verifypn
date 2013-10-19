@@ -1,0 +1,23 @@
+# For bash on OS X, as /bin/sh is compiled with --enable-strict-posix-default
+SHELL    		= /bin/bash
+
+# Programs for processing
+LEX				= false
+YACC			= false
+CC				= gcc
+CUT				= cut
+
+# Compiler and linker flags
+CFLAGS			= -m64 -O3 -I.
+LDFLAGS			= -m64 -O3 lpsolve/liblpsolve55-osx64.a -lstdc++
+
+# Input files
+FLEX_SOURCES	= $(shell find * -name "*.l")
+BISON_SOURCES	= $(shell find * -name "*.y")
+SOURCES			= $(shell find * -name "*.cpp" | grep -v ".\\(parser\\|lexer\\).cpp")		\
+				  $(BISON_SOURCES:.y=.parser.cpp)											\
+				  $(FLEX_SOURCES:.l=.lexer.cpp)
+OBJECTS			= $(SOURCES:.cpp=.o)
+TARGET			= verifypn-osx64
+
+include rules.mk
