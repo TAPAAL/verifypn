@@ -28,7 +28,7 @@ check: $(TARGET)
 		for s in `echo $$f | cut -d- -f3 | cut -d. -f1 | sed -e $(REPLACE_ALL)`; do 			\
 			echo "----------------------------------------------------------------------";		\
 			echo "Testing $$f using $$s";														\
-			./$(TARGET) -s $$s -m 256 $$f $$f.q;												\
+			./$< -s $$s -m 256 $$f $$f.q;												\
 			if [ $$? -ne `echo $$f | cut -d- -f2` ]; then	 									\
 				echo " --- Test Failed!"; 														\
 				failed=$$(($$failed + 1));														\

@@ -13,12 +13,13 @@ correctly against following dependencies:
   * flex (>= 2.5)
   * lp_solve (>= 5.5)
 
-Before running make, install lp-solve
-(on Ubuntu using sudo apt-get install liblpsolve55-dev).
+For simplicity, compiled output form GNU Bison, flex and binaries of lpsolve
+are included in the source tree.
 
-To cross compile for Windows on linux using w64-mingw32 with
-`make -f makefile.win32`. Your choice of cross compiler probably depends
-on what is readily available on your platform of choice.
+To cross compile for Windows on linux install `w64-mingw32` and run
+`make -f makefile.win32`. To cross compile for 32 bit linux you need
+to run install `gcc-multilib`, `g++-multilib` and probably a few others.
+
 To build on OS X run `make -f makefile.osx32` or `make -f makefile.osx64`,
 as cross compilers for OS X are not readily available (e.g. in package manager)
 cross compilation for OS X is not supported.
