@@ -16,9 +16,18 @@ correctly against following dependencies:
 For simplicity, compiled output form GNU Bison, flex and binaries of lpsolve
 are included in the source tree.
 
-To cross compile for Windows on linux install `mingw-w64` and `g++mingw-w64` 
-and run `make -f makefile.win32`. To cross compile for 32 bit linux you need
-to run install `gcc-multilib`, `g++-multilib` and probably a few others.
+To cross compile for Windows on linux install `g++mingw-w64` and run
+`make -f makefile.win32` for 32 bit version, and `make -f makefile.win64` for
+64 bit version.
+
+**Warning** both `verifypn-win32` and `verifypn-win64` are accompanied by a dll
+called `lpsolve55.dll`, however, this is **not** the same dll for both 32 and 64
+bit versions. Unfortunately, we cannot rename the dll either, so either we need
+to build with MSVC or accept this pain, and distribute Windows 32 and 64 bit
+versions in different folders, and watch out of this during deployment.
+
+To cross compile for 32 bit linux you need to run install `gcc-multilib`,
+`g++-multilib` and probably a few others.
 
 To build on OS X run `make -f makefile.osx32` or `make -f makefile.osx64`,
 as cross compilers for OS X are not readily available (e.g. in package manager)
