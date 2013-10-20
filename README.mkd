@@ -16,8 +16,8 @@ correctly against following dependencies:
 For simplicity, compiled output form GNU Bison, flex and binaries of lpsolve
 are included in the source tree.
 
-To cross compile for Windows on linux install `w64-mingw32` and run
-`make -f makefile.win32`. To cross compile for 32 bit linux you need
+To cross compile for Windows on linux install `mingw-w64` and `g++mingw-w64` 
+and run `make -f makefile.win32`. To cross compile for 32 bit linux you need
 to run install `gcc-multilib`, `g++-multilib` and probably a few others.
 
 To build on OS X run `make -f makefile.osx32` or `make -f makefile.osx64`,
