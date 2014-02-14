@@ -71,6 +71,7 @@ int main(int argc, char* argv[]){
 	char* modelfile = NULL;
 	char* queryfile = NULL;
 	bool disableoverapprox = false;
+        bool enablereduction = false;
 
 	//----------------------- Parse Arguments -----------------------//
 
@@ -107,6 +108,8 @@ int main(int argc, char* argv[]){
 				memorylimit *= 1024;
 		}else if(strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable-overapprox") == 0){
 			disableoverapprox = true;
+                }else if(strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--reduction") == 0){
+                        enablereduction = true;
 		}else if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0){
 			printf(	"Usage: VerifyPN [options] model-file query-file\n"
 					"Determine untimed reachability of a query for a Petri net.\n"
@@ -123,6 +126,7 @@ int main(int argc, char* argv[]){
 					"  -m, --memory-limit <megabyte>      Memory limit for state space in MB,\n"
 					"                                     0 for unlimited (1 GB default)\n"
 					"  -d, --disable-over-approximation   Disable linear over approximation\n"
+                                        "  -r, --reduction                    Enable structural net reduction\n"
 					"  -h, --help                         Display this help message\n"
 					"  -v, --version                      Display version information\n"
 					"\n"
@@ -137,10 +141,11 @@ int main(int argc, char* argv[]){
 			return 0;
 		}else if(strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0){
 			printf("VerifyPN (PeTe for TAPAAL) %s\n", VERSION);
-			printf("Copyright (C) 2011 Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
-			printf("                   Thomas Søndersø Nielsen <primogens@gmail.com>,\n");
-			printf("                   Lars Kærlund Østergaard <larsko@gmail.com>\n");
-			printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
+			printf("Copyright (C) 2011-2014 Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
+			printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>,\n");
+			printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
+			printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
+                        printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
 			return 0;
 		}else if(modelfile == NULL){
 			modelfile = argv[i];
