@@ -266,6 +266,14 @@ int main(int argc, char* argv[]){
 		}
 	}
 
+        //--------------------- Apply Net Reduction ---------------//
+        
+        if (enablereduction) {
+            fprintf(stderr,"Net reduction enabled.\n");
+            fprintf(stderr,"Number of places: %i\n\n",net->numberOfPlaces());
+           
+        }
+        
 	//----------------------- Reachability -----------------------//
 
 	//Create reachability search strategy
