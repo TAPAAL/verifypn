@@ -37,6 +37,8 @@
 #include <PetriEngine/Reachability/DepthFirstReachabilitySearch.h>
 #include <PetriEngine/Reachability/BreadthFirstReachabilitySearch.h>
 
+#include "PetriEngine/Reducer.h"
+
 
 using namespace std;
 using namespace PetriEngine;
@@ -269,21 +271,8 @@ int main(int argc, char* argv[]){
         //--------------------- Apply Net Reduction ---------------//
         
         if (enablereduction) {
-            fprintf(stderr,"Net reduction enabled.\n");
-            fprintf(stderr,"Number of places: %i\n",net->numberOfPlaces());
-            fprintf(stderr,"Number of transitions: %i\n\n",net->numberOfTransitions());
-           
-            for (int i=0; i < net->numberOfPlaces(); i++) {
-                for (int j=0; j < net->numberOfTransitions(); j++) {
-                     fprintf(stderr,"Input arc from place %i to transitions %i: %i\n",i,j,net->inArc(i,j));   
-                     fprintf(stderr,"Output arc from transition %i to place %i: %i\n\n",j,i,net->outArc(j,i));  
-                }
-            }
-            
-            for (int i=0; i < net->numberOfPlaces(); i++) {
-                fprintf(stderr,"Marking at place %i is: %i\n",i,m0[i]);
-            } 
-            
+            Reducer* reducer = NULL;
+            reducer->Print(net,m0); 
         }
         
 	//----------------------- Reachability -----------------------//

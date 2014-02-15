@@ -103,6 +103,7 @@ private:
 	PQL::Condition** _conditions;
 	PQL::AssignmentExpression** _assignments;
 	friend class PetriNetBuilder;
+        friend class Reducer;
 };
 
 } // PetriEngine
