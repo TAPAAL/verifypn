@@ -305,8 +305,11 @@ int main(int argc, char* argv[]){
 		for(size_t i = 0; i < trace.size(); i++){
 			fprintf(stderr, "\t<transition id=\"%s\">\n", tnames[trace[i]].c_str());
 			for(unsigned int p = 0; p < net->numberOfPlaces(); p++){
-				if(net->inArc(p, trace[i]))
-					fprintf(stderr, "\t\t<token place=\"%s\" age=\"0\"/>\n", pnames[p].c_str());
+				if(net->inArc(p, trace[i])) {
+					for (int weight=1; weight<= net->inArc(p, trace[i]); weight++) {
+       		                              fprintf(stderr, "\t\t<token place=\"%s\" age=\"0\"/>\n", pnames[p].c_str());
+                                    }
+  				}
 			}
 			fprintf(stderr, "\t</transition>\n");
 		}
