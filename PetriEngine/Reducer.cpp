@@ -10,6 +10,7 @@
 
 namespace PetriEngine{
     
+    
     void Reducer::Print(PetriNet* net, MarkVal* m0){
         fprintf(stdout,"Net reduction enabled.\n");
             fprintf(stdout,"Number of places: %i\n",net->numberOfPlaces());

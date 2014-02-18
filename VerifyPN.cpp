@@ -271,6 +271,10 @@ int main(int argc, char* argv[]){
         //--------------------- Apply Net Reduction ---------------//
         
         if (enablereduction) {
+            CustomAnalysisContext customcontext(*net);
+            query->analyze(customcontext);
+           
+                
             Reducer* reducer = NULL;
             reducer->Print(net,m0); 
         }

@@ -9,6 +9,7 @@
 #define	REDUCER_H
 
 #include "PetriNet.h"
+#include "PQL/Contexts.h"
 
 namespace PetriEngine{
 
@@ -24,6 +25,39 @@ public:
 private:
 
 };
+
+
+class CustomAnalysisContext: public PQL::AnalysisContext {
+  
+public:
+    CustomAnalysisContext(const PetriNet& net):PQL::AnalysisContext(net) {}
+	  
+    ResolutionResult resolve(std::string identifier) const{
+		ResolutionResult result;
+       		result.offset = -1;
+		result.success = false;
+		for(size_t i = 0; i < _places.size(); i++){
+			if(_places[i] == identifier){
+				result.offset = i; 
+                              	result.isPlace = true;
+				result.success = true;
+                                fprintf(stderr,"In query: %i\n\n",i);
+                                return result;
+			}
+		}
+		for(size_t i = 0; i < _variables.size(); i++){
+			if(_variables[i] == identifier){
+				result.offset = i;
+				result.isPlace = false;
+				result.success = true;
+				return result;
+			}
+		}
+		return result;
+	}
+    
+};
+
 
 }
 
