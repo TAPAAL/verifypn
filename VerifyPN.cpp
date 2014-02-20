@@ -271,12 +271,18 @@ int main(int argc, char* argv[]){
         //--------------------- Apply Net Reduction ---------------//
         
         if (enablereduction) {
-            CustomAnalysisContext customcontext(*net);
-            query->analyze(customcontext);
-           
+           // Compute how many times each place appears in the query
+            MarkVal* placeInQuery = new MarkVal[net->numberOfPlaces()];
+	    for(size_t i = 0; i < net->numberOfPlaces(); i++) {
+		placeInQuery[i] = 0;
+            }
+            QueryPlaceAnalysisContext placecontext(*net,placeInQuery);
+            query->analyze(placecontext);
+   
                 
+            
             Reducer* reducer = NULL;
-            reducer->Print(net,m0); 
+            reducer->Print(net,m0,placeInQuery); 
         }
         
 	//----------------------- Reachability -----------------------//

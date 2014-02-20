@@ -20,19 +20,21 @@ class Reducer
 {
 public:
 	Reducer();
-        void Print(PetriNet* net, MarkVal* m0);
+        void Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery);
         
 private:
 
 };
 
 
-class CustomAnalysisContext: public PQL::AnalysisContext {
-  
+class QueryPlaceAnalysisContext: public PQL::AnalysisContext {
+    MarkVal* _placeInQuery;
 public:
-    CustomAnalysisContext(const PetriNet& net):PQL::AnalysisContext(net) {}
-	  
-    ResolutionResult resolve(std::string identifier) const{
+   
+    QueryPlaceAnalysisContext(const PetriNet& net, MarkVal* placeInQuery):PQL::AnalysisContext(net) {_placeInQuery=placeInQuery;};
+
+
+    ResolutionResult resolve(std::string identifier) const {
 		ResolutionResult result;
        		result.offset = -1;
 		result.success = false;
@@ -41,7 +43,8 @@ public:
 				result.offset = i; 
                               	result.isPlace = true;
 				result.success = true;
-                                fprintf(stderr,"In query: %i\n\n",i);
+                                //fprintf(stderr,"In query: %i\n\n",(int)i);
+                                _placeInQuery[i]++;
                                 return result;
 			}
 		}
