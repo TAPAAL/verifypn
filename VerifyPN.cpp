@@ -289,9 +289,8 @@ int main(int argc, char* argv[]){
                   }
             
             PNMLParser::InhibitorArcList inhibarcs = parser.getInhibitorArcs();
-                    
             Reducer* reducer = NULL;
-            reducer->CreateInhibitorPlaces(net, inhibarcs ,placeInInhib);
+            reducer->CreateInhibitorPlaces(net, inhibarcs ,placeInInhib); // translates inhibitor place names to indexes in placeInInhib
             reducer->Print(net,m0,placeInQuery,placeInInhib); 
         }
         

@@ -18,7 +18,6 @@ namespace PetriEngine{
 		int place = -1;
                 //Find place number
 		for(int i = 0; i < net->numberOfPlaces(); i++){
-                    fprintf(stderr,"Inib: %s \n",placeIter->source.c_str());
 			if(net->placeNames()[i] == placeIter->source){
                                 place=i;
                                 placeInInhib[place] = placeIter->weight;
@@ -36,24 +35,27 @@ namespace PetriEngine{
             fprintf(stdout,"Number of places: %i\n",net->numberOfPlaces());
             fprintf(stdout,"Number of transitions: %i\n\n",net->numberOfTransitions());
            
-            for (int i=0; i < net->numberOfPlaces(); i++) {
-                for (int j=0; j < net->numberOfTransitions(); j++) {
-                     fprintf(stdout,"Input arc from place %i to transitions %i: %i\n",i,j,net->inArc(i,j));   
-                     fprintf(stdout,"Output arc from transition %i to place %i: %i\n\n",j,i,net->outArc(j,i));  
+            for (int j=0; j < net->numberOfTransitions(); j++) {
+                fprintf(stdout,"Transition %i:\n",j); 
+                for (int i=0; i < net->numberOfPlaces(); i++) {             
+                     if (net->inArc(i,j)>0) fprintf(stdout,"   Input place %i with arc-weight %i\n",i,net->inArc(i,j));                       
                 }
+                for (int i=0; i < net->numberOfPlaces(); i++) {             
+                     if (net->outArc(j,i)>0) fprintf(stdout,"  Output place %i with arc-weight %i\n",i,net->outArc(j,i));                       
+                }
+                fprintf(stdout,"\n",j);   
             }
             
             for (int i=0; i < net->numberOfPlaces(); i++) {
                 fprintf(stdout,"Marking at place %i is: %i\n",i,m0[i]);
             } 
-            fprintf(stdout,"\n");
     
             for (int i=0; i < net->numberOfPlaces(); i++) {
-                fprintf(stdout,"Query at place %i is: %i\n",i,placeInQuery[i]);
+                fprintf(stdout,"Query count for place %i is: %i\n",i,placeInQuery[i]);
             } 
            
              for (int i=0; i < net->numberOfPlaces(); i++) {
-                fprintf(stdout,"Inhibitor arc in place %i is: %i\n",i,placeInInhib[i]);
+                fprintf(stdout,"Inhibitor count for place %i is: %i\n",i,placeInInhib[i]);
             } 
             
     }

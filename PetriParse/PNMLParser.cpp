@@ -123,7 +123,7 @@ void PNMLParser::parse(const std::string& xml,
 	id2name.clear();
 	arcs.clear();
 	transitions.clear();
-	inhibarcs.clear();
+	//inhibarcs.clear(); We need those for the use in net reductions
 }
 
 void PNMLParser::makePetriNet(){
