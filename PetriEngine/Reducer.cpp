@@ -13,6 +13,22 @@ namespace PetriEngine{
     
     void Reducer::CreateInhibitorPlaces(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib){
         
+        PNMLParser::InhibitorArcIter placeIter;
+	for(placeIter = inhibarcs.begin(); placeIter != inhibarcs.end(); placeIter++){
+		int place = -1;
+                //Find place number
+		for(int i = 0; i < net->numberOfPlaces(); i++){
+                    fprintf(stderr,"Inib: %s \n",placeIter->source.c_str());
+			if(net->placeNames()[i] == placeIter->source){
+                                place=i;
+                                placeInInhib[place] = placeIter->weight;
+				break;
+			}
+		}
+                
+		assert(place >= 0);
+	}
+        
     }
     
     void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib){

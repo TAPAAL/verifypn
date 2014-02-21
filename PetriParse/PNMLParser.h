@@ -58,9 +58,14 @@ public:
 		std::string source,
 					target;
 		int			weight;
+                InhibitorArc() {fprintf(stderr,"CONSTRUCTOR NOW\n");};
+                
+                InhibitorArc(const InhibitorArc& ref):source(ref.source), target(ref.target), weight(ref.weight) {
+                    fprintf(stderr,"COPY CONSTRUCTER NOW-COPY\n");
+                }
 	};
 	typedef std::vector<InhibitorArc> InhibitorArcList;
-        	typedef InhibitorArcList::iterator InhibitorArcIter;
+        typedef InhibitorArcList::iterator InhibitorArcIter;
 
 	PNMLParser(){
 		builder = NULL;
