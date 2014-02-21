@@ -10,8 +10,10 @@
 
 #include "PetriNet.h"
 #include "PQL/Contexts.h"
+#include <PetriParse/PNMLParser.h>
 
 namespace PetriEngine{
+
 
 
 /** Builder for building engine representations of PetriNets */
@@ -20,7 +22,8 @@ class Reducer
 {
 public:
 	Reducer();
-        void Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery);
+        void CreateInhibitorPlaces(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib);
+        void Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib);
         
 private:
 
@@ -28,7 +31,7 @@ private:
 
 
 class QueryPlaceAnalysisContext: public PQL::AnalysisContext {
-    MarkVal* _placeInQuery;
+    PetriEngine::MarkVal* _placeInQuery;
 public:
    
     QueryPlaceAnalysisContext(const PetriNet& net, MarkVal* placeInQuery):PQL::AnalysisContext(net) {_placeInQuery=placeInQuery;};
@@ -36,6 +39,7 @@ public:
 
     ResolutionResult resolve(std::string identifier) const {
 		ResolutionResult result;
+                //fprintf(stderr,"ID %s\n",identifier.c_str());
        		result.offset = -1;
 		result.success = false;
 		for(size_t i = 0; i < _places.size(); i++){

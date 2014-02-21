@@ -43,13 +43,6 @@ class PNMLParser
 	};
 	typedef std::vector<Transition> TransitionList;
 	typedef TransitionList::iterator TransitionIter;
-	struct InhibitorArc{
-		std::string source,
-					target;
-		int			weight;
-	};
-	typedef std::vector<InhibitorArc> InhibitorArcList;
-	typedef InhibitorArcList::iterator InhibitorArcIter;
 	struct NodeName{
 		std::string name;
 		bool isPlace;
@@ -60,6 +53,14 @@ public:
 	struct Query{
 		std::string name,text;
 	};
+        
+        struct InhibitorArc{
+		std::string source,
+					target;
+		int			weight;
+	};
+	typedef std::vector<InhibitorArc> InhibitorArcList;
+        	typedef InhibitorArcList::iterator InhibitorArcIter;
 
 	PNMLParser(){
 		builder = NULL;
@@ -70,6 +71,10 @@ public:
 	std::vector<Query> getQueries(){
 		return queries;
 	}
+        
+        InhibitorArcList getInhibitorArcs(){
+                return inhibarcs;
+        }
 
 private:
 	void parseElement(XMLSP::DOMElement* element);

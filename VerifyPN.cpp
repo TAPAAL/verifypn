@@ -179,6 +179,9 @@ int main(int argc, char* argv[]){
 	PetriNet* net = NULL;
 	MarkVal* m0 = NULL;
 	VarVal* v0 = NULL;
+        
+        PNMLParser parser; //the parser is needed in reduction part for identifying inhibitor places
+        
 	{
 		//Load the model
 		ifstream mfile(modelfile, ifstream::in);
@@ -193,7 +196,7 @@ int main(int argc, char* argv[]){
 
 		//Parse and build the petri net
 		PetriNetBuilder builder(false);
-		PNMLParser parser;
+		//PNMLParser parser;
 		parser.parse(buffer.str(), &builder);
 		parser.makePetriNet();
 
@@ -271,18 +274,25 @@ int main(int argc, char* argv[]){
         //--------------------- Apply Net Reduction ---------------//
         
         if (enablereduction) {
-           // Compute how many times each place appears in the query
+            // Compute how many times each place appears in the query
             MarkVal* placeInQuery = new MarkVal[net->numberOfPlaces()];
 	    for(size_t i = 0; i < net->numberOfPlaces(); i++) {
 		placeInQuery[i] = 0;
             }
             QueryPlaceAnalysisContext placecontext(*net,placeInQuery);
             query->analyze(placecontext);
-   
-                
             
+            // Computer the places that connect to inhibitor arcs
+            MarkVal* placeInInhib = new MarkVal[net->numberOfPlaces()];
+	    for(size_t i = 0; i < net->numberOfPlaces(); i++) {
+		placeInInhib[i] = 0;
+            }
+            
+            PNMLParser::InhibitorArcList inhibarcs = parser.getInhibitorArcs();
+                    
             Reducer* reducer = NULL;
-            reducer->Print(net,m0,placeInQuery); 
+            reducer->CreateInhibitorPlaces(net,inhibarcs,placeInInhib);
+            reducer->Print(net,m0,placeInQuery,placeInInhib); 
         }
         
 	//----------------------- Reachability -----------------------//
