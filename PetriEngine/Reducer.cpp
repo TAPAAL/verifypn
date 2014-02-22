@@ -93,7 +93,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
          
          // Rule A  - find transition t that has exactly one place in pre and post and remove one of the places   
          for (int t=0; t < net->numberOfTransitions(); t++) {
-                if (transitionInInhib[t]>0) { continue;}
+                if (transitionInInhib[t]>0) { continue;} // if t has a connected inhibitor arc, it cannot be removed
                 int pPre=-1;
                 int pPost=-1;
                 bool ok=true;
