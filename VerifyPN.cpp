@@ -289,15 +289,15 @@ int main(int argc, char* argv[]){
                 QueryPlaceAnalysisContext placecontext(*net,placeInQuery);
                 query->analyze(placecontext);
             
-                // Compute the places that connect to inhibitor arcs
+                // Compute the places and transitions that connect to inhibitor arcs
                 MarkVal* placeInInhib = new MarkVal[net->numberOfPlaces()];
-                         for(size_t i = 0; i < net->numberOfPlaces(); i++) {
-                                placeInInhib[i] = 0;
-                        }
-                reducer->CreateInhibitorPlaces(net, inhibarcs ,placeInInhib); // translates inhibitor place names to indexes in placeInInhib
-                reducer->Print(net,m0,placeInQuery,placeInInhib); 
-                reducer->Reduce(net,m0,placeInQuery,placeInInhib); 
-                reducer->Print(net,m0,placeInQuery,placeInInhib); 
+                MarkVal* transitionInInhib = new MarkVal[net->numberOfTransitions()];
+                        
+                reducer->CreateInhibitorPlaces(net, inhibarcs ,placeInInhib, transitionInInhib); // translates inhibitor place names to indexes in placeInInhib
+
+                reducer->Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
+                reducer->Reduce(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
+                reducer->Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
            }
         }
         

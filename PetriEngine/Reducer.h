@@ -22,9 +22,9 @@ class Reducer
 {
 public:
 	Reducer();
-        void CreateInhibitorPlaces(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib);
-        void Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib);
-        void Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib);
+        void CreateInhibitorPlaces(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionsInInhib);
+        void Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionsInInhib);
+        void Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionsInInhib);
         
 private:
 

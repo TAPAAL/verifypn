@@ -11,27 +11,46 @@
 
 namespace PetriEngine{
     
-void Reducer::CreateInhibitorPlaces(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib){
+void Reducer::CreateInhibitorPlaces(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionInInhib){
+        //Initialize
+        for(size_t i = 0; i < net->numberOfPlaces(); i++) {
+                                placeInInhib[i] = 0;
+                        }    
+    
+        for(size_t i = 0; i < net->numberOfTransitions(); i++) {
+                                transitionInInhib[i] = 0;
+                        }
         
-        PNMLParser::InhibitorArcIter placeIter;
-	for(placeIter = inhibarcs.begin(); placeIter != inhibarcs.end(); placeIter++){
+        //Construct the inhibitor places/arcs
+        PNMLParser::InhibitorArcIter arcIter;
+	for(arcIter = inhibarcs.begin(); arcIter != inhibarcs.end(); arcIter++){
 		int place = -1;
                 //Find place number
 		for(int i = 0; i < net->numberOfPlaces(); i++){
-			if(net->placeNames()[i] == placeIter->source){
+			if(net->placeNames()[i] == arcIter->source){
                                 place=i;
-                                placeInInhib[place] = placeIter->weight;
+                                placeInInhib[place] = arcIter->weight;
 				break;
 			}
 		}
                 
-		assert(place >= 0);
+                int transition = -1;
+                //Find place number
+		for(int i = 0; i < net->numberOfTransitions(); i++){
+			if(net->transitionNames()[i] == arcIter->target){
+                                transition=i;
+                                transitionInInhib[transition] = arcIter->weight;
+				break;
+			}
+		}
+                
+		assert(place >= 0 && transition>=0);
 	}
         
     }
     
     
-void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib){
+void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib){
         fprintf(stdout,"\nNET INFO:\n");
             fprintf(stdout,"Number of places: %i\n",net->numberOfPlaces());
             fprintf(stdout,"Number of transitions: %i\n\n",net->numberOfTransitions());
@@ -55,14 +74,17 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                 fprintf(stdout,"Query count for place %i is: %i\n",i,placeInQuery[i]);
             } 
            
-             for (int i=0; i < net->numberOfPlaces(); i++) {
+            for (int i=0; i < net->numberOfPlaces(); i++) {
                 fprintf(stdout,"Inhibitor count for place %i is: %i\n",i,placeInInhib[i]);
             } 
             
+            for (int i=0; i < net->numberOfTransitions(); i++) {
+                fprintf(stdout,"Inhibitor count for transition %i is: %i\n",i,transitionInInhib[i]);
+            } 
     }
     
     
- void Reducer::Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib) {
+ void Reducer::Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
           
      bool continueReductions=true;
      
@@ -71,6 +93,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
          
          // Rule A  - find transition t that has exactly one place in pre and post and remove one of the places   
          for (int t=0; t < net->numberOfTransitions(); t++) {
+                if (transitionInInhib[t]>0) { continue;}
                 int pPre=-1;
                 int pPost=-1;
                 bool ok=true;
