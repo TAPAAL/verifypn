@@ -179,8 +179,9 @@ int main(int argc, char* argv[]){
 	PetriNet* net = NULL;
 	MarkVal* m0 = NULL;
 	VarVal* v0 = NULL;
-        
-        PNMLParser parser; //the parser is needed in reduction part for identifying inhibitor places
+                  
+        // Names of places that connect to inhibitor arcs
+        PNMLParser::InhibitorArcList inhibarcs;
         
 	{
 		//Load the model
@@ -196,9 +197,10 @@ int main(int argc, char* argv[]){
 
 		//Parse and build the petri net
 		PetriNetBuilder builder(false);
-		//PNMLParser parser;
+		PNMLParser parser;
 		parser.parse(buffer.str(), &builder);
 		parser.makePetriNet();
+                inhibarcs = parser.getInhibitorArcs(); // Remember the places with inhibitor arcs
 
 		//Build the petri net
 		net = builder.makePetriNet();
@@ -274,24 +276,26 @@ int main(int argc, char* argv[]){
         //--------------------- Apply Net Reduction ---------------//
         
         if (enablereduction) {
-            // Compute how many times each place appears in the query
-            MarkVal* placeInQuery = new MarkVal[net->numberOfPlaces()];
-                 for(size_t i = 0; i < net->numberOfPlaces(); i++) {
-                	placeInQuery[i] = 0;
-                  }
-            QueryPlaceAnalysisContext placecontext(*net,placeInQuery);
-            query->analyze(placecontext);
-            
-            // Computer the places that connect to inhibitor arcs
-            MarkVal* placeInInhib = new MarkVal[net->numberOfPlaces()];
-                 for(size_t i = 0; i < net->numberOfPlaces(); i++) {
-                	placeInInhib[i] = 0;
-                  }
-            
-            PNMLParser::InhibitorArcList inhibarcs = parser.getInhibitorArcs();
             Reducer* reducer = NULL;
-            reducer->CreateInhibitorPlaces(net, inhibarcs ,placeInInhib); // translates inhibitor place names to indexes in placeInInhib
-            reducer->Print(net,m0,placeInQuery,placeInInhib); 
+            
+            //Create scope for net reductions
+            {
+                // Compute how many times each place appears in the query
+                MarkVal* placeInQuery = new MarkVal[net->numberOfPlaces()];
+                         for(size_t i = 0; i < net->numberOfPlaces(); i++) {
+                                placeInQuery[i] = 0;
+                         }
+                QueryPlaceAnalysisContext placecontext(*net,placeInQuery);
+                query->analyze(placecontext);
+            
+                // Compute the places that connect to inhibitor arcs
+                MarkVal* placeInInhib = new MarkVal[net->numberOfPlaces()];
+                         for(size_t i = 0; i < net->numberOfPlaces(); i++) {
+                                placeInInhib[i] = 0;
+                        }
+                reducer->CreateInhibitorPlaces(net, inhibarcs ,placeInInhib); // translates inhibitor place names to indexes in placeInInhib
+                reducer->Print(net,m0,placeInQuery,placeInInhib); 
+            }
         }
         
 	//----------------------- Reachability -----------------------//
