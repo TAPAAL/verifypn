@@ -155,7 +155,8 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                      tPost=t;
                  }
              }
-             if (ok && tPre>=0 && tPost>=0 && tPre!=tPost && (net->outArc(tPre,p)==net->inArc(p,tPost)) && placeInQuery[p]==0 && placeInInhib[p]==0 && m0[p]==0) {
+             if (ok && tPre>=0 && tPost>=0 && tPre!=tPost && (net->outArc(tPre,p)==net->inArc(p,tPost)) && 
+                 placeInQuery[p]==0 && placeInInhib[p]==0 && m0[p]==0 && transitionInInhib[tPre]==0 && transitionInInhib[tPost]==0) {
                  // Check if the output places of tPost do not have any inhibitor arcs connected
                  for (size_t _p=0; _p < net->numberOfPlaces(); _p++) {
                      if (net->outArc(tPost,_p)>0 && placeInInhib[_p]>0) {ok=false; break;}
