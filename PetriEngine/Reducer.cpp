@@ -138,6 +138,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                 }              
          } // end of Rule A main for-loop
          
+       
          fprintf(stderr,"Rule B\n");
          // Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
          for (size_t p=0; p < net->numberOfPlaces(); p++) {
@@ -179,7 +180,35 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                  }
              }
          } // end of Rule B main for-loop
-               
+         
+         fprintf(stderr,"Rule C\n");
+         // Rule C - two transitions that put and take from the same places
+         for (size_t t1=0; t1 < net->numberOfTransitions(); t1++) {
+                for (size_t t2=0; t2 < net->numberOfTransitions(); t2++) {
+                        bool ok=true;  // check whether post of t1 is the same as pre of t2
+                        for (size_t p=0; p < net->numberOfPlaces(); p++) {
+                                if (net->outArc(t1,p)!=net->inArc(p,t2)) {ok=false; break;}
+                                // check that the places in between are not connected to any other transitions
+                                if (net->outArc(t1,p)>0) {
+                                    for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
+                                        if (net->outArc(_t,p)>0 && _t != t1) {ok=false; break;}
+                                        if (net->inArc(p,_t)>0 && _t != t2) {ok=false; break;}
+                                    }
+                                }
+                                if (!ok) {break;}
+                        }
+                        if (ok) { // Remove places that are in post of t1, are not in queries, are not inhibitor places and have empty initial marking 
+                           for (size_t p=0; p < net->numberOfPlaces(); p++) {
+                               if (net->outArc(t1,p)>0 && placeInQuery[p]==0 && placeInInhib[p]==0 && m0[p]==0) {
+                                   net->updateoutArc(t1,p,0);
+                                   net->updateinArc(p,t2,0);
+                               }
+                           }
+                        }
+                }
+         }
+         
+         
      } // end of main while-loop   
 }
     
