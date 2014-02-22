@@ -197,9 +197,11 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                                 }
                                 if (!ok) {break;}
                         }
+                        //// Make sure one such place is left
                         if (ok) { // Remove places that are in post of t1, are not in queries, are not inhibitor places and have empty initial marking 
                            for (size_t p=0; p < net->numberOfPlaces(); p++) {
                                if (net->outArc(t1,p)>0 && placeInQuery[p]==0 && placeInInhib[p]==0 && m0[p]==0) {
+                                   fprintf(stderr,"Removing place %i\n",(int)p);
                                    net->updateoutArc(t1,p,0);
                                    net->updateinArc(p,t2,0);
                                }
