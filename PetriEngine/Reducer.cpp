@@ -24,9 +24,9 @@ void Reducer::CreateInhibitorPlaces(PetriNet* net, PNMLParser::InhibitorArcList 
         //Construct the inhibitor places/arcs
         PNMLParser::InhibitorArcIter arcIter;
 	for(arcIter = inhibarcs.begin(); arcIter != inhibarcs.end(); arcIter++){
-		int place = -1;
+		size_t place = -1;
                 //Find place number
-		for(int i = 0; i < net->numberOfPlaces(); i++){
+		for(size_t i = 0; i < net->numberOfPlaces(); i++){
 			if(net->placeNames()[i] == arcIter->source){
                                 place=i;
                                 placeInInhib[place] = arcIter->weight;
@@ -34,9 +34,9 @@ void Reducer::CreateInhibitorPlaces(PetriNet* net, PNMLParser::InhibitorArcList 
 			}
 		}
                 
-                int transition = -1;
+                size_t transition = -1;
                 //Find place number
-		for(int i = 0; i < net->numberOfTransitions(); i++){
+		for(size_t i = 0; i < net->numberOfTransitions(); i++){
 			if(net->transitionNames()[i] == arcIter->target){
                                 transition=i;
                                 transitionInInhib[transition] = arcIter->weight;
@@ -55,31 +55,31 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
             fprintf(stdout,"Number of places: %i\n",net->numberOfPlaces());
             fprintf(stdout,"Number of transitions: %i\n\n",net->numberOfTransitions());
            
-            for (int j=0; j < net->numberOfTransitions(); j++) {
-                fprintf(stdout,"Transition %i:\n",j); 
+                for (int j=0; j < net->numberOfTransitions(); j++) {
+                fprintf(stdout,"Transition %d:\n",j); 
                 for (int i=0; i < net->numberOfPlaces(); i++) {             
-                     if (net->inArc(i,j)>0) fprintf(stdout,"   Input place %i with arc-weight %i\n",i,net->inArc(i,j));                       
+                     if (net->inArc(i,j)>0) fprintf(stdout,"   Input place %d with arc-weight %d\n",i,net->inArc(i,j));                       
                 }
                 for (int i=0; i < net->numberOfPlaces(); i++) {             
-                     if (net->outArc(j,i)>0) fprintf(stdout,"  Output place %i with arc-weight %i\n",i,net->outArc(j,i));                       
+                     if (net->outArc(j,i)>0) fprintf(stdout,"  Output place %d with arc-weight %d\n",i,net->outArc(j,i));                       
                 }
                 fprintf(stdout,"\n",j);   
             }
             
             for (int i=0; i < net->numberOfPlaces(); i++) {
-                fprintf(stdout,"Marking at place %i is: %i\n",i,m0[i]);
+                fprintf(stdout,"Marking at place %d is: %d\n",i,m0[i]);
             } 
     
             for (int i=0; i < net->numberOfPlaces(); i++) {
-                fprintf(stdout,"Query count for place %i is: %i\n",i,placeInQuery[i]);
+                fprintf(stdout,"Query count for place %d is: %d\n",i,placeInQuery[i]);
             } 
            
             for (int i=0; i < net->numberOfPlaces(); i++) {
-                fprintf(stdout,"Inhibitor count for place %i is: %i\n",i,placeInInhib[i]);
+                fprintf(stdout,"Inhibitor count for place %d is: %d\n",i,placeInInhib[i]);
             } 
             
             for (int i=0; i < net->numberOfTransitions(); i++) {
-                fprintf(stdout,"Inhibitor count for transition %i is: %i\n",i,transitionInInhib[i]);
+                fprintf(stdout,"Inhibitor count for transition %d is: %d\n",i,transitionInInhib[i]);
             } 
     }
     
@@ -92,12 +92,12 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
          continueReductions=false; // repeat all reductions rules as long as something was reduced
          
          // Rule A  - find transition t that has exactly one place in pre and post and remove one of the places   
-         for (int t=0; t < net->numberOfTransitions(); t++) {
+         for (size_t t=0; t < net->numberOfTransitions(); t++) {
                 if (transitionInInhib[t]>0) { continue;} // if t has a connected inhibitor arc, it cannot be removed
                 int pPre=-1;
                 int pPost=-1;
                 bool ok=true;
-                for (int p=0; p < net->numberOfPlaces(); p++) {
+                for (size_t p=0; p < net->numberOfPlaces(); p++) {
                     if (net->inArc(p,t)>0) { 
                         if (pPre>=0 || net->inArc(p,t)>1 || placeInQuery[p]>0 || placeInInhib[p]>0) { pPre=-1; ok=false; break;}
                         pPre=p;
@@ -109,25 +109,25 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                 }
                 if (ok && (m0[pPre]==0 || m0[pPost]==0)) {
                     // Check that pPre goes only to t and that there is no other transition than t that gives to pPos a
-                    for (int _t=0; _t < net->numberOfTransitions(); _t++) {
+                    for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                         if (net->inArc(pPre,_t)>0 && _t != t) {ok=false; break; }
                         if (net->outArc(_t,pPost)>0 && _t != t ) {ok=false; break; }
                     }
                     if (ok) {
                         continueReductions=true;
                         // Remove transition t and the place that has no tokens in m0
-                        fprintf(stderr,"Removing transition %i connected pre-place %i and post-place %i\n",t,pPre,pPost);
+                        fprintf(stderr,"Removing transition %i connected pre-place %i and post-place %i\n",(int)t,(int)pPre,(int)pPost);
                         net->updateinArc(pPre,t,0);
                         net->updateoutArc(t,pPost,0);
                         if (m0[pPre]==0) { // removing pPre
-                                fprintf(stderr,"Removing place %i\n",pPre);
-                                for (int _t=0; _t < net->numberOfTransitions(); _t++) {
+                                fprintf(stderr,"Removing place %i\n",(int)pPre);
+                                for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                                     net->updateoutArc(_t,pPost,net->outArc(_t,pPre));
                                     net->updateoutArc(_t,pPre,0);
                                 }    
                         } else if (m0[pPost]==0) { // removing pPost
-                        fprintf(stderr,"Removing place %i\n",pPost);
-                        for (int _t=0; _t < net->numberOfTransitions(); _t++) {
+                        fprintf(stderr,"Removing place %i\n",(int)pPost);
+                        for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                             net->updateinArc(pPre,_t,net->inArc(pPost,_t));
                             net->updateinArc(pPost,_t,0);
                         }
