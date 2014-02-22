@@ -137,8 +137,41 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                 }              
          } // end of Rule A main for-loop
          
-         
-         
+         // Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
+         for (size_t p=0; p < net->numberOfPlaces(); p++) {
+             if (placeInInhib[p]>0 || m0[p]>0) { continue;} // if p has inhibitor arc or nonzero initial marking it cannot be removed
+             int tPre=-1;
+             int tPost=-1;
+             bool ok=true;
+             for (size_t t=0; t < net->numberOfTransitions(); t++) {
+                 if (net->outArc(t,p)>0) {
+                     if (tPre>=0) {tPre=-1; ok=false; break;}
+                     tPre=t;
+                 }
+                 if (net->inArc(p,t)>0) {
+                     if (tPost>=0) {tPost=-1; ok=false; break;}
+                     tPost=t;
+                 }
+             }
+             if (ok && tPre>=0 && tPost>=0 && (net->outArc(tPre,p)==net->inArc(p,tPost))) {
+                 // Check if the output places of tPost do not have any inhibitor arcs connected
+                 for (size_t _p=0; _p < net->numberOfPlaces(); _p++) {
+                     if (net->outArc(tPost,_p)>0 && placeInInhib[_p]>0) {ok=false; break;}
+                 }
+                 if (ok) {
+                     continueReductions=true;
+                     // Remove place p
+                     fprintf(stderr,"Removing place %i connected pre-transition %i and post-transition %i\n",(int)p,(int)tPre,(int)tPost);
+                     net->updateoutArc(tPre,p,0);
+                     net->updateinArc(p,tPost,0);
+                     for (size_t _p=0; _p < net->numberOfPlaces(); _p++) { // remove tPost
+                         net->updateoutArc(tPre,_p,net->outArc(tPost,_p));
+                         net->updateoutArc(tPost,_p,0);
+                     }
+                 }
+             }
+         } // end of Rule B main for-loop
+               
      } // end of main while-loop   
 }
     
