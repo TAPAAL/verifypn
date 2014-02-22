@@ -11,7 +11,7 @@
 
 namespace PetriEngine{
     
-void Reducer::CreateInhibitorPlaces(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionInInhib){
+void Reducer::CreateInhibitorPlacesAndTransitions(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionInInhib){
         //Initialize
         for(size_t i = 0; i < net->numberOfPlaces(); i++) {
                                 placeInInhib[i] = 0;

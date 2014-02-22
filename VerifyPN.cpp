@@ -293,7 +293,7 @@ int main(int argc, char* argv[]){
                 MarkVal* placeInInhib = new MarkVal[net->numberOfPlaces()];
                 MarkVal* transitionInInhib = new MarkVal[net->numberOfTransitions()];
                         
-                reducer->CreateInhibitorPlaces(net, inhibarcs ,placeInInhib, transitionInInhib); // translates inhibitor place names to indexes in placeInInhib
+                reducer->CreateInhibitorPlacesAndTransitions(net, inhibarcs ,placeInInhib, transitionInInhib); // translates inhibitor place names to indexes in placeInInhib
 
                 reducer->Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
                 reducer->Reduce(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
