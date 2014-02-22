@@ -11,7 +11,7 @@
 
 namespace PetriEngine{
     
-    void Reducer::CreateInhibitorPlaces(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib){
+void Reducer::CreateInhibitorPlaces(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib){
         
         PNMLParser::InhibitorArcIter placeIter;
 	for(placeIter = inhibarcs.begin(); placeIter != inhibarcs.end(); placeIter++){
@@ -30,8 +30,9 @@ namespace PetriEngine{
         
     }
     
-    void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib){
-        fprintf(stdout,"Net reduction enabled.\n");
+    
+void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib){
+        fprintf(stdout,"\nNET INFO:\n");
             fprintf(stdout,"Number of places: %i\n",net->numberOfPlaces());
             fprintf(stdout,"Number of transitions: %i\n\n",net->numberOfTransitions());
            
@@ -58,6 +59,12 @@ namespace PetriEngine{
                 fprintf(stdout,"Inhibitor count for place %i is: %i\n",i,placeInInhib[i]);
             } 
             
+    }
+    
+    
+ void Reducer::Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib) {
+       
+              
     }
     
 }

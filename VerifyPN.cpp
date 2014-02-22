@@ -276,6 +276,7 @@ int main(int argc, char* argv[]){
         //--------------------- Apply Net Reduction ---------------//
         
         if (enablereduction) {
+            fprintf(stdout,"Net reduction is enabled.\n");
             Reducer* reducer = NULL;
             
             //Create scope for net reductions
@@ -295,7 +296,9 @@ int main(int argc, char* argv[]){
                         }
                 reducer->CreateInhibitorPlaces(net, inhibarcs ,placeInInhib); // translates inhibitor place names to indexes in placeInInhib
                 reducer->Print(net,m0,placeInQuery,placeInInhib); 
-            }
+                reducer->Reduce(net,m0,placeInQuery,placeInInhib); 
+                reducer->Print(net,m0,placeInQuery,placeInInhib); 
+           }
         }
         
 	//----------------------- Reachability -----------------------//
