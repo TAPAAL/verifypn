@@ -194,10 +194,10 @@ int PetriNet::outArc(unsigned int transition, unsigned int place) const{
 }
 
 void PetriNet::updateinArc(unsigned int place, unsigned int transition, int weight) {
-        _tv(transition)[place]=weight;
+        _tv(transition)[place]=weight;       
 }
       
-void PetriNet::updateoutArc(unsigned int transition, unsigned int place, int weight) {
+void PetriNet::updateoutArc(unsigned int transition, unsigned int place, int weight) {  
         _tv(transition)[place + _nPlaces]=weight;
 }
 

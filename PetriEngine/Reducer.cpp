@@ -107,7 +107,8 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                         pPost=p;
                     }
                 }
-                if (ok && (m0[pPre]==0 || m0[pPost]==0)) {
+                if (ok && pPre>=0 && pPost>=0 && (m0[pPre]==0 || m0[pPost]==0)) {
+                    fprintf(stderr,"Pre %d and post %d \n",pPre,pPost);
                     // Check that pPre goes only to t and that there is no other transition than t that gives to pPos a
                     for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                         if (net->inArc(pPre,_t)>0 && _t != t) {ok=false; break; }
