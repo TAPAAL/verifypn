@@ -75,7 +75,7 @@ public:
 	int inArc(unsigned int place, unsigned int transition) const;
 	int outArc(unsigned int transition, unsigned int place) const;
         void updateinArc(unsigned int place, unsigned int transition, int weight);
-        void updateourArc(unsigned int transition, unsigned int place, int weight);
+        void updateoutArc(unsigned int transition, unsigned int place, int weight);
         /** Get vector place names, don't use this to get the number of places */
 	const std::vector<std::string>& placeNames() const {return _places;}
 	/** Get vector variable names, don't use this to get the number of variable */

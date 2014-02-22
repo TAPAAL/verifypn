@@ -63,8 +63,51 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
     
     
  void Reducer::Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib) {
-       
-              
-    }
-    
+          
+     bool continueReductions=true;
+     
+     while (continueReductions){
+         continueReductions=false;
+         
+         // Rule A  - find transition t that has exactly one place in pre and post and remove one of the places   
+         for (int t=0; t < net->numberOfTransitions(); t++) {
+                int pPre=-1;
+                int pPost=-1;
+                bool ok=true;
+                for (int p=0; p < net->numberOfPlaces(); p++) {
+                    if (net->inArc(p,t)>0) { 
+                        if (pPre>=0 || net->inArc(p,t)>1 || placeInQuery[p]>0 || placeInInhib[p]>0) { pPre=-1; ok=false; break;}
+                        pPre=p;
+                    }
+                    if (net->outArc(t,p)>0) {
+                        if (pPost>=0 || net->outArc(t,p)>1 || placeInQuery[p]>0 || placeInInhib[p]>0) { pPost=-1; ok=false; break;}
+                        pPost=p;
+                    }
+                }
+                if (ok && (m0[pPre]==0 || m0[pPost]==0)) {
+                    // Check that pPre goes only to t and that there is no other transition than t that gives to pPos a
+                    for (int _t=0; _t < net->numberOfTransitions(); _t++) {
+                        if (net->inArc(pPre,_t)>0 && _t != t) {ok=false; break; }
+                        if (net->outArc(_t,pPost)>0 && _t != t ) {ok=false; break; }
+                    }
+                    if (ok) {
+                        continueReductions=true;
+                        // Remove transition t the place that has no tokens in m0
+                        fprintf(stderr,"Removing transition %i connected pre-place %i and post-place %i\n",t,pPre,pPost);
+                        net->updateinArc(pPre,t,0);
+                        net->updateoutArc(t,pPost,0);
+                        if (m0[pPre]>0) {std::swap<int>(pPre,pPost);}
+                        fprintf(stderr,"Removing place %i\n",pPre);
+                        for (int _t=0; _t < net->numberOfTransitions(); _t++) {
+                            net->updateoutArc(_t,pPost,net->outArc(_t,pPre));
+                            net->updateoutArc(_t,pPre,0);
+                        }    
+                    }
+                }              
+         } // end of Rule A main for-loop
+         
+         
+     } // end of main while-loop   
 }
+    
+} //PetriNet namespace
