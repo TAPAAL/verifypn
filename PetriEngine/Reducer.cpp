@@ -89,7 +89,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
      bool continueReductions=true;
      
      while (continueReductions){
-         continueReductions=false;
+         continueReductions=false; // repeat all reductions rules as long as something was reduced
          
          // Rule A  - find transition t that has exactly one place in pre and post and remove one of the places   
          for (int t=0; t < net->numberOfTransitions(); t++) {
@@ -128,6 +128,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                     }
                 }              
          } // end of Rule A main for-loop
+         
          
          
      } // end of main while-loop   
