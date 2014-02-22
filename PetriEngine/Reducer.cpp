@@ -91,6 +91,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
      while (continueReductions){
          continueReductions=false; // repeat all reductions rules as long as something was reduced
          
+         fprintf(stderr,"Rule A\n");
          // Rule A  - find transition t that has exactly one place in pre and post and remove one of the places   
          for (size_t t=0; t < net->numberOfTransitions(); t++) {
                 if (transitionInInhib[t]>0) { continue;} // if t has a connected inhibitor arc, it cannot be removed
@@ -109,7 +110,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                 }
                 if (ok && pPre>=0 && pPost>=0 && (m0[pPre]==0 || m0[pPost]==0)) {
                     fprintf(stderr,"Pre %d and post %d \n",pPre,pPost);
-                    // Check that pPre goes only to t and that there is no other transition than t that gives to pPos a
+                    // Check that pPre goes only to t and that there is no other transition than t that gives to pPost
                     for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                         if (net->inArc(pPre,_t)>0 && _t != t) {ok=false; break; }
                         if (net->outArc(_t,pPost)>0 && _t != t ) {ok=false; break; }
@@ -137,6 +138,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                 }              
          } // end of Rule A main for-loop
          
+         fprintf(stderr,"Rule B\n");
          // Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
          for (size_t p=0; p < net->numberOfPlaces(); p++) {
              if (placeInInhib[p]>0 || m0[p]>0) { continue;} // if p has inhibitor arc or nonzero initial marking it cannot be removed
@@ -158,12 +160,18 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                  for (size_t _p=0; _p < net->numberOfPlaces(); _p++) {
                      if (net->outArc(tPost,_p)>0 && placeInInhib[_p]>0) {ok=false; break;}
                  }
+                 // Check that tPre goes only to p and that there is no other place than p that gives to tPost 
+                 for (size_t _p=0; _p < net->numberOfPlaces(); _p++) {
+                     if (net->outArc(tPre,_p)>0 && _p != p) {ok=false; break; }
+                     if (net->inArc(_p,tPost)>0 && _p != p ) {ok=false; break; }
+                 }
                  if (ok) {
                      continueReductions=true;
                      // Remove place p
                      fprintf(stderr,"Removing place %i connected pre-transition %i and post-transition %i\n",(int)p,(int)tPre,(int)tPost);
                      net->updateoutArc(tPre,p,0);
                      net->updateinArc(p,tPost,0);
+                     fprintf(stderr,"Removing transition %i\n",(int)tPost);
                      for (size_t _p=0; _p < net->numberOfPlaces(); _p++) { // remove tPost
                          net->updateoutArc(tPre,_p,net->outArc(tPost,_p));
                          net->updateoutArc(tPost,_p,0);
