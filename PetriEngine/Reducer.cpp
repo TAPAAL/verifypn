@@ -108,8 +108,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                         pPost=p;
                     }
                 }
-                if (ok && pPre>=0 && pPost>=0 && (m0[pPre]==0 || m0[pPost]==0)) {
-                    fprintf(stderr,"Pre %d and post %d \n",pPre,pPost);
+                if (ok && pPre>=0 && pPost>=0 && (m0[pPre]==0 || m0[pPost]==0)) {               
                     // Check that pPre goes only to t and that there is no other transition than t that gives to pPost
                     for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                         if (net->inArc(pPre,_t)>0 && _t != t) {ok=false; break; }
@@ -186,6 +185,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
          for (size_t t1=0; t1 < net->numberOfTransitions(); t1++) {
                 for (size_t t2=0; t2 < net->numberOfTransitions(); t2++) {
                         bool ok=true;  // check whether post of t1 is the same as pre of t2
+                        int noOfPlaces=0;
                         for (size_t p=0; p < net->numberOfPlaces(); p++) {
                                 if (net->outArc(t1,p)!=net->inArc(p,t2)) {ok=false; break;}
                                 // check that the places in between are not connected to any other transitions
@@ -193,17 +193,18 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                                     for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                                         if (net->outArc(_t,p)>0 && _t != t1) {ok=false; break;}
                                         if (net->inArc(p,_t)>0 && _t != t2) {ok=false; break;}
+                                        noOfPlaces++;
                                     }
                                 }
                                 if (!ok) {break;}
                         }
-                        //// Make sure one such place is left
-                        if (ok) { // Remove places that are in post of t1, are not in queries, are not inhibitor places and have empty initial marking 
+                        if (ok) { // Remove places that are in post of t1, are not in queries, are not inhibitor places and have empty initial marking, one place must be left
                            for (size_t p=0; p < net->numberOfPlaces(); p++) {
-                               if (net->outArc(t1,p)>0 && placeInQuery[p]==0 && placeInInhib[p]==0 && m0[p]==0) {
+                               if (net->outArc(t1,p)>0 && placeInQuery[p]==0 && placeInInhib[p]==0 && m0[p]==0 && noOfPlaces>=2) {
                                    fprintf(stderr,"Removing place %i\n",(int)p);
                                    net->updateoutArc(t1,p,0);
                                    net->updateinArc(p,t2,0);
+                                   noOfPlaces--;
                                }
                            }
                         }
