@@ -115,16 +115,23 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                     }
                     if (ok) {
                         continueReductions=true;
-                        // Remove transition t the place that has no tokens in m0
+                        // Remove transition t and the place that has no tokens in m0
                         fprintf(stderr,"Removing transition %i connected pre-place %i and post-place %i\n",t,pPre,pPost);
                         net->updateinArc(pPre,t,0);
                         net->updateoutArc(t,pPost,0);
-                        if (m0[pPre]>0) {std::swap<int>(pPre,pPost);}
-                        fprintf(stderr,"Removing place %i\n",pPre);
+                        if (m0[pPre]==0) { // removing pPre
+                                fprintf(stderr,"Removing place %i\n",pPre);
+                                for (int _t=0; _t < net->numberOfTransitions(); _t++) {
+                                    net->updateoutArc(_t,pPost,net->outArc(_t,pPre));
+                                    net->updateoutArc(_t,pPre,0);
+                                }    
+                        } else if (m0[pPost]==0) { // removing pPost
+                        fprintf(stderr,"Removing place %i\n",pPost);
                         for (int _t=0; _t < net->numberOfTransitions(); _t++) {
-                            net->updateoutArc(_t,pPost,net->outArc(_t,pPre));
-                            net->updateoutArc(_t,pPre,0);
-                        }    
+                            net->updateinArc(pPre,_t,net->inArc(pPost,_t));
+                            net->updateinArc(pPost,_t,0);
+                        }
+                        } 
                     }
                 }              
          } // end of Rule A main for-loop
