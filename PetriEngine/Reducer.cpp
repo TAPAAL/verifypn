@@ -108,7 +108,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                         pPost=p;
                     }
                 }
-                if (ok && pPre>=0 && pPost>=0 && pPre!=pPost && (m0[pPre]==0 || m0[pPost]==0)) {               
+                if (ok && pPre>=0 && pPost>=0 && (m0[pPre]==0 || m0[pPost]==0)) {               
                     // Check that pPre goes only to t and that there is no other transition than t that gives to pPost
                     for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                         if (net->inArc(pPre,_t)>0 && _t != t) {ok=false; break; }
@@ -155,14 +155,14 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                      tPost=t;
                  }
              }
-             if (ok && tPre>=0 && tPost>=0 && tPre!=tPost && (net->outArc(tPre,p)==net->inArc(p,tPost))) {
+             if (ok && tPre>=0 && tPost>=0 && tPre!=tPost && (net->outArc(tPre,p)==net->inArc(p,tPost)) && placeInQuery[p]==0 && placeInInhib[p]==0 && m0[p]==0) {
                  // Check if the output places of tPost do not have any inhibitor arcs connected
                  for (size_t _p=0; _p < net->numberOfPlaces(); _p++) {
                      if (net->outArc(tPost,_p)>0 && placeInInhib[_p]>0) {ok=false; break;}
                  }
-                 // Check that tPre goes only to p and that there is no other place than p that gives to tPost 
+                 // Check that there is no other place than p that gives to tPost, tPre can give to other places
                  for (size_t _p=0; _p < net->numberOfPlaces(); _p++) {
-                     if (net->outArc(tPre,_p)>0 && _p != p) {ok=false; break; }
+                    // if (net->outArc(tPre,_p)>0 && _p != p) {ok=false; break; }
                      if (net->inArc(_p,tPost)>0 && _p != p ) {ok=false; break; }
                  }
                  if (ok) {
@@ -173,7 +173,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                      net->updateinArc(p,tPost,0);
                      fprintf(stderr,"Removing transition %i\n",(int)tPost);
                      for (size_t _p=0; _p < net->numberOfPlaces(); _p++) { // remove tPost
-                         net->updateoutArc(tPre,_p,net->outArc(tPost,_p));
+                         net->updateoutArc(tPre,_p,net->outArc(tPre,_p)+net->outArc(tPost,_p));
                          net->updateoutArc(tPost,_p,0);
                      }
                  }
