@@ -184,24 +184,26 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
          // Rule C - two transitions that put and take from the same places
          for (size_t t1=0; t1 < net->numberOfTransitions(); t1++) {
                 for (size_t t2=0; t2 < net->numberOfTransitions(); t2++) {
-                        if (t1==t2) { break;} 
-                        bool ok=true;  // check whether post of t1 is the same as pre of t2
-                        int noOfPlaces=0;
+                    if (t1!=t2) { 
+                        // check what places have as pre t1 and as post t2
+                        int noOfPlaces=0; // how many such places we have
+                        bool removePlace[net->numberOfPlaces()]; // remember what places can be removed
+                        for (size_t p=0; p < net->numberOfPlaces(); p++) {removePlace[p]=false;}
+                        
                         for (size_t p=0; p < net->numberOfPlaces(); p++) {
-                                if (net->outArc(t1,p)!=net->inArc(p,t2)) {ok=false; break;}
-                                // check that the places in between are not connected to any other transitions
-                                if (net->outArc(t1,p)>0) {
-                                    for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
-                                        if (net->outArc(_t,p)>0 && _t != t1) {ok=false; break;}
-                                        if (net->inArc(p,_t)>0 && _t != t2) {ok=false; break;}                                        
-                                    }
-                                     noOfPlaces++;
-                                }
-                                if (!ok) {break;}
-                        }
-                        if (ok && noOfPlaces>=2) { // Remove places that are in post of t1, are not in queries, are not inhibitor places and have empty initial marking, one place must be left
+                                if (net->outArc(t1,p)==net->inArc(p,t2) && net->outArc(t1,p)>0) {                                    
+                                        // check that the places in between are not connected to any other transitions                                
+                                        bool ok=true;
+                                        for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
+                                                if (net->outArc(_t,p)>0 && _t != t1) {ok=false; break;}
+                                                if (net->inArc(p,_t)>0 && _t != t2) {ok=false; break;}                                        
+                                        }
+                                        if (ok) { removePlace[p]=true; noOfPlaces++; }
+                                }                             
+                        }                    
+                        if (noOfPlaces>=2) { // Remove places that are in post of t1, are not in queries, are not inhibitor places and have empty initial marking, one place must be left
                            for (size_t p=0; p < net->numberOfPlaces(); p++) {
-                               if (net->outArc(t1,p)>0 && placeInQuery[p]==0 && placeInInhib[p]==0 && m0[p]==0 && noOfPlaces>=2) {
+                               if (removePlace[p] && noOfPlaces>=2 && placeInQuery[p]==0 && placeInInhib[p]==0 && m0[p]==0) {
                                    continueReductions=true;
                                    fprintf(stderr,"Removing place %i\n",(int)p);
                                    net->updateoutArc(t1,p,0);
@@ -210,6 +212,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                                }
                            }
                         }
+                    }                        
                 }
          }
          
