@@ -11,9 +11,8 @@
 
 namespace PetriEngine{
     
-Reducer::Reducer(unsigned int numberOfTransitions): _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0) { 
-        unfoldTransitions = new int[numberOfTransitions]; 
-        for (int t=0; t< numberOfTransitions; t++) { unfoldTransitions[t]=-1;}
+Reducer::Reducer(unsigned int numberOfTransitions): _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0) {      
+        for (int t=0; t< numberOfTransitions; t++) { std::list<int> unfoldTransitions[t];}
 }
 
 Reducer::~Reducer() {delete[] unfoldTransitions;}
@@ -125,7 +124,11 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                         continueReductions=true;
                         _ruleA++;
                         // Remember that after any transition putting to pPre, we should fire immediately after that also t
-                        
+                        for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
+                            for(int i=0; i< net->outArc(_t,pPre); i++) {
+                                unfoldTransitions[_t].push_back(t);
+                            }
+                        }    
                         // Remove transition t and the place that has no tokens in m0
                         fprintf(stderr,"Removing transition %i connected pre-place %i and post-place %i\n",(int)t,(int)pPre,(int)pPost);
                         net->updateinArc(pPre,t,0);
@@ -183,6 +186,8 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                  if (ok) {
                      continueReductions=true;
                      _ruleB++;
+                     // Remember that after tPre we should always fire also tPost
+                     unfoldTransitions[tPre].push_back(tPost);
                      // Remove place p
                      fprintf(stderr,"Removing place %i connected pre-transition %i and post-transition %i\n",(int)p,(int)tPre,(int)tPost);
                      net->updateoutArc(tPre,p,0);

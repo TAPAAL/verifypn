@@ -37,7 +37,7 @@ private:
         int _removedTransitions;
         int _removedPlaces;
         int _ruleA, _ruleB, _ruleC, _ruleD;
-        int* unfoldTransitions;
+        std::list<int>* unfoldTransitions;
 };
 
 
