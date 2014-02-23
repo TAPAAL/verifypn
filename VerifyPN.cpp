@@ -282,8 +282,7 @@ int main(int argc, char* argv[]){
         //--------------------- Apply Net Reduction ---------------//
         
         if (enablereduction==1 or enablereduction==2) {
-            fprintf(stdout,"Net reduction is enabled.\n");
-            Reducer* reducer = NULL;
+            Reducer reducer=Reducer();
             
             //Create scope for net reductions
             {
@@ -299,11 +298,14 @@ int main(int argc, char* argv[]){
                 MarkVal* placeInInhib = new MarkVal[net->numberOfPlaces()];
                 MarkVal* transitionInInhib = new MarkVal[net->numberOfTransitions()];
                         
-                reducer->CreateInhibitorPlacesAndTransitions(net, inhibarcs ,placeInInhib, transitionInInhib); // translates inhibitor place names to indexes in placeInInhib
+                reducer.CreateInhibitorPlacesAndTransitions(net, inhibarcs ,placeInInhib, transitionInInhib); // translates inhibitor place names to indexes in placeInInhib
 
-                reducer->Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
-                reducer->Reduce(net,m0,placeInQuery,placeInInhib, transitionInInhib,enablereduction); 
-                reducer->Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
+                reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
+                reducer.Reduce(net,m0,placeInQuery,placeInInhib, transitionInInhib,enablereduction);
+                fprintf(stdout,"Net reduction is enabled.\n");
+                fprintf(stdout,"Removed transitions: %d\n",reducer.RemovedTransitions());
+                fprintf(stdout,"Removed places: %d\n",reducer.RemovedPlaces());
+                reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
            }
         }
         

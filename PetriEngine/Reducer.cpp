@@ -11,6 +11,8 @@
 
 namespace PetriEngine{
     
+Reducer::Reducer(): _removedTransitions(0), _removedPlaces(0) { }
+    
 void Reducer::CreateInhibitorPlacesAndTransitions(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionInInhib){
         //Initialize
         for(size_t i = 0; i < net->numberOfPlaces(); i++) {
@@ -120,14 +122,17 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                         fprintf(stderr,"Removing transition %i connected pre-place %i and post-place %i\n",(int)t,(int)pPre,(int)pPost);
                         net->updateinArc(pPre,t,0);
                         net->updateoutArc(t,pPost,0);
+                        _removedTransitions++;
                         if (m0[pPre]==0) { // removing pPre
                                 fprintf(stderr,"Removing place %i\n",(int)pPre);
+                                _removedPlaces++;
                                 for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                                     net->updateoutArc(_t,pPost,net->outArc(_t,pPre));
                                     net->updateoutArc(_t,pPre,0);
                                 }    
                         } else if (m0[pPost]==0) { // removing pPost
                         fprintf(stderr,"Removing place %i\n",(int)pPost);
+                        _removedPlaces++;
                         for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                             net->updateinArc(pPre,_t,net->inArc(pPost,_t));
                             net->updateinArc(pPost,_t,0);
@@ -172,7 +177,9 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                      fprintf(stderr,"Removing place %i connected pre-transition %i and post-transition %i\n",(int)p,(int)tPre,(int)tPost);
                      net->updateoutArc(tPre,p,0);
                      net->updateinArc(p,tPost,0);
+                     _removedPlaces++;
                      fprintf(stderr,"Removing transition %i\n",(int)tPost);
+                     _removedTransitions++;
                      for (size_t _p=0; _p < net->numberOfPlaces(); _p++) { // remove tPost
                          net->updateoutArc(tPre,_p,net->outArc(tPre,_p)+net->outArc(tPost,_p));
                          net->updateoutArc(tPost,_p,0);
@@ -211,6 +218,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                                    fprintf(stderr,"Removing place %i\n",(int)p);
                                    net->updateoutArc(t1,p,0);
                                    net->updateinArc(p,t2,0);
+                                   _removedPlaces++;
                                    noOfPlaces--;
                                }
                            }

@@ -17,17 +17,20 @@ namespace PetriEngine{
 
 
 /** Builder for building engine representations of PetriNets */
-class Reducer
-
-{
+class Reducer{
+            
+private:
+        int _removedTransitions;
+        int _removedPlaces;
+    
 public:
 	Reducer();
         void CreateInhibitorPlacesAndTransitions(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionsInInhib);
         void Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionsInInhib);
         void Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionsInInhib, int enablereduction);
         
-private:
-
+        int RemovedTransitions() const { return _removedTransitions; }
+        int RemovedPlaces() const { return _removedPlaces; }
 };
 
 
