@@ -282,7 +282,7 @@ int main(int argc, char* argv[]){
         //--------------------- Apply Net Reduction ---------------//
         
         if (enablereduction==1 or enablereduction==2) {
-            Reducer reducer=Reducer();
+            Reducer reducer=Reducer(); // needed also for trace generation
             
             //Create scope for net reductions
             {
@@ -302,11 +302,14 @@ int main(int argc, char* argv[]){
 
                 reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
                 reducer.Reduce(net,m0,placeInQuery,placeInInhib, transitionInInhib,enablereduction);
+                reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib);
                 fprintf(stdout,"Net reduction is enabled.\n");
                 fprintf(stdout,"Removed transitions: %d\n",reducer.RemovedTransitions());
                 fprintf(stdout,"Removed places: %d\n",reducer.RemovedPlaces());
-                reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
-           }
+                fprintf(stdout,"Applications of rule A: %d\n",reducer.RuleA());
+                fprintf(stdout,"Applications of rule B: %d\n",reducer.RuleB());
+                fprintf(stdout,"Applications of rule C: %d\n\n",reducer.RuleC());
+             }
         }
         
 	//----------------------- Reachability -----------------------//

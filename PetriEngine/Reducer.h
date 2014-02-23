@@ -19,10 +19,6 @@ namespace PetriEngine{
 /** Builder for building engine representations of PetriNets */
 class Reducer{
             
-private:
-        int _removedTransitions;
-        int _removedPlaces;
-    
 public:
 	Reducer();
         void CreateInhibitorPlacesAndTransitions(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionsInInhib);
@@ -31,6 +27,14 @@ public:
         
         int RemovedTransitions() const { return _removedTransitions; }
         int RemovedPlaces() const { return _removedPlaces; }
+        int RuleA() const { return _ruleA; }
+        int RuleB() const { return _ruleB; }
+        int RuleC() const { return _ruleC; }
+        
+private:
+        int _removedTransitions;
+        int _removedPlaces;
+        int _ruleA, _ruleB, _ruleC;
 };
 
 
