@@ -80,14 +80,22 @@ int main(int argc, char* argv[]){
 	// Parse command line arguments
 	for(int i = 1; i < argc; i++){
 		if(strcmp(argv[i], "-k") == 0 || strcmp(argv[i], "--k-bound") == 0){
-			if(sscanf(argv[++i], "%d", &kbound) != 1 || kbound < 0){
+                        if (i==argc-1) {
+                                fprintf(stderr, "Missing number after \"%s\"\n", argv[i]);
+				return ErrorCode;                           
+                        }
+                        if(sscanf(argv[++i], "%d", &kbound) != 1 || kbound < 0){
 				fprintf(stderr, "Argument Error: Invalid number of tokens \"%s\"\n", argv[i]);
 				return ErrorCode;
 			}
 		}else if(strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--trace") == 0){
 			outputtrace = true;
 		}else if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--search-strategy") == 0){
-			char* s = argv[++i];
+			if (i==argc-1) {
+                                fprintf(stderr, "Missing search strategy after \"%s\"\n\n", argv[i]);
+				return ErrorCode;                           
+                        }
+                        char* s = argv[++i];
 			if(strcmp(s, "BestFS") == 0)
 				searchstrategy = BestFS;
 			else if(strcmp(s, "BFS") == 0)
@@ -103,6 +111,10 @@ int main(int argc, char* argv[]){
 				return ErrorCode;
 			}
 		}else if(strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--memory-limit") == 0){
+                        if (i==argc-1) {
+                                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+				return ErrorCode;                           
+                        }
 			if(sscanf(argv[++i], "%d", &memorylimit) != 1 || memorylimit < 0){
 				fprintf(stderr, "Argument Error: Invalid memory limit \"%s\"\n", argv[i]);
 				return ErrorCode;
@@ -111,23 +123,28 @@ int main(int argc, char* argv[]){
 		}else if(strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable-overapprox") == 0){
 			disableoverapprox = true;
                 }else if(strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--reduction") == 0){
+                        if (i==argc-1) {
+                                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+				return ErrorCode;                           
+                        }
                         if(sscanf(argv[++i], "%d", &enablereduction) != 1 || enablereduction < 0 || enablereduction > 2){
-				fprintf(stderr, "Argument Error: Invalid reduction argument for \"%s\"\n", argv[i]);
+				fprintf(stderr, "Argument Error: Invalid reduction argument \"%s\"\n", argv[i]);
 				return ErrorCode;
 			}
 		}else if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0){
-			printf(	"Usage: VerifyPN [options] model-file query-file\n"
-					"Determine untimed reachability of a query for a Petri net.\n"
+			printf(	"Usage: verifypn [options] model-file query-file\n"
+					"A tool for answering reachability of place cardinality queries (including deadlock)\n" 
+                                        "for weighted P/T Petri nets extended with inhibitor arcs.\n"
 					"\n"
 					"Options:\n"
 					"  -k, --k-bound <number of tokens>   Token bound, 0 to ignore (default)\n"
 					"  -t, --trace                        Provide XML-trace to stderr\n"
 					"  -s, --search-strategy <strategy>   Search strategy:\n"
 					"                                     - BestFS       Heuristic search (default)\n"
-					"                                     - BFS          Best first search\n"
+					"                                     - BFS          Breath first search\n"
 					"                                     - DFS          Depth first search\n"
 					"                                     - RDFS         Random depth first search\n"
-					"                                     - OverApprox   Linear Over Approx.\n"
+					"                                     - OverApprox   Linear over-approximation only\n"
 					"  -m, --memory-limit <megabyte>      Memory limit for state space in MB,\n"
 					"                                     0 for unlimited (3 GB default)\n"
 					"  -d, --disable-over-approximation   Disable linear over approximation\n"
@@ -145,10 +162,11 @@ int main(int argc, char* argv[]){
 					"  3   Error, see stderr for error message\n"
 					"\n"
 					"VerifyPN is a compilation of PeTe as untimed backend for TAPAAL.\n"
-					"PeTe project page: <https://github.com/jopsen/PeTe>\n");
+					"PeTe project page: <https://github.com/jopsen/PeTe>\n"
+                                        "TAPAAL project page: <http://www.tapaal/net>\n");
 			return 0;
 		}else if(strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0){
-			printf("VerifyPN (PeTe for TAPAAL) %s\n", VERSION);
+			printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERSION);
 			printf("Copyright (C) 2011-2014 Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
 			printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>,\n");
 			printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
