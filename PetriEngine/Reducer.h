@@ -20,7 +20,7 @@ namespace PetriEngine{
 class Reducer{
             
 public:
-	Reducer(unsigned int noOfTransitions);
+	Reducer(PetriNet *net);
         ~Reducer();
         void CreateInhibitorPlacesAndTransitions(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionsInInhib);
         void Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionsInInhib);
@@ -37,7 +37,8 @@ private:
         int _removedTransitions;
         int _removedPlaces;
         int _ruleA, _ruleB, _ruleC, _ruleD;
-        std::list<int>* unfoldTransitions;
+        typedef std::list< std::pair<int,int> > unfoldTransitionsType; 
+        unfoldTransitionsType* unfoldTransitions;
 };
 
 

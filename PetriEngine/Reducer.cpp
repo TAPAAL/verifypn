@@ -11,11 +11,13 @@
 
 namespace PetriEngine{
     
-Reducer::Reducer(unsigned int numberOfTransitions): _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0) {      
-        for (int t=0; t< numberOfTransitions; t++) { std::list<int> unfoldTransitions[t];}
+Reducer::Reducer(PetriNet  *net): _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0) {                 
+        unfoldTransitions = new unfoldTransitionsType[net->numberOfTransitions()];
 }
 
-Reducer::~Reducer() {delete[] unfoldTransitions;}
+Reducer::~Reducer() {
+        delete[] unfoldTransitions;
+}
     
 void Reducer::CreateInhibitorPlacesAndTransitions(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionInInhib){
         //Initialize
@@ -125,9 +127,8 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                         _ruleA++;
                         // Remember that after any transition putting to pPre, we should fire immediately after that also t
                         for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
-                            for(int i=0; i< net->outArc(_t,pPre); i++) {
-                                unfoldTransitions[_t].push_back(t);
-                            }
+                            std::pair<int, int> element(t, net->outArc(_t,pPre));
+                            unfoldTransitions[_t].push_back(element);                           
                         }    
                         // Remove transition t and the place that has no tokens in m0
                         fprintf(stderr,"Removing transition %i connected pre-place %i and post-place %i\n",(int)t,(int)pPre,(int)pPost);
@@ -187,7 +188,8 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                      continueReductions=true;
                      _ruleB++;
                      // Remember that after tPre we should always fire also tPost
-                     unfoldTransitions[tPre].push_back(tPost);
+                     std::pair<int, int> element(tPost,1);
+                     unfoldTransitions[tPre].push_back(element);
                      // Remove place p
                      fprintf(stderr,"Removing place %i connected pre-transition %i and post-transition %i\n",(int)p,(int)tPre,(int)tPost);
                      net->updateoutArc(tPre,p,0);
