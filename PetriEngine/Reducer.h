@@ -30,11 +30,12 @@ public:
         int RuleA() const { return _ruleA; }
         int RuleB() const { return _ruleB; }
         int RuleC() const { return _ruleC; }
+        int RuleD() const { return _ruleD; } 
         
 private:
         int _removedTransitions;
         int _removedPlaces;
-        int _ruleA, _ruleB, _ruleC;
+        int _ruleA, _ruleB, _ruleC, _ruleD;
 };
 
 

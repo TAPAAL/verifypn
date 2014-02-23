@@ -11,7 +11,7 @@
 
 namespace PetriEngine{
     
-Reducer::Reducer(): _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0) { }
+Reducer::Reducer(): _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0) { }
     
 void Reducer::CreateInhibitorPlacesAndTransitions(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionInInhib){
         //Initialize
@@ -231,6 +231,31 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                 }
          }
     }    
+         
+         fprintf(stderr,"Rule D\n");
+         // Rule D - two transitions with the same pre and post and same inhibitor arcs 
+         for (size_t t1=0; t1 < net->numberOfTransitions(); t1++) {
+                for (size_t t2=0; t2 < net->numberOfTransitions(); t2++) {
+                    if (t1!=t2 && transitionInInhib[t1]==transitionInInhib[t2]) {                       
+                        bool ok=false;
+                        for (size_t p=0; p < net->numberOfPlaces(); p++) {
+                            if (net->inArc(p,t1)!=net->inArc(p,t2) || net->outArc(t1,p)!=net->outArc(t2,p)) {ok=false; break;}
+                            if (net->inArc(p,t2)>0 || net->outArc(t2,p)>0) {ok=true;} //so that we do not remove isolated transitions 
+                        }
+                        if (ok) { // Remove transition t2
+                            continueReductions=true;
+                            _ruleD++;
+                            _removedPlaces++;                           
+                            fprintf(stderr,"Removing transition %i\n",(int)t2);                                                             
+                            for (size_t p=0; p < net->numberOfPlaces(); p++) {                                                                                           
+                                   net->updateoutArc(t2,p,0);
+                                   net->updateinArc(p,t2,0);
+                                   
+                            }
+                        }
+                     }
+                }                        
+         }
          
      } // end of main while-loop   
 }

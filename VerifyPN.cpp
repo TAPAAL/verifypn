@@ -326,8 +326,9 @@ int main(int argc, char* argv[]){
                 fprintf(stdout,"Removed places: %d\n",reducer.RemovedPlaces());
                 fprintf(stdout,"Applications of rule A: %d\n",reducer.RuleA());
                 fprintf(stdout,"Applications of rule B: %d\n",reducer.RuleB());
-                fprintf(stdout,"Applications of rule C: %d\n\n",reducer.RuleC());
-             }
+                fprintf(stdout,"Applications of rule C: %d\n",reducer.RuleC());
+                fprintf(stdout,"Applications of rule D: %d\n\n",reducer.RuleD()); 
+            }
         }
         
 	//----------------------- Reachability -----------------------//
