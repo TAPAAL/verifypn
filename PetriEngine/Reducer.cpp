@@ -114,7 +114,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                     // Check that pPre goes only to t and that there is no other transition than t that gives to pPost
                     for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                         if (net->inArc(pPre,_t)>0 && _t != t) {ok=false; break; }
-                        if (net->outArc(_t,pPost)>0 && _t != t ) {ok=false; break; }
+                        // if (net->outArc(_t,pPost)>0 && _t != t ) {ok=false; break; }
                     }
                     if (ok) {
                         continueReductions=true;
@@ -128,7 +128,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                                 fprintf(stderr,"Removing place %i\n",(int)pPre);
                                 _removedPlaces++;
                                 for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
-                                    net->updateoutArc(_t,pPost,net->outArc(_t,pPre));
+                                    net->updateoutArc(_t,pPost,net->outArc(_t,pPost)+net->outArc(_t,pPre));
                                     net->updateoutArc(_t,pPre,0);
                                 }    
                         } else if (m0[pPost]==0) { // removing pPost
@@ -136,6 +136,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                         _removedPlaces++;
                         for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                             net->updateinArc(pPre,_t,net->inArc(pPost,_t));
+                            net->updateoutArc(_t,pPre,net->outArc(_t,pPre)+net->outArc(_t,pPost));
                             net->updateinArc(pPost,_t,0);
                         }
                         } 
@@ -190,7 +191,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
              }
          } // end of Rule B main for-loop
         
-    if (enablereduction==1) {     
+    if (enablereduction==1) {     // only allowed in aggresive reductions (it changes k-boundedness)
          fprintf(stderr,"Rule C\n");
          // Rule C - two transitions that put and take from the same places
          for (size_t t1=0; t1 < net->numberOfTransitions(); t1++) {
