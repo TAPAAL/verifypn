@@ -11,7 +11,12 @@
 
 namespace PetriEngine{
     
-Reducer::Reducer(): _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0) { }
+Reducer::Reducer(unsigned int numberOfTransitions): _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0) { 
+        unfoldTransitions = new int[numberOfTransitions]; 
+        for (int t=0; t< numberOfTransitions; t++) { unfoldTransitions[t]=-1;}
+}
+
+Reducer::~Reducer() {delete[] unfoldTransitions;}
     
 void Reducer::CreateInhibitorPlacesAndTransitions(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionInInhib){
         //Initialize
@@ -119,6 +124,8 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                     if (ok) {
                         continueReductions=true;
                         _ruleA++;
+                        // Remember that after any transition putting to pPre, we should fire immediately after that also t
+                        
                         // Remove transition t and the place that has no tokens in m0
                         fprintf(stderr,"Removing transition %i connected pre-place %i and post-place %i\n",(int)t,(int)pPre,(int)pPost);
                         net->updateinArc(pPre,t,0);

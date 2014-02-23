@@ -300,7 +300,7 @@ int main(int argc, char* argv[]){
         //--------------------- Apply Net Reduction ---------------//
         
         if (enablereduction==1 or enablereduction==2) {
-            Reducer reducer=Reducer(); // needed also for trace generation
+            Reducer reducer=Reducer(net->numberOfTransitions()); // needed also for trace generation
             
             //Create scope for net reductions
             {
