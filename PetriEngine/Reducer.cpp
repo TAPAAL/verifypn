@@ -84,7 +84,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
     }
     
     
- void Reducer::Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
+ void Reducer::Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, int enablereduction) {
           
      bool continueReductions=true;
      
@@ -181,6 +181,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
              }
          } // end of Rule B main for-loop
         
+    if (enablereduction==1) {     
          fprintf(stderr,"Rule C\n");
          // Rule C - two transitions that put and take from the same places
          for (size_t t1=0; t1 < net->numberOfTransitions(); t1++) {
@@ -202,7 +203,8 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                                         if (ok) { removePlace[p]=true; noOfPlaces++; }
                                 }                             
                         }                    
-                        if (noOfPlaces>=2) { // Remove places that are in post of t1, are not in queries, are not inhibitor places and have empty initial marking, one place must be left
+                        if (noOfPlaces>=2) { 
+          // Remove places that are in post of t1, are not in queries, are not inhibitor places and have empty initial marking, one place must be left
                            for (size_t p=0; p < net->numberOfPlaces(); p++) {
                                if (removePlace[p] && noOfPlaces>=2 && placeInQuery[p]==0 && placeInInhib[p]==0 && m0[p]==0) {
                                    continueReductions=true;
@@ -216,7 +218,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                     }                        
                 }
          }
-         
+    }    
          
      } // end of main while-loop   
 }

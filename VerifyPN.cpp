@@ -69,11 +69,11 @@ int main(int argc, char* argv[]){
 	bool outputtrace = false;
 	int kbound = 0;
 	SearchStrategies searchstrategy = BestFS;
-	int memorylimit = 1024*1024*1024;
+	int memorylimit = 3*1024*1024*1024;
 	char* modelfile = NULL;
 	char* queryfile = NULL;
 	bool disableoverapprox = false;
-        bool enablereduction = false;
+        int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
 
 	//----------------------- Parse Arguments -----------------------//
 
@@ -111,7 +111,10 @@ int main(int argc, char* argv[]){
 		}else if(strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable-overapprox") == 0){
 			disableoverapprox = true;
                 }else if(strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--reduction") == 0){
-                        enablereduction = true;
+                        if(sscanf(argv[++i], "%d", &enablereduction) != 1 || enablereduction < 0 || enablereduction > 2){
+				fprintf(stderr, "Argument Error: Invalid reduction argument for \"%s\"\n", argv[i]);
+				return ErrorCode;
+			}
 		}else if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0){
 			printf(	"Usage: VerifyPN [options] model-file query-file\n"
 					"Determine untimed reachability of a query for a Petri net.\n"
@@ -126,9 +129,12 @@ int main(int argc, char* argv[]){
 					"                                     - RDFS         Random depth first search\n"
 					"                                     - OverApprox   Linear Over Approx.\n"
 					"  -m, --memory-limit <megabyte>      Memory limit for state space in MB,\n"
-					"                                     0 for unlimited (1 GB default)\n"
+					"                                     0 for unlimited (3 GB default)\n"
 					"  -d, --disable-over-approximation   Disable linear over approximation\n"
-                                        "  -r, --reduction                    Enable structural net reduction\n"
+                                        "  -r, --reduction                    Enable structural net reduction:\n"
+                                        "                                     - 0  disabled (default)\n"
+                                        "                                     - 1  aggressive reduction\n"
+                                        "                                     - 2  reduction preserving k-boundedness\n"
 					"  -h, --help                         Display this help message\n"
 					"  -v, --version                      Display version information\n"
 					"\n"
@@ -275,7 +281,7 @@ int main(int argc, char* argv[]){
 
         //--------------------- Apply Net Reduction ---------------//
         
-        if (enablereduction) {
+        if (enablereduction==1 or enablereduction==2) {
             fprintf(stdout,"Net reduction is enabled.\n");
             Reducer* reducer = NULL;
             
@@ -296,7 +302,7 @@ int main(int argc, char* argv[]){
                 reducer->CreateInhibitorPlacesAndTransitions(net, inhibarcs ,placeInInhib, transitionInInhib); // translates inhibitor place names to indexes in placeInInhib
 
                 reducer->Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
-                reducer->Reduce(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
+                reducer->Reduce(net,m0,placeInQuery,placeInInhib, transitionInInhib,enablereduction); 
                 reducer->Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
            }
         }
