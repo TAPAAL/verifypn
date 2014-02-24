@@ -155,7 +155,8 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                 }              
          } // end of Rule A main for-loop
          
-       
+      
+    if (enablereduction==1) {     // only allowed in aggresive reductions (it changes k-boundedness)
          fprintf(stderr,"Rule B\n");
          // Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
          for (size_t p=0; p < net->numberOfPlaces(); p++) {
@@ -204,6 +205,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                  }
              }
          } // end of Rule B main for-loop
+    }     
         
     if (enablereduction==1) {     // only allowed in aggresive reductions (it changes k-boundedness)
          fprintf(stderr,"Rule C\n");
