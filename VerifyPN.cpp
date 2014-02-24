@@ -318,16 +318,9 @@ int main(int argc, char* argv[]){
                         
                 reducer.CreateInhibitorPlacesAndTransitions(net, inhibarcs ,placeInInhib, transitionInInhib); // translates inhibitor place names to indexes in placeInInhib
 
-                reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
+               // reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
                 reducer.Reduce(net,m0,placeInQuery,placeInInhib, transitionInInhib,enablereduction);
-                reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib);
-                fprintf(stdout,"Net reduction is enabled.\n");
-                fprintf(stdout,"Removed transitions: %d\n",reducer.RemovedTransitions());
-                fprintf(stdout,"Removed places: %d\n",reducer.RemovedPlaces());
-                fprintf(stdout,"Applications of rule A: %d\n",reducer.RuleA());
-                fprintf(stdout,"Applications of rule B: %d\n",reducer.RuleB());
-                fprintf(stdout,"Applications of rule C: %d\n",reducer.RuleC());
-                fprintf(stdout,"Applications of rule D: %d\n\n",reducer.RuleD()); 
+               // reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib);
             }
         }
         
@@ -393,7 +386,15 @@ int main(int argc, char* argv[]){
 	fprintf(stdout, "\texplored states:   %lli\n", result.exploredStates());
 	fprintf(stdout, "\texpanded states:   %lli\n", result.expandedStates());
 	fprintf(stdout, "\tmax tokens:        %i\n", result.maxTokens());
-
+        if (enablereduction!=0) {
+                fprintf(stdout,"\nNet reduction is enabled.\n");
+                fprintf(stdout,"Removed transitions: %d\n",reducer.RemovedTransitions());
+                fprintf(stdout,"Removed places: %d\n",reducer.RemovedPlaces());
+                fprintf(stdout,"Applications of rule A: %d\n",reducer.RuleA());
+                fprintf(stdout,"Applications of rule B: %d\n",reducer.RuleB());
+                fprintf(stdout,"Applications of rule C: %d\n",reducer.RuleC());
+                fprintf(stdout,"Applications of rule D: %d\n\n",reducer.RuleD()); 
+        }
 	//----------------------- Output Result -----------------------//
 
 	ReturnValues retval = ErrorCode;
