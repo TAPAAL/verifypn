@@ -299,8 +299,8 @@ int main(int argc, char* argv[]){
 
         //--------------------- Apply Net Reduction ---------------//
         
+        Reducer reducer=Reducer(net); // original net should be remembered due to trace generation
         if (enablereduction==1 or enablereduction==2) {
-            Reducer reducer=Reducer(net); // original net should be remembered due to trace generation
             
             //Create scope for net reductions
             {
@@ -364,8 +364,7 @@ int main(int argc, char* argv[]){
 	ReachabilityResult result = strategy->reachable(*net, m0, v0, query);
 
 	//----------------------- Output Trace -----------------------//
-
-	const std::vector<unsigned int>& trace = result.trace();
+        const std::vector<unsigned int>& trace = (enablereduction==0?result.trace() :reducer.NonreducedTrace(net,result.trace()));
 	const std::vector<std::string>& tnames = net->transitionNames();
 	const std::vector<std::string>& pnames = net->placeNames();
 

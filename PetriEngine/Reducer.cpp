@@ -11,12 +11,24 @@
 
 namespace PetriEngine{
     
-Reducer::Reducer(PetriNet  *net): _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0) {                 
-        unfoldTransitions = new unfoldTransitionsType[net->numberOfTransitions()];
+Reducer::Reducer(PetriNet  *net): _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0) {
+        _nplaces=net->numberOfPlaces();
+        _ntransitions=net->numberOfTransitions();
+        unfoldTransitions = new unfoldTransitionsType[_ntransitions];
+        _inArc = new int[_nplaces*_ntransitions];
+        _outArc = new int[_nplaces*_ntransitions];
+        for (int p=0; p<_nplaces; p++) {
+            for (int t=0; t<_ntransitions; t++) {
+                _inArc[_nplaces*t+p]=net->inArc(p,t);
+                _outArc[_nplaces*t+p]=net->outArc(t,p);
+            }
+        }
 }
 
 Reducer::~Reducer() {
         delete[] unfoldTransitions;
+        delete[] _inArc;
+        delete[] _outArc;
 }
     
 void Reducer::CreateInhibitorPlacesAndTransitions(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionInInhib){
@@ -60,35 +72,30 @@ void Reducer::CreateInhibitorPlacesAndTransitions(PetriNet* net, PNMLParser::Inh
     
 void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib){
         fprintf(stdout,"\nNET INFO:\n");
-            fprintf(stdout,"Number of places: %i\n",net->numberOfPlaces());
-            fprintf(stdout,"Number of transitions: %i\n\n",net->numberOfTransitions());
-           
-                for (int j=0; j < net->numberOfTransitions(); j++) {
-                fprintf(stdout,"Transition %d:\n",j); 
-                for (int i=0; i < net->numberOfPlaces(); i++) {             
+        fprintf(stdout,"Number of places: %i\n",net->numberOfPlaces());
+        fprintf(stdout,"Number of transitions: %i\n\n",net->numberOfTransitions());
+        for (int j=0; j < net->numberOfTransitions(); j++) {
+            fprintf(stdout,"Transition %d:\n",j); 
+            for (int i=0; i < net->numberOfPlaces(); i++) {             
                      if (net->inArc(i,j)>0) fprintf(stdout,"   Input place %d with arc-weight %d\n",i,net->inArc(i,j));                       
-                }
-                for (int i=0; i < net->numberOfPlaces(); i++) {             
-                     if (net->outArc(j,i)>0) fprintf(stdout,"  Output place %d with arc-weight %d\n",i,net->outArc(j,i));                       
-                }
-                fprintf(stdout,"\n",j);   
             }
-            
-            for (int i=0; i < net->numberOfPlaces(); i++) {
+            for (int i=0; i < net->numberOfPlaces(); i++) {             
+                     if (net->outArc(j,i)>0) fprintf(stdout,"  Output place %d with arc-weight %d\n",i,net->outArc(j,i));                       
+            }
+                fprintf(stdout,"\n",j);   
+        }
+        for (int i=0; i < net->numberOfPlaces(); i++) {
                 fprintf(stdout,"Marking at place %d is: %d\n",i,m0[i]);
-            } 
-    
-            for (int i=0; i < net->numberOfPlaces(); i++) {
+        } 
+        for (int i=0; i < net->numberOfPlaces(); i++) {
                 fprintf(stdout,"Query count for place %d is: %d\n",i,placeInQuery[i]);
-            } 
-           
-            for (int i=0; i < net->numberOfPlaces(); i++) {
+        } 
+        for (int i=0; i < net->numberOfPlaces(); i++) {
                 fprintf(stdout,"Inhibitor count for place %d is: %d\n",i,placeInInhib[i]);
-            } 
-            
-            for (int i=0; i < net->numberOfTransitions(); i++) {
+        } 
+        for (int i=0; i < net->numberOfTransitions(); i++) {
                 fprintf(stdout,"Inhibitor count for transition %d is: %d\n",i,transitionInInhib[i]);
-            } 
+        } 
     }
     
     
@@ -276,4 +283,32 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
      } // end of main while-loop   
 }
     
+void Reducer::expandTrace (unsigned int t, std::vector<unsigned int>& trace) {
+         trace.push_back(t);
+         for(unfoldTransitionsType::iterator it = unfoldTransitions[t].begin(); it != unfoldTransitions[t].end(); it++) {
+             for (int i=1; i<= it->second; i++) {
+                 expandTrace(it->first, trace);
+             }        
+         }
+ }
+ 
+const std::vector<unsigned int> Reducer::NonreducedTrace(PetriNet* net, const std::vector<unsigned int>& trace) {
+    // recover the original net
+    for (int p=0; p<_nplaces; p++) {
+            for (int t=0; t<_ntransitions; t++) {
+                net->updateinArc(p,t,_inArc[_nplaces*t+p]);
+                net->updateoutArc(t,p,_outArc[_nplaces*t+p]);
+            }
+        }
+    // compute the expanded (nonreduced) trace)
+    std::vector<unsigned int> nonreducedTrace;
+    
+    for(size_t i = 0; i < trace.size(); i++){
+        expandTrace(trace[i],nonreducedTrace);
+    }
+    
+    return nonreducedTrace; // this makes a copy of the vector, but the slowdown is insignificant
+}
+
+
 } //PetriNet namespace
