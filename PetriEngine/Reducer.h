@@ -42,6 +42,7 @@ private:
         
         typedef std::list< std::pair<int,int> > unfoldTransitionsType; 
         unfoldTransitionsType* unfoldTransitions;
+        unfoldTransitionsType* unfoldTransitionsInit;
         
         void expandTrace (unsigned int t, std::vector<unsigned int>& trace); 
         

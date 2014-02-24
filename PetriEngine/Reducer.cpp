@@ -15,6 +15,7 @@ Reducer::Reducer(PetriNet  *net): _removedTransitions(0), _removedPlaces(0), _ru
         _nplaces=net->numberOfPlaces();
         _ntransitions=net->numberOfTransitions();
         unfoldTransitions = new unfoldTransitionsType[_ntransitions];
+        unfoldTransitionsInit = new unfoldTransitionsType[1];
         _inArc = new int[_nplaces*_ntransitions];
         _outArc = new int[_nplaces*_ntransitions];
         for (int p=0; p<_nplaces; p++) {
@@ -27,6 +28,7 @@ Reducer::Reducer(PetriNet  *net): _removedTransitions(0), _removedPlaces(0), _ru
 
 Reducer::~Reducer() {
         delete[] unfoldTransitions;
+        delete[] unfoldTransitionsInit;
         delete[] _inArc;
         delete[] _outArc;
 }
@@ -132,10 +134,17 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                     if (ok) {
                         continueReductions=true;
                         _ruleA++;
+                        // Remember that if the initial marking has tokens in pPre, we should fire  t initially
+                        if (m0[pPre]>0) {
+                                std::pair<int, int> element(t, m0[pPre]);
+                                unfoldTransitionsInit->push_back(element);
+                        } 
                         // Remember that after any transition putting to pPre, we should fire immediately after that also t
                         for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
-                            std::pair<int, int> element(t, net->outArc(_t,pPre));
-                            unfoldTransitions[_t].push_back(element);                           
+                            if (net->outArc(_t,pPre)>0) {
+                                std::pair<int, int> element(t, net->outArc(_t,pPre));
+                                unfoldTransitions[_t].push_back(element);
+                            }
                         }    
                         // Remove transition t and the place that has no tokens in m0
             //            fprintf(stderr,"Removing transition %i connected pre-place %i and post-place %i\n",(int)t,(int)pPre,(int)pPost);
@@ -303,6 +312,14 @@ const std::vector<unsigned int> Reducer::NonreducedTrace(PetriNet* net, const st
     // compute the expanded (nonreduced) trace)
     std::vector<unsigned int> nonreducedTrace;
     
+    // first expand the transitions that can be fired from the initial marking
+    for(unfoldTransitionsType::iterator it = unfoldTransitionsInit->begin(); it != unfoldTransitionsInit->end(); it++) {
+        for (int i=1; i<= it->second; i++) {
+     //       expandTrace(it->first,nonreducedTrace);
+            nonreducedTrace.push_back(it->first);
+        }
+    }
+    // now expand the transitions from the trace
     for(size_t i = 0; i < trace.size(); i++){
         expandTrace(trace[i],nonreducedTrace);
     }
