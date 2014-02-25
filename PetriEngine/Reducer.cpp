@@ -117,35 +117,43 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                 bool ok=true;
                 for (size_t p=0; p < net->numberOfPlaces(); p++) {
                     if (net->inArc(p,t)>0) { 
-                        if (pPre>=0 || net->inArc(p,t)>1 || placeInQuery[p]>0 || placeInInhib[p]>0) { pPre=-1; ok=false; break;}
+                        if (pPre>=0) {ok=false; break;}
                         pPre=p;
                     }
                     if (net->outArc(t,p)>0) {
-                        if (pPost>=0 || net->outArc(t,p)>1 || placeInQuery[p]>0 || placeInInhib[p]>0) { pPost=-1; ok=false; break;}
+                        if (pPost>=0) {ok=false; break;}
                         pPost=p;
                     }
                 }
-                if (ok && pPre>=0 && pPost>=0 && (m0[pPre]==0 || m0[pPost]==0)) {               
-                    // Check that pPre goes only to t and that there is no other transition than t that gives to pPost
-                    for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
-                        if (net->inArc(pPre,_t)>0 && _t != t) {ok=false; break; }
-                        // if (net->outArc(_t,pPost)>0 && _t != t ) {ok=false; break; }
+                if (ok && pPre>=0 && pPost>=0) {
+                    //necessary checks if pPre!=pPost
+                    if (pPre!=pPost && ((m0[pPre]>0 && m0[pPost]>0) || net->inArc(pPre,t)>1 || net->outArc(t,pPost)>1 || 
+                        placeInQuery[pPre]>0 || placeInQuery[pPost]>0 || placeInInhib[pPre]>0 || placeInInhib[pPost]>0 )) {
+                        ok=false;
+                    } 
+                    if (ok && pPre!=pPost) { // check that pPre is not connected to any other transition than t
+                        for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
+                                if (net->inArc(pPre,_t)>0 && _t != t) {ok=false; break; }
+                                // if (net->outArc(_t,pPost)>0 && _t != t ) {ok=false; break; }
+                        }
                     }
+                    if (pPre==pPost && net->inArc(pPre,t)!=net->outArc(t,pPost)) {ok=false;} //self-loops should have same but arbitrary weight
                     if (ok) {
-                        continueReductions=true;
-                        _ruleA++;
+                      continueReductions=true;
+                      _ruleA++;
+                      if (pPre!=pPost) { // self-loops can be removed without changing anything else
                         // Remember that if the initial marking has tokens in pPre, we should fire  t initially
-                        if (m0[pPre]>0) {
+                            if (m0[pPre]>0) {
                                 std::pair<int, int> element(t, m0[pPre]);
                                 unfoldTransitionsInit->push_back(element);
-                        } 
+                            } 
                         // Remember that after any transition putting to pPre, we should fire immediately after that also t
-                        for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
-                            if (net->outArc(_t,pPre)>0) {
-                                std::pair<int, int> element(t, net->outArc(_t,pPre));
-                                unfoldTransitions[_t].push_back(element);
-                            }
-                        }    
+                             for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
+                                if (net->outArc(_t,pPre)>0) {
+                                   std::pair<int, int> element(t, net->outArc(_t,pPre));
+                                   unfoldTransitions[_t].push_back(element);
+                                }
+                             }    
                         // Remove transition t and the place that has no tokens in m0
             //            fprintf(stderr,"Removing transition %i connected pre-place %i and post-place %i\n",(int)t,(int)pPre,(int)pPost);
                         net->updateinArc(pPre,t,0);
@@ -161,12 +169,17 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                         } else if (m0[pPost]==0) { // removing pPost
            //             fprintf(stderr,"Removing place %i\n",(int)pPost);
                         _removedPlaces++;
-                        for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
-                            net->updateinArc(pPre,_t,net->inArc(pPost,_t));
-                            net->updateoutArc(_t,pPre,net->outArc(_t,pPre)+net->outArc(_t,pPost));
-                            net->updateinArc(pPost,_t,0);
+                            for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
+                                net->updateinArc(pPre,_t,net->inArc(pPost,_t));
+                                net->updateoutArc(_t,pPre,net->outArc(_t,pPre)+net->outArc(_t,pPost));
+                                net->updateinArc(pPost,_t,0);
+                            }
                         }
-                        } 
+                      } else { // pPre==pPost
+                                net->updateinArc(pPre,t,0);
+                                net->updateoutArc(t,pPost,0);
+                                _removedTransitions++;  
+                      }
                     }
                 }              
          } // end of Rule A main for-loop
