@@ -270,7 +270,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
          // Rule D - two transitions with the same pre and post and same inhibitor arcs 
          for (size_t t1=0; t1 < net->numberOfTransitions(); t1++) {
                 for (size_t t2=0; t2 < net->numberOfTransitions(); t2++) {
-                    if (t1!=t2 && transitionInInhib[t1]==transitionInInhib[t2]) {                       
+                    if (t1!=t2 && transitionInInhib[t1]==0 && transitionInInhib[t2]==0) {                       
                         bool ok=false;
                         for (size_t p=0; p < net->numberOfPlaces(); p++) {
                             if (net->inArc(p,t1)!=net->inArc(p,t2) || net->outArc(t1,p)!=net->outArc(t2,p)) {ok=false; break;}
