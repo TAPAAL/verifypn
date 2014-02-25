@@ -49,6 +49,11 @@ PetriNet::PetriNet(int places, int transitions, int variables)
 	_tm = new MarkVal[places * transitions * 2];
 	for(int i = 0; i < places * transitions * 2; i++)
 		_tm[i] = 0;
+        
+        skipTransitions = new bool[transitions];
+        for(int i=0; i< transitions; i++) {
+            skipTransitions[i]=false;
+        }
 }
 
 PetriNet::~PetriNet(){
@@ -63,6 +68,10 @@ PetriNet::~PetriNet(){
 		delete[] (char*)_conditions;
 	_conditions = NULL;
 	_assignments = NULL;
+        if (skipTransitions) {
+            delete[] skipTransitions;
+        }
+        skipTransitions = NULL;
 }
 
 bool PetriNet::fire(unsigned int t,
@@ -70,7 +79,8 @@ bool PetriNet::fire(unsigned int t,
 					const VarVal* a,
 					MarkVal* result_m,
 					VarVal* result_a) const{
-	//Check the condition
+        if (skipTransitions[t]) { return false;}
+        //Check the condition
 	if(_conditions[t] &&
 	   !_conditions[t]->evaluate(PQL::EvaluationContext(m, a, NULL)))
 		return false;
@@ -99,7 +109,8 @@ bool PetriNet::fire(unsigned int t,
 					const Structures::State* s,
 					Structures::State* ns,
 					int multiplicity) const{
-	//Check the condition
+	if (skipTransitions[t]) { return false;}
+        //Check the condition
 	if(_conditions[t] &&
 	   !_conditions[t]->evaluate(PQL::EvaluationContext(s->marking(), s->valuation(), NULL)))
 		return false;
@@ -155,7 +166,8 @@ bool PetriNet::fireWithMarkInf(unsigned int t,
 							   const VarVal* a,
 							   MarkVal* result_m,
 							   VarVal* result_a) const{
-	//Check the condition
+	if (skipTransitions[t]) { return false;}
+        //Check the condition
 	if(_conditions[t] && //TODO: Use evaluate that respects MarkInf
 	   !_conditions[t]->evaluate(PQL::EvaluationContext(m, a, NULL)))
 		return false;

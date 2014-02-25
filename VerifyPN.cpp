@@ -318,9 +318,9 @@ int main(int argc, char* argv[]){
                         
                 reducer.CreateInhibitorPlacesAndTransitions(net, inhibarcs ,placeInInhib, transitionInInhib); // translates inhibitor place names to indexes in placeInInhib
 
-               //reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
+               reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
                 reducer.Reduce(net,m0,placeInQuery,placeInInhib, transitionInInhib,enablereduction);
-               //reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib);
+               reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib);
             }
         }
         

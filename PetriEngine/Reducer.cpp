@@ -150,6 +150,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
             //            fprintf(stderr,"Removing transition %i connected pre-place %i and post-place %i\n",(int)t,(int)pPre,(int)pPost);
                         net->updateinArc(pPre,t,0);
                         net->updateoutArc(t,pPost,0);
+                        net->skipTransition(t);
                         _removedTransitions++;
                         if (m0[pPre]==0) { // removing pPre
             //                    fprintf(stderr,"Removing place %i\n",(int)pPre);
@@ -218,6 +219,7 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                          net->updateoutArc(tPre,_p,net->outArc(tPre,_p)+net->outArc(tPost,_p));
                          net->updateoutArc(tPost,_p,0);
                      }
+                     net->skipTransition(tPost);
                  }
              }
          } // end of Rule B main for-loop
@@ -277,13 +279,14 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                         if (ok) { // Remove transition t2
                             continueReductions=true;
                             _ruleD++;
-                            _removedPlaces++;                           
+                            _removedTransitions++;                           
      //                       fprintf(stderr,"Removing transition %i\n",(int)t2);                                                             
                             for (size_t p=0; p < net->numberOfPlaces(); p++) {                                                                                           
                                    net->updateoutArc(t2,p,0);
                                    net->updateinArc(p,t2,0);
                                    
                             }
+                            net->skipTransition(t2);
                         }
                      }
                 }                        
