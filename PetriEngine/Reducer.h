@@ -49,6 +49,11 @@ private:
         int _nplaces, _ntransitions;
         int* _inArc;
         int* _outArc;
+        
+        void ReducebyRuleA(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, bool& continueReductions);
+        void ReducebyRuleB(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, bool& continueReductions);
+        void ReducebyRuleC(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, bool& continueReductions);
+        void ReducebyRuleD(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, bool& continueReductions);
 };
 
 

@@ -99,16 +99,11 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                 fprintf(stdout,"Inhibitor count for transition %d is: %d\n",i,transitionInInhib[i]);
         } 
     }
+
+
     
-    
- void Reducer::Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, int enablereduction) {
-          
-     bool continueReductions=true;
-     
-     while (continueReductions){
-         continueReductions=false; // repeat all reductions rules as long as something was reduced
-         
-        // fprintf(stderr,"Rule A\n");
+void Reducer::ReducebyRuleA(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, bool& continueReductions) {
+    // fprintf(stderr,"Rule A\n");
          // Rule A  - find transition t that has exactly one place in pre and post and remove one of the places   
          for (size_t t=0; t < net->numberOfTransitions(); t++) {
                 if (transitionInInhib[t]>0) { continue;} // if t has a connected inhibitor arc, it cannot be removed
@@ -129,7 +124,6 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                     // Check that pPre goes only to t and that there is no other transition than t that gives to pPost
                     for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                         if (net->inArc(pPre,_t)>0 && _t != t) {ok=false; break; }
-                        // if (net->outArc(_t,pPost)>0 && _t != t ) {ok=false; break; }
                     }
                     if (ok) {
                         continueReductions=true;
@@ -171,10 +165,10 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                     }
                 }              
          } // end of Rule A main for-loop
-         
-      
-    if (enablereduction==1) {     // only allowed in aggresive reductions (it changes k-boundedness)
-       //  fprintf(stderr,"Rule B\n");
+}
+
+void Reducer::ReducebyRuleB(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, bool& continueReductions) {
+    //  fprintf(stderr,"Rule B\n");
          // Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
          for (size_t p=0; p < net->numberOfPlaces(); p++) {
              if (placeInInhib[p]>0 || m0[p]>0) { continue;} // if p has inhibitor arc or nonzero initial marking it cannot be removed
@@ -199,7 +193,6 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                  }
                  // Check that there is no other place than p that gives to tPost, tPre can give to other places
                  for (size_t _p=0; _p < net->numberOfPlaces(); _p++) {
-                    // if (net->outArc(tPre,_p)>0 && _p != p) {ok=false; break; }
                      if (net->inArc(_p,tPost)>0 && _p != p ) {ok=false; break; }
                  }
                  if (ok) {
@@ -223,10 +216,10 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                  }
              }
          } // end of Rule B main for-loop
-    }     
-        
-    if (enablereduction==1) {     // only allowed in aggresive reductions (it changes k-boundedness)
-      //   fprintf(stderr,"Rule C\n");
+}
+
+void Reducer::ReducebyRuleC(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, bool& continueReductions) {
+ //   fprintf(stderr,"Rule C\n");
          // Rule C - two transitions that put and take from the same places
          for (size_t t1=0; t1 < net->numberOfTransitions(); t1++) {
                 for (size_t t2=0; t2 < net->numberOfTransitions(); t2++) {
@@ -264,9 +257,10 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                     }                        
                 }
          }
-    }    
-         
-     //    fprintf(stderr,"Rule D\n");
+}        
+
+void Reducer::ReducebyRuleD(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, bool& continueReductions) {
+   //    fprintf(stderr,"Rule D\n");
          // Rule D - two transitions with the same pre and post and same inhibitor arcs 
          for (size_t t1=0; t1 < net->numberOfTransitions(); t1++) {
                 for (size_t t2=0; t2 < net->numberOfTransitions(); t2++) {
@@ -291,10 +285,24 @@ void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* 
                      }
                 }                        
          }
-         
-     } // end of main while-loop   
+}
+
+
+void Reducer::Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, int enablereduction) {
+     bool continueReductions=true;
+     while (continueReductions){
+         continueReductions=false; // repeat all reductions rules as long as something was reduced
+         ReducebyRuleA(net,m0,placeInQuery,placeInInhib,transitionInInhib,continueReductions);
+         if (enablereduction==1) {     // only allowed in aggresive reductions (it changes k-boundedness)
+                ReducebyRuleB(net,m0,placeInQuery,placeInInhib,transitionInInhib,continueReductions);
+                ReducebyRuleC(net,m0,placeInQuery,placeInInhib,transitionInInhib,continueReductions);
+         }     
+         ReducebyRuleD(net,m0,placeInQuery,placeInInhib,transitionInInhib,continueReductions);
+     } 
 }
     
+
+
 void Reducer::expandTrace (unsigned int t, std::vector<unsigned int>& trace) {
          trace.push_back(t);
          for(unfoldTransitionsType::iterator it = unfoldTransitions[t].begin(); it != unfoldTransitions[t].end(); it++) {
@@ -303,7 +311,6 @@ void Reducer::expandTrace (unsigned int t, std::vector<unsigned int>& trace) {
              }        
          }
  }
- 
 const std::vector<unsigned int> Reducer::NonreducedTrace(PetriNet* net, const std::vector<unsigned int>& trace) {
     // recover the original net
     for (int p=0; p<_nplaces; p++) {
