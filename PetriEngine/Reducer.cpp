@@ -160,6 +160,7 @@ void Reducer::ReducebyRuleA(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, M
                             net->updateinArc(pPre,_t,net->inArc(pPost,_t));
                             net->updateoutArc(_t,pPre,net->outArc(_t,pPre)+net->outArc(_t,pPost));
                             net->updateinArc(pPost,_t,0);
+                            net->updateoutArc(_t,pPost,0);
                         }
                         } 
                     }
