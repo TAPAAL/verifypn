@@ -204,7 +204,7 @@ int main(int argc, char* argv[]){
 	MarkVal* m0 = NULL;
 	VarVal* v0 = NULL;
                   
-        // Names of places that connect to inhibitor arcs
+        // List of inhibitor arcs
         PNMLParser::InhibitorArcList inhibarcs;
         
 	{
@@ -224,7 +224,8 @@ int main(int argc, char* argv[]){
 		PNMLParser parser;
 		parser.parse(buffer.str(), &builder);
 		parser.makePetriNet();
-                inhibarcs = parser.getInhibitorArcs(); // Remember the places with inhibitor arcs
+                
+                inhibarcs = parser.getInhibitorArcs(); // Remember inhibitor arcs
 
 		//Build the petri net
 		net = builder.makePetriNet();
@@ -299,7 +300,7 @@ int main(int argc, char* argv[]){
 
         //--------------------- Apply Net Reduction ---------------//
         
-        Reducer reducer=Reducer(net); // original net should be remembered due to trace generation
+        Reducer reducer=Reducer(net); // reduced is needed also in trace generation (hence the extended scope)
         if (enablereduction==1 or enablereduction==2) {
             
             //Create scope for net reductions
@@ -315,12 +316,13 @@ int main(int argc, char* argv[]){
                 // Compute the places and transitions that connect to inhibitor arcs
                 MarkVal* placeInInhib = new MarkVal[net->numberOfPlaces()];
                 MarkVal* transitionInInhib = new MarkVal[net->numberOfTransitions()];
-                        
-                reducer.CreateInhibitorPlacesAndTransitions(net, inhibarcs ,placeInInhib, transitionInInhib); // translates inhibitor place names to indexes in placeInInhib
+                  
+                // CreateInhibitorPlacesAndTransitions translates inhibitor place/transitions names to indexes
+                reducer.CreateInhibitorPlacesAndTransitions(net, inhibarcs ,placeInInhib, transitionInInhib); 
 
-               reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
-                reducer.Reduce(net,m0,placeInQuery,placeInInhib, transitionInInhib,enablereduction);
-               reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib);
+                //reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
+                reducer.Reduce(net,m0,placeInQuery,placeInInhib, transitionInInhib,enablereduction); // reduce the net
+                //reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib);
             }
         }
         

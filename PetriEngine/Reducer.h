@@ -15,8 +15,6 @@
 namespace PetriEngine{
 
 
-
-/** Builder for building engine representations of PetriNets */
 class Reducer{
             
 public:
@@ -66,7 +64,6 @@ public:
 
     ResolutionResult resolve(std::string identifier) const {
 		ResolutionResult result;
-                //fprintf(stderr,"ID %s\n",identifier.c_str());
        		result.offset = -1;
 		result.success = false;
 		for(size_t i = 0; i < _places.size(); i++){
@@ -74,7 +71,6 @@ public:
 				result.offset = i; 
                               	result.isPlace = true;
 				result.success = true;
-                                //fprintf(stderr,"In query: %i\n\n",(int)i);
                                 _placeInQuery[i]++;
                                 return result;
 			}
