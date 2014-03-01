@@ -141,7 +141,7 @@ int main(int argc, char* argv[]){
 					"  -t, --trace                        Provide XML-trace to stderr\n"
 					"  -s, --search-strategy <strategy>   Search strategy:\n"
 					"                                     - BestFS       Heuristic search (default)\n"
-					"                                     - BFS          Breath first search\n"
+					"                                     - BFS          Breadth first search\n"
 					"                                     - DFS          Depth first search\n"
 					"                                     - RDFS         Random depth first search\n"
 					"                                     - OverApprox   Linear over-approximation only\n"
@@ -163,7 +163,7 @@ int main(int argc, char* argv[]){
 					"\n"
 					"VerifyPN is a compilation of PeTe as untimed backend for TAPAAL.\n"
 					"PeTe project page: <https://github.com/jopsen/PeTe>\n"
-                                        "TAPAAL project page: <http://www.tapaal/net>\n");
+                                        "TAPAAL project page: <http://www.tapaal.net>\n");
 			return 0;
 		}else if(strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0){
 			printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERSION);
