@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-place initialMarking="1" invariant="&lt; inf" name="Doctor1"/>
+<shared-place initialMarking="1" invariant="&lt; inf" name="Doctor2"/>
+<shared-place initialMarking="0" invariant="&lt;= 1" name="in1"/>
+<shared-place initialMarking="0" invariant="&lt;= 1" name="in2"/>
+<net active="true" id="WorkflowNet1" type="P/T net">
+<place id="in1" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="in1" nameOffsetX="-21.0" nameOffsetY="22.0" positionX="165.0" positionY="180.0"/>
+<place id="out" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="out" nameOffsetX="60.0" nameOffsetY="18.0" positionX="660.0" positionY="180.0"/>
+<place id="Doctor1" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Doctor1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="150.0"/>
+<place id="Doctor2" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Doctor2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="150.0"/>
+<place id="Doctor1_working" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Doctor1_working" nameOffsetX="32.0" nameOffsetY="-12.0" positionX="330.0" positionY="45.0"/>
+<place id="Doctor2_working" initialMarking="0" invariant="&lt;= 2" markingOffsetX="0.0" markingOffsetY="0.0" name="Doctor2_working" nameOffsetX="89.0" nameOffsetY="-15.0" positionX="555.0" positionY="45.0"/>
+<transition angle="90" id="treat" infiniteServer="false" name="treat" nameOffsetX="-9.0" nameOffsetY="10.0" positionX="240.0" positionY="45.0" priority="0"/>
+<transition angle="0" id="wait_for_tomorrow" infiniteServer="false" name="wait_for_tomorrow" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="315.0" priority="0"/>
+<transition angle="0" id="Doctor1_done" infiniteServer="false" name="Doctor1_done" nameOffsetX="44.0" nameOffsetY="-17.0" positionX="435.0" positionY="45.0" priority="0"/>
+<transition angle="90" id="Doctor2_done_Doctor1_check" infiniteServer="false" name="Doctor2_done_Doctor1_check" nameOffsetX="189.0" nameOffsetY="17.0" positionX="585.0" positionY="120.0" priority="0"/>
+<arc id="in to work" inscription="[0,inf)" source="in1" target="treat" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="184" yCoord="178"/>
+<arcpath arcPointType="false" id="1" xCoord="246" yCoord="61"/>
+</arc>
+<arc id="in to done" inscription="[0,inf)" source="in1" target="wait_for_tomorrow" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="185" yCoord="204"/>
+<arcpath arcPointType="false" id="1" xCoord="252" yCoord="312"/>
+</arc>
+<arc id="Res1 to work" inscription="[0,inf)" source="Doctor1" target="treat" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="318" yCoord="149"/>
+<arcpath arcPointType="false" id="1" xCoord="256" yCoord="62"/>
+</arc>
+<arc id="work to P10" inscription="1" source="treat" target="Doctor1_working" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="266" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="57"/>
+</arc>
+<arc id="P10 to T6" inscription="[0,inf)" source="Doctor1_working" target="Doctor1_done" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="56"/>
+<arcpath arcPointType="false" id="1" xCoord="442" yCoord="52"/>
+</arc>
+<arc id="done to out" inscription="1" source="wait_for_tomorrow" target="out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="256" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="585" yCoord="330"/>
+<arcpath arcPointType="false" id="2" xCoord="664" yCoord="204"/>
+</arc>
+<arc id="T6 to Res1" inscription="1" source="Doctor1_done" target="Doctor1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="441" yCoord="62"/>
+<arcpath arcPointType="false" id="1" xCoord="338" yCoord="152"/>
+</arc>
+<arc id="T6 to P12" inscription="1" source="Doctor1_done" target="Doctor2_working" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="451" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="57"/>
+</arc>
+<arc id="Res2 to T6" inscription="[0,inf)" source="Doctor2" target="Doctor1_done" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="447" yCoord="147"/>
+<arcpath arcPointType="false" id="1" xCoord="447" yCoord="72"/>
+</arc>
+<arc id="P12 to T8" inscription="[0,inf)" source="Doctor2_working" target="Doctor2_done_Doctor1_check" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="572" yCoord="70"/>
+<arcpath arcPointType="false" id="1" xCoord="596" yCoord="126"/>
+</arc>
+<arc id="T8 to out" inscription="1" source="Doctor2_done_Doctor1_check" target="out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="604" yCoord="137"/>
+<arcpath arcPointType="false" id="1" xCoord="660" yCoord="182"/>
+</arc>
+<arc id="T8 to Res2" inscription="1" source="Doctor2_done_Doctor1_check" target="Doctor2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="581" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="461" yCoord="158"/>
+</arc>
+<arc id="Res1 to T8" inscription="[0,inf)" source="Doctor1" target="Doctor2_done_Doctor1_check" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="335" yCoord="174"/>
+<arcpath arcPointType="true" id="1" xCoord="409" yCoord="224"/>
+<arcpath arcPointType="true" id="2" xCoord="555" yCoord="195"/>
+<arcpath arcPointType="false" id="3" xCoord="590" yCoord="136"/>
+</arc>
+<arc id="T8 to Res1" inscription="1" source="Doctor2_done_Doctor1_check" target="Doctor1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="597" yCoord="137"/>
+<arcpath arcPointType="true" id="1" xCoord="540" yCoord="255"/>
+<arcpath arcPointType="true" id="2" xCoord="337" yCoord="224"/>
+<arcpath arcPointType="false" id="3" xCoord="329" yCoord="176"/>
+</arc>
+</net>
+<net active="true" id="WorkflowNet2" type="P/T net">
+<place id="in2" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="in2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="180.0"/>
+<place id="out" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="out" nameOffsetX="60.0" nameOffsetY="18.0" positionX="660.0" positionY="180.0"/>
+<place id="Doctor1" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Doctor1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="150.0"/>
+<place id="Doctor2" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Doctor2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="150.0"/>
+<place id="Doctor1_working" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Doctor1_working" nameOffsetX="32.0" nameOffsetY="-12.0" positionX="330.0" positionY="45.0"/>
+<place id="Doctor2_working" initialMarking="0" invariant="&lt;= 2" markingOffsetX="0.0" markingOffsetY="0.0" name="Doctor2_working" nameOffsetX="89.0" nameOffsetY="-15.0" positionX="555.0" positionY="45.0"/>
+<transition angle="90" id="treat" infiniteServer="false" name="treat" nameOffsetX="-9.0" nameOffsetY="10.0" positionX="240.0" positionY="45.0" priority="0"/>
+<transition angle="0" id="wait_for_tomorrow" infiniteServer="false" name="wait_for_tomorrow" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="315.0" priority="0"/>
+<transition angle="0" id="Doctor1_done" infiniteServer="false" name="Doctor1_done" nameOffsetX="44.0" nameOffsetY="-17.0" positionX="435.0" positionY="45.0" priority="0"/>
+<transition angle="90" id="Doctor2_done_Doctor1_check" infiniteServer="false" name="Doctor2_done_Doctor1_check" nameOffsetX="189.0" nameOffsetY="17.0" positionX="585.0" positionY="120.0" priority="0"/>
+<arc id="in to work" inscription="[0,inf)" source="in2" target="treat" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="185" yCoord="179"/>
+<arcpath arcPointType="false" id="1" xCoord="246" yCoord="61"/>
+</arc>
+<arc id="in to done" inscription="[0,inf)" source="in2" target="wait_for_tomorrow" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="186" yCoord="205"/>
+<arcpath arcPointType="false" id="1" xCoord="252" yCoord="312"/>
+</arc>
+<arc id="Res1 to work" inscription="[0,inf)" source="Doctor1" target="treat" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="319" yCoord="150"/>
+<arcpath arcPointType="false" id="1" xCoord="256" yCoord="62"/>
+</arc>
+<arc id="work to P10" inscription="1" source="treat" target="Doctor1_working" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="58"/>
+<arcpath arcPointType="false" id="1" xCoord="328" yCoord="58"/>
+</arc>
+<arc id="P10 to T6" inscription="[0,inf)" source="Doctor1_working" target="Doctor1_done" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="442" yCoord="52"/>
+</arc>
+<arc id="done to out" inscription="1" source="wait_for_tomorrow" target="out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="257" yCoord="328"/>
+<arcpath arcPointType="false" id="1" xCoord="585" yCoord="330"/>
+<arcpath arcPointType="false" id="2" xCoord="664" yCoord="205"/>
+</arc>
+<arc id="T6 to Res1" inscription="1" source="Doctor1_done" target="Doctor1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="441" yCoord="62"/>
+<arcpath arcPointType="false" id="1" xCoord="339" yCoord="153"/>
+</arc>
+<arc id="T6 to P12" inscription="1" source="Doctor1_done" target="Doctor2_working" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="451" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="553" yCoord="58"/>
+</arc>
+<arc id="Res2 to T6" inscription="[0,inf)" source="Doctor2" target="Doctor1_done" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="448" yCoord="148"/>
+<arcpath arcPointType="false" id="1" xCoord="448" yCoord="73"/>
+</arc>
+<arc id="P12 to T8" inscription="[0,inf)" source="Doctor2_working" target="Doctor2_done_Doctor1_check" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="573" yCoord="71"/>
+<arcpath arcPointType="false" id="1" xCoord="596" yCoord="126"/>
+</arc>
+<arc id="T8 to out" inscription="1" source="Doctor2_done_Doctor1_check" target="out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="596" yCoord="136"/>
+<arcpath arcPointType="false" id="1" xCoord="661" yCoord="183"/>
+</arc>
+<arc id="T8 to Res2" inscription="1" source="Doctor2_done_Doctor1_check" target="Doctor2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="581" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="462" yCoord="159"/>
+</arc>
+<arc id="Res1 to T8" inscription="[0,inf)" source="Doctor1" target="Doctor2_done_Doctor1_check" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="336" yCoord="175"/>
+<arcpath arcPointType="true" id="1" xCoord="409" yCoord="224"/>
+<arcpath arcPointType="true" id="2" xCoord="555" yCoord="195"/>
+<arcpath arcPointType="false" id="3" xCoord="581" yCoord="132"/>
+</arc>
+<arc id="T8 to Res1" inscription="1" source="Doctor2_done_Doctor1_check" target="Doctor1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="598" yCoord="138"/>
+<arcpath arcPointType="true" id="1" xCoord="540" yCoord="255"/>
+<arcpath arcPointType="true" id="2" xCoord="337" yCoord="224"/>
+<arcpath arcPointType="false" id="3" xCoord="330" yCoord="177"/>
+</arc>
+</net>
+<net active="false" id="SynchronousStart" type="P/T net">
+<place id="start" initialMarking="1" invariant="&lt;= 10" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="180.0"/>
+<place id="in1" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="in1" nameOffsetX="68.0" nameOffsetY="24.0" positionX="300.0" positionY="90.0"/>
+<place id="in2" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="in2" nameOffsetX="59.0" nameOffsetY="32.0" positionX="315.0" positionY="315.0"/>
+<transition angle="0" id="SynchStart" infiniteServer="false" name="SynchStart" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="195.0" positionY="180.0" priority="0"/>
+<arc id="start to SynchStart" inscription="[0,inf)" source="start" target="SynchStart" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="102" yCoord="193"/>
+<arcpath arcPointType="false" id="1" xCoord="201" yCoord="192"/>
+</arc>
+<arc id="SynchStart to in1" inscription="1" source="SynchStart" target="in1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="212" yCoord="187"/>
+<arcpath arcPointType="false" id="1" xCoord="301" yCoord="112"/>
+</arc>
+<arc id="SynchStart to in2" inscription="1" source="SynchStart" target="in2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="212" yCoord="198"/>
+<arcpath arcPointType="false" id="1" xCoord="318" yCoord="316"/>
+</arc>
+</net>
+<net active="true" id="AsynchronousStart" type="P/T net">
+<place id="init1" initialMarking="1" invariant="&lt;= 10" markingOffsetX="0.0" markingOffsetY="0.0" name="init1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="300.0"/>
+<place id="in1" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="in1" nameOffsetX="68.0" nameOffsetY="24.0" positionX="300.0" positionY="90.0"/>
+<place id="in2" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="in2" nameOffsetX="59.0" nameOffsetY="32.0" positionX="300.0" positionY="300.0"/>
+<place id="init2" initialMarking="1" invariant="&lt;= 10" markingOffsetX="0.0" markingOffsetY="0.0" name="init2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="90.0"/>
+<transition angle="0" id="Start1" infiniteServer="false" name="Start1" nameOffsetX="-5.0" nameOffsetY="-2.0" positionX="180.0" positionY="90.0" priority="0"/>
+<transition angle="0" id="Start2" infiniteServer="false" name="Start2" nameOffsetX="-5.0" nameOffsetY="55.0" positionX="180.0" positionY="300.0" priority="0"/>
+<arc id="Start1 to in1" inscription="1" source="Start1" target="in1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="196" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="297" yCoord="102"/>
+</arc>
+<arc id="init1 to Start2" inscription="[0,inf)" source="init1" target="Start2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="101" yCoord="312"/>
+<arcpath arcPointType="false" id="1" xCoord="186" yCoord="312"/>
+</arc>
+<arc id="Start2 to in2" inscription="1" source="Start2" target="in2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="196" yCoord="312"/>
+<arcpath arcPointType="false" id="1" xCoord="297" yCoord="312"/>
+</arc>
+<arc id="init2 to Start1" inscription="[0,inf)" source="init2" target="Start1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="101" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="186" yCoord="102"/>
+</arc>
+</net>
+<query active="true" capacity="2" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="AF (WorkflowNet1.out=1 and WorkflowNet2.out=1)" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="SOME"/>
+</pnml>

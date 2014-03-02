@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-place initialMarking="1" invariant="&lt;= 0" name="in"/>
+<shared-place initialMarking="0" invariant="&lt; inf" name="out"/>
+<net active="true" id="TAPN1" type="P/T net">
+<labels border="true" height="162" positionX="30" positionY="371" width="251">A fix where all guards and invariants are multiplied by 2 fixes the problem and discrete engine correctly detects that it is not sound now. 
+
+The question is, will multiplying by 2 be always enough? I believe we should be able to disprove this claim but I am not sure as I don't have the example. Please, help me to find one and send it by mail as soon as you get it. Thanks.
+</labels>
+<place id="in" initialMarking="1" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="in" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="255.0"/>
+<place id="out" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="out" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="855.0" positionY="270.0"/>
+<place id="P2" initialMarking="0" invariant="&lt;= 2" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-12.0" nameOffsetY="8.0" positionX="315.0" positionY="165.0"/>
+<place id="P3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="345.0"/>
+<place id="P4" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="43.0" nameOffsetY="-27.0" positionX="495.0" positionY="165.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="255.0" priority="0" urgent="false"/>
+<transition angle="0" id="T4" infiniteServer="false" name="T4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="405.0" positionY="165.0" priority="0" urgent="false"/>
+<transition angle="0" id="T5" infiniteServer="false" name="T5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="255.0" priority="0" urgent="false"/>
+<transition angle="0" id="T6" infiniteServer="false" name="T6" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="330.0" priority="0" urgent="false"/>
+<arc id="in to T0" inscription="[0,inf)" source="in" target="T0" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="161" yCoord="267"/>
+<arcpath arcPointType="false" id="1" xCoord="231" yCoord="267"/>
+</arc>
+<arc id="T0 to P2" inscription="1" source="T0" target="P2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="242" yCoord="262"/>
+<arcpath arcPointType="false" id="1" xCoord="316" yCoord="187"/>
+</arc>
+<arc id="T0 to P3" inscription="1" source="T0" target="P3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="241" yCoord="272"/>
+<arcpath arcPointType="false" id="1" xCoord="316" yCoord="346"/>
+</arc>
+<arc id="P2 to T4" inscription="[0,inf)" source="P2" target="T4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="341" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="411" yCoord="177"/>
+</arc>
+<arc id="T4 to P4" inscription="1" source="T4" target="P4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="421" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="177"/>
+</arc>
+<arc id="P4 to T5" inscription="[0,inf)" source="P4" target="T5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="514" yCoord="189"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="252"/>
+</arc>
+<arc id="T5 to out" inscription="1" source="T5" target="out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="556" yCoord="267"/>
+<arcpath arcPointType="false" id="1" xCoord="852" yCoord="281"/>
+</arc>
+<arc id="P3 to T5" inscription="[0,inf)" source="P3" target="T5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="340" yCoord="351"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="267"/>
+</arc>
+<arc id="P4 to T6" inscription="[0,inf)" source="P4" target="T6" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="521" yCoord="181"/>
+<arcpath arcPointType="false" id="1" xCoord="644" yCoord="224"/>
+<arcpath arcPointType="false" id="2" xCoord="542" yCoord="337"/>
+</arc>
+<arc id="P3 to T6" inscription="[0,inf)" source="P3" target="T6" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="338" yCoord="366"/>
+<arcpath arcPointType="false" id="1" xCoord="449" yCoord="449"/>
+<arcpath arcPointType="false" id="2" xCoord="531" yCoord="342"/>
+</arc>
+<arc id="T6 to out" inscription="1" source="T6" target="out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="541" yCoord="347"/>
+<arcpath arcPointType="false" id="1" xCoord="749" yCoord="374"/>
+<arcpath arcPointType="false" id="2" xCoord="855" yCoord="291"/>
+</arc>
+</net>
+<query active="true" capacity="1" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="AF out=1" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="SOME"/>
+</pnml>

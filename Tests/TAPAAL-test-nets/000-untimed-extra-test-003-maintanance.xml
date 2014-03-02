@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-transition name="startEngine"/>
+<shared-transition name="SmallMaint"/>
+<shared-transition name="SmallMaintDone"/>
+<shared-transition name="LargeMaint"/>
+<shared-transition name="LargeMaintDone"/>
+<constant name="FailureInterval" value="10"/>
+<constant name="LargeMaintananceDuration" value="2"/>
+<constant name="LargeMaintananceInterval" value="7"/>
+<constant name="SmallMaintananceDuration" value="1"/>
+<constant name="SmallMaintananceInterval" value="4"/>
+<constant name="EngineStartInterval" value="2"/>
+<net active="true" id="EngineModel" type="P/T net">
+<place id="Engines" initialMarking="0" invariant="&lt;= SmallMaintananceInterval" markingOffsetX="0.0" markingOffsetY="0.0" name="Engines" nameOffsetX="202.62500000000009" nameOffsetY="38.91666666666665" positionX="600.0" positionY="165.0"/>
+<place id="SmallMaintanance" initialMarking="0" invariant="&lt;= LargeMaintananceInterval" markingOffsetX="0.0" markingOffsetY="0.0" name="SmallMaintanance" nameOffsetX="204.67045454545456" nameOffsetY="39.4085968379447" positionX="615.0" positionY="420.0"/>
+<place id="LargeMaintanance" initialMarking="0" invariant="&lt;= FailureInterval" markingOffsetX="0.0" markingOffsetY="0.0" name="LargeMaintanance" nameOffsetX="150.11413043478262" nameOffsetY="14.516304347826086" positionX="615.0" positionY="690.0"/>
+<place id="FailedEngines" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="FailedEngines" nameOffsetX="50.0" nameOffsetY="42.125" positionX="615.0" positionY="855.0"/>
+<place id="Working2" initialMarking="0" invariant="&lt;= SmallMaintananceDuration" markingOffsetX="0.0" markingOffsetY="0.0" name="Working2" nameOffsetX="213.04166666666666" nameOffsetY="8.708333333333325" positionX="960.0" positionY="285.0"/>
+<place id="Working1and2" initialMarking="0" invariant="&lt;= LargeMaintananceDuration" markingOffsetX="0.0" markingOffsetY="0.0" name="Working1and2" nameOffsetX="219.29545454545456" nameOffsetY="13.863636363636374" positionX="315.0" positionY="405.0"/>
+<transition angle="90" id="NeedsSmallMaintanance" infiniteServer="false" name="NeedsSmallMaintanance" nameOffsetX="159.25" nameOffsetY="20.625" positionX="615.0" positionY="285.0" priority="0"/>
+<transition angle="90" id="NeedsLargeMaintanance" infiniteServer="false" name="NeedsLargeMaintanance" nameOffsetX="162.2863712374582" nameOffsetY="21.20443143812709" positionX="615.0" positionY="555.0" priority="0"/>
+<transition angle="90" id="EngineFailing" infiniteServer="false" name="EngineFailing" nameOffsetX="105.125" nameOffsetY="20.875" positionX="615.0" positionY="780.0" priority="0"/>
+<transition angle="180" id="SmallMaint" infiniteServer="false" name="SmallMaint" nameOffsetX="35.0" nameOffsetY="-11.875" positionX="750.0" positionY="420.0" priority="0"/>
+<transition angle="0" id="SmallMaintDone" infiniteServer="false" name="SmallMaintDone" nameOffsetX="55.625" nameOffsetY="-10.625" positionX="750.0" positionY="165.0" priority="0"/>
+<transition angle="180" id="LargeMaint" infiniteServer="false" name="LargeMaint" nameOffsetX="42.27355072463769" nameOffsetY="-12.192028985507235" positionX="465.0" positionY="690.0" priority="0"/>
+<transition angle="270" id="startEngine" infiniteServer="false" name="startEngine" nameOffsetX="44.626262626262644" nameOffsetY="1.2424242424242493" positionX="600.0" positionY="120.0" priority="0"/>
+<transition angle="0" id="LargeMaintDone" infiniteServer="false" name="LargeMaintDone" nameOffsetX="46.111111111111114" nameOffsetY="-6.111111111111115" positionX="465.0" positionY="165.0" priority="0"/>
+<arc id="Engines to NeedsSmallMaintanance" inscription="[0,inf):1" source="Engines" target="NeedsSmallMaintanance" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="613" yCoord="191"/>
+<arcpath arcPointType="false" id="1" xCoord="626" yCoord="291"/>
+</arc>
+<arc id="NeedsSmallMaintanance to SmallMaintanance" inscription="[0,inf):1" source="NeedsSmallMaintanance" target="SmallMaintanance" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="626" yCoord="301"/>
+<arcpath arcPointType="false" id="1" xCoord="626" yCoord="417"/>
+</arc>
+<arc id="SmallMaintanance to NeedsLargeMaintanance" inscription="[0,inf):1" source="SmallMaintanance" target="NeedsLargeMaintanance" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="626" yCoord="446"/>
+<arcpath arcPointType="false" id="1" xCoord="626" yCoord="561"/>
+</arc>
+<arc id="NeedsLargeMaintanance to LargeMaintanance" inscription="[0,inf):1" source="NeedsLargeMaintanance" target="LargeMaintanance" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="626" yCoord="571"/>
+<arcpath arcPointType="false" id="1" xCoord="626" yCoord="687"/>
+</arc>
+<arc id="LargeMaintanance to EngineFailing" inscription="[0,inf)" source="LargeMaintanance" target="EngineFailing" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="626" yCoord="716"/>
+<arcpath arcPointType="false" id="1" xCoord="626" yCoord="786"/>
+</arc>
+<arc id="EngineFailing to FailedEngines" inscription="1" source="EngineFailing" target="FailedEngines" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="626" yCoord="796"/>
+<arcpath arcPointType="false" id="1" xCoord="626" yCoord="852"/>
+</arc>
+<arc id="SmallMaintanance to SmallMaintain2" inscription="[0,inf)" source="SmallMaintanance" target="SmallMaint" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="641" yCoord="431"/>
+<arcpath arcPointType="false" id="1" xCoord="757" yCoord="431"/>
+</arc>
+<arc id="SmallMaintain2 to Working2" inscription="1" source="SmallMaint" target="Working2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="767" yCoord="431"/>
+<arcpath arcPointType="false" id="1" xCoord="965" yCoord="434"/>
+<arcpath arcPointType="false" id="2" xCoord="971" yCoord="311"/>
+</arc>
+<arc id="Working2 to SmallDone2" inscription="[0,inf)" source="Working2" target="SmallMaintDone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="971" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="965" yCoord="182"/>
+<arcpath arcPointType="false" id="2" xCoord="766" yCoord="177"/>
+</arc>
+<arc id="SmallDone2 to Engines" inscription="1" source="SmallMaintDone" target="Engines" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="756" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="626" yCoord="177"/>
+</arc>
+<arc id="LargeMaintain to Working1and2" inscription="1" source="LargeMaint" target="Working1and2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="472" yCoord="701"/>
+<arcpath arcPointType="false" id="1" xCoord="335" yCoord="698"/>
+<arcpath arcPointType="false" id="2" xCoord="327" yCoord="431"/>
+</arc>
+<arc id="startEngine to Engines" inscription="1" source="startEngine" target="Engines" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="137"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="162"/>
+</arc>
+<arc id="LargeMaintanance to LargeMaintain" inscription="[0,inf)" source="LargeMaintanance" target="LargeMaint" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="701"/>
+<arcpath arcPointType="false" id="1" xCoord="482" yCoord="701"/>
+</arc>
+<arc id="Working1and2 to T0" inscription="[0,inf)" source="Working1and2" target="LargeMaintDone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="335" yCoord="183"/>
+<arcpath arcPointType="false" id="2" xCoord="471" yCoord="177"/>
+</arc>
+<arc id="T0 to Engines" inscription="1" source="LargeMaintDone" target="Engines" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="481" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="597" yCoord="177"/>
+</arc>
+</net>
+<net active="true" id="EngineFlow" type="P/T net">
+<place id="EngineStartTimer" initialMarking="1" invariant="&lt;= EngineStartInterval" markingOffsetX="0.0" markingOffsetY="0.0" name="EngineStartTimer" nameOffsetX="117.0" nameOffsetY="43.0" positionX="540.0" positionY="210.0"/>
+<place id="EnginesIdle" initialMarking="55" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="EnginesIdle" nameOffsetX="49.0" nameOffsetY="-1.0" positionX="810.0" positionY="75.0"/>
+<transition angle="90" id="startEngine" infiniteServer="false" name="startEngine" nameOffsetX="46.0" nameOffsetY="38.0" positionX="810.0" positionY="210.0" priority="0"/>
+<transition angle="180" id="NoMoreToStart" infiniteServer="false" name="NoMoreToStart" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="75.0" priority="0"/>
+<arc id="P0 to startEngine" inscription="[0,inf)" source="EngineStartTimer" target="startEngine" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="573" yCoord="219"/>
+<arcpath arcPointType="false" id="1" xCoord="696" yCoord="193"/>
+<arcpath arcPointType="false" id="2" xCoord="806" yCoord="222"/>
+</arc>
+<arc id="startEngine to P0" inscription="1" source="startEngine" target="EngineStartTimer" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="806" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="573" yCoord="222"/>
+</arc>
+<arc id="EnginesIdle to startEngine" inscription="[0,inf)" source="EnginesIdle" target="startEngine" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="827" yCoord="108"/>
+<arcpath arcPointType="false" id="1" xCoord="827" yCoord="216"/>
+</arc>
+<arc id="EnginesIdle to T1" inscription="[0,inf)" source="EnginesIdle" target="NoMoreToStart" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="813" yCoord="93"/>
+<arcpath arcPointType="false" id="1" xCoord="557" yCoord="86"/>
+</arc>
+<arc id="P0 to T1" inscription="[0,inf)" source="EngineStartTimer" target="NoMoreToStart" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="559" yCoord="208"/>
+<arcpath arcPointType="false" id="1" xCoord="559" yCoord="108"/>
+</arc>
+</net>
+<net active="true" id="WorkerModel" type="P/T net">
+<place id="WorkerOneReadyForLarge" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WorkerOneReadyForLarge" nameOffsetX="172.0" nameOffsetY="26.0" positionX="945.0" positionY="495.0"/>
+<place id="WorkerTwoReadyForLarge" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WorkerTwoReadyForLarge" nameOffsetX="-4.0" nameOffsetY="19.0" positionX="585.0" positionY="495.0"/>
+<place id="OneWorkerSmailMaint" initialMarking="0" invariant="&lt;= SmallMaintananceDuration" markingOffsetX="0.0" markingOffsetY="0.0" name="OneWorkerSmailMaint" nameOffsetX="214.0" nameOffsetY="15.0" positionX="765.0" positionY="225.0"/>
+<place id="TwoWorkingLargeMaint" initialMarking="0" invariant="&lt;= LargeMaintananceDuration" markingOffsetX="0.0" markingOffsetY="0.0" name="TwoWorkingLargeMaint" nameOffsetX="128.54545454545456" nameOffsetY="51.363636363636374" positionX="765.0" positionY="660.0"/>
+<place id="Workers" initialMarking="15" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Workers" nameOffsetX="34.0" nameOffsetY="45.0" positionX="765.0" positionY="390.0"/>
+<transition angle="270" id="SmallMaint" infiniteServer="false" name="SmallMaint" nameOffsetX="45.0" nameOffsetY="2.0" positionX="765.0" positionY="90.0" priority="0"/>
+<transition angle="270" id="SmallMaintDone" infiniteServer="false" name="SmallMaintDone" nameOffsetX="120.0" nameOffsetY="22.0" positionX="765.0" positionY="315.0" priority="0"/>
+<transition angle="270" id="LargeMaint" infiniteServer="false" name="LargeMaint" nameOffsetX="44.0" nameOffsetY="38.0" positionX="765.0" positionY="840.0" priority="0"/>
+<transition angle="0" id="LargeMaintDone" infiniteServer="false" name="LargeMaintDone" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="765.0" positionY="495.0" priority="0"/>
+<transition angle="45" id="WorkerOneEnterCoOpZone" infiniteServer="false" name="WorkerOneEnterCoOpZone" nameOffsetX="20.0" nameOffsetY="42.0" positionX="915.0" positionY="420.0" priority="0"/>
+<transition angle="225" id="WorkerOneLeaveCoOpZone" infiniteServer="false" name="WorkerOneLeaveCoOpZone" nameOffsetX="170.0" nameOffsetY="5.0" positionX="945.0" positionY="390.0" priority="0"/>
+<transition angle="135" id="WorkerTwoEnterCoOpZone" infiniteServer="false" name="WorkerTwoEnterCoOpZone" nameOffsetX="148.0" nameOffsetY="40.0" positionX="630.0" positionY="420.0" priority="0"/>
+<transition angle="135" id="WorkerTwoLeaveCoOpZone" infiniteServer="false" name="WorkerTwoLeaveCoOpZone" nameOffsetX="-2.0" nameOffsetY="4.0" positionX="585.0" positionY="390.0" priority="0"/>
+<arc id="SmallMaintain2 to Working2" inscription="1" source="SmallMaint" target="OneWorkerSmailMaint" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="782" yCoord="107"/>
+<arcpath arcPointType="false" id="1" xCoord="777" yCoord="222"/>
+</arc>
+<arc id="Working2 to SmallDone2" inscription="[0,inf)" source="OneWorkerSmailMaint" target="SmallMaintDone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="777" yCoord="251"/>
+<arcpath arcPointType="false" id="1" xCoord="777" yCoord="322"/>
+</arc>
+<arc id="LargeMaintain to Working1and2" inscription="1" source="LargeMaint" target="TwoWorkingLargeMaint" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="777" yCoord="847"/>
+<arcpath arcPointType="false" id="1" xCoord="777" yCoord="687"/>
+</arc>
+<arc id="Working1and2 to LargeDone" inscription="[0,inf)" source="TwoWorkingLargeMaint" target="LargeMaintDone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="777" yCoord="657"/>
+<arcpath arcPointType="false" id="1" xCoord="777" yCoord="522"/>
+</arc>
+<arc id="Worker2 to LargeMaintain" inscription="[0,inf)" source="WorkerTwoReadyForLarge" target="LargeMaint" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="597" yCoord="521"/>
+<arcpath arcPointType="false" id="1" xCoord="601" yCoord="858"/>
+<arcpath arcPointType="false" id="2" xCoord="762" yCoord="851"/>
+</arc>
+<arc id="Worker1 to LargeMaintain" inscription="[0,inf)" source="WorkerOneReadyForLarge" target="LargeMaint" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="957" yCoord="521"/>
+<arcpath arcPointType="false" id="1" xCoord="959" yCoord="858"/>
+<arcpath arcPointType="false" id="2" xCoord="792" yCoord="851"/>
+</arc>
+<arc id="Workers to SmallMaintain2" inscription="[0,inf)" source="Workers" target="SmallMaint" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="764" yCoord="393"/>
+<arcpath arcPointType="false" id="1" xCoord="638" yCoord="302"/>
+<arcpath arcPointType="false" id="2" xCoord="638" yCoord="198"/>
+<arcpath arcPointType="false" id="3" xCoord="772" yCoord="106"/>
+</arc>
+<arc id="LargeDone to Worker1" inscription="1" source="LargeMaintDone" target="WorkerOneReadyForLarge" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="781" yCoord="507"/>
+<arcpath arcPointType="false" id="1" xCoord="942" yCoord="507"/>
+</arc>
+<arc id="LargeDone to Worker2" inscription="1" source="LargeMaintDone" target="WorkerTwoReadyForLarge" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="771" yCoord="507"/>
+<arcpath arcPointType="false" id="1" xCoord="611" yCoord="507"/>
+</arc>
+<arc id="SmallDone2 to Workers" inscription="1" source="SmallMaintDone" target="Workers" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="777" yCoord="332"/>
+<arcpath arcPointType="false" id="1" xCoord="777" yCoord="387"/>
+</arc>
+<arc id="Workers to T3" inscription="[0,inf)" source="Workers" target="WorkerOneEnterCoOpZone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="791" yCoord="404"/>
+<arcpath arcPointType="false" id="1" xCoord="922" yCoord="428"/>
+</arc>
+<arc id="T3 to Worker1" inscription="1" source="WorkerOneEnterCoOpZone" target="WorkerOneReadyForLarge" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="930" yCoord="435"/>
+<arcpath arcPointType="false" id="1" xCoord="951" yCoord="492"/>
+</arc>
+<arc id="Worker1 to T4" inscription="[0,inf)" source="WorkerOneReadyForLarge" target="WorkerOneLeaveCoOpZone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="957" yCoord="492"/>
+<arcpath arcPointType="false" id="1" xCoord="961" yCoord="405"/>
+</arc>
+<arc id="T4 to Workers" inscription="1" source="WorkerOneLeaveCoOpZone" target="Workers" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="953" yCoord="398"/>
+<arcpath arcPointType="false" id="1" xCoord="791" yCoord="401"/>
+</arc>
+<arc id="Workers to T5" inscription="[0,inf)" source="Workers" target="WorkerTwoEnterCoOpZone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="762" yCoord="404"/>
+<arcpath arcPointType="false" id="1" xCoord="645" yCoord="427"/>
+</arc>
+<arc id="T5 to Worker2" inscription="1" source="WorkerTwoEnterCoOpZone" target="WorkerTwoReadyForLarge" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="638" yCoord="435"/>
+<arcpath arcPointType="false" id="1" xCoord="604" yCoord="494"/>
+</arc>
+<arc id="Worker2 to T6" inscription="[0,inf)" source="WorkerTwoReadyForLarge" target="WorkerTwoLeaveCoOpZone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="596" yCoord="492"/>
+<arcpath arcPointType="false" id="1" xCoord="593" yCoord="405"/>
+</arc>
+<arc id="T6 to Workers" inscription="1" source="WorkerTwoLeaveCoOpZone" target="Workers" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="600" yCoord="397"/>
+<arcpath arcPointType="false" id="1" xCoord="762" yCoord="401"/>
+</arc>
+</net>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EG EngineModel.FailedEngines=0" reductionOption="VerifyTAPNdiscreteVerification" searchOption="DFS" symmetry="true" traceOption="NONE"/>
+</pnml>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="TAPN1" type="P/T net">
+<place id="Sum" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Sum" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="480.0"/>
+<place id="P2" initialMarking="4" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="660.0" positionY="270.0"/>
+<place id="P1" initialMarking="3" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="270.0"/>
+<place id="P0" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="270.0"/>
+<transition angle="0" id="T2" infiniteServer="false" name="T2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="390.0" priority="1" timed="true"/>
+<transition angle="0" id="T1" infiniteServer="false" name="T1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="390.0" priority="1" timed="true"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="270.0" positionY="390.0" priority="1" timed="true"/>
+<arc id="T2 to Sum" inscription="1" source="T2" target="Sum" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="576" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="444" yCoord="484"/>
+</arc>
+<arc id="T1 to Sum" inscription="1" source="T1" target="Sum" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="432" yCoord="417"/>
+<arcpath arcPointType="false" id="1" xCoord="432" yCoord="477"/>
+</arc>
+<arc id="T0 to Sum" inscription="1" source="T0" target="Sum" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="286" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="419" yCoord="484"/>
+</arc>
+<arc id="P2 to T2" inscription="[0,inf)" source="P2" target="T2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="663" yCoord="294"/>
+<arcpath arcPointType="false" id="1" xCoord="586" yCoord="402"/>
+</arc>
+<arc id="P1 to T1" inscription="[0,inf)" source="P1" target="T1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="432" yCoord="296"/>
+<arcpath arcPointType="false" id="1" xCoord="432" yCoord="387"/>
+</arc>
+<arc id="P0 to T0" inscription="[0,inf)" source="P0" target="T0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="172" yCoord="292"/>
+<arcpath arcPointType="false" id="1" xCoord="276" yCoord="402"/>
+</arc>
+</net>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="EF (TAPN1.Sum=10 and TAPN1.P0=0 and TAPN1.P1=0 and TAPN1.P2=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EF (TAPN1.Sum=9 and TAPN1.P0=0 and TAPN1.P1=0 and TAPN1.P2=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="TAPN1" type="P/T net">
+<place id="WR" initialMarking="2" invariant="&lt;= 10" markingOffsetX="0.0" markingOffsetY="0.0" name="WR" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="240.0"/>
+<place id="WN" initialMarking="0" invariant="&lt;= 2" markingOffsetX="0.0" markingOffsetY="0.0" name="WN" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="405.0" positionY="240.0"/>
+<place id="WD" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="WD" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="690.0" positionY="240.0"/>
+<place id="WRoom" initialMarking="0" invariant="&lt;= 6" markingOffsetX="0.0" markingOffsetY="0.0" name="WRoom" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="690.0" positionY="660.0"/>
+<place id="WO" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="WO" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="540.0"/>
+<place id="Out" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Out" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="390.0"/>
+<place id="CHO" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="CHO" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="390.0"/>
+<place id="Working" initialMarking="1" invariant="&lt;= 8" markingOffsetX="0.0" markingOffsetY="0.0" name="Working" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="120.0"/>
+<place id="Resting" initialMarking="0" invariant="&lt;= 10" markingOffsetX="0.0" markingOffsetY="0.0" name="Resting" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="120.0"/>
+<place id="NurseResting" initialMarking="0" invariant="&lt;= 10" markingOffsetX="0.0" markingOffsetY="0.0" name="NurseResting" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="390.0" positionY="120.0"/>
+<place id="NurseWorking" initialMarking="1" invariant="&lt;= 24" markingOffsetX="0.0" markingOffsetY="0.0" name="NurseWorking" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="120.0"/>
+<place id="DoctorWorking" initialMarking="1" invariant="&lt;= 24" markingOffsetX="0.0" markingOffsetY="0.0" name="DoctorWorking" nameOffsetX="9.0" nameOffsetY="38.0" positionX="930.0" positionY="300.0"/>
+<place id="DoctorResting" initialMarking="0" invariant="&lt;= 20" markingOffsetX="0.0" markingOffsetY="0.0" name="DoctorResting" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1110.0" positionY="300.0"/>
+<place id="SurgeonWorking" initialMarking="1" invariant="&lt;= 24" markingOffsetX="0.0" markingOffsetY="0.0" name="SurgeonWorking" nameOffsetX="3.0" nameOffsetY="50.0" positionX="945.0" positionY="480.0"/>
+<place id="SurgeonResting" initialMarking="0" invariant="&lt;= 20" markingOffsetX="0.0" markingOffsetY="0.0" name="SurgeonResting" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1125.0" positionY="480.0"/>
+<place id="WS" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="WS" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="390.0"/>
+<transition angle="0" id="Check_in" infiniteServer="false" name="Check_in" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="270.0" positionY="240.0" priority="0"/>
+<transition angle="0" id="Nurse" infiniteServer="false" name="Nurse" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="585.0" positionY="240.0" priority="0"/>
+<transition angle="90" id="DoctorOk" infiniteServer="false" name="DoctorOk" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="630.0" positionY="345.0" priority="0"/>
+<transition angle="90" id="Surgeon" infiniteServer="false" name="Surgeon" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="480.0" priority="0"/>
+<transition angle="0" id="Check_out" infiniteServer="false" name="Check_out" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="390.0" priority="0"/>
+<transition angle="90" id="Operating" infiniteServer="false" name="Operating" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="600.0" priority="0"/>
+<transition angle="0" id="In_Room" infiniteServer="false" name="In_Room" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="660.0" priority="0"/>
+<transition angle="0" id="TR" infiniteServer="false" name="TR" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="165.0" priority="0"/>
+<transition angle="0" id="TW" infiniteServer="false" name="TW" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="75.0" priority="0"/>
+<transition angle="0" id="TNW" infiniteServer="false" name="TNW" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="75.0" priority="0"/>
+<transition angle="0" id="TNR" infiniteServer="false" name="TNR" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="165.0" priority="0"/>
+<transition angle="0" id="TDW" infiniteServer="false" name="TDW" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1020.0" positionY="240.0" priority="0"/>
+<transition angle="0" id="TDR" infiniteServer="false" name="TDR" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1020.0" positionY="345.0" priority="0"/>
+<transition angle="0" id="TSW" infiniteServer="false" name="TSW" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1035.0" positionY="420.0" priority="0"/>
+<transition angle="0" id="TSR" infiniteServer="false" name="TSR" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1035.0" positionY="555.0" priority="0"/>
+<transition angle="90" id="NurseOk" infiniteServer="false" name="NurseOk" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="300.0" priority="0"/>
+<transition angle="90" id="Doctor" infiniteServer="false" name="Doctor" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="240.0" priority="0"/>
+<transition angle="90" id="DoctorRoom" infiniteServer="false" name="DoctorRoom" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="690.0" positionY="405.0" priority="0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="195.0" positionY="300.0" priority="0"/>
+<arc id="WR to Check_in" inscription="[0,inf)" source="WR" target="Check_in" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="206" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="276" yCoord="252"/>
+</arc>
+<arc id="Check_in to WN" inscription="1" source="Check_in" target="WN" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="286" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="252"/>
+</arc>
+<arc id="WN to Nurse" inscription="[0,inf)" source="WN" target="Nurse" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="431" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="591" yCoord="252"/>
+</arc>
+<arc id="WD to Doctor" inscription="[0,inf)" source="WD" target="DoctorOk" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="694" yCoord="264"/>
+<arcpath arcPointType="false" id="1" xCoord="641" yCoord="351"/>
+</arc>
+<arc id="Surgeon to WO" inscription="1" source="Surgeon" target="WO" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="836" yCoord="496"/>
+<arcpath arcPointType="false" id="1" xCoord="836" yCoord="537"/>
+</arc>
+<arc id="WO to Operating" inscription="[0,inf)" source="WO" target="Operating" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="834" yCoord="566"/>
+<arcpath arcPointType="false" id="1" xCoord="828" yCoord="606"/>
+</arc>
+<arc id="Operating to WRoom" inscription="1" source="Operating" target="WRoom" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="836" yCoord="616"/>
+<arcpath arcPointType="false" id="1" xCoord="841" yCoord="676"/>
+<arcpath arcPointType="false" id="2" xCoord="716" yCoord="672"/>
+</arc>
+<arc id="Check_out to Out" inscription="1" source="Check_out" target="Out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="441" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="206" yCoord="402"/>
+</arc>
+<arc id="CHO to Check_out" inscription="[0,inf)" source="CHO" target="Check_out" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="451" yCoord="402"/>
+</arc>
+<arc id="WRoom to In_Room" inscription="[0,inf)" source="WRoom" target="In_Room" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="687" yCoord="672"/>
+<arcpath arcPointType="false" id="1" xCoord="556" yCoord="672"/>
+</arc>
+<arc id="Resting to TW" inscription="[0,inf)" source="Resting" target="TW" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="88" yCoord="117"/>
+<arcpath arcPointType="false" id="1" xCoord="91" yCoord="91"/>
+<arcpath arcPointType="false" id="2" xCoord="156" yCoord="87"/>
+</arc>
+<arc id="TW to Working" inscription="1" source="TW" target="Working" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="166" yCoord="87"/>
+<arcpath arcPointType="false" id="1" xCoord="241" yCoord="91"/>
+<arcpath arcPointType="false" id="2" xCoord="238" yCoord="117"/>
+</arc>
+<arc id="Working to TR" inscription="[0,inf):1" source="Working" target="TR" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="238" yCoord="146"/>
+<arcpath arcPointType="false" id="1" xCoord="241" yCoord="181"/>
+<arcpath arcPointType="false" id="2" xCoord="167" yCoord="172"/>
+</arc>
+<arc id="TR to Resting" inscription="[0,inf):1" source="TR" target="Resting" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="166" yCoord="182"/>
+<arcpath arcPointType="false" id="1" xCoord="166" yCoord="181"/>
+<arcpath arcPointType="false" id="2" xCoord="91" yCoord="181"/>
+<arcpath arcPointType="false" id="3" xCoord="88" yCoord="146"/>
+</arc>
+<arc id="Working to Check_in" inscription="[0,inf):1" source="Working" target="Check_in" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="251" yCoord="133"/>
+<arcpath arcPointType="false" id="1" xCoord="286" yCoord="136"/>
+<arcpath arcPointType="false" id="2" xCoord="282" yCoord="237"/>
+</arc>
+<arc id="Check_in to Working" inscription="[0,inf):1" source="Check_in" target="Working" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="282" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="242" yCoord="145"/>
+</arc>
+<arc id="NurseResting to TNW" inscription="[0,inf)" source="NurseResting" target="TNW" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="403" yCoord="117"/>
+<arcpath arcPointType="false" id="1" xCoord="406" yCoord="91"/>
+<arcpath arcPointType="false" id="2" xCoord="456" yCoord="87"/>
+</arc>
+<arc id="TNW to NurseWorking" inscription="1" source="TNW" target="NurseWorking" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="466" yCoord="87"/>
+<arcpath arcPointType="false" id="1" xCoord="556" yCoord="91"/>
+<arcpath arcPointType="false" id="2" xCoord="553" yCoord="117"/>
+</arc>
+<arc id="NurseWorking to TNR" inscription="[0,inf):1" source="NurseWorking" target="TNR" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="553" yCoord="146"/>
+<arcpath arcPointType="false" id="1" xCoord="556" yCoord="181"/>
+<arcpath arcPointType="false" id="2" xCoord="466" yCoord="177"/>
+</arc>
+<arc id="TNR to NurseResting" inscription="[0,inf):1" source="TNR" target="NurseResting" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="456" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="406" yCoord="181"/>
+<arcpath arcPointType="false" id="2" xCoord="403" yCoord="146"/>
+</arc>
+<arc id="NurseWorking to Nurse" inscription="[0,inf):1" source="NurseWorking" target="Nurse" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="566" yCoord="133"/>
+<arcpath arcPointType="false" id="1" xCoord="601" yCoord="136"/>
+<arcpath arcPointType="false" id="2" xCoord="597" yCoord="237"/>
+</arc>
+<arc id="Nurse to NurseWorking" inscription="[0,inf):1" source="Nurse" target="NurseWorking" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="597" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="557" yCoord="145"/>
+</arc>
+<arc id="Nurse to WD" inscription="1" source="Nurse" target="WD" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="601" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="687" yCoord="252"/>
+</arc>
+<arc id="DoctorResting to TDW" inscription="[0,inf)" source="DoctorResting" target="TDW" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="1123" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="1126" yCoord="256"/>
+<arcpath arcPointType="false" id="2" xCoord="1036" yCoord="252"/>
+</arc>
+<arc id="TDW to DoctorWorking" inscription="1" source="TDW" target="DoctorWorking" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="1026" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="946" yCoord="256"/>
+<arcpath arcPointType="false" id="2" xCoord="943" yCoord="297"/>
+</arc>
+<arc id="DoctorWorking to TDR" inscription="[0,inf):1" source="DoctorWorking" target="TDR" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="943" yCoord="326"/>
+<arcpath arcPointType="false" id="1" xCoord="946" yCoord="361"/>
+<arcpath arcPointType="false" id="2" xCoord="1026" yCoord="357"/>
+</arc>
+<arc id="TDR to DoctorResting" inscription="[0,inf):1" source="TDR" target="DoctorResting" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="1036" yCoord="357"/>
+<arcpath arcPointType="false" id="1" xCoord="1126" yCoord="361"/>
+<arcpath arcPointType="false" id="2" xCoord="1123" yCoord="326"/>
+</arc>
+<arc id="DoctorWorking to Doctor" inscription="[0,inf):1" source="DoctorWorking" target="DoctorOk" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="927" yCoord="314"/>
+<arcpath arcPointType="false" id="1" xCoord="656" yCoord="357"/>
+</arc>
+<arc id="Doctor to DoctorWorking" inscription="[0,inf):1" source="DoctorOk" target="DoctorWorking" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="656" yCoord="357"/>
+<arcpath arcPointType="false" id="1" xCoord="927" yCoord="314"/>
+</arc>
+<arc id="SurgeonResting to TSW" inscription="[0,inf)" source="SurgeonResting" target="TSW" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="1138" yCoord="477"/>
+<arcpath arcPointType="false" id="1" xCoord="1141" yCoord="436"/>
+<arcpath arcPointType="false" id="2" xCoord="1051" yCoord="432"/>
+</arc>
+<arc id="TSW to SurgeonWorking" inscription="1" source="TSW" target="SurgeonWorking" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="1041" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="961" yCoord="436"/>
+<arcpath arcPointType="false" id="2" xCoord="958" yCoord="477"/>
+</arc>
+<arc id="SurgeonWorking to TSR" inscription="[0,inf):1" source="SurgeonWorking" target="TSR" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="957" yCoord="506"/>
+<arcpath arcPointType="false" id="1" xCoord="961" yCoord="571"/>
+<arcpath arcPointType="false" id="2" xCoord="1041" yCoord="567"/>
+</arc>
+<arc id="TSR to SurgeonResting" inscription="[0,inf):1" source="TSR" target="SurgeonResting" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="1051" yCoord="567"/>
+<arcpath arcPointType="false" id="1" xCoord="1141" yCoord="571"/>
+<arcpath arcPointType="false" id="2" xCoord="1137" yCoord="506"/>
+</arc>
+<arc id="SurgeonWorking to Surgeon" inscription="[0,inf):1" source="SurgeonWorking" target="Surgeon" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="942" yCoord="492"/>
+<arcpath arcPointType="false" id="1" xCoord="851" yCoord="492"/>
+</arc>
+<arc id="Surgeon to SurgeonWorking" inscription="[0,inf):1" source="Surgeon" target="SurgeonWorking" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="851" yCoord="492"/>
+<arcpath arcPointType="false" id="1" xCoord="942" yCoord="492"/>
+</arc>
+<arc id="NurseWorking to Operating" inscription="[0,inf):1" source="NurseWorking" target="Operating" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="565" yCoord="125"/>
+<arcpath arcPointType="false" id="1" xCoord="661" yCoord="76"/>
+<arcpath arcPointType="false" id="2" xCoord="1171" yCoord="76"/>
+<arcpath arcPointType="false" id="3" xCoord="1171" yCoord="616"/>
+<arcpath arcPointType="false" id="4" xCoord="851" yCoord="612"/>
+</arc>
+<arc id="Operating to NurseWorking" inscription="[0,inf):1" source="Operating" target="NurseWorking" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="851" yCoord="612"/>
+<arcpath arcPointType="false" id="1" xCoord="1171" yCoord="616"/>
+<arcpath arcPointType="false" id="2" xCoord="1176" yCoord="79"/>
+<arcpath arcPointType="false" id="3" xCoord="668" yCoord="79"/>
+<arcpath arcPointType="false" id="4" xCoord="565" yCoord="125"/>
+</arc>
+<arc id="SurgeonWorking to Operating" inscription="[0,inf):2" source="SurgeonWorking" target="Operating" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="946" yCoord="502"/>
+<arcpath arcPointType="false" id="1" xCoord="842" yCoord="607"/>
+</arc>
+<arc id="Operating to SurgeonWorking" inscription="[0,inf):2" source="Operating" target="SurgeonWorking" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="835" yCoord="606"/>
+<arcpath arcPointType="false" id="1" xCoord="946" yCoord="502"/>
+</arc>
+<arc id="Doctor to CHO" inscription="1" source="DoctorOk" target="CHO" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="626" yCoord="357"/>
+<arcpath arcPointType="false" id="1" xCoord="564" yCoord="394"/>
+</arc>
+<arc id="WN to NurseOk" inscription="[0,inf)" source="WN" target="NurseOk" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="430" yCoord="258"/>
+<arcpath arcPointType="false" id="1" xCoord="536" yCoord="312"/>
+</arc>
+<arc id="NurseOk to CHO" inscription="1" source="NurseOk" target="CHO" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="551" yCoord="316"/>
+<arcpath arcPointType="false" id="1" xCoord="551" yCoord="387"/>
+</arc>
+<arc id="WS to Surgeon" inscription="[0,inf)" source="WS" target="Surgeon" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="836" yCoord="416"/>
+<arcpath arcPointType="false" id="1" xCoord="836" yCoord="486"/>
+</arc>
+<arc id="WD to Doctor" inscription="[0,inf)" source="WD" target="Doctor" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="717" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="821" yCoord="252"/>
+</arc>
+<arc id="Doctor to WS" inscription="1" source="Doctor" target="WS" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="831" yCoord="256"/>
+<arcpath arcPointType="false" id="1" xCoord="836" yCoord="387"/>
+</arc>
+<arc id="DoctorWorking to Doctor" inscription="[0,inf):1" source="DoctorWorking" target="Doctor" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="929" yCoord="303"/>
+<arcpath arcPointType="false" id="1" xCoord="851" yCoord="252"/>
+</arc>
+<arc id="Doctor to DoctorWorking" inscription="[0,inf):1" source="Doctor" target="DoctorWorking" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="841" yCoord="257"/>
+<arcpath arcPointType="false" id="1" xCoord="885" yCoord="285"/>
+<arcpath arcPointType="false" id="2" xCoord="928" yCoord="305"/>
+</arc>
+<arc id="In_Room to CHO" inscription="1" source="In_Room" target="CHO" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="657"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="416"/>
+</arc>
+<arc id="WD to DoctorRoom" inscription="[0,inf)" source="WD" target="DoctorRoom" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="701" yCoord="266"/>
+<arcpath arcPointType="false" id="1" xCoord="701" yCoord="411"/>
+</arc>
+<arc id="DoctorRoom to WRoom" inscription="1" source="DoctorRoom" target="WRoom" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="701" yCoord="421"/>
+<arcpath arcPointType="false" id="1" xCoord="701" yCoord="657"/>
+</arc>
+<arc id="DoctorWorking to DoctorRoom" inscription="[0,inf):1" source="DoctorWorking" target="DoctorRoom" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="928" yCoord="318"/>
+<arcpath arcPointType="false" id="1" xCoord="716" yCoord="417"/>
+</arc>
+<arc id="DoctorRoom to DoctorWorking" inscription="[0,inf):1" source="DoctorRoom" target="DoctorWorking" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="716" yCoord="417"/>
+<arcpath arcPointType="false" id="1" xCoord="928" yCoord="318"/>
+</arc>
+<arc id="WR to T0" inscription="[0,inf)" source="WR" target="T0" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="187" yCoord="266"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="297"/>
+<arcpath arcPointType="false" id="2" xCoord="201" yCoord="312"/>
+</arc>
+<arc id="T0 to WR" inscription="1" source="T0" target="WR" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="211" yCoord="312"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="297"/>
+<arcpath arcPointType="false" id="2" xCoord="202" yCoord="262"/>
+</arc>
+<arc id="Working to T0" inscription="[0,inf)" source="Working" target="T0" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="234" yCoord="146"/>
+<arcpath arcPointType="false" id="1" xCoord="207" yCoord="297"/>
+</arc>
+</net>
+<query active="true" capacity="6" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EF TAPN1.Out=2" reductionOption="DEGREE2BROADCAST" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="EF TAPN1.Out&gt;=3" reductionOption="VerifyTAPN" searchOption="BFS" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="AF TAPN1.Out=1" reductionOption="VerifyTAPNdiscreteVerification" searchOption="DFS" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EG (TAPN1.WR&gt;=1 or TAPN1.WRoom&gt;=1)" reductionOption="VerifyTAPNdiscreteVerification" searchOption="DFS" symmetry="true" traceOption="SOME"/>
+</pnml>

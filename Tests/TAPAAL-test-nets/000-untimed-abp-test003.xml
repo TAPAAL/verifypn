@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<constant name="deadline" value="6"/>
+<constant name="delay" value="2"/>
+<net active="true" id="Protocol" type="P/T net">
+<labels border="true" height="574" positionX="780" positionY="67" width="165">Classical Alternating Bit Protocol with timeouts for resending messages.
+
+In this version of the protocol we use transport arcs to track the timestamp of each message from the point it was sent until it returns as an acknowledgement back to the sender.
+
+The query asks about violation of the synchronization between sender and receiver. The extra number of tokens in the query gives a bound on the total number of messages in transit (i.e. in places Medium_*). This means that TAPAAL provides a suitable underapproximation and verifies the correctness of the protocol upto a given number of extra tokens.
+
+Try to experiment with the values of the constants deadline and delay in order to check for what retransmission rates the protocol remains safe.</labels>
+<place id="Medium_A" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Medium_A" nameOffsetX="50.0" nameOffsetY="-5.0" positionX="390.0" positionY="150.0"/>
+<place id="Sender_0_A" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Sender_0_A" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="60.0"/>
+<place id="Receiver_1_B" initialMarking="0" invariant="&lt;= 2" markingOffsetX="0.0" markingOffsetY="0.0" name="Receiver_1_B" nameOffsetX="107.0" nameOffsetY="32.0" positionX="600.0" positionY="615.0"/>
+<place id="Receiver_0_A" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Receiver_0_A" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="780.0"/>
+<place id="Sender_0_B" initialMarking="0" invariant="&lt;= 6" markingOffsetX="0.0" markingOffsetY="0.0" name="Sender_0_B" nameOffsetX="-5.0" nameOffsetY="31.0" positionX="150.0" positionY="240.0"/>
+<place id="Sender_1_A" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Sender_1_A" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="450.0"/>
+<place id="Sender_1_B" initialMarking="0" invariant="&lt;= 6" markingOffsetX="0.0" markingOffsetY="0.0" name="Sender_1_B" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="630.0"/>
+<place id="Medium_B" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Medium_B" nameOffsetX="44.0" nameOffsetY="0.0" positionX="390.0" positionY="360.0"/>
+<place id="Medium_C" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Medium_C" nameOffsetX="48.0" nameOffsetY="4.0" positionX="390.0" positionY="540.0"/>
+<place id="Medium_D" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Medium_D" nameOffsetX="44.0" nameOffsetY="0.0" positionX="390.0" positionY="720.0"/>
+<place id="Receiver_0_B" initialMarking="0" invariant="&lt;= 2" markingOffsetX="0.0" markingOffsetY="0.0" name="Receiver_0_B" nameOffsetX="110.0" nameOffsetY="33.0" positionX="600.0" positionY="240.0"/>
+<place id="Receiver_1_A" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Receiver_1_A" nameOffsetX="110.0" nameOffsetY="35.0" positionX="600.0" positionY="450.0"/>
+<transition angle="90" id="Ack_rec_0" infiniteServer="false" name="Ack_rec_0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="360.0" priority="0" timed="true"/>
+<transition angle="270" id="Send_1" infiniteServer="false" name="Send_1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="540.0" priority="0" timed="true"/>
+<transition angle="270" id="Ack_send_0" infiniteServer="false" name="Ack_send_0" nameOffsetX="110.0" nameOffsetY="31.0" positionX="600.0" positionY="360.0" priority="0" timed="true"/>
+<transition angle="270" id="Loss_C" infiniteServer="false" name="Loss_C" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="390.0" positionY="630.0" priority="0" timed="true"/>
+<transition angle="270" id="Loss_D" infiniteServer="false" name="Loss_D" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="390.0" positionY="780.0" priority="0" timed="true"/>
+<transition angle="0" id="ReSend_1" infiniteServer="false" name="ReSend_1" nameOffsetX="63.0" nameOffsetY="50.0" positionX="240.0" positionY="630.0" priority="0" timed="true"/>
+<transition angle="0" id="Receive_old_1" infiniteServer="false" name="Receive_old_1" nameOffsetX="74.0" nameOffsetY="-4.0" positionX="510.0" positionY="615.0" priority="0" timed="true"/>
+<transition angle="90" id="Ack_send_1" infiniteServer="false" name="Ack_send_1" nameOffsetX="108.0" nameOffsetY="33.0" positionX="600.0" positionY="720.0" priority="0" timed="true"/>
+<transition angle="270" id="Ack_rec_1" infiniteServer="false" name="Ack_rec_1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="720.0" priority="0" timed="true"/>
+<transition angle="270" id="Send_0" infiniteServer="false" name="Send_0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="150.0" priority="0" timed="true"/>
+<transition angle="270" id="Receive_0" infiniteServer="false" name="Receive_0" nameOffsetX="92.0" nameOffsetY="36.0" positionX="600.0" positionY="150.0" priority="0" timed="true"/>
+<transition angle="0" id="ReSend_0" infiniteServer="false" name="ReSend_0" nameOffsetX="65.0" nameOffsetY="46.0" positionX="240.0" positionY="240.0" priority="0" timed="true"/>
+<transition angle="0" id="Receive_old_0" infiniteServer="false" name="Receive_old_0" nameOffsetX="90.0" nameOffsetY="-3.0" positionX="495.0" positionY="240.0" priority="0" timed="true"/>
+<transition angle="270" id="Loss_A" infiniteServer="false" name="Loss_A" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="390.0" positionY="240.0" priority="0" timed="true"/>
+<transition angle="270" id="Loss_B" infiniteServer="false" name="Loss_B" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="390.0" positionY="450.0" priority="0" timed="true"/>
+<transition angle="270" id="Receive_1" infiniteServer="false" name="Receive_1" nameOffsetX="89.0" nameOffsetY="31.0" positionX="600.0" positionY="540.0" priority="0" timed="true"/>
+<arc id="Medium_A to Loss_A" inscription="[0,inf)" source="Medium_A" target="Loss_A" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="402" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="247"/>
+</arc>
+<arc id="Receiver_0_A to Receive_old_1" inscription="[0,inf)" source="Receiver_0_A" target="Receive_old_1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="604" yCoord="779"/>
+<arcpath arcPointType="false" id="1" xCoord="522" yCoord="642"/>
+</arc>
+<arc id="Receiver_0_A to Receive_0" inscription="[0,inf)" source="Receiver_0_A" target="Receive_0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="626" yCoord="794"/>
+<arcpath arcPointType="false" id="1" xCoord="679" yCoord="804"/>
+<arcpath arcPointType="false" id="2" xCoord="728" yCoord="803"/>
+<arcpath arcPointType="false" id="3" xCoord="728" yCoord="143"/>
+<arcpath arcPointType="false" id="4" xCoord="654" yCoord="142"/>
+<arcpath arcPointType="false" id="5" xCoord="627" yCoord="161"/>
+</arc>
+<arc id="Sender_0_A to Send_0" inscription="[0,inf)" source="Sender_0_A" target="Send_0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="162" yCoord="157"/>
+</arc>
+<arc id="Sender_0_B to Ack_rec_0" inscription="[0,inf)" source="Sender_0_B" target="Ack_rec_0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="161" yCoord="266"/>
+<arcpath arcPointType="false" id="1" xCoord="161" yCoord="366"/>
+</arc>
+<arc id="Sender_0_B to ReSend_0" inscription="[0,inf)" source="Sender_0_B" target="ReSend_0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="176" yCoord="247"/>
+<arcpath arcPointType="false" id="1" xCoord="218" yCoord="233"/>
+<arcpath arcPointType="false" id="2" xCoord="247" yCoord="247"/>
+</arc>
+<arc id="Sender_1_A to Send_1" inscription="[0,inf)" source="Sender_1_A" target="Send_1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="476"/>
+<arcpath arcPointType="false" id="1" xCoord="162" yCoord="547"/>
+</arc>
+<arc id="Sender_1_B to ReSend_1" inscription="[0,inf)" source="Sender_1_B" target="ReSend_1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="176" yCoord="637"/>
+<arcpath arcPointType="false" id="1" xCoord="218" yCoord="623"/>
+<arcpath arcPointType="false" id="2" xCoord="247" yCoord="637"/>
+</arc>
+<arc id="Sender_1_B to Ack_rec_1" inscription="[0,inf)" source="Sender_1_B" target="Ack_rec_1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="656"/>
+<arcpath arcPointType="false" id="1" xCoord="162" yCoord="727"/>
+</arc>
+<arc id="Medium_B to Ack_rec_0" inscription="[0,inf)" source="Medium_B" target="Ack_rec_0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="387" yCoord="372"/>
+<arcpath arcPointType="false" id="1" xCoord="176" yCoord="372"/>
+</arc>
+<arc id="Medium_B to Loss_B" inscription="[0,inf)" source="Medium_B" target="Loss_B" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="402" yCoord="386"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="457"/>
+</arc>
+<arc id="Medium_C to Loss_C" inscription="[0,inf)" source="Medium_C" target="Loss_C" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="402" yCoord="566"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="637"/>
+</arc>
+<arc id="Medium_D to Loss_D" inscription="[0,inf)" source="Medium_D" target="Loss_D" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="402" yCoord="746"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="787"/>
+</arc>
+<arc id="Medium_D to Ack_rec_1" inscription="[0,inf)" source="Medium_D" target="Ack_rec_1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="387" yCoord="731"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="731"/>
+</arc>
+<arc id="Receiver_1_A to Receive_old_0" inscription="[0,inf)" source="Receiver_1_A" target="Receive_old_0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="604" yCoord="448"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="267"/>
+</arc>
+<arc id="Receiver_1_A to Receive_1" inscription="[0,inf)" source="Receiver_1_A" target="Receive_1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="476"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="547"/>
+</arc>
+<arc id="Ack_rec_0 to Sender_1_A" inscription="1" source="Ack_rec_0" target="Sender_1_A" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="161" yCoord="376"/>
+<arcpath arcPointType="false" id="1" xCoord="161" yCoord="447"/>
+</arc>
+<arc id="Receiver_0_B to Ack_send_0" inscription="[0,inf):1" source="Receiver_0_B" target="Ack_send_0" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="266"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="367"/>
+</arc>
+<arc id="Ack_send_0 to Medium_B" inscription="[0,inf):1" source="Ack_send_0" target="Medium_B" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="597" yCoord="371"/>
+<arcpath arcPointType="false" id="1" xCoord="416" yCoord="371"/>
+</arc>
+<arc id="Ack_send_0 to Receiver_1_A" inscription="1" source="Ack_send_0" target="Receiver_1_A" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="377"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="447"/>
+</arc>
+<arc id="ReSend_1 to Sender_1_B" inscription="1" source="ReSend_1" target="Sender_1_B" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="246" yCoord="647"/>
+<arcpath arcPointType="false" id="1" xCoord="218" yCoord="698"/>
+<arcpath arcPointType="false" id="2" xCoord="172" yCoord="652"/>
+</arc>
+<arc id="ReSend_1 to Medium_C" inscription="1" source="ReSend_1" target="Medium_C" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="256" yCoord="642"/>
+<arcpath arcPointType="false" id="1" xCoord="389" yCoord="559"/>
+</arc>
+<arc id="Medium_C to Receive_old_1" inscription="[0,inf):1" source="Medium_C" target="Receive_old_1" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="414" yCoord="560"/>
+<arcpath arcPointType="false" id="1" xCoord="516" yCoord="627"/>
+</arc>
+<arc id="Receive_old_1 to Receiver_1_B" inscription="[0,inf):1" source="Receive_old_1" target="Receiver_1_B" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="526" yCoord="627"/>
+<arcpath arcPointType="false" id="1" xCoord="597" yCoord="627"/>
+</arc>
+<arc id="Ack_send_1 to Receiver_0_A" inscription="1" source="Ack_send_1" target="Receiver_0_A" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="611" yCoord="736"/>
+<arcpath arcPointType="false" id="1" xCoord="611" yCoord="777"/>
+</arc>
+<arc id="Receiver_1_B to Ack_send_1" inscription="[0,inf):1" source="Receiver_1_B" target="Ack_send_1" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="611" yCoord="641"/>
+<arcpath arcPointType="false" id="1" xCoord="611" yCoord="726"/>
+</arc>
+<arc id="Ack_send_1 to Medium_D" inscription="[0,inf):1" source="Ack_send_1" target="Medium_D" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="596" yCoord="732"/>
+<arcpath arcPointType="false" id="1" xCoord="417" yCoord="732"/>
+</arc>
+<arc id="Send_1 to Sender_1_B" inscription="1" source="Send_1" target="Sender_1_B" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="557"/>
+<arcpath arcPointType="false" id="1" xCoord="162" yCoord="627"/>
+</arc>
+<arc id="Send_1 to Medium_C" inscription="1" source="Send_1" target="Medium_C" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="177" yCoord="551"/>
+<arcpath arcPointType="false" id="1" xCoord="387" yCoord="551"/>
+</arc>
+<arc id="Ack_rec_1 to Sender_0_A" inscription="1" source="Ack_rec_1" target="Sender_0_A" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="737"/>
+<arcpath arcPointType="false" id="1" xCoord="142" yCoord="802"/>
+<arcpath arcPointType="false" id="2" xCoord="67" yCoord="802"/>
+<arcpath arcPointType="false" id="3" xCoord="67" yCoord="37"/>
+<arcpath arcPointType="false" id="4" xCoord="172" yCoord="37"/>
+<arcpath arcPointType="false" id="5" xCoord="166" yCoord="57"/>
+</arc>
+<arc id="Send_0 to Medium_A" inscription="1" source="Send_0" target="Medium_A" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="177" yCoord="161"/>
+<arcpath arcPointType="false" id="1" xCoord="387" yCoord="161"/>
+</arc>
+<arc id="Send_0 to Sender_0_B" inscription="1" source="Send_0" target="Sender_0_B" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="167"/>
+<arcpath arcPointType="false" id="1" xCoord="162" yCoord="237"/>
+</arc>
+<arc id="Medium_A to Receive_0" inscription="[0,inf):1" source="Medium_A" target="Receive_0" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="416" yCoord="161"/>
+<arcpath arcPointType="false" id="1" xCoord="597" yCoord="161"/>
+</arc>
+<arc id="Receive_0 to Receiver_0_B" inscription="[0,inf):1" source="Receive_0" target="Receiver_0_B" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="167"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="237"/>
+</arc>
+<arc id="ReSend_0 to Medium_A" inscription="1" source="ReSend_0" target="Medium_A" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="256" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="389" yCoord="169"/>
+</arc>
+<arc id="ReSend_0 to Sender_0_B" inscription="1" source="ReSend_0" target="Sender_0_B" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="246" yCoord="257"/>
+<arcpath arcPointType="false" id="1" xCoord="218" yCoord="308"/>
+<arcpath arcPointType="false" id="2" xCoord="172" yCoord="262"/>
+</arc>
+<arc id="Medium_A to Receive_old_0" inscription="[0,inf):1" source="Medium_A" target="Receive_old_0" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="413" yCoord="172"/>
+<arcpath arcPointType="false" id="1" xCoord="501" yCoord="252"/>
+</arc>
+<arc id="Receive_old_0 to Receiver_0_B" inscription="[0,inf):1" source="Receive_old_0" target="Receiver_0_B" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="511" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="597" yCoord="252"/>
+</arc>
+<arc id="Medium_C to Receive_1" inscription="[0,inf):1" source="Medium_C" target="Receive_1" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="416" yCoord="551"/>
+<arcpath arcPointType="false" id="1" xCoord="597" yCoord="551"/>
+</arc>
+<arc id="Receive_1 to Receiver_1_B" inscription="[0,inf):1" source="Receive_1" target="Receiver_1_B" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="557"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="612"/>
+</arc>
+</net>
+<query active="true" capacity="4" discreteInclusion="true" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*ALL*" name="TRUE" query="EF ((Protocol.Sender_0_A&gt;=1 and (Protocol.Receiver_0_B&gt;=1 or Protocol.Receiver_1_A&gt;=1)) or (Protocol.Sender_1_A&gt;=1 and (Protocol.Receiver_0_A&gt;=1 or Protocol.Receiver_1_B&gt;=1)))" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

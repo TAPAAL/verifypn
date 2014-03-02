@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<constant name="RedLight" value="31"/>
+<constant name="YellowLight" value="5"/>
+<net active="true" id="TAPN1" type="P/T net">
+<place id="Train" initialMarking="4" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Train" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="585.0" positionY="435.0"/>
+<place id="Sensor" initialMarking="0" invariant="&lt; 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Sensor" nameOffsetX="78.0" nameOffsetY="13.0" positionX="480.0" positionY="210.0"/>
+<place id="Red" initialMarking="0" invariant="&lt;= RedLight" markingOffsetX="0.0" markingOffsetY="0.0" name="Red" nameOffsetX="-7.0" nameOffsetY="36.0" positionX="105.0" positionY="240.0"/>
+<place id="Green" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Green" nameOffsetX="-5.0" nameOffsetY="36.0" positionX="345.0" positionY="240.0"/>
+<place id="Yellow" initialMarking="0" invariant="&lt;= YellowLight" markingOffsetX="0.0" markingOffsetY="0.0" name="Yellow" nameOffsetX="-6.0" nameOffsetY="35.0" positionX="225.0" positionY="360.0"/>
+<place id="Dangerzone" initialMarking="0" invariant="&lt; 6" markingOffsetX="0.0" markingOffsetY="0.0" name="Dangerzone" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="495.0"/>
+<place id="BetweenSensorAndCrossing" initialMarking="0" invariant="&lt; 25" markingOffsetX="0.0" markingOffsetY="0.0" name="BetweenSensorAndCrossing" nameOffsetX="129.0" nameOffsetY="50.0" positionX="390.0" positionY="450.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="270.0" positionY="135.0" priority="0"/>
+<transition angle="0" id="T2" infiniteServer="false" name="T2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="465.0" positionY="420.0" priority="0"/>
+<transition angle="0" id="T3" infiniteServer="false" name="T3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="360.0" priority="0"/>
+<transition angle="0" id="T4" infiniteServer="false" name="T4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="360.0" priority="0"/>
+<transition angle="0" id="T5" infiniteServer="false" name="T5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="225.0" priority="0"/>
+<transition angle="0" id="T7" infiniteServer="false" name="T7" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="300.0" positionY="465.0" priority="0"/>
+<transition angle="0" id="T8" infiniteServer="false" name="T8" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="30.0" positionY="480.0" priority="0"/>
+<transition angle="0" id="T10" infiniteServer="false" name="T10" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="300.0" positionY="15.0" priority="0"/>
+<arc id="Green to T4" inscription="[0,inf)" source="Green" target="T4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="359" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="359" yCoord="239"/>
+<arcpath arcPointType="false" id="2" xCoord="357" yCoord="357"/>
+</arc>
+<arc id="T4 to Yellow" inscription="1" source="T4" target="Yellow" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="351" yCoord="372"/>
+<arcpath arcPointType="false" id="1" xCoord="251" yCoord="372"/>
+</arc>
+<arc id="Yellow to T3" inscription="[0,inf)" source="Yellow" target="T3" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="222" yCoord="372"/>
+<arcpath arcPointType="false" id="1" xCoord="121" yCoord="372"/>
+</arc>
+<arc id="T3 to Red" inscription="1" source="T3" target="Red" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="117" yCoord="357"/>
+<arcpath arcPointType="false" id="1" xCoord="117" yCoord="266"/>
+</arc>
+<arc id="Red to T5" inscription="[0,inf)" source="Red" target="T5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="131" yCoord="250"/>
+<arcpath arcPointType="false" id="1" xCoord="231" yCoord="237"/>
+</arc>
+<arc id="T5 to Green" inscription="1" source="T5" target="Green" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="241" yCoord="242"/>
+<arcpath arcPointType="false" id="1" xCoord="342" yCoord="250"/>
+</arc>
+<arc id="Sensor to T0" inscription="[0,inf)" source="Sensor" target="T0" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="477" yCoord="216"/>
+<arcpath arcPointType="false" id="1" xCoord="286" yCoord="147"/>
+</arc>
+<arc id="T0 to Red" inscription="1" source="T0" target="Red" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="277" yCoord="142"/>
+<arcpath arcPointType="false" id="1" xCoord="129" yCoord="243"/>
+</arc>
+<arc id="Train to T2" inscription="[0,inf)" source="Train" target="T2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="582" yCoord="445"/>
+<arcpath arcPointType="false" id="1" xCoord="481" yCoord="432"/>
+</arc>
+<arc id="T2 to Sensor" inscription="1" source="T2" target="Sensor" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="477" yCoord="417"/>
+<arcpath arcPointType="false" id="1" xCoord="490" yCoord="236"/>
+</arc>
+<arc id="Sensor to T5" inscription="[0,inf)" source="Sensor" target="T5" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="477" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="242" yCoord="232"/>
+</arc>
+<arc id="BetweenSensorAndCrossing to T7" inscription="[0,inf)" source="BetweenSensorAndCrossing" target="T7" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="387" yCoord="464"/>
+<arcpath arcPointType="false" id="1" xCoord="316" yCoord="477"/>
+</arc>
+<arc id="T7 to Dangerzone" inscription="1" source="T7" target="Dangerzone" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="306" yCoord="477"/>
+<arcpath arcPointType="false" id="1" xCoord="250" yCoord="501"/>
+</arc>
+<arc id="T2 to BetweenSensorAndCrossing" inscription="1" source="T2" target="BetweenSensorAndCrossing" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="471" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="415" yCoord="456"/>
+</arc>
+<arc id="Dangerzone to T8" inscription="[0,inf)" source="Dangerzone" target="T8" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="222" yCoord="505"/>
+<arcpath arcPointType="false" id="1" xCoord="46" yCoord="492"/>
+</arc>
+<arc id="Sensor to T4" inscription="[0,inf)" source="Sensor" target="T4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="482" yCoord="233"/>
+<arcpath arcPointType="false" id="1" xCoord="361" yCoord="372"/>
+</arc>
+<arc id="Sensor to T10" inscription="[0,inf)" source="Sensor" target="T10" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="481" yCoord="210"/>
+<arcpath arcPointType="false" id="1" xCoord="316" yCoord="27"/>
+</arc>
+<arc id="Green to T10" inscription="[0,inf)" source="Green" target="T10" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="353" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="312" yCoord="42"/>
+</arc>
+<arc id="Red to T10" inscription="[0,inf)" source="Red" target="T10" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="126" yCoord="240"/>
+<arcpath arcPointType="false" id="1" xCoord="306" yCoord="27"/>
+</arc>
+<arc id="Red to T0" inscription="[0,inf)" source="Red" target="T0" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="129" yCoord="244"/>
+<arcpath arcPointType="false" id="1" xCoord="276" yCoord="152"/>
+</arc>
+</net>
+<query active="true" capacity="10" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="EF (TAPN1.Dangerzone&gt;0 and (TAPN1.Green=1 or TAPN1.Yellow=1))" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="SOME"/>
+</pnml>

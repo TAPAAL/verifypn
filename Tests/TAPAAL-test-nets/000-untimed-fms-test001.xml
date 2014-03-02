@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-place initialMarking="1" invariant="&lt; inf" name="mutex"/>
+<shared-transition name="join"/>
+<net active="true" id="Type1" type="P/T net">
+<place id="P0" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="75.0"/>
+<place id="P1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="240.0"/>
+<place id="P2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="345.0"/>
+<place id="P3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="345.0"/>
+<place id="P4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="465.0"/>
+<place id="P5" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="465.0"/>
+<place id="P6" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P6" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="210.0" positionY="645.0"/>
+<place id="P7" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P7" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="210.0" positionY="750.0"/>
+<place id="P8" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P8" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="810.0"/>
+<place id="P9" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P9" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="690.0"/>
+<place id="mutex" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="mutex" nameOffsetX="35.0" nameOffsetY="-12.0" positionX="540.0" positionY="270.0"/>
+<place id="P11" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P11" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="45.0" positionY="210.0"/>
+<transition angle="0" id="waitRobot" infiniteServer="false" name="waitRobot" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="15.0" priority="0"/>
+<transition angle="0" id="endRobot" infiniteServer="false" name="endRobot" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="165.0" priority="0"/>
+<transition angle="0" id="M1working" infiniteServer="false" name="M1working" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="300.0" priority="0"/>
+<transition angle="0" id="M3working" infiniteServer="false" name="M3working" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="300.0" priority="0"/>
+<transition angle="0" id="waitRobota" infiniteServer="false" name="waitRobota" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="405.0" priority="0"/>
+<transition angle="0" id="waitRobotb" infiniteServer="false" name="waitRobotb" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="405.0" priority="0"/>
+<transition angle="0" id="M2working" infiniteServer="false" name="M2working" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="210.0" positionY="705.0" priority="0"/>
+<transition angle="0" id="waitRobotc" infiniteServer="false" name="waitRobotc" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="210.0" positionY="810.0" priority="0"/>
+<transition angle="0" id="endRobotc" infiniteServer="false" name="endRobotc" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="735.0" priority="0"/>
+<transition angle="0" id="join" infiniteServer="false" name="join" nameOffsetX="24.0" nameOffsetY="-9.0" positionX="540.0" positionY="600.0" priority="0"/>
+<transition angle="0" id="endRobota" infiniteServer="false" name="endRobota" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="555.0" priority="0"/>
+<transition angle="0" id="endRobotb" infiniteServer="false" name="endRobotb" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="555.0" priority="0"/>
+<arc id="waitRobot to P0" inscription="1" source="waitRobot" target="P0" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="42"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="72"/>
+</arc>
+<arc id="P0 to endRobot" inscription="[0,inf)" source="P0" target="endRobot" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="101"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="162"/>
+</arc>
+<arc id="endRobot to P1" inscription="1" source="endRobot" target="P1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="237"/>
+</arc>
+<arc id="P1 to M1working" inscription="[0,inf)" source="P1" target="M1working" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="224" yCoord="260"/>
+<arcpath arcPointType="false" id="1" xCoord="151" yCoord="312"/>
+</arc>
+<arc id="P1 to M3working" inscription="[0,inf)" source="P1" target="M3working" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="249" yCoord="260"/>
+<arcpath arcPointType="false" id="1" xCoord="321" yCoord="312"/>
+</arc>
+<arc id="M3working to P3" inscription="1" source="M3working" target="P3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="342"/>
+</arc>
+<arc id="M1working to P2" inscription="1" source="M1working" target="P2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="147" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="147" yCoord="342"/>
+</arc>
+<arc id="P2 to waitRobota" inscription="[0,inf)" source="P2" target="waitRobota" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="147" yCoord="371"/>
+<arcpath arcPointType="false" id="1" xCoord="147" yCoord="402"/>
+</arc>
+<arc id="P3 to waitRobotb" inscription="[0,inf)" source="P3" target="waitRobotb" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="371"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="402"/>
+</arc>
+<arc id="waitRobotb to P5" inscription="1" source="waitRobotb" target="P5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="462"/>
+</arc>
+<arc id="P6 to M2working" inscription="[0,inf)" source="P6" target="M2working" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="222" yCoord="671"/>
+<arcpath arcPointType="false" id="1" xCoord="222" yCoord="702"/>
+</arc>
+<arc id="M2working to P7" inscription="1" source="M2working" target="P7" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="222" yCoord="732"/>
+<arcpath arcPointType="false" id="1" xCoord="222" yCoord="747"/>
+</arc>
+<arc id="P7 to waitRobotc" inscription="[0,inf)" source="P7" target="waitRobotc" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="222" yCoord="776"/>
+<arcpath arcPointType="false" id="1" xCoord="222" yCoord="807"/>
+</arc>
+<arc id="waitRobotc to P8" inscription="1" source="waitRobotc" target="P8" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="226" yCoord="827"/>
+<arcpath arcPointType="false" id="1" xCoord="342" yCoord="822"/>
+</arc>
+<arc id="P8 to endRobotc" inscription="[0,inf)" source="P8" target="endRobotc" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="807"/>
+<arcpath arcPointType="false" id="1" xCoord="357" yCoord="762"/>
+</arc>
+<arc id="endRobotc to P9" inscription="1" source="endRobotc" target="P9" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="361" yCoord="747"/>
+<arcpath arcPointType="false" id="1" xCoord="419" yCoord="710"/>
+</arc>
+<arc id="endRobotc to mutex" inscription="1" source="endRobotc" target="mutex" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="732"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="295"/>
+</arc>
+<arc id="P9 to join" inscription="[0,inf)" source="P9" target="join" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="443" yCoord="692"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="612"/>
+</arc>
+<arc id="join to P11" inscription="1" source="join" target="P11" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="627"/>
+<arcpath arcPointType="false" id="1" xCoord="523" yCoord="868"/>
+<arcpath arcPointType="false" id="2" xCoord="88" yCoord="853"/>
+<arcpath arcPointType="false" id="3" xCoord="57" yCoord="236"/>
+</arc>
+<arc id="P11 to waitRobot" inscription="[0,inf)" source="P11" target="waitRobot" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="67" yCoord="210"/>
+<arcpath arcPointType="false" id="1" xCoord="231" yCoord="27"/>
+</arc>
+<arc id="waitRobota to P4" inscription="1" source="waitRobota" target="P4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="147" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="147" yCoord="462"/>
+</arc>
+<arc id="P4 to endRobota" inscription="[0,inf)" source="P4" target="endRobota" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="147" yCoord="491"/>
+<arcpath arcPointType="false" id="1" xCoord="147" yCoord="552"/>
+</arc>
+<arc id="P5 to endRobotb" inscription="[0,inf)" source="P5" target="endRobotb" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="491"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="552"/>
+</arc>
+<arc id="endRobota to P6" inscription="1" source="endRobota" target="P6" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="151" yCoord="572"/>
+<arcpath arcPointType="false" id="1" xCoord="212" yCoord="645"/>
+</arc>
+<arc id="endRobotb to P6" inscription="1" source="endRobotb" target="P6" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="321" yCoord="567"/>
+<arcpath arcPointType="false" id="1" xCoord="233" yCoord="647"/>
+</arc>
+<arc id="mutex to waitRobot" inscription="[0,inf)" source="mutex" target="waitRobot" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="540" yCoord="272"/>
+<arcpath arcPointType="false" id="1" xCoord="241" yCoord="27"/>
+</arc>
+<arc id="endRobot to mutex" inscription="1" source="endRobot" target="mutex" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="241" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="277"/>
+</arc>
+<arc id="mutex to waitRobota" inscription="[0,inf)" source="mutex" target="waitRobota" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="286"/>
+<arcpath arcPointType="false" id="1" xCoord="151" yCoord="417"/>
+</arc>
+<arc id="mutex to waitRobotb" inscription="[0,inf)" source="mutex" target="waitRobotb" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="539" yCoord="289"/>
+<arcpath arcPointType="false" id="1" xCoord="331" yCoord="417"/>
+</arc>
+<arc id="endRobota to mutex" inscription="1" source="endRobota" target="mutex" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="152" yCoord="562"/>
+<arcpath arcPointType="false" id="1" xCoord="539" yCoord="290"/>
+</arc>
+<arc id="endRobotb to mutex" inscription="1" source="endRobotb" target="mutex" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="567"/>
+<arcpath arcPointType="false" id="1" xCoord="542" yCoord="293"/>
+</arc>
+<arc id="mutex to waitRobotc" inscription="[0,inf)" source="mutex" target="waitRobotc" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="544" yCoord="294"/>
+<arcpath arcPointType="false" id="1" xCoord="227" yCoord="817"/>
+</arc>
+</net>
+<net active="true" id="Type2" type="P/T net">
+<place id="P0" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="75.0"/>
+<place id="P1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="210.0"/>
+<place id="P2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="345.0"/>
+<place id="P3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="480.0"/>
+<place id="P4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="600.0"/>
+<place id="P5" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="390.0" positionY="810.0"/>
+<place id="P6" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P6" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="570.0"/>
+<place id="mutex" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="mutex" nameOffsetX="-12.0" nameOffsetY="15.0" positionX="180.0" positionY="135.0"/>
+<place id="P8" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P8" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="765.0" positionY="255.0"/>
+<place id="P9" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P9" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="720.0"/>
+<transition angle="0" id="waitRobot" infiniteServer="false" name="waitRobot" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="15.0" priority="0"/>
+<transition angle="0" id="endRobot" infiniteServer="false" name="endRobot" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="135.0" priority="0"/>
+<transition angle="0" id="M2working" infiniteServer="false" name="M2working" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="270.0" priority="0"/>
+<transition angle="0" id="waitRobota" infiniteServer="false" name="waitRobota" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="405.0" priority="0"/>
+<transition angle="0" id="endRobota" infiniteServer="false" name="endRobota" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="540.0" priority="0"/>
+<transition angle="0" id="M1working" infiniteServer="false" name="M1working" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="660.0" priority="0"/>
+<transition angle="0" id="waitRobotc" infiniteServer="false" name="waitRobotc" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="795.0" priority="0"/>
+<transition angle="0" id="endRobotc" infiniteServer="false" name="endRobotc" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="405.0" positionY="660.0" priority="0"/>
+<transition angle="0" id="join" infiniteServer="false" name="join" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="525.0" priority="0"/>
+<arc id="waitRobot to P0" inscription="1" source="waitRobot" target="P0" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="556" yCoord="32"/>
+<arcpath arcPointType="false" id="1" xCoord="553" yCoord="28"/>
+<arcpath arcPointType="false" id="2" xCoord="552" yCoord="72"/>
+</arc>
+<arc id="P0 to endRobot" inscription="[0,inf)" source="P0" target="endRobot" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="101"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="132"/>
+</arc>
+<arc id="endRobot to P1" inscription="1" source="endRobot" target="P1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="556" yCoord="147"/>
+<arcpath arcPointType="false" id="1" xCoord="553" yCoord="148"/>
+<arcpath arcPointType="false" id="2" xCoord="552" yCoord="207"/>
+</arc>
+<arc id="P1 to M2working" inscription="[0,inf)" source="P1" target="M2working" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="236"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="267"/>
+</arc>
+<arc id="M2working to P2" inscription="1" source="M2working" target="P2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="342"/>
+</arc>
+<arc id="P2 to waitRobota" inscription="[0,inf)" source="P2" target="waitRobota" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="371"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="402"/>
+</arc>
+<arc id="waitRobota to P3" inscription="1" source="waitRobota" target="P3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="477"/>
+</arc>
+<arc id="P3 to endRobota" inscription="[0,inf)" source="P3" target="endRobota" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="506"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="537"/>
+</arc>
+<arc id="endRobota to P4" inscription="1" source="endRobota" target="P4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="567"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="597"/>
+</arc>
+<arc id="P4 to M1working" inscription="[0,inf)" source="P4" target="M1working" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="626"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="657"/>
+</arc>
+<arc id="M1working to P9" inscription="1" source="M1working" target="P9" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="687"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="717"/>
+</arc>
+<arc id="P9 to waitRobotc" inscription="[0,inf)" source="P9" target="waitRobotc" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="746"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="792"/>
+</arc>
+<arc id="waitRobotc to P5" inscription="1" source="waitRobotc" target="P5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="546" yCoord="807"/>
+<arcpath arcPointType="false" id="1" xCoord="416" yCoord="820"/>
+</arc>
+<arc id="P5 to endRobotc" inscription="[0,inf)" source="P5" target="endRobotc" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="403" yCoord="807"/>
+<arcpath arcPointType="false" id="1" xCoord="417" yCoord="687"/>
+</arc>
+<arc id="endRobotc to P6" inscription="1" source="endRobotc" target="P6" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="411" yCoord="672"/>
+<arcpath arcPointType="false" id="1" xCoord="351" yCoord="593"/>
+</arc>
+<arc id="P6 to join" inscription="[0,inf)" source="P6" target="join" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="328" yCoord="575"/>
+<arcpath arcPointType="false" id="1" xCoord="241" yCoord="537"/>
+</arc>
+<arc id="join to P8" inscription="1" source="join" target="P8" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="552"/>
+<arcpath arcPointType="false" id="1" xCoord="283" yCoord="853"/>
+<arcpath arcPointType="false" id="2" xCoord="748" yCoord="853"/>
+<arcpath arcPointType="false" id="3" xCoord="776" yCoord="281"/>
+</arc>
+<arc id="P8 to waitRobot" inscription="[0,inf)" source="P8" target="waitRobot" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="772" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="718" yCoord="58"/>
+<arcpath arcPointType="false" id="2" xCoord="557" yCoord="22"/>
+</arc>
+<arc id="mutex to waitRobot" inscription="[0,inf)" source="mutex" target="waitRobot" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="206" yCoord="142"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="27"/>
+</arc>
+<arc id="endRobot to mutex" inscription="1" source="endRobot" target="mutex" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="546" yCoord="147"/>
+<arcpath arcPointType="false" id="1" xCoord="206" yCoord="147"/>
+</arc>
+<arc id="mutex to waitRobota" inscription="[0,inf)" source="mutex" target="waitRobota" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="203" yCoord="156"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="417"/>
+</arc>
+<arc id="endRobota to mutex" inscription="1" source="endRobota" target="mutex" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="546" yCoord="552"/>
+<arcpath arcPointType="false" id="1" xCoord="201" yCoord="158"/>
+</arc>
+<arc id="mutex to waitRobotc" inscription="[0,inf)" source="mutex" target="waitRobotc" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="199" yCoord="160"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="792"/>
+</arc>
+<arc id="endRobotc to mutex" inscription="1" source="endRobotc" target="mutex" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="417" yCoord="657"/>
+<arcpath arcPointType="false" id="1" xCoord="198" yCoord="160"/>
+</arc>
+</net>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EF (Type2.P1=0 and Type1.P9&gt;1)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EG Type1.P11&gt;=1" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="AG (Type1.P3&lt;=1 or Type2.P4&lt;=1)" reductionOption="DEGREE2BROADCAST" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="EF (Type1.P5=1 and Type1.P8=1 and Type2.P0=1 and Type2.P5=1)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

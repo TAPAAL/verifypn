@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-place initialMarking="0" invariant="&lt; inf" name="out"/>
+<shared-place initialMarking="1" invariant="&lt; inf" name="in"/>
+<shared-transition name="collect" urgent="false"/>
+<constant name="Deadline" value="45"/>
+<net active="true" id="Registration" type="P/T net">
+<labels border="true" height="72" positionX="26" positionY="30" width="145">A complaint processing workflow from "Learning Workflow Petr Nets" by J. Esparza, M. Leucker and M. Schlund.</labels>
+<place id="in" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="in" nameOffsetX="-9.0" nameOffsetY="3.0" positionX="90.0" positionY="270.0"/>
+<place id="P1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="150.0"/>
+<place id="P2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="390.0"/>
+<place id="P3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="150.0"/>
+<place id="P4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="390.0"/>
+<transition angle="0" id="collect" infiniteServer="false" name="collect" nameOffsetX="56.0" nameOffsetY="-11.0" positionX="420.0" positionY="270.0" priority="0" urgent="false"/>
+<transition angle="0" id="register" infiniteServer="false" name="register" nameOffsetX="71.0" nameOffsetY="2.0" positionX="180.0" positionY="270.0" priority="0" urgent="false"/>
+<transition angle="0" id="contact_customer" infiniteServer="false" name="contact_customer" nameOffsetX="54.0" nameOffsetY="45.0" positionX="300.0" positionY="150.0" priority="0" urgent="false"/>
+<transition angle="0" id="contact_department" infiniteServer="false" name="contact_department" nameOffsetX="61.0" nameOffsetY="52.0" positionX="300.0" positionY="390.0" priority="0" urgent="false"/>
+<arc id="in to register" inscription="[0,inf)" source="in" target="register" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="116" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="186" yCoord="282"/>
+</arc>
+<arc id="register to P1" inscription="1" source="register" target="P1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="267"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="176"/>
+</arc>
+<arc id="register to P2" inscription="1" source="register" target="P2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="387"/>
+</arc>
+<arc id="P1 to contact_customer" inscription="[0,inf)" source="P1" target="contact_customer" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="206" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="306" yCoord="162"/>
+</arc>
+<arc id="contact_customer to P3" inscription="1" source="contact_customer" target="P3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="316" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="417" yCoord="162"/>
+</arc>
+<arc id="P3 to collect" inscription="[0,inf)" source="P3" target="collect" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="432" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="432" yCoord="267"/>
+</arc>
+<arc id="P4 to collect" inscription="[0,inf)" source="P4" target="collect" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="432" yCoord="387"/>
+<arcpath arcPointType="false" id="1" xCoord="432" yCoord="297"/>
+</arc>
+<arc id="P2 to contact_department" inscription="[0,inf)" source="P2" target="contact_department" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="206" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="306" yCoord="402"/>
+</arc>
+<arc id="contact_department to P4" inscription="1" source="contact_department" target="P4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="316" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="417" yCoord="402"/>
+</arc>
+</net>
+<net active="true" id="Handling" type="P/T net">
+<place id="P0" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="10.0" nameOffsetY="50.0" positionX="180.0" positionY="270.0"/>
+<place id="P1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="43.0" nameOffsetY="46.0" positionX="360.0" positionY="270.0"/>
+<place id="P2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="120.0"/>
+<place id="P3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="9.0" nameOffsetY="54.0" positionX="330.0" positionY="420.0"/>
+<place id="P4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="270.0"/>
+<place id="out" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="out" nameOffsetX="59.0" nameOffsetY="-1.0" positionX="660.0" positionY="270.0"/>
+<transition angle="0" id="collect" infiniteServer="false" name="collect" nameOffsetX="-7.0" nameOffsetY="0.0" positionX="60.0" positionY="270.0" priority="0" urgent="false"/>
+<transition angle="0" id="accept" infiniteServer="false" name="accept" nameOffsetX="5.0" nameOffsetY="-4.0" positionX="180.0" positionY="120.0" priority="0" urgent="false"/>
+<transition angle="0" id="reject" infiniteServer="false" name="reject" nameOffsetX="3.0" nameOffsetY="43.0" positionX="180.0" positionY="420.0" priority="0" urgent="false"/>
+<transition angle="0" id="send_rejection" infiniteServer="false" name="send_rejection" nameOffsetX="98.0" nameOffsetY="45.0" positionX="480.0" positionY="420.0" priority="0" urgent="false"/>
+<transition angle="0" id="pay_refund" infiniteServer="false" name="pay_refund" nameOffsetX="83.0" nameOffsetY="-19.0" positionX="480.0" positionY="120.0" priority="0" urgent="false"/>
+<transition angle="0" id="acquire_info" infiniteServer="false" name="acquire_info" nameOffsetX="65.0" nameOffsetY="-18.0" positionX="270.0" positionY="240.0" priority="0" urgent="false"/>
+<transition angle="0" id="need_more_info" infiniteServer="false" name="need_more_info" nameOffsetX="69.0" nameOffsetY="52.0" positionX="270.0" positionY="300.0" priority="0" urgent="false"/>
+<transition angle="0" id="archive" infiniteServer="false" name="archive" nameOffsetX="36.0" nameOffsetY="-22.0" positionX="570.0" positionY="270.0" priority="0" urgent="false"/>
+<transition angle="0" id="T9" infiniteServer="false" name="T9" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="375.0" positionY="195.0" priority="0" urgent="false"/>
+<arc id="collect to P0" inscription="1" source="collect" target="P0" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="76" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="282"/>
+</arc>
+<arc id="P0 to need_more_info" inscription="[0,inf)" source="P0" target="need_more_info" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="206" yCoord="287"/>
+<arcpath arcPointType="false" id="1" xCoord="276" yCoord="312"/>
+</arc>
+<arc id="need_more_info to P1" inscription="1" source="need_more_info" target="P1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="286" yCoord="312"/>
+<arcpath arcPointType="false" id="1" xCoord="357" yCoord="287"/>
+</arc>
+<arc id="P1 to acquire_info" inscription="[0,inf)" source="P1" target="acquire_info" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="277"/>
+<arcpath arcPointType="false" id="1" xCoord="286" yCoord="257"/>
+</arc>
+<arc id="acquire_info to P0" inscription="1" source="acquire_info" target="P0" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="276" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="206" yCoord="277"/>
+</arc>
+<arc id="P0 to accept" inscription="[0,inf)" source="P0" target="accept" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="267"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="147"/>
+</arc>
+<arc id="accept to P2" inscription="1" source="accept" target="P2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="196" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="132"/>
+</arc>
+<arc id="P2 to pay_refund" inscription="[0,inf)" source="P2" target="pay_refund" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="132"/>
+</arc>
+<arc id="pay_refund to P4" inscription="1" source="pay_refund" target="P4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="492" yCoord="147"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="267"/>
+</arc>
+<arc id="P0 to reject" inscription="[0,inf)" source="P0" target="reject" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="296"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="417"/>
+</arc>
+<arc id="reject to P3" inscription="1" source="reject" target="P3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="196" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="432"/>
+</arc>
+<arc id="P3 to send_rejection" inscription="[0,inf)" source="P3" target="send_rejection" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="432"/>
+</arc>
+<arc id="send_rejection to P4" inscription="1" source="send_rejection" target="P4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="492" yCoord="417"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="296"/>
+</arc>
+<arc id="P4 to archive" inscription="[0,inf)" source="P4" target="archive" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="506" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="576" yCoord="282"/>
+</arc>
+<arc id="archive to out" inscription="1" source="archive" target="out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="586" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="657" yCoord="282"/>
+</arc>
+<arc id="P1 to T9" inscription="[0,inf)" source="P1" target="T9" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="375" yCoord="267"/>
+<arcpath arcPointType="false" id="1" xCoord="387" yCoord="222"/>
+</arc>
+<arc id="P2 to T9" inscription="[0,inf)" source="P2" target="T9" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="342" yCoord="147"/>
+<arcpath arcPointType="false" id="1" xCoord="342" yCoord="192"/>
+<arcpath arcPointType="false" id="2" xCoord="381" yCoord="207"/>
+</arc>
+<arc id="T9 to P2" inscription="1" source="T9" target="P2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="387" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="387" yCoord="147"/>
+<arcpath arcPointType="false" id="2" xCoord="356" yCoord="136"/>
+</arc>
+<arc id="acquire_info to P1" inscription="1" source="acquire_info" target="P1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="287" yCoord="247"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="237"/>
+<arcpath arcPointType="false" id="2" xCoord="361" yCoord="271"/>
+</arc>
+</net>
+<net active="true" id="Monitor" type="P/T net">
+<place id="Timer" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Timer" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="90.0"/>
+<place id="out" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="out" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="270.0" positionY="90.0"/>
+<place id="finished_in_time" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="finished_in_time" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="195.0" positionY="315.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="195.0" positionY="195.0" priority="0" urgent="false"/>
+<arc id="Timer to T0" inscription="[0,inf)" source="Timer" target="T0" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="140" yCoord="114"/>
+<arcpath arcPointType="false" id="1" xCoord="201" yCoord="207"/>
+</arc>
+<arc id="out to T0" inscription="[0,inf)" source="out" target="T0" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="273" yCoord="114"/>
+<arcpath arcPointType="false" id="1" xCoord="211" yCoord="207"/>
+</arc>
+<arc id="T0 to finished_in_time" inscription="1" source="T0" target="finished_in_time" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="207" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="207" yCoord="312"/>
+</arc>
+</net>
+<query active="true" capacity="2" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" pTrie="true" query="EF out=1" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<query active="true" capacity="2" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="EF Monitor.finished_in_time=1" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<query active="true" capacity="2" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="AG (out=0 or (in=0 and Registration.P1=0 and Registration.P2=0 and Registration.P3=0 and Registration.P4=0 and Handling.P0=0 and Handling.P1=0 and Handling.P2=0 and Handling.P3=0 and Monitor.finished_in_time=0))" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+</pnml>

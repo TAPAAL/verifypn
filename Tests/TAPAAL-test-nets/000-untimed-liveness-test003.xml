@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="IntroExample" type="P/T net">
+<labels border="true" height="635" positionX="623" positionY="55" width="346">This is an example net to introduce the modelling, verification and simulation features of TAPAAL.
+
+The circles are called places and rectangles transitions. They are connected either by standard arcs from place to transition or transition to place, or they can be connected by transport arcs (these arcs always come in pairs) like from P1 to T3 and T3 to P6.
+
+Behaviour of the net is given by tokens. Each place can store any number of tokens and each token has its own real-time age. In our example there is initially one token of age 0 in the place Start.
+
+A transition can fire if in every of its input places there is at least one token of an age that fits into the interval placed on the corresponding arc. When transition fires a new token of age 0 is produced to any of its output places for the normal arcs. In case of trasport arc, the age of the token remains the same as the age of the consumed token.
+
+Finally, the place P2 contains so-called invariant &lt;=5. This means that any token in that place cannot be older than 5 time units. So another behaviour of the net are so called time-delays. This means that all tokens in the net grow older by a some amount of time, as long as none of the invariants are violated.
+
+-----------------------------
+
+In our example we might want to know if it is possible by doing some time delays and transition firings to place a token into the place Target.
+
+The query "Target Reachable" in the upper right corner expressis this property. It moreover asks for fastest such trace. By clicking on "Verify" the verification will begin and ouput the trace allowing us to place a token into the place Targe. By clicking on the symbols &gt; and &lt; one can move back and force in the trace and investigate the intermediate markings.
+
+One may observe that two extra tokens are needed in the intermediate markings in order to reach the place Target. Indeed, this number of extra tokens is specified in the Query dialog and by clicking on "Check Boundedness", one can verify that 2 extra tokens are really enough for an exact analysis.</labels>
+<place id="Start" initialMarking="1" invariant="&lt;= 4" markingOffsetX="0.0" markingOffsetY="0.0" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="195.0" positionY="30.0"/>
+<place id="P1" initialMarking="0" invariant="&lt;= 6" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="195.0"/>
+<place id="P2" initialMarking="0" invariant="&lt;= 5" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="195.0"/>
+<place id="P3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="285.0" positionY="390.0"/>
+<place id="P4" initialMarking="0" invariant="&lt;= 3" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="555.0" positionY="390.0"/>
+<place id="P5" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="570.0"/>
+<place id="P6" initialMarking="0" invariant="&lt;= 7" markingOffsetX="0.0" markingOffsetY="0.0" name="P6" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="390.0"/>
+<place id="Target" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Target" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="270.0" positionY="735.0"/>
+<transition angle="180" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="195.0" positionY="120.0" priority="0"/>
+<transition angle="90" id="T1" infiniteServer="false" name="T1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="300.0" priority="0"/>
+<transition angle="90" id="T2" infiniteServer="false" name="T2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="480.0" priority="0"/>
+<transition angle="90" id="T3" infiniteServer="false" name="T3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="300.0" priority="0"/>
+<transition angle="0" id="T4" infiniteServer="false" name="T4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="270.0" positionY="630.0" priority="0"/>
+<arc id="Start to T0" inscription="[0,inf)" source="Start" target="T0" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="206" yCoord="56"/>
+<arcpath arcPointType="false" id="1" xCoord="206" yCoord="116"/>
+</arc>
+<arc id="P2 to T1" inscription="[0,inf)" source="P2" target="T1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="431" yCoord="221"/>
+<arcpath arcPointType="false" id="1" xCoord="431" yCoord="306"/>
+</arc>
+<arc id="P3 to T2" inscription="[0,inf)" source="P3" target="T2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="309" yCoord="410"/>
+<arcpath arcPointType="false" id="1" xCoord="426" yCoord="486"/>
+</arc>
+<arc id="P4 to T2" inscription="[0,inf)" source="P4" target="T2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="554" yCoord="410"/>
+<arcpath arcPointType="false" id="1" xCoord="436" yCoord="487"/>
+</arc>
+<arc id="P5 to T4" inscription="[0,inf)" source="P5" target="T4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="418" yCoord="587"/>
+<arcpath arcPointType="false" id="1" xCoord="286" yCoord="642"/>
+</arc>
+<arc id="P6 to T4" inscription="[0,inf)" source="P6" target="T4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="125" yCoord="414"/>
+<arcpath arcPointType="false" id="1" xCoord="276" yCoord="642"/>
+</arc>
+<arc id="T0 to P1" inscription="1" source="T0" target="P1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="202" yCoord="131"/>
+<arcpath arcPointType="false" id="1" xCoord="128" yCoord="197"/>
+</arc>
+<arc id="T0 to P2" inscription="1" source="T0" target="P2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="212" yCoord="131"/>
+<arcpath arcPointType="false" id="1" xCoord="417" yCoord="202"/>
+</arc>
+<arc id="T1 to P3" inscription="1" source="T1" target="P3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="426" yCoord="316"/>
+<arcpath arcPointType="false" id="1" xCoord="309" yCoord="393"/>
+</arc>
+<arc id="T1 to P4" inscription="1" source="T1" target="P4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="436" yCoord="317"/>
+<arcpath arcPointType="false" id="1" xCoord="554" yCoord="393"/>
+</arc>
+<arc id="T2 to P5" inscription="1" source="T2" target="P5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="431" yCoord="496"/>
+<arcpath arcPointType="false" id="1" xCoord="431" yCoord="567"/>
+</arc>
+<arc id="T4 to Target" inscription="1" source="T4" target="Target" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="282" yCoord="657"/>
+<arcpath arcPointType="false" id="1" xCoord="282" yCoord="732"/>
+</arc>
+<arc id="P1 to T3" inscription="[0,inf):1" source="P1" target="T3" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="116" yCoord="221"/>
+<arcpath arcPointType="false" id="1" xCoord="116" yCoord="306"/>
+</arc>
+<arc id="T3 to P6" inscription="[0,inf):1" source="T3" target="P6" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="116" yCoord="316"/>
+<arcpath arcPointType="false" id="1" xCoord="116" yCoord="387"/>
+</arc>
+</net>
+<query active="true" capacity="2" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="false" query="AF IntroExample.Target=1" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="SOME"/>
+</pnml>

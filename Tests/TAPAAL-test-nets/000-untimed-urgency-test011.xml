@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-place initialMarking="0" invariant="&lt;= 3" name="RequestMedicalCheck"/>
+<shared-place initialMarking="0" invariant="&lt; inf" name="MedicalCheckOK"/>
+<shared-place initialMarking="0" invariant="&lt; inf" name="MedicalCheckNOK"/>
+<shared-transition name="Arrival" urgent="true"/>
+<shared-transition name="MedicalCheck" urgent="false"/>
+<shared-transition name="ReBook" urgent="false"/>
+<shared-transition name="Treatment" urgent="false"/>
+<shared-transition name="Checkout" urgent="false"/>
+<constant name="Deadline" value="11"/>
+<constant name="ArrivalTime" value="15"/>
+<net active="true" id="Patient" type="P/T net">
+<place id="PatientFinished" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="PatientFinished" nameOffsetX="-9.0" nameOffsetY="15.0" positionX="180.0" positionY="285.0"/>
+<place id="Waiting" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Waiting" nameOffsetX="73.0" nameOffsetY="24.0" positionX="360.0" positionY="285.0"/>
+<place id="WaitForDecision" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WaitForDecision" nameOffsetX="118.0" nameOffsetY="44.0" positionX="360.0" positionY="465.0"/>
+<place id="Treated" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Treated" nameOffsetX="-5.0" nameOffsetY="46.0" positionX="180.0" positionY="465.0"/>
+<place id="Timer" initialMarking="1" invariant="&lt;= ArrivalTime" markingOffsetX="0.0" markingOffsetY="0.0" name="Timer" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="180.0"/>
+<place id="Patient" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Patient" nameOffsetX="23.0" nameOffsetY="-4.0" positionX="360.0" positionY="90.0"/>
+<place id="P0" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="225.0"/>
+<transition angle="0" id="Arrive" infiniteServer="false" name="Arrive" nameOffsetX="76.0" nameOffsetY="17.0" positionX="360.0" positionY="180.0" priority="0" urgent="false"/>
+<transition angle="270" id="MedicalCheck" infiniteServer="false" name="MedicalCheck" nameOffsetX="114.0" nameOffsetY="9.0" positionX="360.0" positionY="375.0" priority="0" urgent="false"/>
+<transition angle="0" id="Treatment" infiniteServer="false" name="Treatment" nameOffsetX="43.0" nameOffsetY="55.0" positionX="270.0" positionY="465.0" priority="0" urgent="false"/>
+<transition angle="90" id="Checkout" infiniteServer="false" name="Checkout" nameOffsetX="-9.0" nameOffsetY="35.0" positionX="180.0" positionY="375.0" priority="0" urgent="false"/>
+<transition angle="225" id="ReBook" infiniteServer="false" name="ReBook" nameOffsetX="39.0" nameOffsetY="-8.0" positionX="270.0" positionY="375.0" priority="0" urgent="false"/>
+<transition angle="0" id="Arrival" infiniteServer="false" name="Arrival" nameOffsetX="73.0" nameOffsetY="11.0" positionX="465.0" positionY="255.0" priority="0" urgent="true"/>
+<arc id="Timer to Arrival" inscription="[0,inf)" source="Timer" target="Arrive" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="173" yCoord="182"/>
+<arcpath arcPointType="true" id="1" xCoord="269" yCoord="149"/>
+<arcpath arcPointType="false" id="2" xCoord="367" yCoord="187"/>
+</arc>
+<arc id="Arrival to Timer" inscription="1" source="Arrive" target="Timer" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="366" yCoord="197"/>
+<arcpath arcPointType="true" id="1" xCoord="239" yCoord="224"/>
+<arcpath arcPointType="false" id="2" xCoord="175" yCoord="197"/>
+</arc>
+<arc id="Waiting to MedicalCheck" inscription="[0,inf):1" source="Waiting" target="MedicalCheck" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="311"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="382"/>
+</arc>
+<arc id="MedicalCheck to WaitForDecision" inscription="[0,inf):1" source="MedicalCheck" target="WaitForDecision" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="392"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="462"/>
+</arc>
+<arc id="WaitForDecision to ReBook" inscription="[0,inf):1" source="WaitForDecision" target="ReBook" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="361" yCoord="466"/>
+<arcpath arcPointType="false" id="1" xCoord="286" yCoord="390"/>
+</arc>
+<arc id="ReBook to PatientFinished" inscription="[0,inf):1" source="ReBook" target="PatientFinished" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="278" yCoord="383"/>
+<arcpath arcPointType="false" id="1" xCoord="202" yCoord="307"/>
+</arc>
+<arc id="WaitForDecision to Treatment" inscription="[0,inf):1" source="WaitForDecision" target="Treatment" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="477"/>
+<arcpath arcPointType="false" id="1" xCoord="286" yCoord="477"/>
+</arc>
+<arc id="Treatment to Treated" inscription="[0,inf):1" source="Treatment" target="Treated" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="276" yCoord="477"/>
+<arcpath arcPointType="false" id="1" xCoord="206" yCoord="477"/>
+</arc>
+<arc id="Treated to Checkout" inscription="[0,inf):1" source="Treated" target="Checkout" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="191" yCoord="462"/>
+<arcpath arcPointType="false" id="1" xCoord="191" yCoord="391"/>
+</arc>
+<arc id="Checkout to PatientFinished" inscription="[0,inf):1" source="Checkout" target="PatientFinished" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="191" yCoord="381"/>
+<arcpath arcPointType="false" id="1" xCoord="191" yCoord="311"/>
+</arc>
+<arc id="Patient to Arrival" inscription="[0,inf)" source="Patient" target="Arrive" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="116"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="177"/>
+</arc>
+<arc id="P0 to Arrival" inscription="[0,inf)" source="P0" target="Arrival" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="386" yCoord="240"/>
+<arcpath arcPointType="false" id="1" xCoord="472" yCoord="262"/>
+</arc>
+<arc id="Arrival to Waiting" inscription="1" source="Arrival" target="Waiting" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="471" yCoord="272"/>
+<arcpath arcPointType="false" id="1" xCoord="386" yCoord="293"/>
+</arc>
+<arc id="Arrive to P0" inscription="1" source="Arrive" target="P0" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="222"/>
+</arc>
+</net>
+<net active="true" id="Nurse" type="P/T net">
+<place id="Nurse" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Nurse" nameOffsetX="-5.0" nameOffsetY="-7.0" positionX="45.0" positionY="90.0"/>
+<place id="Busy" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Busy" nameOffsetX="38.0" nameOffsetY="-12.0" positionX="270.0" positionY="90.0"/>
+<place id="AwaitingAnswer" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="AwaitingAnswer" nameOffsetX="117.0" nameOffsetY="0.0" positionX="390.0" positionY="180.0"/>
+<place id="RequestMedicalCheck" initialMarking="0" invariant="&lt;= 3" markingOffsetX="0.0" markingOffsetY="0.0" name="RequestMedicalCheck" nameOffsetX="170.0" nameOffsetY="21.0" positionX="510.0" positionY="90.0"/>
+<place id="MedicalCheckOK" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="MedicalCheckOK" nameOffsetX="138.0" nameOffsetY="20.0" positionX="510.0" positionY="390.0"/>
+<place id="MedicalCheckNOK" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="MedicalCheckNOK" nameOffsetX="149.0" nameOffsetY="21.0" positionX="510.0" positionY="270.0"/>
+<place id="ReadyToReBook" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="ReadyToReBook" nameOffsetX="68.0" nameOffsetY="-19.0" positionX="270.0" positionY="180.0"/>
+<place id="ReadyToCheckout" initialMarking="0" invariant="&lt;= 2" markingOffsetX="0.0" markingOffsetY="0.0" name="ReadyToCheckout" nameOffsetX="53.0" nameOffsetY="-10.0" positionX="285.0" positionY="390.0"/>
+<transition angle="0" id="Arrival" infiniteServer="false" name="Arrival" nameOffsetX="27.0" nameOffsetY="-10.0" positionX="150.0" positionY="90.0" priority="0" urgent="true"/>
+<transition angle="0" id="OpenPatientJournal" infiniteServer="false" name="OpenPatientJournal" nameOffsetX="56.0" nameOffsetY="-11.0" positionX="390.0" positionY="90.0" priority="0" urgent="false"/>
+<transition angle="0" id="ReBook" infiniteServer="false" name="ReBook" nameOffsetX="39.0" nameOffsetY="-12.0" positionX="150.0" positionY="180.0" priority="0" urgent="false"/>
+<transition angle="0" id="FindNewDate" infiniteServer="false" name="FindNewDate" nameOffsetX="-1.0" nameOffsetY="16.0" positionX="270.0" positionY="270.0" priority="0" urgent="true"/>
+<transition angle="0" id="ClosePatientJournal" infiniteServer="false" name="ClosePatientJournal" nameOffsetX="73.0" nameOffsetY="45.0" positionX="390.0" positionY="390.0" priority="0" urgent="true"/>
+<transition angle="0" id="Checkout" infiniteServer="false" name="Checkout" nameOffsetX="52.0" nameOffsetY="-36.0" positionX="150.0" positionY="390.0" priority="0" urgent="false"/>
+<arc id="Nurse to Arrival" inscription="[0,inf)" source="Nurse" target="Arrival" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="71" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="156" yCoord="102"/>
+</arc>
+<arc id="Arrival to Busy" inscription="1" source="Arrival" target="Busy" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="166" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="102"/>
+</arc>
+<arc id="Busy to OpenPatientJournal" inscription="[0,inf)" source="Busy" target="OpenPatientJournal" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="296" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="396" yCoord="102"/>
+</arc>
+<arc id="OpenPatientJournal to AwaitingAnswer" inscription="1" source="OpenPatientJournal" target="AwaitingAnswer" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="402" yCoord="117"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="177"/>
+</arc>
+<arc id="OpenPatientJournal to RequestMedicalCheck" inscription="1" source="OpenPatientJournal" target="RequestMedicalCheck" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="406" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="102"/>
+</arc>
+<arc id="MedicalCheckNOK to FindNewDate" inscription="[0,inf)" source="MedicalCheckNOK" target="FindNewDate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="507" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="286" yCoord="287"/>
+</arc>
+<arc id="FindNewDate to ReadyToReBook" inscription="1" source="FindNewDate" target="ReadyToReBook" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="282" yCoord="267"/>
+<arcpath arcPointType="false" id="1" xCoord="282" yCoord="206"/>
+</arc>
+<arc id="AwaitingAnswer to FindNewDate" inscription="[0,inf)" source="AwaitingAnswer" target="FindNewDate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="389" yCoord="200"/>
+<arcpath arcPointType="false" id="1" xCoord="287" yCoord="277"/>
+</arc>
+<arc id="ReadyToReBook to ReBook" inscription="[0,inf)" source="ReadyToReBook" target="ReBook" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="166" yCoord="192"/>
+</arc>
+<arc id="ReBook to Nurse" inscription="1" source="ReBook" target="Nurse" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="156" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="68" yCoord="112"/>
+</arc>
+<arc id="MedicalCheckOK to ClosePatientJournal" inscription="[0,inf)" source="MedicalCheckOK" target="ClosePatientJournal" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="507" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="406" yCoord="402"/>
+</arc>
+<arc id="ClosePatientJournal to ReadyToCheckout" inscription="1" source="ClosePatientJournal" target="ReadyToCheckout" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="396" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="311" yCoord="402"/>
+</arc>
+<arc id="AwaitingAnswer to ClosePatientJournal" inscription="[0,inf)" source="AwaitingAnswer" target="ClosePatientJournal" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="411" yCoord="203"/>
+<arcpath arcPointType="true" id="1" xCoord="449" yCoord="314"/>
+<arcpath arcPointType="false" id="2" xCoord="402" yCoord="387"/>
+</arc>
+<arc id="ReadyToCheckout to Checkout" inscription="[0,inf)" source="ReadyToCheckout" target="Checkout" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="282" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="166" yCoord="402"/>
+</arc>
+<arc id="Checkout to Nurse" inscription="1" source="Checkout" target="Nurse" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="387"/>
+<arcpath arcPointType="false" id="1" xCoord="62" yCoord="116"/>
+</arc>
+</net>
+<net active="true" id="Doctor" type="P/T net">
+<place id="Doctor" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Doctor" nameOffsetX="-8.0" nameOffsetY="13.0" positionX="345.0" positionY="30.0"/>
+<place id="RequestMedicalCheck" initialMarking="0" invariant="&lt;= 3" markingOffsetX="0.0" markingOffsetY="0.0" name="RequestMedicalCheck" nameOffsetX="-19.0" nameOffsetY="16.0" positionX="150.0" positionY="120.0"/>
+<place id="MedicalCheckNOK" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="MedicalCheckNOK" nameOffsetX="-19.0" nameOffsetY="19.0" positionX="150.0" positionY="225.0"/>
+<place id="MedicalCheckOK" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="MedicalCheckOK" nameOffsetX="-21.0" nameOffsetY="7.0" positionX="150.0" positionY="330.0"/>
+<place id="ReadyForCheck" initialMarking="0" invariant="&lt;= 4" markingOffsetX="0.0" markingOffsetY="0.0" name="ReadyForCheck" nameOffsetX="126.0" nameOffsetY="21.0" positionX="540.0" positionY="120.0"/>
+<place id="Decision" initialMarking="0" invariant="&lt;= 2" markingOffsetX="0.0" markingOffsetY="0.0" name="Decision" nameOffsetX="38.0" nameOffsetY="-18.0" positionX="450.0" positionY="225.0"/>
+<place id="Finished" initialMarking="0" invariant="&lt;= 2" markingOffsetX="0.0" markingOffsetY="0.0" name="Finished" nameOffsetX="37.0" nameOffsetY="-9.0" positionX="345.0" positionY="330.0"/>
+<transition angle="0" id="ReadPatientJournal" infiniteServer="false" name="ReadPatientJournal" nameOffsetX="140.0" nameOffsetY="6.0" positionX="345.0" positionY="120.0" priority="0" urgent="false"/>
+<transition angle="0" id="MedicalCheck" infiniteServer="false" name="MedicalCheck" nameOffsetX="107.0" nameOffsetY="12.0" positionX="540.0" positionY="225.0" priority="0" urgent="false"/>
+<transition angle="0" id="Treatment" infiniteServer="false" name="Treatment" nameOffsetX="87.0" nameOffsetY="14.0" positionX="450.0" positionY="330.0" priority="0" urgent="false"/>
+<transition angle="0" id="NOK" infiniteServer="false" name="NOK" nameOffsetX="48.0" nameOffsetY="-1.0" positionX="345.0" positionY="225.0" priority="0" urgent="false"/>
+<transition angle="0" id="UpdatePatientJournal" infiniteServer="false" name="UpdatePatientJournal" nameOffsetX="71.0" nameOffsetY="51.0" positionX="255.0" positionY="330.0" priority="0" urgent="false"/>
+<arc id="Doctor to ReadPatientJournal" inscription="[0,inf)" source="Doctor" target="ReadPatientJournal" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="56"/>
+<arcpath arcPointType="false" id="1" xCoord="357" yCoord="117"/>
+</arc>
+<arc id="RequestMedicalCheck to ReadPatientJournal" inscription="[0,inf)" source="RequestMedicalCheck" target="ReadPatientJournal" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="176" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="351" yCoord="132"/>
+</arc>
+<arc id="ReadPatientJournal to ReadyForCheck" inscription="1" source="ReadPatientJournal" target="ReadyForCheck" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="361" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="132"/>
+</arc>
+<arc id="ReadyForCheck to MedicalCheck" inscription="[0,inf)" source="ReadyForCheck" target="MedicalCheck" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="146"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="222"/>
+</arc>
+<arc id="MedicalCheck to Decision" inscription="1" source="MedicalCheck" target="Decision" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="546" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="476" yCoord="237"/>
+</arc>
+<arc id="Decision to NOK" inscription="[0,inf)" source="Decision" target="NOK" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="447" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="361" yCoord="237"/>
+</arc>
+<arc id="NOK to MedicalCheckNOK" inscription="1" source="NOK" target="MedicalCheckNOK" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="351" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="176" yCoord="237"/>
+</arc>
+<arc id="Decision to Treatment" inscription="[0,inf)" source="Decision" target="Treatment" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="462" yCoord="251"/>
+<arcpath arcPointType="false" id="1" xCoord="462" yCoord="327"/>
+</arc>
+<arc id="Treatment to Finished" inscription="1" source="Treatment" target="Finished" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="456" yCoord="342"/>
+<arcpath arcPointType="false" id="1" xCoord="371" yCoord="342"/>
+</arc>
+<arc id="Finished to UpdatePatientJournal" inscription="[0,inf)" source="Finished" target="UpdatePatientJournal" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="342" yCoord="342"/>
+<arcpath arcPointType="false" id="1" xCoord="271" yCoord="342"/>
+</arc>
+<arc id="UpdatePatientJournal to MedicalCheckOK" inscription="1" source="UpdatePatientJournal" target="MedicalCheckOK" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="261" yCoord="342"/>
+<arcpath arcPointType="false" id="1" xCoord="176" yCoord="342"/>
+</arc>
+<arc id="NOK to Doctor" inscription="1" source="NOK" target="Doctor" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="222"/>
+<arcpath arcPointType="true" id="1" xCoord="314" yCoord="119"/>
+<arcpath arcPointType="false" id="2" xCoord="349" yCoord="55"/>
+</arc>
+<arc id="UpdatePatientJournal to Doctor" inscription="1" source="UpdatePatientJournal" target="Doctor" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="327"/>
+<arcpath arcPointType="true" id="1" xCoord="254" yCoord="104"/>
+<arcpath arcPointType="false" id="2" xCoord="344" yCoord="49"/>
+</arc>
+</net>
+<net active="true" id="Monitor" type="P/T net">
+<place id="InProgress" initialMarking="0" invariant="&lt;= Deadline" markingOffsetX="0.0" markingOffsetY="0.0" name="InProgress" nameOffsetX="-9.0" nameOffsetY="8.0" positionX="120.0" positionY="135.0"/>
+<place id="MissedDeadline" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="MissedDeadline" nameOffsetX="64.0" nameOffsetY="-12.0" positionX="405.0" positionY="135.0"/>
+<transition angle="270" id="Arrival" infiniteServer="false" name="Arrival" nameOffsetX="-12.0" nameOffsetY="22.0" positionX="120.0" positionY="30.0" priority="0" urgent="true"/>
+<transition angle="315" id="Treatment" infiniteServer="false" name="Treatment" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="60.0" positionY="225.0" priority="0" urgent="false"/>
+<transition angle="225" id="ReBook" infiniteServer="false" name="ReBook" nameOffsetX="68.0" nameOffsetY="36.0" positionX="195.0" positionY="225.0" priority="0" urgent="false"/>
+<transition angle="0" id="MissDeadline" infiniteServer="false" name="MissDeadline" nameOffsetX="56.0" nameOffsetY="-13.0" positionX="270.0" positionY="135.0" priority="0" urgent="false"/>
+<arc id="Arrival to InProgress" inscription="1" source="Arrival" target="InProgress" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="132" yCoord="47"/>
+<arcpath arcPointType="false" id="1" xCoord="132" yCoord="132"/>
+</arc>
+<arc id="InProgress to Treatment" inscription="[0,inf)" source="InProgress" target="Treatment" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="123" yCoord="159"/>
+<arcpath arcPointType="false" id="1" xCoord="75" yCoord="233"/>
+</arc>
+<arc id="InProgress to ReBook" inscription="[0,inf)" source="InProgress" target="ReBook" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="141" yCoord="158"/>
+<arcpath arcPointType="false" id="1" xCoord="203" yCoord="233"/>
+</arc>
+<arc id="InProgress to MissDeadline" inscription="[0,inf)" source="InProgress" target="MissDeadline" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="146" yCoord="147"/>
+<arcpath arcPointType="false" id="1" xCoord="276" yCoord="147"/>
+</arc>
+<arc id="MissDeadline to MissedDeadline" inscription="1" source="MissDeadline" target="MissedDeadline" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="286" yCoord="147"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="147"/>
+</arc>
+</net>
+<query active="true" capacity="2" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="AG Monitor.MissedDeadline&lt;=0" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="SOME"/>
+<query active="true" capacity="2" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="AF Patient.PatientFinished&gt;=5" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="SOME"/>
+</pnml>

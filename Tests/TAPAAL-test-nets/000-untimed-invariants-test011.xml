@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="TAPN1" type="P/T net">
+<place id="researching" initialMarking="1" invariant="&lt;= 100" markingOffsetX="0.0" markingOffsetY="0.0" name="researching" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="225.0"/>
+<place id="decision" initialMarking="0" invariant="&lt;= 2" markingOffsetX="0.0" markingOffsetY="0.0" name="decision" nameOffsetX="45.0" nameOffsetY="44.0" positionX="330.0" positionY="360.0"/>
+<place id="writing" initialMarking="0" invariant="&lt;= 50" markingOffsetX="0.0" markingOffsetY="0.0" name="writing" nameOffsetX="61.0" nameOffsetY="47.0" positionX="540.0" positionY="225.0"/>
+<place id="peer_review" initialMarking="0" invariant="&lt;= 50" markingOffsetX="0.0" markingOffsetY="0.0" name="peer_review" nameOffsetX="49.0" nameOffsetY="-15.0" positionX="330.0" positionY="150.0"/>
+<transition angle="0" id="idea_ready" infiniteServer="false" name="idea_ready" nameOffsetX="83.0" nameOffsetY="11.0" positionX="225.0" positionY="285.0" priority="0" urgent="false"/>
+<transition angle="0" id="deadline_missed" infiniteServer="false" name="deadline_missed" nameOffsetX="5.0" nameOffsetY="8.0" positionX="435.0" positionY="285.0" priority="0" urgent="false"/>
+<transition angle="0" id="continue_research" infiniteServer="false" name="continue_research" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="360.0" priority="0" urgent="false"/>
+<transition angle="0" id="submit" infiniteServer="false" name="submit" nameOffsetX="70.0" nameOffsetY="-4.0" positionX="330.0" positionY="225.0" priority="0" urgent="false"/>
+<transition angle="0" id="accept" infiniteServer="false" name="accept" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="150.0" priority="0" urgent="false"/>
+<transition angle="0" id="reject" infiniteServer="false" name="reject" nameOffsetX="61.0" nameOffsetY="31.0" positionX="435.0" positionY="150.0" priority="0" urgent="false"/>
+<transition angle="0" id="write_paper" infiniteServer="false" name="write_paper" nameOffsetX="93.0" nameOffsetY="32.0" positionX="435.0" positionY="360.0" priority="0" urgent="false"/>
+<arc id="researching to idea_ready" inscription="[0,inf)" source="researching" target="idea_ready" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="144" yCoord="244"/>
+<arcpath arcPointType="false" id="1" xCoord="231" yCoord="297"/>
+</arc>
+<arc id="idea_ready to decision" inscription="1" source="idea_ready" target="decision" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="241" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="329" yCoord="363"/>
+</arc>
+<arc id="decision to continue_research" inscription="[0,inf)" source="decision" target="continue_research" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="372"/>
+<arcpath arcPointType="false" id="1" xCoord="241" yCoord="372"/>
+</arc>
+<arc id="continue_research to researching" inscription="1" source="continue_research" target="researching" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="231" yCoord="372"/>
+<arcpath arcPointType="false" id="1" xCoord="140" yCoord="249"/>
+</arc>
+<arc id="writing to submit" inscription="[0,inf)" source="writing" target="submit" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="346" yCoord="237"/>
+</arc>
+<arc id="submit to researching" inscription="1" source="submit" target="researching" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="336" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="146" yCoord="237"/>
+</arc>
+<arc id="submit to peer_review" inscription="1" source="submit" target="peer_review" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="342" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="342" yCoord="176"/>
+</arc>
+<arc id="peer_review to accept" inscription="[0,inf)" source="peer_review" target="accept" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="256" yCoord="162"/>
+</arc>
+<arc id="peer_review to reject" inscription="[0,inf)" source="peer_review" target="reject" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="441" yCoord="162"/>
+</arc>
+<arc id="decision to write_paper" inscription="[0,inf)" source="decision" target="write_paper" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="372"/>
+<arcpath arcPointType="false" id="1" xCoord="441" yCoord="372"/>
+</arc>
+<arc id="write_paper to writing" inscription="1" source="write_paper" target="writing" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="451" yCoord="372"/>
+<arcpath arcPointType="false" id="1" xCoord="543" yCoord="249"/>
+</arc>
+<arc id="writing to deadline_missed" inscription="[0,inf)" source="writing" target="deadline_missed" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="539" yCoord="244"/>
+<arcpath arcPointType="false" id="1" xCoord="451" yCoord="297"/>
+</arc>
+<arc id="deadline_missed to decision" inscription="1" source="deadline_missed" target="decision" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="441" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="354" yCoord="363"/>
+</arc>
+</net>
+<query active="true" capacity="2" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" overApproximation="false" pTrie="true" query="EF false" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" overApproximation="true" pTrie="true" query="AG TAPN1.peer_review&lt;=2" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" overApproximation="false" pTrie="true" query="AF TAPN1.peer_review=1" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="SOME"/>
+</pnml>

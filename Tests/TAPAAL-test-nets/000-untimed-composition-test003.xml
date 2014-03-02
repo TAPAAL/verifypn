@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-place initialMarking="0" invariant="&lt; inf" name="tmp1"/>
+<shared-place initialMarking="0" invariant="&lt; inf" name="tmp2"/>
+<shared-transition name="putitthre"/>
+<net active="true" id="TAPN1" type="P/T net">
+<place id="P0" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="60.0"/>
+<place id="tmp1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="tmp1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="240.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="150.0" priority="1" timed="false"/>
+<transition angle="0" id="putitthre" infiniteServer="false" name="putitthre" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="60.0" priority="1" timed="false"/>
+<arc id="P0 to putitthre" inscription="[0,inf)" source="P0" target="putitthre" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="159" yCoord="63"/>
+<arcpath arcPointType="false" id="1" xCoord="207" yCoord="27"/>
+<arcpath arcPointType="false" id="2" xCoord="261" yCoord="72"/>
+</arc>
+<arc id="P0 to T0" inscription="[0,inf):1" source="P0" target="T0" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="147" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="147" yCoord="147"/>
+</arc>
+<arc id="T0 to tmp1" inscription="[0,inf):1" source="T0" target="tmp1" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="147" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="147" yCoord="237"/>
+</arc>
+</net>
+<net active="true" id="TAPN2" type="P/T net">
+<place id="tmp1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="tmp1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="240.0"/>
+<place id="tmp2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="tmp2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="450.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="330.0" priority="1" timed="false"/>
+<arc id="tmp1 to T0" inscription="[0,inf)" source="tmp1" target="T0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="132" yCoord="266"/>
+<arcpath arcPointType="false" id="1" xCoord="132" yCoord="327"/>
+</arc>
+<arc id="T0 to tmp2" inscription="1" source="T0" target="tmp2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="132" yCoord="357"/>
+<arcpath arcPointType="false" id="1" xCoord="132" yCoord="447"/>
+</arc>
+</net>
+<net active="true" id="TAPN3" type="P/T net">
+<place id="tmp2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="tmp2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="450.0"/>
+<place id="Final" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Final" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="615.0"/>
+<place id="P2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="525.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="540.0" priority="1" timed="false"/>
+<transition angle="0" id="putitthre" infiniteServer="false" name="putitthre" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="300.0" positionY="390.0" priority="1" timed="false"/>
+<arc id="tmp2 to T0" inscription="[0,inf)" source="tmp2" target="T0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="117" yCoord="476"/>
+<arcpath arcPointType="false" id="1" xCoord="117" yCoord="537"/>
+</arc>
+<arc id="T0 to Final" inscription="1" source="T0" target="Final" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="117" yCoord="567"/>
+<arcpath arcPointType="false" id="1" xCoord="117" yCoord="612"/>
+</arc>
+<arc id="P2 to T0" inscription="[0,inf)" source="P2" target="T0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="312" yCoord="538"/>
+<arcpath arcPointType="false" id="1" xCoord="121" yCoord="552"/>
+</arc>
+<arc id="putitthre to P2" inscription="1" source="putitthre" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="312" yCoord="417"/>
+<arcpath arcPointType="false" id="1" xCoord="325" yCoord="522"/>
+</arc>
+</net>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" name="TRUE" query="EF TAPN3.Final&gt;=1" reductionOption="VerifyTAPN" searchOption="BFS" symmetry="true" traceOption="NONE"/>
+</pnml>

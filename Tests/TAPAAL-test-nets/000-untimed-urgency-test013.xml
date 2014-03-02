@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="TAPN1" type="P/T net">
+<place id="in" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="in" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="90.0" positionY="330.0"/>
+<place id="out" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="out" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="780.0" positionY="330.0"/>
+<place id="booking" initialMarking="0" invariant="&lt;= 5" markingOffsetX="0.0" markingOffsetY="0.0" name="booking" nameOffsetX="50.0" nameOffsetY="-18.0" positionX="165.0" positionY="195.0"/>
+<place id="payment" initialMarking="0" invariant="&lt;= 11" markingOffsetX="0.0" markingOffsetY="0.0" name="payment" nameOffsetX="44.0" nameOffsetY="-19.0" positionX="405.0" positionY="195.0"/>
+<place id="succesful" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="succesful" nameOffsetX="41.0" nameOffsetY="-11.0" positionX="645.0" positionY="195.0"/>
+<place id="attempts" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="attempts" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="270.0" positionY="420.0"/>
+<transition angle="0" id="start" infiniteServer="false" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="330.0" priority="0" urgent="true"/>
+<transition angle="0" id="book" infiniteServer="false" name="book" nameOffsetX="29.0" nameOffsetY="-12.0" positionX="285.0" positionY="195.0" priority="0" urgent="false"/>
+<transition angle="0" id="pay" infiniteServer="false" name="pay" nameOffsetX="39.0" nameOffsetY="-10.0" positionX="510.0" positionY="195.0" priority="0" urgent="false"/>
+<transition angle="0" id="empty" infiniteServer="false" name="empty" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="330.0" priority="0" urgent="true"/>
+<transition angle="0" id="success" infiniteServer="false" name="success" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="720.0" positionY="330.0" priority="0" urgent="true"/>
+<transition angle="90" id="fail1" infiniteServer="false" name="fail1" nameOffsetX="26.0" nameOffsetY="41.0" positionX="165.0" positionY="525.0" priority="0" urgent="true"/>
+<transition angle="90" id="fail2" infiniteServer="false" name="fail2" nameOffsetX="25.0" nameOffsetY="44.0" positionX="405.0" positionY="585.0" priority="0" urgent="true"/>
+<transition angle="0" id="restart1" infiniteServer="false" name="restart1" nameOffsetX="75.0" nameOffsetY="23.0" positionX="225.0" positionY="285.0" priority="0" urgent="false"/>
+<transition angle="0" id="restart2" infiniteServer="false" name="restart2" nameOffsetX="76.0" nameOffsetY="24.0" positionX="360.0" positionY="285.0" priority="0" urgent="false"/>
+<arc id="in to start" inscription="[0,inf)" source="in" target="start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="116" yCoord="342"/>
+<arcpath arcPointType="false" id="1" xCoord="171" yCoord="342"/>
+</arc>
+<arc id="start to booking" inscription="1" source="start" target="booking" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="177" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="221"/>
+</arc>
+<arc id="start to attempts" inscription="1" source="start" target="attempts" type="normal" weight="3">
+<arcpath arcPointType="false" id="0" xCoord="181" yCoord="342"/>
+<arcpath arcPointType="false" id="1" xCoord="270" yCoord="421"/>
+</arc>
+<arc id="booking to book" inscription="[0,inf):1" source="booking" target="book" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="191" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="291" yCoord="207"/>
+</arc>
+<arc id="book to payment" inscription="[0,inf):1" source="book" target="payment" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="301" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="207"/>
+</arc>
+<arc id="payment to pay" inscription="[0,inf)" source="payment" target="pay" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="431" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="516" yCoord="207"/>
+</arc>
+<arc id="pay to succesful" inscription="1" source="pay" target="succesful" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="526" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="642" yCoord="207"/>
+</arc>
+<arc id="succesful to empty" inscription="[0,inf)" source="succesful" target="empty" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="643" yCoord="213"/>
+<arcpath arcPointType="true" id="1" xCoord="553" yCoord="283"/>
+<arcpath arcPointType="false" id="2" xCoord="522" yCoord="327"/>
+</arc>
+<arc id="empty to succesful" inscription="1" source="empty" target="succesful" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="526" yCoord="342"/>
+<arcpath arcPointType="true" id="1" xCoord="628" yCoord="268"/>
+<arcpath arcPointType="false" id="2" xCoord="650" yCoord="220"/>
+</arc>
+<arc id="attempts to empty" inscription="[0,inf)" source="attempts" target="empty" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="296" yCoord="431"/>
+<arcpath arcPointType="true" id="1" xCoord="508" yCoord="373"/>
+<arcpath arcPointType="false" id="2" xCoord="522" yCoord="357"/>
+</arc>
+<arc id="succesful to success" inscription="[0,inf)" source="succesful" target="success" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="665" yCoord="219"/>
+<arcpath arcPointType="false" id="1" xCoord="732" yCoord="327"/>
+</arc>
+<arc id="success to out" inscription="1" source="success" target="out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="736" yCoord="342"/>
+<arcpath arcPointType="false" id="1" xCoord="777" yCoord="342"/>
+</arc>
+<arc id="booking to restart1" inscription="[0,inf)" source="booking" target="restart1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="179" yCoord="221"/>
+<arcpath arcPointType="true" id="1" xCoord="193" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="231" yCoord="297"/>
+</arc>
+<arc id="restart1 to booking" inscription="1" source="restart1" target="booking" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="282"/>
+<arcpath arcPointType="true" id="1" xCoord="223" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="187" yCoord="217"/>
+</arc>
+<arc id="attempts to restart1" inscription="[0,inf)" source="attempts" target="restart1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="276" yCoord="417"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="312"/>
+</arc>
+<arc id="payment to restart2" inscription="[0,inf)" source="payment" target="restart2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="409" yCoord="219"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="282"/>
+</arc>
+<arc id="restart2 to booking" inscription="1" source="restart2" target="booking" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="367" yCoord="292"/>
+<arcpath arcPointType="false" id="1" xCoord="190" yCoord="213"/>
+</arc>
+<arc id="attempts to restart2" inscription="[0,inf)" source="attempts" target="restart2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="290" yCoord="419"/>
+<arcpath arcPointType="false" id="1" xCoord="366" yCoord="302"/>
+</arc>
+<arc id="attempts to success" inscription="[0,inf)" source="attempts" target="success" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="296" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="733" yCoord="433"/>
+<arcpath arcPointType="false" id="2" xCoord="732" yCoord="357"/>
+</arc>
+<arc id="attempts to fail1" inscription="[0,inf)" source="attempts" target="fail1" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="271" yCoord="442"/>
+<arcpath arcPointType="false" id="1" xCoord="181" yCoord="532"/>
+</arc>
+<arc id="attempts to fail2" inscription="[0,inf)" source="attempts" target="fail2" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="291" yCoord="443"/>
+<arcpath arcPointType="false" id="1" xCoord="416" yCoord="591"/>
+</arc>
+<arc id="booking to fail1" inscription="[0,inf)" source="booking" target="fail1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="209"/>
+<arcpath arcPointType="true" id="1" xCoord="58" yCoord="283"/>
+<arcpath arcPointType="true" id="2" xCoord="103" yCoord="493"/>
+<arcpath arcPointType="false" id="3" xCoord="171" yCoord="531"/>
+</arc>
+<arc id="fail1 to out" inscription="1" source="fail1" target="out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="191" yCoord="537"/>
+<arcpath arcPointType="true" id="1" xCoord="613" yCoord="523"/>
+<arcpath arcPointType="true" id="2" xCoord="778" yCoord="463"/>
+<arcpath arcPointType="false" id="3" xCoord="790" yCoord="356"/>
+</arc>
+<arc id="payment to fail2" inscription="[0,inf)" source="payment" target="fail2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="408" yCoord="194"/>
+<arcpath arcPointType="true" id="1" xCoord="328" yCoord="118"/>
+<arcpath arcPointType="true" id="2" xCoord="178" yCoord="118"/>
+<arcpath arcPointType="true" id="3" xCoord="28" yCoord="253"/>
+<arcpath arcPointType="true" id="4" xCoord="58" yCoord="523"/>
+<arcpath arcPointType="true" id="5" xCoord="313" yCoord="613"/>
+<arcpath arcPointType="false" id="6" xCoord="401" yCoord="597"/>
+</arc>
+<arc id="fail2 to out" inscription="1" source="fail2" target="out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="431" yCoord="597"/>
+<arcpath arcPointType="true" id="1" xCoord="718" yCoord="598"/>
+<arcpath arcPointType="true" id="2" xCoord="823" yCoord="448"/>
+<arcpath arcPointType="false" id="3" xCoord="796" yCoord="356"/>
+</arc>
+</net>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="AF TAPN1.out=1" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" pTrie="true" query="AG (!(TAPN1.out&gt;=1) or (TAPN1.out=1 and TAPN1.in=0 and TAPN1.booking=0 and TAPN1.payment=0 and TAPN1.attempts=0))" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" pTrie="true" query="EF (TAPN1.succesful=1 and TAPN1.succesful=1)" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="EF (TAPN1.attempts=1 and TAPN1.out=1)" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+</pnml>

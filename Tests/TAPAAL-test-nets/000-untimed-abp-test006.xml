@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="Protocol" type="P/T net">
+<place id="P0" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="50.0" nameOffsetY="-5.0" positionX="390.0" positionY="150.0"/>
+<place id="P1" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="53.0" nameOffsetY="14.0" positionX="150.0" positionY="60.0"/>
+<place id="P2" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="15.0"/>
+<place id="P3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="-5.0" nameOffsetY="31.0" positionX="150.0" positionY="240.0"/>
+<place id="P4" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="92.0" nameOffsetY="24.0" positionX="615.0" positionY="240.0"/>
+<place id="P5" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="45.0"/>
+<transition angle="270" id="T0" infiniteServer="false" name="T0" nameOffsetX="59.0" nameOffsetY="25.0" positionX="615.0" positionY="120.0" priority="0"/>
+<transition angle="0" id="T1" infiniteServer="false" name="T1" nameOffsetX="50.0" nameOffsetY="38.0" positionX="240.0" positionY="240.0" priority="0"/>
+<transition angle="0" id="T2" infiniteServer="false" name="T2" nameOffsetX="36.0" nameOffsetY="-7.0" positionX="495.0" positionY="240.0" priority="0"/>
+<transition angle="270" id="T3" infiniteServer="false" name="T3" nameOffsetX="-2.0" nameOffsetY="36.0" positionX="390.0" positionY="240.0" priority="0"/>
+<transition angle="270" id="T4" infiniteServer="false" name="T4" nameOffsetX="110.0" nameOffsetY="31.0" positionX="600.0" positionY="360.0" priority="0"/>
+<transition angle="270" id="T5" infiniteServer="false" name="T5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="150.0" priority="0"/>
+<arc id="Receiver_0_A to Receive_0" inscription="[0,inf)" source="P2" target="T0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="614" yCoord="41"/>
+<arcpath arcPointType="false" id="1" xCoord="627" yCoord="127"/>
+</arc>
+<arc id="ReSend_0 to Medium_A" inscription="1" source="T1" target="P0" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="256" yCoord="257"/>
+<arcpath arcPointType="false" id="1" xCoord="389" yCoord="170"/>
+</arc>
+<arc id="Sender_0_B to ReSend_0" inscription="[0,inf)" source="P3" target="T1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="176" yCoord="248"/>
+<arcpath arcPointType="false" id="1" xCoord="223" yCoord="238"/>
+<arcpath arcPointType="false" id="2" xCoord="246" yCoord="252"/>
+</arc>
+<arc id="Medium_A to Loss_A" inscription="[0,inf)" source="P0" target="T3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="402" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="247"/>
+</arc>
+<arc id="Medium_A to Receive_old_0" inscription="[0,inf):1" source="P0" target="T2" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="413" yCoord="172"/>
+<arcpath arcPointType="false" id="1" xCoord="501" yCoord="252"/>
+</arc>
+<arc id="Receive_old_0 to Receiver_0_B" inscription="[0,inf):1" source="T2" target="P4" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="511" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="252"/>
+</arc>
+<arc id="Receiver_0_B to Ack_send_0" inscription="[0,inf)" source="P4" target="T4" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="625" yCoord="266"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="367"/>
+</arc>
+<arc id="ReSend_0 to Sender_0_B" inscription="1" source="T1" target="P3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="252" yCoord="267"/>
+<arcpath arcPointType="false" id="1" xCoord="223" yCoord="313"/>
+<arcpath arcPointType="false" id="2" xCoord="172" yCoord="262"/>
+</arc>
+<arc id="Send_0 to Sender_0_B" inscription="1" source="T5" target="P3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="167"/>
+<arcpath arcPointType="false" id="1" xCoord="162" yCoord="237"/>
+</arc>
+<arc id="Send_0 to Medium_A" inscription="1" source="T5" target="P0" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="177" yCoord="161"/>
+<arcpath arcPointType="false" id="1" xCoord="387" yCoord="161"/>
+</arc>
+<arc id="Sender_0_A to Send_0" inscription="[0,inf)" source="P1" target="T5" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="162" yCoord="157"/>
+</arc>
+<arc id="Medium_A to Receive_0" inscription="[0,inf):1" source="P0" target="T0" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="416" yCoord="159"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="131"/>
+</arc>
+<arc id="Receive_0 to Receiver_0_B" inscription="[0,inf):1" source="T0" target="P4" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="627" yCoord="137"/>
+<arcpath arcPointType="false" id="1" xCoord="627" yCoord="237"/>
+</arc>
+<arc id="Ack_send_0 to Sender_0_A" inscription="1" source="T4" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="377"/>
+<arcpath arcPointType="false" id="1" xCoord="620" yCoord="589"/>
+<arcpath arcPointType="false" id="2" xCoord="61" yCoord="581"/>
+<arcpath arcPointType="false" id="3" xCoord="61" yCoord="76"/>
+<arcpath arcPointType="false" id="4" xCoord="147" yCoord="72"/>
+</arc>
+<arc id="P5 to T5" inscription="[0,inf)" source="P5" target="T5" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="358" yCoord="64"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="161"/>
+</arc>
+<arc id="P5 to T1" inscription="[0,inf)" source="P5" target="T1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="364" yCoord="69"/>
+<arcpath arcPointType="false" id="1" xCoord="257" yCoord="247"/>
+</arc>
+<arc id="T3 to P5" inscription="1" source="T3" target="P5" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="402" yCoord="257"/>
+<arcpath arcPointType="false" id="1" xCoord="328" yCoord="328"/>
+<arcpath arcPointType="false" id="2" xCoord="369" yCoord="71"/>
+</arc>
+<arc id="T0 to P5" inscription="1" source="T0" target="P5" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="131"/>
+<arcpath arcPointType="false" id="1" xCoord="493" yCoord="58"/>
+<arcpath arcPointType="false" id="2" xCoord="386" yCoord="57"/>
+</arc>
+</net>
+<query active="true" capacity="0" discreteInclusion="true" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*ALL*" name="TRUE" query="EF (Protocol.P1&gt;=1 and Protocol.P4&gt;=1)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="1" discreteInclusion="true" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*ALL*" name="FALSE" query="EF (Protocol.P1&gt;=1 and Protocol.P4&gt;=1 and Protocol.P0&gt;=1)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<constant name="delay" value="3"/>
+<net active="true" id="TAPN1" type="P/T net">
+<place id="start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="45.0"/>
+<place id="A" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="A" nameOffsetX="-12.0" nameOffsetY="1.0" positionX="180.0" positionY="225.0"/>
+<place id="B" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="B" nameOffsetX="-12.0" nameOffsetY="3.0" positionX="480.0" positionY="225.0"/>
+<place id="C" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="C" nameOffsetX="35.0" nameOffsetY="1.0" positionX="765.0" positionY="225.0"/>
+<place id="rA" initialMarking="0" invariant="&lt;= 6" markingOffsetX="0.0" markingOffsetY="0.0" name="rA" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="420.0"/>
+<place id="P5" initialMarking="0" invariant="&lt;= delay" markingOffsetX="0.0" markingOffsetY="0.0" name="P5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="420.0"/>
+<place id="ready" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ready" nameOffsetX="14.0" nameOffsetY="-6.0" positionX="480.0" positionY="420.0"/>
+<place id="rB" initialMarking="0" invariant="&lt;= 5" markingOffsetX="0.0" markingOffsetY="0.0" name="rB" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="615.0" positionY="420.0"/>
+<place id="rC" initialMarking="0" invariant="&lt;= 8" markingOffsetX="0.0" markingOffsetY="0.0" name="rC" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="765.0" positionY="420.0"/>
+<place id="doneAB" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="doneAB" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="660.0"/>
+<place id="doneAll" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="doneAll" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="750.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="135.0" priority="0" urgent="true"/>
+<transition angle="0" id="sA" infiniteServer="false" name="sA" nameOffsetX="-6.0" nameOffsetY="8.0" positionX="180.0" positionY="315.0" priority="0" urgent="true"/>
+<transition angle="0" id="sBC" infiniteServer="false" name="sBC" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="615.0" positionY="300.0" priority="0" urgent="true"/>
+<transition angle="0" id="latency" infiniteServer="false" name="latency" nameOffsetX="33.0" nameOffsetY="-5.0" positionX="390.0" positionY="420.0" priority="0" urgent="false"/>
+<transition angle="0" id="eAB" infiniteServer="false" name="eAB" nameOffsetX="25.0" nameOffsetY="-14.0" positionX="360.0" positionY="570.0" priority="0" urgent="false"/>
+<transition angle="0" id="end" infiniteServer="false" name="end" nameOffsetX="23.0" nameOffsetY="-8.0" positionX="480.0" positionY="660.0" priority="0" urgent="false"/>
+<arc id="start to T0" inscription="[0,inf)" source="start" target="T0" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="492" yCoord="71"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="132"/>
+</arc>
+<arc id="T0 to B" inscription="1" source="T0" target="B" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="492" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="222"/>
+</arc>
+<arc id="T0 to A" inscription="1" source="T0" target="A" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="492" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="132"/>
+<arcpath arcPointType="false" id="2" xCoord="206" yCoord="232"/>
+</arc>
+<arc id="T0 to C" inscription="1" source="T0" target="C" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="496" yCoord="147"/>
+<arcpath arcPointType="false" id="1" xCoord="762" yCoord="232"/>
+</arc>
+<arc id="A to sA" inscription="[0,inf)" source="A" target="sA" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="237"/>
+<arcpath arcPointType="false" id="2" xCoord="192" yCoord="312"/>
+</arc>
+<arc id="sA to rA" inscription="1" source="sA" target="rA" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="186" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="97" yCoord="421"/>
+</arc>
+<arc id="sA to P5" inscription="1" source="sA" target="P5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="196" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="315" yCoord="422"/>
+</arc>
+<arc id="P5 to latency" inscription="[0,inf)" source="P5" target="latency" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="341" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="396" yCoord="432"/>
+</arc>
+<arc id="latency to ready" inscription="1" source="latency" target="ready" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="406" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="477" yCoord="432"/>
+</arc>
+<arc id="ready to sBC" inscription="[0,inf)" source="ready" target="sBC" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="503" yCoord="422"/>
+<arcpath arcPointType="false" id="1" xCoord="621" yCoord="317"/>
+</arc>
+<arc id="B to sBC" inscription="[0,inf)" source="B" target="sBC" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="505" yCoord="244"/>
+<arcpath arcPointType="false" id="1" xCoord="622" yCoord="307"/>
+</arc>
+<arc id="C to sBC" inscription="[0,inf)" source="C" target="sBC" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="763" yCoord="243"/>
+<arcpath arcPointType="false" id="1" xCoord="632" yCoord="307"/>
+</arc>
+<arc id="sBC to rB" inscription="1" source="sBC" target="rB" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="627" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="627" yCoord="417"/>
+</arc>
+<arc id="sBC to rC" inscription="1" source="sBC" target="rC" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="631" yCoord="317"/>
+<arcpath arcPointType="false" id="1" xCoord="765" yCoord="422"/>
+</arc>
+<arc id="rA to eAB" inscription="[0,inf)" source="rA" target="eAB" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="100" yCoord="439"/>
+<arcpath arcPointType="false" id="1" xCoord="366" yCoord="582"/>
+</arc>
+<arc id="rB to eAB" inscription="[0,inf)" source="rB" target="eAB" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="614" yCoord="439"/>
+<arcpath arcPointType="false" id="1" xCoord="376" yCoord="582"/>
+</arc>
+<arc id="eAB to doneAB" inscription="1" source="eAB" target="doneAB" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="657"/>
+</arc>
+<arc id="rC to end" inscription="[0,inf)" source="rC" target="end" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="765" yCoord="441"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="672"/>
+</arc>
+<arc id="doneAB to end" inscription="[0,inf)" source="doneAB" target="end" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="386" yCoord="672"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="672"/>
+</arc>
+<arc id="end to doneAll" inscription="1" source="end" target="doneAll" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="492" yCoord="687"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="747"/>
+</arc>
+</net>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" overApproximation="false" pTrie="true" query="AF TAPN1.doneAll=1" reductionOption="VerifyTAPNdiscreteVerification" searchOption="DFS" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" overApproximation="false" pTrie="true" query="EF TAPN1.doneAll=1" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" overApproximation="false" pTrie="true" query="AG (TAPN1.rA=0 or TAPN1.rC=0)" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<k-bound bound="3"/>
+</pnml>
