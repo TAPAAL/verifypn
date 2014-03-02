@@ -326,7 +326,6 @@ namespace PetriEngine{
 	}
 
 	void Reducer::Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, int enablereduction) {
-		
 		if (enablereduction == 1) { // in the aggresive reduction all four rules are used as long as they remove something
 			while ( ReducebyRuleA(net, m0, placeInQuery, placeInInhib, transitionInInhib) ||
 					ReducebyRuleB(net, m0, placeInQuery, placeInInhib, transitionInInhib) || 
@@ -338,24 +337,6 @@ namespace PetriEngine{
 					ReducebyRuleD(net, m0, placeInQuery, placeInInhib, transitionInInhib) ) { 
 			}
 		}
-		
-		/*
-		bool continueReductions = true;
-		while (continueReductions) {
-			continueReductions = false; // repeat all reductions rules as long as something was reduced
-
-			continueReductions = continueReductions || ReducebyRuleA(net, m0, placeInQuery, placeInInhib, transitionInInhib);
-
-			if (enablereduction == 1) { // only allowed in aggresive reductions (it changes k-boundedness)
-
-				continueReductions = continueReductions || ReducebyRuleB(net, m0, placeInQuery, placeInInhib, transitionInInhib);
-
-				continueReductions = continueReductions || ReducebyRuleC(net, m0, placeInQuery, placeInInhib, transitionInInhib);
-			}
-
-			continueReductions = continueReductions || ReducebyRuleD(net, m0, placeInQuery, placeInInhib, transitionInInhib);
-		}
-		*/
 	}
 
 	void Reducer::expandTrace(unsigned int t, std::vector<unsigned int>& trace) {
