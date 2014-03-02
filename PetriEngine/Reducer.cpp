@@ -69,6 +69,7 @@ namespace PetriEngine{
 			assert(place >= 0 && transition >= 0);
 		}
 	}
+	
    	void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
 		fprintf(stdout, "\nNET INFO:\n");
 		fprintf(stdout, "Number of places: %i\n", net->numberOfPlaces());
@@ -175,7 +176,8 @@ namespace PetriEngine{
 		} // end of Rule A main for-loop
 		return continueReductions;
 	}
-bool Reducer::ReducebyRuleB(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
+
+	bool Reducer::ReducebyRuleB(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
 		// Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
 		bool continueReductions = false;
 		for (size_t p = 0; p < net->numberOfPlaces(); p++) {
