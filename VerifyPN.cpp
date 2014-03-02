@@ -302,15 +302,12 @@ int main(int argc, char* argv[]){
         
         Reducer reducer=Reducer(net); // reduced is needed also in trace generation (hence the extended scope)
         if (enablereduction==1 or enablereduction==2) {
-            
-            //Create scope for net reductions
-            {
                 // Compute how many times each place appears in the query
                 MarkVal* placeInQuery = new MarkVal[net->numberOfPlaces()];
                          for(size_t i = 0; i < net->numberOfPlaces(); i++) {
                                 placeInQuery[i] = 0;
                          }
-                QueryPlaceAnalysisContext placecontext(*net,placeInQuery);
+                QueryPlaceAnalysisContext placecontext(*net, placeInQuery);
                 query->analyze(placecontext);
             
                 // Compute the places and transitions that connect to inhibitor arcs
@@ -318,12 +315,11 @@ int main(int argc, char* argv[]){
                 MarkVal* transitionInInhib = new MarkVal[net->numberOfTransitions()];
                   
                 // CreateInhibitorPlacesAndTransitions translates inhibitor place/transitions names to indexes
-                reducer.CreateInhibitorPlacesAndTransitions(net, inhibarcs ,placeInInhib, transitionInInhib); 
+                reducer.CreateInhibitorPlacesAndTransitions(net, inhibarcs, placeInInhib, transitionInInhib); 
 
-                //reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib); 
-                reducer.Reduce(net,m0,placeInQuery,placeInInhib, transitionInInhib,enablereduction); // reduce the net
-                //reducer.Print(net,m0,placeInQuery,placeInInhib, transitionInInhib);
-            }
+                //reducer.Print(net, m0, placeInQuery, placeInInhib, transitionInInhib); 
+                reducer.Reduce(net,m0,placeInQuery, placeInInhib, transitionInInhib, enablereduction); // reduce the net
+                //reducer.Print(net, m0, placeInQuery, placeInInhib, transitionInInhib);
         }
         
 	//----------------------- Reachability -----------------------//
@@ -359,7 +355,7 @@ int main(int argc, char* argv[]){
 	ReachabilityResult result = strategy->reachable(*net, m0, v0, query);
 
 	//----------------------- Output Trace -----------------------//
-        const std::vector<unsigned int>& trace = (enablereduction==0?result.trace() :reducer.NonreducedTrace(net,result.trace()));
+        const std::vector<unsigned int>& trace = (enablereduction==0 ? result.trace() : reducer.NonreducedTrace(net,result.trace()));
 	const std::vector<std::string>& tnames = net->transitionNames();
 	const std::vector<std::string>& pnames = net->placeNames();
 
@@ -389,13 +385,13 @@ int main(int argc, char* argv[]){
 	fprintf(stdout, "\texpanded states:   %lli\n", result.expandedStates());
 	fprintf(stdout, "\tmax tokens:        %i\n", result.maxTokens());
         if (enablereduction!=0) {
-                fprintf(stdout,"\nNet reduction is enabled.\n");
-                fprintf(stdout,"Removed transitions: %d\n",reducer.RemovedTransitions());
-                fprintf(stdout,"Removed places: %d\n",reducer.RemovedPlaces());
-                fprintf(stdout,"Applications of rule A: %d\n",reducer.RuleA());
-                fprintf(stdout,"Applications of rule B: %d\n",reducer.RuleB());
-                fprintf(stdout,"Applications of rule C: %d\n",reducer.RuleC());
-                fprintf(stdout,"Applications of rule D: %d\n\n",reducer.RuleD()); 
+                fprintf(stdout, "\nNet reduction is enabled.\n");
+                fprintf(stdout, "Removed transitions: %d\n", reducer.RemovedTransitions());
+                fprintf(stdout, "Removed places: %d\n", reducer.RemovedPlaces());
+                fprintf(stdout, "Applications of rule A: %d\n", reducer.RuleA());
+                fprintf(stdout, "Applications of rule B: %d\n", reducer.RuleB());
+                fprintf(stdout, "Applications of rule C: %d\n", reducer.RuleC());
+                fprintf(stdout, "Applications of rule D: %d\n\n", reducer.RuleD()); 
         }
 	//----------------------- Output Result -----------------------//
 
