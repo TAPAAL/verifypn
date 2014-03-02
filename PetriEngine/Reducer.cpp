@@ -128,13 +128,13 @@ void Reducer::ReducebyRuleA(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, M
                         _ruleA++;
                         // Remember that if the initial marking has tokens in pPre, we should fire t initially
                         if (m0[pPre]>0) {
-                                std::pair<int, int> element(t, m0[pPre]);
+                                std::pair<int, int> element(t, m0[pPre]); // first element is transition id, second how many times it should fire
                                 unfoldTransitionsInit->push_back(element);
                         } 
                         // Remember that after any transition putting to pPre, we should fire immediately after that also t
                         for (size_t _t=0; _t < net->numberOfTransitions(); _t++) {
                             if (net->outArc(_t,pPre)>0) {
-                                std::pair<int, int> element(t, net->outArc(_t,pPre));
+                                std::pair<int, int> element(t, net->outArc(_t,pPre)); // first element is transition id, second how many times it should fire
                                 unfoldTransitions[_t].push_back(element);
                             }
                         }    
@@ -194,7 +194,7 @@ void Reducer::ReducebyRuleB(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, M
                      continueReductions=true;
                      _ruleB++;
                      // Remember that after tPre we should always fire also tPost
-                     std::pair<int, int> element(tPost,1);
+                     std::pair<int, int> element(tPost,1); // first element is transition id, second how many times it should fire
                      unfoldTransitions[tPre].push_back(element);
                      // Remove place p
                      net->updateoutArc(tPre,p,0);
