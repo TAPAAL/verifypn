@@ -97,8 +97,9 @@ namespace PetriEngine{
 		}
 	}
 
-	void Reducer::ReducebyRuleA(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, bool& continueReductions) {
+	bool Reducer::ReducebyRuleA(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
 		// Rule A  - find transition t that has exactly one place in pre and post and remove one of the places   
+		bool continueReductions = false;
 		for (size_t t = 0; t < net->numberOfTransitions(); t++) {
 			if (transitionInInhib[t] > 0) {
 				continue;
@@ -170,10 +171,12 @@ namespace PetriEngine{
 				}
 			}
 		} // end of Rule A main for-loop
+		return continueReductions;
 	}
 
-	void Reducer::ReducebyRuleB(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, bool& continueReductions) {
+	bool Reducer::ReducebyRuleB(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
 		// Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
+		bool continueReductions = false;
 		for (size_t p = 0; p < net->numberOfPlaces(); p++) {
 			if (placeInInhib[p] > 0 || m0[p] > 0) {
 				continue;
@@ -234,10 +237,12 @@ namespace PetriEngine{
 				}
 			}
 		} // end of Rule B main for-loop
+		return continueReductions;
 	}
 
-	void Reducer::ReducebyRuleC(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, bool& continueReductions) {
+	bool Reducer::ReducebyRuleC(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
 		// Rule C - two transitions that put and take from the same places
+		bool continueReductions = false;
 		for (size_t t1 = 0; t1 < net->numberOfTransitions(); t1++) {
 			for (size_t t2 = 0; t2 < net->numberOfTransitions(); t2++) {
 				if (t1 != t2) {
@@ -283,11 +288,13 @@ namespace PetriEngine{
 					}
 				}
 			}
-		}
+		} // end of main for loop for rule C
+		return continueReductions;
 	}
 
-	void Reducer::ReducebyRuleD(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, bool& continueReductions) {
+	bool Reducer::ReducebyRuleD(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
 		// Rule D - two transitions with the same pre and post and same inhibitor arcs 
+		bool continueReductions = false;
 		for (size_t t1 = 0; t1 < net->numberOfTransitions(); t1++) {
 			for (size_t t2 = 0; t2 < net->numberOfTransitions(); t2++) {
 				if (t1 != t2 && transitionInInhib[t1] == 0 && transitionInInhib[t2] == 0) {
@@ -314,25 +321,41 @@ namespace PetriEngine{
 					}
 				}
 			}
-		}
+		} // end of main for loop for rule D
+		return continueReductions;
 	}
 
 	void Reducer::Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, int enablereduction) {
+		
+		if (enablereduction == 1) { // in the aggresive reduction all four rules are used as long as they remove something
+			while ( ReducebyRuleA(net, m0, placeInQuery, placeInInhib, transitionInInhib) ||
+					ReducebyRuleB(net, m0, placeInQuery, placeInInhib, transitionInInhib) || 
+					ReducebyRuleC(net, m0, placeInQuery, placeInInhib, transitionInInhib) ||
+					ReducebyRuleD(net, m0, placeInQuery, placeInInhib, transitionInInhib) ) { 
+			}
+		} else if (enablereduction ==2) { // for k-boundedness checking only rules A and D are applicable
+			while ( ReducebyRuleA(net, m0, placeInQuery, placeInInhib, transitionInInhib) ||
+					ReducebyRuleD(net, m0, placeInQuery, placeInInhib, transitionInInhib) ) { 
+			}
+		}
+		
+		/*
 		bool continueReductions = true;
 		while (continueReductions) {
 			continueReductions = false; // repeat all reductions rules as long as something was reduced
 
-			ReducebyRuleA(net, m0, placeInQuery, placeInInhib, transitionInInhib, continueReductions);
+			continueReductions = continueReductions || ReducebyRuleA(net, m0, placeInQuery, placeInInhib, transitionInInhib);
 
 			if (enablereduction == 1) { // only allowed in aggresive reductions (it changes k-boundedness)
 
-				ReducebyRuleB(net, m0, placeInQuery, placeInInhib, transitionInInhib, continueReductions);
+				continueReductions = continueReductions || ReducebyRuleB(net, m0, placeInQuery, placeInInhib, transitionInInhib);
 
-				ReducebyRuleC(net, m0, placeInQuery, placeInInhib, transitionInInhib, continueReductions);
+				continueReductions = continueReductions || ReducebyRuleC(net, m0, placeInQuery, placeInInhib, transitionInInhib);
 			}
 
-			ReducebyRuleD(net, m0, placeInQuery, placeInInhib, transitionInInhib, continueReductions);
+			continueReductions = continueReductions || ReducebyRuleD(net, m0, placeInQuery, placeInInhib, transitionInInhib);
 		}
+		*/
 	}
 
 	void Reducer::expandTrace(unsigned int t, std::vector<unsigned int>& trace) {
