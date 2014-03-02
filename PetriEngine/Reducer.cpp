@@ -125,62 +125,63 @@ namespace PetriEngine{
 					pPost = p;
 				}
 			}
-			if (ok && pPre >= 0 && pPost >= 0 && pPre != pPost && (m0[pPre] == 0 || m0[pPost] == 0)) {
-				// Check that pPre goes only to t and that there is no other transition than t that gives to pPost
-				for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
-					if (net->inArc(pPre, _t) > 0 && _t != t) {
-						ok = false;
-						break;
-					}
+			if (!ok || pPre < 0 || pPost < 0 || pPre == pPost || (m0[pPre] > 0 && m0[pPost] > 0)) {
+				continue; // continue if we didn't find unique pPre and pPost that are different and at least of them with empty initial marking 
+			}
+			// Check that pPre goes only to t and that there is no other transition than t that gives to pPost
+			for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
+				if (net->inArc(pPre, _t) > 0 && _t != t) {
+					ok = false;
+					break;
 				}
-				if (ok) {
-					continueReductions = true;
-					_ruleA++;
-					// Remember that if the initial marking has tokens in pPre, we should fire t initially
-					if (m0[pPre] > 0) {
-						std::pair<int, int> element(t, m0[pPre]); // first element is transition id, second how many times it should fire
-						unfoldTransitionsInit->push_back(element);
-					}
-					// Remember that after any transition putting to pPre, we should fire immediately after that also t
-					for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
-						if (net->outArc(_t, pPre) > 0) {
-							std::pair<int, int> element(t, net->outArc(_t, pPre)); // first element is transition id, second how many times it should fire
-							unfoldTransitions[_t].push_back(element);
-						}
-					}
-					// Remove transition t and the place that has no tokens in m0
-					net->updateinArc(pPre, t, 0);
-					net->updateoutArc(t, pPost, 0);
-					net->skipTransition(t);
-					_removedTransitions++;
-					if (m0[pPre] == 0) { // removing pPre
-						_removedPlaces++;
-						for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
-							net->updateoutArc(_t, pPost, net->outArc(_t, pPost) + net->outArc(_t, pPre));
-							net->updateoutArc(_t, pPre, 0);
-						}
-					} else if (m0[pPost] == 0) { // removing pPost
-						_removedPlaces++;
-						for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
-							net->updateinArc(pPre, _t, net->inArc(pPost, _t));
-							net->updateoutArc(_t, pPre, net->outArc(_t, pPre) + net->outArc(_t, pPost));
-							net->updateinArc(pPost, _t, 0);
-							net->updateoutArc(_t, pPost, 0);
-						}
-					}
+			}
+			if (!ok) {
+				continue;
+			}
+			continueReductions = true;
+			_ruleA++;
+			// Remember that if the initial marking has tokens in pPre, we should fire t initially
+			if (m0[pPre] > 0) {
+				std::pair<int, int> element(t, m0[pPre]); // first element is transition id, the second how many times it should fire
+				unfoldTransitionsInit->push_back(element);
+			}
+			// Remember that after any transition putting to pPre, we should fire immediately after that also t
+			for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
+				if (net->outArc(_t, pPre) > 0) {
+					std::pair<int, int> element(t, net->outArc(_t, pPre)); // first element is transition id, the second how many times it should fire
+					unfoldTransitions[_t].push_back(element);
+				}
+			}
+			// Remove transition t and the place that has no tokens in m0
+			net->updateinArc(pPre, t, 0);
+			net->updateoutArc(t, pPost, 0);
+			net->skipTransition(t);
+			_removedTransitions++;
+			if (m0[pPre] == 0) { // removing pPre
+				_removedPlaces++;
+				for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
+					net->updateoutArc(_t, pPost, net->outArc(_t, pPost) + net->outArc(_t, pPre));
+					net->updateoutArc(_t, pPre, 0);
+				}
+			} else if (m0[pPost] == 0) { // removing pPost
+				_removedPlaces++;
+				for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
+					net->updateinArc(pPre, _t, net->inArc(pPost, _t));
+					net->updateoutArc(_t, pPre, net->outArc(_t, pPre) + net->outArc(_t, pPost));
+					net->updateinArc(pPost, _t, 0);
+					net->updateoutArc(_t, pPost, 0);
 				}
 			}
 		} // end of Rule A main for-loop
 		return continueReductions;
 	}
-
-	bool Reducer::ReducebyRuleB(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
+bool Reducer::ReducebyRuleB(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
 		// Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
 		bool continueReductions = false;
 		for (size_t p = 0; p < net->numberOfPlaces(); p++) {
 			if (placeInInhib[p] > 0 || m0[p] > 0) {
-				continue;
-			} // if p has inhibitor arc or nonzero initial marking it cannot be removed
+				continue; // if p has inhibitor arc or nonzero initial marking it cannot be removed
+			}
 			int tPre = -1;
 			int tPost = -1;
 			bool ok = true;
@@ -202,40 +203,46 @@ namespace PetriEngine{
 					tPost = t;
 				}
 			}
-			if (ok && tPre >= 0 && tPost >= 0 && tPre != tPost && (net->outArc(tPre, p) == net->inArc(p, tPost)) &&
-					placeInQuery[p] == 0 && placeInInhib[p] == 0 && m0[p] == 0 && transitionInInhib[tPre] == 0 && transitionInInhib[tPost] == 0) {
-				// Check if the output places of tPost do not have any inhibitor arcs connected
-				for (size_t _p = 0; _p < net->numberOfPlaces(); _p++) {
-					if (net->outArc(tPost, _p) > 0 && placeInInhib[_p] > 0) {
-						ok = false;
-						break;
-					}
-				}
-				// Check that there is no other place than p that gives to tPost, tPre can give to other places
-				for (size_t _p = 0; _p < net->numberOfPlaces(); _p++) {
-					if (net->inArc(_p, tPost) > 0 && _p != p) {
-						ok = false;
-						break;
-					}
-				}
-				if (ok) {
-					continueReductions = true;
-					_ruleB++;
-					// Remember that after tPre we should always fire also tPost
-					std::pair<int, int> element(tPost, 1); // first element is transition id, second how many times it should fire
-					unfoldTransitions[tPre].push_back(element);
-					// Remove place p
-					net->updateoutArc(tPre, p, 0);
-					net->updateinArc(p, tPost, 0);
-					_removedPlaces++;
-					_removedTransitions++;
-					for (size_t _p = 0; _p < net->numberOfPlaces(); _p++) { // remove tPost
-						net->updateoutArc(tPre, _p, net->outArc(tPre, _p) + net->outArc(tPost, _p));
-						net->updateoutArc(tPost, _p, 0);
-					}
-					net->skipTransition(tPost);
+			if (!ok || tPre < 0 || tPost < 0 || tPre == tPost || // no unique and different tPre and tPost found
+					(net->outArc(tPre, p) != net->inArc(p, tPost)) || // incoming and outgoing arcs to p have different weight
+					placeInQuery[p] > 0 || placeInInhib[p] > 0 || // p is part of query or has inhibitor arcs connected
+					m0[p] > 0 || // p is marked in the initial marking
+					transitionInInhib[tPre] > 0 || transitionInInhib[tPost] > 0) // tPre or tPost have inhibitor arcs
+			{
+				continue;
+			}
+			// Check if the output places of tPost do not have any inhibitor arcs connected
+			for (size_t _p = 0; _p < net->numberOfPlaces(); _p++) {
+				if (net->outArc(tPost, _p) > 0 && placeInInhib[_p] > 0) {
+					ok = false;
+					break;
 				}
 			}
+			// Check that there is no other place than p that gives to tPost, tPre can give to other places
+			for (size_t _p = 0; _p < net->numberOfPlaces(); _p++) {
+				if (net->inArc(_p, tPost) > 0 && _p != p) {
+					ok = false;
+					break;
+				}
+			}
+			if (!ok) {
+				continue;
+			}
+			continueReductions = true;
+			_ruleB++;
+			// Remember that after tPre we should always fire also tPost
+			std::pair<int, int> element(tPost, 1); // first element is transition id, second how many times it should fire
+			unfoldTransitions[tPre].push_back(element);
+			// Remove place p
+			net->updateoutArc(tPre, p, 0);
+			net->updateinArc(p, tPost, 0);
+			_removedPlaces++;
+			_removedTransitions++;
+			for (size_t _p = 0; _p < net->numberOfPlaces(); _p++) { // remove tPost
+				net->updateoutArc(tPre, _p, net->outArc(tPre, _p) + net->outArc(tPost, _p));
+				net->updateoutArc(tPost, _p, 0);
+			}
+			net->skipTransition(tPost);
 		} // end of Rule B main for-loop
 		return continueReductions;
 	}
@@ -276,7 +283,9 @@ namespace PetriEngine{
 					if (noOfPlaces >= 2) {
 						// Remove places that are in post of t1, are not in queries, are not inhibitor places and have empty initial marking, one place must be left
 						for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-							if (removePlace[p] && noOfPlaces >= 2 && placeInQuery[p] == 0 && placeInInhib[p] == 0 && m0[p] == 0) {
+							if (removePlace[p] && noOfPlaces >= 2 && 
+								placeInQuery[p] == 0 && placeInInhib[p] == 0 && 
+								m0[p] == 0) {
 								continueReductions = true;
 								_ruleC++;
 								net->updateoutArc(t1, p, 0);
