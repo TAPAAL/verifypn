@@ -2,6 +2,7 @@
  * Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
+ *					   Jiri Srba <srba.jiri@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -300,27 +301,27 @@ int main(int argc, char* argv[]){
 
         //--------------------- Apply Net Reduction ---------------//
         
-        Reducer reducer=Reducer(net); // reduced is needed also in trace generation (hence the extended scope)
-        if (enablereduction==1 or enablereduction==2) {
-                // Compute how many times each place appears in the query
-                MarkVal* placeInQuery = new MarkVal[net->numberOfPlaces()];
-                         for(size_t i = 0; i < net->numberOfPlaces(); i++) {
-                                placeInQuery[i] = 0;
-                         }
-                QueryPlaceAnalysisContext placecontext(*net, placeInQuery);
-                query->analyze(placecontext);
-            
-                // Compute the places and transitions that connect to inhibitor arcs
-                MarkVal* placeInInhib = new MarkVal[net->numberOfPlaces()];
-                MarkVal* transitionInInhib = new MarkVal[net->numberOfTransitions()];
-                  
-                // CreateInhibitorPlacesAndTransitions translates inhibitor place/transitions names to indexes
-                reducer.CreateInhibitorPlacesAndTransitions(net, inhibarcs, placeInInhib, transitionInInhib); 
+    Reducer reducer = Reducer(net); // reduced is needed also in trace generation (hence the extended scope)
+	if (enablereduction == 1 or enablereduction == 2) {
+		// Compute how many times each place appears in the query
+		MarkVal* placeInQuery = new MarkVal[net->numberOfPlaces()];
+		for (size_t i = 0; i < net->numberOfPlaces(); i++) {
+			placeInQuery[i] = 0;
+		}
+		QueryPlaceAnalysisContext placecontext(*net, placeInQuery);
+		query->analyze(placecontext);
 
-                //reducer.Print(net, m0, placeInQuery, placeInInhib, transitionInInhib); 
-                reducer.Reduce(net,m0,placeInQuery, placeInInhib, transitionInInhib, enablereduction); // reduce the net
-                //reducer.Print(net, m0, placeInQuery, placeInInhib, transitionInInhib);
-        }
+		// Compute the places and transitions that connect to inhibitor arcs
+		MarkVal* placeInInhib = new MarkVal[net->numberOfPlaces()];
+		MarkVal* transitionInInhib = new MarkVal[net->numberOfTransitions()];
+
+		// CreateInhibitorPlacesAndTransitions translates inhibitor place/transitions names to indexes
+		reducer.CreateInhibitorPlacesAndTransitions(net, inhibarcs, placeInInhib, transitionInInhib);
+
+		//reducer.Print(net, m0, placeInQuery, placeInInhib, transitionInInhib); 
+		reducer.Reduce(net, m0, placeInQuery, placeInInhib, transitionInInhib, enablereduction); // reduce the net
+		//reducer.Print(net, m0, placeInQuery, placeInInhib, transitionInInhib);
+	}
         
 	//----------------------- Reachability -----------------------//
 
