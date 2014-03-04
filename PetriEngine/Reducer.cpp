@@ -248,60 +248,76 @@ namespace PetriEngine{
 		} // end of Rule B main for-loop
 		return continueReductions;
 	}
-
-	bool Reducer::ReducebyRuleC(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
+bool Reducer::ReducebyRuleC(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
 		// Rule C - two transitions that put and take from the same places
 		bool continueReductions = false;
-		for (size_t t1 = 0; t1 < net->numberOfTransitions(); t1++) {
-			for (size_t t2 = 0; t2 < net->numberOfTransitions(); t2++) {
-				if (t1 == t2) {
-					continue;
-				}
-				// check what places have as pre t1 and as post t2
-				int noOfPlaces = 0; // how many such places we have
-				bool removePlace[net->numberOfPlaces()]; // remember what places can be removed
-				for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-					removePlace[p] = false;
-				}
-
-				for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-					if (net->outArc(t1, p) == net->inArc(p, t2) && net->outArc(t1, p) > 0) {
-						// check that the places in between are not connected to any other transitions                                
-						bool ok = true;
-						for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
-							if (net->outArc(_t, p) > 0 && _t != t1) {
-								ok = false;
-								break;
-							}
-							if (net->inArc(p, _t) > 0 && _t != t2) {
-								ok = false;
-								break;
-							}
-						}
-						if (ok) {
-							removePlace[p] = true;
-							noOfPlaces++;
-						}
+		bool removePlace[net->numberOfPlaces()]; // remember what places can be removed (one input and one output arc only with same weight)
+		for (size_t p = 0; p < net->numberOfPlaces(); p++) {
+			removePlace[p] = false;
+			int inDegree = -1; // weight of transition giving to p (should be exactly one)
+			int outDegree = -1; // weight of transition taking out of p (should be exactly one and equal to inDegree)
+			bool ok = true;
+			for (size_t t = 0; t < net->numberOfTransitions(); t++) {
+				if (net->outArc(t, p) > 0) {
+					if (inDegree >= 0) {
+						ok = false;
+						break;
 					}
+					inDegree = net->outArc(t, p);
 				}
-				if (noOfPlaces >= 2) {
-					// Remove places that are in post of t1, are not in queries, are not inhibitor places and 
-					// have empty initial marking, one place must be left
-					for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-						if (removePlace[p] && noOfPlaces >= 2 &&
-								placeInQuery[p] == 0 && placeInInhib[p] == 0 &&
-								m0[p] == 0) {
-							continueReductions = true;
-							_ruleC++;
-							net->updateoutArc(t1, p, 0);
-							net->updateinArc(p, t2, 0);
-							_removedPlaces++;
-							noOfPlaces--;
-						}
+				if (net->inArc(p, t) > 0) {
+					if (outDegree >= 0) {
+						ok = false;
+						break;
 					}
+					outDegree = net->inArc(p, t);
 				}
 			}
-		} // end of main for loop for rule C
+			if (ok && inDegree == outDegree && inDegree > 0) {
+				removePlace[p] = true; // place p can be considered for removing
+			}
+		}
+		// remove place p1 if possible
+		for (size_t p1 = 0; p1 < net->numberOfPlaces(); p1++) {
+			for (size_t p2 = 0; p2 < net->numberOfPlaces(); p2++) {
+				if (!removePlace[p1] || !removePlace[p2] || p1 == p2 ||
+						placeInQuery[p1] > 0 || placeInInhib[p1] > 0 || m0[p1] > 0) {
+					continue; // place p1 cannot be removed
+				}
+				bool ok = true;
+				int t1 = -1;
+				int t2 = -1;
+				for (size_t t = 0; t < net->numberOfTransitions(); t++) {
+					if (net->outArc(t, p1) > 0 || net->outArc(t, p2) > 0) {
+						if (net->outArc(t, p1) != net->outArc(t, p2) || (t1 >= 0 && t1 != t)) {
+							ok = false;
+							break;
+						} else {
+							t1 = t;
+						}
+					}
+					if (net->inArc(p1, t) > 0 || net->inArc(p2, t) > 0) {
+						if (net->inArc(p1, t) != net->inArc(p2, t) || (t2 >= 0 && t2 != t)) {
+							ok = false;
+							break;
+						} else {
+							t2 = t;
+						}
+					}
+				}
+				if (!ok || t1 == t2) {
+					continue;
+				}
+				assert(t1 != -1 && t2 != -1);
+				// remove place p1
+				continueReductions = true;
+				_ruleC++;
+				net->updateoutArc(t1, p1, 0);
+				net->updateinArc(p1, t2, 0);
+				removePlace[p1] = false;
+				_removedPlaces++;
+			}
+		}
 		return continueReductions;
 	}
 
@@ -309,9 +325,9 @@ namespace PetriEngine{
 		// Rule D - two transitions with the same pre and post and same inhibitor arcs 
 		bool continueReductions = false;
 		for (size_t t1 = 0; t1 < net->numberOfTransitions(); t1++) {
-			for (size_t t2 = 0; t2 < net->numberOfTransitions(); t2++) {
-				if (t1 == t2 || transitionInInhib[t1] > 0 || transitionInInhib[t2] > 0) {
-					continue; // no reduction can take place if transitions are the same or connected to inhibitor arcs
+			for (size_t t2 = 0; t2 < t1; t2++) {
+				if (transitionInInhib[t1] > 0 || transitionInInhib[t2] > 0) {
+					continue; // no reduction can take place if transitions connected to inhibitor arcs
 				}
 				bool ok = false;
 				for (size_t p = 0; p < net->numberOfPlaces(); p++) {
@@ -333,7 +349,6 @@ namespace PetriEngine{
 				for (size_t p = 0; p < net->numberOfPlaces(); p++) {
 					net->updateoutArc(t2, p, 0);
 					net->updateinArc(p, t2, 0);
-
 				}
 				net->skipTransition(t2);
 			}
