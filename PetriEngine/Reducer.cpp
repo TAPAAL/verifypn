@@ -248,7 +248,8 @@ namespace PetriEngine{
 		} // end of Rule B main for-loop
 		return continueReductions;
 	}
-bool Reducer::ReducebyRuleC(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
+
+	bool Reducer::ReducebyRuleC(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
 		// Rule C - two transitions that put and take from the same places
 		bool continueReductions = false;
 		bool removePlace[net->numberOfPlaces()]; // remember what places can be removed (one input and one output arc only with same weight)
