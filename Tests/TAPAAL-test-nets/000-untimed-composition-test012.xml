@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-place initialMarking="0" invariant="&lt;= 0" name="sharedPlace"/>
+<shared-transition name="sharedTransition"/>
+<net active="true" id="TAPN1" type="P/T net">
+<place id="Goal1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Goal1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="150.0"/>
+<place id="P1" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="165.0"/>
+<place id="P2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="45.0"/>
+<place id="Goal2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Goal2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="405.0" positionY="330.0"/>
+<place id="sharedPlace" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="sharedPlace" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="630.0" positionY="30.0"/>
+<transition angle="0" id="sharedTransition" infiniteServer="false" name="sharedTransition" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="165.0" priority="1" timed="true"/>
+<transition angle="0" id="T1" infiniteServer="false" name="T1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="270.0" priority="1" timed="true"/>
+<transition angle="0" id="T2" infiniteServer="false" name="T2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="45.0" priority="1" timed="true"/>
+<arc id="P1 to sharedTransition" inscription="[0,inf)" source="P1" target="sharedTransition" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="131" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="336" yCoord="177"/>
+</arc>
+<arc id="sharedTransition to Goal1" inscription="1" source="sharedTransition" target="Goal1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="346" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="522" yCoord="163"/>
+</arc>
+<arc id="P2 to sharedTransition" inscription="[0,inf)" source="P2" target="sharedTransition" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="342" yCoord="71"/>
+<arcpath arcPointType="false" id="1" xCoord="342" yCoord="162"/>
+</arc>
+<arc id="Goal1 to T1" inscription="[0,inf)" source="Goal1" target="T1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="534" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="522" yCoord="267"/>
+</arc>
+<arc id="T1 to Goal2" inscription="1" source="T1" target="Goal2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="516" yCoord="287"/>
+<arcpath arcPointType="false" id="1" xCoord="430" yCoord="334"/>
+</arc>
+<arc id="P2 to T1" inscription="[0,inf)" source="P2" target="T1" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="351" yCoord="68"/>
+<arcpath arcPointType="false" id="1" xCoord="517" yCoord="277"/>
+</arc>
+<arc id="sharedPlace to T2" inscription="[0,inf)" source="sharedPlace" target="T2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="627" yCoord="43"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="57"/>
+</arc>
+<arc id="T2 to P2" inscription="1" source="T2" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="486" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="356" yCoord="57"/>
+</arc>
+</net>
+<net active="true" id="TAPN2" type="P/T net">
+<place id="sharedPlace" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="sharedPlace" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="630.0" positionY="120.0"/>
+<place id="P1" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="405.0" positionY="225.0"/>
+<transition angle="0" id="sharedTransition" infiniteServer="false" name="sharedTransition" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="210.0" positionY="210.0" priority="1" timed="true"/>
+<transition angle="0" id="T1" infiniteServer="false" name="T1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="180.0" priority="1" timed="true"/>
+<arc id="sharedTransition to P1" inscription="1" source="sharedTransition" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="226" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="235"/>
+</arc>
+<arc id="P1 to T1" inscription="[0,inf)" source="P1" target="T1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="430" yCoord="231"/>
+<arcpath arcPointType="false" id="1" xCoord="531" yCoord="192"/>
+</arc>
+<arc id="T1 to sharedPlace" inscription="1" source="T1" target="sharedPlace" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="541" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="629" yCoord="139"/>
+</arc>
+</net>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="EF TAPN1.Goal1&gt;=1" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="AG TAPN1.Goal2&lt;=0" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF TAPN1.Goal2&gt;=1" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

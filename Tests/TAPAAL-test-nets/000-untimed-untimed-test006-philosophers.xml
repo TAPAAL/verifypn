@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="philo" type="P/T net">
+<place id="FORK_1" initialMarking="1" invariant="&lt; inf" markingOffsetX="22.0" markingOffsetY="20.0" name="FORK_1" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="560.0" positionY="722.0"/>
+<place id="WAIT_RIGHT_FORK_2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WAIT_RIGHT_FORK_2" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="368.0" positionY="892.0"/>
+<place id="FORK_3" initialMarking="1" invariant="&lt; inf" markingOffsetX="22.0" markingOffsetY="20.0" name="FORK_3" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="394.0" positionY="434.0"/>
+<place id="WAIT_RIGHT_FORK_5" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WAIT_RIGHT_FORK_5" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="752.0" positionY="168.0"/>
+<place id="EAT_5" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="EAT_5" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="725.0" positionY="244.0"/>
+<place id="THINK_4" initialMarking="1" invariant="&lt; inf" markingOffsetX="22.0" markingOffsetY="20.0" name="THINK_4" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="315.0" positionY="106.0"/>
+<place id="EAT_4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="EAT_4" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="395.0" positionY="244.0"/>
+<place id="WAIT_LEFT_FORK_3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WAIT_LEFT_FORK_3" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="150.0" positionY="516.0"/>
+<place id="WAIT_RIGHT_FORK_6" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WAIT_RIGHT_FORK_6" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="970.0" positionY="516.0"/>
+<place id="EAT_2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="EAT_2" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="395.0" positionY="816.0"/>
+<place id="THINK_6" initialMarking="1" invariant="&lt; inf" markingOffsetX="22.0" markingOffsetY="20.0" name="THINK_6" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="1050.0" positionY="530.0"/>
+<place id="WAIT_RIGHT_FORK_1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WAIT_RIGHT_FORK_1" nameOffsetX="30.0" nameOffsetY="-6.0" positionX="777.0" positionY="878.0"/>
+<place id="FORK_6" initialMarking="1" invariant="&lt; inf" markingOffsetX="22.0" markingOffsetY="20.0" name="FORK_6" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="726.0" positionY="626.0"/>
+<place id="WAIT_LEFT_FORK_4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WAIT_LEFT_FORK_4" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="368.0" positionY="168.0"/>
+<place id="EAT_3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="EAT_3" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="230.0" positionY="530.0"/>
+<place id="EAT_1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="EAT_1" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="725.0" positionY="816.0"/>
+<place id="WAIT_RIGHT_FORK_3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WAIT_RIGHT_FORK_3" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="150.0" positionY="544.0"/>
+<place id="THINK_2" initialMarking="1" invariant="&lt; inf" markingOffsetX="22.0" markingOffsetY="20.0" name="THINK_2" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="315.0" positionY="954.0"/>
+<place id="FORK_4" initialMarking="1" invariant="&lt; inf" markingOffsetX="22.0" markingOffsetY="20.0" name="FORK_4" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="560.0" positionY="338.0"/>
+<place id="WAIT_LEFT_FORK_5" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WAIT_LEFT_FORK_5" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="777.0" positionY="182.0"/>
+<place id="FORK_2" initialMarking="1" invariant="&lt; inf" markingOffsetX="22.0" markingOffsetY="20.0" name="FORK_2" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="394.0" positionY="626.0"/>
+<place id="THINK_3" initialMarking="1" invariant="&lt; inf" markingOffsetX="22.0" markingOffsetY="20.0" name="THINK_3" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="70.0" positionY="530.0"/>
+<place id="WAIT_LEFT_FORK_6" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WAIT_LEFT_FORK_6" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="970.0" positionY="544.0"/>
+<place id="WAIT_RIGHT_FORK_4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WAIT_RIGHT_FORK_4" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="343.0" positionY="182.0"/>
+<place id="WAIT_LEFT_FORK_2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WAIT_LEFT_FORK_2" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="343.0" positionY="878.0"/>
+<place id="FORK_5" initialMarking="1" invariant="&lt; inf" markingOffsetX="22.0" markingOffsetY="20.0" name="FORK_5" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="726.0" positionY="434.0"/>
+<place id="EAT_6" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="EAT_6" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="890.0" positionY="530.0"/>
+<place id="THINK_5" initialMarking="1" invariant="&lt; inf" markingOffsetX="22.0" markingOffsetY="20.0" name="THINK_5" nameOffsetX="22.0" nameOffsetY="-10.0" positionX="805.0" positionY="106.0"/>
+<place id="WAIT_LEFT_FORK_1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="WAIT_LEFT_FORK_1" nameOffsetX="-127.0" nameOffsetY="10.0" positionX="752.0" positionY="892.0"/>
+<place id="THINK_1" initialMarking="1" invariant="&lt; inf" markingOffsetX="22.0" markingOffsetY="20.0" name="THINK_1" nameOffsetX="63.0" nameOffsetY="-6.0" positionX="805.0" positionY="954.0"/>
+<transition angle="0" id="TAKE_LEFT_1_FORK_6" infiniteServer="false" name="TAKE_LEFT_1_FORK_6" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="1010.0" positionY="514.0" priority="0" urgent="false"/>
+<transition angle="0" id="RELEASE_FORK_2" infiniteServer="false" name="RELEASE_FORK_2" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="415.0" positionY="781.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_LEFT_1_FORK_4" infiniteServer="false" name="TAKE_LEFT_1_FORK_4" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="322.0" positionY="148.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_RIGHT_2_FORK_2" infiniteServer="false" name="TAKE_RIGHT_2_FORK_2" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="392.0" positionY="860.0" priority="0" urgent="false"/>
+<transition angle="0" id="RELEASE_FORK_3" infiniteServer="false" name="RELEASE_FORK_3" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="270.0" positionY="530.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_LEFT_1_FORK_5" infiniteServer="false" name="TAKE_LEFT_1_FORK_5" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="771.0" positionY="133.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_LEFT_1_FORK_2" infiniteServer="false" name="TAKE_LEFT_1_FORK_2" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="349.0" positionY="927.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_LEFT_1_FORK_3" infiniteServer="false" name="TAKE_LEFT_1_FORK_3" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="110.0" positionY="546.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_RIGHT_1_FORK_2" infiniteServer="false" name="TAKE_RIGHT_1_FORK_2" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="322.0" positionY="912.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_LEFT_2_FORK_4" infiniteServer="false" name="TAKE_LEFT_2_FORK_4" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="392.0" positionY="200.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_LEFT_2_FORK_3" infiniteServer="false" name="TAKE_LEFT_2_FORK_3" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="191.0" positionY="511.0" priority="0" urgent="false"/>
+<transition angle="0" id="RELEASE_FORK_4" infiniteServer="false" name="RELEASE_FORK_4" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="415.0" positionY="279.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_LEFT_1_FORK_1" infiniteServer="false" name="TAKE_LEFT_1_FORK_1" nameOffsetX="120.0" nameOffsetY="-14.0" positionX="798.0" positionY="912.0" priority="0" urgent="false"/>
+<transition angle="0" id="RELEASE_FORK_6" infiniteServer="false" name="RELEASE_FORK_6" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="850.0" positionY="530.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_LEFT_2_FORK_1" infiniteServer="false" name="TAKE_LEFT_2_FORK_1" nameOffsetX="-145.0" nameOffsetY="1.0" positionX="728.0" positionY="860.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_RIGHT_2_FORK_6" infiniteServer="false" name="TAKE_RIGHT_2_FORK_6" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="929.0" positionY="511.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_LEFT_2_FORK_6" infiniteServer="false" name="TAKE_LEFT_2_FORK_6" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="929.0" positionY="549.0" priority="0" urgent="false"/>
+<transition angle="0" id="RELEASE_FORK_5" infiniteServer="false" name="RELEASE_FORK_5" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="705.0" positionY="279.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_RIGHT_2_FORK_5" infiniteServer="false" name="TAKE_RIGHT_2_FORK_5" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="728.0" positionY="200.0" priority="0" urgent="false"/>
+<transition angle="0" id="RELEASE_FORK_1" infiniteServer="false" name="RELEASE_FORK_1" nameOffsetX="32.0" nameOffsetY="-14.0" positionX="705.0" positionY="781.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_RIGHT_1_FORK_6" infiniteServer="false" name="TAKE_RIGHT_1_FORK_6" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="1010.0" positionY="546.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_RIGHT_2_FORK_3" infiniteServer="false" name="TAKE_RIGHT_2_FORK_3" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="191.0" positionY="549.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_LEFT_2_FORK_5" infiniteServer="false" name="TAKE_LEFT_2_FORK_5" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="762.0" positionY="220.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_LEFT_2_FORK_2" infiniteServer="false" name="TAKE_LEFT_2_FORK_2" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="358.0" positionY="840.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_RIGHT_1_FORK_1" infiniteServer="false" name="TAKE_RIGHT_1_FORK_1" nameOffsetX="96.0" nameOffsetY="-4.0" positionX="771.0" positionY="927.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_RIGHT_1_FORK_4" infiniteServer="false" name="TAKE_RIGHT_1_FORK_4" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="349.0" positionY="133.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_RIGHT_1_FORK_5" infiniteServer="false" name="TAKE_RIGHT_1_FORK_5" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="798.0" positionY="148.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_RIGHT_2_FORK_1" infiniteServer="false" name="TAKE_RIGHT_2_FORK_1" nameOffsetX="26.0" nameOffsetY="-10.0" positionX="762.0" positionY="840.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_RIGHT_1_FORK_3" infiniteServer="false" name="TAKE_RIGHT_1_FORK_3" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="110.0" positionY="514.0" priority="0" urgent="false"/>
+<transition angle="0" id="TAKE_RIGHT_2_FORK_4" infiniteServer="false" name="TAKE_RIGHT_2_FORK_4" nameOffsetX="22.0" nameOffsetY="-14.0" positionX="358.0" positionY="220.0" priority="0" urgent="false"/>
+<arc id="cId260-i943123747" inscription="[0,inf)" source="WAIT_RIGHT_FORK_5" target="TAKE_RIGHT_2_FORK_5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="756" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="744" yCoord="212"/>
+</arc>
+<arc id="cId296-i943123747" inscription="[0,inf)" source="FORK_1" target="TAKE_LEFT_1_FORK_1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="583" yCoord="743"/>
+<arcpath arcPointType="false" id="1" xCoord="804" yCoord="924"/>
+</arc>
+<arc id="cId247-i943123747" inscription="1" source="TAKE_LEFT_1_FORK_1" target="WAIT_RIGHT_FORK_1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="810" yCoord="909"/>
+<arcpath arcPointType="false" id="1" xCoord="800" yCoord="899"/>
+</arc>
+<arc id="cId212-i943123747" inscription="[0,inf)" source="WAIT_LEFT_FORK_1" target="TAKE_LEFT_2_FORK_1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="756" yCoord="891"/>
+<arcpath arcPointType="false" id="1" xCoord="744" yCoord="872"/>
+</arc>
+<arc id="cId243-i943123747" inscription="1" source="TAKE_LEFT_1_FORK_6" target="WAIT_RIGHT_FORK_6" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="1017" yCoord="521"/>
+<arcpath arcPointType="false" id="1" xCoord="996" yCoord="525"/>
+</arc>
+<arc id="cId269-i943123747" inscription="1" source="TAKE_LEFT_2_FORK_5" target="EAT_5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="768" yCoord="232"/>
+<arcpath arcPointType="false" id="1" xCoord="749" yCoord="247"/>
+</arc>
+<arc id="cId240-i943123747" inscription="[0,inf)" source="FORK_6" target="TAKE_RIGHT_2_FORK_1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="740" yCoord="652"/>
+<arcpath arcPointType="false" id="1" xCoord="774" yCoord="837"/>
+</arc>
+<arc id="cId237-i943123747" inscription="1" source="TAKE_LEFT_2_FORK_6" target="EAT_6" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="936" yCoord="556"/>
+<arcpath arcPointType="false" id="1" xCoord="915" yCoord="547"/>
+</arc>
+<arc id="cId274-i943123747" inscription="[0,inf)" source="FORK_2" target="TAKE_LEFT_2_FORK_2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="403" yCoord="652"/>
+<arcpath arcPointType="false" id="1" xCoord="370" yCoord="837"/>
+</arc>
+<arc id="cId235-i943123747" inscription="[0,inf)" source="THINK_5" target="TAKE_LEFT_1_FORK_5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="806" yCoord="128"/>
+<arcpath arcPointType="false" id="1" xCoord="787" yCoord="145"/>
+</arc>
+<arc id="cId224-i943123747" inscription="1" source="RELEASE_FORK_4" target="THINK_4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="427" yCoord="276"/>
+<arcpath arcPointType="false" id="1" xCoord="335" yCoord="130"/>
+</arc>
+<arc id="cId251-i943123747" inscription="[0,inf)" source="THINK_3" target="TAKE_LEFT_1_FORK_3" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="95" yCoord="548"/>
+<arcpath arcPointType="false" id="1" xCoord="116" yCoord="558"/>
+</arc>
+<arc id="cId228-i943123747" inscription="[0,inf)" source="WAIT_LEFT_FORK_2" target="TAKE_LEFT_2_FORK_2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="363" yCoord="877"/>
+<arcpath arcPointType="false" id="1" xCoord="370" yCoord="867"/>
+</arc>
+<arc id="cId276-i943123747" inscription="1" source="TAKE_RIGHT_2_FORK_4" target="EAT_4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="374" yCoord="232"/>
+<arcpath arcPointType="false" id="1" xCoord="394" yCoord="247"/>
+</arc>
+<arc id="cId271-i943123747" inscription="[0,inf)" source="EAT_1" target="RELEASE_FORK_1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="731" yCoord="813"/>
+<arcpath arcPointType="false" id="1" xCoord="722" yCoord="788"/>
+</arc>
+<arc id="cId239-i943123747" inscription="1" source="TAKE_LEFT_2_FORK_3" target="EAT_3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="207" yCoord="528"/>
+<arcpath arcPointType="false" id="1" xCoord="228" yCoord="536"/>
+</arc>
+<arc id="cId252-i943123747" inscription="1" source="TAKE_RIGHT_2_FORK_1" target="EAT_1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="768" yCoord="852"/>
+<arcpath arcPointType="false" id="1" xCoord="748" yCoord="837"/>
+</arc>
+<arc id="cId225-i943123747" inscription="1" source="RELEASE_FORK_1" target="FORK_6" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="717" yCoord="778"/>
+<arcpath arcPointType="false" id="1" xCoord="735" yCoord="652"/>
+</arc>
+<arc id="cId280-i943123747" inscription="1" source="TAKE_LEFT_1_FORK_5" target="WAIT_RIGHT_FORK_5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="783" yCoord="160"/>
+<arcpath arcPointType="false" id="1" xCoord="774" yCoord="169"/>
+</arc>
+<arc id="cId245-i943123747" inscription="[0,inf)" source="FORK_5" target="TAKE_LEFT_1_FORK_5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="740" yCoord="431"/>
+<arcpath arcPointType="false" id="1" xCoord="783" yCoord="160"/>
+</arc>
+<arc id="cId241-i943123747" inscription="1" source="RELEASE_FORK_5" target="FORK_5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="717" yCoord="306"/>
+<arcpath arcPointType="false" id="1" xCoord="735" yCoord="431"/>
+</arc>
+<arc id="cId222-i943123747" inscription="1" source="RELEASE_FORK_6" target="THINK_6" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="867" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="1047" yCoord="541"/>
+</arc>
+<arc id="cId275-i943123747" inscription="[0,inf)" source="FORK_4" target="TAKE_RIGHT_1_FORK_5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="583" yCoord="340"/>
+<arcpath arcPointType="false" id="1" xCoord="804" yCoord="160"/>
+</arc>
+<arc id="cId266-i943123747" inscription="[0,inf)" source="FORK_5" target="TAKE_RIGHT_1_FORK_6" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="751" yCoord="451"/>
+<arcpath arcPointType="false" id="1" xCoord="1017" yCoord="553"/>
+</arc>
+<arc id="cId215-i943123747" inscription="1" source="RELEASE_FORK_2" target="THINK_2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="427" yCoord="808"/>
+<arcpath arcPointType="false" id="1" xCoord="335" yCoord="953"/>
+</arc>
+<arc id="cId258-i943123747" inscription="1" source="TAKE_RIGHT_1_FORK_1" target="WAIT_LEFT_FORK_1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="783" yCoord="924"/>
+<arcpath arcPointType="false" id="1" xCoord="774" yCoord="914"/>
+</arc>
+<arc id="cId292-i943123747" inscription="1" source="TAKE_LEFT_2_FORK_1" target="EAT_1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="740" yCoord="857"/>
+<arcpath arcPointType="false" id="1" xCoord="738" yCoord="842"/>
+</arc>
+<arc id="cId302-i943123747" inscription="[0,inf)" source="WAIT_LEFT_FORK_6" target="TAKE_LEFT_2_FORK_6" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="967" yCoord="558"/>
+<arcpath arcPointType="false" id="1" xCoord="945" yCoord="561"/>
+</arc>
+<arc id="cId267-i943123747" inscription="[0,inf)" source="EAT_2" target="RELEASE_FORK_2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="417" yCoord="817"/>
+<arcpath arcPointType="false" id="1" xCoord="427" yCoord="808"/>
+</arc>
+<arc id="cId234-i943123747" inscription="[0,inf)" source="WAIT_LEFT_FORK_3" target="TAKE_LEFT_2_FORK_3" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="176" yCoord="526"/>
+<arcpath arcPointType="false" id="1" xCoord="197" yCoord="523"/>
+</arc>
+<arc id="cId213-i943123747" inscription="1" source="TAKE_RIGHT_1_FORK_2" target="WAIT_LEFT_FORK_2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="339" yCoord="919"/>
+<arcpath arcPointType="false" id="1" xCoord="347" yCoord="903"/>
+</arc>
+<arc id="cId263-i943123747" inscription="[0,inf)" source="FORK_6" target="TAKE_LEFT_2_FORK_6" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="752" yCoord="632"/>
+<arcpath arcPointType="false" id="1" xCoord="935" yCoord="566"/>
+</arc>
+<arc id="cId250-i943123747" inscription="[0,inf)" source="FORK_4" target="TAKE_LEFT_2_FORK_4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="560" yCoord="340"/>
+<arcpath arcPointType="false" id="1" xCoord="408" yCoord="212"/>
+</arc>
+<arc id="cId254-i943123747" inscription="1" source="RELEASE_FORK_6" target="FORK_6" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="856" yCoord="547"/>
+<arcpath arcPointType="false" id="1" xCoord="749" yCoord="628"/>
+</arc>
+<arc id="cId270-i943123747" inscription="[0,inf)" source="WAIT_RIGHT_FORK_4" target="TAKE_RIGHT_2_FORK_4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="363" yCoord="206"/>
+<arcpath arcPointType="false" id="1" xCoord="370" yCoord="217"/>
+</arc>
+<arc id="cId253-i943123747" inscription="1" source="RELEASE_FORK_3" target="FORK_3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="287" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="394" yCoord="455"/>
+</arc>
+<arc id="cId295-i943123747" inscription="[0,inf)" source="FORK_3" target="TAKE_LEFT_2_FORK_3" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="391" yCoord="451"/>
+<arcpath arcPointType="false" id="1" xCoord="208" yCoord="518"/>
+</arc>
+<arc id="cId298-i943123747" inscription="[0,inf)" source="WAIT_RIGHT_FORK_3" target="TAKE_RIGHT_2_FORK_3" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="176" yCoord="558"/>
+<arcpath arcPointType="false" id="1" xCoord="197" yCoord="561"/>
+</arc>
+<arc id="cId287-i943123747" inscription="[0,inf)" source="FORK_2" target="TAKE_RIGHT_1_FORK_3" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="391" yCoord="632"/>
+<arcpath arcPointType="false" id="1" xCoord="126" yCoord="531"/>
+</arc>
+<arc id="cId297-i943123747" inscription="[0,inf)" source="EAT_5" target="RELEASE_FORK_5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="731" yCoord="270"/>
+<arcpath arcPointType="false" id="1" xCoord="721" yCoord="296"/>
+</arc>
+<arc id="cId289-i943123747" inscription="1" source="TAKE_RIGHT_2_FORK_6" target="EAT_6" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="935" yCoord="528"/>
+<arcpath arcPointType="false" id="1" xCoord="915" yCoord="536"/>
+</arc>
+<arc id="cId300-i943123747" inscription="[0,inf)" source="FORK_5" target="TAKE_LEFT_2_FORK_5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="740" yCoord="431"/>
+<arcpath arcPointType="false" id="1" xCoord="774" yCoord="247"/>
+</arc>
+<arc id="cId248-i943123747" inscription="[0,inf)" source="FORK_3" target="TAKE_LEFT_1_FORK_3" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="392" yCoord="451"/>
+<arcpath arcPointType="false" id="1" xCoord="127" yCoord="553"/>
+</arc>
+<arc id="cId233-i943123747" inscription="[0,inf)" source="FORK_1" target="TAKE_RIGHT_1_FORK_2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="560" yCoord="743"/>
+<arcpath arcPointType="false" id="1" xCoord="338" yCoord="929"/>
+</arc>
+<arc id="cId299-i943123747" inscription="[0,inf)" source="THINK_2" target="TAKE_RIGHT_1_FORK_2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="330" yCoord="951"/>
+<arcpath arcPointType="false" id="1" xCoord="334" yCoord="939"/>
+</arc>
+<arc id="cId278-i943123747" inscription="[0,inf)" source="EAT_6" target="RELEASE_FORK_6" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="887" yCoord="544"/>
+<arcpath arcPointType="false" id="1" xCoord="866" yCoord="547"/>
+</arc>
+<arc id="cId211-i943123747" inscription="[0,inf)" source="FORK_3" target="TAKE_RIGHT_2_FORK_4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="403" yCoord="431"/>
+<arcpath arcPointType="false" id="1" xCoord="370" yCoord="247"/>
+</arc>
+<arc id="cId281-i943123747" inscription="1" source="RELEASE_FORK_5" target="THINK_5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="722" yCoord="286"/>
+<arcpath arcPointType="false" id="1" xCoord="809" yCoord="131"/>
+</arc>
+<arc id="cId242-i943123747" inscription="[0,inf)" source="THINK_6" target="TAKE_RIGHT_1_FORK_6" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="1048" yCoord="548"/>
+<arcpath arcPointType="false" id="1" xCoord="1026" yCoord="558"/>
+</arc>
+<arc id="cId259-i943123747" inscription="[0,inf)" source="FORK_5" target="TAKE_RIGHT_2_FORK_6" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="752" yCoord="451"/>
+<arcpath arcPointType="false" id="1" xCoord="936" yCoord="518"/>
+</arc>
+<arc id="cId279-i943123747" inscription="1" source="TAKE_LEFT_2_FORK_4" target="EAT_4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="404" yCoord="227"/>
+<arcpath arcPointType="false" id="1" xCoord="405" yCoord="241"/>
+</arc>
+<arc id="cId282-i943123747" inscription="[0,inf)" source="WAIT_RIGHT_FORK_6" target="TAKE_RIGHT_2_FORK_6" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="967" yCoord="526"/>
+<arcpath arcPointType="false" id="1" xCoord="945" yCoord="523"/>
+</arc>
+<arc id="cId277-i943123747" inscription="[0,inf)" source="THINK_5" target="TAKE_RIGHT_1_FORK_5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="813" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="810" yCoord="145"/>
+</arc>
+<arc id="cId285-i943123747" inscription="1" source="RELEASE_FORK_1" target="FORK_1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="711" yCoord="793"/>
+<arcpath arcPointType="false" id="1" xCoord="585" yCoord="739"/>
+</arc>
+<arc id="cId255-i943123747" inscription="1" source="RELEASE_FORK_3" target="FORK_2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="286" yCoord="547"/>
+<arcpath arcPointType="false" id="1" xCoord="394" yCoord="628"/>
+</arc>
+<arc id="cId273-i943123747" inscription="1" source="TAKE_LEFT_2_FORK_2" target="EAT_2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="374" yCoord="852"/>
+<arcpath arcPointType="false" id="1" xCoord="395" yCoord="837"/>
+</arc>
+<arc id="cId283-i943123747" inscription="[0,inf)" source="THINK_2" target="TAKE_LEFT_1_FORK_2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="338" yCoord="955"/>
+<arcpath arcPointType="false" id="1" xCoord="355" yCoord="939"/>
+</arc>
+<arc id="cId272-i943123747" inscription="[0,inf)" source="EAT_4" target="RELEASE_FORK_4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="417" yCoord="266"/>
+<arcpath arcPointType="false" id="1" xCoord="427" yCoord="276"/>
+</arc>
+<arc id="cId288-i943123747" inscription="1" source="RELEASE_FORK_2" target="FORK_1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="431" yCoord="793"/>
+<arcpath arcPointType="false" id="1" xCoord="558" yCoord="739"/>
+</arc>
+<arc id="cId265-i943123747" inscription="[0,inf)" source="THINK_4" target="TAKE_RIGHT_1_FORK_4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="337" yCoord="128"/>
+<arcpath arcPointType="false" id="1" xCoord="355" yCoord="145"/>
+</arc>
+<arc id="cId238-i943123747" inscription="[0,inf)" source="WAIT_LEFT_FORK_5" target="TAKE_LEFT_2_FORK_5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="781" yCoord="206"/>
+<arcpath arcPointType="false" id="1" xCoord="774" yCoord="217"/>
+</arc>
+<arc id="cId214-i943123747" inscription="[0,inf)" source="FORK_3" target="TAKE_RIGHT_1_FORK_4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="403" yCoord="431"/>
+<arcpath arcPointType="false" id="1" xCoord="361" yCoord="160"/>
+</arc>
+<arc id="cId236-i943123747" inscription="[0,inf)" source="WAIT_LEFT_FORK_4" target="TAKE_LEFT_2_FORK_4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="387" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="398" yCoord="212"/>
+</arc>
+<arc id="cId220-i943123747" inscription="1" source="RELEASE_FORK_1" target="THINK_1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="721" yCoord="798"/>
+<arcpath arcPointType="false" id="1" xCoord="809" yCoord="952"/>
+</arc>
+<arc id="cId257-i943123747" inscription="[0,inf)" source="FORK_6" target="TAKE_LEFT_1_FORK_6" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="752" yCoord="632"/>
+<arcpath arcPointType="false" id="1" xCoord="1016" yCoord="531"/>
+</arc>
+<arc id="cId256-i943123747" inscription="[0,inf)" source="THINK_4" target="TAKE_LEFT_1_FORK_4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="334" yCoord="145"/>
+</arc>
+<arc id="cId226-i943123747" inscription="1" source="TAKE_RIGHT_1_FORK_3" target="WAIT_LEFT_FORK_3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="127" yCoord="521"/>
+<arcpath arcPointType="false" id="1" xCoord="147" yCoord="525"/>
+</arc>
+<arc id="cId261-i943123747" inscription="[0,inf)" source="THINK_6" target="TAKE_LEFT_1_FORK_6" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="1048" yCoord="535"/>
+<arcpath arcPointType="false" id="1" xCoord="1026" yCoord="526"/>
+</arc>
+<arc id="cId218-i943123747" inscription="[0,inf)" source="FORK_2" target="TAKE_LEFT_1_FORK_2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="403" yCoord="652"/>
+<arcpath arcPointType="false" id="1" xCoord="361" yCoord="924"/>
+</arc>
+<arc id="cId301-i943123747" inscription="1" source="TAKE_LEFT_1_FORK_2" target="WAIT_RIGHT_FORK_2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="365" yCoord="939"/>
+<arcpath arcPointType="false" id="1" xCoord="374" yCoord="917"/>
+</arc>
+<arc id="cId230-i943123747" inscription="[0,inf)" source="WAIT_RIGHT_FORK_1" target="TAKE_RIGHT_2_FORK_1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="780" yCoord="877"/>
+<arcpath arcPointType="false" id="1" xCoord="774" yCoord="867"/>
+</arc>
+<arc id="cId232-i943123747" inscription="[0,inf)" source="THINK_1" target="TAKE_RIGHT_1_FORK_1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="805" yCoord="955"/>
+<arcpath arcPointType="false" id="1" xCoord="787" yCoord="939"/>
+</arc>
+<arc id="cId246-i943123747" inscription="1" source="TAKE_RIGHT_1_FORK_5" target="WAIT_LEFT_FORK_5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="810" yCoord="175"/>
+<arcpath arcPointType="false" id="1" xCoord="800" yCoord="183"/>
+</arc>
+<arc id="cId221-i943123747" inscription="1" source="TAKE_RIGHT_1_FORK_6" target="WAIT_LEFT_FORK_6" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="1016" yCoord="563"/>
+<arcpath arcPointType="false" id="1" xCoord="996" yCoord="559"/>
+</arc>
+<arc id="cId284-i943123747" inscription="1" source="TAKE_RIGHT_2_FORK_2" target="EAT_2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="404" yCoord="857"/>
+<arcpath arcPointType="false" id="1" xCoord="405" yCoord="842"/>
+</arc>
+<arc id="cId290-i943123747" inscription="1" source="RELEASE_FORK_4" target="FORK_4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="431" yCoord="291"/>
+<arcpath arcPointType="false" id="1" xCoord="558" yCoord="344"/>
+</arc>
+<arc id="cId304-i943123747" inscription="[0,inf)" source="FORK_1" target="TAKE_RIGHT_2_FORK_2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="560" yCoord="743"/>
+<arcpath arcPointType="false" id="1" xCoord="408" yCoord="872"/>
+</arc>
+<arc id="cId227-i943123747" inscription="[0,inf)" source="FORK_1" target="TAKE_LEFT_2_FORK_1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="583" yCoord="743"/>
+<arcpath arcPointType="false" id="1" xCoord="734" yCoord="872"/>
+</arc>
+<arc id="cId244-i943123747" inscription="[0,inf)" source="EAT_3" target="RELEASE_FORK_3" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="256" yCoord="544"/>
+<arcpath arcPointType="false" id="1" xCoord="276" yCoord="547"/>
+</arc>
+<arc id="cId262-i943123747" inscription="1" source="RELEASE_FORK_5" target="FORK_4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="711" yCoord="291"/>
+<arcpath arcPointType="false" id="1" xCoord="585" yCoord="344"/>
+</arc>
+<arc id="cId293-i943123747" inscription="1" source="TAKE_RIGHT_1_FORK_4" target="WAIT_LEFT_FORK_4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="365" yCoord="145"/>
+<arcpath arcPointType="false" id="1" xCoord="374" yCoord="166"/>
+</arc>
+<arc id="cId303-i943123747" inscription="[0,inf)" source="FORK_2" target="TAKE_RIGHT_2_FORK_3" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="391" yCoord="632"/>
+<arcpath arcPointType="false" id="1" xCoord="207" yCoord="566"/>
+</arc>
+<arc id="cId268-i943123747" inscription="1" source="TAKE_RIGHT_2_FORK_3" target="EAT_3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="208" yCoord="556"/>
+<arcpath arcPointType="false" id="1" xCoord="228" yCoord="547"/>
+</arc>
+<arc id="cId223-i943123747" inscription="1" source="RELEASE_FORK_2" target="FORK_2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="427" yCoord="778"/>
+<arcpath arcPointType="false" id="1" xCoord="408" yCoord="652"/>
+</arc>
+<arc id="cId219-i943123747" inscription="1" source="TAKE_LEFT_1_FORK_3" target="WAIT_RIGHT_FORK_3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="126" yCoord="563"/>
+<arcpath arcPointType="false" id="1" xCoord="147" yCoord="559"/>
+</arc>
+<arc id="cId229-i943123747" inscription="[0,inf)" source="FORK_4" target="TAKE_LEFT_1_FORK_4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="560" yCoord="340"/>
+<arcpath arcPointType="false" id="1" xCoord="339" yCoord="155"/>
+</arc>
+<arc id="cId294-i943123747" inscription="1" source="RELEASE_FORK_4" target="FORK_3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="427" yCoord="306"/>
+<arcpath arcPointType="false" id="1" xCoord="408" yCoord="431"/>
+</arc>
+<arc id="cId249-i943123747" inscription="[0,inf)" source="THINK_1" target="TAKE_LEFT_1_FORK_1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="813" yCoord="951"/>
+<arcpath arcPointType="false" id="1" xCoord="810" yCoord="939"/>
+</arc>
+<arc id="cId286-i943123747" inscription="1" source="TAKE_LEFT_1_FORK_4" target="WAIT_RIGHT_FORK_4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="338" yCoord="165"/>
+<arcpath arcPointType="false" id="1" xCoord="347" yCoord="180"/>
+</arc>
+<arc id="cId291-i943123747" inscription="[0,inf)" source="FORK_4" target="TAKE_RIGHT_2_FORK_5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="583" yCoord="340"/>
+<arcpath arcPointType="false" id="1" xCoord="734" yCoord="212"/>
+</arc>
+<arc id="cId231-i943123747" inscription="[0,inf)" source="FORK_6" target="TAKE_RIGHT_1_FORK_1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="740" yCoord="652"/>
+<arcpath arcPointType="false" id="1" xCoord="783" yCoord="924"/>
+</arc>
+<arc id="cId209-i943123747" inscription="[0,inf)" source="WAIT_RIGHT_FORK_2" target="TAKE_RIGHT_2_FORK_2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="387" yCoord="891"/>
+<arcpath arcPointType="false" id="1" xCoord="398" yCoord="872"/>
+</arc>
+<arc id="cId210-i943123747" inscription="1" source="RELEASE_FORK_3" target="THINK_3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="277" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="96" yCoord="541"/>
+</arc>
+<arc id="cId264-i943123747" inscription="1" source="TAKE_RIGHT_2_FORK_5" target="EAT_5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="740" yCoord="227"/>
+<arcpath arcPointType="false" id="1" xCoord="738" yCoord="241"/>
+</arc>
+<arc id="cId217-i943123747" inscription="1" source="RELEASE_FORK_6" target="FORK_5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="857" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="749" yCoord="455"/>
+</arc>
+<arc id="cId216-i943123747" inscription="[0,inf)" source="THINK_3" target="TAKE_RIGHT_1_FORK_3" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="95" yCoord="535"/>
+<arcpath arcPointType="false" id="1" xCoord="116" yCoord="526"/>
+</arc>
+</net>
+<query active="true" approximationDenominator="2" capacity="0" discreteInclusion="false" enableOverApproximation="false" enableUnderApproximation="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" overApproximation="false" pTrie="true" query="EF deadlock" reductionOption="VerifyTAPNdiscreteVerification" searchOption="BFS" symmetry="true" timeDarts="true" traceOption="SOME"/>
+<query active="true" approximationDenominator="10" capacity="0" discreteInclusion="false" enableOverApproximation="false" enableUnderApproximation="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" overApproximation="true" pTrie="true" query="EF (philo.EAT_5=1 and philo.EAT_3=1)" reductionOption="VerifyPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<query active="true" approximationDenominator="10" capacity="0" discreteInclusion="false" enableOverApproximation="false" enableUnderApproximation="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" overApproximation="false" pTrie="true" query="EF (philo.EAT_1=1 and philo.EAT_2=1)" reductionOption="VerifyPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<k-bound bound="3"/>
+</pnml>

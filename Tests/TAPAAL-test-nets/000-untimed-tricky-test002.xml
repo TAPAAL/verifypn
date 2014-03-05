@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-transition name="RadioSignalSending"/>
+<shared-transition name="BrakingStops"/>
+<shared-transition name="OutputConnection"/>
+<shared-transition name="StopCars"/>
+<constant name="YellowDuration" value="5"/>
+<constant name="RedDuration" value="240"/>
+<constant name="EnterDelay" value="8"/>
+<constant name="CrossingTime" value="120"/>
+<constant name="ControllerSpeed" value="9"/>
+<constant name="TimeToDangerZone" value="30"/>
+<net active="true" id="Train" type="P/T net">
+<place id="Crossing" initialMarking="0" invariant="&lt;= CrossingTime" markingOffsetX="0.0" markingOffsetY="0.0" name="Crossing" nameOffsetX="49.0" nameOffsetY="-17.0" positionX="540.0" positionY="270.0"/>
+<place id="P5" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="300.0" positionY="90.0"/>
+<place id="P2" initialMarking="0" invariant="&lt;= TimeToDangerZone" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="144.0" nameOffsetY="59.0" positionX="375.0" positionY="270.0"/>
+<transition angle="0" id="StopCars" infiniteServer="false" name="StopCars" nameOffsetX="44.0" nameOffsetY="59.0" positionX="315.0" positionY="270.0" priority="1" timed="true"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="150.0" priority="1" timed="true"/>
+<transition angle="0" id="DangerZoneEntrance" infiniteServer="false" name="DangerZoneEntrance" nameOffsetX="53.0" nameOffsetY="55.0" positionX="495.0" positionY="270.0" priority="1" timed="true"/>
+<arc id="P5 to StopCars" inscription="[0,inf)" source="P5" target="StopCars" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="304" yCoord="114"/>
+<arcpath arcPointType="false" id="1" xCoord="224" yCoord="254"/>
+<arcpath arcPointType="false" id="2" xCoord="321" yCoord="282"/>
+</arc>
+<arc id="Crossing to T0" inscription="[0,inf)" source="Crossing" target="T0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="549" yCoord="267"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="177"/>
+</arc>
+<arc id="T0 to P5" inscription="1" source="T0" target="P5" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="531" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="326" yCoord="105"/>
+</arc>
+<arc id="DangerZoneEntrance to Crossing" inscription="1" source="DangerZoneEntrance" target="Crossing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="511" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="282"/>
+</arc>
+<arc id="P2 to DangerZoneEntrance" inscription="[0,inf)" source="P2" target="DangerZoneEntrance" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="401" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="501" yCoord="282"/>
+</arc>
+<arc id="StopCars to P2" inscription="1" source="StopCars" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="282"/>
+</arc>
+</net>
+<net active="true" id="TragicLight" type="P/T net">
+<place id="Green" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Green" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="45.0" positionY="330.0"/>
+<place id="Yellow" initialMarking="0" invariant="&lt;= YellowDuration" markingOffsetX="0.0" markingOffsetY="0.0" name="Yellow" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="240.0"/>
+<place id="Red" initialMarking="0" invariant="&lt;= RedDuration" markingOffsetX="0.0" markingOffsetY="0.0" name="Red" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="690.0" positionY="330.0"/>
+<place id="Request" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="Request" nameOffsetX="-15.0" nameOffsetY="18.0" positionX="315.0" positionY="120.0"/>
+<transition angle="0" id="StopCars" infiniteServer="false" name="StopCars" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="15.0" priority="1" timed="true"/>
+<transition angle="0" id="T1" infiniteServer="false" name="T1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="285.0" priority="1" timed="true"/>
+<transition angle="0" id="T2" infiniteServer="false" name="T2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="285.0" priority="1" timed="true"/>
+<transition angle="0" id="T7" infiniteServer="false" name="T7" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="135.0" priority="1" timed="true"/>
+<transition angle="0" id="T5" infiniteServer="false" name="T5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="435.0" priority="1" timed="true"/>
+<arc id="StopCars to Request" inscription="1" source="StopCars" target="Request" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="42"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="117"/>
+</arc>
+<arc id="Green to T1" inscription="[0,inf)" source="Green" target="T1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="71" yCoord="337"/>
+<arcpath arcPointType="false" id="1" xCoord="186" yCoord="297"/>
+</arc>
+<arc id="T1 to Yellow" inscription="1" source="T1" target="Yellow" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="196" yCoord="302"/>
+<arcpath arcPointType="false" id="1" xCoord="357" yCoord="256"/>
+</arc>
+<arc id="Request to T1" inscription="[0,inf)" source="Request" target="T1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="317" yCoord="143"/>
+<arcpath arcPointType="false" id="1" xCoord="197" yCoord="292"/>
+</arc>
+<arc id="Yellow to T2" inscription="[0,inf)" source="Yellow" target="T2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="386" yCoord="256"/>
+<arcpath arcPointType="false" id="1" xCoord="531" yCoord="297"/>
+</arc>
+<arc id="T2 to Red" inscription="1" source="T2" target="Red" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="541" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="687" yCoord="337"/>
+</arc>
+<arc id="Yellow to T7" inscription="[0,inf):1" source="Yellow" target="T7" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="378" yCoord="238"/>
+<arcpath arcPointType="false" id="1" xCoord="406" yCoord="181"/>
+<arcpath arcPointType="false" id="2" xCoord="456" yCoord="152"/>
+</arc>
+<arc id="T7 to Yellow" inscription="[0,inf):1" source="T7" target="Yellow" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="466" yCoord="147"/>
+<arcpath arcPointType="false" id="1" xCoord="466" yCoord="151"/>
+<arcpath arcPointType="false" id="2" xCoord="466" yCoord="211"/>
+<arcpath arcPointType="false" id="3" xCoord="385" yCoord="246"/>
+</arc>
+<arc id="Request to T7" inscription="[0,inf)" source="Request" target="T7" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="341" yCoord="133"/>
+<arcpath arcPointType="false" id="1" xCoord="457" yCoord="142"/>
+</arc>
+<arc id="T5 to Green" inscription="1" source="T5" target="Green" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="351" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="71" yCoord="347"/>
+</arc>
+<arc id="Red to T5" inscription="[0,inf)" source="Red" target="T5" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="687" yCoord="346"/>
+<arcpath arcPointType="false" id="1" xCoord="361" yCoord="447"/>
+</arc>
+</net>
+<query active="true" capacity="2" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (Train.Crossing&gt;=1 and TragicLight.Green&gt;=1)" reductionOption="STANDARD" searchOption="BFS" symmetry="true" traceOption="NONE"/>
+</pnml>

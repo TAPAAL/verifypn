@@ -1,0 +1,625 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-place initialMarking="1" invariant="&lt; inf" name="CPUReady"/>
+<shared-place initialMarking="1" invariant="&lt; inf" name="ControllerReady"/>
+<shared-place initialMarking="1" invariant="&lt; inf" name="SonarReady"/>
+<shared-place initialMarking="1" invariant="&lt; inf" name="DataloggingReady"/>
+<shared-place initialMarking="1" invariant="&lt; inf" name="AEBReady"/>
+<shared-place initialMarking="1" invariant="&lt; inf" name="ReadRawReady"/>
+<shared-place initialMarking="1" invariant="&lt; inf" name="CalcSpeedReady"/>
+<shared-place initialMarking="1" invariant="&lt; inf" name="LaneControlReady"/>
+<shared-place initialMarking="1" invariant="&lt; inf" name="ACCReady"/>
+<constant name="ControllerPeriod" value="100"/>
+<constant name="ControllerBCET" value="1"/>
+<constant name="ControllerWCET" value="4"/>
+<constant name="SonarPeriod" value="300"/>
+<constant name="SonarBCET" value="1"/>
+<constant name="SonarWCET" value="2"/>
+<constant name="DataloggingPeriod" value="100"/>
+<constant name="DataloggingBCET" value="1"/>
+<constant name="DataloggingWCET" value="1"/>
+<constant name="AEBPeriod" value="250"/>
+<constant name="AEBBCET" value="1"/>
+<constant name="AEBWCET" value="4"/>
+<constant name="ReadRawPeriod" value="50"/>
+<constant name="ReadRawBCET" value="1"/>
+<constant name="ReadRawWCET" value="1"/>
+<constant name="CalcSpeedPeriod" value="50"/>
+<constant name="CalcSpeedBCET" value="1"/>
+<constant name="CalcSpeedWCET" value="1"/>
+<constant name="LaneControlPeriod" value="200"/>
+<constant name="LaneControlBCET" value="1"/>
+<constant name="LaneControlWCET" value="40"/>
+<constant name="ACCPeriod" value="250"/>
+<constant name="ACCBCET" value="1"/>
+<constant name="ACCWCET" value="1"/>
+<net active="true" id="ControllerTask" type="P/T net">
+<labels border="true" height="119" positionX="62" positionY="32" width="372">Model of how the timings of the system tasks influence scheduling. 
+Each task has three constants, defining its period (amount of time between each release of the task), a best case execution time and a worst case execution time.
+All three are in tenths of milliseconds. 
+Task priorities are simulated through inhibitor arcs, as higher priority tasks have inhibitor arcs from their ready states, to the ready states of lower priority tasks.
+Preemption and waiting is not simulated.</labels>
+<labels border="true" height="54" positionX="484" positionY="39" width="102">Higher priorty tasks, that inhibit starting if they are ready tehmselves.</labels>
+<labels border="true" height="28" positionX="372" positionY="512" width="102">Time since last release of task</labels>
+<place id="ControllerReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ControllerReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="270.0"/>
+<place id="Running" initialMarking="0" invariant="&lt;= ControllerWCET" markingOffsetX="0.0" markingOffsetY="0.0" name="Running" nameOffsetX="122.0" nameOffsetY="-34.0" positionX="750.0" positionY="270.0"/>
+<place id="Suspended" initialMarking="0" invariant="&lt;= ControllerPeriod" markingOffsetX="0.0" markingOffsetY="0.0" name="Suspended" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="690.0"/>
+<place id="CPUReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CPUReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="480.0"/>
+<place id="TaskAge" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="TaskAge" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="480.0"/>
+<place id="ReadRawReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ReadRawReady" nameOffsetX="50.0" nameOffsetY="-11.0" positionX="495.0" positionY="150.0"/>
+<place id="CalcSpeedReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CalcSpeedReady" nameOffsetX="57.0" nameOffsetY="-14.0" positionX="585.0" positionY="150.0"/>
+<transition angle="0" id="Start" infiniteServer="false" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="270.0" priority="0" urgent="true"/>
+<transition angle="0" id="Terminate" infiniteServer="false" name="Terminate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="690.0" priority="0" urgent="false"/>
+<transition angle="90" id="Activate" infiniteServer="false" name="Activate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="480.0" priority="0" urgent="false"/>
+<arc id="Start to Running" inscription="1" source="Start" target="Running" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="556" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="747" yCoord="282"/>
+</arc>
+<arc id="CPUReady to Start" inscription="[0,inf)" source="CPUReady" target="Start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="607" yCoord="477"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="297"/>
+</arc>
+<arc id="ControllerReady to Start" inscription="[0,inf):1" source="ControllerReady" target="Start" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="282"/>
+</arc>
+<arc id="Start to TaskAge" inscription="[0,inf):1" source="Start" target="TaskAge" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="477"/>
+</arc>
+<arc id="TaskAge to Terminate" inscription="[0,inf):1" source="TaskAge" target="Terminate" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="496" yCoord="506"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="687"/>
+</arc>
+<arc id="Terminate to Suspended" inscription="[0,inf):1" source="Terminate" target="Suspended" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="546" yCoord="702"/>
+<arcpath arcPointType="false" id="1" xCoord="356" yCoord="702"/>
+</arc>
+<arc id="Terminate to CPUReady" inscription="1" source="Terminate" target="CPUReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="687"/>
+<arcpath arcPointType="false" id="1" xCoord="607" yCoord="506"/>
+</arc>
+<arc id="Suspended to Activate" inscription="[0,inf)" source="Suspended" target="Activate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="341" yCoord="687"/>
+<arcpath arcPointType="false" id="1" xCoord="341" yCoord="496"/>
+</arc>
+<arc id="Activate to ControllerReady" inscription="1" source="Activate" target="ControllerReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="341" yCoord="486"/>
+<arcpath arcPointType="false" id="1" xCoord="341" yCoord="296"/>
+</arc>
+<arc id="Running to Terminate" inscription="[0,inf)" source="Running" target="Terminate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="762" yCoord="296"/>
+<arcpath arcPointType="false" id="1" xCoord="767" yCoord="707"/>
+<arcpath arcPointType="false" id="2" xCoord="556" yCoord="702"/>
+</arc>
+<arc id="ReadRawReady to Start" inscription="[0,inf)" source="ReadRawReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="507" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="509" yCoord="224"/>
+<arcpath arcPointType="false" id="2" xCoord="554" yCoord="224"/>
+<arcpath arcPointType="false" id="3" xCoord="552" yCoord="267"/>
+</arc>
+<arc id="CalcSpeedReady to Start" inscription="[0,inf)" source="CalcSpeedReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="597" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="599" yCoord="224"/>
+<arcpath arcPointType="false" id="2" xCoord="554" yCoord="224"/>
+<arcpath arcPointType="false" id="3" xCoord="552" yCoord="267"/>
+</arc>
+</net>
+<net active="true" id="SonarTask" type="P/T net">
+<place id="SonarReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="SonarReady" nameOffsetX="4.0" nameOffsetY="-3.0" positionX="330.0" positionY="270.0"/>
+<place id="Running1" initialMarking="0" invariant="&lt;= SonarWCET" markingOffsetX="0.0" markingOffsetY="0.0" name="Running1" nameOffsetX="133.0" nameOffsetY="-3.0" positionX="750.0" positionY="270.0"/>
+<place id="Suspended" initialMarking="0" invariant="&lt;= SonarPeriod" markingOffsetX="0.0" markingOffsetY="0.0" name="Suspended" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="690.0"/>
+<place id="CPUReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CPUReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="480.0"/>
+<place id="TaskAge" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="TaskAge" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="480.0"/>
+<place id="ControllerReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ControllerReady" nameOffsetX="41.0" nameOffsetY="-8.0" positionX="450.0" positionY="150.0"/>
+<place id="DataloggingReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="DataloggingReady" nameOffsetX="48.0" nameOffsetY="-16.0" positionX="360.0" positionY="150.0"/>
+<place id="AEBReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="AEBReady" nameOffsetX="46.0" nameOffsetY="-12.0" positionX="540.0" positionY="150.0"/>
+<place id="ReadRawReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ReadRawReady" nameOffsetX="33.0" nameOffsetY="-13.0" positionX="270.0" positionY="150.0"/>
+<place id="ACCReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ACCReady" nameOffsetX="43.0" nameOffsetY="-12.0" positionX="630.0" positionY="150.0"/>
+<place id="LaneControlReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="LaneControlReady" nameOffsetX="56.0" nameOffsetY="-13.0" positionX="720.0" positionY="150.0"/>
+<place id="CalcSpeedReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CalcSpeedReady" nameOffsetX="62.0" nameOffsetY="-15.0" positionX="810.0" positionY="150.0"/>
+<transition angle="0" id="Start1" infiniteServer="false" name="Start1" nameOffsetX="58.0" nameOffsetY="33.0" positionX="540.0" positionY="270.0" priority="0" urgent="true"/>
+<transition angle="0" id="Terminate" infiniteServer="false" name="Terminate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="690.0" priority="0" urgent="false"/>
+<transition angle="90" id="Activate" infiniteServer="false" name="Activate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="480.0" priority="0" urgent="false"/>
+<arc id="Start1 to Running1" inscription="1" source="Start1" target="Running1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="556" yCoord="291"/>
+<arcpath arcPointType="false" id="1" xCoord="748" yCoord="283"/>
+</arc>
+<arc id="CPUReady to Start1" inscription="[0,inf)" source="CPUReady" target="Start1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="608" yCoord="478"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="297"/>
+</arc>
+<arc id="TaskAge to Terminate" inscription="[0,inf):1" source="TaskAge" target="Terminate" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="496" yCoord="506"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="687"/>
+</arc>
+<arc id="Terminate to Suspended" inscription="[0,inf):1" source="Terminate" target="Suspended" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="546" yCoord="702"/>
+<arcpath arcPointType="false" id="1" xCoord="357" yCoord="703"/>
+</arc>
+<arc id="Terminate to CPUReady" inscription="1" source="Terminate" target="CPUReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="687"/>
+<arcpath arcPointType="false" id="1" xCoord="608" yCoord="507"/>
+</arc>
+<arc id="Suspended to Activate" inscription="[0,inf)" source="Suspended" target="Activate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="342" yCoord="688"/>
+<arcpath arcPointType="false" id="1" xCoord="341" yCoord="496"/>
+</arc>
+<arc id="Activate to SonarReady1" inscription="1" source="Activate" target="SonarReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="342" yCoord="487"/>
+<arcpath arcPointType="false" id="1" xCoord="342" yCoord="297"/>
+</arc>
+<arc id="SonarReady1 to Start1" inscription="[0,inf):1" source="SonarReady" target="Start1" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="291"/>
+</arc>
+<arc id="Start1 to TaskAge" inscription="[0,inf):1" source="Start1" target="TaskAge" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="497" yCoord="478"/>
+</arc>
+<arc id="Running1 to Terminate" inscription="[0,inf)" source="Running1" target="Terminate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="763" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="765" yCoord="705"/>
+<arcpath arcPointType="false" id="2" xCoord="557" yCoord="703"/>
+</arc>
+<arc id="ReadRawReady to Start1" inscription="[0,inf)" source="ReadRawReady" target="Start1" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="283" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="285" yCoord="210"/>
+<arcpath arcPointType="false" id="2" xCoord="555" yCoord="210"/>
+<arcpath arcPointType="false" id="3" xCoord="546" yCoord="285"/>
+</arc>
+<arc id="DataloggingReady to Start1" inscription="[0,inf)" source="DataloggingReady" target="Start1" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="373" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="375" yCoord="210"/>
+<arcpath arcPointType="false" id="2" xCoord="555" yCoord="210"/>
+<arcpath arcPointType="false" id="3" xCoord="547" yCoord="279"/>
+</arc>
+<arc id="ControllerReady to Start1" inscription="[0,inf)" source="ControllerReady" target="Start1" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="463" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="465" yCoord="210"/>
+<arcpath arcPointType="false" id="2" xCoord="555" yCoord="210"/>
+<arcpath arcPointType="false" id="3" xCoord="547" yCoord="273"/>
+</arc>
+<arc id="AEBReady to Start1" inscription="[0,inf)" source="AEBReady" target="Start1" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="553" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="267"/>
+</arc>
+<arc id="ACCReady to Start1" inscription="[0,inf)" source="ACCReady" target="Start1" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="643" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="645" yCoord="210"/>
+<arcpath arcPointType="false" id="2" xCoord="555" yCoord="210"/>
+<arcpath arcPointType="false" id="3" xCoord="557" yCoord="273"/>
+</arc>
+<arc id="LaneControlReady to Start1" inscription="[0,inf)" source="LaneControlReady" target="Start1" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="733" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="735" yCoord="210"/>
+<arcpath arcPointType="false" id="2" xCoord="555" yCoord="210"/>
+<arcpath arcPointType="false" id="3" xCoord="557" yCoord="279"/>
+</arc>
+<arc id="CalcSpeedReady to Start1" inscription="[0,inf)" source="CalcSpeedReady" target="Start1" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="823" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="825" yCoord="210"/>
+<arcpath arcPointType="false" id="2" xCoord="555" yCoord="210"/>
+<arcpath arcPointType="false" id="3" xCoord="553" yCoord="268"/>
+</arc>
+</net>
+<net active="true" id="DataloggingTask" type="P/T net">
+<place id="DataloggingReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="DataloggingReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="270.0"/>
+<place id="Running" initialMarking="0" invariant="&lt;= DataloggingWCET" markingOffsetX="0.0" markingOffsetY="0.0" name="Running" nameOffsetX="122.0" nameOffsetY="-34.0" positionX="750.0" positionY="270.0"/>
+<place id="Suspended" initialMarking="0" invariant="&lt;= DataloggingPeriod" markingOffsetX="0.0" markingOffsetY="0.0" name="Suspended" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="690.0"/>
+<place id="CPUReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CPUReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="480.0"/>
+<place id="TaskAge" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="TaskAge" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="480.0"/>
+<place id="ReadRawReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ReadRawReady" nameOffsetX="49.0" nameOffsetY="-9.0" positionX="495.0" positionY="150.0"/>
+<place id="CalcSpeedReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CalcSpeedReady" nameOffsetX="59.0" nameOffsetY="-8.0" positionX="585.0" positionY="150.0"/>
+<transition angle="0" id="Start" infiniteServer="false" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="270.0" priority="0" urgent="true"/>
+<transition angle="0" id="Terminate" infiniteServer="false" name="Terminate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="690.0" priority="0" urgent="false"/>
+<transition angle="90" id="Activate" infiniteServer="false" name="Activate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="480.0" priority="0" urgent="false"/>
+<arc id="Start to Running" inscription="1" source="Start" target="Running" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="556" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="749" yCoord="284"/>
+</arc>
+<arc id="CPUReady to Start" inscription="[0,inf)" source="CPUReady" target="Start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="609" yCoord="479"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="297"/>
+</arc>
+<arc id="DataloggingReady to Start" inscription="[0,inf):1" source="DataloggingReady" target="Start" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="282"/>
+</arc>
+<arc id="Start to TaskAge" inscription="[0,inf):1" source="Start" target="TaskAge" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="498" yCoord="479"/>
+</arc>
+<arc id="TaskAge to Terminate" inscription="[0,inf):1" source="TaskAge" target="Terminate" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="496" yCoord="506"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="687"/>
+</arc>
+<arc id="Terminate to Suspended" inscription="[0,inf):1" source="Terminate" target="Suspended" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="546" yCoord="702"/>
+<arcpath arcPointType="false" id="1" xCoord="358" yCoord="704"/>
+</arc>
+<arc id="Terminate to CPUReady" inscription="1" source="Terminate" target="CPUReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="687"/>
+<arcpath arcPointType="false" id="1" xCoord="609" yCoord="508"/>
+</arc>
+<arc id="Suspended to Activate" inscription="[0,inf)" source="Suspended" target="Activate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="343" yCoord="689"/>
+<arcpath arcPointType="false" id="1" xCoord="341" yCoord="496"/>
+</arc>
+<arc id="Activate to DataloggingReady" inscription="1" source="Activate" target="DataloggingReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="343" yCoord="488"/>
+<arcpath arcPointType="false" id="1" xCoord="343" yCoord="298"/>
+</arc>
+<arc id="Running to Terminate" inscription="[0,inf)" source="Running" target="Terminate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="764" yCoord="298"/>
+<arcpath arcPointType="false" id="1" xCoord="767" yCoord="707"/>
+<arcpath arcPointType="false" id="2" xCoord="558" yCoord="704"/>
+</arc>
+<arc id="ReadRawReady to Start" inscription="[0,inf)" source="ReadRawReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="509" yCoord="179"/>
+<arcpath arcPointType="false" id="1" xCoord="509" yCoord="224"/>
+<arcpath arcPointType="false" id="2" xCoord="554" yCoord="224"/>
+<arcpath arcPointType="false" id="3" xCoord="552" yCoord="267"/>
+</arc>
+<arc id="CalcSpeedReady to Start" inscription="[0,inf)" source="CalcSpeedReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="599" yCoord="179"/>
+<arcpath arcPointType="false" id="1" xCoord="599" yCoord="224"/>
+<arcpath arcPointType="false" id="2" xCoord="554" yCoord="224"/>
+<arcpath arcPointType="false" id="3" xCoord="554" yCoord="269"/>
+</arc>
+</net>
+<net active="true" id="AEBTask" type="P/T net">
+<place id="AEBReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="AEBReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="270.0"/>
+<place id="Running" initialMarking="0" invariant="&lt;= AEBWCET" markingOffsetX="0.0" markingOffsetY="0.0" name="Running" nameOffsetX="122.0" nameOffsetY="-34.0" positionX="750.0" positionY="270.0"/>
+<place id="Suspended" initialMarking="0" invariant="&lt;= AEBPeriod" markingOffsetX="0.0" markingOffsetY="0.0" name="Suspended" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="690.0"/>
+<place id="CPUReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CPUReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="480.0"/>
+<place id="TaskAge" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="TaskAge" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="480.0"/>
+<place id="DataloggingReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="DataloggingReady" nameOffsetX="49.0" nameOffsetY="-15.0" positionX="450.0" positionY="150.0"/>
+<place id="ControllerReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ControllerReady" nameOffsetX="53.0" nameOffsetY="-9.0" positionX="540.0" positionY="150.0"/>
+<place id="ReadRawReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ReadRawReady" nameOffsetX="29.0" nameOffsetY="-16.0" positionX="360.0" positionY="150.0"/>
+<place id="LaneControlReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="LaneControlReady" nameOffsetX="72.0" nameOffsetY="-15.0" positionX="630.0" positionY="150.0"/>
+<place id="CalcSpeedReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CalcSpeedReady" nameOffsetX="77.0" nameOffsetY="-16.0" positionX="720.0" positionY="150.0"/>
+<transition angle="0" id="Start" infiniteServer="false" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="270.0" priority="0" urgent="true"/>
+<transition angle="0" id="Terminate" infiniteServer="false" name="Terminate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="690.0" priority="0" urgent="false"/>
+<transition angle="90" id="Activate" infiniteServer="false" name="Activate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="480.0" priority="0" urgent="false"/>
+<arc id="Start to Running" inscription="1" source="Start" target="Running" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="556" yCoord="288"/>
+<arcpath arcPointType="false" id="1" xCoord="749" yCoord="284"/>
+</arc>
+<arc id="CPUReady to Start" inscription="[0,inf)" source="CPUReady" target="Start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="609" yCoord="479"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="297"/>
+</arc>
+<arc id="AEBReady to Start" inscription="[0,inf):1" source="AEBReady" target="Start" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="290"/>
+</arc>
+<arc id="Start to TaskAge" inscription="[0,inf):1" source="Start" target="TaskAge" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="498" yCoord="479"/>
+</arc>
+<arc id="TaskAge to Terminate" inscription="[0,inf):1" source="TaskAge" target="Terminate" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="496" yCoord="506"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="687"/>
+</arc>
+<arc id="Terminate to Suspended" inscription="[0,inf):1" source="Terminate" target="Suspended" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="546" yCoord="702"/>
+<arcpath arcPointType="false" id="1" xCoord="358" yCoord="704"/>
+</arc>
+<arc id="Terminate to CPUReady" inscription="1" source="Terminate" target="CPUReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="687"/>
+<arcpath arcPointType="false" id="1" xCoord="609" yCoord="508"/>
+</arc>
+<arc id="Suspended to Activate" inscription="[0,inf)" source="Suspended" target="Activate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="343" yCoord="689"/>
+<arcpath arcPointType="false" id="1" xCoord="341" yCoord="496"/>
+</arc>
+<arc id="Activate to AEBReady" inscription="1" source="Activate" target="AEBReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="343" yCoord="488"/>
+<arcpath arcPointType="false" id="1" xCoord="343" yCoord="298"/>
+</arc>
+<arc id="Running to Terminate" inscription="[0,inf)" source="Running" target="Terminate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="764" yCoord="298"/>
+<arcpath arcPointType="false" id="1" xCoord="767" yCoord="707"/>
+<arcpath arcPointType="false" id="2" xCoord="558" yCoord="704"/>
+</arc>
+<arc id="ReadRawReady to Start" inscription="[0,inf)" source="ReadRawReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="374" yCoord="178"/>
+<arcpath arcPointType="false" id="1" xCoord="375" yCoord="225"/>
+<arcpath arcPointType="false" id="2" xCoord="555" yCoord="225"/>
+<arcpath arcPointType="false" id="3" xCoord="546" yCoord="283"/>
+</arc>
+<arc id="DataloggingReady to Start" inscription="[0,inf)" source="DataloggingReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="464" yCoord="178"/>
+<arcpath arcPointType="false" id="1" xCoord="465" yCoord="225"/>
+<arcpath arcPointType="false" id="2" xCoord="555" yCoord="225"/>
+<arcpath arcPointType="false" id="3" xCoord="547" yCoord="276"/>
+</arc>
+<arc id="ControllerReady to Start" inscription="[0,inf)" source="ControllerReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="554" yCoord="178"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="267"/>
+</arc>
+<arc id="LaneControlReady to Start" inscription="[0,inf)" source="LaneControlReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="644" yCoord="178"/>
+<arcpath arcPointType="false" id="1" xCoord="645" yCoord="225"/>
+<arcpath arcPointType="false" id="2" xCoord="555" yCoord="225"/>
+<arcpath arcPointType="false" id="3" xCoord="557" yCoord="274"/>
+</arc>
+<arc id="CalcSpeedReady to Start" inscription="[0,inf)" source="CalcSpeedReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="734" yCoord="178"/>
+<arcpath arcPointType="false" id="1" xCoord="735" yCoord="225"/>
+<arcpath arcPointType="false" id="2" xCoord="555" yCoord="225"/>
+<arcpath arcPointType="false" id="3" xCoord="554" yCoord="269"/>
+</arc>
+</net>
+<net active="true" id="ReadRawTask" type="P/T net">
+<place id="ReadRawReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ReadRawReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="270.0"/>
+<place id="Running" initialMarking="0" invariant="&lt;= ReadRawWCET" markingOffsetX="0.0" markingOffsetY="0.0" name="Running" nameOffsetX="122.0" nameOffsetY="-34.0" positionX="750.0" positionY="270.0"/>
+<place id="Suspended" initialMarking="0" invariant="&lt;= ReadRawPeriod" markingOffsetX="0.0" markingOffsetY="0.0" name="Suspended" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="690.0"/>
+<place id="CPUReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CPUReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="480.0"/>
+<place id="TaskAge" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="TaskAge" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="480.0"/>
+<transition angle="0" id="Start" infiniteServer="false" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="270.0" priority="0" urgent="true"/>
+<transition angle="0" id="Terminate" infiniteServer="false" name="Terminate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="690.0" priority="0" urgent="false"/>
+<transition angle="90" id="Activate" infiniteServer="false" name="Activate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="480.0" priority="0" urgent="false"/>
+<arc id="Start to Running" inscription="1" source="Start" target="Running" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="556" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="749" yCoord="284"/>
+</arc>
+<arc id="CPUReady to Start" inscription="[0,inf)" source="CPUReady" target="Start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="609" yCoord="479"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="297"/>
+</arc>
+<arc id="ReadRawReady to Start" inscription="[0,inf):1" source="ReadRawReady" target="Start" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="282"/>
+</arc>
+<arc id="Start to TaskAge" inscription="[0,inf):1" source="Start" target="TaskAge" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="554" yCoord="299"/>
+<arcpath arcPointType="false" id="1" xCoord="498" yCoord="479"/>
+</arc>
+<arc id="TaskAge to Terminate" inscription="[0,inf):1" source="TaskAge" target="Terminate" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="496" yCoord="506"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="687"/>
+</arc>
+<arc id="Terminate to Suspended" inscription="[0,inf):1" source="Terminate" target="Suspended" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="546" yCoord="702"/>
+<arcpath arcPointType="false" id="1" xCoord="358" yCoord="704"/>
+</arc>
+<arc id="Terminate to CPUReady" inscription="1" source="Terminate" target="CPUReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="687"/>
+<arcpath arcPointType="false" id="1" xCoord="609" yCoord="508"/>
+</arc>
+<arc id="Suspended to Activate" inscription="[0,inf)" source="Suspended" target="Activate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="343" yCoord="689"/>
+<arcpath arcPointType="false" id="1" xCoord="341" yCoord="496"/>
+</arc>
+<arc id="Activate to ReadRawReady" inscription="1" source="Activate" target="ReadRawReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="343" yCoord="488"/>
+<arcpath arcPointType="false" id="1" xCoord="343" yCoord="298"/>
+</arc>
+<arc id="Running to Terminate" inscription="[0,inf)" source="Running" target="Terminate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="764" yCoord="298"/>
+<arcpath arcPointType="false" id="1" xCoord="767" yCoord="707"/>
+<arcpath arcPointType="false" id="2" xCoord="558" yCoord="704"/>
+</arc>
+</net>
+<net active="true" id="CalcSpeedTask" type="P/T net">
+<place id="CalcSpeedReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CalcSpeedReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="270.0"/>
+<place id="Running" initialMarking="0" invariant="&lt;= CalcSpeedWCET" markingOffsetX="0.0" markingOffsetY="0.0" name="Running" nameOffsetX="122.0" nameOffsetY="-34.0" positionX="750.0" positionY="270.0"/>
+<place id="Suspended" initialMarking="0" invariant="&lt;= CalcSpeedPeriod" markingOffsetX="0.0" markingOffsetY="0.0" name="Suspended" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="690.0"/>
+<place id="CPUReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CPUReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="480.0"/>
+<place id="TaskAge" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="TaskAge" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="480.0"/>
+<transition angle="0" id="Start" infiniteServer="false" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="270.0" priority="0" urgent="true"/>
+<transition angle="0" id="Terminate" infiniteServer="false" name="Terminate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="690.0" priority="0" urgent="false"/>
+<transition angle="90" id="Activate" infiniteServer="false" name="Activate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="480.0" priority="0" urgent="false"/>
+<arc id="Start to Running" inscription="1" source="Start" target="Running" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="556" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="749" yCoord="284"/>
+</arc>
+<arc id="CPUReady to Start" inscription="[0,inf)" source="CPUReady" target="Start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="609" yCoord="479"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="297"/>
+</arc>
+<arc id="CalcSpeedReady to Start" inscription="[0,inf):1" source="CalcSpeedReady" target="Start" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="282"/>
+</arc>
+<arc id="Start to TaskAge" inscription="[0,inf):1" source="Start" target="TaskAge" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="554" yCoord="299"/>
+<arcpath arcPointType="false" id="1" xCoord="498" yCoord="479"/>
+</arc>
+<arc id="TaskAge to Terminate" inscription="[0,inf):1" source="TaskAge" target="Terminate" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="496" yCoord="506"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="687"/>
+</arc>
+<arc id="Terminate to Suspended" inscription="[0,inf):1" source="Terminate" target="Suspended" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="546" yCoord="702"/>
+<arcpath arcPointType="false" id="1" xCoord="358" yCoord="704"/>
+</arc>
+<arc id="Terminate to CPUReady" inscription="1" source="Terminate" target="CPUReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="687"/>
+<arcpath arcPointType="false" id="1" xCoord="609" yCoord="508"/>
+</arc>
+<arc id="Suspended to Activate" inscription="[0,inf)" source="Suspended" target="Activate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="343" yCoord="689"/>
+<arcpath arcPointType="false" id="1" xCoord="341" yCoord="496"/>
+</arc>
+<arc id="Activate to CalcSpeedReady" inscription="1" source="Activate" target="CalcSpeedReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="343" yCoord="488"/>
+<arcpath arcPointType="false" id="1" xCoord="343" yCoord="298"/>
+</arc>
+<arc id="Running to Terminate" inscription="[0,inf)" source="Running" target="Terminate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="764" yCoord="298"/>
+<arcpath arcPointType="false" id="1" xCoord="767" yCoord="707"/>
+<arcpath arcPointType="false" id="2" xCoord="558" yCoord="704"/>
+</arc>
+</net>
+<net active="true" id="LaneControlTask" type="P/T net">
+<place id="LaneControlReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="LaneControlReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="270.0"/>
+<place id="Running" initialMarking="0" invariant="&lt;= LaneControlWCET" markingOffsetX="0.0" markingOffsetY="0.0" name="Running" nameOffsetX="122.0" nameOffsetY="-34.0" positionX="750.0" positionY="270.0"/>
+<place id="Suspended" initialMarking="0" invariant="&lt;= LaneControlPeriod" markingOffsetX="0.0" markingOffsetY="0.0" name="Suspended" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="690.0"/>
+<place id="CPUReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CPUReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="480.0"/>
+<place id="TaskAge" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="TaskAge" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="480.0"/>
+<place id="CalcSpeedReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CalcSpeedReady" nameOffsetX="56.0" nameOffsetY="-13.0" positionX="405.0" positionY="150.0"/>
+<place id="ControllerReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ControllerReady" nameOffsetX="58.0" nameOffsetY="-13.0" positionX="495.0" positionY="150.0"/>
+<place id="ReadRawReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ReadRawReady" nameOffsetX="65.0" nameOffsetY="-8.0" positionX="585.0" positionY="150.0"/>
+<place id="DataloggingReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="DataloggingReady" nameOffsetX="69.0" nameOffsetY="-17.0" positionX="675.0" positionY="150.0"/>
+<transition angle="0" id="Start" infiniteServer="false" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="270.0" priority="0" urgent="true"/>
+<transition angle="0" id="Terminate" infiniteServer="false" name="Terminate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="690.0" priority="0" urgent="false"/>
+<transition angle="90" id="Activate" infiniteServer="false" name="Activate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="480.0" priority="0" urgent="false"/>
+<arc id="Start to Running" inscription="1" source="Start" target="Running" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="556" yCoord="287"/>
+<arcpath arcPointType="false" id="1" xCoord="749" yCoord="284"/>
+</arc>
+<arc id="CPUReady to Start" inscription="[0,inf)" source="CPUReady" target="Start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="609" yCoord="479"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="297"/>
+</arc>
+<arc id="LaneControlReady to Start" inscription="[0,inf):1" source="LaneControlReady" target="Start" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="287"/>
+</arc>
+<arc id="Start to TaskAge" inscription="[0,inf):1" source="Start" target="TaskAge" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="498" yCoord="479"/>
+</arc>
+<arc id="TaskAge to Terminate" inscription="[0,inf):1" source="TaskAge" target="Terminate" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="496" yCoord="506"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="687"/>
+</arc>
+<arc id="Terminate to Suspended" inscription="[0,inf):1" source="Terminate" target="Suspended" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="546" yCoord="702"/>
+<arcpath arcPointType="false" id="1" xCoord="358" yCoord="704"/>
+</arc>
+<arc id="Terminate to CPUReady" inscription="1" source="Terminate" target="CPUReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="687"/>
+<arcpath arcPointType="false" id="1" xCoord="609" yCoord="508"/>
+</arc>
+<arc id="Suspended to Activate" inscription="[0,inf)" source="Suspended" target="Activate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="343" yCoord="689"/>
+<arcpath arcPointType="false" id="1" xCoord="341" yCoord="496"/>
+</arc>
+<arc id="Activate to LaneControlReady" inscription="1" source="Activate" target="LaneControlReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="343" yCoord="488"/>
+<arcpath arcPointType="false" id="1" xCoord="343" yCoord="298"/>
+</arc>
+<arc id="Running to Terminate" inscription="[0,inf)" source="Running" target="Terminate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="764" yCoord="298"/>
+<arcpath arcPointType="false" id="1" xCoord="767" yCoord="707"/>
+<arcpath arcPointType="false" id="2" xCoord="558" yCoord="704"/>
+</arc>
+<arc id="ControllerReady to Start" inscription="[0,inf)" source="ControllerReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="509" yCoord="179"/>
+<arcpath arcPointType="false" id="1" xCoord="509" yCoord="209"/>
+<arcpath arcPointType="false" id="2" xCoord="554" yCoord="209"/>
+<arcpath arcPointType="false" id="3" xCoord="552" yCoord="267"/>
+</arc>
+<arc id="ReadRawReady to Start" inscription="[0,inf)" source="ReadRawReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="599" yCoord="179"/>
+<arcpath arcPointType="false" id="1" xCoord="599" yCoord="209"/>
+<arcpath arcPointType="false" id="2" xCoord="554" yCoord="209"/>
+<arcpath arcPointType="false" id="3" xCoord="552" yCoord="267"/>
+</arc>
+<arc id="DataloggingReady to Start" inscription="[0,inf)" source="DataloggingReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="689" yCoord="179"/>
+<arcpath arcPointType="false" id="1" xCoord="689" yCoord="209"/>
+<arcpath arcPointType="false" id="2" xCoord="554" yCoord="209"/>
+<arcpath arcPointType="false" id="3" xCoord="557" yCoord="277"/>
+</arc>
+<arc id="CalcSpeedReady to Start" inscription="[0,inf)" source="CalcSpeedReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="419" yCoord="179"/>
+<arcpath arcPointType="false" id="1" xCoord="419" yCoord="209"/>
+<arcpath arcPointType="false" id="2" xCoord="554" yCoord="209"/>
+<arcpath arcPointType="false" id="3" xCoord="554" yCoord="269"/>
+</arc>
+</net>
+<net active="true" id="ACCTask" type="P/T net">
+<place id="ACCReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ACCReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="270.0"/>
+<place id="Running" initialMarking="0" invariant="&lt;= ACCWCET" markingOffsetX="0.0" markingOffsetY="0.0" name="Running" nameOffsetX="122.0" nameOffsetY="-34.0" positionX="750.0" positionY="270.0"/>
+<place id="Suspended" initialMarking="0" invariant="&lt;= ACCPeriod" markingOffsetX="0.0" markingOffsetY="0.0" name="Suspended" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="690.0"/>
+<place id="CPUReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CPUReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="480.0"/>
+<place id="TaskAge" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="TaskAge" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="480.0"/>
+<place id="CalcSpeedReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="CalcSpeedReady" nameOffsetX="61.0" nameOffsetY="-13.0" positionX="450.0" positionY="150.0"/>
+<place id="LaneControlReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="LaneControlReady" nameOffsetX="71.0" nameOffsetY="-8.0" positionX="720.0" positionY="150.0"/>
+<place id="DataloggingReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="DataloggingReady" nameOffsetX="58.0" nameOffsetY="-14.0" positionX="360.0" positionY="150.0"/>
+<place id="ControllerReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ControllerReady" nameOffsetX="62.0" nameOffsetY="-16.0" positionX="630.0" positionY="150.0"/>
+<place id="ReadRawReady" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ReadRawReady" nameOffsetX="58.0" nameOffsetY="-13.0" positionX="540.0" positionY="150.0"/>
+<transition angle="0" id="Start" infiniteServer="false" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="270.0" priority="0" urgent="true"/>
+<transition angle="0" id="Terminate" infiniteServer="false" name="Terminate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="690.0" priority="0" urgent="false"/>
+<transition angle="90" id="Activate" infiniteServer="false" name="Activate" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="480.0" priority="0" urgent="false"/>
+<arc id="Start to Running" inscription="1" source="Start" target="Running" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="556" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="747" yCoord="282"/>
+</arc>
+<arc id="CPUReady to Start" inscription="[0,inf)" source="CPUReady" target="Start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="607" yCoord="477"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="297"/>
+</arc>
+<arc id="ACCReady to Start" inscription="[0,inf):1" source="ACCReady" target="Start" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="282"/>
+</arc>
+<arc id="Start to TaskAge" inscription="[0,inf):1" source="Start" target="TaskAge" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="477"/>
+</arc>
+<arc id="TaskAge to Terminate" inscription="[0,inf):1" source="TaskAge" target="Terminate" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="496" yCoord="506"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="687"/>
+</arc>
+<arc id="Terminate to Suspended" inscription="[0,inf):1" source="Terminate" target="Suspended" type="transport" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="546" yCoord="702"/>
+<arcpath arcPointType="false" id="1" xCoord="356" yCoord="702"/>
+</arc>
+<arc id="Terminate to CPUReady" inscription="1" source="Terminate" target="CPUReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="687"/>
+<arcpath arcPointType="false" id="1" xCoord="607" yCoord="506"/>
+</arc>
+<arc id="Suspended to Activate" inscription="[0,inf)" source="Suspended" target="Activate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="341" yCoord="687"/>
+<arcpath arcPointType="false" id="1" xCoord="341" yCoord="496"/>
+</arc>
+<arc id="Activate to ACCReady" inscription="1" source="Activate" target="ACCReady" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="341" yCoord="486"/>
+<arcpath arcPointType="false" id="1" xCoord="341" yCoord="296"/>
+</arc>
+<arc id="Running to Terminate" inscription="[0,inf)" source="Running" target="Terminate" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="762" yCoord="296"/>
+<arcpath arcPointType="false" id="1" xCoord="767" yCoord="707"/>
+<arcpath arcPointType="false" id="2" xCoord="556" yCoord="702"/>
+</arc>
+<arc id="DataloggingReady to Start" inscription="[0,inf)" source="DataloggingReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="374" yCoord="224"/>
+<arcpath arcPointType="false" id="2" xCoord="554" yCoord="224"/>
+<arcpath arcPointType="false" id="3" xCoord="552" yCoord="267"/>
+</arc>
+<arc id="CalcSpeedReady to Start" inscription="[0,inf)" source="CalcSpeedReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="462" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="464" yCoord="224"/>
+<arcpath arcPointType="false" id="2" xCoord="554" yCoord="224"/>
+<arcpath arcPointType="false" id="3" xCoord="552" yCoord="267"/>
+</arc>
+<arc id="ReadRawReady to Start" inscription="[0,inf)" source="ReadRawReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="267"/>
+</arc>
+<arc id="ControllerReady to Start" inscription="[0,inf)" source="ControllerReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="642" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="644" yCoord="224"/>
+<arcpath arcPointType="false" id="2" xCoord="554" yCoord="224"/>
+<arcpath arcPointType="false" id="3" xCoord="552" yCoord="267"/>
+</arc>
+<arc id="LaneControlReady to Start" inscription="[0,inf)" source="LaneControlReady" target="Start" type="tapnInhibitor" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="732" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="734" yCoord="224"/>
+<arcpath arcPointType="false" id="2" xCoord="554" yCoord="224"/>
+<arcpath arcPointType="false" id="3" xCoord="552" yCoord="267"/>
+</arc>
+</net>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" pTrie="false" query="AG !(deadlock)" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="SOME"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" pTrie="true" query="EF (ControllerTask.Running=1 and SonarTask.Suspended=1 and DataloggingTask.Suspended=1)" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" pTrie="true" query="AG (deadlock or ControllerTask.Running=0 or ReadRawTask.Running=0)" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" pTrie="true" query="AF ControllerTask.TaskAge=1" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="EF (ControllerTask.Running=1 and CalcSpeedTask.Running=1)" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+</pnml>

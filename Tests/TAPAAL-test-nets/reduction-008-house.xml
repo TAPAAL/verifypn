@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="TAPN1" type="P/T net">
+<place id="p1" initialMarking="2" invariant="&lt; inf" markingOffsetX="-5.0" markingOffsetY="-3.0" name="p1" nameOffsetX="-20.0" nameOffsetY="-4.0" positionX="255.0" positionY="15.0"/>
+<place id="p2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p2" nameOffsetX="-21.0" nameOffsetY="-5.0" positionX="255.0" positionY="75.0"/>
+<place id="p3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p3" nameOffsetX="-20.0" nameOffsetY="-3.0" positionX="255.0" positionY="135.0"/>
+<place id="p4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p4" nameOffsetX="19.0" nameOffsetY="-2.0" positionX="150.0" positionY="165.0"/>
+<place id="p6" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p6" nameOffsetX="-19.0" nameOffsetY="-4.0" positionX="255.0" positionY="195.0"/>
+<place id="p5" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p5" nameOffsetX="-20.0" nameOffsetY="-3.0" positionX="450.0" positionY="165.0"/>
+<place id="p7" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p7" nameOffsetX="19.0" nameOffsetY="-2.0" positionX="210.0" positionY="225.0"/>
+<place id="p15" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p15" nameOffsetX="-20.0" nameOffsetY="-3.0" positionX="210.0" positionY="360.0"/>
+<place id="p11" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p11" nameOffsetX="25.0" nameOffsetY="-3.0" positionX="210.0" positionY="285.0"/>
+<place id="p12" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p12" nameOffsetX="25.0" nameOffsetY="-4.0" positionX="255.0" positionY="285.0"/>
+<place id="p8" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p8" nameOffsetX="-1.0" nameOffsetY="13.0" positionX="315.0" positionY="225.0"/>
+<place id="p9" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p9" nameOffsetX="-3.0" nameOffsetY="14.0" positionX="405.0" positionY="225.0"/>
+<place id="p10" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p10" nameOffsetX="-19.0" nameOffsetY="-3.0" positionX="360.0" positionY="255.0"/>
+<place id="p13" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p13" nameOffsetX="-19.0" nameOffsetY="-4.0" positionX="450.0" positionY="285.0"/>
+<place id="p17" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p17" nameOffsetX="-19.0" nameOffsetY="-4.0" positionX="360.0" positionY="390.0"/>
+<place id="p14" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p14" nameOffsetX="-19.0" nameOffsetY="-4.0" positionX="360.0" positionY="330.0"/>
+<place id="p19" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p19" nameOffsetX="-19.0" nameOffsetY="-4.0" positionX="450.0" positionY="435.0"/>
+<place id="p20" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p20" nameOffsetX="24.0" nameOffsetY="-4.0" positionX="360.0" positionY="465.0"/>
+<place id="p18" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p18" nameOffsetX="25.0" nameOffsetY="-4.0" positionX="255.0" positionY="435.0"/>
+<place id="p22" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p22" nameOffsetX="-19.0" nameOffsetY="-4.0" positionX="450.0" positionY="495.0"/>
+<place id="p27" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p27" nameOffsetX="-19.0" nameOffsetY="-4.0" positionX="450.0" positionY="570.0"/>
+<place id="p26" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p26" nameOffsetX="24.0" nameOffsetY="-2.0" positionX="255.0" positionY="570.0"/>
+<place id="p21" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p21" nameOffsetX="25.0" nameOffsetY="-2.0" positionX="255.0" positionY="495.0"/>
+<place id="p23" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p23" nameOffsetX="1.0" nameOffsetY="13.0" positionX="360.0" positionY="525.0"/>
+<place id="p25" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p25" nameOffsetX="25.0" nameOffsetY="-3.0" positionX="150.0" positionY="570.0"/>
+<place id="p16" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="p16" nameOffsetX="26.0" nameOffsetY="-3.0" positionX="150.0" positionY="390.0"/>
+<transition angle="0" id="t1" infiniteServer="false" name="t1" nameOffsetX="-22.0" nameOffsetY="4.0" positionX="255.0" positionY="45.0" priority="0" urgent="false"/>
+<transition angle="0" id="t2" infiniteServer="false" name="t2" nameOffsetX="-22.0" nameOffsetY="2.0" positionX="255.0" positionY="105.0" priority="0" urgent="false"/>
+<transition angle="0" id="t3" infiniteServer="false" name="t3" nameOffsetX="-21.0" nameOffsetY="10.0" positionX="255.0" positionY="180.0" priority="0" urgent="false"/>
+<transition angle="0" id="t4" infiniteServer="false" name="t4" nameOffsetX="-21.0" nameOffsetY="10.0" positionX="255.0" positionY="240.0" priority="0" urgent="false"/>
+<transition angle="0" id="t6" infiniteServer="false" name="t6" nameOffsetX="-21.0" nameOffsetY="3.0" positionX="450.0" positionY="240.0" priority="0" urgent="false"/>
+<transition angle="0" id="t7" infiniteServer="false" name="t7" nameOffsetX="16.0" nameOffsetY="3.0" positionX="210.0" positionY="270.0" priority="0" urgent="false"/>
+<transition angle="0" id="t10" infiniteServer="false" name="t10" nameOffsetX="22.0" nameOffsetY="3.0" positionX="150.0" positionY="375.0" priority="0" urgent="false"/>
+<transition angle="0" id="t9" infiniteServer="false" name="t9" nameOffsetX="16.0" nameOffsetY="1.0" positionX="210.0" positionY="330.0" priority="0" urgent="false"/>
+<transition angle="0" id="t5" infiniteServer="false" name="t5" nameOffsetX="-4.0" nameOffsetY="13.0" positionX="360.0" positionY="240.0" priority="0" urgent="false"/>
+<transition angle="0" id="t8" infiniteServer="false" name="t8" nameOffsetX="-15.0" nameOffsetY="13.0" positionX="360.0" positionY="300.0" priority="0" urgent="false"/>
+<transition angle="0" id="t11" infiniteServer="false" name="t11" nameOffsetX="-14.0" nameOffsetY="13.0" positionX="360.0" positionY="375.0" priority="0" urgent="false"/>
+<transition angle="0" id="t13" infiniteServer="false" name="t13" nameOffsetX="-14.0" nameOffsetY="13.0" positionX="360.0" positionY="435.0" priority="0" urgent="false"/>
+<transition angle="0" id="t17" infiniteServer="false" name="t17" nameOffsetX="-21.0" nameOffsetY="2.0" positionX="450.0" positionY="540.0" priority="0" urgent="false"/>
+<transition angle="0" id="t18" infiniteServer="false" name="t18" nameOffsetX="-15.0" nameOffsetY="13.0" positionX="255.0" positionY="615.0" priority="0" urgent="false"/>
+<transition angle="0" id="t15" infiniteServer="false" name="t15" nameOffsetX="-21.0" nameOffsetY="2.0" positionX="450.0" positionY="465.0" priority="0" urgent="false"/>
+<transition angle="0" id="t14" infiniteServer="false" name="t14" nameOffsetX="22.0" nameOffsetY="4.0" positionX="255.0" positionY="465.0" priority="0" urgent="false"/>
+<transition angle="0" id="t16" infiniteServer="false" name="t16" nameOffsetX="22.0" nameOffsetY="3.0" positionX="255.0" positionY="540.0" priority="0" urgent="false"/>
+<transition angle="0" id="t12" infiniteServer="false" name="t12" nameOffsetX="22.0" nameOffsetY="2.0" positionX="150.0" positionY="435.0" priority="0" urgent="false"/>
+<arc id="cId91487430296388804528" inscription="[0,inf)" source="p1" target="t1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="41"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="42"/>
+</arc>
+<arc id="cId91437855756938607729" inscription="1" source="t1" target="p2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="72"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="72"/>
+</arc>
+<arc id="cId914378557569386077210" inscription="[0,inf)" source="p2" target="t2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="101"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="102"/>
+</arc>
+<arc id="cId914378557569386077211" inscription="1" source="t2" target="p3" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="132"/>
+</arc>
+<arc id="cId914378557569386077212" inscription="[0,inf)" source="p3" target="t3" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="161"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="177"/>
+</arc>
+<arc id="cId914378557569386077225" inscription="1" source="t3" target="p6" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="271" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="273" yCoord="193"/>
+</arc>
+<arc id="cId914378557569386077227" inscription="[0,inf)" source="p4" target="t10" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="191"/>
+<arcpath arcPointType="false" id="1" xCoord="162" yCoord="372"/>
+</arc>
+<arc id="cId914378557569386077226" inscription="1" source="t3" target="p4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="261" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="176" yCoord="179"/>
+</arc>
+<arc id="cId914378557569386077229" inscription="1" source="t4" target="p7" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="261" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="235" yCoord="242"/>
+</arc>
+<arc id="cId914378557569386077228" inscription="[0,inf)" source="p6" target="t4" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="221"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="237"/>
+</arc>
+<arc id="cId914213309247717664431" inscription="1" source="t7" target="p11" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="226" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="226" yCoord="282"/>
+</arc>
+<arc id="cId914213309247717664430" inscription="[0,inf)" source="p7" target="t7" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="222" yCoord="251"/>
+<arcpath arcPointType="false" id="1" xCoord="222" yCoord="267"/>
+</arc>
+<arc id="cId914213309247717664434" inscription="[0,inf)" source="p15" target="t10" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="207" yCoord="374"/>
+<arcpath arcPointType="false" id="1" xCoord="167" yCoord="382"/>
+</arc>
+<arc id="cId914213309247717664435" inscription="1" source="t3" target="p5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="272" yCoord="187"/>
+<arcpath arcPointType="false" id="1" xCoord="447" yCoord="177"/>
+</arc>
+<arc id="cId914213309247717664432" inscription="[0,inf)" source="p11" target="t9" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="222" yCoord="311"/>
+<arcpath arcPointType="false" id="1" xCoord="222" yCoord="327"/>
+</arc>
+<arc id="cId914213309247717664433" inscription="1" source="t9" target="p15" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="222" yCoord="357"/>
+<arcpath arcPointType="false" id="1" xCoord="222" yCoord="357"/>
+</arc>
+<arc id="cId914213309247717664436" inscription="1" source="t4" target="p12" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="267"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="282"/>
+</arc>
+<arc id="cId914213309247717664437" inscription="[0,inf)" source="p5" target="t6" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="462" yCoord="191"/>
+<arcpath arcPointType="false" id="1" xCoord="462" yCoord="237"/>
+</arc>
+<arc id="cId914213309247717664446" inscription="[0,inf)" source="p9" target="t5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="402" yCoord="240"/>
+<arcpath arcPointType="false" id="1" xCoord="377" yCoord="247"/>
+</arc>
+<arc id="cId914213309247717664447" inscription="[0,inf)" source="p8" target="t5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="340" yCoord="242"/>
+<arcpath arcPointType="false" id="1" xCoord="366" yCoord="252"/>
+</arc>
+<arc id="cId914213309247717664444" inscription="1" source="t6" target="p9" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="456" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="430" yCoord="242"/>
+</arc>
+<arc id="cId914213309247717664445" inscription="1" source="t4" target="p8" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="271" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="312" yCoord="241"/>
+</arc>
+<arc id="cId914213309247717664451" inscription="[0,inf)" source="p10" target="t8" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="281"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="297"/>
+</arc>
+<arc id="cId914213309247717664450" inscription="[0,inf)" source="p13" target="t8" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="447" yCoord="299"/>
+<arcpath arcPointType="false" id="1" xCoord="376" yCoord="312"/>
+</arc>
+<arc id="cId914213309247717664449" inscription="1" source="t6" target="p13" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="462" yCoord="267"/>
+<arcpath arcPointType="false" id="1" xCoord="462" yCoord="282"/>
+</arc>
+<arc id="cId914213309247717664448" inscription="1" source="t5" target="p10" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="376" yCoord="257"/>
+<arcpath arcPointType="false" id="1" xCoord="378" yCoord="253"/>
+</arc>
+<arc id="cId914213309247717664452" inscription="[0,inf)" source="p12" target="t8" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="281" yCoord="299"/>
+<arcpath arcPointType="false" id="1" xCoord="366" yCoord="312"/>
+</arc>
+<arc id="cId914213309247717664463" inscription="[0,inf)" source="p17" target="t13" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="416"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="432"/>
+</arc>
+<arc id="cId914213309247717664462" inscription="1" source="t11" target="p17" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="376" yCoord="387"/>
+<arcpath arcPointType="false" id="1" xCoord="376" yCoord="387"/>
+</arc>
+<arc id="cId914213309247717664461" inscription="[0,inf)" source="p14" target="t11" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="356"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="372"/>
+</arc>
+<arc id="cId914213309247717664460" inscription="1" source="t8" target="p14" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="327"/>
+</arc>
+<arc id="cId914213309247717664464" inscription="1" source="t13" target="p18" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="366" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="281" yCoord="447"/>
+</arc>
+<arc id="cId914213309247717664465" inscription="1" source="t13" target="p20" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="462"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="462"/>
+</arc>
+<arc id="cId914213309247717664466" inscription="1" source="t13" target="p19" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="376" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="447" yCoord="447"/>
+</arc>
+<arc id="cId918675016080248458176" inscription="[0,inf)" source="p27" target="t18" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="447" yCoord="585"/>
+<arcpath arcPointType="false" id="1" xCoord="271" yCoord="627"/>
+</arc>
+<arc id="cId918509767758580045377" inscription="[0,inf)" source="p20" target="t15" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="386" yCoord="477"/>
+<arcpath arcPointType="false" id="1" xCoord="456" yCoord="477"/>
+</arc>
+<arc id="cId918509767758580045372" inscription="[0,inf)" source="p19" target="t15" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="462" yCoord="461"/>
+<arcpath arcPointType="false" id="1" xCoord="462" yCoord="462"/>
+</arc>
+<arc id="cId918509767758580045373" inscription="1" source="t15" target="p22" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="462" yCoord="492"/>
+<arcpath arcPointType="false" id="1" xCoord="462" yCoord="492"/>
+</arc>
+<arc id="cId918509767758580045374" inscription="[0,inf)" source="p22" target="t17" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="462" yCoord="521"/>
+<arcpath arcPointType="false" id="1" xCoord="462" yCoord="537"/>
+</arc>
+<arc id="cId918509767758580045375" inscription="1" source="t17" target="p27" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="462" yCoord="567"/>
+<arcpath arcPointType="false" id="1" xCoord="462" yCoord="567"/>
+</arc>
+<arc id="cId918509767758580045385" inscription="1" source="t14" target="p21" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="492"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="492"/>
+</arc>
+<arc id="cId918509767758580045384" inscription="[0,inf)" source="p18" target="t14" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="461"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="462"/>
+</arc>
+<arc id="cId918509767758580045387" inscription="1" source="t16" target="p26" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="567"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="567"/>
+</arc>
+<arc id="cId918509767758580045386" inscription="[0,inf)" source="p21" target="t16" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="521"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="537"/>
+</arc>
+<arc id="cId918509767758580045393" inscription="1" source="t10" target="p16" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="166" yCoord="392"/>
+<arcpath arcPointType="false" id="1" xCoord="168" yCoord="388"/>
+</arc>
+<arc id="cId918509767758580045395" inscription="1" source="t12" target="p25" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="462"/>
+<arcpath arcPointType="false" id="1" xCoord="162" yCoord="567"/>
+</arc>
+<arc id="cId918509767758580045394" inscription="[0,inf)" source="p16" target="t12" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="162" yCoord="416"/>
+<arcpath arcPointType="false" id="1" xCoord="162" yCoord="432"/>
+</arc>
+<arc id="cId919005512723585283789" inscription="1" source="t17" target="p23" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="456" yCoord="552"/>
+<arcpath arcPointType="false" id="1" xCoord="386" yCoord="539"/>
+</arc>
+<arc id="cId919005512723585283788" inscription="[0,inf)" source="p26" target="t18" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="596"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="612"/>
+</arc>
+<arc id="cId919005512723585283790" inscription="[0,inf)" source="p23" target="t16" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="539"/>
+<arcpath arcPointType="false" id="1" xCoord="271" yCoord="552"/>
+</arc>
+<arc id="cId919005512723585283796" inscription="[0,inf)" source="p25" target="t18" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="175" yCoord="588"/>
+<arcpath arcPointType="false" id="1" xCoord="261" yCoord="627"/>
+</arc>
+</net>
+<query active="true" capacity="10" discreteInclusion="false" extrapolationOption="null" gcd="false" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" overApproximation="false" pTrie="false" query="EF TAPN1.p15=3" reduction="true" reductionOption="VerifyTAPN" searchOption="DFS" symmetry="true" timeDarts="false" traceOption="SOME"/>
+<query active="true" capacity="10" discreteInclusion="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" overApproximation="false" pTrie="true" query="EF (TAPN1.p26=2 and TAPN1.p7&gt;=1)" reduction="true" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<k-bound bound="3"/>
+</pnml>

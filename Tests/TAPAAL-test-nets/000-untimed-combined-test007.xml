@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-place initialMarking="0" invariant="&lt; inf" name="storage"/>
+<shared-place initialMarking="5" invariant="&lt; inf" name="sup1"/>
+<shared-place initialMarking="0" invariant="&lt; inf" name="sup2"/>
+<shared-place initialMarking="0" invariant="&lt; inf" name="sup3"/>
+<shared-place initialMarking="0" invariant="&lt; inf" name="sup4"/>
+<shared-place initialMarking="0" invariant="&lt; inf" name="sup5"/>
+<shared-place initialMarking="0" invariant="&lt;= y" name="done"/>
+<constant name="a" value="0"/>
+<constant name="b" value="5"/>
+<constant name="c" value="0"/>
+<constant name="d" value="1"/>
+<constant name="e" value="0"/>
+<constant name="f" value="1"/>
+<constant name="g" value="0"/>
+<constant name="h" value="1"/>
+<constant name="x" value="0"/>
+<constant name="y" value="100"/>
+<net active="true" id="worker2" type="P/T net">
+<place id="sup1" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="sup1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="90.0"/>
+<place id="sup2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="sup2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="90.0"/>
+<place id="ready" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ready" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="210.0"/>
+<place id="prep" initialMarking="0" invariant="&lt;= d" markingOffsetX="0.0" markingOffsetY="0.0" name="prep" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="210.0"/>
+<place id="P4" initialMarking="0" invariant="&lt;= b" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="270.0" positionY="90.0"/>
+<place id="asm" initialMarking="0" invariant="&lt;= f" markingOffsetX="0.0" markingOffsetY="0.0" name="asm" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="390.0"/>
+<place id="idle" initialMarking="0" invariant="&lt;= h" markingOffsetX="0.0" markingOffsetY="0.0" name="idle" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="390.0"/>
+<place id="storage" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="storage" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="495.0"/>
+<transition angle="0" id="finish" infiniteServer="false" name="finish" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="390.0" priority="0" urgent="false"/>
+<transition angle="0" id="start" infiniteServer="false" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="300.0" priority="0" urgent="false"/>
+<transition angle="0" id="reset" infiniteServer="false" name="reset" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="300.0" priority="0" urgent="false"/>
+<transition angle="0" id="sStart" infiniteServer="false" name="sStart" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="90.0" priority="0" urgent="true"/>
+<transition angle="0" id="sDone" infiniteServer="false" name="sDone" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="90.0" priority="0" urgent="false"/>
+<arc id="sup2 to sStart" inscription="[0,inf)" source="sup1" target="sStart" type="timed" weight="5">
+<arcpath arcPointType="false" id="0" xCoord="131" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="186" yCoord="102"/>
+</arc>
+<arc id="ready to sStart" inscription="[0,inf)" source="ready" target="sStart" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="179" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="117"/>
+</arc>
+<arc id="sStart to P4" inscription="1" source="sStart" target="P4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="196" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="102"/>
+</arc>
+<arc id="P4 to sDone" inscription="[0,inf)" source="P4" target="sDone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="296" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="351" yCoord="102"/>
+</arc>
+<arc id="sDone to sup3" inscription="1" source="sDone" target="sup2" type="normal" weight="4">
+<arcpath arcPointType="false" id="0" xCoord="361" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="432" yCoord="102"/>
+</arc>
+<arc id="sDone to prep" inscription="1" source="sDone" target="prep" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="117"/>
+<arcpath arcPointType="false" id="1" xCoord="369" yCoord="207"/>
+</arc>
+<arc id="finish to storage" inscription="1" source="finish" target="storage" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="417"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="492"/>
+</arc>
+<arc id="prep to start" inscription="[0,inf)" source="prep" target="start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="236"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="297"/>
+</arc>
+<arc id="start to asm" inscription="1" source="start" target="asm" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="387"/>
+</arc>
+<arc id="asm to finish" inscription="[0,inf)" source="asm" target="finish" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="271" yCoord="402"/>
+</arc>
+<arc id="finish to idle" inscription="1" source="finish" target="idle" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="261" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="191" yCoord="402"/>
+</arc>
+<arc id="idle to reset" inscription="[0,inf)" source="idle" target="reset" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="177" yCoord="387"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="327"/>
+</arc>
+<arc id="reset to ready" inscription="1" source="reset" target="ready" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="177" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="236"/>
+</arc>
+</net>
+<net active="true" id="worker3" type="P/T net">
+<place id="sup2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="sup2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="90.0"/>
+<place id="sup3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="sup3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="90.0"/>
+<place id="ready" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ready" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="210.0"/>
+<place id="prep" initialMarking="0" invariant="&lt;= d" markingOffsetX="0.0" markingOffsetY="0.0" name="prep" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="210.0"/>
+<place id="P4" initialMarking="0" invariant="&lt;= b" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="270.0" positionY="90.0"/>
+<place id="asm" initialMarking="0" invariant="&lt;= f" markingOffsetX="0.0" markingOffsetY="0.0" name="asm" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="390.0"/>
+<place id="idle" initialMarking="0" invariant="&lt;= h" markingOffsetX="0.0" markingOffsetY="0.0" name="idle" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="390.0"/>
+<place id="storage" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="storage" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="495.0"/>
+<transition angle="0" id="finish" infiniteServer="false" name="finish" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="390.0" priority="0" urgent="false"/>
+<transition angle="0" id="start" infiniteServer="false" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="300.0" priority="0" urgent="false"/>
+<transition angle="0" id="reset" infiniteServer="false" name="reset" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="300.0" priority="0" urgent="false"/>
+<transition angle="0" id="sStart" infiniteServer="false" name="sStart" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="90.0" priority="0" urgent="true"/>
+<transition angle="0" id="sDone" infiniteServer="false" name="sDone" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="90.0" priority="0" urgent="false"/>
+<arc id="sup3 to sStart" inscription="[0,inf)" source="sup2" target="sStart" type="timed" weight="4">
+<arcpath arcPointType="false" id="0" xCoord="133" yCoord="104"/>
+<arcpath arcPointType="false" id="1" xCoord="186" yCoord="102"/>
+</arc>
+<arc id="ready to sStart" inscription="[0,inf)" source="ready" target="sStart" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="181" yCoord="209"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="117"/>
+</arc>
+<arc id="sStart to P4" inscription="1" source="sStart" target="P4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="198" yCoord="104"/>
+<arcpath arcPointType="false" id="1" xCoord="269" yCoord="104"/>
+</arc>
+<arc id="P4 to sDone" inscription="[0,inf)" source="P4" target="sDone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="298" yCoord="104"/>
+<arcpath arcPointType="false" id="1" xCoord="351" yCoord="102"/>
+</arc>
+<arc id="sDone to sup4" inscription="1" source="sDone" target="sup3" type="normal" weight="3">
+<arcpath arcPointType="false" id="0" xCoord="361" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="434" yCoord="104"/>
+</arc>
+<arc id="sDone to prep" inscription="1" source="sDone" target="prep" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="359" yCoord="119"/>
+<arcpath arcPointType="false" id="1" xCoord="371" yCoord="209"/>
+</arc>
+<arc id="finish to storage" inscription="1" source="finish" target="storage" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="417"/>
+<arcpath arcPointType="false" id="1" xCoord="269" yCoord="494"/>
+</arc>
+<arc id="prep to start" inscription="[0,inf)" source="prep" target="start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="374" yCoord="238"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="297"/>
+</arc>
+<arc id="start to asm" inscription="1" source="start" target="asm" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="374" yCoord="329"/>
+<arcpath arcPointType="false" id="1" xCoord="374" yCoord="389"/>
+</arc>
+<arc id="asm to finish" inscription="[0,inf)" source="asm" target="finish" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="359" yCoord="404"/>
+<arcpath arcPointType="false" id="1" xCoord="271" yCoord="402"/>
+</arc>
+<arc id="finish to idle" inscription="1" source="finish" target="idle" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="263" yCoord="404"/>
+<arcpath arcPointType="false" id="1" xCoord="193" yCoord="404"/>
+</arc>
+<arc id="idle to reset" inscription="[0,inf)" source="idle" target="reset" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="179" yCoord="389"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="327"/>
+</arc>
+<arc id="reset to ready" inscription="1" source="reset" target="ready" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="179" yCoord="299"/>
+<arcpath arcPointType="false" id="1" xCoord="179" yCoord="238"/>
+</arc>
+</net>
+<net active="true" id="worker4" type="P/T net">
+<place id="sup3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="sup3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="90.0"/>
+<place id="sup4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="sup4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="90.0"/>
+<place id="ready" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ready" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="210.0"/>
+<place id="prep" initialMarking="0" invariant="&lt;= d" markingOffsetX="0.0" markingOffsetY="0.0" name="prep" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="210.0"/>
+<place id="P4" initialMarking="0" invariant="&lt;= b" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="270.0" positionY="90.0"/>
+<place id="asm" initialMarking="0" invariant="&lt;= f" markingOffsetX="0.0" markingOffsetY="0.0" name="asm" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="390.0"/>
+<place id="idle" initialMarking="0" invariant="&lt;= h" markingOffsetX="0.0" markingOffsetY="0.0" name="idle" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="390.0"/>
+<place id="storage" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="storage" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="495.0"/>
+<transition angle="0" id="finish" infiniteServer="false" name="finish" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="390.0" priority="0" urgent="false"/>
+<transition angle="0" id="start" infiniteServer="false" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="300.0" priority="0" urgent="false"/>
+<transition angle="0" id="reset" infiniteServer="false" name="reset" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="300.0" priority="0" urgent="false"/>
+<transition angle="0" id="sStart" infiniteServer="false" name="sStart" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="90.0" priority="0" urgent="true"/>
+<transition angle="0" id="sDone" infiniteServer="false" name="sDone" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="90.0" priority="0" urgent="false"/>
+<arc id="sup4 to sStart" inscription="[0,inf)" source="sup3" target="sStart" type="timed" weight="3">
+<arcpath arcPointType="false" id="0" xCoord="133" yCoord="104"/>
+<arcpath arcPointType="false" id="1" xCoord="186" yCoord="102"/>
+</arc>
+<arc id="ready to sStart" inscription="[0,inf)" source="ready" target="sStart" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="181" yCoord="209"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="117"/>
+</arc>
+<arc id="sStart to P4" inscription="1" source="sStart" target="P4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="198" yCoord="104"/>
+<arcpath arcPointType="false" id="1" xCoord="269" yCoord="104"/>
+</arc>
+<arc id="P4 to sDone" inscription="[0,inf)" source="P4" target="sDone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="298" yCoord="104"/>
+<arcpath arcPointType="false" id="1" xCoord="351" yCoord="102"/>
+</arc>
+<arc id="sDone to sup5" inscription="1" source="sDone" target="sup4" type="normal" weight="2">
+<arcpath arcPointType="false" id="0" xCoord="361" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="434" yCoord="104"/>
+</arc>
+<arc id="sDone to prep" inscription="1" source="sDone" target="prep" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="359" yCoord="119"/>
+<arcpath arcPointType="false" id="1" xCoord="371" yCoord="209"/>
+</arc>
+<arc id="finish to storage" inscription="1" source="finish" target="storage" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="417"/>
+<arcpath arcPointType="false" id="1" xCoord="269" yCoord="494"/>
+</arc>
+<arc id="prep to start" inscription="[0,inf)" source="prep" target="start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="374" yCoord="238"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="297"/>
+</arc>
+<arc id="start to asm" inscription="1" source="start" target="asm" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="374" yCoord="329"/>
+<arcpath arcPointType="false" id="1" xCoord="374" yCoord="389"/>
+</arc>
+<arc id="asm to finish" inscription="[0,inf)" source="asm" target="finish" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="359" yCoord="404"/>
+<arcpath arcPointType="false" id="1" xCoord="271" yCoord="402"/>
+</arc>
+<arc id="finish to idle" inscription="1" source="finish" target="idle" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="263" yCoord="404"/>
+<arcpath arcPointType="false" id="1" xCoord="193" yCoord="404"/>
+</arc>
+<arc id="idle to reset" inscription="[0,inf)" source="idle" target="reset" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="179" yCoord="389"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="327"/>
+</arc>
+<arc id="reset to ready" inscription="1" source="reset" target="ready" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="179" yCoord="299"/>
+<arcpath arcPointType="false" id="1" xCoord="179" yCoord="238"/>
+</arc>
+</net>
+<net active="true" id="worker5" type="P/T net">
+<place id="sup4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="sup4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="90.0"/>
+<place id="sup5" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="sup5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="90.0"/>
+<place id="ready" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ready" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="210.0"/>
+<place id="prep" initialMarking="0" invariant="&lt;= d" markingOffsetX="0.0" markingOffsetY="0.0" name="prep" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="210.0"/>
+<place id="P4" initialMarking="0" invariant="&lt;= b" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="270.0" positionY="90.0"/>
+<place id="asm" initialMarking="0" invariant="&lt;= f" markingOffsetX="0.0" markingOffsetY="0.0" name="asm" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="390.0"/>
+<place id="idle" initialMarking="0" invariant="&lt;= h" markingOffsetX="0.0" markingOffsetY="0.0" name="idle" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="390.0"/>
+<place id="storage" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="storage" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="495.0"/>
+<transition angle="0" id="finish" infiniteServer="false" name="finish" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="390.0" priority="0" urgent="false"/>
+<transition angle="0" id="start" infiniteServer="false" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="300.0" priority="0" urgent="false"/>
+<transition angle="0" id="reset" infiniteServer="false" name="reset" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="300.0" priority="0" urgent="false"/>
+<transition angle="0" id="sStart" infiniteServer="false" name="sStart" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="90.0" priority="0" urgent="true"/>
+<transition angle="0" id="sDone" infiniteServer="false" name="sDone" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="90.0" priority="0" urgent="false"/>
+<arc id="sup5 to sStart" inscription="[0,inf)" source="sup4" target="sStart" type="timed" weight="2">
+<arcpath arcPointType="false" id="0" xCoord="133" yCoord="104"/>
+<arcpath arcPointType="false" id="1" xCoord="186" yCoord="102"/>
+</arc>
+<arc id="ready to sStart" inscription="[0,inf)" source="ready" target="sStart" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="181" yCoord="209"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="117"/>
+</arc>
+<arc id="sStart to P4" inscription="1" source="sStart" target="P4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="198" yCoord="104"/>
+<arcpath arcPointType="false" id="1" xCoord="269" yCoord="104"/>
+</arc>
+<arc id="P4 to sDone" inscription="[0,inf)" source="P4" target="sDone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="298" yCoord="104"/>
+<arcpath arcPointType="false" id="1" xCoord="351" yCoord="102"/>
+</arc>
+<arc id="sDone to sup6" inscription="1" source="sDone" target="sup5" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="361" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="434" yCoord="104"/>
+</arc>
+<arc id="sDone to prep" inscription="1" source="sDone" target="prep" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="359" yCoord="119"/>
+<arcpath arcPointType="false" id="1" xCoord="371" yCoord="209"/>
+</arc>
+<arc id="finish to storage" inscription="1" source="finish" target="storage" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="417"/>
+<arcpath arcPointType="false" id="1" xCoord="269" yCoord="494"/>
+</arc>
+<arc id="prep to start" inscription="[0,inf)" source="prep" target="start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="374" yCoord="238"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="297"/>
+</arc>
+<arc id="start to asm" inscription="1" source="start" target="asm" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="374" yCoord="329"/>
+<arcpath arcPointType="false" id="1" xCoord="374" yCoord="389"/>
+</arc>
+<arc id="asm to finish" inscription="[0,inf)" source="asm" target="finish" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="359" yCoord="404"/>
+<arcpath arcPointType="false" id="1" xCoord="271" yCoord="402"/>
+</arc>
+<arc id="finish to idle" inscription="1" source="finish" target="idle" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="263" yCoord="404"/>
+<arcpath arcPointType="false" id="1" xCoord="193" yCoord="404"/>
+</arc>
+<arc id="idle to reset" inscription="[0,inf)" source="idle" target="reset" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="179" yCoord="389"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="327"/>
+</arc>
+<arc id="reset to ready" inscription="1" source="reset" target="ready" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="179" yCoord="299"/>
+<arcpath arcPointType="false" id="1" xCoord="179" yCoord="238"/>
+</arc>
+</net>
+<net active="true" id="worker6" type="P/T net">
+<place id="sup5" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="sup5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="90.0"/>
+<place id="done" initialMarking="0" invariant="&lt;= y" markingOffsetX="0.0" markingOffsetY="0.0" name="done" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="90.0"/>
+<place id="ready" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ready" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="210.0"/>
+<place id="prep" initialMarking="0" invariant="&lt;= d" markingOffsetX="0.0" markingOffsetY="0.0" name="prep" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="210.0"/>
+<place id="P4" initialMarking="0" invariant="&lt;= b" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="270.0" positionY="90.0"/>
+<place id="asm" initialMarking="0" invariant="&lt;= f" markingOffsetX="0.0" markingOffsetY="0.0" name="asm" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="390.0"/>
+<place id="idle" initialMarking="0" invariant="&lt;= h" markingOffsetX="0.0" markingOffsetY="0.0" name="idle" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="390.0"/>
+<place id="storage" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="storage" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="495.0"/>
+<transition angle="0" id="finish" infiniteServer="false" name="finish" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="390.0" priority="0" urgent="false"/>
+<transition angle="0" id="start" infiniteServer="false" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="300.0" priority="0" urgent="false"/>
+<transition angle="0" id="reset" infiniteServer="false" name="reset" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="300.0" priority="0" urgent="false"/>
+<transition angle="0" id="sStart" infiniteServer="false" name="sStart" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="90.0" priority="0" urgent="true"/>
+<transition angle="0" id="sDone" infiniteServer="false" name="sDone" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="90.0" priority="0" urgent="false"/>
+<arc id="sup6 to sStart" inscription="[0,inf)" source="sup5" target="sStart" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="133" yCoord="104"/>
+<arcpath arcPointType="false" id="1" xCoord="186" yCoord="102"/>
+</arc>
+<arc id="ready to sStart" inscription="[0,inf)" source="ready" target="sStart" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="181" yCoord="209"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="117"/>
+</arc>
+<arc id="sStart to P4" inscription="1" source="sStart" target="P4" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="198" yCoord="104"/>
+<arcpath arcPointType="false" id="1" xCoord="269" yCoord="104"/>
+</arc>
+<arc id="P4 to sDone" inscription="[0,inf)" source="P4" target="sDone" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="298" yCoord="104"/>
+<arcpath arcPointType="false" id="1" xCoord="351" yCoord="102"/>
+</arc>
+<arc id="sDone to done" inscription="1" source="sDone" target="done" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="361" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="434" yCoord="104"/>
+</arc>
+<arc id="sDone to prep" inscription="1" source="sDone" target="prep" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="359" yCoord="119"/>
+<arcpath arcPointType="false" id="1" xCoord="371" yCoord="209"/>
+</arc>
+<arc id="finish to storage" inscription="1" source="finish" target="storage" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="417"/>
+<arcpath arcPointType="false" id="1" xCoord="269" yCoord="494"/>
+</arc>
+<arc id="prep to start" inscription="[0,inf)" source="prep" target="start" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="374" yCoord="238"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="297"/>
+</arc>
+<arc id="start to asm" inscription="1" source="start" target="asm" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="374" yCoord="329"/>
+<arcpath arcPointType="false" id="1" xCoord="374" yCoord="389"/>
+</arc>
+<arc id="asm to finish" inscription="[0,inf)" source="asm" target="finish" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="359" yCoord="404"/>
+<arcpath arcPointType="false" id="1" xCoord="271" yCoord="402"/>
+</arc>
+<arc id="finish to idle" inscription="1" source="finish" target="idle" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="263" yCoord="404"/>
+<arcpath arcPointType="false" id="1" xCoord="193" yCoord="404"/>
+</arc>
+<arc id="idle to reset" inscription="[0,inf)" source="idle" target="reset" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="179" yCoord="389"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="327"/>
+</arc>
+<arc id="reset to ready" inscription="1" source="reset" target="ready" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="179" yCoord="299"/>
+<arcpath arcPointType="false" id="1" xCoord="179" yCoord="238"/>
+</arc>
+</net>
+<net active="true" id="finalization" type="P/T net">
+<place id="done" initialMarking="0" invariant="&lt;= y" markingOffsetX="0.0" markingOffsetY="0.0" name="done" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="75.0"/>
+<place id="storage" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="storage" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="240.0"/>
+<place id="delivered" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="delivered" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="285.0" positionY="165.0"/>
+<transition angle="0" id="d" infiniteServer="false" name="d" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="165.0" priority="0" urgent="false"/>
+<arc id="done to d" inscription="[0,inf)" source="done" target="d" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="140" yCoord="99"/>
+<arcpath arcPointType="false" id="1" xCoord="187" yCoord="172"/>
+</arc>
+<arc id="storage to d" inscription="[0,inf)" source="storage" target="d" type="timed" weight="5">
+<arcpath arcPointType="false" id="0" xCoord="127" yCoord="241"/>
+<arcpath arcPointType="false" id="1" xCoord="186" yCoord="182"/>
+</arc>
+<arc id="d to delivered" inscription="1" source="d" target="delivered" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="196" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="282" yCoord="177"/>
+</arc>
+</net>
+<query active="true" capacity="1" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" pTrie="true" query="EF finalization.delivered=1" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="AG worker6.idle=0" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="1" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" pTrie="true" query="AF finalization.delivered=1" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="EG sup4=0" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="AF finalization.delivered=2" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="false" traceOption="SOME"/>
+</pnml>

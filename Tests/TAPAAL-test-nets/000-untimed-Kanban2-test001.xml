@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="ExportedNet" type="P/T net">
+<place id="P3" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="360.0"/>
+<place id="Pm3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Pm3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="300.0"/>
+<place id="Pback3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Pback3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="210.0" positionY="390.0"/>
+<place id="Pout3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Pout3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="390.0"/>
+<place id="P4" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="300.0" positionY="150.0"/>
+<place id="Pm4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Pm4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="105.0"/>
+<place id="Pback4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Pback4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="195.0" positionY="195.0"/>
+<place id="Pout4" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Pout4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="195.0"/>
+<place id="Pm1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Pm1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="495.0"/>
+<place id="P1" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="525.0"/>
+<place id="Pout1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Pout1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="285.0" positionY="570.0"/>
+<place id="Pback1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Pback1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="570.0"/>
+<place id="Pm2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Pm2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="300.0"/>
+<place id="P2" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="60.0" positionY="360.0"/>
+<place id="Pout2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Pout2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="405.0" positionY="390.0"/>
+<place id="Pback2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Pback2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="390.0"/>
+<transition angle="0" id="tback3" infiniteServer="false" name="tback3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="210.0" positionY="435.0" priority="1" timed="true"/>
+<transition angle="0" id="tredo3" infiniteServer="false" name="tredo3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="210.0" positionY="360.0" priority="1" timed="true"/>
+<transition angle="0" id="tredo2" infiniteServer="false" name="tredo2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="360.0" priority="1" timed="true"/>
+<transition angle="0" id="tok3" infiniteServer="false" name="tok3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="360.0" priority="1" timed="true"/>
+<transition angle="0" id="tredo4" infiniteServer="false" name="tredo4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="150.0" priority="1" timed="true"/>
+<transition angle="0" id="tin4" infiniteServer="false" name="tin4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="75.0" priority="1" timed="true"/>
+<transition angle="0" id="tok4" infiniteServer="false" name="tok4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="150.0" priority="1" timed="true"/>
+<transition angle="0" id="tback4" infiniteServer="false" name="tback4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="240.0" priority="1" timed="true"/>
+<transition angle="0" id="tsynch1_23" infiniteServer="false" name="tsynch1_23" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="465.0" priority="1" timed="true"/>
+<transition angle="0" id="tout1" infiniteServer="false" name="tout1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="285.0" positionY="615.0" priority="1" timed="true"/>
+<transition angle="0" id="tok1" infiniteServer="false" name="tok1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="285.0" positionY="540.0" priority="1" timed="true"/>
+<transition angle="0" id="tsynch4_23" infiniteServer="false" name="tsynch4_23" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="255.0" positionY="255.0" priority="1" timed="true"/>
+<transition angle="0" id="tredo1" infiniteServer="false" name="tredo1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="540.0" priority="1" timed="true"/>
+<transition angle="0" id="tback1" infiniteServer="false" name="tback1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="615.0" priority="1" timed="true"/>
+<transition angle="0" id="tback2" infiniteServer="false" name="tback2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="435.0" priority="1" timed="true"/>
+<transition angle="0" id="tok2" infiniteServer="false" name="tok2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="405.0" positionY="360.0" priority="1" timed="true"/>
+<arc id="arc0" inscription="[0,inf)" source="Pm4" target="tok4" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="244" yCoord="130"/>
+<arcpath arcPointType="false" id="1" xCoord="261" yCoord="162"/>
+</arc>
+<arc id="arc1" inscription="1" source="tok4" target="Pout4" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="192"/>
+</arc>
+<arc id="arc2" inscription="[0,inf)" source="Pback4" target="tback4" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="200" yCoord="220"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="237"/>
+</arc>
+<arc id="arc3" inscription="1" source="tback4" target="Pm4" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="231" yCoord="131"/>
+</arc>
+<arc id="arc4" inscription="[0,inf)" source="Pm4" target="tredo4" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="227" yCoord="128"/>
+<arcpath arcPointType="false" id="1" xCoord="196" yCoord="162"/>
+</arc>
+<arc id="arc5" inscription="1" source="tredo4" target="Pback4" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="200" yCoord="193"/>
+</arc>
+<arc id="arc6" inscription="[0,inf)" source="P4" target="tin4" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="301" yCoord="151"/>
+<arcpath arcPointType="false" id="1" xCoord="241" yCoord="87"/>
+</arc>
+<arc id="arc7" inscription="1" source="tin4" target="Pm4" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="102"/>
+</arc>
+<arc id="arc8" inscription="1" source="tredo2" target="Pback2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="387"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="387"/>
+</arc>
+<arc id="arc9" inscription="[0,inf)" source="Pm2" target="tredo2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="363" yCoord="324"/>
+<arcpath arcPointType="false" id="1" xCoord="331" yCoord="372"/>
+</arc>
+<arc id="arc10" inscription="1" source="tok3" target="Pout3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="132" yCoord="387"/>
+<arcpath arcPointType="false" id="1" xCoord="132" yCoord="387"/>
+</arc>
+<arc id="arc11" inscription="[0,inf)" source="Pm3" target="tok3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="168" yCoord="324"/>
+<arcpath arcPointType="false" id="1" xCoord="136" yCoord="372"/>
+</arc>
+<arc id="arc12" inscription="1" source="tback3" target="Pm3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="222" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="182" yCoord="326"/>
+</arc>
+<arc id="arc13" inscription="[0,inf)" source="Pback3" target="tback3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="222" yCoord="416"/>
+<arcpath arcPointType="false" id="1" xCoord="222" yCoord="432"/>
+</arc>
+<arc id="arc14" inscription="1" source="tredo3" target="Pback3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="222" yCoord="387"/>
+<arcpath arcPointType="false" id="1" xCoord="222" yCoord="387"/>
+</arc>
+<arc id="arc15" inscription="[0,inf)" source="Pm3" target="tredo3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="185" yCoord="324"/>
+<arcpath arcPointType="false" id="1" xCoord="216" yCoord="372"/>
+</arc>
+<arc id="arc16" inscription="1" source="tback1" target="Pm1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="612"/>
+<arcpath arcPointType="false" id="1" xCoord="262" yCoord="521"/>
+</arc>
+<arc id="arc17" inscription="[0,inf)" source="Pback1" target="tback1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="596"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="612"/>
+</arc>
+<arc id="arc18" inscription="1" source="tredo1" target="Pback1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="567"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="567"/>
+</arc>
+<arc id="arc19" inscription="[0,inf)" source="Pm1" target="tredo1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="259" yCoord="520"/>
+<arcpath arcPointType="false" id="1" xCoord="241" yCoord="552"/>
+</arc>
+<arc id="arc20" inscription="1" source="tok2" target="Pout2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="417" yCoord="387"/>
+<arcpath arcPointType="false" id="1" xCoord="417" yCoord="387"/>
+</arc>
+<arc id="arc21" inscription="[0,inf)" source="Pm2" target="tok2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="380" yCoord="324"/>
+<arcpath arcPointType="false" id="1" xCoord="411" yCoord="372"/>
+</arc>
+<arc id="arc22" inscription="1" source="tback2" target="Pm2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="366" yCoord="326"/>
+</arc>
+<arc id="arc23" inscription="[0,inf)" source="Pback2" target="tback2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="416"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="432"/>
+</arc>
+<arc id="arc24" inscription="[0,inf)" source="Pout2" target="tsynch1_23" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="403" yCoord="408"/>
+<arcpath arcPointType="false" id="1" xCoord="272" yCoord="476"/>
+</arc>
+<arc id="arc25" inscription="[0,inf)" source="Pout3" target="tsynch1_23" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="145" yCoord="409"/>
+<arcpath arcPointType="false" id="1" xCoord="262" yCoord="472"/>
+</arc>
+<arc id="arc26" inscription="1" source="tsynch1_23" target="P3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="272" yCoord="469"/>
+<arcpath arcPointType="false" id="1" xCoord="448" yCoord="378"/>
+</arc>
+<arc id="arc27" inscription="[0,inf)" source="P1" target="tsynch1_23" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="330" yCoord="527"/>
+<arcpath arcPointType="false" id="1" xCoord="271" yCoord="483"/>
+</arc>
+<arc id="arc28" inscription="1" source="tsynch1_23" target="Pm1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="492"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="492"/>
+</arc>
+<arc id="arc29" inscription="1" source="tsynch1_23" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="261" yCoord="482"/>
+<arcpath arcPointType="false" id="1" xCoord="84" yCoord="379"/>
+</arc>
+<arc id="arc30" inscription="1" source="tout1" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="297" yCoord="612"/>
+<arcpath arcPointType="false" id="1" xCoord="334" yCoord="549"/>
+</arc>
+<arc id="arc31" inscription="[0,inf)" source="Pout1" target="tout1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="297" yCoord="596"/>
+<arcpath arcPointType="false" id="1" xCoord="297" yCoord="612"/>
+</arc>
+<arc id="arc32" inscription="1" source="tok1" target="Pout1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="297" yCoord="567"/>
+<arcpath arcPointType="false" id="1" xCoord="297" yCoord="567"/>
+</arc>
+<arc id="arc33" inscription="[0,inf)" source="Pm1" target="tok1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="274" yCoord="520"/>
+<arcpath arcPointType="false" id="1" xCoord="291" yCoord="552"/>
+</arc>
+<arc id="arc34" inscription="[0,inf)" source="P2" target="tsynch4_23" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="85" yCoord="365"/>
+<arcpath arcPointType="false" id="1" xCoord="261" yCoord="272"/>
+</arc>
+<arc id="arc35" inscription="[0,inf)" source="Pout4" target="tsynch4_23" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="221"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="252"/>
+</arc>
+<arc id="arc36" inscription="1" source="tsynch4_23" target="P4" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="267" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="305" yCoord="175"/>
+</arc>
+<arc id="arc37" inscription="[0,inf)" source="P3" target="tsynch4_23" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="448" yCoord="365"/>
+<arcpath arcPointType="false" id="1" xCoord="271" yCoord="272"/>
+</arc>
+<arc id="arc38" inscription="1" source="tsynch4_23" target="Pm3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="262" yCoord="262"/>
+<arcpath arcPointType="false" id="1" xCoord="189" yCoord="304"/>
+</arc>
+<arc id="arc39" inscription="1" source="tsynch4_23" target="Pm2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="272" yCoord="262"/>
+<arcpath arcPointType="false" id="1" xCoord="358" yCoord="305"/>
+</arc>
+</net>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="EF (ExportedNet.Pout4=1 and ExportedNet.Pout2=1 and ExportedNet.Pout3=0 and ExportedNet.Pout1=1 and ExportedNet.P4=0 and ExportedNet.P1=2 and ExportedNet.Pm3=0 and ExportedNet.Pm4=1 and ExportedNet.P3=0 and ExportedNet.Pm1=1 and ExportedNet.Pm2=1 and ExportedNet.P2=0 and ExportedNet.Pback1=1 and ExportedNet.Pback2=1 and ExportedNet.Pback3=3 and ExportedNet.Pback4=1)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="EF (ExportedNet.Pout4&gt;=1 and ExportedNet.Pout2&gt;=0 and ExportedNet.Pout3&gt;=0 and ExportedNet.Pout1&gt;=1 and ExportedNet.P4&gt;=0 and ExportedNet.P1&gt;=1 and ExportedNet.Pm3&gt;=2 and ExportedNet.Pm4&gt;=1 and ExportedNet.P3&gt;=1 and ExportedNet.Pm1&gt;=1 and ExportedNet.Pm2&gt;=1 and ExportedNet.P2&gt;=1 and ExportedNet.Pback1&gt;=0 and ExportedNet.Pback2&gt;=1 and ExportedNet.Pback3&gt;=0 and ExportedNet.Pback4&gt;=1)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EF (ExportedNet.Pout4&gt;=1 and ExportedNet.Pout2&gt;=0 and ExportedNet.Pout3&gt;=0 and ExportedNet.Pout1&gt;=0 and ExportedNet.P4&gt;=0 and ExportedNet.P1&gt;=1 and ExportedNet.Pm3&gt;=1 and ExportedNet.Pm4&gt;=1 and ExportedNet.P3&gt;=1 and ExportedNet.Pm1&gt;=1 and ExportedNet.Pm2&gt;=1 and ExportedNet.P2&gt;=1 and ExportedNet.Pback1&gt;=0 and ExportedNet.Pback2&gt;=0 and ExportedNet.Pback3&gt;=0 and ExportedNet.Pback4&gt;=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="EF (ExportedNet.Pout4&gt;=1 and ExportedNet.Pout2&gt;=0 and ExportedNet.Pout3&gt;=0 and ExportedNet.Pout1&gt;=0 and ExportedNet.P4&gt;=0 and ExportedNet.P1&gt;=1 and ExportedNet.Pm3&gt;=1 and ExportedNet.Pm4&gt;=1 and ExportedNet.P3&gt;=1 and ExportedNet.Pm1&gt;=1 and ExportedNet.Pm2&gt;=1 and ExportedNet.P2&gt;=1 and ExportedNet.Pback1&gt;=0 and ExportedNet.Pback2&gt;=1 and ExportedNet.Pback3&gt;=0 and ExportedNet.Pback4&gt;=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-place initialMarking="1" invariant="&lt; inf" name="Res1"/>
+<shared-place initialMarking="1" invariant="&lt; inf" name="Res2"/>
+<net active="true" id="WorkflowNet2" type="P/T net">
+<place id="P16" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P16" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="210.0" positionY="210.0"/>
+<place id="P18" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P18" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="225.0"/>
+<transition angle="0" id="T10" infiniteServer="false" name="T10" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="300.0" positionY="135.0" priority="0" urgent="false"/>
+<arc id="T10 to P16" inscription="1" source="T10" target="P16" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="306" yCoord="147"/>
+<arcpath arcPointType="false" id="1" xCoord="233" yCoord="212"/>
+</arc>
+<arc id="P18 to T10" inscription="[0,inf)" source="P18" target="T10" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="434" yCoord="228"/>
+<arcpath arcPointType="false" id="1" xCoord="316" yCoord="147"/>
+</arc>
+</net>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" overApproximation="false" pTrie="true" query="EF deadlock" reduction="true" reductionOption="VerifyPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="SOME"/>
+<k-bound bound="3"/>
+</pnml>

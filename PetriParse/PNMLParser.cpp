@@ -123,7 +123,7 @@ void PNMLParser::parse(const std::string& xml,
 	id2name.clear();
 	arcs.clear();
 	transitions.clear();
-	inhibarcs.clear();
+	//inhibarcs.clear(); We need those for the use in net reductions
 }
 
 void PNMLParser::makePetriNet(){
@@ -242,8 +242,7 @@ void PNMLParser::parseInhibitorArc(DOMElement* element){
 			arc.weight = atoi(text.c_str());
 		}
 	}
-
-	inhibarcs.push_back(arc);
+       	inhibarcs.push_back(arc);
 }
 
 void PNMLParser::parseArc(DOMElement* element){

@@ -2,6 +2,7 @@
  * Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                     Lars Kærlund Østergaard <larsko@gmail.com>,
+ *					   Jiri Srba <srba.jiri@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +38,8 @@
 #include <PetriEngine/Reachability/DepthFirstReachabilitySearch.h>
 #include <PetriEngine/Reachability/BreadthFirstReachabilitySearch.h>
 
+#include "PetriEngine/Reducer.h"
+
 
 using namespace std;
 using namespace PetriEngine;
@@ -60,31 +63,40 @@ enum SearchStrategies{
 	OverApprox		//LinearOverApprx
 };
 
-#define VERSION		"1.0.0"
+#define VERSION		"1.1.0"
 
 int main(int argc, char* argv[]){
 	// Commandline arguments
 	bool outputtrace = false;
 	int kbound = 0;
 	SearchStrategies searchstrategy = BestFS;
-	int memorylimit = 1024*1024*1024;
+	int memorylimit = 3*1024*1024*1024;
 	char* modelfile = NULL;
 	char* queryfile = NULL;
 	bool disableoverapprox = false;
+        int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
 
 	//----------------------- Parse Arguments -----------------------//
 
 	// Parse command line arguments
 	for(int i = 1; i < argc; i++){
 		if(strcmp(argv[i], "-k") == 0 || strcmp(argv[i], "--k-bound") == 0){
-			if(sscanf(argv[++i], "%d", &kbound) != 1 || kbound < 0){
+                        if (i==argc-1) {
+                                fprintf(stderr, "Missing number after \"%s\"\n", argv[i]);
+				return ErrorCode;                           
+                        }
+                        if(sscanf(argv[++i], "%d", &kbound) != 1 || kbound < 0){
 				fprintf(stderr, "Argument Error: Invalid number of tokens \"%s\"\n", argv[i]);
 				return ErrorCode;
 			}
 		}else if(strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--trace") == 0){
 			outputtrace = true;
 		}else if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--search-strategy") == 0){
-			char* s = argv[++i];
+			if (i==argc-1) {
+                                fprintf(stderr, "Missing search strategy after \"%s\"\n\n", argv[i]);
+				return ErrorCode;                           
+                        }
+                        char* s = argv[++i];
 			if(strcmp(s, "BestFS") == 0)
 				searchstrategy = BestFS;
 			else if(strcmp(s, "BFS") == 0)
@@ -100,6 +112,10 @@ int main(int argc, char* argv[]){
 				return ErrorCode;
 			}
 		}else if(strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--memory-limit") == 0){
+                        if (i==argc-1) {
+                                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+				return ErrorCode;                           
+                        }
 			if(sscanf(argv[++i], "%d", &memorylimit) != 1 || memorylimit < 0){
 				fprintf(stderr, "Argument Error: Invalid memory limit \"%s\"\n", argv[i]);
 				return ErrorCode;
@@ -107,22 +123,36 @@ int main(int argc, char* argv[]){
 				memorylimit *= 1024;
 		}else if(strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable-overapprox") == 0){
 			disableoverapprox = true;
+                }else if(strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--reduction") == 0){
+                        if (i==argc-1) {
+                                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+				return ErrorCode;                           
+                        }
+                        if(sscanf(argv[++i], "%d", &enablereduction) != 1 || enablereduction < 0 || enablereduction > 2){
+				fprintf(stderr, "Argument Error: Invalid reduction argument \"%s\"\n", argv[i]);
+				return ErrorCode;
+			}
 		}else if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0){
-			printf(	"Usage: VerifyPN [options] model-file query-file\n"
-					"Determine untimed reachability of a query for a Petri net.\n"
+			printf(	"Usage: verifypn [options] model-file query-file\n"
+					"A tool for answering reachability of place cardinality queries (including deadlock)\n" 
+                                        "for weighted P/T Petri nets extended with inhibitor arcs.\n"
 					"\n"
 					"Options:\n"
 					"  -k, --k-bound <number of tokens>   Token bound, 0 to ignore (default)\n"
 					"  -t, --trace                        Provide XML-trace to stderr\n"
 					"  -s, --search-strategy <strategy>   Search strategy:\n"
 					"                                     - BestFS       Heuristic search (default)\n"
-					"                                     - BFS          Best first search\n"
+					"                                     - BFS          Breadth first search\n"
 					"                                     - DFS          Depth first search\n"
 					"                                     - RDFS         Random depth first search\n"
-					"                                     - OverApprox   Linear Over Approx.\n"
+					"                                     - OverApprox   Linear over-approximation only\n"
 					"  -m, --memory-limit <megabyte>      Memory limit for state space in MB,\n"
-					"                                     0 for unlimited (1 GB default)\n"
+					"                                     0 for unlimited (3 GB default)\n"
 					"  -d, --disable-over-approximation   Disable linear over approximation\n"
+                                        "  -r, --reduction                    Enable structural net reduction:\n"
+                                        "                                     - 0  disabled (default)\n"
+                                        "                                     - 1  aggressive reduction\n"
+                                        "                                     - 2  reduction preserving k-boundedness\n"
 					"  -h, --help                         Display this help message\n"
 					"  -v, --version                      Display version information\n"
 					"\n"
@@ -133,14 +163,16 @@ int main(int argc, char* argv[]){
 					"  3   Error, see stderr for error message\n"
 					"\n"
 					"VerifyPN is a compilation of PeTe as untimed backend for TAPAAL.\n"
-					"PeTe project page: <https://github.com/jopsen/PeTe>\n");
+					"PeTe project page: <https://github.com/jopsen/PeTe>\n"
+                                        "TAPAAL project page: <http://www.tapaal.net>\n");
 			return 0;
 		}else if(strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0){
-			printf("VerifyPN (PeTe for TAPAAL) %s\n", VERSION);
+			printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERSION);
 			printf("Copyright (C) 2011-2014 Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
 			printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>,\n");
 			printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
-			printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
+			printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
+                        printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
 			return 0;
 		}else if(modelfile == NULL){
 			modelfile = argv[i];
@@ -172,6 +204,10 @@ int main(int argc, char* argv[]){
 	PetriNet* net = NULL;
 	MarkVal* m0 = NULL;
 	VarVal* v0 = NULL;
+                  
+        // List of inhibitor arcs
+        PNMLParser::InhibitorArcList inhibarcs;
+        
 	{
 		//Load the model
 		ifstream mfile(modelfile, ifstream::in);
@@ -189,6 +225,8 @@ int main(int argc, char* argv[]){
 		PNMLParser parser;
 		parser.parse(buffer.str(), &builder);
 		parser.makePetriNet();
+                
+                inhibarcs = parser.getInhibitorArcs(); // Remember inhibitor arcs
 
 		//Build the petri net
 		net = builder.makePetriNet();
@@ -261,6 +299,30 @@ int main(int argc, char* argv[]){
 		}
 	}
 
+        //--------------------- Apply Net Reduction ---------------//
+        
+    Reducer reducer = Reducer(net); // reduced is needed also in trace generation (hence the extended scope)
+	if (enablereduction == 1 or enablereduction == 2) {
+		// Compute how many times each place appears in the query
+		MarkVal* placeInQuery = new MarkVal[net->numberOfPlaces()];
+		for (size_t i = 0; i < net->numberOfPlaces(); i++) {
+			placeInQuery[i] = 0;
+		}
+		QueryPlaceAnalysisContext placecontext(*net, placeInQuery);
+		query->analyze(placecontext);
+
+		// Compute the places and transitions that connect to inhibitor arcs
+		MarkVal* placeInInhib = new MarkVal[net->numberOfPlaces()];
+		MarkVal* transitionInInhib = new MarkVal[net->numberOfTransitions()];
+
+		// CreateInhibitorPlacesAndTransitions translates inhibitor place/transitions names to indexes
+		reducer.CreateInhibitorPlacesAndTransitions(net, inhibarcs, placeInInhib, transitionInInhib);
+
+		//reducer.Print(net, m0, placeInQuery, placeInInhib, transitionInInhib); 
+		reducer.Reduce(net, m0, placeInQuery, placeInInhib, transitionInInhib, enablereduction); // reduce the net
+		//reducer.Print(net, m0, placeInQuery, placeInInhib, transitionInInhib);
+	}
+        
 	//----------------------- Reachability -----------------------//
 
 	//Create reachability search strategy
@@ -294,8 +356,7 @@ int main(int argc, char* argv[]){
 	ReachabilityResult result = strategy->reachable(*net, m0, v0, query);
 
 	//----------------------- Output Trace -----------------------//
-
-	const std::vector<unsigned int>& trace = result.trace();
+        const std::vector<unsigned int>& trace = (enablereduction==0 ? result.trace() : reducer.NonreducedTrace(net,result.trace()));
 	const std::vector<std::string>& tnames = net->transitionNames();
 	const std::vector<std::string>& pnames = net->placeNames();
 
@@ -324,7 +385,15 @@ int main(int argc, char* argv[]){
 	fprintf(stdout, "\texplored states:   %lli\n", result.exploredStates());
 	fprintf(stdout, "\texpanded states:   %lli\n", result.expandedStates());
 	fprintf(stdout, "\tmax tokens:        %i\n", result.maxTokens());
-
+        if (enablereduction!=0) {
+                fprintf(stdout, "\nNet reduction is enabled.\n");
+                fprintf(stdout, "Removed transitions: %d\n", reducer.RemovedTransitions());
+                fprintf(stdout, "Removed places: %d\n", reducer.RemovedPlaces());
+                fprintf(stdout, "Applications of rule A: %d\n", reducer.RuleA());
+                fprintf(stdout, "Applications of rule B: %d\n", reducer.RuleB());
+                fprintf(stdout, "Applications of rule C: %d\n", reducer.RuleC());
+                fprintf(stdout, "Applications of rule D: %d\n\n", reducer.RuleD()); 
+        }
 	//----------------------- Output Result -----------------------//
 
 	ReturnValues retval = ErrorCode;

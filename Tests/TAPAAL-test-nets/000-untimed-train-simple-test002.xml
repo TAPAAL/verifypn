@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<constant name="YellowDuration" value="5"/>
+<constant name="RedDuration" value="17"/>
+<constant name="minTimeToLeveler" value="7"/>
+<constant name="maxTimeToLeveler" value="10"/>
+<constant name="minInDangerZone" value="3"/>
+<constant name="maxInDangerZone" value="6"/>
+<net active="true" id="TAPN1" type="P/T net">
+<place id="green" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="green" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="750.0"/>
+<place id="yellow" initialMarking="0" invariant="&lt;= YellowDuration" markingOffsetX="0.0" markingOffsetY="0.0" name="yellow" nameOffsetX="130.0" nameOffsetY="47.0" positionX="570.0" positionY="750.0"/>
+<place id="red" initialMarking="0" invariant="&lt;= RedDuration" markingOffsetX="0.0" markingOffsetY="0.0" name="red" nameOffsetX="152.0" nameOffsetY="25.0" positionX="990.0" positionY="750.0"/>
+<place id="RedRequested" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="RedRequested" nameOffsetX="-6.0" nameOffsetY="5.0" positionX="180.0" positionY="450.0"/>
+<place id="far" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="far" nameOffsetX="29.444444444444443" nameOffsetY="5.000000000000007" positionX="540.0" positionY="30.0"/>
+<place id="approaching" initialMarking="0" invariant="&lt;= maxTimeToLeveler" markingOffsetX="0.0" markingOffsetY="0.0" name="approaching" nameOffsetX="135.00000000000003" nameOffsetY="49.44444444444443" positionX="300.0" positionY="270.0"/>
+<place id="dangerZone" initialMarking="0" invariant="&lt;= maxInDangerZone" markingOffsetX="0.0" markingOffsetY="0.0" name="dangerZone" nameOffsetX="131.6666666666667" nameOffsetY="52.77777777777779" positionX="690.0" positionY="270.0"/>
+<transition angle="0" id="T1" infiniteServer="false" name="T1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="780.0" positionY="750.0" priority="1" timed="true"/>
+<transition angle="0" id="T2" infiniteServer="false" name="T2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="870.0" priority="1" timed="true"/>
+<transition angle="0" id="T3" infiniteServer="false" name="T3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="570.0" priority="1" timed="true"/>
+<transition angle="0" id="T4" infiniteServer="false" name="T4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="570.0" priority="1" timed="true"/>
+<transition angle="0" id="T5" infiniteServer="false" name="T5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="990.0" positionY="570.0" priority="1" timed="true"/>
+<transition angle="0" id="sendSignal" infiniteServer="false" name="sendSignal" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="270.0" priority="1" timed="true"/>
+<transition angle="0" id="T7" infiniteServer="false" name="T7" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="585.0" positionY="270.0" priority="1" timed="true"/>
+<transition angle="0" id="T8" infiniteServer="false" name="T8" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1005.0" positionY="270.0" priority="1" timed="true"/>
+<arc id="yellow to T1" inscription="[0,inf)" source="yellow" target="T1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="596" yCoord="762"/>
+<arcpath arcPointType="false" id="1" xCoord="786" yCoord="762"/>
+</arc>
+<arc id="T1 to red" inscription="1" source="T1" target="red" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="796" yCoord="762"/>
+<arcpath arcPointType="false" id="1" xCoord="987" yCoord="762"/>
+</arc>
+<arc id="red to T2" inscription="[0,inf)" source="red" target="T2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="987" yCoord="766"/>
+<arcpath arcPointType="false" id="1" xCoord="586" yCoord="882"/>
+</arc>
+<arc id="T2 to green" inscription="1" source="T2" target="green" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="576" yCoord="882"/>
+<arcpath arcPointType="false" id="1" xCoord="206" yCoord="766"/>
+</arc>
+<arc id="green to T3" inscription="[0,inf)" source="green" target="T3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="747"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="597"/>
+</arc>
+<arc id="T3 to yellow" inscription="1" source="T3" target="yellow" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="196" yCoord="582"/>
+<arcpath arcPointType="false" id="1" xCoord="568" yCoord="755"/>
+</arc>
+<arc id="T5 to red" inscription="1" source="T5" target="red" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1002" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="1002" yCoord="747"/>
+</arc>
+<arc id="red to T5" inscription="[0,inf)" source="red" target="T5" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1007" yCoord="748"/>
+<arcpath arcPointType="false" id="1" xCoord="1047" yCoord="657"/>
+<arcpath arcPointType="false" id="2" xCoord="1006" yCoord="582"/>
+</arc>
+<arc id="RedRequested to T3" inscription="[0,inf)" source="RedRequested" target="T3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="476"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="567"/>
+</arc>
+<arc id="RedRequested to T4" inscription="[0,inf)" source="RedRequested" target="T4" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="206" yCoord="466"/>
+<arcpath arcPointType="false" id="1" xCoord="576" yCoord="582"/>
+</arc>
+<arc id="RedRequested to T5" inscription="[0,inf)" source="RedRequested" target="T5" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="206" yCoord="464"/>
+<arcpath arcPointType="false" id="1" xCoord="996" yCoord="582"/>
+</arc>
+<arc id="yellow to T4" inscription="[0,inf):1" source="yellow" target="T4" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="590" yCoord="749"/>
+<arcpath arcPointType="false" id="1" xCoord="642" yCoord="678"/>
+<arcpath arcPointType="false" id="2" xCoord="586" yCoord="582"/>
+</arc>
+<arc id="T4 to yellow" inscription="[0,inf):1" source="T4" target="yellow" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="582" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="582" yCoord="747"/>
+</arc>
+<arc id="far to sendSignal" inscription="[0,inf)" source="far" target="sendSignal" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="539" yCoord="50"/>
+<arcpath arcPointType="false" id="1" xCoord="197" yCoord="277"/>
+</arc>
+<arc id="sendSignal to approaching" inscription="1" source="sendSignal" target="approaching" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="196" yCoord="287"/>
+<arcpath arcPointType="false" id="1" xCoord="297" yCoord="282"/>
+</arc>
+<arc id="sendSignal to RedRequested" inscription="1" source="sendSignal" target="RedRequested" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="447"/>
+</arc>
+<arc id="approaching to T7" inscription="[0,inf)" source="approaching" target="T7" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="326" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="591" yCoord="282"/>
+</arc>
+<arc id="T7 to dangerZone" inscription="1" source="T7" target="dangerZone" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="601" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="687" yCoord="282"/>
+</arc>
+<arc id="dangerZone to T8" inscription="[0,inf)" source="dangerZone" target="T8" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="716" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="1011" yCoord="287"/>
+</arc>
+<arc id="T8 to far" inscription="1" source="T8" target="far" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1012" yCoord="277"/>
+<arcpath arcPointType="false" id="1" xCoord="565" yCoord="48"/>
+</arc>
+</net>
+<query active="true" capacity="8" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="EF (TAPN1.dangerZone&gt;=1 and (TAPN1.green&gt;=1 or TAPN1.yellow&gt;=1))" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

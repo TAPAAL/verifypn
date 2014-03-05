@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="TAPN1" type="P/T net">
+<place id="P0" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="330.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="330.0" priority="0"/>
+<arc id="P0 to T0" inscription="[0,inf):1" source="P0" target="T0" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="371" yCoord="342"/>
+<arcpath arcPointType="false" id="1" xCoord="456" yCoord="342"/>
+</arc>
+<arc id="T0 to P0" inscription="[0,inf):1" source="T0" target="P0" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="466" yCoord="342"/>
+<arcpath arcPointType="false" id="1" xCoord="463" yCoord="343"/>
+<arcpath arcPointType="false" id="2" xCoord="403" yCoord="298"/>
+<arcpath arcPointType="false" id="3" xCoord="388" yCoord="313"/>
+<arcpath arcPointType="false" id="4" xCoord="367" yCoord="331"/>
+</arc>
+</net>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="EF TAPN1.P0=0" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="AG (TAPN1.P0&gt;0 and (TAPN1.P0=0 or true))" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>
