@@ -82,6 +82,7 @@ ReachabilityResult StateSearch::reachable(const PetriNet &net,
 
 	// Statistics
 	BigInt expanded = 0, explored = 0;
+	std::vector<BigInt> enabledTransitionsCount (net.numberOfTransitions());
 	size_t max = 1;
 	int count = 0;
 
@@ -109,6 +110,7 @@ ReachabilityResult StateSearch::reachable(const PetriNet &net,
 			if(net.fire(t, s, ns) && states.add(ns)){
 				// Update statistics
 				explored++;
+				enabledTransitionsCount[t]++;
 				ns->setParent(s);
 				ns->setTransition(t);
 
@@ -116,7 +118,7 @@ ReachabilityResult StateSearch::reachable(const PetriNet &net,
 				if(query->evaluate(*ns, &net)){
 					return ReachabilityResult(ReachabilityResult::Satisfied,
 											  "Query was satisfied",
-											  expanded, explored, states.discovered(), states.maxTokens(), ns->pathLength(), ns->trace());
+											  expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), ns->pathLength(), ns->trace());
 				}
 
 				bool isImpossible = true;
@@ -139,14 +141,14 @@ ReachabilityResult StateSearch::reachable(const PetriNet &net,
 				if(!ns)
 					return ReachabilityResult(ReachabilityResult::Unknown,
 											  "Memory bound exceeded",
-											  expanded, explored, states.discovered(), states.maxTokens());
+											  expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens());
 			}
 		}
 	}
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
 							  "Query cannot be satisfied",
-							  expanded, explored, states.discovered(), states.maxTokens());
+							  expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens());
 }
 
 } // Reachability

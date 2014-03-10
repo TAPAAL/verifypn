@@ -56,10 +56,11 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 	int count = 0;
 	BigInt exploredStates = 1;
 	BigInt expandedStates = 0;
+	std::vector<BigInt> enabledTransitionsCount (net.numberOfTransitions());
 	
 	if(query->evaluate(*s0, &net)){
 		return ReachabilityResult(ReachabilityResult::Satisfied, "Query was satisfied",
-								  expandedStates, exploredStates, states.discovered(), states.maxTokens(), s0->pathLength(), s0->trace());
+								  expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), s0->pathLength(), s0->trace());
 	}
 	
 	State* ns = allocator.createState();
@@ -89,11 +90,12 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 		for(unsigned int t = stack.back().t; t < net.numberOfTransitions(); t++){
 			if(net.fire(t, s, ns, 1)){
 				if(states.add(ns)){
+					enabledTransitionsCount[t]++;
 					ns->setTransition(t);
 					if(query->evaluate(PQL::EvaluationContext(ns->marking(), ns->valuation(), &net)))
 						return ReachabilityResult(ReachabilityResult::Satisfied,
 									  "A state satisfying the query was found", expandedStates, exploredStates,
-									  states.discovered(), states.maxTokens(), ns->pathLength(), ns->trace());
+									  states.discovered(), enabledTransitionsCount, states.maxTokens(), ns->pathLength(), ns->trace());
 					stack.back().t = t + 1;
 					stack.push_back(Step(ns, 0));
 					exploredStates++;
@@ -102,7 +104,7 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 					if(!ns)
 						return ReachabilityResult(ReachabilityResult::Unknown,
 												   "Memory bound exceeded",
-												   expandedStates, exploredStates, states.discovered(), states.maxTokens());
+												   expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens());
 					break;
 				}
 			}
@@ -113,7 +115,7 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 		}
 	}
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-							"No state satisfying the query exists.", expandedStates, exploredStates, states.discovered(), states.maxTokens());
+							"No state satisfying the query exists.", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens());
 }
 
 } // Reachability

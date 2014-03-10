@@ -26,35 +26,35 @@
 #include <string.h>
 using namespace std;
 
-namespace PetriEngine{
+namespace PetriEngine {
 
-PetriNet::PetriNet(int places, int transitions, int variables)
+	PetriNet::PetriNet(int places, int transitions, int variables)
 	: _places(places), _transitions(transitions), _variables(variables) {
-	//Store size for later
-	_nPlaces = places;
-	_nTransitions = transitions;
-	_nVariables = variables;
+		//Store size for later
+		_nPlaces = places;
+		_nTransitions = transitions;
+		_nVariables = variables;
 
-	//Allocate space for ranges
-	_ranges = new VarVal[variables];
+		//Allocate space for ranges
+		_ranges = new VarVal[variables];
 
-	//Allocate space for conditions and assignments
-	size_t s = (sizeof(PQL::Condition*) + sizeof(PQL::AssignmentExpression*)) * transitions;
-	char* d = new char[s];
-	memset(d, 0, s);
-	_conditions = (PQL::Condition**)d;
-	_assignments = (PQL::AssignmentExpression**)(d + sizeof(PQL::Condition*)*transitions);
+		//Allocate space for conditions and assignments
+		size_t s = (sizeof (PQL::Condition*) + sizeof (PQL::AssignmentExpression*)) * transitions;
+		char* d = new char[s];
+		memset(d, 0, s);
+		_conditions = (PQL::Condition**)d;
+		_assignments = (PQL::AssignmentExpression**)(d + sizeof (PQL::Condition*) * transitions);
 
-	//Allocate transition matrix
-	_tm = new MarkVal[places * transitions * 2];
-	for(int i = 0; i < places * transitions * 2; i++)
-		_tm[i] = 0;
-        
-        skipTransitions = new bool[transitions];
-        for(int i=0; i< transitions; i++) {
-            skipTransitions[i]=false;
-        }
-}
+		//Allocate transition matrix
+		_tm = new MarkVal[places * transitions * 2];
+		for (int i = 0; i < places * transitions * 2; i++)
+			_tm[i] = 0;
+
+		skipTransitions = new bool[transitions];
+		for (int i = 0; i < transitions; i++) {
+			skipTransitions[i] = false;
+		}
+	}
 
 PetriNet::~PetriNet(){
 	if(_ranges)

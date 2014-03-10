@@ -394,6 +394,11 @@ int main(int argc, char* argv[]){
                 fprintf(stdout, "Applications of rule C: %d\n", reducer.RuleC());
                 fprintf(stdout, "Applications of rule D: %d\n\n", reducer.RuleD()); 
         }
+	fprintf(stdout,"TRANSITION STATISTICS\n");
+	for(size_t i = 0; i < result.enabledTransitionsCount().size(); i++) {
+		fprintf(stdout,"<%s:%lli> ", tnames[i].c_str(), result.enabledTransitionsCount()[i]);	
+	}
+	fprintf(stdout,"\n\n");
 	//----------------------- Output Result -----------------------//
 
 	ReturnValues retval = ErrorCode;

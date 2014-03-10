@@ -57,6 +57,7 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 
 	// Statistics
 	BigInt expanded = 0, explored = 1;
+	std::vector<BigInt> enabledTransitionsCount (net.numberOfTransitions());
 	size_t max = 1;
 	int count = 0;
 
@@ -66,7 +67,7 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 
 	if(query->evaluate(s0, &net)){
 		return ReachabilityResult(ReachabilityResult::Satisfied, "Query was satisfied",
-								  expanded, explored, states.discovered(), states.maxTokens(), s0.pathLength(), s0.trace());
+								  expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), s0.pathLength(), s0.trace());
 	}
 
 	// Main-loop
@@ -90,6 +91,7 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 			if(net.fire(t, s, ns, 1) && states.add(ns)){
 				// Update statistics
 				explored++;
+				enabledTransitionsCount[t]++;
 				ns->setParent(s);
 				ns->setTransition(t);
 
@@ -97,7 +99,7 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 				if(query->evaluate(*ns, &net)){
 					return ReachabilityResult(ReachabilityResult::Satisfied,
 											  "Query was satisfied",
-											  expanded, explored, states.discovered(), states.maxTokens(), ns->pathLength(), ns->trace());
+											  expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), ns->pathLength(), ns->trace());
 				}
 
 				// Push new state on the queue
@@ -113,7 +115,7 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 				if(!ns)
 					return ReachabilityResult(ReachabilityResult::Unknown,
 											  "Memory bound exceeded",
-											  expanded, explored, states.discovered(), states.maxTokens());
+											  expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens());
 			}
 		}
 	  expanded++;
@@ -121,7 +123,7 @@ ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
 							  "Query cannot be satisfied",
-							  expanded, explored, states.discovered(), states.maxTokens());
+							  expanded, explored, states.discovered(),enabledTransitionsCount, states.maxTokens());
 }
 
 } // Reachability

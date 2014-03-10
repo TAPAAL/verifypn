@@ -64,6 +64,7 @@ ReachabilityResult MagicSearch::reachable(const PetriNet &net,
 	//Statistics
 	int lastReport = 0;
 	BigInt expanded = 0, explored = 0;
+	std::vector<BigInt> enabledTransitionsCount (net.numberOfTransitions());
 	size_t max = 1;
 
 	//Main loop
@@ -118,6 +119,7 @@ ReachabilityResult MagicSearch::reachable(const PetriNet &net,
 				//Add it to the state set
 				if(states.add(storeState, ns->marking(), ns->valuation())){
 					explored++; //Count explored states
+					enabledTransitionsCount[t]++;
 
 					//Test the query
 					if(query->evaluate(EvaluationContext(ns->marking(), ns->valuation(), &net))){
@@ -127,6 +129,7 @@ ReachabilityResult MagicSearch::reachable(const PetriNet &net,
 												  expanded,
 												  explored,
 												  states.discovered(),
+												  enabledTransitionsCount,
 												  -1,
 												  storeState->pathLength(),
 												  storeState->trace());
@@ -160,6 +163,7 @@ ReachabilityResult MagicSearch::reachable(const PetriNet &net,
 							  expanded,
 							  explored,
 							  states.discovered(),
+							  enabledTransitionsCount,
 							  -1);
 }
 

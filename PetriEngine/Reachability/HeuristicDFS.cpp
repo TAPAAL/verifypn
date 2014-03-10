@@ -59,6 +59,7 @@ ReachabilityResult HeuristicDFS::reachable(const PetriNet& net,
 	int count = 0;
 	BigInt expandedStates = 0;
 	BigInt exploredStates = 0;
+	std::vector<BigInt> enabledTransitionsCount (net.numberOfTransitions());
 	while(!stack.empty()){
 		// Progress reporting and abort checking
 		if(count++ & 1<<16){
@@ -82,12 +83,13 @@ ReachabilityResult HeuristicDFS::reachable(const PetriNet& net,
 			if(net.fire(t, s, ns)){
 				if(states.add(ns)){
 					exploredStates++;
+					enabledTransitionsCount[t]++;
 					ns->setParent(s);
 					ns->setTransition(t);
 					if(query->evaluate(*ns, &net))
 						return ReachabilityResult(ReachabilityResult::Satisfied,
 												"A state satisfying the query was found", expandedStates, exploredStates,
-												states.discovered(), states.maxTokens(), ns->pathLength(), ns->trace());
+												states.discovered(), enabledTransitionsCount, states.maxTokens(), ns->pathLength(), ns->trace());
 					PQL::DistanceContext context(net,
 												 _distanceStrategy,
 												 ns->marking(),
@@ -120,7 +122,7 @@ ReachabilityResult HeuristicDFS::reachable(const PetriNet& net,
 	}
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-						"No state satisfying the query exists.", expandedStates, exploredStates, states.discovered(), states.maxTokens());
+						"No state satisfying the query exists.", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens());
 }
 
 } // Reachability
