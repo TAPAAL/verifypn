@@ -82,11 +82,10 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 		// Attempt to fire each transition
 		for(unsigned int t = 0; t < net.numberOfTransitions(); t++){
 			if(net.fire(t, s->marking(), s->valuation(), ns->marking(), ns->valuation())){
-				
+				enabledTransitionsCount[t]++;
 				//If it's new
 				if(states.add(ns)){
 					exploredStates++;
-					enabledTransitionsCount[t]++;
 					//Set parent and transition for the state
 					ns->setParent(s);
 					ns->setTransition(t);

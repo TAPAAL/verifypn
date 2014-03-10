@@ -89,8 +89,8 @@ ReachabilityResult DepthFirstReachabilitySearch::reachable(const PetriNet &net,
 		bool foundSomething = false;
 		for(unsigned int t = stack.back().t; t < net.numberOfTransitions(); t++){
 			if(net.fire(t, s, ns, 1)){
+				enabledTransitionsCount[t]++;
 				if(states.add(ns)){
-					enabledTransitionsCount[t]++;
 					ns->setTransition(t);
 					if(query->evaluate(PQL::EvaluationContext(ns->marking(), ns->valuation(), &net)))
 						return ReachabilityResult(ReachabilityResult::Satisfied,

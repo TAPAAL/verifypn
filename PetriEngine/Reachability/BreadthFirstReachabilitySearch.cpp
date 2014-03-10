@@ -81,9 +81,9 @@ ReachabilityResult BreadthFirstReachabilitySearch::reachable(const PetriNet &net
 		queue.pop_front();
 		for(unsigned int t = 0; t < net.numberOfTransitions(); t++){
 			if(net.fire(t, s, ns, 1)){
+				enabledTransitionsCount[t]++;
 				if(states.add(ns)){
 					exploredStates++;
-					enabledTransitionsCount[t]++;
 					ns->setParent(s);
 					ns->setTransition(t);
 					if(query->evaluate(*ns, &net)){

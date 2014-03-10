@@ -101,9 +101,9 @@ ReachabilityResult RandomDFS::reachable(const PetriNet &net,
 		memset(succ, 0, net.numberOfTransitions()*sizeof(State*));
 		for(unsigned int t = 0; t < net.numberOfTransitions(); t++){
 			if(net.fire(t, s, ns, 1)){
+				enabledTransitionsCount[t]++;
 				if(states.add(ns)){
 					exploredStates++;
-					enabledTransitionsCount[t]++;
 					ns->setParent(s);
 					ns->setTransition(t);
 					if(query && query->evaluate(*ns, &net))

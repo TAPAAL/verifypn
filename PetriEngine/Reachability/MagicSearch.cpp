@@ -115,12 +115,10 @@ ReachabilityResult MagicSearch::reachable(const PetriNet &net,
 					storeState = ls;
 				storeState->setParent(step.state);
 				storeState->setTransition(t);
-
+				enabledTransitionsCount[t]++;
 				//Add it to the state set
 				if(states.add(storeState, ns->marking(), ns->valuation())){
 					explored++; //Count explored states
-					enabledTransitionsCount[t]++;
-
 					//Test the query
 					if(query->evaluate(EvaluationContext(ns->marking(), ns->valuation(), &net))){
 						printf("\nmemory usage: %f\n",allocator.percentMemoryUsed());
