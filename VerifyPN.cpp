@@ -392,9 +392,9 @@ int main(int argc, char* argv[]){
                 fprintf(stdout, "Applications of rule A: %d\n", reducer.RuleA());
                 fprintf(stdout, "Applications of rule B: %d\n", reducer.RuleB());
                 fprintf(stdout, "Applications of rule C: %d\n", reducer.RuleC());
-                fprintf(stdout, "Applications of rule D: %d\n\n", reducer.RuleD()); 
+                fprintf(stdout, "Applications of rule D: %d\n", reducer.RuleD()); 
         }
-	fprintf(stdout,"TRANSITION STATISTICS\n");
+	fprintf(stdout,"\nTRANSITION STATISTICS\n");
 	for(size_t t = 0; t < result.enabledTransitionsCount().size(); t++) { 
 		// report how many times transitions were enabled (? means that the transition was removed in net reduction)
 		if (net->isTransitionSkipped(t)) {
