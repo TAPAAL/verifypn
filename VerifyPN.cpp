@@ -400,7 +400,7 @@ int main(int argc, char* argv[]){
 		if (net->isTransitionSkipped(t)) {
 			fprintf(stdout,"<%s:?> ", tnames[t].c_str());
 		} else {
-			fprintf(stdout,"<%s:%lli> ", tnames[t].c_str(), net->isTransitionSkipped(t) ? -1 : result.enabledTransitionsCount()[t]);	
+			fprintf(stdout,"<%s:%lli> ", tnames[t].c_str(), result.enabledTransitionsCount()[t]);	
 		}
 	}
 	fprintf(stdout,"\n\n");
