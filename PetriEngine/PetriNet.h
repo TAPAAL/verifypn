@@ -83,6 +83,7 @@ public:
 	/** Get vector transition names, don't use this to get the number of variable */
 	const std::vector<std::string>& transitionNames() const {return _transitions;}
         void skipTransition(unsigned int t) { skipTransitions[t]=true; }
+        bool isTransitionSkipped(unsigned int t) { return skipTransitions[t]; }
         
 private:
 	std::vector<std::string> _places;

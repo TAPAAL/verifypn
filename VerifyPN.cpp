@@ -395,8 +395,13 @@ int main(int argc, char* argv[]){
                 fprintf(stdout, "Applications of rule D: %d\n\n", reducer.RuleD()); 
         }
 	fprintf(stdout,"TRANSITION STATISTICS\n");
-	for(size_t i = 0; i < result.enabledTransitionsCount().size(); i++) {
-		fprintf(stdout,"<%s:%lli> ", tnames[i].c_str(), result.enabledTransitionsCount()[i]);	
+	for(size_t t = 0; t < result.enabledTransitionsCount().size(); t++) { 
+		// report how many times transitions were enabled (? means that the transition was removed in net reduction)
+		if (net->isTransitionSkipped(t)) {
+			fprintf(stdout,"<%s:?> ", tnames[t].c_str());
+		} else {
+			fprintf(stdout,"<%s:%lli> ", tnames[t].c_str(), net->isTransitionSkipped(t) ? -1 : result.enabledTransitionsCount()[t]);	
+		}
 	}
 	fprintf(stdout,"\n\n");
 	//----------------------- Output Result -----------------------//
