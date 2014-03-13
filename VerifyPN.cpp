@@ -39,7 +39,7 @@
 #include <PetriEngine/Reachability/BreadthFirstReachabilitySearch.h>
 
 #include "PetriEngine/Reducer.h"
-#include "PetriParse/SumoXMLParser.h"
+#include "PetriParse/QueryXMLParser.h"
 
 
 using namespace std;
@@ -83,10 +83,10 @@ int main(int argc, char* argv[]){
 //	" <subtag v1=\"1\" v2=\"2\" v3=\"3\" />\n"
 //	"</hello>";
 
-        char* sumoQueryFile = argv[1];
+        char* queryXMLFile = argv[1];
       
         //Load the model
-		ifstream mfile(sumoQueryFile, ifstream::in);
+		ifstream mfile(queryXMLFile, ifstream::in);
 		if(!mfile){
 			fprintf(stderr, "Error: Model file \"%s\" couldn't be opened\n", modelfile);
 			return ErrorCode;
@@ -94,15 +94,14 @@ int main(int argc, char* argv[]){
                 stringstream buffer;
 		buffer << mfile.rdbuf();
 
-		//Parse and build the petri net
-		
-	SumoXMLParser p;
-	if (p.parse(buffer.str())) {
+		//Parse the query
+		QueryXMLParser parser;
+	if (parser.parse(buffer.str())) {
 		cout<<"OK."<<endl;
 	} else {
 		cout<<"Aborted."<<endl;
 	}
-        return 0;
+    return 0;
         
         
 	//----------------------- Parse Arguments -----------------------//
