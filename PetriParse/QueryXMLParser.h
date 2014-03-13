@@ -12,12 +12,17 @@
 
 #include <map>
 #include <string>
+#include <string.h>
 #include <vector>
 
 class QueryXMLParser {
 public:    
 //	QueryXMLParser();
  //       ~QueryXMLParser();
+    
+        typedef std::string queryType;
+            
+        std::map<std::string, queryType> queries;
         
 	bool parse(const std::string& xml);
         
