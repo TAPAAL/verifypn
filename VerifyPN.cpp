@@ -78,15 +78,26 @@ int main(int argc, char* argv[]){
         int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
 
         
-        const char* xml = "<?xml version=\"1.0\"?>\n"
-	"<hello v=\"1\">&lt;Hello world&gt;<!-- small comment -->\n"
-	" <subtag v1=\"1\" v2=\"2\" v3=\"3\" />\n"
-	"</hello>";
+//        const char* xml = "<?xml version=\"1.0\"?>\n"
+//	"<hello v=\"1\">&lt;Hello world&gt;<!-- small comment -->\n"
+//	" <subtag v1=\"1\" v2=\"2\" v3=\"3\" />\n"
+//	"</hello>";
 
+        char* sumoQueryFile = argv[1];
+      
+        //Load the model
+		ifstream mfile(sumoQueryFile, ifstream::in);
+		if(!mfile){
+			fprintf(stderr, "Error: Model file \"%s\" couldn't be opened\n", modelfile);
+			return ErrorCode;
+		}
+                stringstream buffer;
+		buffer << mfile.rdbuf();
+
+		//Parse and build the petri net
+		
 	SumoXMLParser p;
-	string s = xml;
-        cout << s <<endl;
-	if (p.parse(s)) {
+	if (p.parse(buffer.str())) {
 		cout<<"OK."<<endl;
 	} else {
 		cout<<"Aborted."<<endl;
