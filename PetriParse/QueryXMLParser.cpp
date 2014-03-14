@@ -215,9 +215,39 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
 				return false;
 			}
+			queryText+= "( "+subformula1+" AND NOT ( "+subformula2+" ) ) OR ( NOT ( "+subformula1+" ) AND "+subformula2+"  )";
+			return true;
+		} else if (elementName=="implication") {
+			DOMElements children = (*it)->getChilds();
+			if (children.size()!=2) { // implication has only two subformulae
+				return false;
+			}
+			string subformula1;
+			string subformula2;
+			if (!(parseBooleanFormula(*children.begin(), subformula1))) {
+				return false;
+			}
+			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
+				return false;
+			}
+			queryText+= "( NOT ( "+subformula1+" ) OR ( "+subformula2+" )";
+			return true;
+		} else if (elementName=="equivalence") {
+			DOMElements children = (*it)->getChilds();
+			if (children.size()!=2) { // we support only two subformulae here
+				return false;
+			}
+			string subformula1;
+			string subformula2;
+			if (!(parseBooleanFormula(*children.begin(), subformula1))) {
+				return false;
+			}
+			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
+				return false;
+			}
 			queryText+= "( "+subformula1+" AND "+subformula2+" ) OR ( NOT ( "+subformula1+" ) AND NOT ( "+subformula2+" ) )";
 			return true;
-		} 
+		}
 	}
 	return true;
 }
