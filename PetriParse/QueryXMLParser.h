@@ -24,7 +24,8 @@ public:
     
         struct QueryItem {
             string id;
-            string queryText;
+            string queryText; // on EF queries will be here
+            bool negateResult;
             enum { 
                 PARSING_OK,
                 PARSING_ERROR,
@@ -33,6 +34,7 @@ public:
         };
 
         typedef vector<QueryItem> Queries;
+        typedef Queries::iterator QueriesIterator;
         Queries queries;
 
 	bool parse(const string& xml);
@@ -41,7 +43,7 @@ private:
         void parsePropertySet(XMLSP::DOMElement* element);
         void parseProperty(XMLSP::DOMElement* element);
         bool parseTags(XMLSP::DOMElement* element);
-        void parseFormula(XMLSP::DOMElement* element, string &queryText);
+        bool parseFormula(XMLSP::DOMElement* element, string &queryText, bool &negateResult);
         
         enum {MISSING_PROPERTY_SET, MISSING_PROPERTY, EMPTY_QUERY_ID};
         

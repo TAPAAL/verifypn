@@ -97,6 +97,10 @@ int main(int argc, char* argv[]){
 		//Parse the query
 		QueryXMLParser parser;
 	if (parser.parse(buffer.str())) {
+		QueryXMLParser::QueriesIterator it;
+		for(it = parser.queries.begin(); it != parser.queries.end(); it++){
+			cout << it->id << ": " << it->queryText << endl;
+		}
 		cout<<"OK."<<endl;
 	} else {
 		cout<<"Aborted."<<endl;

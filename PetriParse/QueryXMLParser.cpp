@@ -47,6 +47,7 @@ void QueryXMLParser::parseProperty(DOMElement* element){
 	}
 	string id;
 	string queryText;
+	bool negateResult;
 	bool tagsOK=true;
 	
 	DOMElements elements = element->getChilds();
@@ -70,12 +71,13 @@ void QueryXMLParser::parseProperty(DOMElement* element){
 	
 	QueryItem queryItem;
 	queryItem.id=id;
-	if (tagsOK) {
-		parseFormula(*formulaPtr, queryText);
+	if (tagsOK && parseFormula(*formulaPtr, queryText, negateResult)) {
 		queryItem.queryText=queryText;
+		queryItem.negateResult=negateResult;
 		queryItem.parsingResult=QueryItem::PARSING_OK;
 	} else {
 		queryItem.queryText="";
+		queryItem.negateResult=false;
 		queryItem.parsingResult=QueryItem::UNSUPPORTED_QUERY;
 	}
 	
@@ -94,12 +96,23 @@ bool QueryXMLParser::parseTags(DOMElement* element){
 	return true;
 }
 
-void QueryXMLParser::parseFormula(DOMElement* element, string &queryText){
+bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &negateResult){
 	DOMElements elements = element->getChilds();
 	DOMElements::iterator it;
-	for(it = elements.begin(); it != elements.end(); it++){
-	//	cout << (*it)->getElementName() << endl;
+	if (elements.size() != 1) {
+		return false;
 	}
-	cout << endl;
+	string elementName = (*elements.begin())->getElementName(); 
+	if (elementName=="invariant") {
+		queryText="INV";
+	} else if (elementName=="impossibility") {
+		queryText="IMPOSIB";
+	} else if (elementName=="possibility") {
+		queryText="POSIB";
+	} else {
+		return false;
+	}
+	
+	return true;
 }
 
