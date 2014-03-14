@@ -128,7 +128,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 		if (children.size() !=1) {
 			return false;
 		}
-		booleanFormula = (*children.begin())->getChilds();
+		booleanFormula = children; //->getChilds();
 		string negElementName = (*children.begin())->getElementName();
 		if (negElementName=="invariant") {
 			queryText="NEG INV ( ";
@@ -155,22 +155,25 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 	for(it = elements.begin(); it != elements.end(); it++){
 	//	cout << (*it)->getElementName() << endl;
 		string elementName = (*it)->getElementName();
-		if (elementName=="true") {
-			queryText+="TRUE";
+		if (elementName == "deadlock") {
+			queryText+="deadlock";
 			return true;
-		} else if (elementName=="false") {
-			queryText+="FALSE";
+		} else if (elementName == "true") {
+			queryText+="true";
 			return true;
-		} else if (elementName=="negation") {
+		} else if (elementName == "false") {
+			queryText+="false";
+			return true;
+		} else if (elementName == "negation") {
 			DOMElements children = (*it)->getChilds();
-			queryText+="NOT (";
+			queryText+="not (";
 			if (children.size()==1 && parseBooleanFormula(*children.begin(), queryText)) {
 				queryText+=" )";
 			} else {
 				return false;
 			}
 			return true;
-		} else if (elementName=="conjunction") {
+		} else if (elementName == "conjunction") {
 			DOMElements children = (*it)->getChilds();
 			if (children.size()<2) {
 				return false;
@@ -179,14 +182,14 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 				return false;
 			}
 			DOMElements::iterator it;
-			for(it = elements.begin()+1; it != elements.end(); it++) {
-				queryText+=" AND ";
+			for(it = children.begin()+1; it != children.end(); it++) {
+				queryText+=" and ";
 				if (!(parseBooleanFormula(*it, queryText))) {
 					return false;
 				}
 			}
 			return true;
-		} else if (elementName=="disjunction") {
+		} else if (elementName == "disjunction") {
 			DOMElements children = (*it)->getChilds();
 			if (children.size()<2) {
 				return false;
@@ -195,14 +198,14 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 				return false;
 			}
 			DOMElements::iterator it;
-			for(it = elements.begin()+1; it != elements.end(); it++) {
-				queryText+=" OR ";
+			for(it = children.begin()+1; it != children.end(); it++) {
+				queryText+=" or ";
 				if (!(parseBooleanFormula(*it, queryText))) {
-					return false;
+					return false;	
 				}
 			}
 			return true;
-		} else if (elementName=="exclusive-disjunction") {
+		} else if (elementName == "exclusive-disjunction") {
 			DOMElements children = (*it)->getChilds();
 			if (children.size()!=2) { // we support only two subformulae here
 				return false;
@@ -215,9 +218,9 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
 				return false;
 			}
-			queryText+= "( "+subformula1+" AND NOT ( "+subformula2+" ) ) OR ( NOT ( "+subformula1+" ) AND "+subformula2+"  )";
+			queryText+= "( "+subformula1+" and not( "+subformula2+" )) or ( not( "+subformula1+" ) and "+subformula2+"  )";
 			return true;
-		} else if (elementName=="implication") {
+		} else if (elementName == "implication") {
 			DOMElements children = (*it)->getChilds();
 			if (children.size()!=2) { // implication has only two subformulae
 				return false;
@@ -230,9 +233,9 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
 				return false;
 			}
-			queryText+= "( NOT ( "+subformula1+" ) OR ( "+subformula2+" )";
+			queryText+= "( not( "+subformula1+" ) or ( "+subformula2+" )";
 			return true;
-		} else if (elementName=="equivalence") {
+		} else if (elementName == "equivalence") {
 			DOMElements children = (*it)->getChilds();
 			if (children.size()!=2) { // we support only two subformulae here
 				return false;
@@ -245,10 +248,41 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
 				return false;
 			}
-			queryText+= "( "+subformula1+" AND "+subformula2+" ) OR ( NOT ( "+subformula1+" ) AND NOT ( "+subformula2+" ) )";
+			queryText+= "( "+subformula1+" and "+subformula2+" ) or ( not ( "+subformula1+" ) and not ( "+subformula2+" ) )";
+			return true;
+		} else if (	elementName == "integer-eq" || 
+					elementName == "integer-ne" || 
+					elementName == "integer-lt" || 
+					elementName == "integer-le" || 
+					elementName == "integer-gt" || 
+					elementName == "integer-ge") {
+			DOMElements children = (*it)->getChilds();
+			if (children.size()!=2) { // exactly two integer subformulae are required
+				return false;
+			}
+			string subformula1;
+			string subformula2;
+			if (!(parseIntegerExpression(*children.begin(), subformula1))) {
+				return false;
+			}
+			if (!(parseIntegerExpression(*(children.begin()+1), subformula2))) {
+				return false;
+			}
+			string mathoperator;
+			if		( elementName == "integer-eq") mathoperator=" == ";
+			else if ( elementName == "integer-ne") mathoperator=" != ";
+			else if ( elementName == "integer-lt") mathoperator=" < ";
+			else if ( elementName == "integer-le") mathoperator=" <= ";
+			else if ( elementName == "integer-gt") mathoperator=" > ";
+			else if ( elementName == "integer-ge") mathoperator=" >= ";
+			
+			queryText+= "( "+subformula1+mathoperator+subformula2+" )";
 			return true;
 		}
 	}
 	return true;
 }
 
+bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryText){
+	
+}

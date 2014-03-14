@@ -45,6 +45,7 @@ private:
         bool parseTags(XMLSP::DOMElement* element);
         bool parseFormula(XMLSP::DOMElement* element, string &queryText, bool &negateResult);
         bool parseBooleanFormula(XMLSP::DOMElement* element, string &queryText);
+        bool parseIntegerExpression(XMLSP::DOMElement* element, string &queryText);
         
         enum {MISSING_PROPERTY_SET, MISSING_PROPERTY, EMPTY_QUERY_ID};
         
