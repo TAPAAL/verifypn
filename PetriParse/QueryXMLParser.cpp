@@ -17,11 +17,16 @@ bool QueryXMLParser::parse(const std::string& xml){
 	//Parser the xml
 	DOMElement* root = DOMElement::loadXML(xml);
 	bool parsingOK=true;
-	try {
-	parsePropertySet(root);
-	} catch (int e) {
+	if (root) {
+		try {
+			parsePropertySet(root);
+		} catch (int e) {
+			parsingOK=false;
+		}
+	} else {
 		parsingOK=false;
 	}
+		
 	//Release DOM tree
 	delete root;
 	return parsingOK;
@@ -106,7 +111,6 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	 * NEG IMPOS phi
 	 * NEG POS phi
 	 */
-	
 	DOMElements elements = element->getChilds();
 	if (elements.size() != 1) {
 		return false;
@@ -139,7 +143,6 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 		return false;
 	}
 	if (!parseBooleanFormula(*booleanFormula.begin(), queryText)) {
-		queryText="";
 		return false;
 	}
 	queryText+=" )";
@@ -147,6 +150,75 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 }
 
 bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText){
-	
+	DOMElements elements = element->getChilds();
+	DOMElements::iterator it;
+	for(it = elements.begin(); it != elements.end(); it++){
+	//	cout << (*it)->getElementName() << endl;
+		string elementName = (*it)->getElementName();
+		if (elementName=="true") {
+			queryText+="TRUE";
+			return true;
+		} else if (elementName=="false") {
+			queryText+="FALSE";
+			return true;
+		} else if (elementName=="negation") {
+			DOMElements children = (*it)->getChilds();
+			queryText+="NOT (";
+			if (children.size()==1 && parseBooleanFormula(*children.begin(), queryText)) {
+				queryText+=" )";
+			} else {
+				return false;
+			}
+			return true;
+		} else if (elementName=="conjunction") {
+			DOMElements children = (*it)->getChilds();
+			if (children.size()<2) {
+				return false;
+			}
+			if (!(parseBooleanFormula(*children.begin(), queryText))) {
+				return false;
+			}
+			DOMElements::iterator it;
+			for(it = elements.begin()+1; it != elements.end(); it++) {
+				queryText+=" AND ";
+				if (!(parseBooleanFormula(*it, queryText))) {
+					return false;
+				}
+			}
+			return true;
+		} else if (elementName=="disjunction") {
+			DOMElements children = (*it)->getChilds();
+			if (children.size()<2) {
+				return false;
+			}
+			if (!(parseBooleanFormula(*children.begin(), queryText))) {
+				return false;
+			}
+			DOMElements::iterator it;
+			for(it = elements.begin()+1; it != elements.end(); it++) {
+				queryText+=" OR ";
+				if (!(parseBooleanFormula(*it, queryText))) {
+					return false;
+				}
+			}
+			return true;
+		} else if (elementName=="exclusive-disjunction") {
+			DOMElements children = (*it)->getChilds();
+			if (children.size()!=2) { // we support only two subformulae here
+				return false;
+			}
+			string subformula1;
+			string subformula2;
+			if (!(parseBooleanFormula(*children.begin(), subformula1))) {
+				return false;
+			}
+			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
+				return false;
+			}
+			queryText+= "( "+subformula1+" AND "+subformula2+" ) OR ( NOT ( "+subformula1+" ) AND NOT ( "+subformula2+" ) )";
+			return true;
+		} 
+	}
+	return true;
 }
 
