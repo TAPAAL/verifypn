@@ -115,7 +115,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	if (elements.size() != 1) {
 		return false;
 	}
-	DOMElements booleanFormula = (*elements.begin())->getChilds();
+	DOMElements::iterator booleanFormula = elements.begin();
 	string elementName = (*elements.begin())->getElementName(); 
 	if (elementName=="invariant") {
 		queryText="INV ( ";
@@ -128,7 +128,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 		if (children.size() !=1) {
 			return false;
 		}
-		booleanFormula = children; //->getChilds();
+		booleanFormula = children.begin(); //->getChilds();
 		string negElementName = (*children.begin())->getElementName();
 		if (negElementName=="invariant") {
 			queryText="NEG INV ( ";
@@ -142,7 +142,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	} else {
 		return false;
 	}
-	if (!parseBooleanFormula(*booleanFormula.begin(), queryText)) {
+	if (!parseBooleanFormula(*booleanFormula , queryText)) {
 		return false;
 	}
 	queryText+=" )";
