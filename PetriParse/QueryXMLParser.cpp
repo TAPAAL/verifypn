@@ -97,22 +97,56 @@ bool QueryXMLParser::parseTags(DOMElement* element){
 }
 
 bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &negateResult){
+	/*
+	 Describe here how to parse
+	 * INV phi
+	 * IMPOS phi
+	 * POS phi
+	 * NEG INV phi
+	 * NEG IMPOS phi
+	 * NEG POS phi
+	 */
+	
 	DOMElements elements = element->getChilds();
-	DOMElements::iterator it;
 	if (elements.size() != 1) {
 		return false;
 	}
+	DOMElements booleanFormula = (*elements.begin())->getChilds();
 	string elementName = (*elements.begin())->getElementName(); 
 	if (elementName=="invariant") {
-		queryText="INV";
+		queryText="INV ( ";
 	} else if (elementName=="impossibility") {
-		queryText="IMPOSIB";
+		queryText="IMPOSIB ( ";
 	} else if (elementName=="possibility") {
-		queryText="POSIB";
+		queryText="POSIB ( ";
+	} else if (elementName=="negation") {
+		DOMElements children = (*elements.begin())->getChilds();
+		if (children.size() !=1) {
+			return false;
+		}
+		booleanFormula = (*children.begin())->getChilds();
+		string negElementName = (*children.begin())->getElementName();
+		if (negElementName=="invariant") {
+			queryText="NEG INV ( ";
+		} else if (negElementName=="impossibility") {
+			queryText="NEG IMPOSIB ( ";
+		} else if (negElementName=="possibility") {
+			queryText="NEG POSIB ( ";
+		} else {
+			return false;
+		}
 	} else {
 		return false;
 	}
-	
+	if (!parseBooleanFormula(*booleanFormula.begin(), queryText)) {
+		queryText="";
+		return false;
+	}
+	queryText+=" )";
 	return true;
+}
+
+bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText){
+	
 }
 
