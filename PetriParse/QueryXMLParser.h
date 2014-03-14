@@ -15,22 +15,36 @@
 #include <string.h>
 #include <vector>
 
+using namespace std;
+
 class QueryXMLParser {
 public:    
-//	QueryXMLParser();
- //       ~QueryXMLParser();
+	QueryXMLParser();
+ //      ~QueryXMLParser();
     
-        typedef std::string queryType;
-            
-        std::map<std::string, queryType> queries;
-        
-	bool parse(const std::string& xml);
+        struct QueryItem {
+            string id;
+            string queryText;
+            enum { 
+                PARSING_OK,
+                PARSING_ERROR,
+                UNSUPPORTED_QUERY,
+            } parsingResult;
+        };
+
+        typedef vector<QueryItem> Queries;
+        Queries queries;
+
+	bool parse(const string& xml);
         
 private:
         void parsePropertySet(XMLSP::DOMElement* element);
         void parseProperty(XMLSP::DOMElement* element);
-        void parseTags(XMLSP::DOMElement* element);
-        void parseFormula(XMLSP::DOMElement* element);
+        bool parseTags(XMLSP::DOMElement* element);
+        void parseFormula(XMLSP::DOMElement* element, string &queryText);
+        
+        enum {MISSING_PROPERTY_SET, MISSING_PROPERTY, EMPTY_QUERY_ID};
+        
 };
 
 #endif	/* QUERYXMLPARSER_H */
