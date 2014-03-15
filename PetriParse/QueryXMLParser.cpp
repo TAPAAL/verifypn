@@ -118,11 +118,11 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	DOMElements::iterator booleanFormula = elements.begin();
 	string elementName = (*booleanFormula)->getElementName(); 
 	if (elementName=="invariant") {
-		queryText="INV ( ";
+		queryText="INV (";
 	} else if (elementName=="impossibility") {
-		queryText="IMPOSIB ( ";
+		queryText="IMPOSIB (";
 	} else if (elementName=="possibility") {
-		queryText="POSIB ( ";
+		queryText="POSIB (";
 	} else if (elementName=="negation") {
 		DOMElements children = (*elements.begin())->getChilds();
 		if (children.size() !=1) {
@@ -131,26 +131,27 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 		booleanFormula = children.begin(); 
 		string negElementName = (*booleanFormula)->getElementName();
 		if (negElementName=="invariant") {
-			queryText="NEG INV ( ";
+			queryText="NEG INV (";
 		} else if (negElementName=="impossibility") {
-			queryText="NEG IMPOSIB ( ";
+			queryText="NEG IMPOSIB (";
 		} else if (negElementName=="possibility") {
-			queryText="NEG POSIB ( ";
+			queryText="NEG POSIB (";
 		} else {
 			return false;
 		}
 	} else {
 		return false;
 	}
-	if (!parseBooleanFormula(((*booleanFormula)->getChilds())[0]  , queryText)) {
+	DOMElements nextElements = (*booleanFormula)->getChilds();
+	if (nextElements.size() !=1 || !parseBooleanFormula(nextElements[0] , queryText)) {
 		return false;
 	}
-	queryText+=" )";
+	queryText+=")";
 	return true;
 }
 
 bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText){
-		cout << "parseBooleanFormula: " << element->getElementName() << endl;
+		//cout << "parseBooleanFormula: " << element->getElementName() << endl;
 		string elementName = element->getElementName();
 		if (elementName == "deadlock") {
 			queryText+="deadlock";
@@ -163,9 +164,9 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			return true;
 		} else if (elementName == "negation") {
 			DOMElements children = element->getChilds();
-			queryText+="not (";
+			queryText+="not(";
 			if (children.size()==1 && parseBooleanFormula(children[0], queryText)) {
-				queryText+=" )";
+				queryText+=")";
 			} else {
 				return false;
 			}
@@ -175,11 +176,9 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (children.size()<2) {
 				return false;
 			}
-			cout << "NOW1";
 			if (!(parseBooleanFormula((children[0]), queryText))) {
 				return false;
 			}
-			cout << "NOW2";
 			DOMElements::iterator it;
 			for(it = (children.begin())+1; it != children.end(); it++) {
 				queryText+=" and ";
@@ -217,7 +216,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
 				return false;
 			}
-			queryText+= "( "+subformula1+" and not( "+subformula2+" )) or ( not( "+subformula1+" ) and "+subformula2+"  )";
+			queryText+= "( ( "+subformula1+" and not( "+subformula2+" )) or ( not( "+subformula1+" ) and "+subformula2+"  ) )";
 			return true;
 		} else if (elementName == "implication") {
 			DOMElements children = element->getChilds();
@@ -232,7 +231,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
 				return false;
 			}
-			queryText+= "( not( "+subformula1+" ) or ( "+subformula2+" )";
+			queryText+= "not("+subformula1+") or ( "+subformula2;
 			return true;
 		} else if (elementName == "equivalence") {
 			DOMElements children = element->getChilds();
@@ -247,7 +246,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
 				return false;
 			}
-			queryText+= "( "+subformula1+" and "+subformula2+" ) or ( not ( "+subformula1+" ) and not ( "+subformula2+" ) )";
+			queryText+= "( ( "+subformula1+" and "+subformula2+" ) or ( not ( "+subformula1+" ) and not ( "+subformula2+" ) ) )";
 			return true;
 		} else if (	elementName == "integer-eq" || 
 					elementName == "integer-ne" || 
@@ -261,10 +260,10 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			}
 			string subformula1;
 			string subformula2;
-			if (!(parseIntegerExpression(*children.begin(), subformula1))) {
+			if (!(parseIntegerExpression(children[0], subformula1))) {
 				return false;
 			}
-			if (!(parseIntegerExpression(*(children.begin()+1), subformula2))) {
+			if (!(parseIntegerExpression(children[1], subformula2))) {
 				return false;
 			}
 			string mathoperator;
@@ -275,13 +274,32 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			else if ( elementName == "integer-gt") mathoperator=" > ";
 			else if ( elementName == "integer-ge") mathoperator=" >= ";
 			
-			queryText+= "( "+subformula1+mathoperator+subformula2+" )";
+			queryText+="("+subformula1+mathoperator+subformula2+")";
 			return true;
 		}
 	return false;
 }
 
 bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryText){
-	//cout << element << endl;
-	return true;
+	string elementName = element->getElementName();
+	if (elementName == "integer-constant") {
+		queryText+=element->getCData();
+		return true;
+	} else if (elementName == "tokens-count") {
+		DOMElements children = element->getChilds();
+		if (children.size()==0) {
+			return false;
+		}
+		for (int i = 0; i < children.size(); i++) {
+			if (children[i]->getElementName() != "place") {
+				return false;
+			}
+			if (i > 0) {
+				queryText += " + ";
+			}
+			queryText+=children[i]->getCData();
+		}
+		return true;
+	}
+	return false;
 }
