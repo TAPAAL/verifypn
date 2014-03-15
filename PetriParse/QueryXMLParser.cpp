@@ -105,12 +105,12 @@ bool QueryXMLParser::parseTags(DOMElement* element){
 bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &negateResult){
 	/*
 	 Describe here how to parse
-	 * INV phi
-	 * IMPOS phi
-	 * POS phi
-	 * NEG INV phi
-	 * NEG IMPOS phi
-	 * NEG POS phi
+	 * INV phi =  AG phi =  not EF not phi
+	 * IMPOS phi = AG not phi = not EF phi
+	 * POS phi = EF phi
+	 * NEG INV phi = not AG phi = EF not phi
+	 * NEG IMPOS phi = not AG not phi = EF phi
+	 * NEG POS phi = not EF phi
 	 */
 	DOMElements elements = element->getChilds();
 	if (elements.size() != 1) {
@@ -119,11 +119,14 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	DOMElements::iterator booleanFormula = elements.begin();
 	string elementName = (*booleanFormula)->getElementName(); 
 	if (elementName=="invariant") {
-		queryText="INV ( ";
+		queryText="EF not(";
+		negateResult=true;
 	} else if (elementName=="impossibility") {
-		queryText="IMPOSIB ( ";
+		queryText="EF ( ";
+		negateResult=true;
 	} else if (elementName=="possibility") {
-		queryText="POSIB ( ";
+		queryText="EF ( ";
+		negateResult=false;
 	} else if (elementName=="negation") {
 		DOMElements children = (*elements.begin())->getChilds();
 		if (children.size() !=1) {
@@ -132,11 +135,14 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 		booleanFormula = children.begin(); 
 		string negElementName = (*booleanFormula)->getElementName();
 		if (negElementName=="invariant") {
-			queryText="NEG INV ( ";
+			queryText="EF not( ";
+			negateResult=false;
 		} else if (negElementName=="impossibility") {
-			queryText="NEG IMPOSIB ( ";
+			queryText="EF ( ";
+			negateResult=false;
 		} else if (negElementName=="possibility") {
-			queryText="NEG POSIB ( ";
+			queryText="EF ( ";
+			negateResult=true;
 		} else {
 			return false;
 		}
@@ -147,7 +153,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	if (nextElements.size() !=1 || !parseBooleanFormula(nextElements[0] , queryText)) {
 		return false;
 	}
-	queryText+=" )";
+	queryText+=")";
 	return true;
 }
 
