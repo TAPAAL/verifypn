@@ -116,7 +116,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 		return false;
 	}
 	DOMElements::iterator booleanFormula = elements.begin();
-	string elementName = (*elements.begin())->getElementName(); 
+	string elementName = (*booleanFormula)->getElementName(); 
 	if (elementName=="invariant") {
 		queryText="INV ( ";
 	} else if (elementName=="impossibility") {
@@ -128,8 +128,8 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 		if (children.size() !=1) {
 			return false;
 		}
-		booleanFormula = children.begin(); //->getChilds();
-		string negElementName = (*children.begin())->getElementName();
+		booleanFormula = children.begin(); 
+		string negElementName = (*booleanFormula)->getElementName();
 		if (negElementName=="invariant") {
 			queryText="NEG INV ( ";
 		} else if (negElementName=="impossibility") {
@@ -142,7 +142,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	} else {
 		return false;
 	}
-	if (!parseBooleanFormula(*booleanFormula , queryText)) {
+	if (!parseBooleanFormula(((*booleanFormula)->getChilds())[0]  , queryText)) {
 		return false;
 	}
 	queryText+=" )";
@@ -150,11 +150,8 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 }
 
 bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText){
-	DOMElements elements = element->getChilds();
-	DOMElements::iterator it;
-	for(it = elements.begin(); it != elements.end(); it++){
-	//	cout << (*it)->getElementName() << endl;
-		string elementName = (*it)->getElementName();
+		cout << "parseBooleanFormula: " << element->getElementName() << endl;
+		string elementName = element->getElementName();
 		if (elementName == "deadlock") {
 			queryText+="deadlock";
 			return true;
@@ -165,24 +162,26 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			queryText+="false";
 			return true;
 		} else if (elementName == "negation") {
-			DOMElements children = (*it)->getChilds();
+			DOMElements children = element->getChilds();
 			queryText+="not (";
-			if (children.size()==1 && parseBooleanFormula(*children.begin(), queryText)) {
+			if (children.size()==1 && parseBooleanFormula(children[0], queryText)) {
 				queryText+=" )";
 			} else {
 				return false;
 			}
 			return true;
 		} else if (elementName == "conjunction") {
-			DOMElements children = (*it)->getChilds();
+			DOMElements children = element->getChilds();
 			if (children.size()<2) {
 				return false;
 			}
-			if (!(parseBooleanFormula(*children.begin(), queryText))) {
+			cout << "NOW1";
+			if (!(parseBooleanFormula((children[0]), queryText))) {
 				return false;
 			}
+			cout << "NOW2";
 			DOMElements::iterator it;
-			for(it = children.begin()+1; it != children.end(); it++) {
+			for(it = (children.begin())+1; it != children.end(); it++) {
 				queryText+=" and ";
 				if (!(parseBooleanFormula(*it, queryText))) {
 					return false;
@@ -190,7 +189,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			}
 			return true;
 		} else if (elementName == "disjunction") {
-			DOMElements children = (*it)->getChilds();
+			DOMElements children = element->getChilds();
 			if (children.size()<2) {
 				return false;
 			}
@@ -206,13 +205,13 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			}
 			return true;
 		} else if (elementName == "exclusive-disjunction") {
-			DOMElements children = (*it)->getChilds();
+			DOMElements children = element->getChilds();
 			if (children.size()!=2) { // we support only two subformulae here
 				return false;
 			}
 			string subformula1;
 			string subformula2;
-			if (!(parseBooleanFormula(*children.begin(), subformula1))) {
+			if (!(parseBooleanFormula(*(children.begin()), subformula1))) {
 				return false;
 			}
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
@@ -221,13 +220,13 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			queryText+= "( "+subformula1+" and not( "+subformula2+" )) or ( not( "+subformula1+" ) and "+subformula2+"  )";
 			return true;
 		} else if (elementName == "implication") {
-			DOMElements children = (*it)->getChilds();
+			DOMElements children = element->getChilds();
 			if (children.size()!=2) { // implication has only two subformulae
 				return false;
 			}
 			string subformula1;
 			string subformula2;
-			if (!(parseBooleanFormula(*children.begin(), subformula1))) {
+			if (!(parseBooleanFormula(*(children.begin()), subformula1))) {
 				return false;
 			}
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
@@ -236,13 +235,13 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			queryText+= "( not( "+subformula1+" ) or ( "+subformula2+" )";
 			return true;
 		} else if (elementName == "equivalence") {
-			DOMElements children = (*it)->getChilds();
+			DOMElements children = element->getChilds();
 			if (children.size()!=2) { // we support only two subformulae here
 				return false;
 			}
 			string subformula1;
 			string subformula2;
-			if (!(parseBooleanFormula(*children.begin(), subformula1))) {
+			if (!(parseBooleanFormula(*(children.begin()), subformula1))) {
 				return false;
 			}
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
@@ -256,7 +255,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 					elementName == "integer-le" || 
 					elementName == "integer-gt" || 
 					elementName == "integer-ge") {
-			DOMElements children = (*it)->getChilds();
+			DOMElements children = element->getChilds();
 			if (children.size()!=2) { // exactly two integer subformulae are required
 				return false;
 			}
@@ -279,10 +278,10 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			queryText+= "( "+subformula1+mathoperator+subformula2+" )";
 			return true;
 		}
-	}
-	return true;
+	return false;
 }
 
 bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryText){
-	
+	//cout << element << endl;
+	return true;
 }
