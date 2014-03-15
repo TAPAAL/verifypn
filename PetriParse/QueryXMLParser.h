@@ -14,6 +14,7 @@
 #include <string>
 #include <string.h>
 #include <vector>
+#include <sstream> 
 
 using namespace std;
 
@@ -47,7 +48,7 @@ private:
         bool parseBooleanFormula(XMLSP::DOMElement* element, string &queryText);
         bool parseIntegerExpression(XMLSP::DOMElement* element, string &queryText);
         
-        enum {MISSING_PROPERTY_SET, MISSING_PROPERTY, EMPTY_QUERY_ID};
+        enum {MISSING_PROPERTY_SET, MISSING_PROPERTY, EMPTY_QUERY_ID, EXPECTED_INTEGER};
         
 };
 

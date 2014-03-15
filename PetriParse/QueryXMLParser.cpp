@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <sstream> 
 
 using namespace XMLSP;
 using namespace std;
@@ -118,11 +119,11 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	DOMElements::iterator booleanFormula = elements.begin();
 	string elementName = (*booleanFormula)->getElementName(); 
 	if (elementName=="invariant") {
-		queryText="INV (";
+		queryText="INV ( ";
 	} else if (elementName=="impossibility") {
-		queryText="IMPOSIB (";
+		queryText="IMPOSIB ( ";
 	} else if (elementName=="possibility") {
-		queryText="POSIB (";
+		queryText="POSIB ( ";
 	} else if (elementName=="negation") {
 		DOMElements children = (*elements.begin())->getChilds();
 		if (children.size() !=1) {
@@ -131,11 +132,11 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 		booleanFormula = children.begin(); 
 		string negElementName = (*booleanFormula)->getElementName();
 		if (negElementName=="invariant") {
-			queryText="NEG INV (";
+			queryText="NEG INV ( ";
 		} else if (negElementName=="impossibility") {
-			queryText="NEG IMPOSIB (";
+			queryText="NEG IMPOSIB ( ";
 		} else if (negElementName=="possibility") {
-			queryText="NEG POSIB (";
+			queryText="NEG POSIB ( ";
 		} else {
 			return false;
 		}
@@ -146,7 +147,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	if (nextElements.size() !=1 || !parseBooleanFormula(nextElements[0] , queryText)) {
 		return false;
 	}
-	queryText+=")";
+	queryText+=" )";
 	return true;
 }
 
@@ -216,7 +217,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
 				return false;
 			}
-			queryText+= "( ( "+subformula1+" and not( "+subformula2+" )) or ( not( "+subformula1+" ) and "+subformula2+"  ) )";
+			queryText+= "(("+subformula1+" and not("+subformula2+")) or (not("+subformula1+") and "+subformula2+"))";
 			return true;
 		} else if (elementName == "implication") {
 			DOMElements children = element->getChilds();
@@ -246,7 +247,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
 				return false;
 			}
-			queryText+= "( ( "+subformula1+" and "+subformula2+" ) or ( not ( "+subformula1+" ) and not ( "+subformula2+" ) ) )";
+			queryText+= "(("+subformula1+" and "+subformula2+") or (not("+subformula1+") and not("+subformula2+")))";
 			return true;
 		} else if (	elementName == "integer-eq" || 
 					elementName == "integer-ne" || 
@@ -283,12 +284,21 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryText){
 	string elementName = element->getElementName();
 	if (elementName == "integer-constant") {
-		queryText+=element->getCData();
+		int i;
+		if(sscanf((element->getCData()).c_str(), "%d", &i)  == EOF ) { 
+			throw EXPECTED_INTEGER;
+		}
+		 stringstream ss;//create a stringstream
+         ss << i;//add number to the stream
+         queryText+=ss.str();
 		return true;
 	} else if (elementName == "tokens-count") {
 		DOMElements children = element->getChilds();
 		if (children.size()==0) {
 			return false;
+		}
+		if (children.size()>1) {
+			queryText+="(";
 		}
 		for (int i = 0; i < children.size(); i++) {
 			if (children[i]->getElementName() != "place") {
@@ -297,8 +307,48 @@ bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryTe
 			if (i > 0) {
 				queryText += " + ";
 			}
-			queryText+=children[i]->getCData();
+			string placeName= children[i]->getCData();
+			placeName.erase( std::remove_if( placeName.begin(), placeName.end(), ::isspace ), placeName.end() );
+			queryText+=placeName;
 		}
+		if (children.size()>1) {
+			queryText+=")";
+		}
+		return true;
+	} else if (	elementName == "integer-sum" ||
+				elementName == "integer-product" ) {
+		DOMElements children = element->getChilds();
+		if (children.size() < 2) { // at least two integer subexpression are required
+			return false;
+		}
+		string mathoperator;
+		if (	 elementName == "integer-sum") mathoperator = " + ";
+		else if (elementName == "integer-product") mathoperator = " * ";
+		queryText+="(";
+		for (int i = 0; i < children.size(); i++) {
+			if (i > 0) {
+				queryText+= mathoperator;
+			}
+			if (!parseIntegerExpression(children[i], queryText)) {
+				return false;
+			}
+		}
+		queryText+=")";
+		return true;
+	} else if (elementName == "integer-difference" ) {
+		DOMElements children = element->getChilds();
+		if (children.size() != 2) { // at least two integer subexpression are required
+			return false;
+		}
+		queryText+="(";
+		if (!parseIntegerExpression(children[0], queryText)) {
+			return false;
+		}
+		queryText+=" - ";
+		if (!parseIntegerExpression(children[1], queryText)) {
+			return false;
+		}
+		queryText+=")";
 		return true;
 	}
 	return false;
