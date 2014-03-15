@@ -153,7 +153,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	if (nextElements.size() !=1 || !parseBooleanFormula(nextElements[0] , queryText)) {
 		return false;
 	}
-	queryText+=")";
+	queryText+=" )";
 	return true;
 }
 
@@ -358,4 +358,18 @@ bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryTe
 		return true;
 	}
 	return false;
+}
+
+void QueryXMLParser::printQueries() {
+	QueryXMLParser::QueriesIterator it;
+	for(it = queries.begin(); it != queries.end(); it++){
+			cout << it->id << ": ";
+			if (it->parsingResult == QueryItem::PARSING_ERROR) {
+				cout << "\t---------- parsing error ----------" << endl;
+			} else if (it->parsingResult == QueryItem::UNSUPPORTED_QUERY) {
+				cout << "\t---------- unsupported query ----------" << endl;
+			} else {
+			cout << "\t" << (it->negateResult ? "not " : "") << it->queryText << endl;
+			}
+	}	
 }

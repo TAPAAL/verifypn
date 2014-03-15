@@ -78,34 +78,27 @@ int main(int argc, char* argv[]){
         int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
 
         
-//        const char* xml = "<?xml version=\"1.0\"?>\n"
-//	"<hello v=\"1\">&lt;Hello world&gt;<!-- small comment -->\n"
-//	" <subtag v1=\"1\" v2=\"2\" v3=\"3\" />\n"
-//	"</hello>";
+	//-------------------- Query XML Parser -----------------------//	
 
-        char* queryXMLFile = argv[1];
-      
-        //Load the model
-		ifstream mfile(queryXMLFile, ifstream::in);
-		if(!mfile){
-			fprintf(stderr, "Error: Model file \"%s\" couldn't be opened\n", modelfile);
-			return ErrorCode;
-		}
-                stringstream buffer;
-		buffer << mfile.rdbuf();
-
-		//Parse the query
-		QueryXMLParser parser;
-	if (parser.parse(buffer.str())) {
-		QueryXMLParser::QueriesIterator it;
-		for(it = parser.queries.begin(); it != parser.queries.end(); it++){
-			cout << it->id << ": " << it->queryText << endl;
-		}
-		cout<<"OK."<<endl;
-	} else {
-		cout<<"Aborted."<<endl;
+	char* queryXMLFile = argv[1];
+	//Load the model
+	ifstream mfile(queryXMLFile, ifstream::in);
+	if (!mfile) {
+		fprintf(stderr, "Error: Model file \"%s\" couldn't be opened\n", modelfile);
+		return ErrorCode;
 	}
-    return 0;
+	stringstream buffer;
+	buffer << mfile.rdbuf();
+
+	//Parse the query
+	QueryXMLParser parser;
+	if (parser.parse(buffer.str())) {
+		parser.printQueries();
+		cout << "OK." << endl;
+	} else {
+		cout << "Aborted." << endl;
+	}
+	return 0;
         
         
 	//----------------------- Parse Arguments -----------------------//

@@ -24,9 +24,9 @@ public:
  //      ~QueryXMLParser();
     
         struct QueryItem {
-            string id;
-            string queryText; // on EF queries will be here
-            bool negateResult;
+            string id; // query name
+            string queryText; // only EF queries will be here
+            bool negateResult; // true if the final result should be negated
             enum { 
                 PARSING_OK,
                 PARSING_ERROR,
@@ -39,6 +39,7 @@ public:
         Queries queries;
 
 	bool parse(const string& xml);
+        void printQueries();
         
 private:
         void parsePropertySet(XMLSP::DOMElement* element);
