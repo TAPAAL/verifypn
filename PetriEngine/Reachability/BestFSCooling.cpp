@@ -104,6 +104,7 @@ ReachabilityResult BestFSCooling::reachable(const PetriNet &net,
 												  states.discovered(),
 												  enabledTransitionsCount,
 												  states.maxTokens(),
+												  states.maxPlaceBound(),
 												  ns->pathLength(),
 												  ns->trace());
 
@@ -129,7 +130,7 @@ ReachabilityResult BestFSCooling::reachable(const PetriNet &net,
 	}
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-							  "Query cannot be satisfied!", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens());
+							  "Query cannot be satisfied!", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
 }
 
 double BestFSCooling::priority(const Structures::State *state,

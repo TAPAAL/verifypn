@@ -129,6 +129,7 @@ ReachabilityResult MagicSearch::reachable(const PetriNet &net,
 												  states.discovered(),
 												  enabledTransitionsCount,
 												  -1,
+												  std::vector<unsigned int>(),
 												  storeState->pathLength(),
 												  storeState->trace());
 					}
@@ -162,7 +163,8 @@ ReachabilityResult MagicSearch::reachable(const PetriNet &net,
 							  explored,
 							  states.discovered(),
 							  enabledTransitionsCount,
-							  -1);
+							  -1,
+							  std::vector<unsigned int>());
 }
 
 double MagicSearch::priority(const MarkVal *marking,
