@@ -54,25 +54,33 @@ namespace PetriEngine {
 		for (int i = 0; i < transitions; i++) {
 			skipTransitions[i] = false;
 		}
+		skipPlaces = new bool[places];
+		for (int i = 0; i < places; i++) {
+			skipPlaces[i] = false;
+		}
 	}
 
-PetriNet::~PetriNet(){
-	if(_ranges)
-		delete[] _ranges;
-	_ranges = NULL;
-	if(_tm)
-		delete[] _tm;
-	_tm = NULL;
-	//Conditions and assignments is allocated in the same block
-	if(_conditions)
-		delete[] (char*)_conditions;
-	_conditions = NULL;
-	_assignments = NULL;
-        if (skipTransitions) {
-            delete[] skipTransitions;
-        }
-        skipTransitions = NULL;
-}
+	PetriNet::~PetriNet() {
+		if (_ranges)
+			delete[] _ranges;
+		_ranges = NULL;
+		if (_tm)
+			delete[] _tm;
+		_tm = NULL;
+		//Conditions and assignments is allocated in the same block
+		if (_conditions)
+			delete[] (char*) _conditions;
+		_conditions = NULL;
+		_assignments = NULL;
+		if (skipTransitions) {
+			delete[] skipTransitions;
+		}
+		skipTransitions = NULL;
+		if (skipPlaces) {
+			delete[] skipPlaces;
+		}
+		skipPlaces = NULL;
+	}
 
 bool PetriNet::fire(unsigned int t,
 					const MarkVal* m,
