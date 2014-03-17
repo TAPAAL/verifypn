@@ -71,7 +71,6 @@ int main(int argc, char* argv[]){
 	int kbound = 0;
 	SearchStrategies searchstrategy = BestFS;
 	int memorylimit = 0;
-	int memorylimit = 3*1024*1024*1024;
 	char* modelfile = NULL;
 	char* queryfile = NULL;
 	bool disableoverapprox = false;
