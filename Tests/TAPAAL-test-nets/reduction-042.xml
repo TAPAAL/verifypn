@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="TAPN1" type="P/T net">
+<place id="P6" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P6" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="405.0" positionY="60.0"/>
+<place id="P7" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P7" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="405.0" positionY="630.0"/>
+<place id="P8" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P8" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="165.0" positionY="345.0"/>
+<place id="P9" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P9" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="300.0" positionY="345.0"/>
+<place id="P10" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P10" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="360.0"/>
+<place id="P11" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P11" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="585.0" positionY="345.0"/>
+<place id="P12" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="720.0" positionY="345.0"/>
+<transition angle="0" id="T5" infiniteServer="false" name="T5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="390.0" positionY="180.0" priority="0" urgent="false"/>
+<transition angle="0" id="T6" infiniteServer="false" name="T6" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="390.0" positionY="510.0" priority="0" urgent="false"/>
+<arc id="P6 to T5" inscription="[0,inf)" source="P6" target="T5" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="414" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="177"/>
+</arc>
+<arc id="T5 to P8" inscription="1" source="T5" target="P8" type="normal" weight="2">
+<arcpath arcPointType="false" id="0" xCoord="396" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="189" yCoord="348"/>
+</arc>
+<arc id="P8 to T6" inscription="[0,inf)" source="P8" target="T6" type="timed" weight="2">
+<arcpath arcPointType="false" id="0" xCoord="188" yCoord="366"/>
+<arcpath arcPointType="false" id="1" xCoord="396" yCoord="522"/>
+</arc>
+<arc id="T5 to P9" inscription="1" source="T5" target="P9" type="normal" weight="3">
+<arcpath arcPointType="false" id="0" xCoord="402" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="319" yCoord="344"/>
+</arc>
+<arc id="P9 to T6" inscription="[0,inf)" source="P9" target="T6" type="timed" weight="3">
+<arcpath arcPointType="false" id="0" xCoord="319" yCoord="369"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="507"/>
+</arc>
+<arc id="T5 to P10" inscription="1" source="T5" target="P10" type="normal" weight="3">
+<arcpath arcPointType="false" id="0" xCoord="402" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="456" yCoord="357"/>
+</arc>
+<arc id="P10 to T6" inscription="[0,inf)" source="P10" target="T6" type="timed" weight="3">
+<arcpath arcPointType="false" id="0" xCoord="455" yCoord="385"/>
+<arcpath arcPointType="false" id="1" xCoord="402" yCoord="507"/>
+</arc>
+<arc id="T5 to P11" inscription="1" source="T5" target="P11" type="normal" weight="6">
+<arcpath arcPointType="false" id="0" xCoord="406" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="585" yCoord="347"/>
+</arc>
+<arc id="P11 to T6" inscription="[0,inf)" source="P11" target="T6" type="timed" weight="6">
+<arcpath arcPointType="false" id="0" xCoord="585" yCoord="366"/>
+<arcpath arcPointType="false" id="1" xCoord="407" yCoord="517"/>
+</arc>
+<arc id="T5 to P12" inscription="1" source="T5" target="P12" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="407" yCoord="187"/>
+<arcpath arcPointType="false" id="1" xCoord="718" yCoord="350"/>
+</arc>
+<arc id="P12 to T6" inscription="[0,inf)" source="P12" target="T6" type="timed" weight="2">
+<arcpath arcPointType="false" id="0" xCoord="718" yCoord="363"/>
+<arcpath arcPointType="false" id="1" xCoord="406" yCoord="527"/>
+</arc>
+<arc id="T6 to P7" inscription="1" source="T6" target="P7" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="402" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="414" yCoord="627"/>
+</arc>
+</net>
+<query active="true" capacity="14" discreteInclusion="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" overApproximation="false" pTrie="true" query="EF TAPN1.P7=1" reduction="true" reductionOption="VerifyPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="SOME"/>
+<query active="true" capacity="14" discreteInclusion="false" extrapolationOption="null" gcd="false" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" overApproximation="false" pTrie="true" query="EF deadlock" reduction="true" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<k-bound bound="3"/>
+</pnml>

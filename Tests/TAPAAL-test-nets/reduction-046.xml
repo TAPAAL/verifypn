@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="TAPN1" type="P/T net">
+<place id="P0" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="180.0"/>
+<place id="P1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="375.0"/>
+<place id="P2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="570.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="270.0" priority="0" urgent="false"/>
+<transition angle="0" id="T1" infiniteServer="false" name="T1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="465.0" priority="0" urgent="false"/>
+<transition angle="0" id="T2" infiniteServer="false" name="T2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="705.0" priority="0" urgent="false"/>
+<arc id="P0 to T0" inscription="[0,inf)" source="P0" target="T0" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="206"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="267"/>
+</arc>
+<arc id="T0 to P1" inscription="1" source="T0" target="P1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="327" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="327" yCoord="372"/>
+</arc>
+<arc id="T0 to P2" inscription="1" source="T0" target="P2" type="normal" weight="3">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="477" yCoord="447"/>
+<arcpath arcPointType="false" id="2" xCoord="352" yCoord="571"/>
+</arc>
+<arc id="P1 to T1" inscription="[0,inf)" source="P1" target="T1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="330" yCoord="401"/>
+<arcpath arcPointType="false" id="1" xCoord="342" yCoord="462"/>
+</arc>
+<arc id="T1 to P2" inscription="1" source="T1" target="P2" type="normal" weight="2">
+<arcpath arcPointType="false" id="0" xCoord="342" yCoord="492"/>
+<arcpath arcPointType="false" id="1" xCoord="342" yCoord="567"/>
+</arc>
+<arc id="P2 to T2" inscription="[0,inf)" source="P2" target="T2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="334" yCoord="594"/>
+<arcpath arcPointType="false" id="1" xCoord="297" yCoord="657"/>
+<arcpath arcPointType="false" id="2" xCoord="351" yCoord="717"/>
+</arc>
+<arc id="T2 to P2" inscription="1" source="T2" target="P2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="361" yCoord="717"/>
+<arcpath arcPointType="false" id="1" xCoord="417" yCoord="672"/>
+<arcpath arcPointType="false" id="2" xCoord="351" yCoord="593"/>
+</arc>
+</net>
+<query active="true" capacity="4" discreteInclusion="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" overApproximation="true" pTrie="true" query="EF TAPN1.P2=5" reduction="true" reductionOption="VerifyPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<query active="true" capacity="4" discreteInclusion="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" overApproximation="false" pTrie="true" query="EF TAPN1.P2=2" reduction="true" reductionOption="VerifyPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<query active="true" capacity="5" discreteInclusion="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" overApproximation="false" pTrie="true" query="EF deadlock" reduction="true" reductionOption="VerifyPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<k-bound bound="3"/>
+</pnml>

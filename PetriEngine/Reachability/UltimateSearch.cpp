@@ -33,96 +33,100 @@ using namespace PetriEngine::PQL;
 #define ULTIMATE_MEMORY_BOUND				1024*1024*1024
 
 namespace PetriEngine{
-namespace Reachability{
+namespace Reachability {
 
-ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
-											 const MarkVal *m0,
-											 const VarVal *v0,
-											 PQL::Condition *query){
-	// Create allocator, stateset and queue
-	LimitedStateAllocator<> allocator(net, _memorylimit);
-	StateSet states(net, _kbound);
-	EnhancedPriorityQueue<State*> queue;
+		ReachabilityResult UltimateSearch::reachable(const PetriNet &net,
+				const MarkVal *m0,
+				const VarVal *v0,
+				PQL::Condition *query) {
+			// Create allocator, stateset and queue
+			LimitedStateAllocator<> allocator(net, _memorylimit);
+			StateSet states(net, _kbound);
+			EnhancedPriorityQueue<State*> queue;
 
-	// Create s0
-	State s0;
-	s0.setParent(NULL);
-	s0.setTransition(0);
-	s0.setMarking(const_cast<MarkVal*>(m0));
-	s0.setValuation(const_cast<VarVal*>(v0));
+			// Create s0
+			State s0;
+			s0.setParent(NULL);
+			s0.setTransition(0);
+			s0.setMarking(const_cast<MarkVal*> (m0));
+			s0.setValuation(const_cast<VarVal*> (v0));
 
-	// Push s0
-	queue.push(1, &s0);
-	states.add(&s0);
+			// Push s0
+			queue.push(1, &s0);
+			states.add(&s0);
 
-	// Statistics
-	BigInt expanded = 0, explored = 1;
-	size_t max = 1;
-	int count = 0;
+			// Statistics
+			BigInt expanded = 0, explored = 1;
+			std::vector<BigInt> enabledTransitionsCount(net.numberOfTransitions());
+			size_t max = 1;
+			int count = 0;
 
-	State* ns = allocator.createState();
+			State* ns = allocator.createState();
 
-	DistanceContext::DistanceStrategy flags = (DistanceContext::DistanceStrategy)(DistanceContext::AndSum | DistanceContext::OrExtreme);
+			DistanceContext::DistanceStrategy flags = (DistanceContext::DistanceStrategy)(DistanceContext::AndSum | DistanceContext::OrExtreme);
 
-	if(query->evaluate(s0, &net)){
-		return ReachabilityResult(ReachabilityResult::Satisfied, "Query was satisfied",
-								  expanded, explored, states.discovered(), states.maxTokens(), s0.pathLength(), s0.trace());
-	}
+			if (query->evaluate(s0, &net)) {
+				return ReachabilityResult(ReachabilityResult::Satisfied, "Query was satisfied",
+						expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), s0.pathLength(), s0.trace());
+			}
 
-	// Main-loop
-	while(!queue.empty()){
-		// Report progress
-		if(count++ & 1<<17){
-			count = 0;
-			if(queue.size() > max)
-				max = queue.size();
-			this->reportProgress((double)(max - queue.size()) / ((double)(max)));
-			if(this->abortRequested())
-				return ReachabilityResult(ReachabilityResult::Unknown,
-										  "Query aborted!");
-		}
-
-		// Pop from queue
-		State* s = queue.pop(depthFirst);
-
-		// Try firing each transition
-		for(unsigned int t = 0; t < net.numberOfTransitions(); t++){
-			if(net.fire(t, s, ns, 1) && states.add(ns)){
-				// Update statistics
-				explored++;
-				ns->setParent(s);
-				ns->setTransition(t);
-
-				// Test query
-				if(query->evaluate(*ns, &net)){
-					return ReachabilityResult(ReachabilityResult::Satisfied,
-											  "Query was satisfied",
-											  expanded, explored, states.discovered(), states.maxTokens(), ns->pathLength(), ns->trace());
+			// Main-loop
+			while (!queue.empty()) {
+				// Report progress
+				if (count++ & 1 << 17) {
+					count = 0;
+					if (queue.size() > max)
+						max = queue.size();
+					this->reportProgress((double) (max - queue.size()) / ((double) (max)));
+					if (this->abortRequested())
+						return ReachabilityResult(ReachabilityResult::Unknown,
+							"Query aborted!");
 				}
 
-				// Push new state on the queue
-				DistanceContext context(net,
-										flags,
-										ns->marking(),
-										ns->valuation(),
-										NULL);
-				queue.push(query->distance(context), ns);
+				// Pop from queue
+				State* s = queue.pop(depthFirst);
 
-				// Allocate new state, abort if not possible
-				ns = allocator.createState();
-				if(!ns)
-					return ReachabilityResult(ReachabilityResult::Unknown,
-											  "Memory bound exceeded",
-											  expanded, explored, states.discovered(), states.maxTokens());
+				// Try firing each transition
+				for (unsigned int t = 0; t < net.numberOfTransitions(); t++) {
+					if (net.fire(t, s, ns, 1)) {
+						enabledTransitionsCount[t]++;
+						if (states.add(ns)) {
+							// Update statistics
+							explored++;
+							ns->setParent(s);
+							ns->setTransition(t);
+
+							// Test query
+							if (query->evaluate(*ns, &net)) {
+								return ReachabilityResult(ReachabilityResult::Satisfied,
+										"Query was satisfied",
+										expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), ns->pathLength(), ns->trace());
+							}
+
+							// Push new state on the queue
+							DistanceContext context(net,
+									flags,
+									ns->marking(),
+									ns->valuation(),
+									NULL);
+							queue.push(query->distance(context), ns);
+
+							// Allocate new state, abort if not possible
+							ns = allocator.createState();
+							if (!ns)
+								return ReachabilityResult(ReachabilityResult::Unknown,
+									"Memory bound exceeded",
+									expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens());
+						}
+					}
+				}
+				expanded++;
 			}
-		}
-	  expanded++;
-	}
 
-	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-							  "Query cannot be satisfied",
-							  expanded, explored, states.discovered(), states.maxTokens());
-}
+			return ReachabilityResult(ReachabilityResult::NotSatisfied,
+					"Query cannot be satisfied",
+					expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens());
+		}
 
 } // Reachability
 } // PetriEngine

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<constant name="b" value="5"/>
+<net active="true" id="TAPN1" type="P/T net">
+<place id="P0" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="225.0"/>
+<place id="P2" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="360.0"/>
+<place id="P3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="360.0"/>
+<place id="end" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="end" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="555.0" positionY="225.0"/>
+<transition angle="0" id="T1" infiniteServer="false" name="T1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="360.0" priority="0"/>
+<transition angle="0" id="T2" infiniteServer="false" name="T2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="225.0" priority="0"/>
+<transition angle="0" id="T3" infiniteServer="false" name="T3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="465.0" positionY="135.0" priority="0"/>
+<arc id="P0 to T1" inscription="[0,inf)" source="P0" target="T1" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="251"/>
+<arcpath arcPointType="false" id="1" xCoord="357" yCoord="357"/>
+</arc>
+<arc id="P2 to T1" inscription="[0,inf)" source="P2" target="T1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="266" yCoord="372"/>
+<arcpath arcPointType="false" id="1" xCoord="351" yCoord="372"/>
+</arc>
+<arc id="P0 to T2" inscription="[0,inf):1" source="P0" target="T2" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="368" yCoord="246"/>
+<arcpath arcPointType="false" id="1" xCoord="418" yCoord="283"/>
+<arcpath arcPointType="false" id="2" xCoord="456" yCoord="237"/>
+</arc>
+<arc id="T2 to P0" inscription="[0,inf):1" source="T2" target="P0" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="466" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="463" yCoord="238"/>
+<arcpath arcPointType="false" id="2" xCoord="418" yCoord="193"/>
+<arcpath arcPointType="false" id="3" xCoord="369" yCoord="228"/>
+</arc>
+<arc id="T1 to P3" inscription="1" source="T1" target="P3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="361" yCoord="372"/>
+<arcpath arcPointType="false" id="1" xCoord="447" yCoord="372"/>
+</arc>
+<arc id="P0 to T3" inscription="[0,inf)" source="P0" target="T3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="359" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="162"/>
+<arcpath arcPointType="false" id="2" xCoord="471" yCoord="147"/>
+</arc>
+<arc id="T3 to end" inscription="1" source="T3" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="481" yCoord="147"/>
+<arcpath arcPointType="false" id="1" xCoord="567" yCoord="162"/>
+<arcpath arcPointType="false" id="2" xCoord="567" yCoord="222"/>
+</arc>
+<arc id="end to T3" inscription="[0,inf)" source="end" target="T3" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="234"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="222"/>
+<arcpath arcPointType="false" id="2" xCoord="477" yCoord="162"/>
+</arc>
+</net>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="EF TAPN1.P3=1" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="AG (TAPN1.end=0 or TAPN1.P0=1)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

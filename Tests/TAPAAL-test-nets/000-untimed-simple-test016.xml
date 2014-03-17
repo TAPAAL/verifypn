@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<constant name="Sum" value="16"/>
+<constant name="Number1" value="3"/>
+<constant name="Number2" value="6"/>
+<constant name="Number3" value="7"/>
+<net active="true" id="TAPN1" type="P/T net">
+<place id="P0" initialMarking="1" invariant="&lt;= Number1" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="300.0" positionY="135.0"/>
+<place id="P1" initialMarking="0" invariant="&lt;= Number2" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="255.0"/>
+<place id="P2" initialMarking="0" invariant="&lt;= Number3" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="390.0"/>
+<place id="P3" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="510.0"/>
+<place id="P4" initialMarking="1" invariant="&lt;= Sum" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="765.0" positionY="570.0"/>
+<place id="P5" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="645.0" positionY="360.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="195.0" priority="1" timed="true"/>
+<transition angle="0" id="T1" infiniteServer="false" name="T1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="315.0" priority="1" timed="true"/>
+<transition angle="0" id="T2" infiniteServer="false" name="T2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="435.0" priority="1" timed="true"/>
+<transition angle="0" id="T3" infiniteServer="false" name="T3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="630.0" positionY="480.0" priority="1" timed="true"/>
+<arc id="P0 to T0" inscription="[0,inf)" source="P0" target="T0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="322" yCoord="157"/>
+<arcpath arcPointType="false" id="1" xCoord="367" yCoord="202"/>
+</arc>
+<arc id="T0 to P1" inscription="1" source="T0" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="366" yCoord="212"/>
+<arcpath arcPointType="false" id="1" xCoord="265" yCoord="260"/>
+</arc>
+<arc id="P1 to T1" inscription="[0,inf)" source="P1" target="T1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="265" yCoord="273"/>
+<arcpath arcPointType="false" id="1" xCoord="367" yCoord="322"/>
+</arc>
+<arc id="T1 to P2" inscription="1" source="T1" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="366" yCoord="332"/>
+<arcpath arcPointType="false" id="1" xCoord="264" yCoord="394"/>
+</arc>
+<arc id="P2 to T2" inscription="[0,inf)" source="P2" target="T2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="265" yCoord="407"/>
+<arcpath arcPointType="false" id="1" xCoord="366" yCoord="447"/>
+</arc>
+<arc id="P4 to T3" inscription="[0,inf)" source="P4" target="T3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="764" yCoord="573"/>
+<arcpath arcPointType="false" id="1" xCoord="646" yCoord="492"/>
+</arc>
+<arc id="T3 to P5" inscription="1" source="T3" target="P5" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="642" yCoord="477"/>
+<arcpath arcPointType="false" id="1" xCoord="654" yCoord="386"/>
+</arc>
+<arc id="T2 to P3" inscription="1" source="T2" target="P3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="376" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="479" yCoord="513"/>
+</arc>
+<arc id="P3 to T3" inscription="[0,inf)" source="P3" target="T3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="502" yCoord="532"/>
+<arcpath arcPointType="false" id="1" xCoord="493" yCoord="523"/>
+<arcpath arcPointType="false" id="2" xCoord="636" yCoord="492"/>
+</arc>
+</net>
+<query active="true" capacity="2" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EF TAPN1.P5&gt;=1" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

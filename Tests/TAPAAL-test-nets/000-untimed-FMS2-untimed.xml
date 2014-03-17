@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="ExportedNet" type="P/T net">
+<place id="P2s" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2s" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="630.0" positionY="390.0"/>
+<place id="P3" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="735.0" positionY="105.0"/>
+<place id="P2d" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2d" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="315.0"/>
+<place id="P2wP1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2wP1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="390.0"/>
+<place id="P3M2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P3M2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="735.0" positionY="195.0"/>
+<place id="P3s" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P3s" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="735.0" positionY="315.0"/>
+<place id="M3" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="M3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="600.0"/>
+<place id="P12s" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P12s" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="675.0"/>
+<place id="P12wM3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P12wM3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="510.0"/>
+<place id="P12M3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P12M3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="600.0"/>
+<place id="P2M2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2M2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="240.0"/>
+<place id="M2" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="M2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="645.0" positionY="240.0"/>
+<place id="P2" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="105.0"/>
+<place id="P2wM2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2wM2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="165.0"/>
+<place id="M1" initialMarking="3" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="M1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="240.0"/>
+<place id="P1M1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1M1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="465.0" positionY="240.0"/>
+<place id="P1wM1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1wM1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="465.0" positionY="165.0"/>
+<place id="P1" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="465.0" positionY="105.0"/>
+<place id="P12" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="435.0"/>
+<place id="P1wP2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1wP2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="390.0"/>
+<place id="P1s" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1s" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="390.0"/>
+<place id="P1d" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1d" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="465.0" positionY="315.0"/>
+<transition angle="0" id="tP3M2" infiniteServer="false" name="tP3M2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="735.0" positionY="255.0" priority="1" timed="true"/>
+<transition angle="0" id="tP3s" infiniteServer="false" name="tP3s" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="795.0" positionY="225.0" priority="1" timed="true"/>
+<transition angle="0" id="tP2" infiniteServer="false" name="tP2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="135.0" priority="1" timed="true"/>
+<transition angle="0" id="tP12s" infiniteServer="false" name="tP12s" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="735.0" priority="1" timed="true"/>
+<transition angle="0" id="tP2M2" infiniteServer="false" name="tP2M2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="285.0" priority="1" timed="true"/>
+<transition angle="0" id="tM2" infiniteServer="false" name="tM2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="210.0" priority="1" timed="true"/>
+<transition angle="0" id="tP2e" infiniteServer="false" name="tP2e" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="630.0" positionY="360.0" priority="1" timed="true"/>
+<transition angle="0" id="tP2j" infiniteServer="false" name="tP2j" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="360.0" priority="1" timed="true"/>
+<transition angle="0" id="tP3" infiniteServer="false" name="tP3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="735.0" positionY="150.0" priority="1" timed="true"/>
+<transition angle="0" id="tP2s" infiniteServer="false" name="tP2s" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="630.0" positionY="435.0" priority="1" timed="true"/>
+<transition angle="0" id="tP1e" infiniteServer="false" name="tP1e" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="360.0" priority="1" timed="true"/>
+<transition angle="0" id="tP1M1" infiniteServer="false" name="tP1M1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="285.0" priority="1" timed="true"/>
+<transition angle="0" id="tP1j" infiniteServer="false" name="tP1j" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="360.0" priority="1" timed="true"/>
+<transition angle="0" id="tP1s" infiniteServer="false" name="tP1s" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="435.0" priority="1" timed="true"/>
+<transition angle="0" id="tP12" infiniteServer="false" name="tP12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="480.0" priority="1" timed="true"/>
+<transition angle="0" id="tx" infiniteServer="false" name="tx" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="405.0" priority="1" timed="true"/>
+<transition angle="0" id="tP12M3" infiniteServer="false" name="tP12M3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="645.0" priority="1" timed="true"/>
+<transition angle="0" id="tM3" infiniteServer="false" name="tM3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="555.0" priority="1" timed="true"/>
+<transition angle="0" id="tP1" infiniteServer="false" name="tP1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="135.0" priority="1" timed="true"/>
+<transition angle="0" id="tM1" infiniteServer="false" name="tM1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="210.0" priority="1" timed="true"/>
+<arc id="arc0" inscription="1" source="tP3M2" target="P3s" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="747" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="747" yCoord="312"/>
+</arc>
+<arc id="arc1" inscription="1" source="tP3M2" target="M2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="742" yCoord="262"/>
+<arcpath arcPointType="false" id="1" xCoord="671" yCoord="253"/>
+</arc>
+<arc id="arc2" inscription="[0,inf)" source="P3s" target="tP3s" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="754" yCoord="314"/>
+<arcpath arcPointType="false" id="1" xCoord="801" yCoord="237"/>
+</arc>
+<arc id="arc3" inscription="1" source="tP3s" target="P3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="807" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="754" yCoord="129"/>
+</arc>
+<arc id="arc4" inscription="1" source="tP2j" target="P2wP1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="582" yCoord="387"/>
+<arcpath arcPointType="false" id="1" xCoord="582" yCoord="387"/>
+</arc>
+<arc id="arc5" inscription="[0,inf)" source="P2d" target="tP2j" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="604" yCoord="340"/>
+<arcpath arcPointType="false" id="1" xCoord="586" yCoord="372"/>
+</arc>
+<arc id="arc6" inscription="1" source="tP2M2" target="M2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="616" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="647" yCoord="263"/>
+</arc>
+<arc id="arc7" inscription="1" source="tP2M2" target="P2d" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="312"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="312"/>
+</arc>
+<arc id="arc8" inscription="[0,inf)" source="P2M2" target="tP2M2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="266"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="282"/>
+</arc>
+<arc id="arc9" inscription="1" source="tM2" target="P2M2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="237"/>
+</arc>
+<arc id="arc10" inscription="[0,inf)" source="M2" target="tM2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="644" yCoord="243"/>
+<arcpath arcPointType="false" id="1" xCoord="616" yCoord="222"/>
+</arc>
+<arc id="arc11" inscription="[0,inf)" source="P2wM2" target="tM2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="191"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="207"/>
+</arc>
+<arc id="arc12" inscription="[0,inf)" source="M2" target="tP3M2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="671" yCoord="255"/>
+<arcpath arcPointType="false" id="1" xCoord="741" yCoord="272"/>
+</arc>
+<arc id="arc13" inscription="[0,inf)" source="P3M2" target="tP3M2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="747" yCoord="221"/>
+<arcpath arcPointType="false" id="1" xCoord="747" yCoord="252"/>
+</arc>
+<arc id="arc14" inscription="1" source="tP3" target="P3M2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="747" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="747" yCoord="192"/>
+</arc>
+<arc id="arc15" inscription="[0,inf)" source="P3" target="tP3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="747" yCoord="131"/>
+<arcpath arcPointType="false" id="1" xCoord="747" yCoord="147"/>
+</arc>
+<arc id="arc16" inscription="1" source="tP2s" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="642" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="613" yCoord="131"/>
+</arc>
+<arc id="arc17" inscription="[0,inf)" source="P2s" target="tP2s" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="642" yCoord="416"/>
+<arcpath arcPointType="false" id="1" xCoord="642" yCoord="432"/>
+</arc>
+<arc id="arc18" inscription="1" source="tP2e" target="P2s" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="642" yCoord="387"/>
+<arcpath arcPointType="false" id="1" xCoord="642" yCoord="387"/>
+</arc>
+<arc id="arc19" inscription="[0,inf)" source="P2d" target="tP2e" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="619" yCoord="340"/>
+<arcpath arcPointType="false" id="1" xCoord="636" yCoord="372"/>
+</arc>
+<arc id="arc20" inscription="[0,inf)" source="M3" target="tM3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="571" yCoord="600"/>
+<arcpath arcPointType="false" id="1" xCoord="541" yCoord="567"/>
+</arc>
+<arc id="arc21" inscription="1" source="tM3" target="P12M3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="582"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="597"/>
+</arc>
+<arc id="arc22" inscription="1" source="tP12" target="P12wM3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="507"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="507"/>
+</arc>
+<arc id="arc23" inscription="[0,inf)" source="P12wM3" target="tM3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="536"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="552"/>
+</arc>
+<arc id="arc24" inscription="1" source="tx" target="P12" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="432"/>
+</arc>
+<arc id="arc25" inscription="[0,inf)" source="P12" target="tP12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="461"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="477"/>
+</arc>
+<arc id="arc26" inscription="[0,inf)" source="P1wP2" target="tx" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="505" yCoord="407"/>
+<arcpath arcPointType="false" id="1" xCoord="531" yCoord="417"/>
+</arc>
+<arc id="arc27" inscription="[0,inf)" source="P2wP1" target="tx" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="567" yCoord="407"/>
+<arcpath arcPointType="false" id="1" xCoord="541" yCoord="417"/>
+</arc>
+<arc id="arc28" inscription="[0,inf)" source="P2" target="tP2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="131"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="132"/>
+</arc>
+<arc id="arc29" inscription="1" source="tP2" target="P2wM2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="612" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="162"/>
+</arc>
+<arc id="arc30" inscription="1" source="tP12s" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="732"/>
+<arcpath arcPointType="false" id="1" xCoord="478" yCoord="131"/>
+</arc>
+<arc id="arc31" inscription="1" source="tP12s" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="732"/>
+<arcpath arcPointType="false" id="1" xCoord="610" yCoord="131"/>
+</arc>
+<arc id="arc32" inscription="1" source="tP12M3" target="M3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="541" yCoord="657"/>
+<arcpath arcPointType="false" id="1" xCoord="572" yCoord="623"/>
+</arc>
+<arc id="arc33" inscription="[0,inf)" source="P12s" target="tP12s" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="701"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="732"/>
+</arc>
+<arc id="arc34" inscription="[0,inf)" source="P12M3" target="tP12M3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="626"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="642"/>
+</arc>
+<arc id="arc35" inscription="1" source="tP12M3" target="P12s" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="537" yCoord="672"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="672"/>
+</arc>
+<arc id="arc36" inscription="1" source="tP1M1" target="M1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="456" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="439" yCoord="265"/>
+</arc>
+<arc id="arc37" inscription="1" source="tP1M1" target="P1d" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="462" yCoord="312"/>
+<arcpath arcPointType="false" id="1" xCoord="466" yCoord="316"/>
+</arc>
+<arc id="arc38" inscription="[0,inf)" source="P1d" target="tP1e" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="469" yCoord="340"/>
+<arcpath arcPointType="false" id="1" xCoord="451" yCoord="372"/>
+</arc>
+<arc id="arc39" inscription="1" source="tP1e" target="P1s" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="447" yCoord="387"/>
+<arcpath arcPointType="false" id="1" xCoord="447" yCoord="387"/>
+</arc>
+<arc id="arc40" inscription="[0,inf)" source="P1s" target="tP1s" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="447" yCoord="416"/>
+<arcpath arcPointType="false" id="1" xCoord="447" yCoord="432"/>
+</arc>
+<arc id="arc41" inscription="1" source="tP1s" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="447" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="475" yCoord="131"/>
+</arc>
+<arc id="arc42" inscription="[0,inf)" source="P1d" target="tP1j" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="483" yCoord="340"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="357"/>
+</arc>
+<arc id="arc43" inscription="1" source="tP1j" target="P1wP2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="492" yCoord="387"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="387"/>
+</arc>
+<arc id="arc44" inscription="[0,inf)" source="P1" target="tP1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="466" yCoord="127"/>
+<arcpath arcPointType="false" id="1" xCoord="462" yCoord="132"/>
+</arc>
+<arc id="arc45" inscription="1" source="tP1" target="P1wM1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="462" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="466" yCoord="166"/>
+</arc>
+<arc id="arc46" inscription="[0,inf)" source="P1wM1" target="tM1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="470" yCoord="190"/>
+<arcpath arcPointType="false" id="1" xCoord="462" yCoord="207"/>
+</arc>
+<arc id="arc47" inscription="[0,inf)" source="M1" target="tM1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="441" yCoord="240"/>
+<arcpath arcPointType="false" id="1" xCoord="456" yCoord="222"/>
+</arc>
+<arc id="arc48" inscription="1" source="tM1" target="P1M1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="462" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="466" yCoord="241"/>
+</arc>
+<arc id="arc49" inscription="[0,inf)" source="P1M1" target="tP1M1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="470" yCoord="265"/>
+<arcpath arcPointType="false" id="1" xCoord="462" yCoord="282"/>
+</arc>
+</net>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="EF (ExportedNet.P12=0 and ExportedNet.P1wP2=1 and ExportedNet.P12wM3=0 and ExportedNet.P3s=1 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=0 and ExportedNet.P3=1 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=0 and ExportedNet.P2wP1=1 and ExportedNet.P1wM1=1 and ExportedNet.P1M1=0 and ExportedNet.P2M2=1 and ExportedNet.P1d=0 and ExportedNet.P3M2=0 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="EF (ExportedNet.P12=0 and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=1 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=0 and ExportedNet.P3=0 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=0 and ExportedNet.P2wP1=1 and ExportedNet.P1wM1=2 and ExportedNet.P1M1=0 and ExportedNet.P2M2=1 and ExportedNet.P1d=0 and ExportedNet.P3M2=1 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="EF (ExportedNet.P12=0 and ExportedNet.P1wP2=1 and ExportedNet.P12wM3=1 and ExportedNet.P3s=2 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=0 and ExportedNet.P3=0 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=0 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=0 and ExportedNet.P2M2=1 and ExportedNet.P1d=0 and ExportedNet.P3M2=0 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="EF (ExportedNet.P12=0 and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=1 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=1 and ExportedNet.M3=2 and ExportedNet.P1s=1 and ExportedNet.M2=1 and ExportedNet.P3=0 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=1 and ExportedNet.P2d=1 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=0 and ExportedNet.P2M2=0 and ExportedNet.P1d=0 and ExportedNet.P3M2=1 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="EF (ExportedNet.P12=0 and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=0 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=1 and ExportedNet.P1s=0 and ExportedNet.M2=1 and ExportedNet.P3=1 and ExportedNet.P2=1 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=0 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=1 and ExportedNet.P1M1=0 and ExportedNet.P2M2=0 and ExportedNet.P1d=0 and ExportedNet.P3M2=1 and ExportedNet.P12M3=1)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="EF (ExportedNet.P12=1 and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=0 and ExportedNet.P12s=0 and ExportedNet.P2s=1 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=1 and ExportedNet.P3=1 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=0 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=0 and ExportedNet.P2M2=0 and ExportedNet.P1d=1 and ExportedNet.P3M2=1 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="EF (ExportedNet.P12=0 and ExportedNet.P1wP2=1 and ExportedNet.P12wM3=0 and ExportedNet.P3s=0 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=1 and ExportedNet.M2=0 and ExportedNet.P3=2 and ExportedNet.P2=1 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=0 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=0 and ExportedNet.P2M2=1 and ExportedNet.P1d=0 and ExportedNet.P3M2=0 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="EF (ExportedNet.P12=0 and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=1 and ExportedNet.P12s=0 and ExportedNet.P2s=1 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=1 and ExportedNet.P3=1 and ExportedNet.P2=0 and ExportedNet.M1=2 and ExportedNet.P2wM2=1 and ExportedNet.P2d=0 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=1 and ExportedNet.P1M1=1 and ExportedNet.P2M2=0 and ExportedNet.P1d=0 and ExportedNet.P3M2=0 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="EF (ExportedNet.P12=0 and ExportedNet.P1wP2=1 and ExportedNet.P12wM3=0 and ExportedNet.P3s=1 and ExportedNet.P12s=0 and ExportedNet.P2s=1 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=1 and ExportedNet.P3=0 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=1 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=0 and ExportedNet.P2M2=0 and ExportedNet.P1d=1 and ExportedNet.P3M2=1 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="EF (ExportedNet.P12=0 and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=1 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=1 and ExportedNet.M3=2 and ExportedNet.P1s=1 and ExportedNet.M2=1 and ExportedNet.P3=0 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=1 and ExportedNet.P2d=0 and ExportedNet.P2wP1=1 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=0 and ExportedNet.P2M2=0 and ExportedNet.P1d=0 and ExportedNet.P3M2=1 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (!(ExportedNet.P12=0) and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=0 and ExportedNet.P12s=0 and ExportedNet.P2s=1 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=1 and ExportedNet.P3=1 and ExportedNet.P2=1 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=0 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=2 and ExportedNet.P1M1=0 and ExportedNet.P2M2=0 and ExportedNet.P1d=0 and ExportedNet.P3M2=1 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (!(ExportedNet.P12=0) and ExportedNet.P1wP2=1 and ExportedNet.P12wM3=1 and ExportedNet.P3s=1 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=0 and ExportedNet.P3=1 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=0 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=0 and ExportedNet.P2M2=1 and ExportedNet.P1d=0 and ExportedNet.P3M2=0 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (!(ExportedNet.P12=0) and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=2 and ExportedNet.P12s=1 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=1 and ExportedNet.M2=1 and ExportedNet.P3=0 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=1 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=0 and ExportedNet.P2M2=0 and ExportedNet.P1d=0 and ExportedNet.P3M2=0 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (!(ExportedNet.P12=0) and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=1 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=1 and ExportedNet.P3=1 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=1 and ExportedNet.P2d=1 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=0 and ExportedNet.P2M2=0 and ExportedNet.P1d=2 and ExportedNet.P3M2=0 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (!(ExportedNet.P12=1) and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=0 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=1 and ExportedNet.P3=0 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=0 and ExportedNet.P2wP1=1 and ExportedNet.P1wM1=1 and ExportedNet.P1M1=0 and ExportedNet.P2M2=0 and ExportedNet.P1d=0 and ExportedNet.P3M2=2 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (!(ExportedNet.P12=0) and ExportedNet.P1wP2=1 and ExportedNet.P12wM3=0 and ExportedNet.P3s=0 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=1 and ExportedNet.M2=1 and ExportedNet.P3=2 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=2 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=0 and ExportedNet.P2M2=0 and ExportedNet.P1d=0 and ExportedNet.P3M2=0 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (!(ExportedNet.P12=0) and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=0 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=2 and ExportedNet.M2=1 and ExportedNet.P3=0 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=2 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=0 and ExportedNet.P2M2=0 and ExportedNet.P1d=0 and ExportedNet.P3M2=2 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (!(ExportedNet.P12=0) and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=0 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=1 and ExportedNet.P3=1 and ExportedNet.P2=1 and ExportedNet.M1=1 and ExportedNet.P2wM2=0 and ExportedNet.P2d=1 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=2 and ExportedNet.P2M2=0 and ExportedNet.P1d=0 and ExportedNet.P3M2=1 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (!(ExportedNet.P12=0) and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=1 and ExportedNet.P12s=1 and ExportedNet.P2s=1 and ExportedNet.P1=1 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=1 and ExportedNet.P3=0 and ExportedNet.P2=0 and ExportedNet.M1=3 and ExportedNet.P2wM2=0 and ExportedNet.P2d=0 and ExportedNet.P2wP1=0 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=0 and ExportedNet.P2M2=0 and ExportedNet.P1d=0 and ExportedNet.P3M2=1 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (!(ExportedNet.P12=0) and ExportedNet.P1wP2=0 and ExportedNet.P12wM3=0 and ExportedNet.P3s=1 and ExportedNet.P12s=0 and ExportedNet.P2s=0 and ExportedNet.P1=0 and ExportedNet.M3=2 and ExportedNet.P1s=0 and ExportedNet.M2=1 and ExportedNet.P3=0 and ExportedNet.P2=0 and ExportedNet.M1=2 and ExportedNet.P2wM2=0 and ExportedNet.P2d=0 and ExportedNet.P2wP1=2 and ExportedNet.P1wM1=0 and ExportedNet.P1M1=1 and ExportedNet.P2M2=0 and ExportedNet.P1d=1 and ExportedNet.P3M2=1 and ExportedNet.P12M3=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

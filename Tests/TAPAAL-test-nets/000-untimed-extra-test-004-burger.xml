@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-place initialMarking="5" invariant="&lt; inf" name="Ham"/>
+<shared-place initialMarking="5" invariant="&lt; inf" name="Cheese"/>
+<shared-place initialMarking="5" invariant="&lt; inf" name="Bread"/>
+<shared-place initialMarking="0" invariant="&lt;= 0" name="MissedDeadline"/>
+<constant name="breadMin" value="3"/>
+<constant name="breadMax" value="5"/>
+<constant name="cheeseMin" value="2"/>
+<constant name="cheesMax" value="5"/>
+<constant name="HamMin" value="3"/>
+<constant name="HamMax" value="5"/>
+<constant name="HamBurgerMin" value="1"/>
+<constant name="HamBurgerMax" value="5"/>
+<constant name="CheeseBurgerMin" value="2"/>
+<constant name="CheeseBurgerMax" value="5"/>
+<constant name="DoubleBurgerMin" value="4"/>
+<constant name="DoubleBurgerMax" value="5"/>
+<net active="true" id="BreadImporter" type="P/T net">
+<place id="Bread" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Bread" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="180.0"/>
+<place id="P1" initialMarking="1" invariant="&lt;= breadMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="180.0"/>
+<place id="MissedDeadline" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="MissedDeadline" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="420.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="180.0" priority="0"/>
+<transition angle="0" id="miss" infiniteServer="false" name="miss" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="300.0" priority="0"/>
+<arc id="P1 to T0" inscription="[0,inf)" source="P1" target="T0" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="204" yCoord="184"/>
+<arcpath arcPointType="false" id="1" xCoord="257" yCoord="152"/>
+<arcpath arcPointType="false" id="2" xCoord="322" yCoord="187"/>
+</arc>
+<arc id="T0 to P1" inscription="1" source="T0" target="P1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="321" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="257" yCoord="242"/>
+<arcpath arcPointType="false" id="2" xCoord="203" yCoord="201"/>
+</arc>
+<arc id="T0 to Bread" inscription="1" source="T0" target="Bread" type="normal" weight="5">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="447" yCoord="192"/>
+</arc>
+<arc id="P1 to miss" inscription="[0,inf)" source="P1" target="miss" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="206"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="297"/>
+</arc>
+<arc id="miss to MissedDeadline" inscription="1" source="miss" target="MissedDeadline" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="417"/>
+</arc>
+<arc id="Bread to T0" inscription="[0,inf)" source="Bread" target="T0" type="tapnInhibitor" weight="11">
+<arcpath arcPointType="false" id="0" xCoord="451" yCoord="181"/>
+<arcpath arcPointType="false" id="1" xCoord="392" yCoord="122"/>
+<arcpath arcPointType="false" id="2" xCoord="332" yCoord="187"/>
+</arc>
+</net>
+<net active="true" id="CheeseImporter" type="P/T net">
+<place id="Cheese" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Cheese" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="180.0"/>
+<place id="P1" initialMarking="1" invariant="&lt;= cheesMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="180.0"/>
+<place id="MissedDeadline" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="MissedDeadline" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="420.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="180.0" priority="0"/>
+<transition angle="0" id="miss" infiniteServer="false" name="miss" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="300.0" priority="0"/>
+<arc id="P1 to T0" inscription="[0,inf)" source="P1" target="T0" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="204" yCoord="184"/>
+<arcpath arcPointType="false" id="1" xCoord="257" yCoord="152"/>
+<arcpath arcPointType="false" id="2" xCoord="322" yCoord="187"/>
+</arc>
+<arc id="T0 to P1" inscription="1" source="T0" target="P1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="321" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="257" yCoord="242"/>
+<arcpath arcPointType="false" id="2" xCoord="203" yCoord="201"/>
+</arc>
+<arc id="T0 to Cheese" inscription="1" source="T0" target="Cheese" type="normal" weight="5">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="447" yCoord="192"/>
+</arc>
+<arc id="P1 to miss" inscription="[0,inf)" source="P1" target="miss" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="206"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="297"/>
+</arc>
+<arc id="miss to MissedDeadline" inscription="1" source="miss" target="MissedDeadline" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="417"/>
+</arc>
+<arc id="Cheese to T0" inscription="[0,inf)" source="Cheese" target="T0" type="tapnInhibitor" weight="11">
+<arcpath arcPointType="false" id="0" xCoord="451" yCoord="181"/>
+<arcpath arcPointType="false" id="1" xCoord="392" yCoord="122"/>
+<arcpath arcPointType="false" id="2" xCoord="332" yCoord="187"/>
+</arc>
+</net>
+<net active="true" id="HamImporter" type="P/T net">
+<place id="Ham" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Ham" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="180.0"/>
+<place id="P1" initialMarking="1" invariant="&lt;= HamMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="180.0"/>
+<place id="MissedDeadline" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="MissedDeadline" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="420.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="180.0" priority="0"/>
+<transition angle="0" id="miss" infiniteServer="false" name="miss" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="300.0" priority="0"/>
+<arc id="P1 to T0" inscription="[0,inf)" source="P1" target="T0" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="204" yCoord="184"/>
+<arcpath arcPointType="false" id="1" xCoord="257" yCoord="152"/>
+<arcpath arcPointType="false" id="2" xCoord="322" yCoord="187"/>
+</arc>
+<arc id="T0 to P1" inscription="1" source="T0" target="P1" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="321" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="257" yCoord="242"/>
+<arcpath arcPointType="false" id="2" xCoord="203" yCoord="201"/>
+</arc>
+<arc id="T0 to Ham" inscription="1" source="T0" target="Ham" type="normal" weight="8">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="447" yCoord="192"/>
+</arc>
+<arc id="P1 to miss" inscription="[0,inf)" source="P1" target="miss" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="206"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="297"/>
+</arc>
+<arc id="miss to MissedDeadline" inscription="1" source="miss" target="MissedDeadline" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="417"/>
+</arc>
+<arc id="Ham to T0" inscription="[0,inf)" source="Ham" target="T0" type="tapnInhibitor" weight="11">
+<arcpath arcPointType="false" id="0" xCoord="452" yCoord="180"/>
+<arcpath arcPointType="false" id="1" xCoord="407" yCoord="122"/>
+<arcpath arcPointType="false" id="2" xCoord="332" yCoord="187"/>
+</arc>
+</net>
+<net active="true" id="HamBurger" type="P/T net">
+<place id="Bread" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Bread" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="90.0"/>
+<place id="Ham" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Ham" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="90.0"/>
+<place id="P2" initialMarking="1" invariant="&lt;= HamBurgerMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="315.0"/>
+<place id="MissedDeadline" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="MissedDeadline" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="555.0"/>
+<transition angle="0" id="MakeHamBurger" infiniteServer="false" name="MakeHamBurger" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="195.0" priority="0"/>
+<transition angle="0" id="miss" infiniteServer="false" name="miss" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="435.0" priority="0"/>
+<arc id="Bread to T0" inscription="[0,inf)" source="Bread" target="MakeHamBurger" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="142" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="232" yCoord="202"/>
+</arc>
+<arc id="Ham to T0" inscription="[0,inf)" source="Ham" target="MakeHamBurger" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="242" yCoord="202"/>
+</arc>
+<arc id="P2 to T0" inscription="[0,inf)" source="P2" target="MakeHamBurger" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="228" yCoord="314"/>
+<arcpath arcPointType="false" id="1" xCoord="197" yCoord="272"/>
+<arcpath arcPointType="false" id="2" xCoord="231" yCoord="212"/>
+</arc>
+<arc id="T0 to P2" inscription="1" source="MakeHamBurger" target="P2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="241" yCoord="212"/>
+<arcpath arcPointType="false" id="1" xCoord="287" yCoord="257"/>
+<arcpath arcPointType="false" id="2" xCoord="245" yCoord="314"/>
+</arc>
+<arc id="P2 to miss" inscription="[0,inf)" source="P2" target="miss" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="341"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="432"/>
+</arc>
+<arc id="miss to MissedDeadline" inscription="1" source="miss" target="MissedDeadline" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="462"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="552"/>
+</arc>
+</net>
+<net active="true" id="CheeseBurger" type="P/T net">
+<place id="Bread" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Bread" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="90.0"/>
+<place id="Ham" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Ham" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="90.0"/>
+<place id="P2" initialMarking="1" invariant="&lt;= CheeseBurgerMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="315.0"/>
+<place id="MissedDeadline" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="MissedDeadline" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="555.0"/>
+<place id="Cheese" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Cheese" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="90.0"/>
+<transition angle="0" id="MakeCheeseBurger" infiniteServer="false" name="MakeCheeseBurger" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="195.0" priority="0"/>
+<transition angle="0" id="miss" infiniteServer="false" name="miss" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="435.0" priority="0"/>
+<arc id="Bread to T0" inscription="[0,inf)" source="Bread" target="MakeCheeseBurger" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="142" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="232" yCoord="202"/>
+</arc>
+<arc id="Ham to T0" inscription="[0,inf)" source="Ham" target="MakeCheeseBurger" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="242" yCoord="199"/>
+</arc>
+<arc id="P2 to T0" inscription="[0,inf)" source="P2" target="MakeCheeseBurger" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="228" yCoord="314"/>
+<arcpath arcPointType="false" id="1" xCoord="197" yCoord="272"/>
+<arcpath arcPointType="false" id="2" xCoord="231" yCoord="212"/>
+</arc>
+<arc id="T0 to P2" inscription="1" source="MakeCheeseBurger" target="P2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="241" yCoord="213"/>
+<arcpath arcPointType="false" id="1" xCoord="287" yCoord="257"/>
+<arcpath arcPointType="false" id="2" xCoord="245" yCoord="314"/>
+</arc>
+<arc id="P2 to miss" inscription="[0,inf)" source="P2" target="miss" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="341"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="432"/>
+</arc>
+<arc id="miss to MissedDeadline" inscription="1" source="miss" target="MissedDeadline" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="462"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="552"/>
+</arc>
+<arc id="Cheese to T0" inscription="[0,inf)" source="Cheese" target="MakeCheeseBurger" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="513" yCoord="114"/>
+<arcpath arcPointType="false" id="1" xCoord="452" yCoord="197"/>
+<arcpath arcPointType="false" id="2" xCoord="242" yCoord="206"/>
+</arc>
+</net>
+<net active="true" id="DoubleBurger" type="P/T net">
+<place id="Bread" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Bread" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="90.0"/>
+<place id="Ham" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Ham" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="90.0"/>
+<place id="P2" initialMarking="1" invariant="&lt;= DoubleBurgerMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="315.0"/>
+<place id="MissedDeadline" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="MissedDeadline" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="555.0"/>
+<place id="Cheese" initialMarking="5" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Cheese" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="90.0"/>
+<transition angle="0" id="MakeDoubleBurger" infiniteServer="false" name="MakeDoubleBurger" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="195.0" priority="0"/>
+<transition angle="0" id="miss" infiniteServer="false" name="miss" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="435.0" priority="0"/>
+<arc id="Bread to T0" inscription="[0,inf)" source="Bread" target="MakeDoubleBurger" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="142" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="232" yCoord="202"/>
+</arc>
+<arc id="Ham to T0" inscription="[0,inf)" source="Ham" target="MakeDoubleBurger" type="timed" weight="2">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="242" yCoord="199"/>
+</arc>
+<arc id="P2 to T0" inscription="[0,inf)" source="P2" target="MakeDoubleBurger" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="228" yCoord="314"/>
+<arcpath arcPointType="false" id="1" xCoord="197" yCoord="272"/>
+<arcpath arcPointType="false" id="2" xCoord="231" yCoord="212"/>
+</arc>
+<arc id="T0 to P2" inscription="1" source="MakeDoubleBurger" target="P2" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="241" yCoord="213"/>
+<arcpath arcPointType="false" id="1" xCoord="287" yCoord="257"/>
+<arcpath arcPointType="false" id="2" xCoord="245" yCoord="314"/>
+</arc>
+<arc id="P2 to miss" inscription="[0,inf)" source="P2" target="miss" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="341"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="432"/>
+</arc>
+<arc id="miss to MissedDeadline" inscription="1" source="miss" target="MissedDeadline" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="462"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="552"/>
+</arc>
+<arc id="Cheese to T0" inscription="[0,inf)" source="Cheese" target="MakeDoubleBurger" type="timed" weight="3">
+<arcpath arcPointType="false" id="0" xCoord="513" yCoord="114"/>
+<arcpath arcPointType="false" id="1" xCoord="452" yCoord="197"/>
+<arcpath arcPointType="false" id="2" xCoord="242" yCoord="206"/>
+</arc>
+</net>
+<net active="true" id="DeadlineCheck" type="P/T net">
+<place id="MissedDeadline" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="MissedDeadline" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="90.0"/>
+</net>
+<query active="true" capacity="30" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EG MissedDeadline=0" reductionOption="VerifyTAPNdiscreteVerification" searchOption="HEURISTIC" symmetry="true" traceOption="SOME"/>
+</pnml>

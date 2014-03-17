@@ -1,0 +1,672 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-transition name="checkPatientInfo"/>
+<shared-transition name="firstPatientInfo"/>
+<shared-transition name="firstBloodInfo"/>
+<shared-transition name="checkPatientConsent"/>
+<shared-transition name="checkPhyOrder"/>
+<shared-transition name="obtainBloodType"/>
+<shared-transition name="bloodReady"/>
+<shared-transition name="transStarted"/>
+<shared-transition name="transEnded"/>
+<shared-transition name="lastBloodInfo"/>
+<shared-transition name="lastPatientInfo"/>
+<shared-transition name="checkBloodAvailability"/>
+<shared-transition name="checkBloodType"/>
+<shared-transition name="monitorReaction"/>
+<shared-transition name="completeOrder"/>
+<shared-transition name="checkoutPatient"/>
+<shared-transition name="checkoutPatientWithoutTreatment"/>
+<shared-transition name="orderIncomplete"/>
+<shared-transition name="bloodAvailableNOK"/>
+<shared-transition name="reaction"/>
+<shared-transition name="transInterrupted"/>
+<constant name="checkPatientInfoMin" value="1"/>
+<constant name="checkPatientInfoMax" value="2"/>
+<constant name="firstPatientInfoMix" value="2"/>
+<constant name="firstPatientInfoMax" value="3"/>
+<constant name="firstBloodInfoMin" value="3"/>
+<constant name="firstBloodInfoMax" value="5"/>
+<constant name="checkPatientConsentMin" value="1"/>
+<constant name="checkPatientConsentMax" value="11"/>
+<constant name="checkoutPatientWithoutTreatmentMin" value="3"/>
+<constant name="checkoutPatientWithoutTreatmentMax" value="0"/>
+<constant name="completeOrderMax" value="10"/>
+<constant name="obtainBloodTypeMin" value="5"/>
+<constant name="obtainBloodTypeMax" value="10"/>
+<constant name="blodReadyMax" value="5"/>
+<constant name="transStartedMin" value="10"/>
+<constant name="transStartedMax" value="15"/>
+<constant name="singleUnitAssessment" value="15"/>
+<constant name="transfusionDuration" value="100"/>
+<constant name="lastBloodInfoMin" value="2"/>
+<constant name="lastBloodInfoMax" value="4"/>
+<constant name="lastPatientInfoMin" value="1"/>
+<constant name="lastPatientInfoMax" value="4"/>
+<constant name="checkBloodTypeMax" value="6"/>
+<constant name="checkoutPatientMin" value="1"/>
+<constant name="checkoutPatientMax" value="3"/>
+<constant name="DEADLINE" value="100"/>
+<constant name="transEndedMin" value="20"/>
+<net active="true" id="StartProcedure" type="P/T net">
+<place id="start" initialMarking="1" invariant="&lt;= checkPatientInfoMax" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="300.0" positionY="30.0"/>
+<place id="end" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="end" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="435.0"/>
+<place id="P2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="300.0" positionY="255.0"/>
+<place id="endNoTreatment" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="endNoTreatment" nameOffsetX="135.0" nameOffsetY="37.0" positionX="360.0" positionY="435.0"/>
+<transition angle="270" id="checkPatientInfo" infiniteServer="false" name="checkPatientInfo" nameOffsetX="-11.0" nameOffsetY="23.0" positionX="300.0" positionY="135.0" priority="0"/>
+<transition angle="90" id="checkoutPatient" infiniteServer="false" name="checkoutPatient" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="345.0" priority="0"/>
+<transition angle="270" id="checkoutPatientWithoutTreatment" infiniteServer="false" name="checkoutPatientWithoutTreatment" nameOffsetX="231.0" nameOffsetY="32.0" positionX="360.0" positionY="345.0" priority="0"/>
+<arc id="start to checkPatientInfo" inscription="[0,inf)" source="start" target="checkPatientInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="312" yCoord="56"/>
+<arcpath arcPointType="false" id="1" xCoord="312" yCoord="142"/>
+</arc>
+<arc id="checkPatientInfo to P2" inscription="" source="checkPatientInfo" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="312" yCoord="152"/>
+<arcpath arcPointType="false" id="1" xCoord="312" yCoord="252"/>
+</arc>
+<arc id="P2 to checkoutPatient" inscription="[0,inf)" source="P2" target="checkoutPatient" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="303" yCoord="279"/>
+<arcpath arcPointType="false" id="1" xCoord="251" yCoord="351"/>
+</arc>
+<arc id="checkoutPatient to end" inscription="" source="checkoutPatient" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="251" yCoord="361"/>
+<arcpath arcPointType="false" id="1" xCoord="251" yCoord="432"/>
+</arc>
+<arc id="P2 to checkoutPatientWithoutTreatment" inscription="[0,inf)" source="P2" target="checkoutPatientWithoutTreatment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="320" yCoord="279"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="352"/>
+</arc>
+<arc id="checkoutPatientWithoutTreatment to endNoTreatment" inscription="" source="checkoutPatientWithoutTreatment" target="endNoTreatment" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="362"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="432"/>
+</arc>
+</net>
+<net active="true" id="PreparePatient" type="P/T net">
+<place id="start" initialMarking="1" invariant="&lt;= firstPatientInfoMax" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="45.0"/>
+<place id="P1" initialMarking="0" invariant="&lt;= firstBloodInfoMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="71.0" nameOffsetY="35.0" positionX="315.0" positionY="270.0"/>
+<place id="P2" initialMarking="0" invariant="&lt;= checkPatientConsentMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="615.0" positionY="45.0"/>
+<place id="P3" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="735.0" positionY="150.0"/>
+<place id="P4" initialMarking="0" invariant="&lt;= completeOrderMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="103.0" nameOffsetY="36.0" positionX="495.0" positionY="150.0"/>
+<place id="P5" initialMarking="0" invariant="&lt;= completeOrderMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P5" nameOffsetX="87.0" nameOffsetY="36.0" positionX="225.0" positionY="150.0"/>
+<place id="end" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="end" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="270.0"/>
+<place id="P7" initialMarking="0" invariant="&lt;= checkoutPatientWithoutTreatmentMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P7" nameOffsetX="203.0" nameOffsetY="37.0" positionX="870.0" positionY="270.0"/>
+<transition angle="180" id="firstPatientInfo" infiniteServer="false" name="firstPatientInfo" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="45.0" priority="0"/>
+<transition angle="0" id="firstBloodInfo" infiniteServer="false" name="firstBloodInfo" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="435.0" positionY="270.0" priority="0"/>
+<transition angle="0" id="checkPatientConsent" infiniteServer="false" name="checkPatientConsent" nameOffsetX="141.0" nameOffsetY="29.0" positionX="735.0" positionY="45.0" priority="0"/>
+<transition angle="0" id="patientAgree" infiniteServer="false" name="patientAgree" nameOffsetX="49.0" nameOffsetY="-10.0" positionX="615.0" positionY="150.0" priority="0"/>
+<transition angle="0" id="patientDisagree" infiniteServer="false" name="patientDisagree" nameOffsetX="78.0" nameOffsetY="-1.0" positionX="870.0" positionY="150.0" priority="0"/>
+<transition angle="0" id="checkPhyOrder" infiniteServer="false" name="checkPhyOrder" nameOffsetX="51.0" nameOffsetY="-8.0" positionX="360.0" positionY="150.0" priority="0"/>
+<transition angle="0" id="orderIncomplete" infiniteServer="false" name="orderIncomplete" nameOffsetX="40.0" nameOffsetY="61.0" positionX="75.0" positionY="150.0" priority="0"/>
+<transition angle="0" id="completeOrder" infiniteServer="false" name="completeOrder" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="225.0" positionY="270.0" priority="0"/>
+<transition angle="0" id="checkoutPatientWithoutTreatment" infiniteServer="false" name="checkoutPatientWithoutTreatment" nameOffsetX="98.0" nameOffsetY="-14.0" positionX="705.0" positionY="270.0" priority="0"/>
+<arc id="start to firstPatientInfo" inscription="[0,inf)" source="start" target="firstPatientInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="101" yCoord="56"/>
+<arcpath arcPointType="false" id="1" xCoord="232" yCoord="56"/>
+</arc>
+<arc id="P1 to firstBloodInfo" inscription="[0,inf)" source="P1" target="firstBloodInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="341" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="441" yCoord="282"/>
+</arc>
+<arc id="P2 to checkPatientConsent" inscription="[0,inf)" source="P2" target="checkPatientConsent" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="641" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="741" yCoord="57"/>
+</arc>
+<arc id="checkPatientConsent to P3" inscription="" source="checkPatientConsent" target="P3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="747" yCoord="72"/>
+<arcpath arcPointType="false" id="1" xCoord="747" yCoord="147"/>
+</arc>
+<arc id="P3 to patientAgree" inscription="[0,inf)" source="P3" target="patientAgree" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="732" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="631" yCoord="162"/>
+</arc>
+<arc id="patientAgree to P4" inscription="" source="patientAgree" target="P4" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="621" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="521" yCoord="162"/>
+</arc>
+<arc id="P3 to patientDisagree" inscription="[0,inf)" source="P3" target="patientDisagree" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="761" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="876" yCoord="162"/>
+</arc>
+<arc id="P5 to completeOrder" inscription="[0,inf)" source="P5" target="completeOrder" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="267"/>
+</arc>
+<arc id="patientDisagree to P7" inscription="" source="patientDisagree" target="P7" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="882" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="882" yCoord="267"/>
+</arc>
+<arc id="P7 to checkoutPatientWithoutTreatment" inscription="[0,inf)" source="P7" target="checkoutPatientWithoutTreatment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="867" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="721" yCoord="282"/>
+</arc>
+<arc id="checkoutPatientWithoutTreatment to end" inscription="" source="checkoutPatientWithoutTreatment" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="711" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="596" yCoord="282"/>
+</arc>
+<arc id="P4 to checkPhyOrder" inscription="[0,inf):1" source="P4" target="checkPhyOrder" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="492" yCoord="161"/>
+<arcpath arcPointType="false" id="1" xCoord="377" yCoord="157"/>
+</arc>
+<arc id="checkPhyOrder to P5" inscription="[0,inf):1" source="checkPhyOrder" target="P5" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="376" yCoord="167"/>
+<arcpath arcPointType="false" id="1" xCoord="375" yCoord="165"/>
+<arcpath arcPointType="false" id="2" xCoord="251" yCoord="162"/>
+</arc>
+<arc id="P5 to orderIncomplete" inscription="[0,inf):1" source="P5" target="orderIncomplete" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="222" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="91" yCoord="162"/>
+</arc>
+<arc id="orderIncomplete to P4" inscription="[0,inf):1" source="orderIncomplete" target="P4" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="87" yCoord="147"/>
+<arcpath arcPointType="false" id="1" xCoord="90" yCoord="105"/>
+<arcpath arcPointType="false" id="2" xCoord="510" yCoord="105"/>
+<arcpath arcPointType="false" id="3" xCoord="507" yCoord="147"/>
+</arc>
+<arc id="completeOrder to P1" inscription="" source="completeOrder" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="241" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="312" yCoord="282"/>
+</arc>
+<arc id="firstBloodInfo to end" inscription="" source="firstBloodInfo" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="451" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="567" yCoord="282"/>
+</arc>
+<arc id="firstPatientInfo to P2" inscription="" source="firstPatientInfo" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="242" yCoord="56"/>
+<arcpath arcPointType="false" id="1" xCoord="612" yCoord="56"/>
+</arc>
+</net>
+<net active="true" id="PrepareBlood" type="P/T net">
+<place id="P0" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="90.0" positionY="60.0"/>
+<place id="P1" initialMarking="0" invariant="&lt;= blodReadyMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="555.0" positionY="60.0"/>
+<place id="P2" initialMarking="0" invariant="&lt;= obtainBloodTypeMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="92.0" nameOffsetY="37.0" positionX="300.0" positionY="150.0"/>
+<place id="end" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="end" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="555.0" positionY="315.0"/>
+<place id="P5" initialMarking="0" invariant="&lt;= blodReadyMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P5" nameOffsetX="152.0" nameOffsetY="48.0" positionX="690.0" positionY="180.0"/>
+<place id="start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="90.0" positionY="315.0"/>
+<transition angle="0" id="bloodTypeOK" infiniteServer="false" name="bloodTypeOK" nameOffsetX="-1.0" nameOffsetY="11.0" positionX="300.0" positionY="15.0" priority="0"/>
+<transition angle="0" id="bloodTypeNOK" infiniteServer="false" name="bloodTypeNOK" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="150.0" priority="0"/>
+<transition angle="0" id="obtainBloodType" infiniteServer="false" name="obtainBloodType" nameOffsetX="39.0" nameOffsetY="-14.0" positionX="420.0" positionY="150.0" priority="0"/>
+<transition angle="0" id="bloodAvailableNOK" infiniteServer="false" name="bloodAvailableNOK" nameOffsetX="47.0" nameOffsetY="-17.0" positionX="690.0" positionY="60.0" priority="0"/>
+<transition angle="0" id="bloodReady" infiniteServer="false" name="bloodReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="690.0" positionY="315.0" priority="0"/>
+<transition angle="0" id="checkBloodAvailability" infiniteServer="false" name="checkBloodAvailability" nameOffsetX="38.0" nameOffsetY="55.0" positionX="555.0" positionY="180.0" priority="0"/>
+<transition angle="0" id="checkBloodType" infiniteServer="false" name="checkBloodType" nameOffsetX="114.0" nameOffsetY="35.0" positionX="60.0" positionY="195.0" priority="0"/>
+<arc id="P0 to bloodTypeOK" inscription="[0,inf)" source="P0" target="bloodTypeOK" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="116" yCoord="68"/>
+<arcpath arcPointType="false" id="1" xCoord="306" yCoord="27"/>
+</arc>
+<arc id="bloodTypeOK to P1" inscription="" source="bloodTypeOK" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="316" yCoord="27"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="69"/>
+</arc>
+<arc id="P0 to bloodTypeNOK" inscription="[0,inf)" source="P0" target="bloodTypeNOK" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="112" yCoord="82"/>
+<arcpath arcPointType="false" id="1" xCoord="186" yCoord="162"/>
+</arc>
+<arc id="bloodTypeNOK to P2" inscription="" source="bloodTypeNOK" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="196" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="297" yCoord="162"/>
+</arc>
+<arc id="P2 to obtainBloodType" inscription="[0,inf)" source="P2" target="obtainBloodType" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="326" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="426" yCoord="162"/>
+</arc>
+<arc id="obtainBloodType to P1" inscription="" source="obtainBloodType" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="436" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="554" yCoord="80"/>
+</arc>
+<arc id="bloodReady to end" inscription="" source="bloodReady" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="696" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="581" yCoord="327"/>
+</arc>
+<arc id="start to checkBloodType" inscription="[0,inf)" source="start" target="checkBloodType" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="97" yCoord="312"/>
+<arcpath arcPointType="false" id="1" xCoord="72" yCoord="222"/>
+</arc>
+<arc id="checkBloodType to P0" inscription="" source="checkBloodType" target="P0" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="72" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="98" yCoord="86"/>
+</arc>
+<arc id="P5 to bloodReady" inscription="[0,inf)" source="P5" target="bloodReady" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="702" yCoord="206"/>
+<arcpath arcPointType="false" id="1" xCoord="702" yCoord="312"/>
+</arc>
+<arc id="P1 to checkBloodAvailability" inscription="[0,inf):1" source="P1" target="checkBloodAvailability" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="567" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="567" yCoord="177"/>
+</arc>
+<arc id="checkBloodAvailability to P5" inscription="[0,inf):1" source="checkBloodAvailability" target="P5" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="571" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="687" yCoord="192"/>
+</arc>
+<arc id="P5 to bloodAvailableNOK" inscription="[0,inf):1" source="P5" target="bloodAvailableNOK" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="702" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="702" yCoord="87"/>
+</arc>
+<arc id="bloodAvailableNOK to P1" inscription="[0,inf):1" source="bloodAvailableNOK" target="P1" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="696" yCoord="72"/>
+<arcpath arcPointType="false" id="1" xCoord="581" yCoord="72"/>
+</arc>
+</net>
+<net active="true" id="StartTransfusion" type="P/T net">
+<place id="P1" initialMarking="0" invariant="&lt;= transStartedMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="240.0"/>
+<place id="end" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="end" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="450.0"/>
+<place id="start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="45.0"/>
+<transition angle="0" id="transStarted" infiniteServer="false" name="transStarted" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="345.0" priority="0"/>
+<transition angle="0" id="bloodReady" infiniteServer="false" name="bloodReady" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="135.0" priority="0"/>
+<arc id="P1 to transStarted" inscription="[0,inf)" source="P1" target="transStarted" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="266"/>
+<arcpath arcPointType="false" id="1" xCoord="357" yCoord="342"/>
+</arc>
+<arc id="transStarted to end" inscription="" source="transStarted" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="372"/>
+<arcpath arcPointType="false" id="1" xCoord="357" yCoord="447"/>
+</arc>
+<arc id="start to bloodReady" inscription="[0,inf)" source="start" target="bloodReady" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="71"/>
+<arcpath arcPointType="false" id="1" xCoord="357" yCoord="132"/>
+</arc>
+<arc id="bloodReady to P1" inscription="" source="bloodReady" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="357" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="357" yCoord="237"/>
+</arc>
+</net>
+<net active="true" id="MonitorTransfusion" type="P/T net">
+<place id="start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="210.0"/>
+<place id="P1" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="210.0"/>
+<place id="P2" initialMarking="0" invariant="&lt;= singleUnitAssessment" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="191.0" nameOffsetY="10.0" positionX="570.0" positionY="210.0"/>
+<place id="end" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="end" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="420.0"/>
+<place id="P4" initialMarking="0" invariant="&lt;= firstBloodInfoMin" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="87.0" nameOffsetY="43.0" positionX="225.0" positionY="315.0"/>
+<place id="transfusionDuration" initialMarking="0" invariant="&lt;= transfusionDuration" markingOffsetX="0.0" markingOffsetY="0.0" name="transfusionDuration" nameOffsetX="70.0" nameOffsetY="-9.0" positionX="465.0" positionY="45.0"/>
+<place id="P5" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="P5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="360.0" positionY="420.0"/>
+<transition angle="0" id="transStarted" infiniteServer="false" name="transStarted" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="120.0" positionY="315.0" priority="0"/>
+<transition angle="0" id="patientOK" infiniteServer="false" name="patientOK" nameOffsetX="38.0" nameOffsetY="50.0" positionX="465.0" positionY="210.0" priority="0"/>
+<transition angle="0" id="reaction" infiniteServer="false" name="reaction" nameOffsetX="-5.0" nameOffsetY="20.0" positionX="360.0" positionY="315.0" priority="0"/>
+<transition angle="0" id="transEnded" infiniteServer="false" name="transEnded" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="315.0" priority="0"/>
+<transition angle="0" id="monitorReaction" infiniteServer="false" name="monitorReaction" nameOffsetX="13.0" nameOffsetY="-17.0" positionX="225.0" positionY="210.0" priority="0"/>
+<transition angle="0" id="singleUnitAssessment" infiniteServer="false" name="singleUnitAssessment" nameOffsetX="77.0" nameOffsetY="-8.0" positionX="465.0" positionY="150.0" priority="0"/>
+<transition angle="0" id="transInterrupted" infiniteServer="false" name="transInterrupted" nameOffsetX="67.0" nameOffsetY="-12.0" positionX="465.0" positionY="420.0" priority="0"/>
+<arc id="start to transStarted" inscription="[0,inf)" source="start" target="transStarted" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="132" yCoord="236"/>
+<arcpath arcPointType="false" id="1" xCoord="132" yCoord="312"/>
+</arc>
+<arc id="P1 to reaction" inscription="[0,inf)" source="P1" target="reaction" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="236"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="312"/>
+</arc>
+<arc id="P2 to transEnded" inscription="[0,inf)" source="P2" target="transEnded" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="582" yCoord="236"/>
+<arcpath arcPointType="false" id="1" xCoord="582" yCoord="312"/>
+</arc>
+<arc id="transEnded to end" inscription="" source="transEnded" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="582" yCoord="342"/>
+<arcpath arcPointType="false" id="1" xCoord="582" yCoord="417"/>
+</arc>
+<arc id="transStarted to P4" inscription="" source="transStarted" target="P4" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="136" yCoord="327"/>
+<arcpath arcPointType="false" id="1" xCoord="222" yCoord="327"/>
+</arc>
+<arc id="P4 to monitorReaction" inscription="[0,inf)" source="P4" target="monitorReaction" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="312"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="237"/>
+</arc>
+<arc id="monitorReaction to P1" inscription="" source="monitorReaction" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="241" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="357" yCoord="222"/>
+</arc>
+<arc id="P1 to patientOK" inscription="[0,inf)" source="P1" target="patientOK" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="386" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="471" yCoord="222"/>
+</arc>
+<arc id="patientOK to P2" inscription="" source="patientOK" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="481" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="567" yCoord="222"/>
+</arc>
+<arc id="P2 to singleUnitAssessment" inscription="[0,inf)" source="P2" target="singleUnitAssessment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="582" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="585" yCoord="165"/>
+<arcpath arcPointType="false" id="2" xCoord="481" yCoord="162"/>
+</arc>
+<arc id="singleUnitAssessment to P1" inscription="" source="singleUnitAssessment" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="471" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="375" yCoord="165"/>
+<arcpath arcPointType="false" id="2" xCoord="372" yCoord="207"/>
+</arc>
+<arc id="monitorReaction to transfusionDuration" inscription="" source="monitorReaction" target="transfusionDuration" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="237" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="240" yCoord="60"/>
+<arcpath arcPointType="false" id="2" xCoord="462" yCoord="57"/>
+</arc>
+<arc id="transfusionDuration to transEnded" inscription="[0,inf)" source="transfusionDuration" target="transEnded" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="491" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="795" yCoord="60"/>
+<arcpath arcPointType="false" id="2" xCoord="795" yCoord="330"/>
+<arcpath arcPointType="false" id="3" xCoord="586" yCoord="327"/>
+</arc>
+<arc id="reaction to P5" inscription="" source="reaction" target="P5" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="372" yCoord="342"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="417"/>
+</arc>
+<arc id="P5 to transInterrupted" inscription="[0,inf)" source="P5" target="transInterrupted" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="386" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="471" yCoord="432"/>
+</arc>
+<arc id="transInterrupted to end" inscription="" source="transInterrupted" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="481" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="567" yCoord="432"/>
+</arc>
+<arc id="transfusionDuration to transInterrupted" inscription="[0,inf)" source="transfusionDuration" target="transInterrupted" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="491" yCoord="53"/>
+<arcpath arcPointType="false" id="1" xCoord="598" yCoord="28"/>
+<arcpath arcPointType="false" id="2" xCoord="943" yCoord="28"/>
+<arcpath arcPointType="false" id="3" xCoord="943" yCoord="568"/>
+<arcpath arcPointType="false" id="4" xCoord="478" yCoord="568"/>
+<arcpath arcPointType="false" id="5" xCoord="477" yCoord="447"/>
+</arc>
+</net>
+<net active="true" id="CompleteTransfusion" type="P/T net">
+<place id="start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="90.0"/>
+<place id="P1" initialMarking="0" invariant="&lt;= lastBloodInfoMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="108.0" nameOffsetY="-28.0" positionX="315.0" positionY="90.0"/>
+<place id="P2" initialMarking="0" invariant="&lt;= lastPatientInfoMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="112.0" nameOffsetY="44.0" positionX="660.0" positionY="90.0"/>
+<place id="end" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="end" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1005.0" positionY="90.0"/>
+<transition angle="0" id="transEnded" infiniteServer="false" name="transEnded" nameOffsetX="45.0" nameOffsetY="-12.0" positionX="210.0" positionY="45.0" priority="0"/>
+<transition angle="0" id="lastBloodInfo" infiniteServer="false" name="lastBloodInfo" nameOffsetX="47.0" nameOffsetY="-10.0" positionX="585.0" positionY="90.0" priority="0"/>
+<transition angle="0" id="lastPatientInfo" infiniteServer="false" name="lastPatientInfo" nameOffsetX="40.0" nameOffsetY="-11.0" positionX="930.0" positionY="90.0" priority="0"/>
+<transition angle="0" id="transInterrupted" infiniteServer="false" name="transInterrupted" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="210.0" positionY="165.0" priority="0"/>
+<arc id="start to transEnded" inscription="[0,inf)" source="start" target="transEnded" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="130" yCoord="95"/>
+<arcpath arcPointType="false" id="1" xCoord="216" yCoord="57"/>
+</arc>
+<arc id="transEnded to P1" inscription="" source="transEnded" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="226" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="313" yCoord="95"/>
+</arc>
+<arc id="P1 to lastBloodInfo" inscription="[0,inf)" source="P1" target="lastBloodInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="341" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="591" yCoord="102"/>
+</arc>
+<arc id="lastBloodInfo to P2" inscription="" source="lastBloodInfo" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="601" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="657" yCoord="102"/>
+</arc>
+<arc id="P2 to lastPatientInfo" inscription="[0,inf)" source="P2" target="lastPatientInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="686" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="936" yCoord="102"/>
+</arc>
+<arc id="lastPatientInfo to end" inscription="" source="lastPatientInfo" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="946" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="1002" yCoord="102"/>
+</arc>
+<arc id="start to transInterrupted" inscription="[0,inf)" source="start" target="transInterrupted" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="128" yCoord="111"/>
+<arcpath arcPointType="false" id="1" xCoord="216" yCoord="177"/>
+</arc>
+<arc id="transInterrupted to P1" inscription="" source="transInterrupted" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="226" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="315" yCoord="111"/>
+</arc>
+</net>
+<net active="true" id="PatientIDinfo" type="P/T net">
+<place id="start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="90.0"/>
+<place id="P1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="90.0"/>
+<place id="end" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="end" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="90.0"/>
+<transition angle="0" id="firstPatientInfo" infiniteServer="false" name="firstPatientInfo" nameOffsetX="39.0" nameOffsetY="-15.0" positionX="240.0" positionY="90.0" priority="0"/>
+<transition angle="0" id="lastPatientInfo" infiniteServer="false" name="lastPatientInfo" nameOffsetX="41.0" nameOffsetY="-11.0" positionX="435.0" positionY="90.0" priority="0"/>
+<arc id="start to firstPatientInfo" inscription="[0,inf)" source="start" target="firstPatientInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="161" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="246" yCoord="102"/>
+</arc>
+<arc id="firstPatientInfo to P1" inscription="" source="firstPatientInfo" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="256" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="342" yCoord="102"/>
+</arc>
+<arc id="P1 to lastPatientInfo" inscription="[0,inf)" source="P1" target="lastPatientInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="371" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="441" yCoord="102"/>
+</arc>
+<arc id="lastPatientInfo to end" inscription="" source="lastPatientInfo" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="451" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="522" yCoord="102"/>
+</arc>
+</net>
+<net active="true" id="BloodIDinfo" type="P/T net">
+<place id="start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="90.0"/>
+<place id="P1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="345.0" positionY="90.0"/>
+<place id="end" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="end" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="90.0"/>
+<transition angle="0" id="firstBloodInfo" infiniteServer="false" name="firstBloodInfo" nameOffsetX="39.0" nameOffsetY="-15.0" positionX="240.0" positionY="90.0" priority="0"/>
+<transition angle="0" id="lastBloodInfo" infiniteServer="false" name="lastBloodInfo" nameOffsetX="41.0" nameOffsetY="-11.0" positionX="435.0" positionY="90.0" priority="0"/>
+<arc id="start to firstBloodInfo" inscription="[0,inf)" source="start" target="firstBloodInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="161" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="246" yCoord="102"/>
+</arc>
+<arc id="firstBloodInfo to P1" inscription="" source="firstBloodInfo" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="256" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="342" yCoord="102"/>
+</arc>
+<arc id="P1 to lastBloodInfo" inscription="[0,inf)" source="P1" target="lastBloodInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="371" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="441" yCoord="102"/>
+</arc>
+<arc id="lastBloodInfo to end" inscription="" source="lastBloodInfo" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="451" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="522" yCoord="102"/>
+</arc>
+</net>
+<net active="true" id="Nurse" type="P/T net">
+<place id="start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="60.0" positionY="30.0"/>
+<place id="P1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="285.0" positionY="120.0"/>
+<place id="P2" initialMarking="0" invariant="&lt;= checkBloodTypeMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="96.0" nameOffsetY="34.0" positionX="495.0" positionY="120.0"/>
+<place id="P3" initialMarking="0" invariant="&lt;= checkBloodTypeMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P3" nameOffsetX="178.0" nameOffsetY="35.0" positionX="705.0" positionY="120.0"/>
+<place id="P4" initialMarking="0" invariant="&lt;= firstBloodInfoMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P4" nameOffsetX="85.0" nameOffsetY="-24.0" positionX="930.0" positionY="240.0"/>
+<place id="P5" initialMarking="0" invariant="&lt;= firstBloodInfoMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P5" nameOffsetX="89.0" nameOffsetY="-24.0" positionX="780.0" positionY="240.0"/>
+<place id="P6" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P6" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="195.0"/>
+<place id="end" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="end" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="90.0" positionY="720.0"/>
+<place id="P8" initialMarking="0" invariant="&lt;= lastBloodInfoMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P8" nameOffsetX="59.0" nameOffsetY="34.0" positionX="120.0" positionY="345.0"/>
+<place id="P9" initialMarking="0" invariant="&lt;= lastPatientInfoMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P9" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="495.0" positionY="345.0"/>
+<place id="P10" initialMarking="0" invariant="&lt;= checkoutPatientMax" markingOffsetX="0.0" markingOffsetY="0.0" name="P10" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="495.0" positionY="495.0"/>
+<place id="P11" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="P11" nameOffsetX="41.0" nameOffsetY="-18.0" positionX="300.0" positionY="240.0"/>
+<place id="P12" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="240.0"/>
+<transition angle="0" id="checkPatientInfo" infiniteServer="false" name="checkPatientInfo" nameOffsetX="46.0" nameOffsetY="-10.0" positionX="180.0" positionY="120.0" priority="0"/>
+<transition angle="0" id="checkPatientConsent" infiniteServer="false" name="checkPatientConsent" nameOffsetX="61.0" nameOffsetY="-19.0" positionX="390.0" positionY="120.0" priority="0"/>
+<transition angle="0" id="checkPhyOrder" infiniteServer="false" name="checkPhyOrder" nameOffsetX="56.0" nameOffsetY="-13.0" positionX="600.0" positionY="120.0" priority="0"/>
+<transition angle="0" id="checkBloodType" infiniteServer="false" name="checkBloodType" nameOffsetX="66.0" nameOffsetY="59.0" positionX="1005.0" positionY="240.0" priority="0"/>
+<transition angle="0" id="checkBloodAvailability" infiniteServer="false" name="checkBloodAvailability" nameOffsetX="48.0" nameOffsetY="55.0" positionX="855.0" positionY="240.0" priority="0"/>
+<transition angle="0" id="monitorReaction" infiniteServer="false" name="monitorReaction" nameOffsetX="61.0" nameOffsetY="-11.0" positionX="210.0" positionY="195.0" priority="0"/>
+<transition angle="0" id="checkoutPatient" infiniteServer="false" name="checkoutPatient" nameOffsetX="120.0" nameOffsetY="8.0" positionX="495.0" positionY="585.0" priority="0"/>
+<transition angle="0" id="orderIncomplete" infiniteServer="false" name="orderIncomplete" nameOffsetX="55.0" nameOffsetY="-8.0" positionX="600.0" positionY="45.0" priority="0"/>
+<transition angle="0" id="bloodAvailableNOK" infiniteServer="false" name="bloodAvailableNOK" nameOffsetX="56.0" nameOffsetY="53.0" positionX="855.0" positionY="345.0" priority="0"/>
+<transition angle="0" id="transEnded" infiniteServer="false" name="transEnded" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="270.0" priority="0"/>
+<transition angle="0" id="lastBloodInfo" infiniteServer="false" name="lastBloodInfo" nameOffsetX="32.0" nameOffsetY="57.0" positionX="390.0" positionY="345.0" priority="0"/>
+<transition angle="90" id="lastPatientInfo" infiniteServer="false" name="lastPatientInfo" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="495.0" positionY="420.0" priority="0"/>
+<transition angle="0" id="firstBloodInfo" infiniteServer="false" name="firstBloodInfo" nameOffsetX="25.0" nameOffsetY="54.0" positionX="690.0" positionY="240.0" priority="0"/>
+<transition angle="0" id="transStarted" infiniteServer="false" name="transStarted" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="240.0" priority="0"/>
+<transition angle="0" id="transInterrupted" infiniteServer="false" name="transInterrupted" nameOffsetX="121.0" nameOffsetY="21.0" positionX="165.0" positionY="270.0" priority="0"/>
+<arc id="start to checkPatientInfo" inscription="[0,inf)" source="start" target="checkPatientInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="83" yCoord="51"/>
+<arcpath arcPointType="false" id="1" xCoord="186" yCoord="132"/>
+</arc>
+<arc id="checkPatientInfo to P1" inscription="" source="checkPatientInfo" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="196" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="282" yCoord="132"/>
+</arc>
+<arc id="P1 to checkPatientConsent" inscription="[0,inf)" source="P1" target="checkPatientConsent" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="311" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="396" yCoord="132"/>
+</arc>
+<arc id="checkPatientConsent to P2" inscription="" source="checkPatientConsent" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="406" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="132"/>
+</arc>
+<arc id="P3 to checkBloodType" inscription="[0,inf)" source="P3" target="checkBloodType" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="731" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="1023" yCoord="136"/>
+<arcpath arcPointType="false" id="2" xCoord="1017" yCoord="237"/>
+</arc>
+<arc id="checkBloodType to P4" inscription="" source="checkBloodType" target="P4" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1011" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="956" yCoord="252"/>
+</arc>
+<arc id="monitorReaction to P6" inscription="" source="monitorReaction" target="P6" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="216" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="161" yCoord="207"/>
+</arc>
+<arc id="checkoutPatient to end" inscription="" source="checkoutPatient" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="501" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="116" yCoord="727"/>
+</arc>
+<arc id="P6 to transEnded" inscription="[0,inf)" source="P6" target="transEnded" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="138" yCoord="219"/>
+<arcpath arcPointType="false" id="1" xCoord="91" yCoord="282"/>
+</arc>
+<arc id="transEnded to P8" inscription="" source="transEnded" target="P8" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="87" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="123" yCoord="344"/>
+</arc>
+<arc id="P8 to lastBloodInfo" inscription="[0,inf)" source="P8" target="lastBloodInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="146" yCoord="357"/>
+<arcpath arcPointType="false" id="1" xCoord="396" yCoord="357"/>
+</arc>
+<arc id="lastBloodInfo to P9" inscription="" source="lastBloodInfo" target="P9" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="406" yCoord="357"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="357"/>
+</arc>
+<arc id="P9 to lastPatientInfo" inscription="[0,inf)" source="P9" target="lastPatientInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="506" yCoord="371"/>
+<arcpath arcPointType="false" id="1" xCoord="506" yCoord="426"/>
+</arc>
+<arc id="lastPatientInfo to P10" inscription="" source="lastPatientInfo" target="P10" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="506" yCoord="436"/>
+<arcpath arcPointType="false" id="1" xCoord="506" yCoord="492"/>
+</arc>
+<arc id="P10 to checkoutPatient" inscription="[0,inf)" source="P10" target="checkoutPatient" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="507" yCoord="521"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="582"/>
+</arc>
+<arc id="P2 to checkPhyOrder" inscription="[0,inf):1" source="P2" target="checkPhyOrder" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="521" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="606" yCoord="132"/>
+</arc>
+<arc id="checkPhyOrder to P3" inscription="[0,inf):1" source="checkPhyOrder" target="P3" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="616" yCoord="132"/>
+<arcpath arcPointType="false" id="1" xCoord="702" yCoord="132"/>
+</arc>
+<arc id="P3 to orderIncomplete" inscription="[0,inf):1" source="P3" target="orderIncomplete" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="717" yCoord="117"/>
+<arcpath arcPointType="false" id="1" xCoord="720" yCoord="60"/>
+<arcpath arcPointType="false" id="2" xCoord="616" yCoord="57"/>
+</arc>
+<arc id="orderIncomplete to P2" inscription="[0,inf):1" source="orderIncomplete" target="P2" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="606" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="510" yCoord="60"/>
+<arcpath arcPointType="false" id="2" xCoord="507" yCoord="117"/>
+</arc>
+<arc id="P4 to checkBloodAvailability" inscription="[0,inf):1" source="P4" target="checkBloodAvailability" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="927" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="871" yCoord="252"/>
+</arc>
+<arc id="checkBloodAvailability to P5" inscription="[0,inf):1" source="checkBloodAvailability" target="P5" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="861" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="806" yCoord="252"/>
+</arc>
+<arc id="P5 to bloodAvailableNOK" inscription="[0,inf):1" source="P5" target="bloodAvailableNOK" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="792" yCoord="266"/>
+<arcpath arcPointType="false" id="1" xCoord="794" yCoord="359"/>
+<arcpath arcPointType="false" id="2" xCoord="861" yCoord="357"/>
+</arc>
+<arc id="bloodAvailableNOK to P4" inscription="[0,inf):1" source="bloodAvailableNOK" target="P4" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="871" yCoord="357"/>
+<arcpath arcPointType="false" id="1" xCoord="944" yCoord="359"/>
+<arcpath arcPointType="false" id="2" xCoord="942" yCoord="266"/>
+</arc>
+<arc id="P5 to firstBloodInfo" inscription="[0,inf)" source="P5" target="firstBloodInfo" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="777" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="706" yCoord="252"/>
+</arc>
+<arc id="P11 to monitorReaction" inscription="[0,inf)" source="P11" target="monitorReaction" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="298" yCoord="245"/>
+<arcpath arcPointType="false" id="1" xCoord="226" yCoord="207"/>
+</arc>
+<arc id="firstBloodInfo to P12" inscription="" source="firstBloodInfo" target="P12" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="696" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="596" yCoord="252"/>
+</arc>
+<arc id="P12 to transStarted" inscription="[0,inf)" source="P12" target="transStarted" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="567" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="436" yCoord="252"/>
+</arc>
+<arc id="transStarted to P11" inscription="" source="transStarted" target="P11" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="426" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="326" yCoord="252"/>
+</arc>
+<arc id="P6 to transInterrupted" inscription="[0,inf)" source="P6" target="transInterrupted" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="153" yCoord="220"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="267"/>
+</arc>
+<arc id="transInterrupted to P8" inscription="" source="transInterrupted" target="P8" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="171" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="139" yCoord="343"/>
+</arc>
+</net>
+<net active="true" id="Physician" type="P/T net">
+<place id="start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="135.0" positionY="90.0"/>
+<place id="end" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="end" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="450.0" positionY="90.0"/>
+<transition angle="0" id="completeOrder" infiniteServer="false" name="completeOrder" nameOffsetX="58.0" nameOffsetY="-13.0" positionX="285.0" positionY="90.0" priority="0"/>
+<arc id="start to completeOrder" inscription="[0,inf)" source="start" target="completeOrder" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="161" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="291" yCoord="102"/>
+</arc>
+<arc id="completeOrder to end" inscription="" source="completeOrder" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="301" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="447" yCoord="102"/>
+</arc>
+</net>
+<net active="true" id="BloodBank" type="P/T net">
+<place id="start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="90.0"/>
+<place id="end" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="end" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="255.0"/>
+<transition angle="0" id="obtainBloodType" infiniteServer="false" name="obtainBloodType" nameOffsetX="40.0" nameOffsetY="-13.0" positionX="225.0" positionY="90.0" priority="0"/>
+<transition angle="90" id="bloodReady" infiniteServer="false" name="bloodReady" nameOffsetX="-17.0" nameOffsetY="16.0" positionX="105.0" positionY="180.0" priority="0"/>
+<arc id="start to obtainBloodType" inscription="[0,inf)" source="start" target="obtainBloodType" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="131" yCoord="101"/>
+<arcpath arcPointType="false" id="1" xCoord="232" yCoord="97"/>
+</arc>
+<arc id="bloodReady to end" inscription="" source="bloodReady" target="end" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="116" yCoord="196"/>
+<arcpath arcPointType="false" id="1" xCoord="116" yCoord="252"/>
+</arc>
+<arc id="start to bloodReady" inscription="[0,inf)" source="start" target="bloodReady" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="116" yCoord="116"/>
+<arcpath arcPointType="false" id="1" xCoord="116" yCoord="186"/>
+</arc>
+<arc id="obtainBloodType to start" inscription="" source="obtainBloodType" target="start" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="231" yCoord="107"/>
+<arcpath arcPointType="false" id="1" xCoord="180" yCoord="150"/>
+<arcpath arcPointType="false" id="2" xCoord="128" yCoord="111"/>
+</arc>
+</net>
+<net active="true" id="Observer" type="P/T net">
+<place id="IDchecked" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="IDchecked" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="105.0"/>
+<place id="TransfusionStart" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="TransfusionStart" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="225.0"/>
+<place id="PatientReaction" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="PatientReaction" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="345.0"/>
+<place id="Time" initialMarking="1" invariant="&lt;= DEADLINE" markingOffsetX="0.0" markingOffsetY="0.0" name="Time" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="465.0"/>
+<transition angle="0" id="firstPatientInfo" infiniteServer="false" name="firstPatientInfo" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="105.0" priority="0"/>
+<transition angle="0" id="transStarted" infiniteServer="false" name="transStarted" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="225.0" priority="0"/>
+<transition angle="0" id="reaction" infiniteServer="false" name="reaction" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="315.0" positionY="345.0" priority="0"/>
+<arc id="firstPatientInfo to IDchecked" inscription="" source="firstPatientInfo" target="IDchecked" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="117"/>
+<arcpath arcPointType="false" id="1" xCoord="522" yCoord="117"/>
+</arc>
+<arc id="transStarted to TransfusionStart" inscription="" source="transStarted" target="TransfusionStart" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="522" yCoord="237"/>
+</arc>
+<arc id="reaction to PatientReaction" inscription="" source="reaction" target="PatientReaction" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="331" yCoord="357"/>
+<arcpath arcPointType="false" id="1" xCoord="522" yCoord="357"/>
+</arc>
+</net>
+<query active="true" capacity="4" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="AG (Observer.TransfusionStart=0 or Observer.IDchecked=1)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="SOME"/>
+<query active="true" capacity="4" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="EF Observer.IDchecked&gt;=2" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="4" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EF Observer.TransfusionStart=1" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="4" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="AG (Observer.TransfusionStart=1 or Observer.TransfusionStart=0)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="4" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EF StartProcedure.end=1" reductionOption="VerifyTAPN" searchOption="RANDOM" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="4" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EF (Observer.PatientReaction&gt;=1 and (StartProcedure.end=1 or StartProcedure.endNoTreatment=1))" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="4" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EF (StartProcedure.end=1 or StartProcedure.endNoTreatment=1)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

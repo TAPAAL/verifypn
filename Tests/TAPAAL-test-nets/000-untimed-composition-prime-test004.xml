@@ -1,0 +1,1074 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-place initialMarking="47" invariant="&lt; inf" name="Number"/>
+<shared-place initialMarking="0" invariant="&lt; inf" name="Reminder"/>
+<shared-place initialMarking="1" invariant="&lt; inf" name="Control"/>
+<net active="true" id="DevisionBy2" type="P/T net">
+<place id="Control" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Control" nameOffsetX="-5.0" nameOffsetY="34.0" positionX="825.0" positionY="45.0"/>
+<place id="Decrementing" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Decrementing" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="300.0"/>
+<place id="Number" initialMarking="47" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Number" nameOffsetX="-1.0" nameOffsetY="33.0" positionX="825.0" positionY="315.0"/>
+<place id="RoundControl" initialMarking="0" invariant="&lt;= 2" markingOffsetX="0.0" markingOffsetY="0.0" name="RoundControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="195.0"/>
+<place id="Reminder" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Reminder" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="600.0"/>
+<transition angle="0" id="TakeControl" infiniteServer="false" name="TakeControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="75.0" priority="1" timed="true"/>
+<transition angle="0" id="Decrerment" infiniteServer="false" name="Decrerment" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="540.0" priority="1" timed="true"/>
+<transition angle="0" id="ReturnControl" infiniteServer="false" name="ReturnControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="105.0" priority="1" timed="true"/>
+<transition angle="0" id="OneRound" infiniteServer="false" name="OneRound" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="300.0" priority="1" timed="true"/>
+<transition angle="0" id="T12" infiniteServer="false" name="T12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="450.0" priority="1" timed="true"/>
+<arc id="Control to TakeControl" inscription="[0,inf)" source="Control" target="TakeControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="92" yCoord="79"/>
+</arc>
+<arc id="TakeControl to Decrementing" inscription="1" source="TakeControl" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="87" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="87" yCoord="297"/>
+</arc>
+<arc id="Decrementing to Decrerment" inscription="[0,inf)" source="Decrementing" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="91" yCoord="326"/>
+<arcpath arcPointType="false" id="1" xCoord="136" yCoord="481"/>
+<arcpath arcPointType="false" id="2" xCoord="246" yCoord="552"/>
+</arc>
+<arc id="Decrerment to Decrementing" inscription="1" source="Decrerment" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="252" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="211" yCoord="436"/>
+<arcpath arcPointType="false" id="2" xCoord="97" yCoord="322"/>
+</arc>
+<arc id="Decrementing to ReturnControl" inscription="[0,inf)" source="Decrementing" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="100" yCoord="305"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="117"/>
+</arc>
+<arc id="ReturnControl to Control" inscription="1" source="ReturnControl" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="497" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="822" yCoord="59"/>
+</arc>
+<arc id="Number to Decrerment" inscription="[0,inf)" source="Number" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="823" yCoord="332"/>
+<arcpath arcPointType="false" id="1" xCoord="256" yCoord="558"/>
+</arc>
+<arc id="TakeControl to RoundControl" inscription="1" source="TakeControl" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="92" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="202"/>
+</arc>
+<arc id="RoundControl to ReturnControl" inscription="[0,inf)" source="RoundControl" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="516" yCoord="193"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="132"/>
+</arc>
+<arc id="RoundControl to OneRound" inscription="[0,inf)" source="RoundControl" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="533" yCoord="216"/>
+<arcpath arcPointType="false" id="1" xCoord="571" yCoord="244"/>
+<arcpath arcPointType="false" id="2" xCoord="582" yCoord="297"/>
+</arc>
+<arc id="OneRound to RoundControl" inscription="1" source="OneRound" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="577" yCoord="306"/>
+<arcpath arcPointType="false" id="1" xCoord="528" yCoord="282"/>
+<arcpath arcPointType="false" id="2" xCoord="523" yCoord="221"/>
+</arc>
+<arc id="RoundControl to Decrerment" inscription="[0,inf):1" source="RoundControl" target="Decrerment" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="511" yCoord="217"/>
+<arcpath arcPointType="false" id="1" xCoord="346" yCoord="391"/>
+<arcpath arcPointType="false" id="2" xCoord="257" yCoord="544"/>
+</arc>
+<arc id="Decrerment to RoundControl" inscription="[0,inf):1" source="Decrerment" target="RoundControl" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="257" yCoord="551"/>
+<arcpath arcPointType="false" id="1" xCoord="391" yCoord="421"/>
+<arcpath arcPointType="false" id="2" xCoord="514" yCoord="219"/>
+</arc>
+<arc id="Number to OneRound" inscription="[0,inf)" source="Number" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="325"/>
+<arcpath arcPointType="false" id="1" xCoord="587" yCoord="307"/>
+</arc>
+<arc id="T12 to Number" inscription="1" source="T12" target="Number" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="341"/>
+</arc>
+<arc id="Reminder to TakeControl" inscription="[0,inf)" source="Reminder" target="TakeControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="603"/>
+<arcpath arcPointType="false" id="1" xCoord="91" yCoord="93"/>
+</arc>
+<arc id="Reminder to T12" inscription="[0,inf)" source="Reminder" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="477"/>
+</arc>
+<arc id="OneRound to Reminder" inscription="1" source="OneRound" target="Reminder" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="586" yCoord="317"/>
+<arcpath arcPointType="false" id="1" xCoord="827" yCoord="600"/>
+</arc>
+<arc id="Decrementing to OneRound" inscription="[0,inf)" source="Decrementing" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="101" yCoord="309"/>
+<arcpath arcPointType="false" id="1" xCoord="250" yCoord="285"/>
+<arcpath arcPointType="false" id="2" xCoord="576" yCoord="313"/>
+</arc>
+<arc id="OneRound to Decrementing" inscription="1" source="OneRound" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="576" yCoord="320"/>
+<arcpath arcPointType="false" id="1" xCoord="255" yCoord="345"/>
+<arcpath arcPointType="false" id="2" xCoord="101" yCoord="314"/>
+</arc>
+<arc id="Number to ReturnControl" inscription="[0,inf)" source="Number" target="ReturnControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="319"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="122"/>
+</arc>
+<arc id="Control to T12" inscription="[0,inf)" source="Control" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="848" yCoord="66"/>
+<arcpath arcPointType="false" id="1" xCoord="1063" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="841" yCoord="462"/>
+</arc>
+<arc id="T12 to Control" inscription="1" source="T12" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="943" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="844" yCoord="70"/>
+</arc>
+</net>
+<net active="true" id="DevisionBy3" type="P/T net">
+<place id="Control" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Control" nameOffsetX="-5.0" nameOffsetY="34.0" positionX="825.0" positionY="45.0"/>
+<place id="Decrementing" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Decrementing" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="300.0"/>
+<place id="Number" initialMarking="47" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Number" nameOffsetX="-1.0" nameOffsetY="33.0" positionX="825.0" positionY="315.0"/>
+<place id="RoundControl" initialMarking="0" invariant="&lt;= 3" markingOffsetX="0.0" markingOffsetY="0.0" name="RoundControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="195.0"/>
+<place id="Reminder" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Reminder" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="600.0"/>
+<transition angle="0" id="TakeControl" infiniteServer="false" name="TakeControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="75.0" priority="1" timed="true"/>
+<transition angle="0" id="Decrerment" infiniteServer="false" name="Decrerment" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="540.0" priority="1" timed="true"/>
+<transition angle="0" id="ReturnControl" infiniteServer="false" name="ReturnControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="105.0" priority="1" timed="true"/>
+<transition angle="0" id="OneRound" infiniteServer="false" name="OneRound" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="300.0" priority="1" timed="true"/>
+<transition angle="0" id="T12" infiniteServer="false" name="T12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="450.0" priority="1" timed="true"/>
+<arc id="Control to TakeControl" inscription="[0,inf)" source="Control" target="TakeControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="92" yCoord="79"/>
+</arc>
+<arc id="TakeControl to Decrementing" inscription="1" source="TakeControl" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="87" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="87" yCoord="297"/>
+</arc>
+<arc id="Decrementing to Decrerment" inscription="[0,inf)" source="Decrementing" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="91" yCoord="326"/>
+<arcpath arcPointType="false" id="1" xCoord="136" yCoord="481"/>
+<arcpath arcPointType="false" id="2" xCoord="246" yCoord="552"/>
+</arc>
+<arc id="Decrerment to Decrementing" inscription="1" source="Decrerment" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="252" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="211" yCoord="436"/>
+<arcpath arcPointType="false" id="2" xCoord="97" yCoord="322"/>
+</arc>
+<arc id="Decrementing to ReturnControl" inscription="[0,inf)" source="Decrementing" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="100" yCoord="305"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="117"/>
+</arc>
+<arc id="ReturnControl to Control" inscription="1" source="ReturnControl" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="497" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="822" yCoord="59"/>
+</arc>
+<arc id="Number to Decrerment" inscription="[0,inf)" source="Number" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="823" yCoord="332"/>
+<arcpath arcPointType="false" id="1" xCoord="256" yCoord="558"/>
+</arc>
+<arc id="TakeControl to RoundControl" inscription="1" source="TakeControl" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="92" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="202"/>
+</arc>
+<arc id="RoundControl to ReturnControl" inscription="[0,inf)" source="RoundControl" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="516" yCoord="193"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="132"/>
+</arc>
+<arc id="RoundControl to OneRound" inscription="[0,inf)" source="RoundControl" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="533" yCoord="216"/>
+<arcpath arcPointType="false" id="1" xCoord="571" yCoord="244"/>
+<arcpath arcPointType="false" id="2" xCoord="582" yCoord="297"/>
+</arc>
+<arc id="OneRound to RoundControl" inscription="1" source="OneRound" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="577" yCoord="306"/>
+<arcpath arcPointType="false" id="1" xCoord="528" yCoord="282"/>
+<arcpath arcPointType="false" id="2" xCoord="523" yCoord="221"/>
+</arc>
+<arc id="RoundControl to Decrerment" inscription="[0,inf):1" source="RoundControl" target="Decrerment" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="511" yCoord="217"/>
+<arcpath arcPointType="false" id="1" xCoord="346" yCoord="391"/>
+<arcpath arcPointType="false" id="2" xCoord="257" yCoord="544"/>
+</arc>
+<arc id="Decrerment to RoundControl" inscription="[0,inf):1" source="Decrerment" target="RoundControl" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="257" yCoord="551"/>
+<arcpath arcPointType="false" id="1" xCoord="391" yCoord="421"/>
+<arcpath arcPointType="false" id="2" xCoord="514" yCoord="219"/>
+</arc>
+<arc id="Number to OneRound" inscription="[0,inf)" source="Number" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="325"/>
+<arcpath arcPointType="false" id="1" xCoord="587" yCoord="307"/>
+</arc>
+<arc id="T12 to Number" inscription="1" source="T12" target="Number" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="341"/>
+</arc>
+<arc id="Reminder to TakeControl" inscription="[0,inf)" source="Reminder" target="TakeControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="603"/>
+<arcpath arcPointType="false" id="1" xCoord="91" yCoord="93"/>
+</arc>
+<arc id="Reminder to T12" inscription="[0,inf)" source="Reminder" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="477"/>
+</arc>
+<arc id="OneRound to Reminder" inscription="1" source="OneRound" target="Reminder" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="586" yCoord="317"/>
+<arcpath arcPointType="false" id="1" xCoord="827" yCoord="600"/>
+</arc>
+<arc id="Decrementing to OneRound" inscription="[0,inf)" source="Decrementing" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="101" yCoord="309"/>
+<arcpath arcPointType="false" id="1" xCoord="250" yCoord="285"/>
+<arcpath arcPointType="false" id="2" xCoord="576" yCoord="313"/>
+</arc>
+<arc id="OneRound to Decrementing" inscription="1" source="OneRound" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="576" yCoord="320"/>
+<arcpath arcPointType="false" id="1" xCoord="255" yCoord="345"/>
+<arcpath arcPointType="false" id="2" xCoord="101" yCoord="314"/>
+</arc>
+<arc id="Number to ReturnControl" inscription="[0,inf)" source="Number" target="ReturnControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="319"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="122"/>
+</arc>
+<arc id="T12 to Control" inscription="1" source="T12" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="842" yCoord="457"/>
+<arcpath arcPointType="false" id="1" xCoord="958" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="844" yCoord="69"/>
+</arc>
+<arc id="Control to T12" inscription="[0,inf)" source="Control" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="848" yCoord="66"/>
+<arcpath arcPointType="false" id="1" xCoord="1078" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="841" yCoord="467"/>
+</arc>
+</net>
+<net active="true" id="DevisionBy5" type="P/T net">
+<place id="Control" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Control" nameOffsetX="-5.0" nameOffsetY="34.0" positionX="825.0" positionY="45.0"/>
+<place id="Decrementing" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Decrementing" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="300.0"/>
+<place id="Number" initialMarking="47" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Number" nameOffsetX="-1.0" nameOffsetY="33.0" positionX="825.0" positionY="315.0"/>
+<place id="RoundControl" initialMarking="0" invariant="&lt;= 5" markingOffsetX="0.0" markingOffsetY="0.0" name="RoundControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="195.0"/>
+<place id="Reminder" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Reminder" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="600.0"/>
+<transition angle="0" id="TakeControl" infiniteServer="false" name="TakeControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="75.0" priority="1" timed="true"/>
+<transition angle="0" id="Decrerment" infiniteServer="false" name="Decrerment" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="540.0" priority="1" timed="true"/>
+<transition angle="0" id="ReturnControl" infiniteServer="false" name="ReturnControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="105.0" priority="1" timed="true"/>
+<transition angle="0" id="OneRound" infiniteServer="false" name="OneRound" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="300.0" priority="1" timed="true"/>
+<transition angle="0" id="T12" infiniteServer="false" name="T12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="450.0" priority="1" timed="true"/>
+<arc id="Control to TakeControl" inscription="[0,inf)" source="Control" target="TakeControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="92" yCoord="79"/>
+</arc>
+<arc id="TakeControl to Decrementing" inscription="1" source="TakeControl" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="87" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="87" yCoord="297"/>
+</arc>
+<arc id="Decrementing to Decrerment" inscription="[0,inf)" source="Decrementing" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="91" yCoord="326"/>
+<arcpath arcPointType="false" id="1" xCoord="136" yCoord="481"/>
+<arcpath arcPointType="false" id="2" xCoord="246" yCoord="552"/>
+</arc>
+<arc id="Decrerment to Decrementing" inscription="1" source="Decrerment" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="252" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="211" yCoord="436"/>
+<arcpath arcPointType="false" id="2" xCoord="97" yCoord="322"/>
+</arc>
+<arc id="Decrementing to ReturnControl" inscription="[0,inf)" source="Decrementing" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="100" yCoord="305"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="117"/>
+</arc>
+<arc id="ReturnControl to Control" inscription="1" source="ReturnControl" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="497" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="822" yCoord="59"/>
+</arc>
+<arc id="Number to Decrerment" inscription="[0,inf)" source="Number" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="823" yCoord="332"/>
+<arcpath arcPointType="false" id="1" xCoord="256" yCoord="558"/>
+</arc>
+<arc id="TakeControl to RoundControl" inscription="1" source="TakeControl" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="92" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="202"/>
+</arc>
+<arc id="RoundControl to ReturnControl" inscription="[0,inf)" source="RoundControl" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="516" yCoord="193"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="132"/>
+</arc>
+<arc id="RoundControl to OneRound" inscription="[0,inf)" source="RoundControl" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="533" yCoord="216"/>
+<arcpath arcPointType="false" id="1" xCoord="571" yCoord="244"/>
+<arcpath arcPointType="false" id="2" xCoord="582" yCoord="297"/>
+</arc>
+<arc id="OneRound to RoundControl" inscription="1" source="OneRound" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="577" yCoord="306"/>
+<arcpath arcPointType="false" id="1" xCoord="528" yCoord="282"/>
+<arcpath arcPointType="false" id="2" xCoord="523" yCoord="221"/>
+</arc>
+<arc id="RoundControl to Decrerment" inscription="[0,inf):1" source="RoundControl" target="Decrerment" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="511" yCoord="217"/>
+<arcpath arcPointType="false" id="1" xCoord="346" yCoord="391"/>
+<arcpath arcPointType="false" id="2" xCoord="257" yCoord="544"/>
+</arc>
+<arc id="Decrerment to RoundControl" inscription="[0,inf):1" source="Decrerment" target="RoundControl" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="257" yCoord="551"/>
+<arcpath arcPointType="false" id="1" xCoord="391" yCoord="421"/>
+<arcpath arcPointType="false" id="2" xCoord="514" yCoord="219"/>
+</arc>
+<arc id="Number to OneRound" inscription="[0,inf)" source="Number" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="325"/>
+<arcpath arcPointType="false" id="1" xCoord="587" yCoord="307"/>
+</arc>
+<arc id="T12 to Number" inscription="1" source="T12" target="Number" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="341"/>
+</arc>
+<arc id="Reminder to TakeControl" inscription="[0,inf)" source="Reminder" target="TakeControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="603"/>
+<arcpath arcPointType="false" id="1" xCoord="91" yCoord="93"/>
+</arc>
+<arc id="Reminder to T12" inscription="[0,inf)" source="Reminder" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="477"/>
+</arc>
+<arc id="OneRound to Reminder" inscription="1" source="OneRound" target="Reminder" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="586" yCoord="317"/>
+<arcpath arcPointType="false" id="1" xCoord="827" yCoord="600"/>
+</arc>
+<arc id="Decrementing to OneRound" inscription="[0,inf)" source="Decrementing" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="101" yCoord="309"/>
+<arcpath arcPointType="false" id="1" xCoord="250" yCoord="285"/>
+<arcpath arcPointType="false" id="2" xCoord="576" yCoord="313"/>
+</arc>
+<arc id="OneRound to Decrementing" inscription="1" source="OneRound" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="576" yCoord="320"/>
+<arcpath arcPointType="false" id="1" xCoord="255" yCoord="345"/>
+<arcpath arcPointType="false" id="2" xCoord="101" yCoord="314"/>
+</arc>
+<arc id="Number to ReturnControl" inscription="[0,inf)" source="Number" target="ReturnControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="319"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="122"/>
+</arc>
+<arc id="T12 to Control" inscription="1" source="T12" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="958" yCoord="238"/>
+<arcpath arcPointType="false" id="2" xCoord="845" yCoord="69"/>
+</arc>
+<arc id="Control to T12" inscription="[0,inf)" source="Control" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="848" yCoord="66"/>
+<arcpath arcPointType="false" id="1" xCoord="1078" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="841" yCoord="462"/>
+</arc>
+</net>
+<net active="true" id="DevisionBy7" type="P/T net">
+<place id="Control" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Control" nameOffsetX="-5.0" nameOffsetY="34.0" positionX="825.0" positionY="45.0"/>
+<place id="Decrementing" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Decrementing" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="300.0"/>
+<place id="Number" initialMarking="47" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Number" nameOffsetX="-1.0" nameOffsetY="33.0" positionX="825.0" positionY="315.0"/>
+<place id="RoundControl" initialMarking="0" invariant="&lt;= 7" markingOffsetX="0.0" markingOffsetY="0.0" name="RoundControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="195.0"/>
+<place id="Reminder" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Reminder" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="600.0"/>
+<transition angle="0" id="TakeControl" infiniteServer="false" name="TakeControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="75.0" priority="1" timed="true"/>
+<transition angle="0" id="Decrerment" infiniteServer="false" name="Decrerment" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="540.0" priority="1" timed="true"/>
+<transition angle="0" id="ReturnControl" infiniteServer="false" name="ReturnControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="105.0" priority="1" timed="true"/>
+<transition angle="0" id="OneRound" infiniteServer="false" name="OneRound" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="300.0" priority="1" timed="true"/>
+<transition angle="0" id="T12" infiniteServer="false" name="T12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="450.0" priority="1" timed="true"/>
+<arc id="Control to TakeControl" inscription="[0,inf)" source="Control" target="TakeControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="92" yCoord="79"/>
+</arc>
+<arc id="TakeControl to Decrementing" inscription="1" source="TakeControl" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="87" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="87" yCoord="297"/>
+</arc>
+<arc id="Decrementing to Decrerment" inscription="[0,inf)" source="Decrementing" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="91" yCoord="326"/>
+<arcpath arcPointType="false" id="1" xCoord="136" yCoord="481"/>
+<arcpath arcPointType="false" id="2" xCoord="246" yCoord="552"/>
+</arc>
+<arc id="Decrerment to Decrementing" inscription="1" source="Decrerment" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="252" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="211" yCoord="436"/>
+<arcpath arcPointType="false" id="2" xCoord="97" yCoord="322"/>
+</arc>
+<arc id="Decrementing to ReturnControl" inscription="[0,inf)" source="Decrementing" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="100" yCoord="305"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="117"/>
+</arc>
+<arc id="ReturnControl to Control" inscription="1" source="ReturnControl" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="497" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="822" yCoord="59"/>
+</arc>
+<arc id="Number to Decrerment" inscription="[0,inf)" source="Number" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="823" yCoord="332"/>
+<arcpath arcPointType="false" id="1" xCoord="256" yCoord="558"/>
+</arc>
+<arc id="TakeControl to RoundControl" inscription="1" source="TakeControl" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="92" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="202"/>
+</arc>
+<arc id="RoundControl to ReturnControl" inscription="[0,inf)" source="RoundControl" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="516" yCoord="193"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="132"/>
+</arc>
+<arc id="RoundControl to OneRound" inscription="[0,inf)" source="RoundControl" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="533" yCoord="216"/>
+<arcpath arcPointType="false" id="1" xCoord="571" yCoord="244"/>
+<arcpath arcPointType="false" id="2" xCoord="582" yCoord="297"/>
+</arc>
+<arc id="OneRound to RoundControl" inscription="1" source="OneRound" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="577" yCoord="306"/>
+<arcpath arcPointType="false" id="1" xCoord="528" yCoord="282"/>
+<arcpath arcPointType="false" id="2" xCoord="523" yCoord="221"/>
+</arc>
+<arc id="RoundControl to Decrerment" inscription="[0,inf):1" source="RoundControl" target="Decrerment" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="511" yCoord="217"/>
+<arcpath arcPointType="false" id="1" xCoord="346" yCoord="391"/>
+<arcpath arcPointType="false" id="2" xCoord="257" yCoord="544"/>
+</arc>
+<arc id="Decrerment to RoundControl" inscription="[0,inf):1" source="Decrerment" target="RoundControl" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="257" yCoord="551"/>
+<arcpath arcPointType="false" id="1" xCoord="391" yCoord="421"/>
+<arcpath arcPointType="false" id="2" xCoord="514" yCoord="219"/>
+</arc>
+<arc id="Number to OneRound" inscription="[0,inf)" source="Number" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="325"/>
+<arcpath arcPointType="false" id="1" xCoord="587" yCoord="307"/>
+</arc>
+<arc id="T12 to Number" inscription="1" source="T12" target="Number" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="341"/>
+</arc>
+<arc id="Reminder to TakeControl" inscription="[0,inf)" source="Reminder" target="TakeControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="603"/>
+<arcpath arcPointType="false" id="1" xCoord="91" yCoord="93"/>
+</arc>
+<arc id="Reminder to T12" inscription="[0,inf)" source="Reminder" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="477"/>
+</arc>
+<arc id="OneRound to Reminder" inscription="1" source="OneRound" target="Reminder" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="586" yCoord="317"/>
+<arcpath arcPointType="false" id="1" xCoord="827" yCoord="600"/>
+</arc>
+<arc id="Decrementing to OneRound" inscription="[0,inf)" source="Decrementing" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="101" yCoord="309"/>
+<arcpath arcPointType="false" id="1" xCoord="250" yCoord="285"/>
+<arcpath arcPointType="false" id="2" xCoord="576" yCoord="313"/>
+</arc>
+<arc id="OneRound to Decrementing" inscription="1" source="OneRound" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="576" yCoord="320"/>
+<arcpath arcPointType="false" id="1" xCoord="255" yCoord="345"/>
+<arcpath arcPointType="false" id="2" xCoord="101" yCoord="314"/>
+</arc>
+<arc id="Number to ReturnControl" inscription="[0,inf)" source="Number" target="ReturnControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="319"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="122"/>
+</arc>
+<arc id="T12 to Control" inscription="1" source="T12" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="842" yCoord="457"/>
+<arcpath arcPointType="false" id="1" xCoord="973" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="845" yCoord="69"/>
+</arc>
+<arc id="Control to T12" inscription="[0,inf)" source="Control" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="848" yCoord="66"/>
+<arcpath arcPointType="false" id="1" xCoord="1093" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="841" yCoord="467"/>
+</arc>
+</net>
+<net active="true" id="DevisionBy11" type="P/T net">
+<place id="Control" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Control" nameOffsetX="-5.0" nameOffsetY="34.0" positionX="825.0" positionY="45.0"/>
+<place id="Decrementing" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Decrementing" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="300.0"/>
+<place id="Number" initialMarking="47" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Number" nameOffsetX="-1.0" nameOffsetY="33.0" positionX="825.0" positionY="315.0"/>
+<place id="RoundControl" initialMarking="0" invariant="&lt;= 11" markingOffsetX="0.0" markingOffsetY="0.0" name="RoundControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="195.0"/>
+<place id="Reminder" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Reminder" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="600.0"/>
+<transition angle="0" id="TakeControl" infiniteServer="false" name="TakeControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="75.0" priority="1" timed="true"/>
+<transition angle="0" id="Decrerment" infiniteServer="false" name="Decrerment" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="540.0" priority="1" timed="true"/>
+<transition angle="0" id="ReturnControl" infiniteServer="false" name="ReturnControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="105.0" priority="1" timed="true"/>
+<transition angle="0" id="OneRound" infiniteServer="false" name="OneRound" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="300.0" priority="1" timed="true"/>
+<transition angle="0" id="T12" infiniteServer="false" name="T12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="450.0" priority="1" timed="true"/>
+<arc id="Control to TakeControl" inscription="[0,inf)" source="Control" target="TakeControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="92" yCoord="79"/>
+</arc>
+<arc id="TakeControl to Decrementing" inscription="1" source="TakeControl" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="87" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="87" yCoord="297"/>
+</arc>
+<arc id="Decrementing to Decrerment" inscription="[0,inf)" source="Decrementing" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="91" yCoord="326"/>
+<arcpath arcPointType="false" id="1" xCoord="136" yCoord="481"/>
+<arcpath arcPointType="false" id="2" xCoord="246" yCoord="552"/>
+</arc>
+<arc id="Decrerment to Decrementing" inscription="1" source="Decrerment" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="252" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="211" yCoord="436"/>
+<arcpath arcPointType="false" id="2" xCoord="97" yCoord="322"/>
+</arc>
+<arc id="Decrementing to ReturnControl" inscription="[0,inf)" source="Decrementing" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="100" yCoord="305"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="117"/>
+</arc>
+<arc id="ReturnControl to Control" inscription="1" source="ReturnControl" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="497" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="822" yCoord="59"/>
+</arc>
+<arc id="Number to Decrerment" inscription="[0,inf)" source="Number" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="823" yCoord="332"/>
+<arcpath arcPointType="false" id="1" xCoord="256" yCoord="558"/>
+</arc>
+<arc id="TakeControl to RoundControl" inscription="1" source="TakeControl" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="92" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="202"/>
+</arc>
+<arc id="RoundControl to ReturnControl" inscription="[0,inf)" source="RoundControl" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="516" yCoord="193"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="132"/>
+</arc>
+<arc id="RoundControl to OneRound" inscription="[0,inf)" source="RoundControl" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="533" yCoord="216"/>
+<arcpath arcPointType="false" id="1" xCoord="571" yCoord="244"/>
+<arcpath arcPointType="false" id="2" xCoord="582" yCoord="297"/>
+</arc>
+<arc id="OneRound to RoundControl" inscription="1" source="OneRound" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="577" yCoord="306"/>
+<arcpath arcPointType="false" id="1" xCoord="528" yCoord="282"/>
+<arcpath arcPointType="false" id="2" xCoord="523" yCoord="221"/>
+</arc>
+<arc id="RoundControl to Decrerment" inscription="[0,inf):1" source="RoundControl" target="Decrerment" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="511" yCoord="217"/>
+<arcpath arcPointType="false" id="1" xCoord="346" yCoord="391"/>
+<arcpath arcPointType="false" id="2" xCoord="257" yCoord="544"/>
+</arc>
+<arc id="Decrerment to RoundControl" inscription="[0,inf):1" source="Decrerment" target="RoundControl" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="257" yCoord="551"/>
+<arcpath arcPointType="false" id="1" xCoord="391" yCoord="421"/>
+<arcpath arcPointType="false" id="2" xCoord="514" yCoord="219"/>
+</arc>
+<arc id="Number to OneRound" inscription="[0,inf)" source="Number" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="325"/>
+<arcpath arcPointType="false" id="1" xCoord="587" yCoord="307"/>
+</arc>
+<arc id="T12 to Number" inscription="1" source="T12" target="Number" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="341"/>
+</arc>
+<arc id="Reminder to TakeControl" inscription="[0,inf)" source="Reminder" target="TakeControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="603"/>
+<arcpath arcPointType="false" id="1" xCoord="91" yCoord="93"/>
+</arc>
+<arc id="Reminder to T12" inscription="[0,inf)" source="Reminder" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="477"/>
+</arc>
+<arc id="OneRound to Reminder" inscription="1" source="OneRound" target="Reminder" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="586" yCoord="317"/>
+<arcpath arcPointType="false" id="1" xCoord="827" yCoord="600"/>
+</arc>
+<arc id="Decrementing to OneRound" inscription="[0,inf)" source="Decrementing" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="101" yCoord="309"/>
+<arcpath arcPointType="false" id="1" xCoord="250" yCoord="285"/>
+<arcpath arcPointType="false" id="2" xCoord="576" yCoord="313"/>
+</arc>
+<arc id="OneRound to Decrementing" inscription="1" source="OneRound" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="576" yCoord="320"/>
+<arcpath arcPointType="false" id="1" xCoord="255" yCoord="345"/>
+<arcpath arcPointType="false" id="2" xCoord="101" yCoord="314"/>
+</arc>
+<arc id="Number to ReturnControl" inscription="[0,inf)" source="Number" target="ReturnControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="319"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="122"/>
+</arc>
+<arc id="T12 to Control" inscription="1" source="T12" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="842" yCoord="457"/>
+<arcpath arcPointType="false" id="1" xCoord="973" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="845" yCoord="69"/>
+</arc>
+<arc id="Control to T12" inscription="[0,inf)" source="Control" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="848" yCoord="66"/>
+<arcpath arcPointType="false" id="1" xCoord="1093" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="841" yCoord="467"/>
+</arc>
+</net>
+<net active="true" id="DevisionBy13" type="P/T net">
+<place id="Control" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Control" nameOffsetX="-5.0" nameOffsetY="34.0" positionX="825.0" positionY="45.0"/>
+<place id="Decrementing" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Decrementing" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="300.0"/>
+<place id="Number" initialMarking="47" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Number" nameOffsetX="-1.0" nameOffsetY="33.0" positionX="825.0" positionY="315.0"/>
+<place id="RoundControl" initialMarking="0" invariant="&lt;= 13" markingOffsetX="0.0" markingOffsetY="0.0" name="RoundControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="195.0"/>
+<place id="Reminder" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Reminder" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="600.0"/>
+<transition angle="0" id="TakeControl" infiniteServer="false" name="TakeControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="75.0" priority="1" timed="true"/>
+<transition angle="0" id="Decrerment" infiniteServer="false" name="Decrerment" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="540.0" priority="1" timed="true"/>
+<transition angle="0" id="ReturnControl" infiniteServer="false" name="ReturnControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="105.0" priority="1" timed="true"/>
+<transition angle="0" id="OneRound" infiniteServer="false" name="OneRound" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="300.0" priority="1" timed="true"/>
+<transition angle="0" id="T12" infiniteServer="false" name="T12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="450.0" priority="1" timed="true"/>
+<arc id="Control to TakeControl" inscription="[0,inf)" source="Control" target="TakeControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="92" yCoord="79"/>
+</arc>
+<arc id="TakeControl to Decrementing" inscription="1" source="TakeControl" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="87" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="87" yCoord="297"/>
+</arc>
+<arc id="Decrementing to Decrerment" inscription="[0,inf)" source="Decrementing" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="91" yCoord="326"/>
+<arcpath arcPointType="false" id="1" xCoord="136" yCoord="481"/>
+<arcpath arcPointType="false" id="2" xCoord="246" yCoord="552"/>
+</arc>
+<arc id="Decrerment to Decrementing" inscription="1" source="Decrerment" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="252" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="211" yCoord="436"/>
+<arcpath arcPointType="false" id="2" xCoord="97" yCoord="322"/>
+</arc>
+<arc id="Decrementing to ReturnControl" inscription="[0,inf)" source="Decrementing" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="100" yCoord="305"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="117"/>
+</arc>
+<arc id="ReturnControl to Control" inscription="1" source="ReturnControl" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="497" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="822" yCoord="59"/>
+</arc>
+<arc id="Number to Decrerment" inscription="[0,inf)" source="Number" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="823" yCoord="332"/>
+<arcpath arcPointType="false" id="1" xCoord="256" yCoord="558"/>
+</arc>
+<arc id="TakeControl to RoundControl" inscription="1" source="TakeControl" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="92" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="202"/>
+</arc>
+<arc id="RoundControl to ReturnControl" inscription="[0,inf)" source="RoundControl" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="516" yCoord="193"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="132"/>
+</arc>
+<arc id="RoundControl to OneRound" inscription="[0,inf)" source="RoundControl" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="533" yCoord="216"/>
+<arcpath arcPointType="false" id="1" xCoord="571" yCoord="244"/>
+<arcpath arcPointType="false" id="2" xCoord="582" yCoord="297"/>
+</arc>
+<arc id="OneRound to RoundControl" inscription="1" source="OneRound" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="577" yCoord="306"/>
+<arcpath arcPointType="false" id="1" xCoord="528" yCoord="282"/>
+<arcpath arcPointType="false" id="2" xCoord="523" yCoord="221"/>
+</arc>
+<arc id="RoundControl to Decrerment" inscription="[0,inf):1" source="RoundControl" target="Decrerment" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="511" yCoord="217"/>
+<arcpath arcPointType="false" id="1" xCoord="346" yCoord="391"/>
+<arcpath arcPointType="false" id="2" xCoord="257" yCoord="544"/>
+</arc>
+<arc id="Decrerment to RoundControl" inscription="[0,inf):1" source="Decrerment" target="RoundControl" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="257" yCoord="551"/>
+<arcpath arcPointType="false" id="1" xCoord="391" yCoord="421"/>
+<arcpath arcPointType="false" id="2" xCoord="514" yCoord="219"/>
+</arc>
+<arc id="Number to OneRound" inscription="[0,inf)" source="Number" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="325"/>
+<arcpath arcPointType="false" id="1" xCoord="587" yCoord="307"/>
+</arc>
+<arc id="T12 to Number" inscription="1" source="T12" target="Number" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="341"/>
+</arc>
+<arc id="Reminder to TakeControl" inscription="[0,inf)" source="Reminder" target="TakeControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="603"/>
+<arcpath arcPointType="false" id="1" xCoord="91" yCoord="93"/>
+</arc>
+<arc id="Reminder to T12" inscription="[0,inf)" source="Reminder" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="477"/>
+</arc>
+<arc id="OneRound to Reminder" inscription="1" source="OneRound" target="Reminder" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="586" yCoord="317"/>
+<arcpath arcPointType="false" id="1" xCoord="827" yCoord="600"/>
+</arc>
+<arc id="Decrementing to OneRound" inscription="[0,inf)" source="Decrementing" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="101" yCoord="309"/>
+<arcpath arcPointType="false" id="1" xCoord="250" yCoord="285"/>
+<arcpath arcPointType="false" id="2" xCoord="576" yCoord="313"/>
+</arc>
+<arc id="OneRound to Decrementing" inscription="1" source="OneRound" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="576" yCoord="320"/>
+<arcpath arcPointType="false" id="1" xCoord="255" yCoord="345"/>
+<arcpath arcPointType="false" id="2" xCoord="101" yCoord="314"/>
+</arc>
+<arc id="Number to ReturnControl" inscription="[0,inf)" source="Number" target="ReturnControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="319"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="122"/>
+</arc>
+<arc id="T12 to Control" inscription="1" source="T12" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="943" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="844" yCoord="70"/>
+</arc>
+<arc id="Control to T12" inscription="[0,inf)" source="Control" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="848" yCoord="66"/>
+<arcpath arcPointType="false" id="1" xCoord="1063" yCoord="253"/>
+<arcpath arcPointType="false" id="2" xCoord="841" yCoord="462"/>
+</arc>
+</net>
+<net active="true" id="DevisionBy17" type="P/T net">
+<place id="Control" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Control" nameOffsetX="-5.0" nameOffsetY="34.0" positionX="825.0" positionY="45.0"/>
+<place id="Decrementing" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Decrementing" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="300.0"/>
+<place id="Number" initialMarking="47" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Number" nameOffsetX="-1.0" nameOffsetY="33.0" positionX="825.0" positionY="315.0"/>
+<place id="RoundControl" initialMarking="0" invariant="&lt;= 17" markingOffsetX="0.0" markingOffsetY="0.0" name="RoundControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="195.0"/>
+<place id="Reminder" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Reminder" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="600.0"/>
+<transition angle="0" id="TakeControl" infiniteServer="false" name="TakeControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="75.0" priority="1" timed="true"/>
+<transition angle="0" id="Decrerment" infiniteServer="false" name="Decrerment" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="540.0" priority="1" timed="true"/>
+<transition angle="0" id="ReturnControl" infiniteServer="false" name="ReturnControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="105.0" priority="1" timed="true"/>
+<transition angle="0" id="OneRound" infiniteServer="false" name="OneRound" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="300.0" priority="1" timed="true"/>
+<transition angle="0" id="T12" infiniteServer="false" name="T12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="450.0" priority="1" timed="true"/>
+<arc id="Control to TakeControl" inscription="[0,inf)" source="Control" target="TakeControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="92" yCoord="79"/>
+</arc>
+<arc id="TakeControl to Decrementing" inscription="1" source="TakeControl" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="87" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="87" yCoord="297"/>
+</arc>
+<arc id="Decrementing to Decrerment" inscription="[0,inf)" source="Decrementing" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="91" yCoord="326"/>
+<arcpath arcPointType="false" id="1" xCoord="136" yCoord="481"/>
+<arcpath arcPointType="false" id="2" xCoord="246" yCoord="552"/>
+</arc>
+<arc id="Decrerment to Decrementing" inscription="1" source="Decrerment" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="252" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="211" yCoord="436"/>
+<arcpath arcPointType="false" id="2" xCoord="97" yCoord="322"/>
+</arc>
+<arc id="Decrementing to ReturnControl" inscription="[0,inf)" source="Decrementing" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="100" yCoord="305"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="117"/>
+</arc>
+<arc id="ReturnControl to Control" inscription="1" source="ReturnControl" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="497" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="822" yCoord="59"/>
+</arc>
+<arc id="Number to Decrerment" inscription="[0,inf)" source="Number" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="823" yCoord="332"/>
+<arcpath arcPointType="false" id="1" xCoord="256" yCoord="558"/>
+</arc>
+<arc id="TakeControl to RoundControl" inscription="1" source="TakeControl" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="92" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="202"/>
+</arc>
+<arc id="RoundControl to ReturnControl" inscription="[0,inf)" source="RoundControl" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="516" yCoord="193"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="132"/>
+</arc>
+<arc id="RoundControl to OneRound" inscription="[0,inf)" source="RoundControl" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="533" yCoord="216"/>
+<arcpath arcPointType="false" id="1" xCoord="571" yCoord="244"/>
+<arcpath arcPointType="false" id="2" xCoord="582" yCoord="297"/>
+</arc>
+<arc id="OneRound to RoundControl" inscription="1" source="OneRound" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="577" yCoord="306"/>
+<arcpath arcPointType="false" id="1" xCoord="528" yCoord="282"/>
+<arcpath arcPointType="false" id="2" xCoord="523" yCoord="221"/>
+</arc>
+<arc id="RoundControl to Decrerment" inscription="[0,inf):1" source="RoundControl" target="Decrerment" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="511" yCoord="217"/>
+<arcpath arcPointType="false" id="1" xCoord="346" yCoord="391"/>
+<arcpath arcPointType="false" id="2" xCoord="257" yCoord="544"/>
+</arc>
+<arc id="Decrerment to RoundControl" inscription="[0,inf):1" source="Decrerment" target="RoundControl" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="257" yCoord="551"/>
+<arcpath arcPointType="false" id="1" xCoord="391" yCoord="421"/>
+<arcpath arcPointType="false" id="2" xCoord="514" yCoord="219"/>
+</arc>
+<arc id="Number to OneRound" inscription="[0,inf)" source="Number" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="325"/>
+<arcpath arcPointType="false" id="1" xCoord="587" yCoord="307"/>
+</arc>
+<arc id="T12 to Number" inscription="1" source="T12" target="Number" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="341"/>
+</arc>
+<arc id="Reminder to TakeControl" inscription="[0,inf)" source="Reminder" target="TakeControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="603"/>
+<arcpath arcPointType="false" id="1" xCoord="91" yCoord="93"/>
+</arc>
+<arc id="Reminder to T12" inscription="[0,inf)" source="Reminder" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="477"/>
+</arc>
+<arc id="OneRound to Reminder" inscription="1" source="OneRound" target="Reminder" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="586" yCoord="317"/>
+<arcpath arcPointType="false" id="1" xCoord="827" yCoord="600"/>
+</arc>
+<arc id="Decrementing to OneRound" inscription="[0,inf)" source="Decrementing" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="101" yCoord="309"/>
+<arcpath arcPointType="false" id="1" xCoord="250" yCoord="285"/>
+<arcpath arcPointType="false" id="2" xCoord="576" yCoord="313"/>
+</arc>
+<arc id="OneRound to Decrementing" inscription="1" source="OneRound" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="576" yCoord="320"/>
+<arcpath arcPointType="false" id="1" xCoord="255" yCoord="345"/>
+<arcpath arcPointType="false" id="2" xCoord="101" yCoord="314"/>
+</arc>
+<arc id="Number to ReturnControl" inscription="[0,inf)" source="Number" target="ReturnControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="319"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="122"/>
+</arc>
+<arc id="T12 to Control" inscription="1" source="T12" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="842" yCoord="457"/>
+<arcpath arcPointType="false" id="1" xCoord="973" yCoord="238"/>
+<arcpath arcPointType="false" id="2" xCoord="846" yCoord="68"/>
+</arc>
+<arc id="Control to T12" inscription="[0,inf)" source="Control" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="849" yCoord="65"/>
+<arcpath arcPointType="false" id="1" xCoord="1093" yCoord="238"/>
+<arcpath arcPointType="false" id="2" xCoord="841" yCoord="467"/>
+</arc>
+</net>
+<net active="true" id="DevisionBy19" type="P/T net">
+<place id="Control" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Control" nameOffsetX="-5.0" nameOffsetY="34.0" positionX="825.0" positionY="45.0"/>
+<place id="Decrementing" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Decrementing" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="300.0"/>
+<place id="Number" initialMarking="47" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Number" nameOffsetX="-1.0" nameOffsetY="33.0" positionX="825.0" positionY="315.0"/>
+<place id="RoundControl" initialMarking="0" invariant="&lt;= 19" markingOffsetX="0.0" markingOffsetY="0.0" name="RoundControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="195.0"/>
+<place id="Reminder" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Reminder" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="600.0"/>
+<transition angle="0" id="TakeControl" infiniteServer="false" name="TakeControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="75.0" priority="1" timed="true"/>
+<transition angle="0" id="Decrerment" infiniteServer="false" name="Decrerment" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="540.0" priority="1" timed="true"/>
+<transition angle="0" id="ReturnControl" infiniteServer="false" name="ReturnControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="105.0" priority="1" timed="true"/>
+<transition angle="0" id="OneRound" infiniteServer="false" name="OneRound" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="300.0" priority="1" timed="true"/>
+<transition angle="0" id="T12" infiniteServer="false" name="T12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="450.0" priority="1" timed="true"/>
+<arc id="Control to TakeControl" inscription="[0,inf)" source="Control" target="TakeControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="92" yCoord="79"/>
+</arc>
+<arc id="TakeControl to Decrementing" inscription="1" source="TakeControl" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="87" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="87" yCoord="297"/>
+</arc>
+<arc id="Decrementing to Decrerment" inscription="[0,inf)" source="Decrementing" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="91" yCoord="326"/>
+<arcpath arcPointType="false" id="1" xCoord="136" yCoord="481"/>
+<arcpath arcPointType="false" id="2" xCoord="246" yCoord="552"/>
+</arc>
+<arc id="Decrerment to Decrementing" inscription="1" source="Decrerment" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="252" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="211" yCoord="436"/>
+<arcpath arcPointType="false" id="2" xCoord="97" yCoord="322"/>
+</arc>
+<arc id="Decrementing to ReturnControl" inscription="[0,inf)" source="Decrementing" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="100" yCoord="305"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="117"/>
+</arc>
+<arc id="ReturnControl to Control" inscription="1" source="ReturnControl" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="497" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="822" yCoord="59"/>
+</arc>
+<arc id="Number to Decrerment" inscription="[0,inf)" source="Number" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="823" yCoord="332"/>
+<arcpath arcPointType="false" id="1" xCoord="256" yCoord="558"/>
+</arc>
+<arc id="TakeControl to RoundControl" inscription="1" source="TakeControl" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="92" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="202"/>
+</arc>
+<arc id="RoundControl to ReturnControl" inscription="[0,inf)" source="RoundControl" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="516" yCoord="193"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="132"/>
+</arc>
+<arc id="RoundControl to OneRound" inscription="[0,inf)" source="RoundControl" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="533" yCoord="216"/>
+<arcpath arcPointType="false" id="1" xCoord="571" yCoord="244"/>
+<arcpath arcPointType="false" id="2" xCoord="582" yCoord="297"/>
+</arc>
+<arc id="OneRound to RoundControl" inscription="1" source="OneRound" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="577" yCoord="306"/>
+<arcpath arcPointType="false" id="1" xCoord="528" yCoord="282"/>
+<arcpath arcPointType="false" id="2" xCoord="523" yCoord="221"/>
+</arc>
+<arc id="RoundControl to Decrerment" inscription="[0,inf):1" source="RoundControl" target="Decrerment" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="511" yCoord="217"/>
+<arcpath arcPointType="false" id="1" xCoord="346" yCoord="391"/>
+<arcpath arcPointType="false" id="2" xCoord="257" yCoord="544"/>
+</arc>
+<arc id="Decrerment to RoundControl" inscription="[0,inf):1" source="Decrerment" target="RoundControl" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="257" yCoord="551"/>
+<arcpath arcPointType="false" id="1" xCoord="391" yCoord="421"/>
+<arcpath arcPointType="false" id="2" xCoord="514" yCoord="219"/>
+</arc>
+<arc id="Number to OneRound" inscription="[0,inf)" source="Number" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="325"/>
+<arcpath arcPointType="false" id="1" xCoord="587" yCoord="307"/>
+</arc>
+<arc id="T12 to Number" inscription="1" source="T12" target="Number" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="341"/>
+</arc>
+<arc id="Reminder to TakeControl" inscription="[0,inf)" source="Reminder" target="TakeControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="603"/>
+<arcpath arcPointType="false" id="1" xCoord="91" yCoord="93"/>
+</arc>
+<arc id="Reminder to T12" inscription="[0,inf)" source="Reminder" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="477"/>
+</arc>
+<arc id="OneRound to Reminder" inscription="1" source="OneRound" target="Reminder" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="586" yCoord="317"/>
+<arcpath arcPointType="false" id="1" xCoord="827" yCoord="600"/>
+</arc>
+<arc id="Decrementing to OneRound" inscription="[0,inf)" source="Decrementing" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="101" yCoord="309"/>
+<arcpath arcPointType="false" id="1" xCoord="250" yCoord="285"/>
+<arcpath arcPointType="false" id="2" xCoord="576" yCoord="313"/>
+</arc>
+<arc id="OneRound to Decrementing" inscription="1" source="OneRound" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="576" yCoord="320"/>
+<arcpath arcPointType="false" id="1" xCoord="255" yCoord="345"/>
+<arcpath arcPointType="false" id="2" xCoord="101" yCoord="314"/>
+</arc>
+<arc id="Number to ReturnControl" inscription="[0,inf)" source="Number" target="ReturnControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="319"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="122"/>
+</arc>
+<arc id="T12 to Control" inscription="1" source="T12" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="958" yCoord="238"/>
+<arcpath arcPointType="false" id="2" xCoord="845" yCoord="69"/>
+</arc>
+<arc id="Control to T12" inscription="[0,inf)" source="Control" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="848" yCoord="66"/>
+<arcpath arcPointType="false" id="1" xCoord="1063" yCoord="238"/>
+<arcpath arcPointType="false" id="2" xCoord="841" yCoord="462"/>
+</arc>
+</net>
+<net active="true" id="DevisionBy23" type="P/T net">
+<place id="Control" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Control" nameOffsetX="-5.0" nameOffsetY="34.0" positionX="825.0" positionY="45.0"/>
+<place id="Decrementing" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="Decrementing" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="300.0"/>
+<place id="Number" initialMarking="47" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Number" nameOffsetX="-1.0" nameOffsetY="33.0" positionX="825.0" positionY="315.0"/>
+<place id="RoundControl" initialMarking="0" invariant="&lt;= 23" markingOffsetX="0.0" markingOffsetY="0.0" name="RoundControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="195.0"/>
+<place id="Reminder" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Reminder" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="600.0"/>
+<transition angle="0" id="TakeControl" infiniteServer="false" name="TakeControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="75.0" positionY="75.0" priority="1" timed="true"/>
+<transition angle="0" id="Decrerment" infiniteServer="false" name="Decrerment" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="240.0" positionY="540.0" priority="1" timed="true"/>
+<transition angle="0" id="ReturnControl" infiniteServer="false" name="ReturnControl" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="105.0" priority="1" timed="true"/>
+<transition angle="0" id="OneRound" infiniteServer="false" name="OneRound" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="570.0" positionY="300.0" priority="1" timed="true"/>
+<transition angle="0" id="T12" infiniteServer="false" name="T12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="825.0" positionY="450.0" priority="1" timed="true"/>
+<arc id="Control to TakeControl" inscription="[0,inf)" source="Control" target="TakeControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="92" yCoord="79"/>
+</arc>
+<arc id="TakeControl to Decrementing" inscription="1" source="TakeControl" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="87" yCoord="102"/>
+<arcpath arcPointType="false" id="1" xCoord="87" yCoord="297"/>
+</arc>
+<arc id="Decrementing to Decrerment" inscription="[0,inf)" source="Decrementing" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="91" yCoord="326"/>
+<arcpath arcPointType="false" id="1" xCoord="136" yCoord="481"/>
+<arcpath arcPointType="false" id="2" xCoord="246" yCoord="552"/>
+</arc>
+<arc id="Decrerment to Decrementing" inscription="1" source="Decrerment" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="252" yCoord="537"/>
+<arcpath arcPointType="false" id="1" xCoord="211" yCoord="436"/>
+<arcpath arcPointType="false" id="2" xCoord="97" yCoord="322"/>
+</arc>
+<arc id="Decrementing to ReturnControl" inscription="[0,inf)" source="Decrementing" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="100" yCoord="305"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="117"/>
+</arc>
+<arc id="ReturnControl to Control" inscription="1" source="ReturnControl" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="497" yCoord="112"/>
+<arcpath arcPointType="false" id="1" xCoord="822" yCoord="59"/>
+</arc>
+<arc id="Number to Decrerment" inscription="[0,inf)" source="Number" target="Decrerment" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="823" yCoord="332"/>
+<arcpath arcPointType="false" id="1" xCoord="256" yCoord="558"/>
+</arc>
+<arc id="TakeControl to RoundControl" inscription="1" source="TakeControl" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="92" yCoord="86"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="202"/>
+</arc>
+<arc id="RoundControl to ReturnControl" inscription="[0,inf)" source="RoundControl" target="ReturnControl" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="516" yCoord="193"/>
+<arcpath arcPointType="false" id="1" xCoord="492" yCoord="132"/>
+</arc>
+<arc id="RoundControl to OneRound" inscription="[0,inf)" source="RoundControl" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="533" yCoord="216"/>
+<arcpath arcPointType="false" id="1" xCoord="571" yCoord="244"/>
+<arcpath arcPointType="false" id="2" xCoord="582" yCoord="297"/>
+</arc>
+<arc id="OneRound to RoundControl" inscription="1" source="OneRound" target="RoundControl" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="577" yCoord="306"/>
+<arcpath arcPointType="false" id="1" xCoord="528" yCoord="282"/>
+<arcpath arcPointType="false" id="2" xCoord="523" yCoord="221"/>
+</arc>
+<arc id="RoundControl to Decrerment" inscription="[0,inf):1" source="RoundControl" target="Decrerment" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="511" yCoord="217"/>
+<arcpath arcPointType="false" id="1" xCoord="346" yCoord="391"/>
+<arcpath arcPointType="false" id="2" xCoord="257" yCoord="544"/>
+</arc>
+<arc id="Decrerment to RoundControl" inscription="[0,inf):1" source="Decrerment" target="RoundControl" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="257" yCoord="551"/>
+<arcpath arcPointType="false" id="1" xCoord="391" yCoord="421"/>
+<arcpath arcPointType="false" id="2" xCoord="514" yCoord="219"/>
+</arc>
+<arc id="Number to OneRound" inscription="[0,inf)" source="Number" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="325"/>
+<arcpath arcPointType="false" id="1" xCoord="587" yCoord="307"/>
+</arc>
+<arc id="T12 to Number" inscription="1" source="T12" target="Number" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="341"/>
+</arc>
+<arc id="Reminder to TakeControl" inscription="[0,inf)" source="Reminder" target="TakeControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="603"/>
+<arcpath arcPointType="false" id="1" xCoord="91" yCoord="93"/>
+</arc>
+<arc id="Reminder to T12" inscription="[0,inf)" source="Reminder" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="597"/>
+<arcpath arcPointType="false" id="1" xCoord="837" yCoord="477"/>
+</arc>
+<arc id="OneRound to Reminder" inscription="1" source="OneRound" target="Reminder" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="586" yCoord="317"/>
+<arcpath arcPointType="false" id="1" xCoord="827" yCoord="600"/>
+</arc>
+<arc id="Decrementing to OneRound" inscription="[0,inf)" source="Decrementing" target="OneRound" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="101" yCoord="309"/>
+<arcpath arcPointType="false" id="1" xCoord="250" yCoord="285"/>
+<arcpath arcPointType="false" id="2" xCoord="576" yCoord="313"/>
+</arc>
+<arc id="OneRound to Decrementing" inscription="1" source="OneRound" target="Decrementing" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="576" yCoord="320"/>
+<arcpath arcPointType="false" id="1" xCoord="255" yCoord="345"/>
+<arcpath arcPointType="false" id="2" xCoord="101" yCoord="314"/>
+</arc>
+<arc id="Number to ReturnControl" inscription="[0,inf)" source="Number" target="ReturnControl" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="824" yCoord="319"/>
+<arcpath arcPointType="false" id="1" xCoord="496" yCoord="122"/>
+</arc>
+<arc id="T12 to Control" inscription="1" source="T12" target="Control" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="837" yCoord="447"/>
+<arcpath arcPointType="false" id="1" xCoord="958" yCoord="238"/>
+<arcpath arcPointType="false" id="2" xCoord="845" yCoord="69"/>
+</arc>
+<arc id="Control to T12" inscription="[0,inf)" source="Control" target="T12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="848" yCoord="66"/>
+<arcpath arcPointType="false" id="1" xCoord="1078" yCoord="238"/>
+<arcpath arcPointType="false" id="2" xCoord="841" yCoord="462"/>
+</arc>
+</net>
+<net active="true" id="Finish" type="P/T net">
+<place id="Control" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Control" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="720.0" positionY="150.0"/>
+<place id="Number" initialMarking="47" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Number" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="720.0" positionY="360.0"/>
+<place id="Reminder" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Reminder" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="720.0" positionY="570.0"/>
+<place id="Check" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Check" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="375.0" positionY="240.0"/>
+<place id="NotPrime" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="NotPrime" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="375.0" positionY="570.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="525.0" positionY="240.0" priority="1" timed="true"/>
+<transition angle="0" id="T1" infiniteServer="false" name="T1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="375.0" positionY="405.0" priority="1" timed="true"/>
+<arc id="Reminder to T0" inscription="[0,inf)" source="Reminder" target="T0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="724" yCoord="569"/>
+<arcpath arcPointType="false" id="1" xCoord="541" yCoord="258"/>
+</arc>
+<arc id="Control to T0" inscription="[0,inf)" source="Control" target="T0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="718" yCoord="167"/>
+<arcpath arcPointType="false" id="1" xCoord="542" yCoord="244"/>
+</arc>
+<arc id="Number to T0" inscription="[0,inf)" source="Number" target="T0" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="719" yCoord="363"/>
+<arcpath arcPointType="false" id="1" xCoord="542" yCoord="251"/>
+</arc>
+<arc id="T0 to Check" inscription="1" source="T0" target="Check" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="531" yCoord="252"/>
+<arcpath arcPointType="false" id="1" xCoord="401" yCoord="252"/>
+</arc>
+<arc id="Check to T1" inscription="[0,inf)" source="Check" target="T1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="387" yCoord="266"/>
+<arcpath arcPointType="false" id="1" xCoord="387" yCoord="402"/>
+</arc>
+<arc id="T1 to NotPrime" inscription="1" source="T1" target="NotPrime" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="387" yCoord="432"/>
+<arcpath arcPointType="false" id="1" xCoord="387" yCoord="567"/>
+</arc>
+<arc id="Reminder to T1" inscription="[0,inf)" source="Reminder" target="T1" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="718" yCoord="575"/>
+<arcpath arcPointType="false" id="1" xCoord="391" yCoord="422"/>
+</arc>
+<arc id="Number to T1" inscription="[0,inf)" source="Number" target="T1" type="tapnInhibitor">
+<arcpath arcPointType="false" id="0" xCoord="717" yCoord="373"/>
+<arcpath arcPointType="false" id="1" xCoord="392" yCoord="412"/>
+</arc>
+</net>
+<query active="true" capacity="1" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF Finish.NotPrime&gt;=1" reductionOption="VerifyTAPN" searchOption="BFS" symmetry="true" traceOption="NONE"/>
+</pnml>

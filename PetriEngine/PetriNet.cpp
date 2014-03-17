@@ -26,30 +26,35 @@
 #include <string.h>
 using namespace std;
 
-namespace PetriEngine{
+namespace PetriEngine {
 
-PetriNet::PetriNet(int places, int transitions, int variables)
+	PetriNet::PetriNet(int places, int transitions, int variables)
 	: _places(places), _transitions(transitions), _variables(variables) {
-	//Store size for later
-	_nPlaces = places;
-	_nTransitions = transitions;
-	_nVariables = variables;
+		//Store size for later
+		_nPlaces = places;
+		_nTransitions = transitions;
+		_nVariables = variables;
 
-	//Allocate space for ranges
-	_ranges = new VarVal[variables];
+		//Allocate space for ranges
+		_ranges = new VarVal[variables];
 
-	//Allocate space for conditions and assignments
-	size_t s = (sizeof(PQL::Condition*) + sizeof(PQL::AssignmentExpression*)) * transitions;
-	char* d = new char[s];
-	memset(d, 0, s);
-	_conditions = (PQL::Condition**)d;
-	_assignments = (PQL::AssignmentExpression**)(d + sizeof(PQL::Condition*)*transitions);
+		//Allocate space for conditions and assignments
+		size_t s = (sizeof (PQL::Condition*) + sizeof (PQL::AssignmentExpression*)) * transitions;
+		char* d = new char[s];
+		memset(d, 0, s);
+		_conditions = (PQL::Condition**)d;
+		_assignments = (PQL::AssignmentExpression**)(d + sizeof (PQL::Condition*) * transitions);
 
-	//Allocate transition matrix
-	_tm = new MarkVal[places * transitions * 2];
-	for(int i = 0; i < places * transitions * 2; i++)
-		_tm[i] = 0;
-}
+		//Allocate transition matrix
+		_tm = new MarkVal[places * transitions * 2];
+		for (int i = 0; i < places * transitions * 2; i++)
+			_tm[i] = 0;
+
+		skipTransitions = new bool[transitions];
+		for (int i = 0; i < transitions; i++) {
+			skipTransitions[i] = false;
+		}
+	}
 
 PetriNet::~PetriNet(){
 	if(_ranges)
@@ -63,6 +68,10 @@ PetriNet::~PetriNet(){
 		delete[] (char*)_conditions;
 	_conditions = NULL;
 	_assignments = NULL;
+        if (skipTransitions) {
+            delete[] skipTransitions;
+        }
+        skipTransitions = NULL;
 }
 
 bool PetriNet::fire(unsigned int t,
@@ -70,7 +79,8 @@ bool PetriNet::fire(unsigned int t,
 					const VarVal* a,
 					MarkVal* result_m,
 					VarVal* result_a) const{
-	//Check the condition
+        if (skipTransitions[t]) { return false;}
+        //Check the condition
 	if(_conditions[t] &&
 	   !_conditions[t]->evaluate(PQL::EvaluationContext(m, a, NULL)))
 		return false;
@@ -99,7 +109,8 @@ bool PetriNet::fire(unsigned int t,
 					const Structures::State* s,
 					Structures::State* ns,
 					int multiplicity) const{
-	//Check the condition
+	if (skipTransitions[t]) { return false;}
+        //Check the condition
 	if(_conditions[t] &&
 	   !_conditions[t]->evaluate(PQL::EvaluationContext(s->marking(), s->valuation(), NULL)))
 		return false;
@@ -155,7 +166,8 @@ bool PetriNet::fireWithMarkInf(unsigned int t,
 							   const VarVal* a,
 							   MarkVal* result_m,
 							   VarVal* result_a) const{
-	//Check the condition
+	if (skipTransitions[t]) { return false;}
+        //Check the condition
 	if(_conditions[t] && //TODO: Use evaluate that respects MarkInf
 	   !_conditions[t]->evaluate(PQL::EvaluationContext(m, a, NULL)))
 		return false;
@@ -192,5 +204,14 @@ int PetriNet::inArc(unsigned int place, unsigned int transition) const{
 int PetriNet::outArc(unsigned int transition, unsigned int place) const{
 	return _tv(transition)[place + _nPlaces];
 }
+
+void PetriNet::updateinArc(unsigned int place, unsigned int transition, int weight) {
+        _tv(transition)[place]=weight;       
+}
+      
+void PetriNet::updateoutArc(unsigned int transition, unsigned int place, int weight) {  
+        _tv(transition)[place + _nPlaces]=weight;
+}
+
 
 } // PetriEngine
