@@ -38,11 +38,11 @@ class LimitedStateAllocator{
 		char* m;
 	} __attribute__((__packed__));
 public:
-	LimitedStateAllocator(const PetriNet& net, int memorylimit = 0){
+	LimitedStateAllocator(const PetriNet& net, int memorylimit = 0){ //  memory limit in MB
 		_nPlaces = net.numberOfPlaces();
 		_nVars = net.numberOfVariables();
-		if(memorylimit != 0)
-			_blocklimit = ceil(memorylimit / (stateSize() * blocksize));
+		if(memorylimit != 0) 
+			_blocklimit = ceil((memorylimit*1024.0*1024.0 / (stateSize() * blocksize)));
 		else
 			_blocklimit = -1;
 		_b = NULL;
