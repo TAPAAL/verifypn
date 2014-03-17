@@ -42,7 +42,7 @@ public:
 		_nPlaces = net.numberOfPlaces();
 		_nVars = net.numberOfVariables();
 		if(memorylimit != 0) 
-			_blocklimit = ceil((memorylimit*1024.0*1024.0 / (stateSize() * blocksize)));
+			_blocklimit = ceil(memorylimit*1024.0*1024.0 / (stateSize() * blocksize));
 		else
 			_blocklimit = -1;
 		_b = NULL;
