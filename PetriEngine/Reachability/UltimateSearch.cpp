@@ -67,7 +67,7 @@ namespace Reachability {
 
 			if (query->evaluate(s0, &net)) {
 				return ReachabilityResult(ReachabilityResult::Satisfied, "Query was satisfied",
-						expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), s0.pathLength(), s0.trace());
+						expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), s0.pathLength(), s0.trace());
 			}
 
 			// Main-loop
@@ -100,7 +100,7 @@ namespace Reachability {
 							if (query->evaluate(*ns, &net)) {
 								return ReachabilityResult(ReachabilityResult::Satisfied,
 										"Query was satisfied",
-										expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), ns->pathLength(), ns->trace());
+										expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), ns->pathLength(), ns->trace());
 							}
 
 							// Push new state on the queue
@@ -116,7 +116,7 @@ namespace Reachability {
 							if (!ns)
 								return ReachabilityResult(ReachabilityResult::Unknown,
 									"Memory bound exceeded",
-									expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens());
+									expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
 						}
 					}
 				}
@@ -125,7 +125,7 @@ namespace Reachability {
 
 			return ReachabilityResult(ReachabilityResult::NotSatisfied,
 					"Query cannot be satisfied",
-					expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens());
+					expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
 		}
 
 } // Reachability

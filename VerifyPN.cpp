@@ -71,7 +71,7 @@ int main(int argc, char* argv[]){
 	bool outputtrace = false;
 	int kbound = 0;
 	SearchStrategies searchstrategy = BestFS;
-	int memorylimit = 3*1024*1024*1024;
+	int memorylimit = 0;
 	char* modelfile = NULL;
 	char* queryfile = NULL;
 	bool disableoverapprox = false;
@@ -144,8 +144,7 @@ int main(int argc, char* argv[]){
 			if(sscanf(argv[++i], "%d", &memorylimit) != 1 || memorylimit < 0){
 				fprintf(stderr, "Argument Error: Invalid memory limit \"%s\"\n", argv[i]);
 				return ErrorCode;
-			}else
-				memorylimit *= 1024;
+			}
 		}else if(strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable-overapprox") == 0){
 			disableoverapprox = true;
                 }else if(strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--reduction") == 0){
@@ -170,9 +169,9 @@ int main(int argc, char* argv[]){
 					"                                     - BFS          Breadth first search\n"
 					"                                     - DFS          Depth first search\n"
 					"                                     - RDFS         Random depth first search\n"
-					"                                     - OverApprox   Linear over-approximation only\n"
-					"  -m, --memory-limit <megabyte>      Memory limit for state space in MB,\n"
-					"                                     0 for unlimited (3 GB default)\n"
+					"                                     - OverApprox   Linear Over Approx.\n"
+					"  -m, --memory-limit <megabyte>      Memory limit for the state space search in MB,\n"
+					"                                     0 for unlimited (default)\n"
 					"  -d, --disable-over-approximation   Disable linear over approximation\n"
                                         "  -r, --reduction                    Enable structural net reduction:\n"
                                         "                                     - 0  disabled (default)\n"
@@ -428,7 +427,17 @@ int main(int argc, char* argv[]){
 			fprintf(stdout,"<%s:%lli> ", tnames[t].c_str(), result.enabledTransitionsCount()[t]);	
 		}
 	}
+	fprintf(stdout,"\n\nPLACE-BOUND STATISTICS\n");
+	for(size_t p = 0; p < result.maxPlaceBound().size(); p++) { 
+		// report maximum bounds for each place (? means that the place was removed in net reduction)
+		if (net->isPlaceSkipped(p)) {
+			fprintf(stdout,"<%s;?> ", pnames[p].c_str());
+		} else {
+			fprintf(stdout,"<%s;%i> ", pnames[p].c_str(), result.maxPlaceBound()[p]);	
+		}
+	}
 	fprintf(stdout,"\n\n");
+	
 	//----------------------- Output Result -----------------------//
 
 	ReturnValues retval = ErrorCode;

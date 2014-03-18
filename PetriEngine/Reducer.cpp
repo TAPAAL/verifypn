@@ -160,12 +160,14 @@ namespace PetriEngine{
 			_removedTransitions++;
 			if (m0[pPre] == 0) { // removing pPre
 				_removedPlaces++;
+				net->skipPlace(pPre);
 				for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
 					net->updateoutArc(_t, pPost, net->outArc(_t, pPost) + net->outArc(_t, pPre));
 					net->updateoutArc(_t, pPre, 0);
 				}
 			} else if (m0[pPost] == 0) { // removing pPost
 				_removedPlaces++;
+				net->skipPlace(pPost);
 				for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
 					net->updateinArc(pPre, _t, net->inArc(pPost, _t));
 					net->updateoutArc(_t, pPre, net->outArc(_t, pPre) + net->outArc(_t, pPost));
@@ -239,6 +241,7 @@ namespace PetriEngine{
 			net->updateoutArc(tPre, p, 0);
 			net->updateinArc(p, tPost, 0);
 			_removedPlaces++;
+			net->skipPlace(p);
 			_removedTransitions++;
 			for (size_t _p = 0; _p < net->numberOfPlaces(); _p++) { // remove tPost
 				net->updateoutArc(tPre, _p, net->outArc(tPre, _p) + net->outArc(tPost, _p));
@@ -317,6 +320,7 @@ namespace PetriEngine{
 				net->updateinArc(p1, t2, 0);
 				removePlace[p1] = false;
 				_removedPlaces++;
+				net->skipPlace(p1);
 			}
 		}
 		return continueReductions;

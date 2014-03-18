@@ -89,7 +89,7 @@ ReachabilityResult HeuristicDFS::reachable(const PetriNet& net,
 					if(query->evaluate(*ns, &net))
 						return ReachabilityResult(ReachabilityResult::Satisfied,
 												"A state satisfying the query was found", expandedStates, exploredStates,
-												states.discovered(), enabledTransitionsCount, states.maxTokens(), ns->pathLength(), ns->trace());
+												states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), ns->pathLength(), ns->trace());
 					PQL::DistanceContext context(net,
 												 _distanceStrategy,
 												 ns->marking(),
@@ -122,7 +122,7 @@ ReachabilityResult HeuristicDFS::reachable(const PetriNet& net,
 	}
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-						"No state satisfying the query exists.", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens());
+						"No state satisfying the query exists.", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
 }
 
 } // Reachability

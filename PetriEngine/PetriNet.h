@@ -84,6 +84,9 @@ public:
 	const std::vector<std::string>& transitionNames() const {return _transitions;}
         void skipTransition(unsigned int t) { skipTransitions[t]=true; }
         bool isTransitionSkipped(unsigned int t) { return skipTransitions[t]; }
+        void skipPlace(unsigned int p) { skipPlaces[p]=true; }
+        bool isPlaceSkipped(unsigned int p) { return skipPlaces[p]; }
+        
         
 private:
 	std::vector<std::string> _places;
@@ -108,6 +111,7 @@ private:
 	PQL::Condition** _conditions;
 	PQL::AssignmentExpression** _assignments;
         bool* skipTransitions;
+        bool* skipPlaces;
 
 	friend class PetriNetBuilder;
         friend class Reducer;
