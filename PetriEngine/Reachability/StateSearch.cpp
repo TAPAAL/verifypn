@@ -120,7 +120,7 @@ namespace Reachability {
 								if (query->evaluate(*ns, &net)) {
 									return ReachabilityResult(ReachabilityResult::Satisfied,
 											"Query was satisfied",
-											expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), ns->pathLength(), ns->trace());
+											expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), ns->pathLength(), ns->trace());
 								}
 
 								bool isImpossible = true;
@@ -143,7 +143,7 @@ namespace Reachability {
 									if (!ns)
 										return ReachabilityResult(ReachabilityResult::Unknown,
 											"Memory bound exceeded",
-											expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens());
+											expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
 									}
 						}
 				}
@@ -151,7 +151,7 @@ namespace Reachability {
 
 			return ReachabilityResult(ReachabilityResult::NotSatisfied,
 					"Query cannot be satisfied",
-					expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens());
+					expanded, explored, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
 		}
 
 } // Reachability

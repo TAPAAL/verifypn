@@ -95,7 +95,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 						//ns->dumpTrace(net);
 						return ReachabilityResult(ReachabilityResult::Satisfied,
 												  "Query was satified!", expandedStates, exploredStates,
-												  states.discovered(), enabledTransitionsCount, states.maxTokens(), ns->pathLength(), ns->trace());
+												  states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), ns->pathLength(), ns->trace());
 					}
 
 					// Insert in queue, with given priority
@@ -109,7 +109,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 							ns2->setParent(ns);
 							return ReachabilityResult(ReachabilityResult::Satisfied,
 												  "Query was satified!", expandedStates, exploredStates,
-												  states.discovered(), enabledTransitionsCount, states.maxTokens(), ns2->pathLength(), ns2->trace());
+												  states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), ns2->pathLength(), ns2->trace());
 						}
 						double p = priority(ns2, query, net);
 						if(p <= bestp){
@@ -125,7 +125,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 								if(query->evaluate(*ns2, &net)){
 									return ReachabilityResult(ReachabilityResult::Satisfied,
 													  "Query was satisfied!", expandedStates, exploredStates,
-													  states.discovered(), enabledTransitionsCount, states.maxTokens(), ns2->pathLength(), ns2->trace());
+													  states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), ns2->pathLength(), ns2->trace());
 								}
 							}
 							if(states.add(ns2)){
@@ -143,7 +143,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 	}
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-							  "Query cannot be satisfied!", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens());
+							  "Query cannot be satisfied!", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
 }
 
 double BestFirstReachabilitySearch::priority(const Structures::State *state,

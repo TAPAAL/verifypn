@@ -403,7 +403,17 @@ int main(int argc, char* argv[]){
 			fprintf(stdout,"<%s:%lli> ", tnames[t].c_str(), result.enabledTransitionsCount()[t]);	
 		}
 	}
+	fprintf(stdout,"\n\nPLACE-BOUND STATISTICS\n");
+	for(size_t p = 0; p < result.maxPlaceBound().size(); p++) { 
+		// report maximum bounds for each place (? means that the place was removed in net reduction)
+		if (net->isPlaceSkipped(p)) {
+			fprintf(stdout,"<%s;?> ", pnames[p].c_str());
+		} else {
+			fprintf(stdout,"<%s;%i> ", pnames[p].c_str(), result.maxPlaceBound()[p]);	
+		}
+	}
 	fprintf(stdout,"\n\n");
+	
 	//----------------------- Output Result -----------------------//
 
 	ReturnValues retval = ErrorCode;
