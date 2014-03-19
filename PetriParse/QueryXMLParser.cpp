@@ -53,7 +53,8 @@ void QueryXMLParser::parseProperty(DOMElement* element){
 	}
 	string id;
 	string queryText;
-	bool negateResult;
+	bool negateResult=false;
+    bool isPlaceBound=false;
 	bool tagsOK=true;
 	
 	DOMElements elements = element->getChilds();
@@ -77,13 +78,15 @@ void QueryXMLParser::parseProperty(DOMElement* element){
 	
 	QueryItem queryItem;
 	queryItem.id=id;
-	if (tagsOK && parseFormula(*formulaPtr, queryText, negateResult)) {
+	if (tagsOK && parseFormula(*formulaPtr, queryText, negateResult, isPlaceBound)) {
 		queryItem.queryText=queryText;
 		queryItem.negateResult=negateResult;
+        queryItem.isPlaceBound=isPlaceBound;
 		queryItem.parsingResult=QueryItem::PARSING_OK;
 	} else {
 		queryItem.queryText="";
 		queryItem.negateResult=false;
+        queryItem.isPlaceBound=false;
 		queryItem.parsingResult=QueryItem::UNSUPPORTED_QUERY;
 	}
 	
@@ -102,7 +105,7 @@ bool QueryXMLParser::parseTags(DOMElement* element){
 	return true;
 }
 
-bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &negateResult){
+bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &negateResult, bool &isPlaceBound){
 	/*
 	 Describe here how to parse
 	 * INV phi =  AG phi =  not EF not phi
@@ -146,14 +149,42 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 		} else {
 			return false;
 		}
-	} else {
-		return false;
+    } else if (elementName == "place-bound") {
+        queryText = "EF ";
+        DOMElements children = (*booleanFormula)->getChilds();
+        if (children.size() == 0) {
+            return false;
+        }
+        if (children.size() > 1) {
+            queryText += "(";
+        }
+        for (int i = 0; i < children.size(); i++) {
+            if (children[i]->getElementName() != "place") {
+                return false;
+            }
+            if (i > 0) {
+                queryText += " + ";
+            }
+            string placeName = children[i]->getCData();
+            placeName.erase(std::remove_if(placeName.begin(), placeName.end(), ::isspace), placeName.end());
+            queryText += placeName;
+        }
+        if (children.size() > 1) {
+            queryText += ")";
+        }
+        queryText += " < 0";
+        negateResult = false;
+        isPlaceBound = true;
+        return true;
+    } else {
+            return false;
 	}
 	DOMElements nextElements = (*booleanFormula)->getChilds();
 	if (nextElements.size() !=1 || !parseBooleanFormula(nextElements[0] , queryText)) {
 		return false;
 	}
 	queryText+=" )";
+    isPlaceBound=false;
 	return true;
 }
 
@@ -363,7 +394,7 @@ bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryTe
 void QueryXMLParser::printQueries() {
 	QueryXMLParser::QueriesIterator it;
 	for(it = queries.begin(); it != queries.end(); it++){
-			cout << it->id << ": ";
+			cout << it->id << ": " << (it->isPlaceBound ? "\tplace-bound " : "");
 			if (it->parsingResult == QueryItem::PARSING_ERROR) {
 				cout << "\t---------- parsing error ----------" << endl;
 			} else if (it->parsingResult == QueryItem::UNSUPPORTED_QUERY) {
