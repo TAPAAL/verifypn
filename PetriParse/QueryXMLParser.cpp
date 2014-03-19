@@ -152,27 +152,15 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
     } else if (elementName == "place-bound") {
         queryText = "EF ";
         DOMElements children = (*booleanFormula)->getChilds();
-        if (children.size() == 0) {
+        if (children.size() != 1) {
+            return false; // we support only place-bound for one place
+        }
+        if (children[0]->getElementName() != "place") {
             return false;
         }
-        if (children.size() > 1) {
-            queryText += "(";
-        }
-        for (int i = 0; i < children.size(); i++) {
-            if (children[i]->getElementName() != "place") {
-                return false;
-            }
-            if (i > 0) {
-                queryText += " + ";
-            }
-            string placeName = children[i]->getCData();
-            placeName.erase(std::remove_if(placeName.begin(), placeName.end(), ::isspace), placeName.end());
-            queryText += placeName;
-        }
-        if (children.size() > 1) {
-            queryText += ")";
-        }
-        queryText += " < 0";
+        string placeName = children[0]->getCData();
+        placeName.erase(std::remove_if(placeName.begin(), placeName.end(), ::isspace), placeName.end());
+        queryText += placeName + " < 0";
         negateResult = false;
         isPlaceBound = true;
         return true;
@@ -395,9 +383,7 @@ void QueryXMLParser::printQueries() {
 	QueryXMLParser::QueriesIterator it;
 	for(it = queries.begin(); it != queries.end(); it++){
 			cout << it->id << ": " << (it->isPlaceBound ? "\tplace-bound " : "");
-			if (it->parsingResult == QueryItem::PARSING_ERROR) {
-				cout << "\t---------- parsing error ----------" << endl;
-			} else if (it->parsingResult == QueryItem::UNSUPPORTED_QUERY) {
+			if (it->parsingResult == QueryItem::UNSUPPORTED_QUERY) {
 				cout << "\t---------- unsupported query ----------" << endl;
 			} else {
 			cout << "\t" << (it->negateResult ? "not " : "") << it->queryText << endl;

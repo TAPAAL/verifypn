@@ -30,7 +30,6 @@ public:
             bool isPlaceBound; // true if the query is a place-bound one (returns integer)
             enum { 
                 PARSING_OK,
-                PARSING_ERROR,
                 UNSUPPORTED_QUERY,
             } parsingResult;
         };
