@@ -391,12 +391,12 @@ int main(int argc, char* argv[]){
 	ReachabilityResult result = strategy->reachable(*net, m0, v0, query);
 
 	//----------------------- Output Trace -----------------------//
-        const std::vector<unsigned int>& trace = (enablereduction==0 ? result.trace() : reducer.NonreducedTrace(net,result.trace()));
-	const std::vector<std::string>& tnames = net->transitionNames();
+    const std::vector<std::string>& tnames = net->transitionNames();
 	const std::vector<std::string>& pnames = net->placeNames();
-
+	
 	//Print result to stderr
 	if(outputtrace && result.result() == ReachabilityResult::Satisfied){
+		const std::vector<unsigned int>& trace = (enablereduction==0 ? result.trace() : reducer.NonreducedTrace(net,result.trace()));
 		fprintf(stderr, "Trace:\n<trace>\n");
 		for(size_t i = 0; i < trace.size(); i++){
 			fprintf(stderr, "\t<transition id=\"%s\">\n", tnames[trace[i]].c_str());
@@ -466,8 +466,19 @@ int main(int argc, char* argv[]){
 		fprintf(stdout, "Unable to decide if query is satisfied.\n");
 	else if(retval == SuccessCode)
 		fprintf(stdout, "Query is satisfied.\n");
-	else if(retval == FailedCode)
-		fprintf(stdout, "Query is NOT satisfied.\n");
+	else if(retval == FailedCode) {
+		if (xmlquery>0 && XMLparser.queries[xmlquery-1].isPlaceBound) {
+			// find index of the place for reporting place bound
+			for(size_t p = 0; p < result.maxPlaceBound().size(); p++) { 
+				if (pnames[p]==XMLparser.queries[xmlquery-1].placeNameForBound) {
+					fprintf(stdout, "Place %s contains at most %d tokens.\n",XMLparser.queries[xmlquery-1].placeNameForBound.c_str(),result.maxPlaceBound()[p]);
+					break;
+				}
+			}
+		} else {
+			fprintf(stdout, "Query is NOT satisfied.\n");
+		}
+	}
 
 	return retval;
 }

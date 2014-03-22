@@ -55,6 +55,7 @@ void QueryXMLParser::parseProperty(DOMElement* element){
 	string queryText;
 	bool negateResult=false;
     bool isPlaceBound=false;
+	string placeNameForBound;
 	bool tagsOK=true;
 	
 	DOMElements elements = element->getChilds();
@@ -78,18 +79,19 @@ void QueryXMLParser::parseProperty(DOMElement* element){
 	
 	QueryItem queryItem;
 	queryItem.id=id;
-	if (tagsOK && parseFormula(*formulaPtr, queryText, negateResult, isPlaceBound)) {
+	if (tagsOK && parseFormula(*formulaPtr, queryText, negateResult, isPlaceBound, placeNameForBound)) {
 		queryItem.queryText=queryText;
 		queryItem.negateResult=negateResult;
         queryItem.isPlaceBound=isPlaceBound;
+		queryItem.placeNameForBound=placeNameForBound;
 		queryItem.parsingResult=QueryItem::PARSING_OK;
 	} else {
 		queryItem.queryText="";
 		queryItem.negateResult=false;
         queryItem.isPlaceBound=false;
+		queryItem.placeNameForBound="";
 		queryItem.parsingResult=QueryItem::UNSUPPORTED_QUERY;
-	}
-	
+	}	
 	queries.push_back(queryItem);
 }
 
@@ -105,7 +107,7 @@ bool QueryXMLParser::parseTags(DOMElement* element){
 	return true;
 }
 
-bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &negateResult, bool &isPlaceBound){
+bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &negateResult, bool &isPlaceBound, string &placeNameForBound){
 	/*
 	 Describe here how to parse
 	 * INV phi =  AG phi =  not EF not phi
@@ -163,6 +165,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
         queryText += placeName + " < 0";
         negateResult = false;
         isPlaceBound = true;
+		placeNameForBound = placeName;
         return true;
     } else {
             return false;
@@ -173,6 +176,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	}
 	queryText+=" )";
     isPlaceBound=false;
+	placeNameForBound = "";
 	return true;
 }
 

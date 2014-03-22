@@ -28,6 +28,7 @@ public:
             string queryText; // only EF queries will be here
             bool negateResult; // true if the final result should be negated
             bool isPlaceBound; // true if the query is a place-bound one (returns integer)
+            string placeNameForBound;
             enum { 
                 PARSING_OK,
                 UNSUPPORTED_QUERY,
@@ -45,7 +46,7 @@ private:
         void parsePropertySet(XMLSP::DOMElement* element);
         void parseProperty(XMLSP::DOMElement* element);
         bool parseTags(XMLSP::DOMElement* element);
-        bool parseFormula(XMLSP::DOMElement* element, string &queryText, bool &negateResult, bool &isPlaceBound);
+        bool parseFormula(XMLSP::DOMElement* element, string &queryText, bool &negateResult, bool &isPlaceBound, string &placeNameForBound);
         bool parseBooleanFormula(XMLSP::DOMElement* element, string &queryText);
         bool parseIntegerExpression(XMLSP::DOMElement* element, string &queryText);
         
