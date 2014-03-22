@@ -161,7 +161,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
             return false;
         }
         string placeName = children[0]->getCData();
-        placeName.erase(std::remove_if(placeName.begin(), placeName.end(), ::isspace), placeName.end());
+		placeName.erase(std::remove_if(placeName.begin(), placeName.end(), ::isspace), placeName.end());
         queryText += placeName + " < 0";
         negateResult = false;
         isPlaceBound = true;

@@ -40,6 +40,7 @@
 
 #include "PetriEngine/Reducer.h"
 #include "PetriParse/QueryXMLParser.h"
+#include "PetriParse/Renamer.h"
 
 
 using namespace std;

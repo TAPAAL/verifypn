@@ -304,14 +304,13 @@ void PNMLParser::parseVariable(DOMElement* element){
 	builder->addVariable(name, initialValue, range);
 }
 
-
-void PNMLParser::parseValue(DOMElement* element, string& text){
+void PNMLParser::parseValue(DOMElement* element, string& text) {
 	DOMElements elements = element->getChilds();
 	DOMElements::iterator it;
-	for(it = elements.begin(); it != elements.end(); it++){
-		if((*it)->getElementName() == "value" || (*it)->getElementName() == "text")
+	for (it = elements.begin(); it != elements.end(); it++) {
+		if ((*it)->getElementName() == "value" || (*it)->getElementName() == "text") {
 			text = (*it)->getCData();
-		else
+		} else
 			parseValue(*it, text);
 	}
 }
