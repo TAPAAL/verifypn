@@ -75,31 +75,10 @@ int main(int argc, char* argv[]){
 	char* modelfile = NULL;
 	char* queryfile = NULL;
 	bool disableoverapprox = false;
-        int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
+    int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
+	int xmlquery = -1; // if value is nonnegative then input query file is in xml format and we verify query 
+						 // number xmlquery
 
-        
-	//-------------------- Query XML Parser -----------------------//	
-
-	char* queryXMLFile = argv[1];
-	//Load the model
-	ifstream mfile(queryXMLFile, ifstream::in);
-	if (!mfile) {
-		fprintf(stderr, "Error: Model file \"%s\" couldn't be opened\n", modelfile);
-		return ErrorCode;
-	}
-	stringstream buffer;
-	buffer << mfile.rdbuf();
-
-	//Parse the query
-	QueryXMLParser parser;
-	if (parser.parse(buffer.str())) {
-		parser.printQueries();
-		cout << "OK." << endl;
-	} else {
-		cout << "Aborted." << endl;
-	}
-	return 0;
-        
         
 	//----------------------- Parse Arguments -----------------------//
 
@@ -136,27 +115,36 @@ int main(int argc, char* argv[]){
 				fprintf(stderr, "Argument Error: Unrecognized search strategy \"%s\"\n", s);
 				return ErrorCode;
 			}
-		}else if(strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--memory-limit") == 0){
-                        if (i==argc-1) {
-                                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
-				return ErrorCode;                           
-                        }
-			if(sscanf(argv[++i], "%d", &memorylimit) != 1 || memorylimit < 0){
+		} else if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--memory-limit") == 0) {
+			if (i == argc - 1) {
+				fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+				return ErrorCode;
+			}
+			if (sscanf(argv[++i], "%d", &memorylimit) != 1 || memorylimit < 0) {
 				fprintf(stderr, "Argument Error: Invalid memory limit \"%s\"\n", argv[i]);
 				return ErrorCode;
 			}
-		}else if(strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable-overapprox") == 0){
+		} else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable-overapprox") == 0) {
 			disableoverapprox = true;
-                }else if(strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--reduction") == 0){
-                        if (i==argc-1) {
-                                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
-				return ErrorCode;                           
-                        }
-                        if(sscanf(argv[++i], "%d", &enablereduction) != 1 || enablereduction < 0 || enablereduction > 2){
-				fprintf(stderr, "Argument Error: Invalid reduction argument \"%s\"\n", argv[i]);
+		} else if (strcmp(argv[i], "-x") == 0 || strcmp(argv[i], "--xml-queries") == 0) {
+			if (i == argc - 1) {
+				fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
 				return ErrorCode;
 			}
-		}else if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0){
+			if (sscanf(argv[++i], "%d", &xmlquery) != 1 || xmlquery <= 0) {
+				fprintf(stderr, "Argument Error: Query index to verify \"%s\"\n", argv[i]);
+				return ErrorCode;
+			} 
+		}else if (strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--reduction") == 0) {
+				if (i == argc - 1) {
+					fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+					return ErrorCode;
+				}
+				if (sscanf(argv[++i], "%d", &enablereduction) != 1 || enablereduction < 0 || enablereduction > 2) {
+					fprintf(stderr, "Argument Error: Invalid reduction argument \"%s\"\n", argv[i]);
+					return ErrorCode;
+				}
+		} else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0){
 			printf(	"Usage: verifypn [options] model-file query-file\n"
 					"A tool for answering reachability of place cardinality queries (including deadlock)\n" 
                                         "for weighted P/T Petri nets extended with inhibitor arcs.\n"
@@ -169,9 +157,10 @@ int main(int argc, char* argv[]){
 					"                                     - BFS          Breadth first search\n"
 					"                                     - DFS          Depth first search\n"
 					"                                     - RDFS         Random depth first search\n"
-					"                                     - OverApprox   Linear Over Approx.\n"
+					"                                     - OverApprox   Linear Over Approx\n"
 					"  -m, --memory-limit <megabyte>      Memory limit for the state space search in MB,\n"
 					"                                     0 for unlimited (default)\n"
+					"  -x, --xml-query <query index>      Parse XML query file and verify query of a given index\n"
 					"  -d, --disable-over-approximation   Disable linear over approximation\n"
                                         "  -r, --reduction                    Enable structural net reduction:\n"
                                         "                                     - 0  disabled (default)\n"
@@ -266,7 +255,7 @@ int main(int argc, char* argv[]){
 	//Condition to check
 	Condition* query = NULL;
 	bool isInvariant = false;
-
+	QueryXMLParser XMLparser; // parser for XML queries
 	//Read query file, begin scope to release memory
 	{
 		//Open query file
@@ -279,22 +268,44 @@ int main(int argc, char* argv[]){
 		//Read everything
 		stringstream buffer;
 		buffer << qfile.rdbuf();
-		string querystr = buffer.str();
+		string querystr = buffer.str(); // including EF and AG
+		string querystring; // excluding EF and AG
 
-		//Validate query type
-		if(querystr.substr(0, 2) != "EF" && querystr.substr(0, 2) != "AG"){
-			fprintf(stderr, "Error: Query type \"%s\" not supported, only (EF and AG is supported)\n", querystr.substr(0, 2).c_str());
-			return ErrorCode;
+		//Parse XML the queries and querystr let be the index of xmlquery 		
+		if (xmlquery > 0) {
+			if (!XMLparser.parse(querystr)) {
+				fprintf(stderr, "Error: Failed parsing XML query file");
+				return ErrorCode;
+			}
+			XMLparser.printQueries();
+			if (XMLparser.queries.size() < xmlquery) { 
+				fprintf(stderr, "Error: Wrong index of query in the XML query file");
+				return ErrorCode;
+			}
+			if (XMLparser.queries[xmlquery-1].parsingResult == QueryXMLParser::QueryItem::UNSUPPORTED_QUERY) {
+				fprintf(stderr, "Error: The selected query in the XML query file is not supported");
+				return ErrorCode;
+			}
+			fprintf(stdout, "Index of the selected query: %d\n\n",xmlquery);
+			querystr = XMLparser.queries[xmlquery-1].queryText;
+			querystring = querystr.substr(2);
+			isInvariant = XMLparser.queries[xmlquery-1].negateResult; 
+			
+		} else { // standard textual query
+			//Validate query type
+			if(querystr.substr(0, 2) != "EF" && querystr.substr(0, 2) != "AG"){
+				fprintf(stderr, "Error: Query type \"%s\" not supported, only (EF and AG is supported)\n", querystr.substr(0, 2).c_str());
+				return ErrorCode;
+			} 
+			//Check if is invariant
+			isInvariant = querystr.substr(0, 2) == "AG";
+
+			//Warp in not if isInvariant
+			querystring = querystr.substr(2);
+			if(isInvariant)
+				querystring = "not ( " + querystring + " )";
 		}
-
-		//Check if is invariant
-		isInvariant = querystr.substr(0, 2) == "AG";
-
-		//Warp in not if isInvariant
-		string querystring = querystr.substr(2);
-		if(isInvariant)
-			querystring = "not ( " + querystring + " )";
-
+	
 		//Parse query
 		query = ParseQuery(querystring);
 		if(!query){
