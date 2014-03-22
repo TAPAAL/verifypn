@@ -12,7 +12,7 @@ extern int pqlqparse();
 %option nounput
 
 digit         [0-9]
-letter        [a-zA-Z_]
+letter        [a-zA-Z_/-]
 
 %%
 

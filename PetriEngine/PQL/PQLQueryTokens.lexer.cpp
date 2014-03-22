@@ -66,6 +66,7 @@ typedef int16_t flex_int16_t;
 typedef uint16_t flex_uint16_t;
 typedef int32_t flex_int32_t;
 typedef uint32_t flex_uint32_t;
+typedef uint64_t flex_uint64_t;
 #else
 typedef signed char flex_int8_t;
 typedef short int flex_int16_t;
@@ -73,6 +74,7 @@ typedef int flex_int32_t;
 typedef unsigned char flex_uint8_t; 
 typedef unsigned short int flex_uint16_t;
 typedef unsigned int flex_uint32_t;
+#endif /* ! C99 */
 
 /* Limits of integral types. */
 #ifndef INT8_MIN
@@ -102,8 +104,6 @@ typedef unsigned int flex_uint32_t;
 #ifndef UINT32_MAX
 #define UINT32_MAX             (4294967295U)
 #endif
-
-#endif /* ! C99 */
 
 #endif /* ! FLEXINT_H */
 
@@ -161,15 +161,7 @@ typedef unsigned int flex_uint32_t;
 
 /* Size of default input buffer. */
 #ifndef YY_BUF_SIZE
-#ifdef __ia64__
-/* On IA-64, the buffer size is 16k, not 8k.
- * Moreover, YY_BUF_SIZE is 2*YY_READ_BUF_SIZE in the general case.
- * Ditto for the __ia64__ case accordingly.
- */
-#define YY_BUF_SIZE 32768
-#else
 #define YY_BUF_SIZE 16384
-#endif /* __ia64__ */
 #endif
 
 /* The state buf must be large enough to hold one state per character in the main buffer.
@@ -181,7 +173,12 @@ typedef unsigned int flex_uint32_t;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 #endif
 
-extern int pqlqleng;
+#ifndef YY_TYPEDEF_YY_SIZE_T
+#define YY_TYPEDEF_YY_SIZE_T
+typedef size_t yy_size_t;
+#endif
+
+extern yy_size_t pqlqleng;
 
 extern FILE *pqlqin, *pqlqout;
 
@@ -207,11 +204,6 @@ extern FILE *pqlqin, *pqlqout;
 
 #define unput(c) yyunput( c, (yytext_ptr)  )
 
-#ifndef YY_TYPEDEF_YY_SIZE_T
-#define YY_TYPEDEF_YY_SIZE_T
-typedef size_t yy_size_t;
-#endif
-
 #ifndef YY_STRUCT_YY_BUFFER_STATE
 #define YY_STRUCT_YY_BUFFER_STATE
 struct yy_buffer_state
@@ -229,7 +221,7 @@ struct yy_buffer_state
 	/* Number of characters read into yy_ch_buf, not including EOB
 	 * characters.
 	 */
-	int yy_n_chars;
+	yy_size_t yy_n_chars;
 
 	/* Whether we "own" the buffer - i.e., we know we created it,
 	 * and can realloc() it to grow it, and should free() it to
@@ -299,8 +291,8 @@ static YY_BUFFER_STATE * yy_buffer_stack = 0; /**< Stack as an array. */
 
 /* yy_hold_char holds the character lost when pqlqtext is formed. */
 static char yy_hold_char;
-static int yy_n_chars;		/* number of characters read into yy_ch_buf */
-int pqlqleng;
+static yy_size_t yy_n_chars;		/* number of characters read into yy_ch_buf */
+yy_size_t pqlqleng;
 
 /* Points to current character in buffer. */
 static char *yy_c_buf_p = (char *) 0;
@@ -328,7 +320,7 @@ static void pqlq_init_buffer (YY_BUFFER_STATE b,FILE *file  );
 
 YY_BUFFER_STATE pqlq_scan_buffer (char *base,yy_size_t size  );
 YY_BUFFER_STATE pqlq_scan_string (yyconst char *yy_str  );
-YY_BUFFER_STATE pqlq_scan_bytes (yyconst char *bytes,int len  );
+YY_BUFFER_STATE pqlq_scan_bytes (yyconst char *bytes,yy_size_t len  );
 
 void *pqlqalloc (yy_size_t  );
 void *pqlqrealloc (void *,yy_size_t  );
@@ -383,7 +375,7 @@ static void yy_fatal_error (yyconst char msg[]  );
  */
 #define YY_DO_BEFORE_ACTION \
 	(yytext_ptr) = yy_bp; \
-	pqlqleng = (size_t) (yy_cp - yy_bp); \
+	pqlqleng = (yy_size_t) (yy_cp - yy_bp); \
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
@@ -400,9 +392,9 @@ struct yy_trans_info
 static yyconst flex_int16_t yy_accept[62] =
     {   0,
         0,    0,   30,   28,    1,    1,   15,   28,   22,   23,
-       26,   24,   25,   12,   18,   27,   20,   11,   11,   11,
+       26,   24,   11,   11,   12,   18,   27,   20,   11,   11,
        11,   11,   11,   11,   11,   11,   11,   28,   17,   13,
-       12,   19,   16,   21,   11,   11,   11,    8,   11,   11,
+       11,   12,   19,   16,   21,   11,   11,    8,   11,   11,
        11,   11,    7,   11,   14,    6,   10,    5,   11,   11,
         9,   11,   11,   11,    2,   11,    3,   11,   11,    4,
         0
@@ -414,16 +406,16 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    2,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    2,    4,    1,    1,    1,    1,    5,    1,    6,
-        7,    8,    9,    1,   10,    1,    1,   11,   11,   11,
-       11,   11,   11,   11,   11,   11,   11,    1,    1,   12,
-       13,   14,    1,    1,   15,   16,   16,   17,   16,   16,
-       16,   16,   16,   16,   16,   16,   16,   18,   19,   16,
-       16,   20,   16,   21,   16,   16,   16,   16,   16,   16,
-        1,    1,    1,    1,   16,    1,   22,   16,   23,   24,
+        7,    8,    9,    1,   10,    1,   11,   12,   12,   12,
+       12,   12,   12,   12,   12,   12,   12,    1,    1,   13,
+       14,   15,    1,    1,   16,   11,   11,   17,   11,   11,
+       11,   11,   11,   11,   11,   11,   11,   18,   19,   11,
+       11,   20,   11,   21,   11,   11,   11,   11,   11,   11,
+        1,    1,    1,    1,   11,    1,   22,   11,   23,   24,
 
-       25,   26,   16,   16,   16,   16,   27,   28,   16,   29,
-       30,   16,   16,   31,   32,   33,   34,   16,   16,   16,
-       16,   16,    1,   35,    1,    1,    1,    1,    1,    1,
+       25,   26,   11,   11,   11,   11,   27,   28,   11,   29,
+       30,   11,   11,   31,   32,   33,   34,   11,   11,   11,
+       11,   11,    1,   35,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -442,18 +434,18 @@ static yyconst flex_int32_t yy_ec[256] =
 
 static yyconst flex_int32_t yy_meta[36] =
     {   0,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        2,    1,    1,    1,    2,    2,    2,    2,    2,    2,
+        1,    1,    1,    1,    1,    1,    1,    1,    1,    2,
+        2,    2,    1,    1,    1,    2,    2,    2,    2,    2,
         2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
         2,    2,    2,    2,    1
     } ;
 
 static yyconst flex_int16_t yy_base[63] =
     {   0,
-        0,    0,   69,   70,   70,   70,   55,   62,   70,   70,
-       70,   70,   70,   55,   52,   51,   50,   44,    0,   42,
+        0,    0,   69,   70,   70,   70,   54,   62,   70,   70,
+       70,   70,    0,    0,   54,   51,   50,   49,   44,   42,
        40,   30,   33,   35,   26,   24,   23,   18,   70,   70,
-       41,   70,   70,   70,    0,   34,   29,    0,   25,   26,
+        0,   40,   70,   70,   70,   34,   29,    0,   25,   26,
        19,   13,    0,   11,   70,    0,    0,    0,   20,   11,
         0,   17,   13,   15,    0,    9,    0,   15,   10,    0,
        70,   34
@@ -462,9 +454,9 @@ static yyconst flex_int16_t yy_base[63] =
 static yyconst flex_int16_t yy_def[63] =
     {   0,
        61,    1,   61,   61,   61,   61,   61,   61,   61,   61,
-       61,   61,   61,   61,   61,   61,   61,   62,   62,   62,
+       61,   61,   62,   62,   61,   61,   61,   61,   62,   62,
        62,   62,   62,   62,   62,   62,   62,   61,   61,   61,
-       61,   61,   61,   61,   62,   62,   62,   62,   62,   62,
+       62,   61,   61,   61,   61,   62,   62,   62,   62,   62,
        62,   62,   62,   62,   61,   62,   62,   62,   62,   62,
        62,   62,   62,   62,   62,   62,   62,   62,   62,   62,
         0,   61
@@ -473,12 +465,12 @@ static yyconst flex_int16_t yy_def[63] =
 static yyconst flex_int16_t yy_nxt[106] =
     {   0,
         4,    5,    6,    7,    8,    9,   10,   11,   12,   13,
-       14,   15,   16,   17,   18,   19,   19,   20,   21,   19,
-       19,   22,   19,   23,   19,   24,   19,   19,   25,   26,
-       19,   19,   27,   19,   28,   35,   60,   59,   58,   57,
+       14,   15,   16,   17,   18,   19,   14,   20,   21,   14,
+       14,   22,   14,   23,   14,   24,   14,   14,   25,   26,
+       14,   14,   27,   14,   28,   31,   60,   59,   58,   57,
        56,   55,   54,   53,   52,   51,   50,   49,   48,   47,
-       46,   31,   45,   44,   43,   42,   41,   40,   39,   38,
-       37,   36,   34,   33,   32,   31,   30,   29,   61,    3,
+       46,   32,   45,   44,   43,   42,   41,   40,   39,   38,
+       37,   36,   35,   34,   33,   32,   30,   29,   61,    3,
        61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
        61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
        61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
@@ -493,8 +485,8 @@ static yyconst flex_int16_t yy_chk[106] =
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,   62,   59,   58,   56,   54,
        53,   52,   50,   49,   44,   42,   41,   40,   39,   37,
-       36,   31,   28,   27,   26,   25,   24,   23,   22,   21,
-       20,   18,   17,   16,   15,   14,    8,    7,    3,   61,
+       36,   32,   28,   27,   26,   25,   24,   23,   22,   21,
+       20,   19,   18,   17,   16,   15,    8,    7,    3,   61,
        61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
        61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
        61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
@@ -526,7 +518,7 @@ char *pqlqtext;
 extern "C" int pqlqwrap(){return 1;}
 extern PetriEngine::PQL::Condition* query;
 extern int pqlqparse();
-#line 530 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 522 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 
 #define INITIAL 0
 
@@ -565,7 +557,7 @@ FILE *pqlqget_out (void );
 
 void pqlqset_out  (FILE * out_str  );
 
-int pqlqget_leng (void );
+yy_size_t pqlqget_leng (void );
 
 char *pqlqget_text (void );
 
@@ -605,12 +597,7 @@ static int input (void );
 
 /* Amount of stuff to slurp up with each read. */
 #ifndef YY_READ_BUF_SIZE
-#ifdef __ia64__
-/* On IA-64, the buffer size is 16k, not 8k */
-#define YY_READ_BUF_SIZE 16384
-#else
 #define YY_READ_BUF_SIZE 8192
-#endif /* __ia64__ */
 #endif
 
 /* Copy whatever the last rule matched to the standard output. */
@@ -618,7 +605,7 @@ static int input (void );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
-#define ECHO do { if (fwrite( pqlqtext, pqlqleng, 1, pqlqout )) {} } while (0)
+#define ECHO fwrite( pqlqtext, pqlqleng, 1, pqlqout )
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or YY_NULL,
@@ -629,7 +616,7 @@ static int input (void );
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) \
 		{ \
 		int c = '*'; \
-		size_t n; \
+		yy_size_t n; \
 		for ( n = 0; n < max_size && \
 			     (c = getc( pqlqin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
@@ -714,7 +701,7 @@ YY_DECL
 #line 17 "PetriEngine/PQL/PQLQueryTokens.l"
 
 
-#line 718 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 705 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 
 	if ( !(yy_init) )
 		{
@@ -943,7 +930,7 @@ YY_RULE_SETUP
 #line 48 "PetriEngine/PQL/PQLQueryTokens.l"
 ECHO;
 	YY_BREAK
-#line 947 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 934 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1129,7 +1116,7 @@ static int yy_get_next_buffer (void)
 
 	else
 		{
-			int num_to_read =
+			yy_size_t num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
@@ -1143,7 +1130,7 @@ static int yy_get_next_buffer (void)
 
 			if ( b->yy_is_our_buffer )
 				{
-				int new_size = b->yy_buf_size * 2;
+				yy_size_t new_size = b->yy_buf_size * 2;
 
 				if ( new_size <= 0 )
 					b->yy_buf_size += b->yy_buf_size / 8;
@@ -1174,7 +1161,7 @@ static int yy_get_next_buffer (void)
 
 		/* Read in more data. */
 		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
-			(yy_n_chars), (size_t) num_to_read );
+			(yy_n_chars), num_to_read );
 
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars = (yy_n_chars);
 		}
@@ -1296,7 +1283,7 @@ static int yy_get_next_buffer (void)
 
 		else
 			{ /* need more input */
-			int offset = (yy_c_buf_p) - (yytext_ptr);
+			yy_size_t offset = (yy_c_buf_p) - (yytext_ptr);
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -1320,7 +1307,7 @@ static int yy_get_next_buffer (void)
 				case EOB_ACT_END_OF_FILE:
 					{
 					if ( pqlqwrap( ) )
-						return EOF;
+						return 0;
 
 					if ( ! (yy_did_buffer_switch_on_eof) )
 						YY_NEW_FILE;
@@ -1572,7 +1559,7 @@ void pqlqpop_buffer_state (void)
  */
 static void pqlqensure_buffer_stack (void)
 {
-	int num_to_alloc;
+	yy_size_t num_to_alloc;
     
 	if (!(yy_buffer_stack)) {
 
@@ -1664,17 +1651,16 @@ YY_BUFFER_STATE pqlq_scan_string (yyconst char * yystr )
 
 /** Setup the input buffer state to scan the given bytes. The next call to pqlqlex() will
  * scan from a @e copy of @a bytes.
- * @param yybytes the byte buffer to scan
- * @param _yybytes_len the number of bytes in the buffer pointed to by @a bytes.
+ * @param bytes the byte buffer to scan
+ * @param len the number of bytes in the buffer pointed to by @a bytes.
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE pqlq_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
+YY_BUFFER_STATE pqlq_scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_len )
 {
 	YY_BUFFER_STATE b;
 	char *buf;
-	yy_size_t n;
-	int i;
+	yy_size_t n, i;
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = _yybytes_len + 2;
@@ -1756,7 +1742,7 @@ FILE *pqlqget_out  (void)
 /** Get the length of the current token.
  * 
  */
-int pqlqget_leng  (void)
+yy_size_t pqlqget_leng  (void)
 {
         return pqlqleng;
 }

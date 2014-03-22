@@ -471,7 +471,7 @@ int main(int argc, char* argv[]){
 			// find index of the place for reporting place bound
 			for(size_t p = 0; p < result.maxPlaceBound().size(); p++) { 
 				if (pnames[p]==XMLparser.queries[xmlquery-1].placeNameForBound) {
-					fprintf(stdout, "Place %s contains at most %d tokens.\n",XMLparser.queries[xmlquery-1].placeNameForBound.c_str(),result.maxPlaceBound()[p]);
+					fprintf(stdout, "Maximum number of tokens in place %s: %d\n",XMLparser.queries[xmlquery-1].placeNameForBound.c_str(),result.maxPlaceBound()[p]);
 					break;
 				}
 			}

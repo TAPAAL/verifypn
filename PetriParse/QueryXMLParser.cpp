@@ -21,7 +21,7 @@ bool QueryXMLParser::parse(const std::string& xml){
 	if (root) {
 		try {
 			parsePropertySet(root);
-		} catch (int e) {
+		} catch (ERRORS e) {
 			parsingOK=false;
 		}
 	} else {
