@@ -82,7 +82,7 @@ namespace PetriEngine{
 			for (int i = 0; i < net->numberOfPlaces(); i++) {
 				if (net->outArc(j, i) > 0) fprintf(stdout, "  Output place %d with arc-weight %d\n", i, net->outArc(j, i));
 			}
-			fprintf(stdout, "\n", j);
+			fprintf(stdout, "\n");
 		}
 		for (int i = 0; i < net->numberOfPlaces(); i++) {
 			fprintf(stdout, "Marking at place %d is: %d\n", i, m0[i]);
