@@ -36,7 +36,7 @@ class PNMLParser
 	typedef std::vector<Arc> ArcList;
 	typedef ArcList::iterator ArcIter;
 	struct Transition{
-		std::string name,
+		std::string id,
 					cond,
 					assign;
 		double x, y;
@@ -44,7 +44,7 @@ class PNMLParser
 	typedef std::vector<Transition> TransitionList;
 	typedef TransitionList::iterator TransitionIter;
 	struct NodeName{
-		std::string name;
+		std::string id;
 		bool isPlace;
 	};
 	typedef std::map<std::string, NodeName> NodeNameMap;
