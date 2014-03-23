@@ -215,9 +215,9 @@ namespace PetriEngine{
 			{
 				continue;
 			}
-			// Check if the output places of tPost do not have any inhibitor arcs connected
+			// Check if the output places of tPost do not have any inhibitor arcs connected and are not used in the query
 			for (size_t _p = 0; _p < net->numberOfPlaces(); _p++) {
-				if (net->outArc(tPost, _p) > 0 && placeInInhib[_p] > 0) {
+				if (net->outArc(tPost, _p) > 0 && (placeInInhib[_p] > 0 || placeInQuery[_p]>0)) {
 					ok = false;
 					break;
 				}

@@ -66,7 +66,6 @@ typedef int16_t flex_int16_t;
 typedef uint16_t flex_uint16_t;
 typedef int32_t flex_int32_t;
 typedef uint32_t flex_uint32_t;
-typedef uint64_t flex_uint64_t;
 #else
 typedef signed char flex_int8_t;
 typedef short int flex_int16_t;
@@ -74,7 +73,6 @@ typedef int flex_int32_t;
 typedef unsigned char flex_uint8_t; 
 typedef unsigned short int flex_uint16_t;
 typedef unsigned int flex_uint32_t;
-#endif /* ! C99 */
 
 /* Limits of integral types. */
 #ifndef INT8_MIN
@@ -104,6 +102,8 @@ typedef unsigned int flex_uint32_t;
 #ifndef UINT32_MAX
 #define UINT32_MAX             (4294967295U)
 #endif
+
+#endif /* ! C99 */
 
 #endif /* ! FLEXINT_H */
 
@@ -161,7 +161,15 @@ typedef unsigned int flex_uint32_t;
 
 /* Size of default input buffer. */
 #ifndef YY_BUF_SIZE
+#ifdef __ia64__
+/* On IA-64, the buffer size is 16k, not 8k.
+ * Moreover, YY_BUF_SIZE is 2*YY_READ_BUF_SIZE in the general case.
+ * Ditto for the __ia64__ case accordingly.
+ */
+#define YY_BUF_SIZE 32768
+#else
 #define YY_BUF_SIZE 16384
+#endif /* __ia64__ */
 #endif
 
 /* The state buf must be large enough to hold one state per character in the main buffer.
@@ -173,12 +181,7 @@ typedef unsigned int flex_uint32_t;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 #endif
 
-#ifndef YY_TYPEDEF_YY_SIZE_T
-#define YY_TYPEDEF_YY_SIZE_T
-typedef size_t yy_size_t;
-#endif
-
-extern yy_size_t pqlqleng;
+extern int pqlqleng;
 
 extern FILE *pqlqin, *pqlqout;
 
@@ -204,6 +207,11 @@ extern FILE *pqlqin, *pqlqout;
 
 #define unput(c) yyunput( c, (yytext_ptr)  )
 
+#ifndef YY_TYPEDEF_YY_SIZE_T
+#define YY_TYPEDEF_YY_SIZE_T
+typedef size_t yy_size_t;
+#endif
+
 #ifndef YY_STRUCT_YY_BUFFER_STATE
 #define YY_STRUCT_YY_BUFFER_STATE
 struct yy_buffer_state
@@ -221,7 +229,7 @@ struct yy_buffer_state
 	/* Number of characters read into yy_ch_buf, not including EOB
 	 * characters.
 	 */
-	yy_size_t yy_n_chars;
+	int yy_n_chars;
 
 	/* Whether we "own" the buffer - i.e., we know we created it,
 	 * and can realloc() it to grow it, and should free() it to
@@ -291,8 +299,8 @@ static YY_BUFFER_STATE * yy_buffer_stack = 0; /**< Stack as an array. */
 
 /* yy_hold_char holds the character lost when pqlqtext is formed. */
 static char yy_hold_char;
-static yy_size_t yy_n_chars;		/* number of characters read into yy_ch_buf */
-yy_size_t pqlqleng;
+static int yy_n_chars;		/* number of characters read into yy_ch_buf */
+int pqlqleng;
 
 /* Points to current character in buffer. */
 static char *yy_c_buf_p = (char *) 0;
@@ -320,7 +328,7 @@ static void pqlq_init_buffer (YY_BUFFER_STATE b,FILE *file  );
 
 YY_BUFFER_STATE pqlq_scan_buffer (char *base,yy_size_t size  );
 YY_BUFFER_STATE pqlq_scan_string (yyconst char *yy_str  );
-YY_BUFFER_STATE pqlq_scan_bytes (yyconst char *bytes,yy_size_t len  );
+YY_BUFFER_STATE pqlq_scan_bytes (yyconst char *bytes,int len  );
 
 void *pqlqalloc (yy_size_t  );
 void *pqlqrealloc (void *,yy_size_t  );
@@ -375,13 +383,13 @@ static void yy_fatal_error (yyconst char msg[]  );
  */
 #define YY_DO_BEFORE_ACTION \
 	(yytext_ptr) = yy_bp; \
-	pqlqleng = (yy_size_t) (yy_cp - yy_bp); \
+	pqlqleng = (size_t) (yy_cp - yy_bp); \
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
 
-#define YY_NUM_RULES 29
-#define YY_END_OF_BUFFER 30
+#define YY_NUM_RULES 30
+#define YY_END_OF_BUFFER 31
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -389,15 +397,15 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[62] =
+static yyconst flex_int16_t yy_accept[69] =
     {   0,
-        0,    0,   30,   28,    1,    1,   15,   28,   22,   23,
-       26,   24,   25,   12,   18,   27,   20,   11,   11,   11,
-       11,   11,   11,   11,   11,   11,   11,   28,   17,   13,
-       12,   19,   16,   21,   11,   11,   11,    8,   11,   11,
-       11,   11,    7,   11,   14,    6,   10,    5,   11,   11,
-        9,   11,   11,   11,    2,   11,    3,   11,   11,    4,
-        0
+        0,    0,   31,   29,    1,    1,   16,   29,   29,   23,
+       24,   27,   25,   26,   12,   19,   28,   21,   11,   11,
+       11,   11,   11,   11,   11,   11,   11,   11,   29,   18,
+        0,   13,    0,   14,   12,   20,   17,   22,   11,   11,
+       11,    8,   11,   11,   11,   11,    7,   11,   15,    0,
+       13,    0,    6,   10,    5,   11,   11,    9,   11,   11,
+       11,    2,   11,    3,   11,   11,    4,    0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
@@ -405,17 +413,17 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
         1,    1,    2,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    2,    4,    1,    1,    1,    1,    5,    1,    6,
-        7,    8,    9,    1,   10,    1,    1,   11,   11,   11,
-       11,   11,   11,   11,   11,   11,   11,    1,    1,   12,
-       13,   14,    1,    1,   15,   16,   16,   17,   16,   16,
-       16,   16,   16,   16,   16,   16,   16,   18,   19,   16,
-       16,   20,   16,   21,   16,   16,   16,   16,   16,   16,
-        1,    1,    1,    1,   16,    1,   22,   16,   23,   24,
+        1,    2,    4,    5,    1,    1,    1,    6,    1,    7,
+        8,    9,   10,    1,   11,    1,    1,   12,   12,   12,
+       12,   12,   12,   12,   12,   12,   12,    1,    1,   13,
+       14,   15,    1,    1,   16,   17,   17,   18,   17,   17,
+       17,   17,   17,   17,   17,   17,   17,   19,   20,   17,
+       17,   21,   17,   22,   17,   17,   17,   17,   17,   17,
+        1,   23,    1,    1,   17,    1,   24,   17,   25,   26,
 
-       25,   26,   16,   16,   16,   16,   27,   28,   16,   29,
-       30,   16,   16,   31,   32,   33,   34,   16,   16,   16,
-       16,   16,    1,   35,    1,    1,    1,    1,    1,    1,
+       27,   28,   17,   17,   17,   17,   29,   30,   17,   31,
+       32,   17,   17,   33,   34,   35,   36,   17,   17,   17,
+       17,   17,    1,   37,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -432,66 +440,72 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst flex_int32_t yy_meta[36] =
+static yyconst flex_int32_t yy_meta[38] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        2,    1,    1,    1,    2,    2,    2,    2,    2,    2,
-        2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
-        2,    2,    2,    2,    1
+        1,    2,    1,    1,    1,    2,    2,    2,    2,    2,
+        2,    2,    1,    2,    2,    2,    2,    2,    2,    2,
+        2,    2,    2,    2,    2,    2,    1
     } ;
 
-static yyconst flex_int16_t yy_base[63] =
+static yyconst flex_int16_t yy_base[72] =
     {   0,
-        0,    0,   69,   70,   70,   70,   55,   62,   70,   70,
-       70,   70,   70,   55,   52,   51,   50,   44,    0,   42,
-       40,   30,   33,   35,   26,   24,   23,   18,   70,   70,
-       41,   70,   70,   70,    0,   34,   29,    0,   25,   26,
-       19,   13,    0,   11,   70,    0,    0,    0,   20,   11,
-        0,   17,   13,   15,    0,    9,    0,   15,   10,    0,
-       70,   34
+        0,    0,   89,   90,   90,   90,   74,   33,   81,   90,
+       90,   90,   90,   90,   74,   71,   70,   69,   63,    0,
+       61,   59,   48,   51,   53,   44,   42,   41,   36,   90,
+       34,   90,   37,   90,   60,   90,   90,   90,    0,   53,
+       48,    0,   43,   39,   32,   23,    0,   19,   90,   36,
+       38,   41,    0,    0,    0,   28,   19,    0,   25,   21,
+       23,    0,   17,    0,   23,   18,    0,   90,   64,   43,
+       66
     } ;
 
-static yyconst flex_int16_t yy_def[63] =
+static yyconst flex_int16_t yy_def[72] =
     {   0,
-       61,    1,   61,   61,   61,   61,   61,   61,   61,   61,
-       61,   61,   61,   61,   61,   61,   61,   62,   62,   62,
-       62,   62,   62,   62,   62,   62,   62,   61,   61,   61,
-       61,   61,   61,   61,   62,   62,   62,   62,   62,   62,
-       62,   62,   62,   62,   61,   62,   62,   62,   62,   62,
-       62,   62,   62,   62,   62,   62,   62,   62,   62,   62,
-        0,   61
+       68,    1,   68,   68,   68,   68,   68,   69,   68,   68,
+       68,   68,   68,   68,   68,   68,   68,   68,   70,   70,
+       70,   70,   70,   70,   70,   70,   70,   70,   68,   68,
+       69,   68,   71,   68,   68,   68,   68,   68,   70,   70,
+       70,   70,   70,   70,   70,   70,   70,   70,   68,   69,
+       69,   71,   70,   70,   70,   70,   70,   70,   70,   70,
+       70,   70,   70,   70,   70,   70,   70,    0,   68,   68,
+       68
     } ;
 
-static yyconst flex_int16_t yy_nxt[106] =
+static yyconst flex_int16_t yy_nxt[128] =
     {   0,
         4,    5,    6,    7,    8,    9,   10,   11,   12,   13,
-       14,   15,   16,   17,   18,   19,   19,   20,   21,   19,
-       19,   22,   19,   23,   19,   24,   19,   19,   25,   26,
-       19,   19,   27,   19,   28,   35,   60,   59,   58,   57,
-       56,   55,   54,   53,   52,   51,   50,   49,   48,   47,
-       46,   31,   45,   44,   43,   42,   41,   40,   39,   38,
-       37,   36,   34,   33,   32,   31,   30,   29,   61,    3,
-       61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
-       61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
-       61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
+       14,   15,   16,   17,   18,   19,   20,   20,   21,   22,
+       20,   20,    4,   23,   20,   24,   20,   25,   20,   20,
+       26,   27,   20,   20,   28,   20,   29,   32,   32,   31,
+       32,   51,   32,   31,   39,   51,   67,   66,   65,   64,
+       63,   62,   61,   60,   59,   33,   33,   58,   33,   52,
+       33,   57,   56,   52,   31,   31,   50,   50,   55,   54,
+       53,   35,   49,   48,   47,   46,   45,   44,   43,   42,
+       41,   40,   38,   37,   36,   35,   34,   30,   68,    3,
+       68,   68,   68,   68,   68,   68,   68,   68,   68,   68,
 
-       61,   61,   61,   61,   61
+       68,   68,   68,   68,   68,   68,   68,   68,   68,   68,
+       68,   68,   68,   68,   68,   68,   68,   68,   68,   68,
+       68,   68,   68,   68,   68,   68,   68
     } ;
 
-static yyconst flex_int16_t yy_chk[106] =
+static yyconst flex_int16_t yy_chk[128] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,   62,   59,   58,   56,   54,
-       53,   52,   50,   49,   44,   42,   41,   40,   39,   37,
-       36,   31,   28,   27,   26,   25,   24,   23,   22,   21,
-       20,   18,   17,   16,   15,   14,    8,    7,    3,   61,
-       61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
-       61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
-       61,   61,   61,   61,   61,   61,   61,   61,   61,   61,
+        1,    1,    1,    1,    1,    1,    1,    8,   31,   33,
+       50,   33,   51,   52,   70,   52,   66,   65,   63,   61,
+       60,   59,   57,   56,   48,    8,   31,   46,   50,   33,
+       51,   45,   44,   52,   69,   69,   71,   71,   43,   41,
+       40,   35,   29,   28,   27,   26,   25,   24,   23,   22,
+       21,   19,   18,   17,   16,   15,    9,    7,    3,   68,
+       68,   68,   68,   68,   68,   68,   68,   68,   68,   68,
 
-       61,   61,   61,   61,   61
+       68,   68,   68,   68,   68,   68,   68,   68,   68,   68,
+       68,   68,   68,   68,   68,   68,   68,   68,   68,   68,
+       68,   68,   68,   68,   68,   68,   68
     } ;
 
 static yy_state_type yy_last_accepting_state;
@@ -514,11 +528,12 @@ char *pqlqtext;
 #include "PQL.h"
 #include "PQLQueryParser.parser.hpp"
 #define SAVE_TOKEN pqlqlval.string = new std::string(pqlqtext, pqlqleng)
+#define SAVE_QUOTED_TOKEN pqlqlval.string = new std::string(pqlqtext+1, pqlqleng-2)
 #define TOKEN(t) (pqlqlval.token = t)
 extern "C" int pqlqwrap(){return 1;}
 extern PetriEngine::PQL::Condition* query;
 extern int pqlqparse();
-#line 522 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 537 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 
 #define INITIAL 0
 
@@ -557,7 +572,7 @@ FILE *pqlqget_out (void );
 
 void pqlqset_out  (FILE * out_str  );
 
-yy_size_t pqlqget_leng (void );
+int pqlqget_leng (void );
 
 char *pqlqget_text (void );
 
@@ -597,7 +612,12 @@ static int input (void );
 
 /* Amount of stuff to slurp up with each read. */
 #ifndef YY_READ_BUF_SIZE
+#ifdef __ia64__
+/* On IA-64, the buffer size is 16k, not 8k */
+#define YY_READ_BUF_SIZE 16384
+#else
 #define YY_READ_BUF_SIZE 8192
+#endif /* __ia64__ */
 #endif
 
 /* Copy whatever the last rule matched to the standard output. */
@@ -605,7 +625,7 @@ static int input (void );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
-#define ECHO fwrite( pqlqtext, pqlqleng, 1, pqlqout )
+#define ECHO do { if (fwrite( pqlqtext, pqlqleng, 1, pqlqout )) {} } while (0)
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or YY_NULL,
@@ -616,7 +636,7 @@ static int input (void );
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) \
 		{ \
 		int c = '*'; \
-		yy_size_t n; \
+		size_t n; \
 		for ( n = 0; n < max_size && \
 			     (c = getc( pqlqin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
@@ -698,10 +718,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 16 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 18 "PetriEngine/PQL/PQLQueryTokens.l"
 
 
-#line 705 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 725 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 
 	if ( !(yy_init) )
 		{
@@ -754,13 +774,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 62 )
+				if ( yy_current_state >= 69 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 70 );
+		while ( yy_base[yy_current_state] != 90 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -787,150 +807,156 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 18 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 20 "PetriEngine/PQL/PQLQueryTokens.l"
 ;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 19 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 21 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(TRUE);}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 20 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 22 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(FALSE);}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 21 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 23 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(DEADLOCK);}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 22 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 24 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(AND);}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 23 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 25 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(AND);}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 24 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 26 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(OR);}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 25 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 27 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(OR);}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 26 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 28 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(NOT);}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 27 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 29 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(NOT);}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 28 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 30 "PetriEngine/PQL/PQLQueryTokens.l"
 {SAVE_TOKEN; return ID;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 29 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 31 "PetriEngine/PQL/PQLQueryTokens.l"
 {SAVE_TOKEN; return INT;}
 	YY_BREAK
 case 13:
+/* rule 13 can match eol */
 YY_RULE_SETUP
-#line 30 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(AND);}
+#line 32 "PetriEngine/PQL/PQLQueryTokens.l"
+{SAVE_QUOTED_TOKEN; return ID;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 31 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(OR);}
+#line 33 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(AND);}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 32 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(NOT);}
+#line 34 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(OR);}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 33 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(EQUAL);}
+#line 35 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(NOT);}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 34 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(NEQUAL);}
+#line 36 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(EQUAL);}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 35 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(LESS);}
+#line 37 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(NEQUAL);}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 36 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(LESSEQUAL);}
+#line 38 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(LESS);}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 37 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(GREATER);}
+#line 39 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(LESSEQUAL);}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 38 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(GREATEREQUAL);}
+#line 40 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(GREATER);}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 39 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(LPAREN);}
+#line 41 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(GREATEREQUAL);}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 40 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(RPAREN);}
+#line 42 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(LPAREN);}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 41 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(PLUS);}
+#line 43 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(RPAREN);}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 42 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(MINUS);}
+#line 44 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(PLUS);}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 43 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(MULTIPLY);}
+#line 45 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(MINUS);}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 44 "PetriEngine/PQL/PQLQueryTokens.l"
-{return TOKEN(EQUAL);}
+#line 46 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(MULTIPLY);}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 45 "PetriEngine/PQL/PQLQueryTokens.l"
-{printf("Unknown token %s!\n", pqlqtext); yyterminate();}
+#line 47 "PetriEngine/PQL/PQLQueryTokens.l"
+{return TOKEN(EQUAL);}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 47 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 48 "PetriEngine/PQL/PQLQueryTokens.l"
+{printf("Unknown token %s!\n", pqlqtext); yyterminate();}
+	YY_BREAK
+case 30:
+YY_RULE_SETUP
+#line 50 "PetriEngine/PQL/PQLQueryTokens.l"
 ECHO;
 	YY_BREAK
-#line 934 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 960 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1116,7 +1142,7 @@ static int yy_get_next_buffer (void)
 
 	else
 		{
-			yy_size_t num_to_read =
+			int num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
@@ -1130,7 +1156,7 @@ static int yy_get_next_buffer (void)
 
 			if ( b->yy_is_our_buffer )
 				{
-				yy_size_t new_size = b->yy_buf_size * 2;
+				int new_size = b->yy_buf_size * 2;
 
 				if ( new_size <= 0 )
 					b->yy_buf_size += b->yy_buf_size / 8;
@@ -1161,7 +1187,7 @@ static int yy_get_next_buffer (void)
 
 		/* Read in more data. */
 		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
-			(yy_n_chars), num_to_read );
+			(yy_n_chars), (size_t) num_to_read );
 
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars = (yy_n_chars);
 		}
@@ -1222,7 +1248,7 @@ static int yy_get_next_buffer (void)
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 62 )
+			if ( yy_current_state >= 69 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1250,11 +1276,11 @@ static int yy_get_next_buffer (void)
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 62 )
+		if ( yy_current_state >= 69 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 61);
+	yy_is_jam = (yy_current_state == 68);
 
 	return yy_is_jam ? 0 : yy_current_state;
 }
@@ -1283,7 +1309,7 @@ static int yy_get_next_buffer (void)
 
 		else
 			{ /* need more input */
-			yy_size_t offset = (yy_c_buf_p) - (yytext_ptr);
+			int offset = (yy_c_buf_p) - (yytext_ptr);
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -1307,7 +1333,7 @@ static int yy_get_next_buffer (void)
 				case EOB_ACT_END_OF_FILE:
 					{
 					if ( pqlqwrap( ) )
-						return 0;
+						return EOF;
 
 					if ( ! (yy_did_buffer_switch_on_eof) )
 						YY_NEW_FILE;
@@ -1559,7 +1585,7 @@ void pqlqpop_buffer_state (void)
  */
 static void pqlqensure_buffer_stack (void)
 {
-	yy_size_t num_to_alloc;
+	int num_to_alloc;
     
 	if (!(yy_buffer_stack)) {
 
@@ -1651,16 +1677,17 @@ YY_BUFFER_STATE pqlq_scan_string (yyconst char * yystr )
 
 /** Setup the input buffer state to scan the given bytes. The next call to pqlqlex() will
  * scan from a @e copy of @a bytes.
- * @param bytes the byte buffer to scan
- * @param len the number of bytes in the buffer pointed to by @a bytes.
+ * @param yybytes the byte buffer to scan
+ * @param _yybytes_len the number of bytes in the buffer pointed to by @a bytes.
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE pqlq_scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_len )
+YY_BUFFER_STATE pqlq_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
 {
 	YY_BUFFER_STATE b;
 	char *buf;
-	yy_size_t n, i;
+	yy_size_t n;
+	int i;
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = _yybytes_len + 2;
@@ -1742,7 +1769,7 @@ FILE *pqlqget_out  (void)
 /** Get the length of the current token.
  * 
  */
-yy_size_t pqlqget_leng  (void)
+int pqlqget_leng  (void)
 {
         return pqlqleng;
 }
@@ -1890,7 +1917,7 @@ void pqlqfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 47 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 50 "PetriEngine/PQL/PQLQueryTokens.l"
 
 
 namespace PetriEngine{ namespace PQL {

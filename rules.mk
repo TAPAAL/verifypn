@@ -1,11 +1,17 @@
 # Default target
-all: $(TARGET)
+all: release
 
 # Build rules
 %.o: %.cpp
 	$(CC) -c $(CFLAGS) -o $@ $<
 $(TARGET): $(DEPS) $(OBJECTS)
 	$(CC) $^ $(LDFLAGS) -o $@
+
+release: CFLAGS += -O3
+release: LDFLAGS += -O3
+release: $(TARGET)
+debug: CFLAGS += -g
+debug: $(TARGET)
 
 # Rules for updating lexer and parser
 %.lexer.cpp: %.l
