@@ -49,8 +49,9 @@ private:
         bool parseFormula(XMLSP::DOMElement* element, string &queryText, bool &negateResult, bool &isPlaceBound, string &placeNameForBound);
         bool parseBooleanFormula(XMLSP::DOMElement* element, string &queryText);
         bool parseIntegerExpression(XMLSP::DOMElement* element, string &queryText);
+        string parsePlace(XMLSP::DOMElement* element);
         
-        enum ERRORS {MISSING_PROPERTY_SET, MISSING_PROPERTY, EMPTY_QUERY_ID, EXPECTED_INTEGER};
+        enum ERRORS {MISSING_PROPERTY_SET, MISSING_PROPERTY, EMPTY_QUERY_ID, EXPECTED_INTEGER, NOT_A_PLACE};
         
 };
 

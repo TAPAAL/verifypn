@@ -160,12 +160,10 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
         if (children[0]->getElementName() != "place") {
             return false;
         }
-        string placeName = children[0]->getCData();
-		placeName.erase(std::remove_if(placeName.begin(), placeName.end(), ::isspace), placeName.end());
-        queryText +="\""+placeName+"\"" + " < 0";
+        placeNameForBound = parsePlace(children[0]);
+        queryText += "\""+placeNameForBound+"\""+" < 0";
         negateResult = false;
         isPlaceBound = true;
-		placeNameForBound = placeName;
         return true;
     } else {
             return false;
@@ -336,9 +334,7 @@ bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryTe
 			if (i > 0) {
 				queryText += " + ";
 			}
-			string placeName= children[i]->getCData();
-			placeName.erase( std::remove_if( placeName.begin(), placeName.end(), ::isspace ), placeName.end() );
-			queryText+="\""+placeName+"\"";
+			queryText+="\""+parsePlace(children[i])+"\"";
 		}
 		if (children.size()>1) {
 			queryText+=")";
@@ -382,6 +378,16 @@ bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryTe
 	}
 	return false;
 }
+
+string QueryXMLParser::parsePlace(XMLSP::DOMElement* element) {
+	if (element->getElementName() != "place") {
+		throw NOT_A_PLACE;
+	}
+	string placeName = element->getCData();
+	placeName.erase(std::remove_if(placeName.begin(), placeName.end(), ::isspace), placeName.end());
+	return placeName;
+}
+ 
 
 void QueryXMLParser::printQueries() {
 	QueryXMLParser::QueriesIterator it;
