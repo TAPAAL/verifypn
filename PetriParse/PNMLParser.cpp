@@ -21,6 +21,7 @@
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 
 using namespace PetriEngine;
 using namespace XMLSP;
@@ -259,7 +260,6 @@ void PNMLParser::parseArc(DOMElement* element){
 			weight = atoi(text.c_str());
 		}
 	}
-
 	Arc arc;
 	arc.source = source;
 	arc.target = target;
