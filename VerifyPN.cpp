@@ -274,7 +274,7 @@ int main(int argc, char* argv[]){
 
 		//Parse XML the queries and querystr let be the index of xmlquery 		
 		if (xmlquery > 0) {
-			if (!XMLparser.parse(querystr)) {
+			if (!XMLparser.parse(querystr, transitionEnabledness)) {
 				fprintf(stderr, "Error: Failed parsing XML query file");
 				return ErrorCode;
 			}

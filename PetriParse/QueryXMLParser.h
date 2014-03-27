@@ -9,6 +9,7 @@
 #define	QUERYXMLPARSER_H
 
 #include "xmlsp/xmlsp_dom.h"
+#include "PNMLParser.h"
 
 #include <map>
 #include <string>
@@ -39,7 +40,7 @@ public:
         typedef Queries::iterator QueriesIterator;
         Queries queries;
 
-	bool parse(const string& xml);
+	bool parse(const string& xml, const PNMLParser::TransitionEnablednessMap transitionEnabledness);
         void printQueries();
         
 private:

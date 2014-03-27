@@ -14,7 +14,7 @@ QueryXMLParser::QueryXMLParser() { };
 // QueryXMLParser::~QueryXMLParser() { };
 
 
-bool QueryXMLParser::parse(const std::string& xml){
+bool QueryXMLParser::parse(const std::string& xml, const PNMLParser::TransitionEnablednessMap transitionEnabledness){
 	//Parser the xml
 	DOMElement* root = DOMElement::loadXML(xml);
 	bool parsingOK=true;
