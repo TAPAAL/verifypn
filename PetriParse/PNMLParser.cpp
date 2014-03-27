@@ -34,6 +34,7 @@ void PNMLParser::parse(const std::string& xml,
 	arcs.clear();
 	transitions.clear();
 	inhibarcs.clear();
+	transitionEnabledness.clear();
 
 	//Set the builder
 	this->builder = builder;
@@ -42,6 +43,11 @@ void PNMLParser::parse(const std::string& xml,
 	DOMElement* root = DOMElement::loadXML(xml);
 	parseElement(root);
 
+	// initialize transitionEnabledness
+	for(TransitionIter it = transitions.begin(); it != transitions.end(); it++){
+		transitionEnabledness[it->id]="(true";
+	}
+	
 	//Create inhibitor arcs
 	for(InhibitorArcIter inhb = inhibarcs.begin(); inhb != inhibarcs.end(); inhb++){
 		//Check that source id exists
@@ -68,6 +74,10 @@ void PNMLParser::parse(const std::string& xml,
 				// Convert integer weight to string
 				char weight[sizeof(int) * 8 + 1];
 				sprintf(weight, "%i", inhb->weight);
+				
+				//cout << "INHIB ARC: " << source.id << " to " << target.id << " weight " << weight << endl;
+				string cond = " and " + source.id + " < " + weight;
+				transitionEnabledness[it->id]+=cond;
 				
 				if(it->cond.empty()){
 					it->cond = source.id + " < " + string(weight);
@@ -104,6 +114,14 @@ void PNMLParser::parse(const std::string& xml,
 
 		if(source.isPlace && !target.isPlace){
 			builder->addInputArc(source.id, target.id, it->weight);
+			
+			// cout << "ARC: " << source.id << " to " << target.id << " weight " << it->weight << endl;
+			char weight[sizeof(int) * 8 + 1];
+			sprintf(weight, "%i", it->weight);
+			
+			string cond = " and " + source.id + " >= " + weight;
+			transitionEnabledness[target.id]+=cond;
+		
 		}else if(!source.isPlace && target.isPlace){
 			builder->addOutputArc(source.id, target.id, it->weight);
 		}else{
@@ -114,6 +132,11 @@ void PNMLParser::parse(const std::string& xml,
 		}
 	}
 
+	// finalize transitionEnabledness
+	for(TransitionIter it = transitions.begin(); it != transitions.end(); it++){
+		transitionEnabledness[it->id]+=")";
+	}
+	
 	//Release DOM tree
 	delete root;
 

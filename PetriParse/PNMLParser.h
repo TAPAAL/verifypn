@@ -48,6 +48,7 @@ class PNMLParser
 		bool isPlace;
 	};
 	typedef std::map<std::string, NodeName> NodeNameMap;
+        
 public:
 
 	struct Query{
@@ -61,6 +62,7 @@ public:
 	};
 	typedef std::vector<InhibitorArc> InhibitorArcList;
         typedef InhibitorArcList::iterator InhibitorArcIter;
+        typedef std::map<std::string, std::string> TransitionEnablednessMap;
 
 	PNMLParser(){
 		builder = NULL;
@@ -74,6 +76,10 @@ public:
         
         InhibitorArcList getInhibitorArcs(){
                 return inhibarcs;
+        }
+        
+        TransitionEnablednessMap getTransitionEnabledness() {
+            return transitionEnabledness;
         }
 
 private:
@@ -93,6 +99,7 @@ private:
 	TransitionList transitions;
 	InhibitorArcList inhibarcs;
 	std::vector<Query> queries;
+        TransitionEnablednessMap transitionEnabledness; // encodes the enabledness condition for each transition
 };
 
 #endif // PNMLPARSER_H

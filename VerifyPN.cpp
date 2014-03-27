@@ -218,9 +218,9 @@ int main(int argc, char* argv[]){
 	MarkVal* m0 = NULL;
 	VarVal* v0 = NULL;
                   
-        // List of inhibitor arcs
-        PNMLParser::InhibitorArcList inhibarcs;
-        
+    // List of inhibitor arcs and transition enabledness
+    PNMLParser::InhibitorArcList inhibarcs;
+    PNMLParser::TransitionEnablednessMap transitionEnabledness;
 	{
 		//Load the model
 		ifstream mfile(modelfile, ifstream::in);
@@ -239,8 +239,9 @@ int main(int argc, char* argv[]){
 		parser.parse(buffer.str(), &builder);
 		parser.makePetriNet();
                 
-                inhibarcs = parser.getInhibitorArcs(); // Remember inhibitor arcs
-
+        inhibarcs = parser.getInhibitorArcs(); // Remember inhibitor arcs
+		transitionEnabledness = parser.getTransitionEnabledness(); // Remember conditions for transitions
+				
 		//Build the petri net
 		net = builder.makePetriNet();
 		m0 = builder.makeInitialMarking();
@@ -249,7 +250,7 @@ int main(int argc, char* argv[]){
 		// Close the file
 		mfile.close();
 	}
-
+	
 	//----------------------- Parse Query -----------------------//
 
 	//Condition to check
