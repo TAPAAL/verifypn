@@ -21,7 +21,7 @@ using namespace std;
 
 class QueryXMLParser {
 public:    
-	QueryXMLParser();
+	QueryXMLParser(const PNMLParser::TransitionEnablednessMap &transitionEnabledness);
  //      ~QueryXMLParser();
     
         struct QueryItem {
@@ -40,7 +40,7 @@ public:
         typedef Queries::iterator QueriesIterator;
         Queries queries;
 
-	bool parse(const string& xml, const PNMLParser::TransitionEnablednessMap transitionEnabledness);
+	bool parse(const string& xml);
         void printQueries();
         
 private:
@@ -51,6 +51,7 @@ private:
         bool parseBooleanFormula(XMLSP::DOMElement* element, string &queryText);
         bool parseIntegerExpression(XMLSP::DOMElement* element, string &queryText);
         string parsePlace(XMLSP::DOMElement* element);
+        PNMLParser::TransitionEnablednessMap _transitionEnabledness;
         
         enum ERRORS {MISSING_PROPERTY_SET, MISSING_PROPERTY, EMPTY_QUERY_ID, EXPECTED_INTEGER, NOT_A_PLACE};
         

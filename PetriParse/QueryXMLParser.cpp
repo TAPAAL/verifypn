@@ -9,12 +9,14 @@
 using namespace XMLSP;
 using namespace std;
 
-QueryXMLParser::QueryXMLParser() { };
+QueryXMLParser::QueryXMLParser(const PNMLParser::TransitionEnablednessMap &transitionEnabledness) {
+	_transitionEnabledness = transitionEnabledness;
+};
 
 // QueryXMLParser::~QueryXMLParser() { };
 
 
-bool QueryXMLParser::parse(const std::string& xml, const PNMLParser::TransitionEnablednessMap transitionEnabledness){
+bool QueryXMLParser::parse(const std::string& xml){
 	//Parser the xml
 	DOMElement* root = DOMElement::loadXML(xml);
 	bool parsingOK=true;
@@ -303,6 +305,28 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			else if ( elementName == "integer-ge") mathoperator=" >= ";
 			
 			queryText+="("+subformula1+mathoperator+subformula2+")";
+			return true;
+		} else if (elementName == "is-fireable") {
+			DOMElements children = element->getChilds();
+			if (children.size() == 0) {
+				return false;
+			}
+			if (children.size() > 1) {
+				queryText += "(";
+			}
+			for (int i = 0; i < children.size(); i++) {
+				if (children[i]->getElementName() != "transition") {
+					return false;
+				}
+				if (i > 0) {
+					queryText += " or ";
+				}
+				string transitionName = children[i]->getCData();
+				queryText += _transitionEnabledness[transitionName]; 
+			}
+			if (children.size() > 1) {
+				queryText += ")";
+			}
 			return true;
 		}
 	return false;

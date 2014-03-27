@@ -256,7 +256,7 @@ int main(int argc, char* argv[]){
 	//Condition to check
 	Condition* query = NULL;
 	bool isInvariant = false;
-	QueryXMLParser XMLparser; // parser for XML queries
+	QueryXMLParser XMLparser(transitionEnabledness); // parser for XML queries
 	//Read query file, begin scope to release memory
 	{
 		//Open query file
@@ -274,7 +274,7 @@ int main(int argc, char* argv[]){
 
 		//Parse XML the queries and querystr let be the index of xmlquery 		
 		if (xmlquery > 0) {
-			if (!XMLparser.parse(querystr, transitionEnabledness)) {
+			if (!XMLparser.parse(querystr)) {
 				fprintf(stderr, "Error: Failed parsing XML query file");
 				return ErrorCode;
 			}
