@@ -76,7 +76,7 @@ void PNMLParser::parse(const std::string& xml,
 				sprintf(weight, "%i", inhb->weight);
 				
 				//cout << "INHIB ARC: " << source.id << " to " << target.id << " weight " << weight << endl;
-				string cond = " and " + source.id + " < " + weight;
+				string cond = " and \"" + source.id + "\" < " + weight;
 				transitionEnabledness[it->id]+=cond;
 				
 				if(it->cond.empty()){
@@ -119,7 +119,7 @@ void PNMLParser::parse(const std::string& xml,
 			char weight[sizeof(int) * 8 + 1];
 			sprintf(weight, "%i", it->weight);
 			
-			string cond = " and " + source.id + " >= " + weight;
+			string cond = " and \"" + source.id + "\" >= " + weight;
 			transitionEnabledness[target.id]+=cond;
 		
 		}else if(!source.isPlace && target.isPlace){

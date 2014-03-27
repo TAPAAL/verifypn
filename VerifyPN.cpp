@@ -335,8 +335,9 @@ int main(int argc, char* argv[]){
 		}
 	}
 
-        //--------------------- Apply Net Reduction ---------------//
-        
+	
+    //--------------------- Apply Net Reduction ---------------//
+
     Reducer reducer = Reducer(net); // reduced is needed also in trace generation (hence the extended scope)
 	if (enablereduction == 1 or enablereduction == 2) {
 		// Compute how many times each place appears in the query
