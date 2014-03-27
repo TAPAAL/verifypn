@@ -322,6 +322,12 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 					queryText += " or ";
 				}
 				string transitionName = children[i]->getCData();
+				if(_transitionEnabledness.find(transitionName) == _transitionEnabledness.end()){
+					fprintf(stderr,
+						"XML Query Parsing error: Transition id=\"%s\" was not found!\n",
+					    transitionName.c_str());
+					return false;
+			    }
 				queryText += _transitionEnabledness[transitionName]; 
 			}
 			if (children.size() > 1) {
