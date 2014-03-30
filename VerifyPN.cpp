@@ -78,6 +78,7 @@ int main(int argc, char* argv[]){
     int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
 	int xmlquery = -1; // if value is nonnegative then input query file is in xml format and we verify query 
 						 // number xmlquery
+	bool statespaceexploration = false;
 
         
 	//----------------------- Parse Arguments -----------------------//
@@ -126,6 +127,8 @@ int main(int argc, char* argv[]){
 			}
 		} else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable-overapprox") == 0) {
 			disableoverapprox = true;
+		} else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--state-space-exploration") == 0) {
+			statespaceexploration = true;
 		} else if (strcmp(argv[i], "-x") == 0 || strcmp(argv[i], "--xml-queries") == 0) {
 			if (i == argc - 1) {
 				fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -160,12 +163,13 @@ int main(int argc, char* argv[]){
 					"                                     - OverApprox   Linear Over Approx\n"
 					"  -m, --memory-limit <megabyte>      Memory limit for the state space search in MB,\n"
 					"                                     0 for unlimited (default)\n"
+					"  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
 					"  -x, --xml-query <query index>      Parse XML query file and verify query of a given index\n"
 					"  -d, --disable-over-approximation   Disable linear over approximation\n"
-                                        "  -r, --reduction                    Enable structural net reduction:\n"
-                                        "                                     - 0  disabled (default)\n"
-                                        "                                     - 1  aggressive reduction\n"
-                                        "                                     - 2  reduction preserving k-boundedness\n"
+                    "  -r, --reduction                    Enable structural net reduction:\n"
+                    "                                     - 0  disabled (default)\n"
+                    "                                     - 1  aggressive reduction\n"
+                    "                                     - 2  reduction preserving k-boundedness\n"
 					"  -h, --help                         Display this help message\n"
 					"  -v, --version                      Display version information\n"
 					"\n"
@@ -196,6 +200,15 @@ int main(int argc, char* argv[]){
 			return ErrorCode;
 		}
 	}
+	if (statespaceexploration) { 
+		// for state-space exploration some options are mandatory
+		disableoverapprox = true; 
+		enablereduction = 0;
+		kbound = 0;
+		outputtrace = false;
+		searchstrategy = BFS;
+	}
+	
 
 	//----------------------- Validate Arguments -----------------------//
 
@@ -206,7 +219,7 @@ int main(int argc, char* argv[]){
 	}
 
 	//Check for query file
-	if(!modelfile){
+	if(!modelfile && !statespaceexploration){
 		fprintf(stderr, "Argument Error: No query-file provided\n");
 		return ErrorCode;
 	}
@@ -259,63 +272,66 @@ int main(int argc, char* argv[]){
 	QueryXMLParser XMLparser(transitionEnabledness); // parser for XML queries
 	//Read query file, begin scope to release memory
 	{
-		//Open query file
-		ifstream qfile(queryfile, ifstream::in);
-		if(!qfile){
-			fprintf(stderr, "Error: Query file \"%s\" couldn't be opened\n", queryfile);
-			return ErrorCode;
-		}
-
-		//Read everything
-		stringstream buffer;
-		buffer << qfile.rdbuf();
-		string querystr = buffer.str(); // including EF and AG
 		string querystring; // excluding EF and AG
+		if (!statespaceexploration) {
+			//Open query file
+			ifstream qfile(queryfile, ifstream::in);
+			if (!qfile) {
+				fprintf(stderr, "Error: Query file \"%s\" couldn't be opened\n", queryfile);
+				return ErrorCode;
+			}
 
-		//Parse XML the queries and querystr let be the index of xmlquery 		
-		if (xmlquery > 0) {
-			if (!XMLparser.parse(querystr)) {
-				fprintf(stderr, "Error: Failed parsing XML query file");
-				return ErrorCode;
-			}
-			XMLparser.printQueries();
-			if (XMLparser.queries.size() < xmlquery) { 
-				fprintf(stderr, "Error: Wrong index of query in the XML query file");
-				return ErrorCode;
-			}
-			if (XMLparser.queries[xmlquery-1].parsingResult == QueryXMLParser::QueryItem::UNSUPPORTED_QUERY) {
-				fprintf(stderr, "Error: The selected query in the XML query file is not supported");
-				return ErrorCode;
-			}
-			fprintf(stdout, "Index of the selected query: %d\n\n",xmlquery);
-			querystr = XMLparser.queries[xmlquery-1].queryText;
-			querystring = querystr.substr(2);
-			isInvariant = XMLparser.queries[xmlquery-1].negateResult; 
-			
-		} else { // standard textual query
-			//Validate query type
-			if(querystr.substr(0, 2) != "EF" && querystr.substr(0, 2) != "AG"){
-				fprintf(stderr, "Error: Query type \"%s\" not supported, only (EF and AG is supported)\n", querystr.substr(0, 2).c_str());
-				return ErrorCode;
-			} 
-			//Check if is invariant
-			isInvariant = querystr.substr(0, 2) == "AG";
+			//Read everything
+			stringstream buffer;
+			buffer << qfile.rdbuf();
+			string querystr = buffer.str(); // including EF and AG
+			//Parse XML the queries and querystr let be the index of xmlquery 		
+			if (xmlquery > 0) {
+				if (!XMLparser.parse(querystr)) {
+					fprintf(stderr, "Error: Failed parsing XML query file");
+					return ErrorCode;
+				}
+				XMLparser.printQueries();
+				if (XMLparser.queries.size() < xmlquery) {
+					fprintf(stderr, "Error: Wrong index of query in the XML query file");
+					return ErrorCode;
+				}
+				if (XMLparser.queries[xmlquery - 1].parsingResult == QueryXMLParser::QueryItem::UNSUPPORTED_QUERY) {
+					fprintf(stderr, "Error: The selected query in the XML query file is not supported");
+					return ErrorCode;
+				}
+				fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
+				querystr = XMLparser.queries[xmlquery - 1].queryText;
+				querystring = querystr.substr(2);
+				isInvariant = XMLparser.queries[xmlquery - 1].negateResult;
 
-			//Warp in not if isInvariant
-			querystring = querystr.substr(2);
-			if(isInvariant)
-				querystring = "not ( " + querystring + " )";
+			} else { // standard textual query
+				//Validate query type
+				if (querystr.substr(0, 2) != "EF" && querystr.substr(0, 2) != "AG") {
+					fprintf(stderr, "Error: Query type \"%s\" not supported, only (EF and AG is supported)\n", querystr.substr(0, 2).c_str());
+					return ErrorCode;
+				}
+				//Check if is invariant
+				isInvariant = querystr.substr(0, 2) == "AG";
+
+				//Warp in not if isInvariant
+				querystring = querystr.substr(2);
+				if (isInvariant)
+					querystring = "not ( " + querystring + " )";
+			}
+			//Close query file
+			qfile.close();
+		} else { // state-space exploration
+			querystring = "false";
+			isInvariant = false;
 		}
 	
 		//Parse query
 		query = ParseQuery(querystring);
 		if(!query){
-			fprintf(stderr, "Error: Failed to parse query \"%s\"\n", querystr.substr(2).c_str());
+			fprintf(stderr, "Error: Failed to parse query \"%s\"\n", querystring.c_str()); //querystr.substr(2).c_str());
 			return ErrorCode;
 		}
-
-		//Close query file
-		qfile.close();
 	}
 
 	//----------------------- Context Analysis -----------------------//
@@ -455,6 +471,16 @@ int main(int argc, char* argv[]){
 
 	ReturnValues retval = ErrorCode;
 
+	if (statespaceexploration) {
+		retval = UnknownCode;
+		unsigned int placeBound = 0;
+		for(size_t p = 0; p < result.maxPlaceBound().size(); p++) { 
+			placeBound = std::max<unsigned int>(placeBound,result.maxPlaceBound()[p]);
+		}
+		fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
+		return retval;
+	}
+	
 	//Find result code
 	if(result.result() == ReachabilityResult::Unknown)
 		retval = UnknownCode;
