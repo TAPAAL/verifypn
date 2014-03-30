@@ -79,6 +79,7 @@ int main(int argc, char* argv[]){
 	int xmlquery = -1; // if value is nonnegative then input query file is in xml format and we verify query 
 						 // number xmlquery
 	bool statespaceexploration = false;
+	bool printstatistics = true;
 
         
 	//----------------------- Parse Arguments -----------------------//
@@ -129,6 +130,8 @@ int main(int argc, char* argv[]){
 			disableoverapprox = true;
 		} else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--state-space-exploration") == 0) {
 			statespaceexploration = true;
+		} else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--no-statistics") == 0) {
+			printstatistics = false;
 		} else if (strcmp(argv[i], "-x") == 0 || strcmp(argv[i], "--xml-queries") == 0) {
 			if (i == argc - 1) {
 				fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -170,6 +173,7 @@ int main(int argc, char* argv[]){
                     "                                     - 0  disabled (default)\n"
                     "                                     - 1  aggressive reduction\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
+					"  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
 					"  -h, --help                         Display this help message\n"
 					"  -v, --version                      Display version information\n"
 					"\n"
@@ -187,7 +191,7 @@ int main(int argc, char* argv[]){
 			printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERSION);
 			printf("Copyright (C) 2011-2014 Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
 			printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>,\n");
-			printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
+			printf("                        Lars Kærlund Østergaard <larsko@gmail.com>,\n");
 			printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
                         printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
 			return 0;
@@ -239,6 +243,7 @@ int main(int argc, char* argv[]){
 		ifstream mfile(modelfile, ifstream::in);
 		if(!mfile){
 			fprintf(stderr, "Error: Model file \"%s\" couldn't be opened\n", modelfile);
+			fprintf(stdout, "CANNOT_COMPUTE");
 			return ErrorCode;
 		}
 
@@ -278,6 +283,7 @@ int main(int argc, char* argv[]){
 			ifstream qfile(queryfile, ifstream::in);
 			if (!qfile) {
 				fprintf(stderr, "Error: Query file \"%s\" couldn't be opened\n", queryfile);
+				fprintf(stdout, "CANNOT_COMPUTE");
 				return ErrorCode;
 			}
 
@@ -288,16 +294,19 @@ int main(int argc, char* argv[]){
 			//Parse XML the queries and querystr let be the index of xmlquery 		
 			if (xmlquery > 0) {
 				if (!XMLparser.parse(querystr)) {
-					fprintf(stderr, "Error: Failed parsing XML query file");
+					fprintf(stderr, "Error: Failed parsing XML query file\n");
+					fprintf(stdout, "DO_NOT_COMPETE\n");
 					return ErrorCode;
 				}
 				XMLparser.printQueries();
 				if (XMLparser.queries.size() < xmlquery) {
-					fprintf(stderr, "Error: Wrong index of query in the XML query file");
+					fprintf(stderr, "Error: Wrong index of query in the XML query file\n");
+					fprintf(stdout, "CANNOT_COMPUTE");
 					return ErrorCode;
 				}
 				if (XMLparser.queries[xmlquery - 1].parsingResult == QueryXMLParser::QueryItem::UNSUPPORTED_QUERY) {
-					fprintf(stderr, "Error: The selected query in the XML query file is not supported");
+					fprintf(stderr, "Error: The selected query in the XML query file is not supported\n");
+					fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", XMLparser.queries[xmlquery-1].id.c_str());
 					return ErrorCode;
 				}
 				fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
@@ -432,6 +441,7 @@ int main(int argc, char* argv[]){
 
 	//----------------------- Output Statistics -----------------------//
 
+	if (printstatistics) {
 	//Print statistics
 	fprintf(stdout, "STATS:\n");
 	fprintf(stdout, "\tdiscovered states: %lli\n", result.discoveredStates());
@@ -466,6 +476,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 	fprintf(stdout,"\n\n");
+	}
 	
 	//----------------------- Output Result -----------------------//
 
@@ -492,19 +503,26 @@ int main(int argc, char* argv[]){
 	//Print result
 	if(retval == UnknownCode)
 		fprintf(stdout, "Unable to decide if query is satisfied.\n");
-	else if(retval == SuccessCode)
+	else if(retval == SuccessCode) {
 		fprintf(stdout, "Query is satisfied.\n");
-	else if(retval == FailedCode) {
+		if (xmlquery>0) {
+			fprintf(stdout, "FORMULA %s TRUE TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n", XMLparser.queries[xmlquery-1].id.c_str());
+		}
+	} else if(retval == FailedCode) {
 		if (xmlquery>0 && XMLparser.queries[xmlquery-1].isPlaceBound) {
 			// find index of the place for reporting place bound
 			for(size_t p = 0; p < result.maxPlaceBound().size(); p++) { 
 				if (pnames[p]==XMLparser.queries[xmlquery-1].placeNameForBound) {
 					fprintf(stdout, "Maximum number of tokens in place %s: %d\n",XMLparser.queries[xmlquery-1].placeNameForBound.c_str(),result.maxPlaceBound()[p]);
+					fprintf(stdout, "FORMULA %s %d TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n", XMLparser.queries[xmlquery-1].id.c_str(),result.maxPlaceBound()[p]);
 					break;
 				}
 			}
 		} else {
 			fprintf(stdout, "Query is NOT satisfied.\n");
+			if (xmlquery>0) {
+				fprintf(stdout, "FORMULA %s FALSE TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n", XMLparser.queries[xmlquery-1].id.c_str());
+			}
 		}
 	}
 
