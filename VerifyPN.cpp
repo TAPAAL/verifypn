@@ -243,7 +243,7 @@ int main(int argc, char* argv[]){
 		ifstream mfile(modelfile, ifstream::in);
 		if(!mfile){
 			fprintf(stderr, "Error: Model file \"%s\" couldn't be opened\n", modelfile);
-			fprintf(stdout, "CANNOT_COMPUTE");
+			fprintf(stdout, "CANNOT_COMPUTE\n");
 			return ErrorCode;
 		}
 
@@ -283,7 +283,7 @@ int main(int argc, char* argv[]){
 			ifstream qfile(queryfile, ifstream::in);
 			if (!qfile) {
 				fprintf(stderr, "Error: Query file \"%s\" couldn't be opened\n", queryfile);
-				fprintf(stdout, "CANNOT_COMPUTE");
+				fprintf(stdout, "CANNOT_COMPUTE\n");
 				return ErrorCode;
 			}
 
@@ -301,7 +301,7 @@ int main(int argc, char* argv[]){
 				XMLparser.printQueries();
 				if (XMLparser.queries.size() < xmlquery) {
 					fprintf(stderr, "Error: Wrong index of query in the XML query file\n");
-					fprintf(stdout, "CANNOT_COMPUTE");
+					fprintf(stdout, "CANNOT_COMPUTE\n");
 					return ErrorCode;
 				}
 				if (XMLparser.queries[xmlquery - 1].parsingResult == QueryXMLParser::QueryItem::UNSUPPORTED_QUERY) {

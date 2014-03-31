@@ -261,7 +261,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
 				return false;
 			}
-			queryText+= "not("+subformula1+") or ( "+subformula2;
+			queryText+= "not("+subformula1+") or ( "+subformula2+" )";
 			return true;
 		} else if (elementName == "equivalence") {
 			DOMElements children = element->getChilds();
