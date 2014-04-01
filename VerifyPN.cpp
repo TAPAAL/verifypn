@@ -298,7 +298,7 @@ int main(int argc, char* argv[]){
 					fprintf(stdout, "DO_NOT_COMPETE\n");
 					return ErrorCode;
 				}
-				XMLparser.printQueries();
+				// XMLparser.printQueries();
 				if (XMLparser.queries.size() < xmlquery) {
 					fprintf(stderr, "Error: Wrong index of query in the XML query file\n");
 					fprintf(stdout, "CANNOT_COMPUTE\n");
@@ -309,7 +309,7 @@ int main(int argc, char* argv[]){
 					fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", XMLparser.queries[xmlquery-1].id.c_str());
 					return ErrorCode;
 				}
-				fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
+				// fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
 				querystr = XMLparser.queries[xmlquery - 1].queryText;
 				querystring = querystr.substr(2);
 				isInvariant = XMLparser.queries[xmlquery - 1].negateResult;
