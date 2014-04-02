@@ -6,6 +6,8 @@
 # BK_EXAMINATION: it is a string that identifies your "examination"
 
 export PATH="$PATH:/home/mcc/BenchKit/bin/"
+#VERIFYPN = $HOME/BenchKit/bin/verifypn
+VERIFYPN=$PWD/verifypn
 
 if [ ! -f iscolored ]; then
     	echo "File 'iscolored' not found!"
@@ -32,9 +34,8 @@ function verify {
 	do
 		echo
 		echo "verifypn" $1 "-x" $QUERY "model.pnml" $2
-		./verifypn $1 "-x" $QUERY "model.pnml" $2
+		$VERIFYPN $1 "-x" $QUERY "model.pnml" $2
 	done
-	#$HOME/BenchKit/bin/verifypn
 } 
 
 
@@ -45,7 +46,7 @@ case "$BK_EXAMINATION" in
 		echo "*****************************************"
 		echo "*  TAPAAL performing StateSpace search  *"
 		echo "*****************************************"
-		$HOME/BenchKit/bin/verifypn -n -d -e model.pnml 
+		$VERIFYPN -n -d -e model.pnml 
 		;;
 
 	ReachabilityComputeBounds)	
