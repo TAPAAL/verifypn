@@ -5,6 +5,7 @@
 
 # BK_EXAMINATION: it is a string that identifies your "examination"
 
+export PATH="$PATH:/home/mcc/BenchKit/bin/"
 
 if [ ! -f iscolored ]; then
     	echo "File 'iscolored' not found!"
@@ -36,7 +37,6 @@ function verify {
 	#$HOME/BenchKit/bin/verifypn
 } 
 
-export PATH="$PATH:/home/mcc/BenchKit/bin/"
 
 case "$BK_EXAMINATION" in
 
