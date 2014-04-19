@@ -75,7 +75,7 @@ int main(int argc, char* argv[]){
 	char* modelfile = NULL;
 	char* queryfile = NULL;
 	bool disableoverapprox = false;
-    int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
+  	int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
 	int xmlquery = -1; // if value is nonnegative then input query file is in xml format and we verify query 
 						 // number xmlquery
 	bool statespaceexploration = false;
@@ -515,7 +515,8 @@ int main(int argc, char* argv[]){
 				if (pnames[p]==XMLparser.queries[xmlquery-1].placeNameForBound) {
 					fprintf(stdout, "Maximum number of tokens in place %s: %d\n",XMLparser.queries[xmlquery-1].placeNameForBound.c_str(),result.maxPlaceBound()[p]);
 					fprintf(stdout, "FORMULA %s %d TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n", XMLparser.queries[xmlquery-1].id.c_str(),result.maxPlaceBound()[p]);
-					break;
+					retval = UnknownCode;
+                    			break;
 				}
 			}
 		} else {
