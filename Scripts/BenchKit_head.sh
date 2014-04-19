@@ -7,7 +7,8 @@
 
 export PATH="$PATH:/home/mcc/BenchKit/bin/"
 #VERIFYPN = $HOME/BenchKit/bin/verifypn
-VERIFYPN=$PWD/verifypn
+VERIFYPN=/Users/srba/dev/sumoXMLparsing/verifypn-osx64
+TIMEOUT=5
 
 if [ ! -f iscolored ]; then
     	echo "File 'iscolored' not found!"
@@ -34,7 +35,14 @@ function verify {
 	do
 		echo
 		echo "verifypn" $1 "-x" $QUERY "model.pnml" $2
-		$VERIFYPN $1 "-x" $QUERY "model.pnml" $2
+		if [ $TIMEOUT = 0 ]; then
+			$VERIFYPN $1 "-x" $QUERY "model.pnml" $2
+		else
+			gtimeout $TIMEOUT $VERIFYPN $1 "-x" $QUERY "model.pnml" $2
+			if [ $? = 124 ]; then
+				echo -ne "CANNOT_COMPUTE\n"
+			fi
+		fi
 	done
 } 
 
@@ -62,6 +70,7 @@ case "$BK_EXAMINATION" in
 		echo "**********************************************"
 		echo "*  TAPAAL checking for ReachabilityDeadlock  *"
 		echo "**********************************************"
+		TIMEOUT=0
 		verify "-n -r 1" "ReachabilityDeadlock.xml"
 		;;
 

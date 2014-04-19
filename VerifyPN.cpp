@@ -305,7 +305,7 @@ int main(int argc, char* argv[]){
 					return ErrorCode;
 				}
 				if (XMLparser.queries[xmlquery - 1].parsingResult == QueryXMLParser::QueryItem::UNSUPPORTED_QUERY) {
-					fprintf(stderr, "Error: The selected query in the XML query file is not supported\n");
+					fprintf(stdout, "The selected query in the XML query file is not supported\n");
 					fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", XMLparser.queries[xmlquery-1].id.c_str());
 					return ErrorCode;
 				}
@@ -313,6 +313,11 @@ int main(int argc, char* argv[]){
 				querystr = XMLparser.queries[xmlquery - 1].queryText;
 				querystring = querystr.substr(2);
 				isInvariant = XMLparser.queries[xmlquery - 1].negateResult;
+                
+                if (xmlquery>0) {
+                    fprintf(stdout, "FORMULA %s ", XMLparser.queries[xmlquery-1].id.c_str());
+                    fflush(stdout);
+                }
 
 			} else { // standard textual query
 				//Validate query type
@@ -504,26 +509,26 @@ int main(int argc, char* argv[]){
 	if(retval == UnknownCode)
 		fprintf(stdout, "Unable to decide if query is satisfied.\n");
 	else if(retval == SuccessCode) {
-		fprintf(stdout, "Query is satisfied.\n");
 		if (xmlquery>0) {
-			fprintf(stdout, "FORMULA %s TRUE TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n", XMLparser.queries[xmlquery-1].id.c_str());
+			fprintf(stdout, "TRUE TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n");
 		}
+        fprintf(stdout, "Query is satisfied.\n");
 	} else if(retval == FailedCode) {
 		if (xmlquery>0 && XMLparser.queries[xmlquery-1].isPlaceBound) {
 			// find index of the place for reporting place bound
 			for(size_t p = 0; p < result.maxPlaceBound().size(); p++) { 
 				if (pnames[p]==XMLparser.queries[xmlquery-1].placeNameForBound) {
+					fprintf(stdout, "%d TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n", result.maxPlaceBound()[p]);
 					fprintf(stdout, "Maximum number of tokens in place %s: %d\n",XMLparser.queries[xmlquery-1].placeNameForBound.c_str(),result.maxPlaceBound()[p]);
-					fprintf(stdout, "FORMULA %s %d TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n", XMLparser.queries[xmlquery-1].id.c_str(),result.maxPlaceBound()[p]);
-					retval = UnknownCode;
+                    retval = UnknownCode;
                     			break;
 				}
 			}
 		} else {
-			fprintf(stdout, "Query is NOT satisfied.\n");
 			if (xmlquery>0) {
-				fprintf(stdout, "FORMULA %s FALSE TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n", XMLparser.queries[xmlquery-1].id.c_str());
+				fprintf(stdout, "FALSE TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n");
 			}
+            fprintf(stdout, "Query is NOT satisfied.\n");
 		}
 	}
 
