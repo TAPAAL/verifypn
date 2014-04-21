@@ -55,3 +55,4 @@ Authors
   * Jonas Finnemann Jensen
   * Thomas Søndersø Nielsen
   * Lars Kærlund Østergaard
+  * Jiri Srba
