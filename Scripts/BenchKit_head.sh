@@ -39,7 +39,8 @@ function verify {
 			$VERIFYPN $1 "-x" $QUERY "model.pnml" $2
 		else
 			timeout $TIMEOUT $VERIFYPN $1 "-x" $QUERY "model.pnml" $2
-			if [ $? = "124" ]; then
+			RETVAL=$?
+			if [ $RETVAL = 124 ] || [ $RETVAL =  125 ] || [ $RETVAL =  126 ] || [ $RETVAL =  127 ] || [ $RETVAL =  137 ] ; then
 				echo -ne "CANNOT_COMPUTE\n"
 			fi
 		fi
