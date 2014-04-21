@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <sstream> 
+#include <algorithm> 
 
 using namespace XMLSP;
 using namespace std;

@@ -6,9 +6,9 @@
 # BK_EXAMINATION: it is a string that identifies your "examination"
 
 export PATH="$PATH:/home/mcc/BenchKit/bin/"
-#VERIFYPN = $HOME/BenchKit/bin/verifypn
-VERIFYPN=/Users/srba/dev/sumoXMLparsing/verifypn-osx64
-TIMEOUT=5
+VERIFYPN = $HOME/BenchKit/bin/verifypn
+#VERIFYPN=/Users/srba/dev/sumoXMLparsing/verifypn-osx64
+TIMEOUT=10
 
 if [ ! -f iscolored ]; then
     	echo "File 'iscolored' not found!"
@@ -38,7 +38,7 @@ function verify {
 		if [ $TIMEOUT = 0 ]; then
 			$VERIFYPN $1 "-x" $QUERY "model.pnml" $2
 		else
-			gtimeout $TIMEOUT $VERIFYPN $1 "-x" $QUERY "model.pnml" $2
+			timeout $TIMEOUT $VERIFYPN $1 "-x" $QUERY "model.pnml" $2
 			if [ $? = 124 ]; then
 				echo -ne "CANNOT_COMPUTE\n"
 			fi
