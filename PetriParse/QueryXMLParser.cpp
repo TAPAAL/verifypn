@@ -35,15 +35,11 @@ QueryXMLParser::QueryXMLParser(const PNMLParser::TransitionEnablednessMap &trans
 
 
 bool QueryXMLParser::parse(const std::string& xml){
-	//Parser the xml
+	//Parse the xml
 	DOMElement* root = DOMElement::loadXML(xml);
-	bool parsingOK=true;
+	bool parsingOK;
 	if (root) {
-		try {
-			parsePropertySet(root);
-		} catch (ERRORS e) {
-			parsingOK=false;
-		}
+		parsingOK = parsePropertySet(root);
 	} else {
 		parsingOK=false;
 	}
@@ -54,22 +50,25 @@ bool QueryXMLParser::parse(const std::string& xml){
 }
 
 
-void QueryXMLParser::parsePropertySet(DOMElement* element){
+bool QueryXMLParser::parsePropertySet(DOMElement* element){
 	if (element->getElementName()!="property-set") {
 		fprintf(stderr,"ERROR missing property-set\n");
-		throw MISSING_PROPERTY_SET; // missing property-set element
+		return false; // missing property-set element
 	}
 	DOMElements elements = element->getChilds();
 	DOMElements::iterator it;
 	for(it = elements.begin(); it != elements.end(); it++){
-		parseProperty(*it);
+		if (!parseProperty(*it)) {
+			return false;
+		};
 	}
+	return true;
 }
 
-void QueryXMLParser::parseProperty(DOMElement* element){
+bool QueryXMLParser::parseProperty(DOMElement* element){
 	if (element->getElementName()!="property") {
 		fprintf(stderr,"ERROR missing property\n");
-		throw MISSING_PROPERTY; // unexpected element (only property is allowed)
+		return false; // unexpected element (only property is allowed)
 	}
 	string id;
 	string queryText;
@@ -92,7 +91,8 @@ void QueryXMLParser::parseProperty(DOMElement* element){
 	}
 	
 	if (id=="") {
-		throw EMPTY_QUERY_ID;
+		fprintf(stderr,"ERROR a query with empty id\n");
+		return false;
 	}
 	
 	QueryItem queryItem;
@@ -111,6 +111,7 @@ void QueryXMLParser::parseProperty(DOMElement* element){
 		queryItem.parsingResult=QueryItem::UNSUPPORTED_QUERY;
 	}	
 	queries.push_back(queryItem);
+	return true;
 }
 
 bool QueryXMLParser::parseTags(DOMElement* element){
@@ -179,6 +180,9 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
             return false;
         }
         placeNameForBound = parsePlace(children[0]);
+		if (placeNameForBound=="") {
+			return false; // invalid place name
+		}
         queryText += "\""+placeNameForBound+"\""+" < 0";
         negateResult = false;
         isPlaceBound = true;
@@ -358,7 +362,7 @@ bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryTe
 	if (elementName == "integer-constant") {
 		int i;
 		if(sscanf((element->getCData()).c_str(), "%d", &i)  == EOF ) { 
-			throw EXPECTED_INTEGER;
+			return false; // expected integer at this place
 		}
 		 stringstream ss;//create a stringstream
          ss << i;//add number to the stream
@@ -379,7 +383,11 @@ bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryTe
 			if (i > 0) {
 				queryText += " + ";
 			}
-			queryText+="\""+parsePlace(children[i])+"\"";
+			string placeName = parsePlace(children[i]);
+			if (placeName == "") {
+				return false; // invalid place name
+			}
+			queryText+="\""+placeName+"\"";
 		}
 		if (children.size()>1) {
 			queryText+=")";
@@ -426,7 +434,7 @@ bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryTe
 
 string QueryXMLParser::parsePlace(XMLSP::DOMElement* element) {
 	if (element->getElementName() != "place") {
-		throw NOT_A_PLACE;
+		return ""; // missing place tag
 	}
 	string placeName = element->getCData();
 	placeName.erase(std::remove_if(placeName.begin(), placeName.end(), ::isspace), placeName.end());

@@ -54,17 +54,14 @@ public:
         void printQueries();
         
 private:
-        void parsePropertySet(XMLSP::DOMElement* element);
-        void parseProperty(XMLSP::DOMElement* element);
+        bool parsePropertySet(XMLSP::DOMElement* element);
+        bool parseProperty(XMLSP::DOMElement* element);
         bool parseTags(XMLSP::DOMElement* element);
         bool parseFormula(XMLSP::DOMElement* element, string &queryText, bool &negateResult, bool &isPlaceBound, string &placeNameForBound);
         bool parseBooleanFormula(XMLSP::DOMElement* element, string &queryText);
         bool parseIntegerExpression(XMLSP::DOMElement* element, string &queryText);
         string parsePlace(XMLSP::DOMElement* element);
         PNMLParser::TransitionEnablednessMap _transitionEnabledness;
-        
-        enum ERRORS {MISSING_PROPERTY_SET, MISSING_PROPERTY, EMPTY_QUERY_ID, EXPECTED_INTEGER, NOT_A_PLACE};
-        
 };
 
 #endif	/* QUERYXMLPARSER_H */
