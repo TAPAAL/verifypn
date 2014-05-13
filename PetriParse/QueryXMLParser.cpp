@@ -56,7 +56,7 @@ bool QueryXMLParser::parse(const std::string& xml){
 
 void QueryXMLParser::parsePropertySet(DOMElement* element){
 	if (element->getElementName()!="property-set") {
-		cout << "ERROR missing property-set" << endl;
+		fprintf(stderr,"ERROR missing property-set\n");
 		throw MISSING_PROPERTY_SET; // missing property-set element
 	}
 	DOMElements elements = element->getChilds();
@@ -68,7 +68,7 @@ void QueryXMLParser::parsePropertySet(DOMElement* element){
 
 void QueryXMLParser::parseProperty(DOMElement* element){
 	if (element->getElementName()!="property") {
-		cout << "ERROR missing property" << endl;
+		fprintf(stderr,"ERROR missing property\n");
 		throw MISSING_PROPERTY; // unexpected element (only property is allowed)
 	}
 	string id;
@@ -82,10 +82,8 @@ void QueryXMLParser::parseProperty(DOMElement* element){
 	DOMElements::iterator it;
 	DOMElements::iterator formulaPtr;
 	for(it = elements.begin(); it != elements.end(); it++){
-	//	cout << (*it)->getElementName() << endl;
 		if ((*it)->getElementName()=="id") {
 			id = (*it)->getCData();
-			//cout << "ID: " << (*it)->getCData() << endl;
 		} else if ((*it)->getElementName()=="formula") {
 			formulaPtr=it;
 		} else if ((*it)->getElementName()=="tags") {
@@ -199,7 +197,6 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 }
 
 bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText){
-		//cout << "parseBooleanFormula: " << element->getElementName() << endl;
 		string elementName = element->getElementName();
 		if (elementName == "deadlock") {
 			queryText+="deadlock";
