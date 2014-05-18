@@ -14,7 +14,6 @@ extern int pqlqparse();
 
 digit         [0-9]
 letter        [a-zA-Z_]
-
 %%
 
 [ \t\n\r]         ;
