@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="ExportedNet" type="P/T net">
+<place id="Raf" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Raf" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="555.0" positionY="1305.0"/>
+<place id="RasGTP" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="RasGTP" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="465.0" positionY="1230.0"/>
+<place id="RafP_Phase1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="RafP_Phase1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="675.0" positionY="1305.0"/>
+<place id="MEK_RafP" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="MEK_RafP" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="810.0" positionY="1170.0"/>
+<place id="Raf_RasGTP" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Raf_RasGTP" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="465.0" positionY="1320.0"/>
+<place id="RafP" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="RafP" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="810.0" positionY="1275.0"/>
+<place id="ERK" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ERK" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1350.0" positionY="1005.0"/>
+<place id="MEKPP_Phase2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="MEKPP_Phase2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1155.0" positionY="1095.0"/>
+<place id="MEKP_Phase2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="MEKP_Phase2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1050.0" positionY="1095.0"/>
+<place id="MEKP_RafP" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="MEKP_RafP" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="915.0" positionY="1335.0"/>
+<place id="ERKPP" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ERKPP" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1770.0" positionY="1215.0"/>
+<place id="MEKP" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="MEKP" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="915.0" positionY="1215.0"/>
+<place id="Phase3" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Phase3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1665.0" positionY="1005.0"/>
+<place id="Phase2" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Phase2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1095.0" positionY="1005.0"/>
+<place id="MEKPP" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="MEKPP" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1260.0" positionY="1050.0"/>
+<place id="ERKP" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ERKP" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1455.0" positionY="1050.0"/>
+<place id="ERKP_Phase3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ERKP_Phase3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1545.0" positionY="1095.0"/>
+<place id="ERKPP_Phase3" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ERKPP_Phase3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1740.0" positionY="1095.0"/>
+<place id="MEK" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="MEK" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="810.0" positionY="1095.0"/>
+<place id="Phase1" initialMarking="2" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Phase1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="675.0" positionY="1230.0"/>
+<place id="ERKP_MEKPP" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ERKP_MEKPP" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1365.0" positionY="1245.0"/>
+<place id="ERK_MEKPP" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="ERK_MEKPP" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1350.0" positionY="1095.0"/>
+<transition angle="0" id="k5" infiniteServer="false" name="k5" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="675.0" positionY="1350.0" priority="1" timed="true"/>
+<transition angle="0" id="k16" infiniteServer="false" name="k16" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1050.0" positionY="1065.0" priority="1" timed="true"/>
+<transition angle="0" id="k30" infiniteServer="false" name="k30" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1590.0" positionY="1125.0" priority="1" timed="true"/>
+<transition angle="0" id="k17" infiniteServer="false" name="k17" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1050.0" positionY="1125.0" priority="1" timed="true"/>
+<transition angle="0" id="k29" infiniteServer="false" name="k29" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1485.0" positionY="1125.0" priority="1" timed="true"/>
+<transition angle="0" id="k4" infiniteServer="false" name="k4" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="675.0" positionY="1275.0" priority="1" timed="true"/>
+<transition angle="0" id="k19" infiniteServer="false" name="k19" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1350.0" positionY="1065.0" priority="1" timed="true"/>
+<transition angle="0" id="k22" infiniteServer="false" name="k22" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1365.0" positionY="1185.0" priority="1" timed="true"/>
+<transition angle="0" id="k27" infiniteServer="false" name="k27" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1680.0" positionY="1125.0" priority="1" timed="true"/>
+<transition angle="0" id="k13" infiniteServer="false" name="k13" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1155.0" positionY="1065.0" priority="1" timed="true"/>
+<transition angle="0" id="k14" infiniteServer="false" name="k14" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1215.0" positionY="1125.0" priority="1" timed="true"/>
+<transition angle="0" id="k28" infiniteServer="false" name="k28" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1545.0" positionY="1065.0" priority="1" timed="true"/>
+<transition angle="0" id="k7" infiniteServer="false" name="k7" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="810.0" positionY="1125.0" priority="1" timed="true"/>
+<transition angle="0" id="k10" infiniteServer="false" name="k10" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="900.0" positionY="1275.0" priority="1" timed="true"/>
+<transition angle="0" id="k23" infiniteServer="false" name="k23" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1365.0" positionY="1290.0" priority="1" timed="true"/>
+<transition angle="0" id="k20" infiniteServer="false" name="k20" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1320.0" positionY="1125.0" priority="1" timed="true"/>
+<transition angle="0" id="k11" infiniteServer="false" name="k11" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="870.0" positionY="1395.0" priority="1" timed="true"/>
+<transition angle="0" id="k8" infiniteServer="false" name="k8" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="750.0" positionY="1230.0" priority="1" timed="true"/>
+<transition angle="0" id="k26" infiniteServer="false" name="k26" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1770.0" positionY="1125.0" priority="1" timed="true"/>
+<transition angle="0" id="k25" infiniteServer="false" name="k25" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1740.0" positionY="1065.0" priority="1" timed="true"/>
+<transition angle="0" id="k15" infiniteServer="false" name="k15" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1095.0" positionY="1125.0" priority="1" timed="true"/>
+<transition angle="0" id="k24" infiniteServer="false" name="k24" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1440.0" positionY="1215.0" priority="1" timed="true"/>
+<transition angle="270" id="k9" infiniteServer="false" name="k9" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="855.0" positionY="1230.0" priority="1" timed="true"/>
+<transition angle="0" id="k12" infiniteServer="false" name="k12" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="945.0" positionY="1395.0" priority="1" timed="true"/>
+<transition angle="0" id="k21" infiniteServer="false" name="k21" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="1395.0" positionY="1125.0" priority="1" timed="true"/>
+<transition angle="0" id="k18" infiniteServer="false" name="k18" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="930.0" positionY="1095.0" priority="1" timed="true"/>
+<transition angle="0" id="k3" infiniteServer="false" name="k3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="375.0" positionY="1365.0" priority="1" timed="true"/>
+<transition angle="0" id="k6" infiniteServer="false" name="k6" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="600.0" positionY="1320.0" priority="1" timed="true"/>
+<transition angle="0" id="k1" infiniteServer="false" name="k1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="465.0" positionY="1275.0" priority="1" timed="true"/>
+<transition angle="0" id="k2" infiniteServer="false" name="k2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="555.0" positionY="1365.0" priority="1" timed="true"/>
+<arc id="k29 to ERKP" inscription="1" source="k29" target="ERKP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1497" yCoord="1122"/>
+<arcpath arcPointType="false" id="1" xCoord="1473" yCoord="1075"/>
+</arc>
+<arc id="Phase3 to k28" inscription="[0,inf)" source="Phase3" target="k28" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1663" yCoord="1023"/>
+<arcpath arcPointType="false" id="1" xCoord="1561" yCoord="1077"/>
+</arc>
+<arc id="ERKP to k28" inscription="[0,inf)" source="ERKP" target="k28" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1481" yCoord="1064"/>
+<arcpath arcPointType="false" id="1" xCoord="1551" yCoord="1077"/>
+</arc>
+<arc id="k28 to ERKP_Phase3" inscription="1" source="k28" target="ERKP_Phase3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1557" yCoord="1092"/>
+<arcpath arcPointType="false" id="1" xCoord="1557" yCoord="1092"/>
+</arc>
+<arc id="MEKP to k16" inscription="[0,inf)" source="MEKP" target="k16" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="936" yCoord="1215"/>
+<arcpath arcPointType="false" id="1" xCoord="1056" yCoord="1077"/>
+</arc>
+<arc id="Phase2 to k16" inscription="[0,inf)" source="Phase2" target="k16" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1098" yCoord="1029"/>
+<arcpath arcPointType="false" id="1" xCoord="1066" yCoord="1077"/>
+</arc>
+<arc id="MEKP_Phase2 to k17" inscription="[0,inf)" source="MEKP_Phase2" target="k17" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1062" yCoord="1121"/>
+<arcpath arcPointType="false" id="1" xCoord="1062" yCoord="1122"/>
+</arc>
+<arc id="k16 to MEKP_Phase2" inscription="1" source="k16" target="MEKP_Phase2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1062" yCoord="1092"/>
+<arcpath arcPointType="false" id="1" xCoord="1062" yCoord="1092"/>
+</arc>
+<arc id="MEKPP_Phase2 to k14" inscription="[0,inf)" source="MEKPP_Phase2" target="k14" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1179" yCoord="1115"/>
+<arcpath arcPointType="false" id="1" xCoord="1221" yCoord="1142"/>
+</arc>
+<arc id="k14 to Phase2" inscription="1" source="k14" target="Phase2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1222" yCoord="1132"/>
+<arcpath arcPointType="false" id="1" xCoord="1117" yCoord="1027"/>
+</arc>
+<arc id="k17 to Phase2" inscription="1" source="k17" target="Phase2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1062" yCoord="1122"/>
+<arcpath arcPointType="false" id="1" xCoord="1101" yCoord="1030"/>
+</arc>
+<arc id="k17 to MEKP" inscription="1" source="k17" target="MEKP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1056" yCoord="1137"/>
+<arcpath arcPointType="false" id="1" xCoord="939" yCoord="1218"/>
+</arc>
+<arc id="ERKP_Phase3 to k29" inscription="[0,inf)" source="ERKP_Phase3" target="k29" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1544" yCoord="1115"/>
+<arcpath arcPointType="false" id="1" xCoord="1501" yCoord="1142"/>
+</arc>
+<arc id="k29 to Phase3" inscription="1" source="k29" target="Phase3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1502" yCoord="1132"/>
+<arcpath arcPointType="false" id="1" xCoord="1664" yCoord="1025"/>
+</arc>
+<arc id="ERKP_MEKPP to k24" inscription="[0,inf)" source="ERKP_MEKPP" target="k24" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1391" yCoord="1252"/>
+<arcpath arcPointType="false" id="1" xCoord="1446" yCoord="1232"/>
+</arc>
+<arc id="k15 to MEKP" inscription="1" source="k15" target="MEKP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1101" yCoord="1137"/>
+<arcpath arcPointType="false" id="1" xCoord="940" yCoord="1220"/>
+</arc>
+<arc id="k24 to MEKPP" inscription="1" source="k24" target="MEKPP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1447" yCoord="1222"/>
+<arcpath arcPointType="false" id="1" xCoord="1283" yCoord="1072"/>
+</arc>
+<arc id="k24 to ERKPP" inscription="1" source="k24" target="ERKPP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1456" yCoord="1227"/>
+<arcpath arcPointType="false" id="1" xCoord="1767" yCoord="1227"/>
+</arc>
+<arc id="RasGTP to k1" inscription="[0,inf)" source="RasGTP" target="k1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="477" yCoord="1256"/>
+<arcpath arcPointType="false" id="1" xCoord="477" yCoord="1272"/>
+</arc>
+<arc id="Raf to k1" inscription="[0,inf)" source="Raf" target="k1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="1312"/>
+<arcpath arcPointType="false" id="1" xCoord="481" yCoord="1287"/>
+</arc>
+<arc id="Raf_RasGTP to k2" inscription="[0,inf)" source="Raf_RasGTP" target="k2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="489" yCoord="1339"/>
+<arcpath arcPointType="false" id="1" xCoord="561" yCoord="1382"/>
+</arc>
+<arc id="k1 to Raf_RasGTP" inscription="1" source="k1" target="Raf_RasGTP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="477" yCoord="1302"/>
+<arcpath arcPointType="false" id="1" xCoord="477" yCoord="1317"/>
+</arc>
+<arc id="k30 to ERK" inscription="1" source="k30" target="ERK" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1596" yCoord="1142"/>
+<arcpath arcPointType="false" id="1" xCoord="1375" yCoord="1024"/>
+</arc>
+<arc id="k30 to Phase3" inscription="1" source="k30" target="Phase3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1606" yCoord="1137"/>
+<arcpath arcPointType="false" id="1" xCoord="1669" yCoord="1029"/>
+</arc>
+<arc id="k27 to ERKP" inscription="1" source="k27" target="ERKP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1686" yCoord="1137"/>
+<arcpath arcPointType="false" id="1" xCoord="1481" yCoord="1066"/>
+</arc>
+<arc id="ERKP_Phase3 to k30" inscription="[0,inf)" source="ERKP_Phase3" target="k30" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1569" yCoord="1115"/>
+<arcpath arcPointType="false" id="1" xCoord="1597" yCoord="1132"/>
+</arc>
+<arc id="ERKPP_Phase3 to k27" inscription="[0,inf)" source="ERKPP_Phase3" target="k27" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1738" yCoord="1114"/>
+<arcpath arcPointType="false" id="1" xCoord="1696" yCoord="1137"/>
+</arc>
+<arc id="k27 to Phase3" inscription="1" source="k27" target="Phase3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1692" yCoord="1122"/>
+<arcpath arcPointType="false" id="1" xCoord="1679" yCoord="1031"/>
+</arc>
+<arc id="k2 to Raf" inscription="1" source="k2" target="Raf" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="567" yCoord="1362"/>
+<arcpath arcPointType="false" id="1" xCoord="567" yCoord="1331"/>
+</arc>
+<arc id="k2 to RasGTP" inscription="1" source="k2" target="RasGTP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="562" yCoord="1372"/>
+<arcpath arcPointType="false" id="1" xCoord="485" yCoord="1254"/>
+</arc>
+<arc id="k7 to MEK_RafP" inscription="1" source="k7" target="MEK_RafP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="1152"/>
+<arcpath arcPointType="false" id="1" xCoord="822" yCoord="1167"/>
+</arc>
+<arc id="RafP to k10" inscription="[0,inf)" source="RafP" target="k10" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="836" yCoord="1287"/>
+<arcpath arcPointType="false" id="1" xCoord="906" yCoord="1287"/>
+</arc>
+<arc id="MEKP_RafP to k12" inscription="[0,inf)" source="MEKP_RafP" target="k12" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="935" yCoord="1359"/>
+<arcpath arcPointType="false" id="1" xCoord="957" yCoord="1392"/>
+</arc>
+<arc id="k9 to RafP" inscription="1" source="k9" target="RafP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="867" yCoord="1247"/>
+<arcpath arcPointType="false" id="1" xCoord="833" yCoord="1277"/>
+</arc>
+<arc id="k12 to RafP" inscription="1" source="k12" target="RafP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="951" yCoord="1407"/>
+<arcpath arcPointType="false" id="1" xCoord="832" yCoord="1297"/>
+</arc>
+<arc id="k12 to MEKPP" inscription="1" source="k12" target="MEKPP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="961" yCoord="1407"/>
+<arcpath arcPointType="false" id="1" xCoord="1261" yCoord="1073"/>
+</arc>
+<arc id="k18 to Phase2" inscription="1" source="k18" target="Phase2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="947" yCoord="1102"/>
+<arcpath arcPointType="false" id="1" xCoord="1093" yCoord="1024"/>
+</arc>
+<arc id="k18 to MEK" inscription="1" source="k18" target="MEK" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="936" yCoord="1107"/>
+<arcpath arcPointType="false" id="1" xCoord="836" yCoord="1107"/>
+</arc>
+<arc id="ERKP to k22" inscription="[0,inf)" source="ERKP" target="k22" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1459" yCoord="1074"/>
+<arcpath arcPointType="false" id="1" xCoord="1381" yCoord="1197"/>
+</arc>
+<arc id="k22 to ERKP_MEKPP" inscription="1" source="k22" target="ERKP_MEKPP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1377" yCoord="1212"/>
+<arcpath arcPointType="false" id="1" xCoord="1377" yCoord="1242"/>
+</arc>
+<arc id="k19 to ERK_MEKPP" inscription="1" source="k19" target="ERK_MEKPP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1362" yCoord="1092"/>
+<arcpath arcPointType="false" id="1" xCoord="1362" yCoord="1092"/>
+</arc>
+<arc id="MEKPP to k22" inscription="[0,inf)" source="MEKPP" target="k22" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1280" yCoord="1074"/>
+<arcpath arcPointType="false" id="1" xCoord="1371" yCoord="1197"/>
+</arc>
+<arc id="MEKPP to k19" inscription="[0,inf)" source="MEKPP" target="k19" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1286" yCoord="1064"/>
+<arcpath arcPointType="false" id="1" xCoord="1356" yCoord="1077"/>
+</arc>
+<arc id="ERK to k19" inscription="[0,inf)" source="ERK" target="k19" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1362" yCoord="1031"/>
+<arcpath arcPointType="false" id="1" xCoord="1362" yCoord="1062"/>
+</arc>
+<arc id="MEKP to k10" inscription="[0,inf)" source="MEKP" target="k10" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="922" yCoord="1241"/>
+<arcpath arcPointType="false" id="1" xCoord="912" yCoord="1272"/>
+</arc>
+<arc id="k10 to MEKP_RafP" inscription="1" source="k10" target="MEKP_RafP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="912" yCoord="1302"/>
+<arcpath arcPointType="false" id="1" xCoord="922" yCoord="1332"/>
+</arc>
+<arc id="k3 to RafP" inscription="1" source="k3" target="RafP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="391" yCoord="1383"/>
+<arcpath arcPointType="false" id="1" xCoord="807" yCoord="1290"/>
+</arc>
+<arc id="Raf_RasGTP to k3" inscription="[0,inf)" source="Raf_RasGTP" target="k3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="463" yCoord="1338"/>
+<arcpath arcPointType="false" id="1" xCoord="392" yCoord="1376"/>
+</arc>
+<arc id="MEKP_Phase2 to k18" inscription="[0,inf)" source="MEKP_Phase2" target="k18" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1047" yCoord="1107"/>
+<arcpath arcPointType="false" id="1" xCoord="946" yCoord="1112"/>
+</arc>
+<arc id="k21 to MEKPP" inscription="1" source="k21" target="MEKPP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1401" yCoord="1142"/>
+<arcpath arcPointType="false" id="1" xCoord="1284" yCoord="1069"/>
+</arc>
+<arc id="k15 to Phase2" inscription="1" source="k15" target="Phase2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1107" yCoord="1122"/>
+<arcpath arcPointType="false" id="1" xCoord="1107" yCoord="1031"/>
+</arc>
+<arc id="MEKPP_Phase2 to k15" inscription="[0,inf)" source="MEKPP_Phase2" target="k15" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1153" yCoord="1114"/>
+<arcpath arcPointType="false" id="1" xCoord="1111" yCoord="1137"/>
+</arc>
+<arc id="k9 to MEKP" inscription="1" source="k9" target="MEKP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="882" yCoord="1241"/>
+<arcpath arcPointType="false" id="1" xCoord="912" yCoord="1231"/>
+</arc>
+<arc id="MEK_RafP to k9" inscription="[0,inf)" source="MEK_RafP" target="k9" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="831" yCoord="1193"/>
+<arcpath arcPointType="false" id="1" xCoord="867" yCoord="1237"/>
+</arc>
+<arc id="k23 to MEKPP" inscription="1" source="k23" target="MEKPP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1377" yCoord="1287"/>
+<arcpath arcPointType="false" id="1" xCoord="1278" yCoord="1075"/>
+</arc>
+<arc id="ERKP_MEKPP to k23" inscription="[0,inf)" source="ERKP_MEKPP" target="k23" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1377" yCoord="1271"/>
+<arcpath arcPointType="false" id="1" xCoord="1377" yCoord="1287"/>
+</arc>
+<arc id="k21 to ERKP" inscription="1" source="k21" target="ERKP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1411" yCoord="1137"/>
+<arcpath arcPointType="false" id="1" xCoord="1458" yCoord="1074"/>
+</arc>
+<arc id="ERK_MEKPP to k21" inscription="[0,inf)" source="ERK_MEKPP" target="k21" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1374" yCoord="1115"/>
+<arcpath arcPointType="false" id="1" xCoord="1402" yCoord="1132"/>
+</arc>
+<arc id="k6 to Phase1" inscription="1" source="k6" target="Phase1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="617" yCoord="1327"/>
+<arcpath arcPointType="false" id="1" xCoord="677" yCoord="1253"/>
+</arc>
+<arc id="k6 to Raf" inscription="1" source="k6" target="Raf" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="606" yCoord="1332"/>
+<arcpath arcPointType="false" id="1" xCoord="580" yCoord="1322"/>
+</arc>
+<arc id="RafP_Phase1 to k6" inscription="[0,inf)" source="RafP_Phase1" target="k6" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="672" yCoord="1321"/>
+<arcpath arcPointType="false" id="1" xCoord="616" yCoord="1337"/>
+</arc>
+<arc id="k3 to RasGTP" inscription="1" source="k3" target="RasGTP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="392" yCoord="1369"/>
+<arcpath arcPointType="false" id="1" xCoord="468" yCoord="1254"/>
+</arc>
+<arc id="RafP to k7" inscription="[0,inf)" source="RafP" target="k7" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="1272"/>
+<arcpath arcPointType="false" id="1" xCoord="822" yCoord="1152"/>
+</arc>
+<arc id="MEK to k7" inscription="[0,inf)" source="MEK" target="k7" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="822" yCoord="1121"/>
+<arcpath arcPointType="false" id="1" xCoord="822" yCoord="1122"/>
+</arc>
+<arc id="k23 to ERKP" inscription="1" source="k23" target="ERKP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1377" yCoord="1287"/>
+<arcpath arcPointType="false" id="1" xCoord="1461" yCoord="1075"/>
+</arc>
+<arc id="ERK_MEKPP to k20" inscription="[0,inf)" source="ERK_MEKPP" target="k20" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1352" yCoord="1118"/>
+<arcpath arcPointType="false" id="1" xCoord="1336" yCoord="1137"/>
+</arc>
+<arc id="k20 to MEKPP" inscription="1" source="k20" target="MEKPP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1326" yCoord="1137"/>
+<arcpath arcPointType="false" id="1" xCoord="1280" yCoord="1074"/>
+</arc>
+<arc id="k20 to ERK" inscription="1" source="k20" target="ERK" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1332" yCoord="1122"/>
+<arcpath arcPointType="false" id="1" xCoord="1357" yCoord="1031"/>
+</arc>
+<arc id="k8 to RafP" inscription="1" source="k8" target="RafP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="766" yCoord="1247"/>
+<arcpath arcPointType="false" id="1" xCoord="809" yCoord="1278"/>
+</arc>
+<arc id="k8 to MEK" inscription="1" source="k8" target="MEK" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="762" yCoord="1227"/>
+<arcpath arcPointType="false" id="1" xCoord="815" yCoord="1120"/>
+</arc>
+<arc id="k26 to Phase3" inscription="1" source="k26" target="Phase3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1777" yCoord="1132"/>
+<arcpath arcPointType="false" id="1" xCoord="1686" yCoord="1028"/>
+</arc>
+<arc id="ERKPP_Phase3 to k26" inscription="[0,inf)" source="ERKPP_Phase3" target="k26" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1760" yCoord="1119"/>
+<arcpath arcPointType="false" id="1" xCoord="1776" yCoord="1142"/>
+</arc>
+<arc id="k11 to RafP" inscription="1" source="k11" target="RafP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="882" yCoord="1392"/>
+<arcpath arcPointType="false" id="1" xCoord="829" yCoord="1299"/>
+</arc>
+<arc id="MEKP_RafP to k11" inscription="[0,inf)" source="MEKP_RafP" target="k11" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="918" yCoord="1359"/>
+<arcpath arcPointType="false" id="1" xCoord="886" yCoord="1407"/>
+</arc>
+<arc id="k25 to ERKPP_Phase3" inscription="1" source="k25" target="ERKPP_Phase3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1752" yCoord="1092"/>
+<arcpath arcPointType="false" id="1" xCoord="1752" yCoord="1092"/>
+</arc>
+<arc id="ERKPP to k25" inscription="[0,inf)" source="ERKPP" target="k25" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1778" yCoord="1212"/>
+<arcpath arcPointType="false" id="1" xCoord="1752" yCoord="1092"/>
+</arc>
+<arc id="MEK_RafP to k8" inscription="[0,inf)" source="MEK_RafP" target="k8" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="811" yCoord="1192"/>
+<arcpath arcPointType="false" id="1" xCoord="767" yCoord="1237"/>
+</arc>
+<arc id="k11 to MEKP" inscription="1" source="k11" target="MEKP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="882" yCoord="1392"/>
+<arcpath arcPointType="false" id="1" xCoord="923" yCoord="1241"/>
+</arc>
+<arc id="Phase2 to k13" inscription="[0,inf)" source="Phase2" target="k13" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1117" yCoord="1028"/>
+<arcpath arcPointType="false" id="1" xCoord="1161" yCoord="1077"/>
+</arc>
+<arc id="k14 to MEKPP" inscription="1" source="k14" target="MEKPP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1227" yCoord="1122"/>
+<arcpath arcPointType="false" id="1" xCoord="1263" yCoord="1074"/>
+</arc>
+<arc id="k13 to MEKPP_Phase2" inscription="1" source="k13" target="MEKPP_Phase2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1167" yCoord="1092"/>
+<arcpath arcPointType="false" id="1" xCoord="1167" yCoord="1092"/>
+</arc>
+<arc id="MEKPP to k13" inscription="[0,inf)" source="MEKPP" target="k13" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1257" yCoord="1064"/>
+<arcpath arcPointType="false" id="1" xCoord="1171" yCoord="1077"/>
+</arc>
+<arc id="k26 to ERKPP" inscription="1" source="k26" target="ERKPP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="1782" yCoord="1152"/>
+<arcpath arcPointType="false" id="1" xCoord="1782" yCoord="1212"/>
+</arc>
+<arc id="Phase3 to k25" inscription="[0,inf)" source="Phase3" target="k25" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="1688" yCoord="1026"/>
+<arcpath arcPointType="false" id="1" xCoord="1746" yCoord="1077"/>
+</arc>
+<arc id="k4 to RafP_Phase1" inscription="1" source="k4" target="RafP_Phase1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="687" yCoord="1302"/>
+<arcpath arcPointType="false" id="1" xCoord="687" yCoord="1302"/>
+</arc>
+<arc id="RafP to k4" inscription="[0,inf)" source="RafP" target="k4" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="807" yCoord="1287"/>
+<arcpath arcPointType="false" id="1" xCoord="691" yCoord="1287"/>
+</arc>
+<arc id="k5 to Phase1" inscription="1" source="k5" target="Phase1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="687" yCoord="1347"/>
+<arcpath arcPointType="false" id="1" xCoord="687" yCoord="1256"/>
+</arc>
+<arc id="RafP_Phase1 to k5" inscription="[0,inf)" source="RafP_Phase1" target="k5" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="687" yCoord="1331"/>
+<arcpath arcPointType="false" id="1" xCoord="687" yCoord="1347"/>
+</arc>
+<arc id="Phase1 to k4" inscription="[0,inf)" source="Phase1" target="k4" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="687" yCoord="1256"/>
+<arcpath arcPointType="false" id="1" xCoord="687" yCoord="1272"/>
+</arc>
+<arc id="k5 to RafP" inscription="1" source="k5" target="RafP" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="691" yCoord="1362"/>
+<arcpath arcPointType="false" id="1" xCoord="809" yCoord="1294"/>
+</arc>
+</net>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (ExportedNet.ERK_MEKPP&gt;=0 and ExportedNet.ERKPP&gt;=1 and ExportedNet.Raf&gt;=1 and ExportedNet.ERK&gt;=1 and ExportedNet.ERKPP_Phase3&gt;=1 and ExportedNet.Phase3&gt;=2)" reductionOption="VerifyTAPN" searchOption="DFS" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="FALSE" query="EF (ExportedNet.ERK_MEKPP&gt;=0 and ExportedNet.Raf&gt;=1 and ExportedNet.ERK&gt;=1 and ExportedNet.ERKPP_Phase3&gt;=1 and ExportedNet.Phase3&gt;=2)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="AUTOMATIC" hashTableSize="MB_16" inclusionPlaces="*NONE*" name="TRUE" query="EF (ExportedNet.ERK_MEKPP&gt;=0 and ExportedNet.Raf&gt;=1 and ExportedNet.ERK&gt;=1 and ExportedNet.ERKPP_Phase3&gt;=1 and ExportedNet.Phase3&gt;=1)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

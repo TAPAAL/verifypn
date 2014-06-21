@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="Piscine" type="P/T net">
+<place id="Cabines" initialMarking="1" invariant="&lt; inf" markingOffsetX="234.0" markingOffsetY="-108.0" name="Cabines" nameOffsetX="1.0" nameOffsetY="16.0" positionX="281.0" positionY="81.0"/>
+<place id="Attente_P" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Attente_P" nameOffsetX="19.0" nameOffsetY="13.0" positionX="121.0" positionY="186.0"/>
+<place id="Paniers" initialMarking="1" invariant="&lt; inf" markingOffsetX="234.0" markingOffsetY="72.0" name="Paniers" nameOffsetX="-19.0" nameOffsetY="-9.0" positionX="281.0" positionY="261.0"/>
+<place id="Entree" initialMarking="3" invariant="&lt; inf" markingOffsetX="-6.0" markingOffsetY="-3.0" name="Entree" nameOffsetX="11.0" nameOffsetY="16.0" positionX="41.0" positionY="186.0"/>
+<place id="Sortie" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Sortie" nameOffsetX="1.0" nameOffsetY="21.0" positionX="521.0" positionY="186.0"/>
+<place id="Fini" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Fini" nameOffsetX="11.0" nameOffsetY="21.0" positionX="441.0" positionY="186.0"/>
+<place id="Habillage" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Habillage" nameOffsetX="12.0" nameOffsetY="20.0" positionX="361.0" positionY="186.0"/>
+<place id="Deshabillage" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Deshabillage" nameOffsetX="33.0" nameOffsetY="20.0" positionX="201.0" positionY="186.0"/>
+<place id="Baignade" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Baignade" nameOffsetX="15.0" nameOffsetY="15.0" positionX="281.0" positionY="186.0"/>
+<transition angle="0" id="Entrer_Piscine" infiniteServer="false" name="Entrer_Piscine" nameOffsetX="40.0" nameOffsetY="15.0" positionX="287.0" positionY="310.0" priority="0" urgent="false"/>
+<transition angle="0" id="R_Panier" infiniteServer="false" name="R_Panier" nameOffsetX="29.0" nameOffsetY="-25.0" positionX="487.0" positionY="185.0" priority="0" urgent="false"/>
+<transition angle="0" id="P_Cle2" infiniteServer="false" name="P_Cle2" nameOffsetX="18.0" nameOffsetY="-25.0" positionX="327.0" positionY="185.0" priority="0" urgent="false"/>
+<transition angle="0" id="R_Cles" infiniteServer="false" name="R_Cles" nameOffsetX="8.0" nameOffsetY="-26.0" positionX="407.0" positionY="185.0" priority="0" urgent="false"/>
+<transition angle="0" id="P_Cle1" infiniteServer="false" name="P_Cle1" nameOffsetX="12.0" nameOffsetY="-25.0" positionX="87.0" positionY="185.0" priority="0" urgent="false"/>
+<transition angle="0" id="R_Cle1" infiniteServer="false" name="R_Cle1" nameOffsetX="20.0" nameOffsetY="-26.0" positionX="247.0" positionY="185.0" priority="0" urgent="false"/>
+<transition angle="0" id="P_Panier" infiniteServer="false" name="P_Panier" nameOffsetX="39.0" nameOffsetY="-27.0" positionX="167.0" positionY="185.0" priority="0" urgent="false"/>
+<arc id="cId-778302279272294019530" inscription="[0,inf)" source="Sortie" target="Entrer_Piscine" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="519" yCoord="205"/>
+<arcpath arcPointType="false" id="1" xCoord="303" yCoord="322"/>
+</arc>
+<arc id="cId-779459017953469638731" inscription="1" source="Entrer_Piscine" target="Entree" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="293" yCoord="322"/>
+<arcpath arcPointType="false" id="1" xCoord="66" yCoord="204"/>
+</arc>
+<arc id="cId-779459017953469638734" inscription="[0,inf)" source="Cabines" target="P_Cle2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="299" yCoord="106"/>
+<arcpath arcPointType="false" id="1" xCoord="339" yCoord="182"/>
+</arc>
+<arc id="cId-779459017953469638729" inscription="1" source="R_Panier" target="Sortie" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="503" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="518" yCoord="197"/>
+</arc>
+<arc id="cId-779459017953469638727" inscription="1" source="R_Cles" target="Fini" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="423" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="438" yCoord="197"/>
+</arc>
+<arc id="cId-779624266704634781128" inscription="[0,inf)" source="Fini" target="R_Panier" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="467" yCoord="199"/>
+<arcpath arcPointType="false" id="1" xCoord="493" yCoord="202"/>
+</arc>
+<arc id="cId-779624266704634781123" inscription="1" source="R_Cle1" target="Baignade" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="263" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="278" yCoord="197"/>
+</arc>
+<arc id="cId-779624266704634781135" inscription="1" source="R_Panier" target="Cabines" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="494" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="306" yCoord="99"/>
+</arc>
+<arc id="cId-779624266704634781133" inscription="1" source="R_Cle1" target="Cabines" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="259" yCoord="182"/>
+<arcpath arcPointType="false" id="1" xCoord="287" yCoord="107"/>
+</arc>
+<arc id="cId-779624266704634781124" inscription="[0,inf)" source="Baignade" target="P_Cle2" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="307" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="333" yCoord="197"/>
+</arc>
+<arc id="cId-779624266704634781136" inscription="[0,inf)" source="Paniers" target="P_Panier" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="280" yCoord="264"/>
+<arcpath arcPointType="false" id="1" xCoord="183" yCoord="202"/>
+</arc>
+<arc id="cId-779624266704634781126" inscription="[0,inf)" source="Habillage" target="R_Cles" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="387" yCoord="196"/>
+<arcpath arcPointType="false" id="1" xCoord="414" yCoord="192"/>
+</arc>
+<arc id="cId-779624266704634781125" inscription="1" source="P_Cle2" target="Habillage" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="343" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="358" yCoord="197"/>
+</arc>
+<arc id="cId-779624266704634781148" inscription="[0,inf)" source="Cabines" target="P_Cle1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="279" yCoord="99"/>
+<arcpath arcPointType="false" id="1" xCoord="104" yCoord="192"/>
+</arc>
+<arc id="cId-779624266704634781118" inscription="[0,inf)" source="Entree" target="P_Cle1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="67" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="93" yCoord="197"/>
+</arc>
+<arc id="cId-779624266704634781137" inscription="1" source="R_Cles" target="Paniers" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="413" yCoord="202"/>
+<arcpath arcPointType="false" id="1" xCoord="305" yCoord="265"/>
+</arc>
+<arc id="cId-779624266704634781122" inscription="[0,inf)" source="Deshabillage" target="R_Cle1" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="227" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="253" yCoord="197"/>
+</arc>
+<arc id="cId-779624266704634781121" inscription="1" source="P_Panier" target="Deshabillage" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="184" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="198" yCoord="195"/>
+</arc>
+<arc id="cId-779624266704634781119" inscription="1" source="P_Cle1" target="Attente_P" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="103" yCoord="202"/>
+<arcpath arcPointType="false" id="1" xCoord="118" yCoord="200"/>
+</arc>
+<arc id="cId-779128521310132813120" inscription="[0,inf)" source="Attente_P" target="P_Panier" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="147" yCoord="197"/>
+<arcpath arcPointType="false" id="1" xCoord="173" yCoord="197"/>
+</arc>
+</net>
+<query active="true" approximationDenominator="10" capacity="0" discreteInclusion="false" enableOverApproximation="false" enableUnderApproximation="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" overApproximation="false" pTrie="true" query="EF Piscine.Sortie=2" reductionOption="VerifyPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<query active="true" approximationDenominator="10" capacity="0" discreteInclusion="false" enableOverApproximation="false" enableUnderApproximation="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" overApproximation="false" pTrie="true" query="EF (Piscine.Deshabillage=3 and Piscine.Entree=2)" reductionOption="VerifyPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<query active="true" approximationDenominator="10" capacity="3" discreteInclusion="false" enableOverApproximation="false" enableUnderApproximation="false" extrapolationOption="null" gcd="true" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" overApproximation="false" pTrie="true" query="EF deadlock" reductionOption="VerifyPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<k-bound bound="3"/>
+</pnml>

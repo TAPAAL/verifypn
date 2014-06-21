@@ -36,30 +36,33 @@ class PNMLParser
 	typedef std::vector<Arc> ArcList;
 	typedef ArcList::iterator ArcIter;
 	struct Transition{
-		std::string name,
+		std::string id,
 					cond,
 					assign;
 		double x, y;
 	};
 	typedef std::vector<Transition> TransitionList;
 	typedef TransitionList::iterator TransitionIter;
-	struct InhibitorArc{
-		std::string source,
-					target;
-		int			weight;
-	};
-	typedef std::vector<InhibitorArc> InhibitorArcList;
-	typedef InhibitorArcList::iterator InhibitorArcIter;
 	struct NodeName{
-		std::string name;
+		std::string id;
 		bool isPlace;
 	};
 	typedef std::map<std::string, NodeName> NodeNameMap;
+        
 public:
 
 	struct Query{
 		std::string name,text;
 	};
+        
+        struct InhibitorArc{
+		std::string source,
+					target;
+		int			weight;
+	};
+	typedef std::vector<InhibitorArc> InhibitorArcList;
+        typedef InhibitorArcList::iterator InhibitorArcIter;
+        typedef std::map<std::string, std::string> TransitionEnablednessMap;
 
 	PNMLParser(){
 		builder = NULL;
@@ -70,6 +73,14 @@ public:
 	std::vector<Query> getQueries(){
 		return queries;
 	}
+        
+        InhibitorArcList getInhibitorArcs(){
+                return inhibarcs;
+        }
+        
+        TransitionEnablednessMap getTransitionEnabledness() {
+            return transitionEnabledness;
+        }
 
 private:
 	void parseElement(XMLSP::DOMElement* element);
@@ -88,6 +99,7 @@ private:
 	TransitionList transitions;
 	InhibitorArcList inhibarcs;
 	std::vector<Query> queries;
+        TransitionEnablednessMap transitionEnabledness; // encodes the enabledness condition for each transition
 };
 
 #endif // PNMLPARSER_H

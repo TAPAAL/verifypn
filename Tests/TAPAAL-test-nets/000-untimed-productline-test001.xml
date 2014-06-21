@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<constant name="Deadline" value="22"/>
+<net active="true" id="TAPN1" type="P/T net">
+<place id="Workplace1" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Workplace1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="210.0" positionY="150.0"/>
+<place id="Workplace2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Workplace2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="390.0" positionY="150.0"/>
+<place id="Workplace3" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Workplace3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="150.0"/>
+<place id="Start" initialMarking="4" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="30.0" positionY="270.0"/>
+<place id="End" initialMarking="0" invariant="&lt;= Deadline" markingOffsetX="0.0" markingOffsetY="0.0" name="End" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="705.0" positionY="270.0"/>
+<place id="Finishedtask1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Finishedtask1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="195.0" positionY="390.0"/>
+<place id="Finishedtask2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Finishedtask2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="375.0" positionY="390.0"/>
+<transition angle="0" id="Move2to1" infiniteServer="false" name="Move2to1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="285.0" positionY="60.0" priority="1" timed="false"/>
+<transition angle="0" id="Move1to2" infiniteServer="false" name="Move1to2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="300.0" positionY="210.0" priority="1" timed="false"/>
+<transition angle="0" id="Move3to2" infiniteServer="false" name="Move3to2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="465.0" positionY="60.0" priority="1" timed="false"/>
+<transition angle="0" id="Move2to3" infiniteServer="false" name="Move2to3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="480.0" positionY="210.0" priority="1" timed="false"/>
+<transition angle="0" id="Task1" infiniteServer="false" name="Task1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="195.0" positionY="270.0" priority="1" timed="false"/>
+<transition angle="0" id="Task2" infiniteServer="false" name="Task2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="375.0" positionY="270.0" priority="1" timed="false"/>
+<transition angle="0" id="Task3" infiniteServer="false" name="Task3" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="555.0" positionY="270.0" priority="1" timed="false"/>
+<arc id="Workplace1 to Task1" inscription="[0,inf)" source="Workplace1" target="Task1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="213" yCoord="174"/>
+<arcpath arcPointType="false" id="1" xCoord="177" yCoord="222"/>
+<arcpath arcPointType="false" id="2" xCoord="207" yCoord="267"/>
+</arc>
+<arc id="Task1 to Workplace1" inscription="1" source="Task1" target="Workplace1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="211" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="252" yCoord="237"/>
+<arcpath arcPointType="false" id="2" xCoord="227" yCoord="175"/>
+</arc>
+<arc id="Workplace2 to Task2" inscription="[0,inf)" source="Workplace2" target="Task2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="395" yCoord="175"/>
+<arcpath arcPointType="false" id="1" xCoord="372" yCoord="222"/>
+<arcpath arcPointType="false" id="2" xCoord="387" yCoord="267"/>
+</arc>
+<arc id="Task2 to Workplace2" inscription="1" source="Task2" target="Workplace2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="387" yCoord="267"/>
+<arcpath arcPointType="false" id="1" xCoord="417" yCoord="222"/>
+<arcpath arcPointType="false" id="2" xCoord="405" yCoord="176"/>
+</arc>
+<arc id="Workplace3 to Task3" inscription="[0,inf)" source="Workplace3" target="Task3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="548" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="222"/>
+<arcpath arcPointType="false" id="2" xCoord="567" yCoord="267"/>
+</arc>
+<arc id="Task3 to Workplace3" inscription="1" source="Task3" target="Workplace3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="567" yCoord="267"/>
+<arcpath arcPointType="false" id="1" xCoord="597" yCoord="207"/>
+<arcpath arcPointType="false" id="2" xCoord="562" yCoord="172"/>
+</arc>
+<arc id="Workplace1 to Move1to2" inscription="[0,inf)" source="Workplace1" target="Move1to2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="234" yCoord="170"/>
+<arcpath arcPointType="false" id="1" xCoord="306" yCoord="222"/>
+</arc>
+<arc id="Move1to2 to Workplace2" inscription="1" source="Move1to2" target="Workplace2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="312" yCoord="237"/>
+<arcpath arcPointType="false" id="1" xCoord="312" yCoord="222"/>
+<arcpath arcPointType="false" id="2" xCoord="389" yCoord="170"/>
+</arc>
+<arc id="Workplace2 to Move2to3" inscription="[0,inf)" source="Workplace2" target="Move2to3" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="414" yCoord="170"/>
+<arcpath arcPointType="false" id="1" xCoord="486" yCoord="222"/>
+</arc>
+<arc id="Move2to3 to Workplace3" inscription="1" source="Move2to3" target="Workplace3" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="496" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="541" yCoord="173"/>
+</arc>
+<arc id="Workplace3 to Move3to2" inscription="[0,inf)" source="Workplace3" target="Move3to2" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="542" yCoord="150"/>
+<arcpath arcPointType="false" id="1" xCoord="481" yCoord="72"/>
+</arc>
+<arc id="Move3to2 to Workplace2" inscription="1" source="Move3to2" target="Workplace2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="471" yCoord="72"/>
+<arcpath arcPointType="false" id="1" xCoord="411" yCoord="150"/>
+</arc>
+<arc id="Workplace2 to Move2to1" inscription="[0,inf)" source="Workplace2" target="Move2to1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="390" yCoord="151"/>
+<arcpath arcPointType="false" id="1" xCoord="301" yCoord="72"/>
+</arc>
+<arc id="Move2to1 to Workplace1" inscription="1" source="Move2to1" target="Workplace1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="291" yCoord="72"/>
+<arcpath arcPointType="false" id="1" xCoord="231" yCoord="150"/>
+</arc>
+<arc id="Start to Task1" inscription="[0,inf):1" source="Start" target="Task1" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="56" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="201" yCoord="282"/>
+</arc>
+<arc id="Task1 to Finishedtask1" inscription="[0,inf):1" source="Task1" target="Finishedtask1" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="207" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="207" yCoord="297"/>
+<arcpath arcPointType="false" id="2" xCoord="207" yCoord="387"/>
+</arc>
+<arc id="Finishedtask1 to Task2" inscription="[0,inf):1" source="Finishedtask1" target="Task2" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="219" yCoord="393"/>
+<arcpath arcPointType="false" id="1" xCoord="381" yCoord="282"/>
+</arc>
+<arc id="Task2 to Finishedtask2" inscription="[0,inf):1" source="Task2" target="Finishedtask2" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="387" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="387" yCoord="282"/>
+<arcpath arcPointType="false" id="2" xCoord="387" yCoord="387"/>
+</arc>
+<arc id="Finishedtask2 to Task3" inscription="[0,inf):1" source="Finishedtask2" target="Task3" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="399" yCoord="393"/>
+<arcpath arcPointType="false" id="1" xCoord="561" yCoord="282"/>
+</arc>
+<arc id="Task3 to End" inscription="[0,inf):1" source="Task3" target="End" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="567" yCoord="297"/>
+<arcpath arcPointType="false" id="1" xCoord="567" yCoord="282"/>
+<arcpath arcPointType="false" id="2" xCoord="702" yCoord="282"/>
+</arc>
+</net>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" name="TRUE" query="EF TAPN1.End&gt;=4" reductionOption="VerifyTAPN" searchOption="BFS" symmetry="true" traceOption="SOME"/>
+</pnml>

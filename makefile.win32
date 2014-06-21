@@ -9,7 +9,7 @@ CUT				= cut
 
 # Compiler and linker flags
 CFLAGS			= -O3 -I.
-LDFLAGS			= -static-libgcc -static-libstdc++ -O3 -L. -Wl,--enable-stdcall-fixup -llpsolve55
+LDFLAGS			= -static -static-libgcc -static-libstdc++ -O3 -L. -Wl,--enable-stdcall-fixup -Wl,-Bdynamic -llpsolve55 -Wl,-Bstatic -lpthread 
 
 # Input files
 FLEX_SOURCES	= $(shell find * -name "*.l")

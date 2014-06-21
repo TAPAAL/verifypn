@@ -3,6 +3,7 @@
 #include "PQL.h"
 #include "PQLQueryParser.parser.hpp"
 #define SAVE_TOKEN pqlqlval.string = new std::string(pqlqtext, pqlqleng)
+#define SAVE_QUOTED_TOKEN pqlqlval.string = new std::string(pqlqtext+1, pqlqleng-2)
 #define TOKEN(t) (pqlqlval.token = t)
 extern "C" int pqlqwrap(){return 1;}
 extern PetriEngine::PQL::Condition* query;
@@ -13,21 +14,21 @@ extern int pqlqparse();
 
 digit         [0-9]
 letter        [a-zA-Z_]
-
 %%
 
-[ \t\n\r]					;
-"true"						{return TOKEN(TRUE);}
-"false"						{return TOKEN(FALSE);}
-"deadlock"					{return TOKEN(DEADLOCK);}
-"and"						{return TOKEN(AND);}
-"AND"						{return TOKEN(AND);}
-"or"						{return TOKEN(OR);}
-"OR"						{return TOKEN(OR);}
-"not"						{return TOKEN(NOT);}
-"NOT"						{return TOKEN(NOT);}
-{letter}({letter}|{digit})*	{SAVE_TOKEN; return ID;}
-{digit}+					{SAVE_TOKEN; return INT;}
+[ \t\n\r]         ;
+"true"            {return TOKEN(TRUE);}
+"false"           {return TOKEN(FALSE);}
+"deadlock"          {return TOKEN(DEADLOCK);}
+"and"           {return TOKEN(AND);}
+"AND"           {return TOKEN(AND);}
+"or"            {return TOKEN(OR);}
+"OR"            {return TOKEN(OR);}
+"not"           {return TOKEN(NOT);}
+"NOT"           {return TOKEN(NOT);}
+{letter}({letter}|{digit})* {SAVE_TOKEN; return ID;}
+{digit}+          {SAVE_TOKEN; return INT;}
+(\"(\\.|[^"])*\") {SAVE_QUOTED_TOKEN; return ID;}
 "&&"						{return TOKEN(AND);}
 "||"						{return TOKEN(OR);}
 "!"							{return TOKEN(NOT);}

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="TAPN1" type="P/T net">
+<place id="P0" initialMarking="4" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="210.0" positionY="330.0"/>
+<place id="P1" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="540.0" positionY="330.0"/>
+<place id="P2" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="375.0" positionY="60.0"/>
+<transition angle="0" id="T0" infiniteServer="false" name="T0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="375.0" positionY="330.0" priority="0"/>
+<transition angle="0" id="T1" infiniteServer="false" name="T1" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="375.0" positionY="180.0" priority="0"/>
+<arc id="P0 to T1" inscription="[0,inf)" source="P0" target="T1" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="232" yCoord="331"/>
+<arcpath arcPointType="false" id="1" xCoord="381" yCoord="192"/>
+</arc>
+<arc id="T1 to P2" inscription="1" source="T1" target="P2" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="387" yCoord="177"/>
+<arcpath arcPointType="false" id="1" xCoord="387" yCoord="86"/>
+</arc>
+<arc id="T1 to P1" inscription="1" source="T1" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="391" yCoord="192"/>
+<arcpath arcPointType="false" id="1" xCoord="541" yCoord="331"/>
+</arc>
+<arc id="P0 to T0" inscription="[0,inf)" source="P0" target="T0" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="236" yCoord="342"/>
+<arcpath arcPointType="false" id="1" xCoord="381" yCoord="342"/>
+</arc>
+<arc id="T0 to P1" inscription="1" source="T0" target="P1" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="391" yCoord="342"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="342"/>
+</arc>
+</net>
+<query active="true" capacity="4" discreteInclusion="true" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*ALL*" name="TRUE" query="EF (TAPN1.P2&lt;=0 and TAPN1.P1=4)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="4" discreteInclusion="true" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*ALL*" name="TRUE" query="EF (TAPN1.P2=1 and TAPN1.P1=4)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

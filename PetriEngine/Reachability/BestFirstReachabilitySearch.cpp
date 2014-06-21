@@ -41,9 +41,10 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 	State* s0 = allocator.createState();
 	memcpy(s0->marking(), m0, sizeof(MarkVal) * net.numberOfPlaces());
 	memcpy(s0->valuation(), v0, sizeof(VarVal) * net.numberOfVariables());
-
+    std::vector<BigInt> enabledTransitionsCount (net.numberOfTransitions());
+	
 	if(query->evaluate(*s0, &net))
-		return ReachabilityResult(ReachabilityResult::Satisfied, "Satisfied initially", 0, 0, 0, 0);
+		return ReachabilityResult(ReachabilityResult::Satisfied, "Satisfied initially", 0, 0, 0, enabledTransitionsCount, 0);
 
 	//Initialize subclasses
 	initialize(query, net);
@@ -81,6 +82,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 		// Attempt to fire each transition
 		for(unsigned int t = 0; t < net.numberOfTransitions(); t++){
 			if(net.fire(t, s->marking(), s->valuation(), ns->marking(), ns->valuation())){
+				enabledTransitionsCount[t]++;
 				//If it's new
 				if(states.add(ns)){
 					exploredStates++;
@@ -93,7 +95,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 						//ns->dumpTrace(net);
 						return ReachabilityResult(ReachabilityResult::Satisfied,
 												  "Query was satified!", expandedStates, exploredStates,
-												  states.discovered(), states.maxTokens(), ns->pathLength(), ns->trace());
+												  states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), ns->pathLength(), ns->trace());
 					}
 
 					// Insert in queue, with given priority
@@ -107,7 +109,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 							ns2->setParent(ns);
 							return ReachabilityResult(ReachabilityResult::Satisfied,
 												  "Query was satified!", expandedStates, exploredStates,
-												  states.discovered(), states.maxTokens(), ns2->pathLength(), ns2->trace());
+												  states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), ns2->pathLength(), ns2->trace());
 						}
 						double p = priority(ns2, query, net);
 						if(p <= bestp){
@@ -123,7 +125,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 								if(query->evaluate(*ns2, &net)){
 									return ReachabilityResult(ReachabilityResult::Satisfied,
 													  "Query was satisfied!", expandedStates, exploredStates,
-													  states.discovered(), states.maxTokens(), ns2->pathLength(), ns2->trace());
+													  states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), ns2->pathLength(), ns2->trace());
 								}
 							}
 							if(states.add(ns2)){
@@ -141,7 +143,7 @@ ReachabilityResult BestFirstReachabilitySearch::reachable(const PetriNet &net,
 	}
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-							  "Query cannot be satisfied!", expandedStates, exploredStates, states.discovered(), states.maxTokens());
+							  "Query cannot be satisfied!", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
 }
 
 double BestFirstReachabilitySearch::priority(const Structures::State *state,

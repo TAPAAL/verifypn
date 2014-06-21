@@ -45,7 +45,9 @@ public:
 					   BigInt expandedStates = 0,
 					   BigInt exploredStates = 0,
 					   BigInt discoveredStates = 0,
+                                           const std::vector<BigInt> enabledTransitionsCount = std::vector<BigInt>(),
 					   int maxTokens = 0,
+                                           const std::vector<unsigned int> maxPlaceBound = std::vector<unsigned int>(),
 					   int pathLength = 0,
 					   const std::vector<unsigned int>& trace = std::vector<unsigned int>()){
 		_result = result;
@@ -53,6 +55,8 @@ public:
 		_expandedStates = expandedStates;
 		_exploredStates = exploredStates;
 		_discoveredStates = discoveredStates;
+                _enabledTransitionsCount = enabledTransitionsCount;
+                _maxPlaceBound = maxPlaceBound;
 		_pathLength = pathLength;
 		_trace = trace;
 		_maxTokens = maxTokens;
@@ -71,6 +75,10 @@ public:
 	/** Gets the number of times a state was discovered,
 		A state is discovered every time it's seen, but only explore the first time */
 	BigInt discoveredStates() const { return _discoveredStates; }
+        /** Gets the number of times each transition was enabled during the search*/
+        const std::vector<BigInt> enabledTransitionsCount() const { return _enabledTransitionsCount; }
+         /** Gets the maximum number of tokens in each place of the net during the search*/
+        const std::vector<unsigned int> maxPlaceBound() const { return _maxPlaceBound; }
 	/** Gets the length of the trace path. */
 	int pathLength() const { return _pathLength; }
 	/** Get trace, empty if no trace available or not provided by strategy */
@@ -83,6 +91,8 @@ private:
 	BigInt _expandedStates;
 	BigInt _exploredStates;
 	BigInt _discoveredStates;
+        std::vector<BigInt> _enabledTransitionsCount;
+        std::vector<unsigned int> _maxPlaceBound;
 	int _pathLength;
 	std::vector<unsigned int> _trace;
 	int _maxTokens;

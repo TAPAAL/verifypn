@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-transition name="SensorActivation"/>
+<constant name="YellowDuration" value="5"/>
+<constant name="RedDuration" value="16"/>
+<constant name="minTimeToLeveler" value="7"/>
+<constant name="maxTimeToLeveler" value="10"/>
+<constant name="minInDangerZone" value="3"/>
+<constant name="maxInDangerZone" value="6"/>
+<net active="true" id="Train" type="P/T net">
+<place id="Trains" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Trains" nameOffsetX="29.444444444444443" nameOffsetY="5.000000000000007" positionX="285.0" positionY="45.0"/>
+<place id="Approaching" initialMarking="0" invariant="&lt;= maxTimeToLeveler" markingOffsetX="0.0" markingOffsetY="0.0" name="Approaching" nameOffsetX="135.00000000000003" nameOffsetY="49.44444444444443" positionX="120.0" positionY="210.0"/>
+<place id="DangerZone" initialMarking="0" invariant="&lt;= maxInDangerZone" markingOffsetX="0.0" markingOffsetY="0.0" name="DangerZone" nameOffsetX="131.6666666666667" nameOffsetY="52.77777777777779" positionX="555.0" positionY="210.0"/>
+<transition angle="0" id="T2" infiniteServer="false" name="T2" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="420.0" positionY="330.0" priority="1" timed="true"/>
+<transition angle="0" id="SensorActivation" infiniteServer="false" name="SensorActivation" nameOffsetX="-6.0" nameOffsetY="19.0" positionX="120.0" positionY="45.0" priority="1" timed="true"/>
+<transition angle="0" id="T7" infiniteServer="false" name="T7" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="405.0" positionY="210.0" priority="1" timed="true"/>
+<transition angle="0" id="LeaveDangerZone" infiniteServer="false" name="LeaveDangerZone" nameOffsetX="132.0" nameOffsetY="21.0" positionX="555.0" positionY="45.0" priority="1" timed="true"/>
+<arc id="Trains to SensorActivation" inscription="[0,inf)" source="Trains" target="SensorActivation" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="282" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="136" yCoord="57"/>
+</arc>
+<arc id="SensorActivation to Approaching" inscription="1" source="SensorActivation" target="Approaching" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="132" yCoord="72"/>
+<arcpath arcPointType="false" id="1" xCoord="132" yCoord="207"/>
+</arc>
+<arc id="Approaching to T7" inscription="[0,inf)" source="Approaching" target="T7" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="146" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="411" yCoord="222"/>
+</arc>
+<arc id="T7 to DangerZone" inscription="1" source="T7" target="DangerZone" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="421" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="222"/>
+</arc>
+<arc id="DangerZone to LeaveDangerZone" inscription="[0,inf)" source="DangerZone" target="LeaveDangerZone" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="567" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="567" yCoord="72"/>
+</arc>
+<arc id="LeaveDangerZone to Trains" inscription="1" source="LeaveDangerZone" target="Trains" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="561" yCoord="57"/>
+<arcpath arcPointType="false" id="1" xCoord="311" yCoord="57"/>
+</arc>
+</net>
+<net active="true" id="TraficLight" type="P/T net">
+<place id="Green" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Green" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="480.0"/>
+<place id="Yellow" initialMarking="0" invariant="&lt;= YellowDuration" markingOffsetX="0.0" markingOffsetY="0.0" name="Yellow" nameOffsetX="130.0" nameOffsetY="47.0" positionX="420.0" positionY="390.0"/>
+<place id="Red" initialMarking="0" invariant="&lt;= RedDuration" markingOffsetX="0.0" markingOffsetY="0.0" name="Red" nameOffsetX="152.0" nameOffsetY="25.0" positionX="720.0" positionY="150.0"/>
+<place id="RedRequested" initialMarking="0" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="RedRequested" nameOffsetX="-6.0" nameOffsetY="5.0" positionX="105.0" positionY="150.0"/>
+<transition angle="315" id="YellowToRed" infiniteServer="false" name="YellowToRed" nameOffsetX="6.0" nameOffsetY="2.0" positionX="570.0" positionY="270.0" priority="1" timed="true"/>
+<transition angle="0" id="RedToGreen" infiniteServer="false" name="RedToGreen" nameOffsetX="97.0" nameOffsetY="8.0" positionX="720.0" positionY="480.0" priority="1" timed="true"/>
+<transition angle="0" id="GreenToYellow" infiniteServer="false" name="GreenToYellow" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="390.0" priority="1" timed="true"/>
+<transition angle="45" id="YellowStaysYellow" infiniteServer="false" name="YellowStaysYellow" nameOffsetX="122.0" nameOffsetY="-4.0" positionX="240.0" positionY="255.0" priority="1" timed="true"/>
+<transition angle="0" id="RedTimerReset" infiniteServer="false" name="RedTimerReset" nameOffsetX="36.0" nameOffsetY="-13.0" positionX="390.0" positionY="150.0" priority="1" timed="true"/>
+<transition angle="0" id="SensorActivation" infiniteServer="false" name="SensorActivation" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="105.0" positionY="45.0" priority="1" timed="true"/>
+<arc id="Yellow to YellowToRed" inscription="[0,inf)" source="Yellow" target="YellowToRed" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="443" yCoord="392"/>
+<arcpath arcPointType="false" id="1" xCoord="578" yCoord="286"/>
+</arc>
+<arc id="YellowToRed to Red" inscription="1" source="YellowToRed" target="Red" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="585" yCoord="278"/>
+<arcpath arcPointType="false" id="1" xCoord="720" yCoord="171"/>
+</arc>
+<arc id="Red to RedToGreen" inscription="[0,inf)" source="Red" target="RedToGreen" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="732" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="732" yCoord="477"/>
+</arc>
+<arc id="RedToGreen to Green" inscription="1" source="RedToGreen" target="Green" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="726" yCoord="492"/>
+<arcpath arcPointType="false" id="1" xCoord="131" yCoord="492"/>
+</arc>
+<arc id="Green to GreenToYellow" inscription="[0,inf)" source="Green" target="GreenToYellow" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="117" yCoord="477"/>
+<arcpath arcPointType="false" id="1" xCoord="117" yCoord="417"/>
+</arc>
+<arc id="GreenToYellow to Yellow" inscription="1" source="GreenToYellow" target="Yellow" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="121" yCoord="402"/>
+<arcpath arcPointType="false" id="1" xCoord="417" yCoord="402"/>
+</arc>
+<arc id="RedTimerReset to Red" inscription="1" source="RedTimerReset" target="Red" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="406" yCoord="167"/>
+<arcpath arcPointType="true" id="1" xCoord="573" yCoord="184"/>
+<arcpath arcPointType="false" id="2" xCoord="717" yCoord="164"/>
+</arc>
+<arc id="Red to RedTimerReset" inscription="[0,inf)" source="Red" target="RedTimerReset" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="717" yCoord="158"/>
+<arcpath arcPointType="true" id="1" xCoord="512" yCoord="137"/>
+<arcpath arcPointType="false" id="2" xCoord="407" yCoord="157"/>
+</arc>
+<arc id="RedRequested to GreenToYellow" inscription="[0,inf)" source="RedRequested" target="GreenToYellow" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="117" yCoord="176"/>
+<arcpath arcPointType="false" id="1" xCoord="117" yCoord="387"/>
+</arc>
+<arc id="RedRequested to YellowStaysYellow" inscription="[0,inf)" source="RedRequested" target="YellowStaysYellow" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="128" yCoord="171"/>
+<arcpath arcPointType="false" id="1" xCoord="247" yCoord="263"/>
+</arc>
+<arc id="RedRequested to RedTimerReset" inscription="[0,inf)" source="RedRequested" target="RedTimerReset" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="131" yCoord="162"/>
+<arcpath arcPointType="false" id="1" xCoord="396" yCoord="162"/>
+</arc>
+<arc id="Yellow to YellowStaysYellow" inscription="[0,inf):1" source="Yellow" target="YellowStaysYellow" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="417" yCoord="399"/>
+<arcpath arcPointType="true" id="1" xCoord="317" yCoord="353"/>
+<arcpath arcPointType="false" id="2" xCoord="251" yCoord="274"/>
+</arc>
+<arc id="YellowStaysYellow to Yellow" inscription="[0,inf):1" source="YellowStaysYellow" target="Yellow" type="transport">
+<arcpath arcPointType="false" id="0" xCoord="259" yCoord="267"/>
+<arcpath arcPointType="true" id="1" xCoord="379" yCoord="334"/>
+<arcpath arcPointType="false" id="2" xCoord="422" yCoord="390"/>
+</arc>
+<arc id="SensorActivation to RedRequested" inscription="1" source="SensorActivation" target="RedRequested" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="117" yCoord="72"/>
+<arcpath arcPointType="false" id="1" xCoord="117" yCoord="147"/>
+</arc>
+</net>
+<query active="true" capacity="1" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="AG (!(Train.DangerZone&gt;0) or TraficLight.Red=1)" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="SOME"/>
+</pnml>

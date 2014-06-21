@@ -39,6 +39,7 @@ public:
 		_maxTokens = 0;
 		_places = net.numberOfPlaces();
 		_variables = net.numberOfVariables();
+                _maxPlaceBound = std::vector<unsigned int>(_places,0);
 	}
 	StateSet(unsigned int places, unsigned int variables, int kbound = 0)
 		: std::tr1::unordered_set<State*, State::hash, State::equal_to>
@@ -49,7 +50,8 @@ public:
 		_maxTokens = 0;
 		_places = places;
 		_variables = variables;
-	}
+                _maxPlaceBound = std::vector<unsigned int>(_places,0);
+        }
 	bool add(State* state) {
 		_discovered++;
 		
@@ -66,6 +68,12 @@ public:
 			return false;
 		
 		std::pair<iter, bool> result = this->insert(state);
+                // update the max token bound for each place in the net (only for newly discovered markings)
+                if (result.second) {
+                    for(size_t i = 0; i < _places; i++) {
+                    _maxPlaceBound[i] = std::max<unsigned int>(state->marking()[i],_maxPlaceBound[i]);
+                    }
+                }
 		return result.second;
 	}
 	bool contains(State* state) {
@@ -78,12 +86,18 @@ public:
 	int maxTokens() const {
 	  return _maxTokens;
 	}
+        
+        std::vector<unsigned int> maxPlaceBound() const { 
+            return _maxPlaceBound; 
+        }
+        
 private:
 	typedef std::tr1::unordered_set<State*, State::hash, State::equal_to>::const_iterator const_iter;
 	typedef std::tr1::unordered_set<State*, State::hash, State::equal_to>::iterator iter;
 	BigInt _discovered;
 	int _kbound;
 	int _maxTokens;
+        std::vector<unsigned int> _maxPlaceBound;
 	unsigned int _places;
 	unsigned int _variables;
 };

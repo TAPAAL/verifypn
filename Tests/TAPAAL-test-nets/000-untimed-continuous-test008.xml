@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<net active="true" id="TAPN1" type="P/T net">
+<place id="in" initialMarking="1" invariant="&lt;= 0" markingOffsetX="0.0" markingOffsetY="0.0" name="in" nameOffsetX="26.0" nameOffsetY="-23.0" positionX="135.0" positionY="270.0"/>
+<place id="out" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="out" nameOffsetX="59.0" nameOffsetY="7.0" positionX="705.0" positionY="270.0"/>
+<place id="waiting" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="waiting" nameOffsetX="26.0" nameOffsetY="-16.0" positionX="315.0" positionY="195.0"/>
+<place id="deadline" initialMarking="0" invariant="&lt;= 1" markingOffsetX="0.0" markingOffsetY="0.0" name="deadline" nameOffsetX="14.0" nameOffsetY="44.0" positionX="330.0" positionY="345.0"/>
+<place id="finished" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="finished" nameOffsetX="29.0" nameOffsetY="-9.0" positionX="540.0" positionY="195.0"/>
+<transition angle="0" id="init" infiniteServer="false" name="init" nameOffsetX="17.0" nameOffsetY="-5.0" positionX="225.0" positionY="270.0" priority="0" urgent="false"/>
+<transition angle="0" id="service" infiniteServer="false" name="service" nameOffsetX="36.0" nameOffsetY="-11.0" positionX="420.0" positionY="195.0" priority="0" urgent="false"/>
+<transition angle="0" id="late" infiniteServer="false" name="late" nameOffsetX="25.0" nameOffsetY="38.0" positionX="540.0" positionY="270.0" priority="0" urgent="false"/>
+<transition angle="0" id="early" infiniteServer="false" name="early" nameOffsetX="33.0" nameOffsetY="47.0" positionX="630.0" positionY="345.0" priority="0" urgent="false"/>
+<arc id="in to init" inscription="[0,inf)" source="in" target="init" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="161" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="231" yCoord="282"/>
+</arc>
+<arc id="init to waiting" inscription="1" source="init" target="waiting" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="242" yCoord="277"/>
+<arcpath arcPointType="false" id="1" xCoord="315" yCoord="216"/>
+</arc>
+<arc id="init to deadline" inscription="1" source="init" target="deadline" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="241" yCoord="287"/>
+<arcpath arcPointType="false" id="1" xCoord="329" yCoord="348"/>
+</arc>
+<arc id="waiting to service" inscription="[0,inf)" source="waiting" target="service" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="341" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="426" yCoord="207"/>
+</arc>
+<arc id="service to finished" inscription="1" source="service" target="finished" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="436" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="537" yCoord="207"/>
+</arc>
+<arc id="finished to late" inscription="[0,inf)" source="finished" target="late" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="552" yCoord="221"/>
+<arcpath arcPointType="false" id="1" xCoord="552" yCoord="267"/>
+</arc>
+<arc id="deadline to late" inscription="[0,inf)" source="deadline" target="late" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="351"/>
+<arcpath arcPointType="false" id="1" xCoord="546" yCoord="282"/>
+</arc>
+<arc id="late to out" inscription="1" source="late" target="out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="556" yCoord="282"/>
+<arcpath arcPointType="false" id="1" xCoord="702" yCoord="282"/>
+</arc>
+<arc id="deadline to early" inscription="[0,inf)" source="deadline" target="early" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="356" yCoord="357"/>
+<arcpath arcPointType="false" id="1" xCoord="636" yCoord="357"/>
+</arc>
+<arc id="finished to early" inscription="[0,inf)" source="finished" target="early" type="timed" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="567" yCoord="207"/>
+<arcpath arcPointType="false" id="1" xCoord="642" yCoord="207"/>
+<arcpath arcPointType="false" id="2" xCoord="642" yCoord="342"/>
+</arc>
+<arc id="early to out" inscription="1" source="early" target="out" type="normal" weight="1">
+<arcpath arcPointType="false" id="0" xCoord="646" yCoord="357"/>
+<arcpath arcPointType="false" id="1" xCoord="717" yCoord="357"/>
+<arcpath arcPointType="false" id="2" xCoord="717" yCoord="297"/>
+</arc>
+</net>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" pTrie="true" query="EF TAPN1.out=1" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" timeDarts="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" pTrie="true" query="AF TAPN1.out=1" reductionOption="BROADCAST" searchOption="DFS" symmetry="true" timeDarts="false" traceOption="NONE"/>
+</pnml>

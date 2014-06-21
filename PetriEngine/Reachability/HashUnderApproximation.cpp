@@ -37,6 +37,7 @@ ReachabilityResult HashUnderApproximation::reachable(const PetriNet &net,
 													 const VarVal *v0,
 													 PQL::Condition *query){
 
+	
 	// Check for initial satisfying query
 	if(query->evaluate(PQL::EvaluationContext(m0,v0, &net)))
 		return ReachabilityResult(ReachabilityResult::Satisfied,
@@ -58,6 +59,7 @@ ReachabilityResult HashUnderApproximation::reachable(const PetriNet &net,
 	int count = 0;
 	BigInt discovered = 0;
 	BigInt expanded = 0, explored = 0;
+	std::vector<BigInt> enabledTransitionsCount (net.numberOfTransitions());
 	// Main loop
 	while(!stack.empty()){
 		// Magic number, so we do not report progress too often
@@ -81,13 +83,14 @@ ReachabilityResult HashUnderApproximation::reachable(const PetriNet &net,
 		for(unsigned int t = stack.back().t; t < net.numberOfTransitions(); t++){
 			if(net.fire(t, s->marking(), s->valuation(), ns->marking(), ns->valuation())){
 				discovered++;
+				enabledTransitionsCount[t]++;
 				std::pair<HashSetIter,bool> result = states.insert(hasher(ns));
 				if(result.second){
 					explored++;
 					ns->setTransition(t);
 					if(query->evaluate(PQL::EvaluationContext(ns->marking(), ns->valuation(), &net)))
 						return ReachabilityResult(ReachabilityResult::Satisfied,
-									  "A state satisfying the query was found", expanded, explored, discovered, -1, ns->pathLength(), ns->trace());
+									  "A state satisfying the query was found", expanded, explored, discovered, enabledTransitionsCount, -1, std::vector<unsigned int>(), ns->pathLength(), ns->trace());
 					stack.back().t = t + 1;
 					stack.push_back(Step(ns, 0));
 					foundSomething = true;
@@ -101,7 +104,7 @@ ReachabilityResult HashUnderApproximation::reachable(const PetriNet &net,
 		}
 	}
 	return ReachabilityResult(ReachabilityResult::Unknown,
-							"Could not disprove the existence of a state not satisfying the query.", expanded, explored, discovered, -1);
+							"Could not disprove the existence of a state not satisfying the query.", expanded, explored, discovered, enabledTransitionsCount, -1, std::vector<unsigned int>());
 }
 
 }}

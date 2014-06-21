@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.informatik.hu-berlin.de/top/pnml/ptNetb">
+<shared-transition name="Done"/>
+<net active="true" id="Test" type="P/T net">
+<place id="P0" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="P0" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="150.0" positionY="210.0"/>
+<place id="Finished" initialMarking="0" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Finished" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="510.0" positionY="210.0"/>
+<transition angle="0" id="Done" infiniteServer="false" name="Done" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="210.0" priority="0"/>
+<arc id="P0 to Done" inscription="[0,inf)" source="P0" target="Done" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="176" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="336" yCoord="222"/>
+</arc>
+<arc id="Done to Finished" inscription="1" source="Done" target="Finished" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="346" yCoord="222"/>
+<arcpath arcPointType="false" id="1" xCoord="507" yCoord="222"/>
+</arc>
+</net>
+<net active="true" id="Net1" type="P/T net">
+<place id="Start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="135.0"/>
+<transition angle="0" id="Reset" infiniteServer="false" name="Reset" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="135.0" priority="0"/>
+<transition angle="0" id="Done" infiniteServer="false" name="Done" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="270.0" priority="0"/>
+<arc id="Start to Reset" inscription="[0,inf)" source="Start" target="Reset" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="201" yCoord="135"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="87"/>
+<arcpath arcPointType="false" id="2" xCoord="337" yCoord="142"/>
+</arc>
+<arc id="Reset to Start" inscription="1" source="Reset" target="Start" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="336" yCoord="152"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="192"/>
+<arcpath arcPointType="false" id="2" xCoord="204" yCoord="154"/>
+</arc>
+<arc id="Start to Done" inscription="[0,inf)" source="Start" target="Done" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="161"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="267"/>
+</arc>
+</net>
+<net active="true" id="Net2" type="P/T net">
+<place id="Start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="135.0"/>
+<transition angle="0" id="Reset" infiniteServer="false" name="Reset" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="135.0" priority="0"/>
+<transition angle="0" id="Done" infiniteServer="false" name="Done" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="270.0" priority="0"/>
+<arc id="Start to Reset" inscription="[0,inf)" source="Start" target="Reset" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="201" yCoord="135"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="87"/>
+<arcpath arcPointType="false" id="2" xCoord="337" yCoord="142"/>
+</arc>
+<arc id="Reset to Start" inscription="1" source="Reset" target="Start" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="336" yCoord="152"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="192"/>
+<arcpath arcPointType="false" id="2" xCoord="204" yCoord="154"/>
+</arc>
+<arc id="Start to Done" inscription="[0,inf)" source="Start" target="Done" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="161"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="267"/>
+</arc>
+</net>
+<net active="true" id="Net3" type="P/T net">
+<place id="Start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="135.0"/>
+<transition angle="0" id="Reset" infiniteServer="false" name="Reset" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="135.0" priority="0"/>
+<transition angle="0" id="Done" infiniteServer="false" name="Done" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="270.0" priority="0"/>
+<arc id="Start to Reset" inscription="[0,inf)" source="Start" target="Reset" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="201" yCoord="135"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="87"/>
+<arcpath arcPointType="false" id="2" xCoord="337" yCoord="142"/>
+</arc>
+<arc id="Reset to Start" inscription="1" source="Reset" target="Start" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="336" yCoord="152"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="192"/>
+<arcpath arcPointType="false" id="2" xCoord="204" yCoord="154"/>
+</arc>
+<arc id="Start to Done" inscription="[0,inf)" source="Start" target="Done" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="161"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="267"/>
+</arc>
+</net>
+<net active="true" id="Net4" type="P/T net">
+<place id="Start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="135.0"/>
+<transition angle="0" id="Reset" infiniteServer="false" name="Reset" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="135.0" priority="0"/>
+<transition angle="0" id="Done" infiniteServer="false" name="Done" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="270.0" priority="0"/>
+<arc id="Start to Reset" inscription="[0,inf)" source="Start" target="Reset" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="201" yCoord="135"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="87"/>
+<arcpath arcPointType="false" id="2" xCoord="337" yCoord="142"/>
+</arc>
+<arc id="Reset to Start" inscription="1" source="Reset" target="Start" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="336" yCoord="152"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="192"/>
+<arcpath arcPointType="false" id="2" xCoord="204" yCoord="154"/>
+</arc>
+<arc id="Start to Done" inscription="[0,inf)" source="Start" target="Done" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="161"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="267"/>
+</arc>
+</net>
+<net active="false" id="Net5" type="P/T net">
+<place id="Start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="135.0"/>
+<transition angle="0" id="Reset" infiniteServer="false" name="Reset" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="135.0" priority="0"/>
+<transition angle="0" id="Done" infiniteServer="false" name="Done" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="270.0" priority="0"/>
+<arc id="Start to Reset" inscription="[0,inf)" source="Start" target="Reset" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="201" yCoord="135"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="87"/>
+<arcpath arcPointType="false" id="2" xCoord="337" yCoord="142"/>
+</arc>
+<arc id="Reset to Start" inscription="1" source="Reset" target="Start" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="336" yCoord="152"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="192"/>
+<arcpath arcPointType="false" id="2" xCoord="204" yCoord="154"/>
+</arc>
+<arc id="Start to Done" inscription="[0,inf)" source="Start" target="Done" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="161"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="267"/>
+</arc>
+</net>
+<net active="false" id="Net6" type="P/T net">
+<place id="Start" initialMarking="1" invariant="&lt; inf" markingOffsetX="0.0" markingOffsetY="0.0" name="Start" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="135.0"/>
+<transition angle="0" id="Reset" infiniteServer="false" name="Reset" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="330.0" positionY="135.0" priority="0"/>
+<transition angle="0" id="Done" infiniteServer="false" name="Done" nameOffsetX="-5.0" nameOffsetY="35.0" positionX="180.0" positionY="270.0" priority="0"/>
+<arc id="Start to Reset" inscription="[0,inf)" source="Start" target="Reset" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="201" yCoord="135"/>
+<arcpath arcPointType="false" id="1" xCoord="237" yCoord="87"/>
+<arcpath arcPointType="false" id="2" xCoord="337" yCoord="142"/>
+</arc>
+<arc id="Reset to Start" inscription="1" source="Reset" target="Start" type="normal">
+<arcpath arcPointType="false" id="0" xCoord="336" yCoord="152"/>
+<arcpath arcPointType="false" id="1" xCoord="267" yCoord="192"/>
+<arcpath arcPointType="false" id="2" xCoord="204" yCoord="154"/>
+</arc>
+<arc id="Start to Done" inscription="[0,inf)" source="Start" target="Done" type="timed">
+<arcpath arcPointType="false" id="0" xCoord="192" yCoord="161"/>
+<arcpath arcPointType="false" id="1" xCoord="192" yCoord="267"/>
+</arc>
+</net>
+<query active="true" capacity="0" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="TRUE" query="EF Test.Finished&gt;=1" reductionOption="DEGREE2BROADCAST" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+<query active="true" capacity="3" discreteInclusion="false" extrapolationOption="null" hashTableSize="null" inclusionPlaces="*NONE*" name="FALSE" query="EF Test.Finished&gt;=2" reductionOption="VerifyTAPN" searchOption="HEURISTIC" symmetry="true" traceOption="NONE"/>
+</pnml>

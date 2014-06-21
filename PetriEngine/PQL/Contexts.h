@@ -33,7 +33,7 @@ namespace PQL{
 
 /** Context provided for context analysis */
 class AnalysisContext{
-private:
+protected:
 	std::vector<std::string> _places;
 	std::vector<std::string> _variables;
 	std::vector<ExprError> _errors;
@@ -54,16 +54,16 @@ public:
 	 : _places(places), _variables(variables) {}
 
 	/** Resolve an identifier */
-	ResolutionResult resolve(std::string identifier) const{
+	virtual ResolutionResult resolve(std::string identifier) const{
 		ResolutionResult result;
-		result.offset = -1;
+       		result.offset = -1;
 		result.success = false;
 		for(size_t i = 0; i < _places.size(); i++){
 			if(_places[i] == identifier){
-				result.offset = i;
+				result.offset = i; 
 				result.isPlace = true;
 				result.success = true;
-				return result;
+                                return result;
 			}
 		}
 		for(size_t i = 0; i < _variables.size(); i++){

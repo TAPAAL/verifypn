@@ -53,10 +53,11 @@ ReachabilityResult BreadthFirstReachabilitySearch::reachable(const PetriNet &net
 	int count = 0;
 	BigInt expandedStates = 0;
 	BigInt exploredStates = 1;
+	std::vector<BigInt> enabledTransitionsCount (net.numberOfTransitions());
 	
 	if(query->evaluate(*s0, &net)){
 		return ReachabilityResult(ReachabilityResult::Satisfied, "Query was satisfied",
-								  expandedStates, exploredStates, states.discovered(), states.maxTokens(), s0->pathLength(), s0->trace());
+								  expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), s0->pathLength(), s0->trace());
 	}
 	
 	State* ns = allocator.createState();
@@ -80,6 +81,7 @@ ReachabilityResult BreadthFirstReachabilitySearch::reachable(const PetriNet &net
 		queue.pop_front();
 		for(unsigned int t = 0; t < net.numberOfTransitions(); t++){
 			if(net.fire(t, s, ns, 1)){
+				enabledTransitionsCount[t]++;
 				if(states.add(ns)){
 					exploredStates++;
 					ns->setParent(s);
@@ -87,7 +89,7 @@ ReachabilityResult BreadthFirstReachabilitySearch::reachable(const PetriNet &net
 					if(query->evaluate(*ns, &net)){
 						//ns->dumpTrace(net);
 						return ReachabilityResult(ReachabilityResult::Satisfied,
-												"A state satisfying the query was found", expandedStates, exploredStates, states.discovered(), states.maxTokens(), ns->pathLength(), ns->trace());
+												"A state satisfying the query was found", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), ns->pathLength(), ns->trace());
 					}
 
 					queue.push_back(ns);
@@ -95,7 +97,7 @@ ReachabilityResult BreadthFirstReachabilitySearch::reachable(const PetriNet &net
 					if(!ns)
 						return ReachabilityResult(ReachabilityResult::Unknown,
 												   "Memory bound exceeded",
-												   expandedStates, exploredStates, states.discovered(), states.maxTokens());
+												   expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
 				}
 			}
 		}
@@ -103,7 +105,7 @@ ReachabilityResult BreadthFirstReachabilitySearch::reachable(const PetriNet &net
 	}
 
 	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-						"No state satisfying the query exists.", expandedStates, exploredStates, states.discovered(), states.maxTokens());
+						"No state satisfying the query exists.", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
 }
 
 }}

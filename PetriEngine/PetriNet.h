@@ -74,12 +74,20 @@ public:
 	unsigned int numberOfPlaces() const {return _nPlaces;}
 	int inArc(unsigned int place, unsigned int transition) const;
 	int outArc(unsigned int transition, unsigned int place) const;
-	/** Get vector place names, don't use this to get the number of places */
+        void updateinArc(unsigned int place, unsigned int transition, int weight);
+        void updateoutArc(unsigned int transition, unsigned int place, int weight);
+        /** Get vector place names, don't use this to get the number of places */
 	const std::vector<std::string>& placeNames() const {return _places;}
 	/** Get vector variable names, don't use this to get the number of variable */
 	const std::vector<std::string>& variableNames() const {return _variables;}
 	/** Get vector transition names, don't use this to get the number of variable */
 	const std::vector<std::string>& transitionNames() const {return _transitions;}
+        void skipTransition(unsigned int t) { skipTransitions[t]=true; }
+        bool isTransitionSkipped(unsigned int t) { return skipTransitions[t]; }
+        void skipPlace(unsigned int p) { skipPlaces[p]=true; }
+        bool isPlaceSkipped(unsigned int p) { return skipPlaces[p]; }
+        
+        
 private:
 	std::vector<std::string> _places;
 	std::vector<std::string> _transitions;
@@ -102,7 +110,11 @@ private:
 	VarVal* _ranges;
 	PQL::Condition** _conditions;
 	PQL::AssignmentExpression** _assignments;
+        bool* skipTransitions;
+        bool* skipPlaces;
+
 	friend class PetriNetBuilder;
+        friend class Reducer;
 };
 
 } // PetriEngine

@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 2.5.  */
+/* A Bison parser, made by GNU Bison 2.7.12-4996.  */
 
 /* Bison interface for Yacc-like parsers in C
    
-      Copyright (C) 1984, 1989-1990, 2000-2011 Free Software Foundation, Inc.
+      Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
    
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,6 +30,15 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
+#ifndef YY_PQLQ_PETRIENGINE_PQL_PQLQUERYPARSER_PARSER_HPP_INCLUDED
+# define YY_PQLQ_PETRIENGINE_PQL_PQLQUERYPARSER_PARSER_HPP_INCLUDED
+/* Enabling traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int pqlqdebug;
+#endif
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -60,12 +69,10 @@
 #endif
 
 
-
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
 {
-
-/* Line 2068 of yacc.c  */
+/* Line 2053 of yacc.c  */
 #line 16 "PetriEngine/PQL/PQLQueryParser.y"
 
 	PetriEngine::PQL::Expr* expr;
@@ -74,16 +81,13 @@ typedef union YYSTYPE
 	int token;
 
 
-
-/* Line 2068 of yacc.c  */
-#line 80 "PetriEngine/PQL/PQLQueryParser.parser.hpp"
+/* Line 2053 of yacc.c  */
+#line 86 "PetriEngine/PQL/PQLQueryParser.parser.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 #endif
-
-extern YYSTYPE pqlqlval;
 
 #if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
 typedef struct YYLTYPE
@@ -98,5 +102,20 @@ typedef struct YYLTYPE
 # define YYLTYPE_IS_TRIVIAL 1
 #endif
 
+extern YYSTYPE pqlqlval;
 extern YYLTYPE pqlqlloc;
+#ifdef YYPARSE_PARAM
+#if defined __STDC__ || defined __cplusplus
+int pqlqparse (void *YYPARSE_PARAM);
+#else
+int pqlqparse ();
+#endif
+#else /* ! YYPARSE_PARAM */
+#if defined __STDC__ || defined __cplusplus
+int pqlqparse (void);
+#else
+int pqlqparse ();
+#endif
+#endif /* ! YYPARSE_PARAM */
 
+#endif /* !YY_PQLQ_PETRIENGINE_PQL_PQLQUERYPARSER_PARSER_HPP_INCLUDED  */
