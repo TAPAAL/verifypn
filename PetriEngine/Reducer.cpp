@@ -258,6 +258,9 @@ namespace PetriEngine{
 		bool removePlace[net->numberOfPlaces()]; // remember what places can be removed (one input and one output arc only with same weight)
 		for (size_t p = 0; p < net->numberOfPlaces(); p++) {
 			removePlace[p] = false;
+			if (m0[p] > 0) {
+				continue; // places for removal must have empty initial marking
+			}
 			int inDegree = -1; // weight of transition giving to p (should be exactly one)
 			int outDegree = -1; // weight of transition taking out of p (should be exactly one and equal to inDegree)
 			bool ok = true;
@@ -285,7 +288,7 @@ namespace PetriEngine{
 		for (size_t p1 = 0; p1 < net->numberOfPlaces(); p1++) {
 			for (size_t p2 = 0; p2 < net->numberOfPlaces(); p2++) {
 				if (!removePlace[p1] || !removePlace[p2] || p1 == p2 ||
-						placeInQuery[p1] > 0 || placeInInhib[p1] > 0 || m0[p1] > 0) {
+						placeInQuery[p1] > 0 || placeInInhib[p1] > 0) {
 					continue; // place p1 cannot be removed
 				}
 				bool ok = true;

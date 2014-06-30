@@ -64,7 +64,7 @@ enum SearchStrategies{
 	OverApprox		//LinearOverApprx
 };
 
-#define VERSION		"1.1.0"
+#define VERSION		"1.1.1"
 
 int main(int argc, char* argv[]){
 	// Commandline arguments
