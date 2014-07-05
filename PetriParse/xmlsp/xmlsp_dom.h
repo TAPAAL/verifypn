@@ -37,8 +37,9 @@ namespace XMLSP {
 	class DOMElement;
 	
 	typedef std::vector<DOMElement*> DOMElements;
-	typedef std::map<std::string, DOMElements> DOMElementMap;
-	typedef std::map<std::string, std::string> DOMAttributes;
+//	typedef std::map<std::string, DOMElements> DOMElementMap;
+	typedef std::vector<std::pair<std::string, DOMElements> > DOMElementMap;
+        typedef std::map<std::string, std::string> DOMAttributes;
 	typedef std::vector<std::string> DOMStringList;
 	
 	class DOMElement

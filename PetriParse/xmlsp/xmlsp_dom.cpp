@@ -392,7 +392,10 @@ namespace XMLSP {
 	
 	void DOMElement::addChild(DOMElement* element)
 	{
-		childs[element->getElementName()].push_back(element);
+	//	childs[element->getElementName()].push_back(element); // using old map implementation that does not preserve insertion order
+		std::vector<DOMElement*> tmp;
+		tmp.push_back(element);
+		childs.push_back(std::make_pair(element->getElementName(), tmp));
 	}
 	
 	
