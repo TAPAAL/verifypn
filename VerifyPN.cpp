@@ -323,7 +323,7 @@ int main(int argc, char* argv[]){
                 }
 
 			} else { // standard textual query
-				fprintf(stdout, "Query:  %s", querystr.c_str());
+				fprintf(stdout, "Query:  %s \n", querystr.c_str());
 				//Validate query type
 				if (querystr.substr(0, 2) != "EF" && querystr.substr(0, 2) != "AG") {
 					fprintf(stderr, "Error: Query type \"%s\" not supported, only (EF and AG is supported)\n", querystr.substr(0, 2).c_str());
