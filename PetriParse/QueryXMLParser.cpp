@@ -442,14 +442,23 @@ string QueryXMLParser::parsePlace(XMLSP::DOMElement* element) {
 }
  
 
+void QueryXMLParser::printQueries(int i) {
+//	QueryXMLParser::QueriesIterator it;
+	if (i<=0 || i > queries.size()) {
+		cout << "In printQueries the query index is out of scope\n\n";
+		return;
+	}
+	QueryItem it = queries[i-1];
+	cout << it.id << ": " << (it.isPlaceBound ? "\tplace-bound " : "");
+	if (it.parsingResult == QueryItem::UNSUPPORTED_QUERY) {
+		cout << "\t---------- unsupported query ----------" << endl;
+	} else {
+		cout << "\t" << (it.negateResult ? "not " : "") << it.queryText << endl;
+	}
+}
+
 void QueryXMLParser::printQueries() {
-	QueryXMLParser::QueriesIterator it;
-	for(it = queries.begin(); it != queries.end(); it++){
-			cout << it->id << ": " << (it->isPlaceBound ? "\tplace-bound " : "");
-			if (it->parsingResult == QueryItem::UNSUPPORTED_QUERY) {
-				cout << "\t---------- unsupported query ----------" << endl;
-			} else {
-			cout << "\t" << (it->negateResult ? "not " : "") << it->queryText << endl;
-			}
+	for (int i = 1; i <= queries.size(); i++) {
+		printQueries(i);
 	}	
 }

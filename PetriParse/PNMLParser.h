@@ -20,7 +20,7 @@
 #define PNMLPARSER_H
 
 #include <PetriEngine/AbstractPetriNetBuilder.h>
-#include "xmlsp/xmlsp_dom.h"
+#include "xmlsp/xmlsp_dom_vector.h"
 
 #include <map>
 #include <string>
