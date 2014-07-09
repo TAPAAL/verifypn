@@ -18,7 +18,7 @@
 #ifndef QUERYXMLPARSER_H
 #define	QUERYXMLPARSER_H
 
-#include "xmlsp/xmlsp_dom.h"
+#include "xmlsp/xmlsp_dom_vector.h"
 #include "PNMLParser.h"
 
 #include <map>
@@ -52,6 +52,7 @@ public:
 
 	bool parse(const string& xml);
         void printQueries();
+        void printQueries(int i);
         
 private:
         bool parsePropertySet(XMLSP::DOMElement* element);

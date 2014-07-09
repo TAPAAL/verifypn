@@ -1,5 +1,7 @@
 // Copyright (c) 2007, Przemyslaw Grzywacz
 // All rights reserved.
+// Modified to use vector instead of map so that the order of elements is preserved
+// and removed some unused functionality by Jiri Srba, 2014.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -27,10 +29,11 @@
 #include <sstream>
 #include <cstring>
 
-#include "xmlsp_dom.h"
+#include "xmlsp_dom_vector.h"
 
 
-namespace XMLSP {
+namespace XMLSP
+{
 	
 	static std::string lastParseError;
 	
@@ -158,41 +161,6 @@ namespace XMLSP {
 	//===================================================================
 	
 	
-	/* NOT NEEDED while getXML is not implemented
-	static std::string encodeEntities(const std::string& text)
-	{
-		std::string out;
-		int ch, i, l;
-		static char hex[] = "0123456789abcdef";
-	
-		l = text.size();
-		for(i = 0; i < l; i++) {
-			ch = text[i];
-			switch (ch) {
-			case '&': out.append("&amp;"); break;
-			case '"': out.append("&quot;"); break;
-			case '\'': out.append("&apos;"); break;
-			case '<': out.append("&lt;"); break;
-			case '>': out.append("&gt;"); break;
-			default:
-				if (isalnum(ch)) {
-					out.append(1, ch);
-				} else {
-					out.append("&#");
-					out.append(1, hex[(ch & 0xf0) >> 4]);
-					out.append(1, hex[(ch & 0x0f)]);
-				}
-			}
-		}	
-	
-		return out;
-	}
-	*/
-	
-	
-	//===================================================================
-	
-	
 	std::string DOMElement::getLastError()
 	{
 		return lastParseError;
@@ -213,14 +181,6 @@ namespace XMLSP {
 	}
 	
 	
-	//===================================================================
-	
-	
-	/*std::string DOMElement::getXML(DOMElement* root, int depth)
-	{
-	
-	}*/
-	
 	
 	//===================================================================
 	
@@ -236,13 +196,10 @@ namespace XMLSP {
 	
 	DOMElement::~DOMElement()
 	{
-		DOMElementMap::iterator mi;
-		DOMElements::iterator ei;
+		DOMElements::iterator mi;
 	
 		for(mi = childs.begin(); mi != childs.end(); mi++) {
-			for(ei = mi->second.begin(); ei != mi->second.end(); ei++) {
-				delete *ei;
-			}
+				delete *mi;
 		}
 	}
 	
@@ -297,70 +254,21 @@ namespace XMLSP {
 	
 	int DOMElement::childCount()
 	{
-		DOMElementMap::iterator mi;
-		DOMElements::iterator ei;
-		int count = 0;
-	
-		for(mi = childs.begin(); mi != childs.end(); mi++) {
-			for(ei = mi->second.begin(); ei != mi->second.end(); ei++)
-				count++;
-		}
-	
-		return count;
+		return childs.size();
 	}
 	
-	
-	//===================================================================
-	
-	
-	DOMStringList DOMElement::getChildsNames()
-	{
-		DOMElementMap::iterator mi;
-		DOMStringList list;
-	
-		for(mi = childs.begin(); mi != childs.end(); mi++) {
-			list.push_back(mi->first);
-		}
-	
-		return list;
-	}
-	
-	
-	//===================================================================
-	
-	
-	DOMElements DOMElement::getElementsByName(const std::string& name)
-	{
-		DOMElementMap::iterator mi;
-		DOMElements::iterator ei;
-		DOMElements elements;
-	
-		for(mi = childs.begin(); mi != childs.end(); mi++) {
-			if (mi->first == name) {
-				for(ei = mi->second.begin(); ei != mi->second.end(); ei++) {
-					elements.push_back(*ei);
-				}
-			}
-		}
-	
-		return elements;
-	}
-	
-	
+		
 	//===================================================================
 	
 	
 	DOMElements DOMElement::getElementsByAttribute(const std::string& attribute, const std::string& value)
 	{
-		DOMElementMap::iterator mi;
-		DOMElements::iterator ei;
+		DOMElements::iterator mi;
 		DOMElements elements;
 	
 		for(mi = childs.begin(); mi != childs.end(); mi++) {
-			for(ei = mi->second.begin(); ei != mi->second.end(); ei++) {
-				if ((*ei)->hasAttribute(attribute) && (*ei)->getAttribute(attribute) == value) {
-					elements.push_back(*ei);
-				}
+			if ((*mi)->hasAttribute(attribute) && (*mi)->getAttribute(attribute) == value) {
+				elements.push_back(*mi);
 			}
 		}
 	
@@ -373,17 +281,7 @@ namespace XMLSP {
 	
 	DOMElements DOMElement::getChilds()
 	{
-		DOMElementMap::iterator mi;
-		DOMElements::iterator ei;
-		DOMElements elements;
-	
-		for(mi = childs.begin(); mi != childs.end(); mi++) {
-			for(ei = mi->second.begin(); ei != mi->second.end(); ei++) {
-				elements.push_back(*ei);
-			}
-		}
-	
-		return elements;
+		return childs;
 	}
 	
 	
@@ -392,28 +290,11 @@ namespace XMLSP {
 	
 	void DOMElement::addChild(DOMElement* element)
 	{
-		childs[element->getElementName()].push_back(element);
+		childs.push_back(element);
 	}
 	
 	
 	//===================================================================
-	
-	
-	void DOMElement::removeChild(DOMElement* element)
-	{
-		DOMElementMap::iterator mi;
-		DOMElements::iterator ei;
 
-		for(mi = childs.begin(); mi != childs.end(); mi++) {
-			if (mi->first == element->getElementName()) {
-				for(ei = mi->second.begin(); ei != mi->second.end(); ei++) {
-					if (*ei == element) {
-						mi->second.erase(ei);
-						return;
-					}
-				}
-			}
-		}
-	}
 	
 }; // namespace XMLSP

@@ -1,5 +1,7 @@
 // Copyright (c) 2007, Przemyslaw Grzywacz
 // All rights reserved.
+// Modified to use vector instead of map so that the order of elements is preserved
+// and removed some unused functionality by Jiri Srba, 2014.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -23,8 +25,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef __xmlsp_dom_H
-#define __xmlsp_dom_H
+#ifndef __xmlsp_dom_vector_H
+#define __xmlsp_dom_vector_H
 
 #include <map>
 #include <vector>
@@ -37,7 +39,6 @@ namespace XMLSP {
 	class DOMElement;
 	
 	typedef std::vector<DOMElement*> DOMElements;
-	typedef std::map<std::string, DOMElements> DOMElementMap;
 	typedef std::map<std::string, std::string> DOMAttributes;
 	typedef std::vector<std::string> DOMStringList;
 	
@@ -48,7 +49,6 @@ namespace XMLSP {
 		~DOMElement();
 	
 		static DOMElement* loadXML(const std::string& xml);	
-		//static std::string getXML(DOMElement* element, int depth = 0);
 		static std::string getLastError();
 	
 		int attributeCount() { return attributes.size(); }
@@ -59,13 +59,10 @@ namespace XMLSP {
 	
 		bool hasChilds() { return childs.size() ? true : false; }
 		int childCount();
-		DOMStringList getChildsNames();
-		DOMElements getElementsByName(const std::string& name);
 		DOMElements getElementsByAttribute(const std::string& attribute, const std::string& value);
 		DOMElements getChilds();
 		void addChild(DOMElement* element);
-		void removeChild(DOMElement* element);
-		
+                
 		const std::string& getCData() { return cdata; }
 		void setCData(const std::string& data) { cdata = data; }
 	
@@ -73,7 +70,7 @@ namespace XMLSP {
 	
 	protected:
 		DOMAttributes attributes;
-		DOMElementMap childs;
+		DOMElements childs;
 		std::string cdata;
 		std::string elementName;
 	};
@@ -81,4 +78,4 @@ namespace XMLSP {
 }; // namespace XMLSP
 
 
-#endif // !__xmlsp_dom_H
+#endif // !__xmlsp_dom_vector_H

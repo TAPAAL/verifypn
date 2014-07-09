@@ -304,6 +304,9 @@ int main(int argc, char* argv[]){
 					fprintf(stdout, "CANNOT_COMPUTE\n");
 					return ErrorCode;
 				}
+				XMLparser.printQueries(xmlquery);
+				fprintf(stdout, "\n");
+				
 				if (XMLparser.queries[xmlquery - 1].parsingResult == QueryXMLParser::QueryItem::UNSUPPORTED_QUERY) {
 					fprintf(stdout, "The selected query in the XML query file is not supported\n");
 					fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", XMLparser.queries[xmlquery-1].id.c_str());
@@ -320,6 +323,7 @@ int main(int argc, char* argv[]){
                 }
 
 			} else { // standard textual query
+				fprintf(stdout, "Query:  %s \n", querystr.c_str());
 				//Validate query type
 				if (querystr.substr(0, 2) != "EF" && querystr.substr(0, 2) != "AG") {
 					fprintf(stderr, "Error: Query type \"%s\" not supported, only (EF and AG is supported)\n", querystr.substr(0, 2).c_str());
@@ -422,9 +426,60 @@ int main(int argc, char* argv[]){
 	//Reachability search
 	ReachabilityResult result = strategy->reachable(*net, m0, v0, query);
 
-	//----------------------- Output Trace -----------------------//
-    const std::vector<std::string>& tnames = net->transitionNames();
+	
+	//----------------------- Output Result -----------------------//
+	
+	const std::vector<std::string>& tnames = net->transitionNames();
 	const std::vector<std::string>& pnames = net->placeNames();
+
+	ReturnValues retval = ErrorCode;
+
+	if (statespaceexploration) {
+		retval = UnknownCode;
+		unsigned int placeBound = 0;
+		for(size_t p = 0; p < result.maxPlaceBound().size(); p++) { 
+			placeBound = std::max<unsigned int>(placeBound,result.maxPlaceBound()[p]);
+		}
+		fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
+		return retval;
+	}
+	
+	//Find result code
+	if(result.result() == ReachabilityResult::Unknown)
+		retval = UnknownCode;
+	else if(result.result() == ReachabilityResult::Satisfied)
+		retval = isInvariant ? FailedCode : SuccessCode;
+	else if(result.result() == ReachabilityResult::NotSatisfied)
+		retval = isInvariant ? SuccessCode : FailedCode;
+
+	//Print result
+	if(retval == UnknownCode)
+		fprintf(stdout, "\nUnable to decide if query is satisfied.\n\n");
+	else if(retval == SuccessCode) {
+		if (xmlquery>0) {
+			fprintf(stdout, "TRUE TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n");
+		}
+        fprintf(stdout, "\nQuery is satisfied.\n\n");
+	} else if(retval == FailedCode) {
+		if (xmlquery>0 && XMLparser.queries[xmlquery-1].isPlaceBound) {
+			// find index of the place for reporting place bound
+			for(size_t p = 0; p < result.maxPlaceBound().size(); p++) { 
+				if (pnames[p]==XMLparser.queries[xmlquery-1].placeNameForBound) {
+					fprintf(stdout, "%d TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n", result.maxPlaceBound()[p]);
+					fprintf(stdout, "\nMaximum number of tokens in place %s: %d\n\n",XMLparser.queries[xmlquery-1].placeNameForBound.c_str(),result.maxPlaceBound()[p]);
+                    retval = UnknownCode;
+                    			break;
+				}
+			}
+		} else {
+			if (xmlquery>0) {
+				fprintf(stdout, "FALSE TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n");
+			}
+            fprintf(stdout, "\nQuery is NOT satisfied.\n\n");
+		}
+	}
+	
+	//----------------------- Output Trace -----------------------//
 	
 	//Print result to stderr
 	if(outputtrace && result.result() == ReachabilityResult::Satisfied){
@@ -483,55 +538,8 @@ int main(int argc, char* argv[]){
 	fprintf(stdout,"\n\n");
 	}
 	
-	//----------------------- Output Result -----------------------//
-
-	ReturnValues retval = ErrorCode;
-
-	if (statespaceexploration) {
-		retval = UnknownCode;
-		unsigned int placeBound = 0;
-		for(size_t p = 0; p < result.maxPlaceBound().size(); p++) { 
-			placeBound = std::max<unsigned int>(placeBound,result.maxPlaceBound()[p]);
-		}
-		fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
-		return retval;
-	}
+	//------------------------ Return the Output Value -------------------//
 	
-	//Find result code
-	if(result.result() == ReachabilityResult::Unknown)
-		retval = UnknownCode;
-	else if(result.result() == ReachabilityResult::Satisfied)
-		retval = isInvariant ? FailedCode : SuccessCode;
-	else if(result.result() == ReachabilityResult::NotSatisfied)
-		retval = isInvariant ? SuccessCode : FailedCode;
-
-	//Print result
-	if(retval == UnknownCode)
-		fprintf(stdout, "Unable to decide if query is satisfied.\n");
-	else if(retval == SuccessCode) {
-		if (xmlquery>0) {
-			fprintf(stdout, "TRUE TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n");
-		}
-        fprintf(stdout, "Query is satisfied.\n");
-	} else if(retval == FailedCode) {
-		if (xmlquery>0 && XMLparser.queries[xmlquery-1].isPlaceBound) {
-			// find index of the place for reporting place bound
-			for(size_t p = 0; p < result.maxPlaceBound().size(); p++) { 
-				if (pnames[p]==XMLparser.queries[xmlquery-1].placeNameForBound) {
-					fprintf(stdout, "%d TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n", result.maxPlaceBound()[p]);
-					fprintf(stdout, "Maximum number of tokens in place %s: %d\n",XMLparser.queries[xmlquery-1].placeNameForBound.c_str(),result.maxPlaceBound()[p]);
-                    retval = UnknownCode;
-                    			break;
-				}
-			}
-		} else {
-			if (xmlquery>0) {
-				fprintf(stdout, "FALSE TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n");
-			}
-            fprintf(stdout, "Query is NOT satisfied.\n");
-		}
-	}
-
 	return retval;
 }
 
