@@ -151,7 +151,33 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	} else if (elementName=="possibility") {
 		queryText="EF ( ";
 		negateResult=false;
-	} else if (elementName=="negation") {
+	} else if (elementName == "all-paths") { // new A operator for 2015 competition
+        DOMElements children = (*elements.begin())->getChilds();
+		if (children.size() !=1) {
+			return false;
+		}
+		booleanFormula = children.begin(); 
+		string subElementName = (*booleanFormula)->getElementName();
+        if (subElementName=="globally") {
+            queryText="EF not ( ";
+            negateResult=true;
+        } else {
+            return false;
+        }
+    } else if (elementName == "exists-path") { // new E operator for 2015 competition
+        DOMElements children = (*elements.begin())->getChilds();
+		if (children.size() !=1) {
+			return false;
+		}
+		booleanFormula = children.begin(); 
+		string subElementName = (*booleanFormula)->getElementName();
+        if (subElementName=="finally") {
+            queryText="EF ( ";
+            negateResult=false;
+        } else {
+            return false;
+        }
+    } else if (elementName=="negation") {
 		DOMElements children = (*elements.begin())->getChilds();
 		if (children.size() !=1) {
 			return false;
