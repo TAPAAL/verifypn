@@ -140,8 +140,8 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 	if (elements.size() != 1) {
 		return false;
 	}
-	DOMElements::iterator booleanFormula = elements.begin();
-	string elementName = (*booleanFormula)->getElementName(); 
+	DOMElement* booleanFormula = elements[0];
+	string elementName = booleanFormula->getElementName(); 
 	if (elementName=="invariant") {
 		queryText="EF not(";
 		negateResult=true;
@@ -152,12 +152,12 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 		queryText="EF ( ";
 		negateResult=false;
 	} else if (elementName == "all-paths") { // new A operator for 2015 competition
-        DOMElements children = (*elements.begin())->getChilds();
+        DOMElements children = elements[0]->getChilds();
 		if (children.size() !=1) {
 			return false;
 		}
-		booleanFormula = children.begin(); 
-		string subElementName = (*booleanFormula)->getElementName();
+		booleanFormula = children[0]; 
+		string subElementName = booleanFormula->getElementName();
         if (subElementName=="globally") {
             queryText="EF not ( ";
             negateResult=true;
@@ -165,12 +165,12 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
             return false;
         }
     } else if (elementName == "exists-path") { // new E operator for 2015 competition
-        DOMElements children = (*elements.begin())->getChilds();
+        DOMElements children = elements[0]->getChilds();
 		if (children.size() !=1) {
 			return false;
 		}
-		booleanFormula = children.begin(); 
-		string subElementName = (*booleanFormula)->getElementName();
+		booleanFormula = children[0]; 
+		string subElementName = booleanFormula->getElementName();
         if (subElementName=="finally") {
             queryText="EF ( ";
             negateResult=false;
@@ -178,12 +178,12 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
             return false;
         }
     } else if (elementName=="negation") {
-		DOMElements children = (*elements.begin())->getChilds();
+		DOMElements children = elements[0]->getChilds();
 		if (children.size() !=1) {
 			return false;
 		}
-		booleanFormula = children.begin(); 
-		string negElementName = (*booleanFormula)->getElementName();
+		booleanFormula = children[0]; 
+		string negElementName = booleanFormula->getElementName();
 		if (negElementName=="invariant") {
 			queryText="EF not( ";
 			negateResult=false;
@@ -198,7 +198,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
 		}
     } else if (elementName == "place-bound") {
         queryText = "EF ";
-        DOMElements children = (*booleanFormula)->getChilds();
+        DOMElements children = booleanFormula->getChilds();
         if (children.size() != 1) {
             return false; // we support only place-bound for one place
         }
@@ -216,7 +216,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
     } else {
             return false;
 	}
-	DOMElements nextElements = (*booleanFormula)->getChilds();
+	DOMElements nextElements = booleanFormula->getChilds();
 	if (nextElements.size() !=1 || !parseBooleanFormula(nextElements[0] , queryText)) {
 		return false;
 	}
@@ -251,7 +251,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (children.size()<2) {
 				return false;
 			}
-			if (!(parseBooleanFormula((children[0]), queryText))) {
+			if (!(parseBooleanFormula(children[0], queryText))) {
 				return false;
 			}
 			DOMElements::iterator it;
@@ -267,7 +267,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (children.size()<2) {
 				return false;
 			}
-			if (!(parseBooleanFormula(*children.begin(), queryText))) {
+			if (!(parseBooleanFormula(children[0], queryText))) {
 				return false;
 			}
 			DOMElements::iterator it;
@@ -285,10 +285,10 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			}
 			string subformula1;
 			string subformula2;
-			if (!(parseBooleanFormula(*(children.begin()), subformula1))) {
+			if (!(parseBooleanFormula(children[0], subformula1))) {
 				return false;
 			}
-			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
+			if (!(parseBooleanFormula(children[1], subformula2))) {
 				return false;
 			}
 			queryText+= "(("+subformula1+" and not("+subformula2+")) or (not("+subformula1+") and "+subformula2+"))";
@@ -300,10 +300,10 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			}
 			string subformula1;
 			string subformula2;
-			if (!(parseBooleanFormula(*(children.begin()), subformula1))) {
+			if (!(parseBooleanFormula(children[0], subformula1))) {
 				return false;
 			}
-			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
+			if (!(parseBooleanFormula(children[1], subformula2))) {
 				return false;
 			}
 			queryText+= "not("+subformula1+") or ( "+subformula2+" )";
@@ -315,10 +315,10 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			}
 			string subformula1;
 			string subformula2;
-			if (!(parseBooleanFormula(*(children.begin()), subformula1))) {
+			if (!(parseBooleanFormula(children[0], subformula1))) {
 				return false;
 			}
-			if (!(parseBooleanFormula(*(children.begin()+1), subformula2))) {
+			if (!(parseBooleanFormula(children[1], subformula2))) {
 				return false;
 			}
 			queryText+= "(("+subformula1+" and "+subformula2+") or (not("+subformula1+") and not("+subformula2+")))";
