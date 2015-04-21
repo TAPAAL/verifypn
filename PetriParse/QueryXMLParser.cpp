@@ -261,8 +261,8 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 				if (!(parseBooleanFormula(*it, queryText))) {
 					return false;
 				}
-            }
-            queryText+=")";
+            		}
+            		queryText+=")";
 			return true;
 		} else if (elementName == "disjunction") {
 			DOMElements children = element->getChilds();
