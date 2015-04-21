@@ -251,6 +251,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (children.size()<2) {
 				return false;
 			}
+            queryText+="(";
 			if (!(parseBooleanFormula(children[0], queryText))) {
 				return false;
 			}
@@ -260,13 +261,15 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 				if (!(parseBooleanFormula(*it, queryText))) {
 					return false;
 				}
-			}
+            }
+            queryText+=")";
 			return true;
 		} else if (elementName == "disjunction") {
 			DOMElements children = element->getChilds();
 			if (children.size()<2) {
 				return false;
 			}
+            queryText+="(";
 			if (!(parseBooleanFormula(children[0], queryText))) {
 				return false;
 			}
@@ -277,6 +280,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 					return false;	
 				}
 			}
+            queryText+=")";
 			return true;
 		} else if (elementName == "exclusive-disjunction") {
 			DOMElements children = element->getChilds();
@@ -291,7 +295,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (!(parseBooleanFormula(children[1], subformula2))) {
 				return false;
 			}
-			queryText+= "(("+subformula1+" and not("+subformula2+")) or (not("+subformula1+") and "+subformula2+"))";
+			queryText+= "((("+subformula1+" and not("+subformula2+")) or (not("+subformula1+") and "+subformula2+")))";
 			return true;
 		} else if (elementName == "implication") {
 			DOMElements children = element->getChilds();
@@ -306,7 +310,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (!(parseBooleanFormula(children[1], subformula2))) {
 				return false;
 			}
-			queryText+= "not("+subformula1+") or ( "+subformula2+" )";
+			queryText+= "(not("+subformula1+") or ( "+subformula2+" ))";
 			return true;
 		} else if (elementName == "equivalence") {
 			DOMElements children = element->getChilds();
