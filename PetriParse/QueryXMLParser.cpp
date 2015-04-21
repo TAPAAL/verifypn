@@ -251,7 +251,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (children.size()<2) {
 				return false;
 			}
-            queryText+="(";
+            		queryText+="(";
 			if (!(parseBooleanFormula(children[0], queryText))) {
 				return false;
 			}
@@ -269,7 +269,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 			if (children.size()<2) {
 				return false;
 			}
-            queryText+="(";
+            		queryText+="(";
 			if (!(parseBooleanFormula(children[0], queryText))) {
 				return false;
 			}
@@ -280,7 +280,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
 					return false;	
 				}
 			}
-            queryText+=")";
+            		queryText+=")";
 			return true;
 		} else if (elementName == "exclusive-disjunction") {
 			DOMElements children = element->getChilds();
