@@ -369,6 +369,7 @@ void LogicalCondition::findConstraints(ConstraintAnalysisContext& context) const
 		return;
 	_cond1->findConstraints(context);
 	ConstraintAnalysisContext::ConstraintSet left = context.retval;
+	context.retval.clear();
 	_cond2->findConstraints(context);
 	mergeConstraints(context.retval, left, context.negated);
 }
