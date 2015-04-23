@@ -64,7 +64,7 @@ enum SearchStrategies{
 	OverApprox		//LinearOverApprx
 };
 
-#define VERSION		"1.1.1"
+#define VERSION		"1.2.0"
 
 int main(int argc, char* argv[]){
 	// Commandline arguments
@@ -440,8 +440,12 @@ int main(int argc, char* argv[]){
 		for(size_t p = 0; p < result.maxPlaceBound().size(); p++) { 
 			placeBound = std::max<unsigned int>(placeBound,result.maxPlaceBound()[p]);
 		}
-		fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
-		return retval;
+		// fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
+		fprintf(stdout,"STATE_SPACE STATES %lli TECHNIQUES EXPLICIT\n", result.exploredStates());
+        fprintf(stdout,"STATE_SPACE TRANSITIONS -1 TECHNIQUES EXPLICIT\n");
+        fprintf(stdout,"STATE_SPACE MAX_TOKEN_PER_MARKING %d TECHNIQUES EXPLICIT\n", result.maxTokens());
+        fprintf(stdout,"STATE_SPACE MAX_TOKEN_IN_PLACE %d TECHNIQUES EXPLICIT\n", placeBound);               
+        return retval;
 	}
 	
 	//Find result code

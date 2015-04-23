@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <set>
+#include <cmath>
 
 namespace PetriEngine {
 namespace PQL{
@@ -368,6 +369,7 @@ void LogicalCondition::findConstraints(ConstraintAnalysisContext& context) const
 		return;
 	_cond1->findConstraints(context);
 	ConstraintAnalysisContext::ConstraintSet left = context.retval;
+	context.retval.clear();
 	_cond2->findConstraints(context);
 	mergeConstraints(context.retval, left, context.negated);
 }
@@ -747,18 +749,18 @@ double CompareCondition::distance(DistanceContext& context) const{
 		if(_expr1->pfree() && !_expr2->pfree() && _expr2->type() == Expr::IdentifierExpr){
 			int d = delta(v2, v1, context.negated());
 			if(d == 0) return 0;
-			if(d < 0) return abs(d);
+			if(d < 0) return std::abs(d);
 			IdentifierExpr* id = (IdentifierExpr*)_expr2;
 			return context.distanceMatrix()->tokenCost(id->offset(), d, context.marking());
 		}else if(_expr2->pfree() && !_expr1->pfree() && _expr1->type() == Expr::IdentifierExpr){
 			int d = delta(v1, v2, context.negated());
 			if(d == 0) return 0;
-			if(d < 0) return abs(d);
+			if(d < 0) return std::abs(d);
 			IdentifierExpr* id = (IdentifierExpr*)_expr1;
 			return context.distanceMatrix()->tokenCost(id->offset(), d, context.marking());
 		}
 	}
-	return abs(delta(v1, v2, context.negated()));
+	return std::abs(delta(v1, v2, context.negated()));
 }
 
 double EqualCondition::delta(int v1, int v2, bool negated) const{

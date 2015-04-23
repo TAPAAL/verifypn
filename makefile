@@ -1,1 +1,1 @@
--include makefile.linux64
+-include makefile.osx64
