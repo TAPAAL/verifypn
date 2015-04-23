@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # This is the initialization script for the participation of TAPAAL
-# untimed engine verifypn in the Petri net competition 2014.
+# untimed engine verifypn in the Petri net competition 2015.
+# It uses a number of available cores.
 
 # BK_EXAMINATION: it is a string that identifies your "examination"
 
