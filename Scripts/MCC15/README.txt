@@ -11,4 +11,7 @@ lp:~verifypn-maintainers/verifypn/competition2015reachabilityBounds
 that is used only for ReachabilityBounds (but does not support multiple
 place bounds).
 
+Both branches were modified inside the disk image by:
+- adding SEQUENTIAL/COLLATERAL processing keywords
+- for COLLATERAL processing outputing formula at the very end.
 
