@@ -35,47 +35,57 @@
 #include "xmlsp.h"
 
 namespace XMLSP {
-	
-	class DOMElement;
-	
-	typedef std::vector<DOMElement*> DOMElements;
-	typedef std::map<std::string, std::string> DOMAttributes;
-	typedef std::vector<std::string> DOMStringList;
-	
-	class DOMElement
-	{
-	public:
-		DOMElement(const std::string& tag_name);
-		~DOMElement();
-	
-		static DOMElement* loadXML(const std::string& xml);	
-		static std::string getLastError();
-	
-		int attributeCount() { return attributes.size(); }
-		int hasAttribute(const std::string& name);
-		const std::string& getAttribute(const std::string& name);
-		void setAttribute(const std::string& name, const std::string& value);
-		DOMStringList getAttributeList();
-	
-		bool hasChilds() { return childs.size() ? true : false; }
-		int childCount();
-		DOMElements getElementsByAttribute(const std::string& attribute, const std::string& value);
-		DOMElements getChilds();
-		void addChild(DOMElement* element);
-                
-		const std::string& getCData() { return cdata; }
-		void setCData(const std::string& data) { cdata = data; }
-	
-		std::string getElementName() { return elementName; }
-	
-	protected:
-		DOMAttributes attributes;
-		DOMElements childs;
-		std::string cdata;
-		std::string elementName;
-	};
-	
-}; // namespace XMLSP
+
+    class DOMElement;
+
+    typedef std::vector<DOMElement*> DOMElements;
+    typedef std::map<std::string, std::string> DOMAttributes;
+    typedef std::vector<std::string> DOMStringList;
+
+    class DOMElement {
+    public:
+        DOMElement(const std::string& tag_name);
+        ~DOMElement();
+
+        static DOMElement* loadXML(const std::string& xml);
+        static std::string getLastError();
+
+        int attributeCount() {
+            return attributes.size();
+        }
+        int hasAttribute(const std::string& name);
+        const std::string& getAttribute(const std::string& name);
+        void setAttribute(const std::string& name, const std::string& value);
+        DOMStringList getAttributeList();
+
+        bool hasChilds() {
+            return childs.size() ? true : false;
+        }
+        int childCount();
+        DOMElements getElementsByAttribute(const std::string& attribute, const std::string& value);
+        DOMElements getChilds();
+        void addChild(DOMElement* element);
+
+        const std::string& getCData() {
+            return cdata;
+        }
+
+        void setCData(const std::string& data) {
+            cdata = data;
+        }
+
+        std::string getElementName() {
+            return elementName;
+        }
+
+    protected:
+        DOMAttributes attributes;
+        DOMElements childs;
+        std::string cdata;
+        std::string elementName;
+    };
+
+} // namespace XMLSP
 
 
 #endif // !__xmlsp_dom_vector_H

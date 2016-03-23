@@ -20,22 +20,14 @@
 #define PQLPARSER_H
 
 #include <string>
+#include <memory>
 
-namespace PetriEngine { namespace PQL {
+namespace PetriEngine {
+    namespace PQL {
 
-class Condition;
-class AssignmentExpression;
+        class Condition;
 
-/** Return value for SUMo import */
-struct SUMoQuery{
-	Condition* query;
-	std::string name;
-	bool isInvariant;
-};
-
-Condition* ParseQuery(const std::string& queryString);
-SUMoQuery ParseSUMoQuery(const std::string& queryString);
-AssignmentExpression* ParseAssignment(const std::string& assignmentString);
-
-}}
+        std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool isinvariant, std::string placenameforbound);
+    }
+}
 #endif // PQLPARSER_H

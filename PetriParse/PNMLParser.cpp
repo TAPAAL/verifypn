@@ -28,320 +28,229 @@ using namespace XMLSP;
 using namespace std;
 
 void PNMLParser::parse(const std::string& xml,
-					   AbstractPetriNetBuilder* builder){
-	//Clear any left overs
-	id2name.clear();
-	arcs.clear();
-	transitions.clear();
-	inhibarcs.clear();
-	transitionEnabledness.clear();
+        AbstractPetriNetBuilder* builder) {
+    //Clear any left overs
+    id2name.clear();
+    arcs.clear();
+    transitions.clear();
+    transitionEnabledness.clear();
 
-	//Set the builder
-	this->builder = builder;
+    //Set the builder
+    this->builder = builder;
 
-	//Parser the xml
-	DOMElement* root = DOMElement::loadXML(xml);
-	parseElement(root);
+    //Parser the xml
+    DOMElement* root = DOMElement::loadXML(xml);
+    parseElement(root);
 
-	// initialize transitionEnabledness
-	for(TransitionIter it = transitions.begin(); it != transitions.end(); it++){
-		transitionEnabledness[it->id]="(true";
-	}
-	
-	//Create inhibitor arcs
-	for(InhibitorArcIter inhb = inhibarcs.begin(); inhb != inhibarcs.end(); inhb++){
-		//Check that source id exists
-		if(id2name.find(inhb->source) == id2name.end()){
-			fprintf(stderr,
-					"XML Parsing error: Inhibitor arc source with id=\"%s\" wasn't found!\n",
-					inhb->source.c_str());
-			continue;
-		}
-		//Check that target id exists
-		if(id2name.find(inhb->target) == id2name.end()){
-			fprintf(stderr,
-					"XML Parsing error: Inhibitor arc target with id=\"%s\" wasn't found!\n",
-					inhb->target.c_str());
-			continue;
-		}
-		//Find source and target
-		NodeName source = id2name[inhb->source];
-		NodeName target = id2name[inhb->target];
+    // initialize transitionEnabledness
+    for (TransitionIter it = transitions.begin(); it != transitions.end(); it++) {
+        transitionEnabledness[it->id] = "(true";
+    }
 
-		//Find target transition
-		for(TransitionIter it = transitions.begin(); it != transitions.end(); it++){
-			if(it->id == target.id){
-				// Convert integer weight to string
-				char weight[sizeof(int) * 8 + 1];
-				sprintf(weight, "%i", inhb->weight);
-				
-				//cout << "INHIB ARC: " << source.id << " to " << target.id << " weight " << weight << endl;
-				string cond = " and \"" + source.id + "\" < " + weight;
-				transitionEnabledness[it->id]+=cond;
-				
-				if(it->cond.empty()){
-					it->cond = source.id + " < " + string(weight);
-				}else{
-					it->cond = source.id + " < " + string(weight) + " and ( " + it->cond + " )";
-				}
-			}
-		}
-	}
+    //Add all the transition
+    for (TransitionIter it = transitions.begin(); it != transitions.end(); it++)
+        builder->addTransition(it->id, it->x, it->y);
 
-	//Add all the transition
-	for(TransitionIter it = transitions.begin(); it != transitions.end(); it++)
-		builder->addTransition(it->id, it->cond, it->assign, it->x, it->y);
+    //Add all the arcs
+    for (ArcIter it = arcs.begin(); it != arcs.end(); it++) {
+        //Check that source id exists
+        if (id2name.find(it->source) == id2name.end()) {
+            fprintf(stderr,
+                    "XML Parsing error: Arc source with id=\"%s\" wasn't found!\n",
+                    it->source.c_str());
+            continue;
+        }
+        //Check that target id exists
+        if (id2name.find(it->target) == id2name.end()) {
+            fprintf(stderr,
+                    "XML Parsing error: Arc target with id=\"%s\" wasn't found!\n",
+                    it->target.c_str());
+            continue;
+        }
+        //Find source and target
+        NodeName source = id2name[it->source];
+        NodeName target = id2name[it->target];
 
-	//Add all the arcs
-	for(ArcIter it = arcs.begin(); it != arcs.end(); it++){
-		//Check that source id exists
-		if(id2name.find(it->source) == id2name.end()){
-			fprintf(stderr,
-					"XML Parsing error: Arc source with id=\"%s\" wasn't found!\n",
-					it->source.c_str());
-			continue;
-		}
-		//Check that target id exists
-		if(id2name.find(it->target) == id2name.end()){
-			fprintf(stderr,
-					"XML Parsing error: Arc target with id=\"%s\" wasn't found!\n",
-					it->target.c_str());
-			continue;
-		}
-		//Find source and target
-		NodeName source = id2name[it->source];
-		NodeName target = id2name[it->target];
+        if (source.isPlace && !target.isPlace) {
+            builder->addInputArc(source.id, target.id, it->weight);
 
-		if(source.isPlace && !target.isPlace){
-			builder->addInputArc(source.id, target.id, it->weight);
-			
-			// cout << "ARC: " << source.id << " to " << target.id << " weight " << it->weight << endl;
-			char weight[sizeof(int) * 8 + 1];
-			sprintf(weight, "%i", it->weight);
-			
-			string cond = " and \"" + source.id + "\" >= " + weight;
-			transitionEnabledness[target.id]+=cond;
-		
-		}else if(!source.isPlace && target.isPlace){
-			builder->addOutputArc(source.id, target.id, it->weight);
-		}else{
-			fprintf(stderr,
-					"XML Parsing error: Arc from \"%s\" to \"%s\" is neight input nor output!\n",
-					source.id.c_str(),
-					target.id.c_str());
-		}
-	}
+            // cout << "ARC: " << source.id << " to " << target.id << " weight " << it->weight << endl;
+            char weight[sizeof (int) * 8 + 1];
+            sprintf(weight, "%i", it->weight);
 
-	// finalize transitionEnabledness
-	for(TransitionIter it = transitions.begin(); it != transitions.end(); it++){
-		transitionEnabledness[it->id]+=")";
-	}
-	
-	//Release DOM tree
-	delete root;
+            string cond = " and \"" + source.id + "\" >= " + weight;
+            transitionEnabledness[target.id] += cond;
 
-	//Unset the builder
-	this->builder = NULL;
+        } else if (!source.isPlace && target.isPlace) {
+            builder->addOutputArc(source.id, target.id, it->weight);
+        } else {
+            fprintf(stderr,
+                    "XML Parsing error: Arc from \"%s\" to \"%s\" is neight input nor output!\n",
+                    source.id.c_str(),
+                    target.id.c_str());
+        }
+    }
 
-	//Cleanup
-	id2name.clear();
-	arcs.clear();
-	transitions.clear();
-	//inhibarcs.clear(); We need those for the use in net reductions
+    // finalize transitionEnabledness
+    for (TransitionIter it = transitions.begin(); it != transitions.end(); it++) {
+        transitionEnabledness[it->id] += ")";
+    }
+
+    //Release DOM tree
+    delete root;
+
+    //Unset the builder
+    this->builder = NULL;
+
+    //Cleanup
+    id2name.clear();
+    arcs.clear();
+    transitions.clear();
+    //inhibarcs.clear(); We need those for the use in net reductions
 }
 
-void PNMLParser::makePetriNet(){
-	builder = NULL;
+void PNMLParser::makePetriNet() {
+    builder = NULL;
 }
 
-void PNMLParser::parseElement(DOMElement* element){
-	DOMElements elements = element->getChilds();
-	DOMElements::iterator it;
-	for(it = elements.begin(); it != elements.end(); it++){
-		if((*it)->getElementName() == "place"){
-			parsePlace(*it);
-		}else if((*it)->getElementName() == "transition"){
-			parseTransition(*it);
-		}else if((*it)->getElementName() == "arc" ||
-				 (*it)->getElementName() == "inputArc" ||
-				 (*it)->getElementName() == "outputArc"){
-			parseArc(*it);
-		}else if((*it)->getElementName() == "transportArc"){
-			parseTransportArc(*it);
-		}else if((*it)->getElementName() == "inhibitorArc"){
-			parseInhibitorArc(*it);
-		}else if((*it)->getElementName() == "variable"){
-			parseVariable(*it);
-		} else if((*it)->getElementName() == "queries"){
-			parseQueries(*it);
-		}else
-			parseElement(*it);
-	}
+void PNMLParser::parseElement(DOMElement* element) {
+    DOMElements elements = element->getChilds();
+    DOMElements::iterator it;
+    for (it = elements.begin(); it != elements.end(); it++) {
+        if ((*it)->getElementName() == "place") {
+            parsePlace(*it);
+        } else if ((*it)->getElementName() == "transition") {
+            parseTransition(*it);
+        } else if ((*it)->getElementName() == "arc" ||
+                (*it)->getElementName() == "inputArc" ||
+                (*it)->getElementName() == "outputArc") {
+            parseArc(*it);
+        } else if ((*it)->getElementName() == "transportArc") {
+            std::cout << "transportArc not supported" << std::endl;
+            exit(-1);
+        } else if ((*it)->getElementName() == "inhibitorArc") {
+            std::cout << "inhibitorArc not supported" << std::endl;
+            exit(-1);
+        } else if ((*it)->getElementName() == "variable") {
+            std::cout << "variable not supported" << std::endl;
+            exit(-1);
+        } else if ((*it)->getElementName() == "queries") {
+            parseQueries(*it);
+        } else
+            parseElement(*it);
+    }
 }
 
-void PNMLParser::parseQueries(DOMElement* element){
-	string name, query;
+void PNMLParser::parseQueries(DOMElement* element) {
+    string name, query;
 
-	DOMElements elements = element->getChilds();
-	DOMElements::iterator it;
-	for(it = elements.begin(); it != elements.end(); it++){
-		name = element->getAttribute("name");
-		parseValue(element,query);
-		Query q;
-		q.name = name;
-		q.text = query;
-		this->queries.push_back(q);
-	}
+    DOMElements elements = element->getChilds();
+    DOMElements::iterator it;
+    for (it = elements.begin(); it != elements.end(); it++) {
+        name = element->getAttribute("name");
+        parseValue(element, query);
+        Query q;
+        q.name = name;
+        q.text = query;
+        this->queries.push_back(q);
+    }
 }
 
-void PNMLParser::parsePlace(DOMElement* element){
-	double x = 0, y = 0;
-	string id = element->getAttribute("id");
-	int initialMarking = atoi(element->getAttribute("initialMarking").c_str());
+void PNMLParser::parsePlace(DOMElement* element) {
+    double x = 0, y = 0;
+    string id = element->getAttribute("id");
+    int initialMarking = atoi(element->getAttribute("initialMarking").c_str());
 
-	DOMElements elements = element->getChilds();
-	DOMElements::iterator it;
-	for(it = elements.begin(); it != elements.end(); it++){
-		// name element is ignored
-		if((*it)->getElementName() == "graphics"){
-			parsePosition(*it, x, y);
-		}else if((*it)->getElementName() == "initialMarking"){
-			string text;
-			parseValue(*it, text);
-			initialMarking = atoi(text.c_str());
-		}
-	}
-	//Create place
-	builder->addPlace(id, initialMarking, x, y);
-	//Map id to name
-	NodeName nn;
-	nn.id = id;
-	nn.isPlace = true;
-	id2name[id] = nn;
+    DOMElements elements = element->getChilds();
+    DOMElements::iterator it;
+    for (it = elements.begin(); it != elements.end(); it++) {
+        // name element is ignored
+        if ((*it)->getElementName() == "graphics") {
+            parsePosition(*it, x, y);
+        } else if ((*it)->getElementName() == "initialMarking") {
+            string text;
+            parseValue(*it, text);
+            initialMarking = atoi(text.c_str());
+        }
+    }
+    //Create place
+    builder->addPlace(id, initialMarking, x, y);
+    //Map id to name
+    NodeName nn;
+    nn.id = id;
+    nn.isPlace = true;
+    id2name[id] = nn;
 }
 
-void PNMLParser::parseTransportArc(DOMElement* element){
-	string source		= element->getAttribute("source"),
-		   transiton	= element->getAttribute("transition"),
-		   target		= element->getAttribute("target");
-	int weight = 1;
+void PNMLParser::parseArc(DOMElement* element) {
+    string source = element->getAttribute("source"),
+            target = element->getAttribute("target");
+    int weight = 1;
 
-	DOMElements elements = element->getChilds();
-	DOMElements::iterator it;
-	for(it = elements.begin(); it != elements.end(); it++){
-		if((*it)->getElementName() == "inscription"){
-			string text;
-			parseValue(*it, text);
-			weight = atoi(text.c_str());
-		}
-	}
-
-	Arc inArc;
-	inArc.source = source;
-	inArc.target = transiton;
-	inArc.weight = weight;
-	arcs.push_back(inArc);
-
-	Arc outArc;
-	outArc.source = transiton;
-	outArc.target = target;
-	outArc.weight = weight;
-	arcs.push_back(outArc);
+    DOMElements elements = element->getChilds();
+    DOMElements::iterator it;
+    for (it = elements.begin(); it != elements.end(); it++) {
+        if ((*it)->getElementName() == "inscription") {
+            string text;
+            parseValue(*it, text);
+            weight = atoi(text.c_str());
+        }
+    }
+    Arc arc;
+    arc.source = source;
+    arc.target = target;
+    arc.weight = weight;
+    arcs.push_back(arc);
 }
 
-void PNMLParser::parseInhibitorArc(DOMElement* element){
-	InhibitorArc arc;
-	arc.source = element->getAttribute("source");
-	arc.target = element->getAttribute("target");
-	arc.weight = 1;
+void PNMLParser::parseTransition(DOMElement* element) {
+    Transition t;
+    t.x = 0;
+    t.y = 0;
+    t.id = element->getAttribute("id");
 
-	DOMElements elements = element->getChilds();
-	DOMElements::iterator it;
-	for(it = elements.begin(); it != elements.end(); it++){
-		if((*it)->getElementName() == "inscription"){
-			string text;
-			parseValue(*it, text);
-			arc.weight = atoi(text.c_str());
-		}
-	}
-       	inhibarcs.push_back(arc);
-}
-
-void PNMLParser::parseArc(DOMElement* element){
-	string source = element->getAttribute("source"),
-		   target = element->getAttribute("target");
-	int weight = 1;
-
-	DOMElements elements = element->getChilds();
-	DOMElements::iterator it;
-	for(it = elements.begin(); it != elements.end(); it++){
-		if((*it)->getElementName() == "inscription"){
-			string text;
-			parseValue(*it, text);
-			weight = atoi(text.c_str());
-		}
-	}
-	Arc arc;
-	arc.source = source;
-	arc.target = target;
-	arc.weight = weight;
-	arcs.push_back(arc);
-}
-
-void PNMLParser::parseTransition(DOMElement* element){
-	Transition t;
-	t.x = 0; t.y = 0;
-	t.id = element->getAttribute("id");
-
-	DOMElements elements = element->getChilds();
-	DOMElements::iterator it;
-	for(it = elements.begin(); it != elements.end(); it++){
-		// name element is ignored
-		if((*it)->getElementName() == "graphics"){
-			parsePosition(*it, t.x, t.y);
-		}else if((*it)->getElementName() == "conditions"){
-			t.cond = (*it)->getCData();
-		}else if((*it)->getElementName() == "assignments"){
-			t.assign = (*it)->getCData();
-		}
-	}
-	//Add transition to list
-	transitions.push_back(t);
-	//Map id to name
-	NodeName nn;
-	nn.id = t.id;
-	nn.isPlace = false;
-	id2name[t.id] = nn;
-}
-
-void PNMLParser::parseVariable(DOMElement* element){
-	string name = element->getAttribute("name");
-	int initialValue = atoi(element->getAttribute("initial-value").c_str());
-	int range = atoi(element->getAttribute("range").c_str());
-
-	//Add the variable
-	builder->addVariable(name, initialValue, range);
+    DOMElements elements = element->getChilds();
+    DOMElements::iterator it;
+    for (it = elements.begin(); it != elements.end(); it++) {
+        // name element is ignored
+        if ((*it)->getElementName() == "graphics") {
+            parsePosition(*it, t.x, t.y);
+        } else if ((*it)->getElementName() == "conditions") {
+            std::cout << "conditions not supported" << std::endl;
+            exit(-1);
+        } else if ((*it)->getElementName() == "assignments") {
+            std::cout << "assignments not supported" << std::endl;
+            exit(-1);
+        }
+    }
+    //Add transition to list
+    transitions.push_back(t);
+    //Map id to name
+    NodeName nn;
+    nn.id = t.id;
+    nn.isPlace = false;
+    id2name[t.id] = nn;
 }
 
 void PNMLParser::parseValue(DOMElement* element, string& text) {
-	DOMElements elements = element->getChilds();
-	DOMElements::iterator it;
-	for (it = elements.begin(); it != elements.end(); it++) {
-		if ((*it)->getElementName() == "value" || (*it)->getElementName() == "text") {
-			text = (*it)->getCData();
-		} else
-			parseValue(*it, text);
-	}
+    DOMElements elements = element->getChilds();
+    DOMElements::iterator it;
+    for (it = elements.begin(); it != elements.end(); it++) {
+        if ((*it)->getElementName() == "value" || (*it)->getElementName() == "text") {
+            text = (*it)->getCData();
+        } else
+            parseValue(*it, text);
+    }
 }
 
-void PNMLParser::parsePosition(DOMElement* element, double& x, double& y){
-	DOMElements elements = element->getChilds();
-	DOMElements::iterator it;
-	for(it = elements.begin(); it != elements.end(); it++){
-		if((*it)->getElementName() == "position"){
-			x = atof((*it)->getAttribute("x").c_str());
-			y = atof((*it)->getAttribute("y").c_str());
-		}else
-			parsePosition(*it, x, y);
-	}
+void PNMLParser::parsePosition(DOMElement* element, double& x, double& y) {
+    DOMElements elements = element->getChilds();
+    DOMElements::iterator it;
+    for (it = elements.begin(); it != elements.end(); it++) {
+        if ((*it)->getElementName() == "position") {
+            x = atof((*it)->getAttribute("x").c_str());
+            y = atof((*it)->getAttribute("y").c_str());
+        } else
+            parsePosition(*it, x, y);
+    }
 }

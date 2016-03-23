@@ -32,269 +32,231 @@
 #include "xmlsp_dom_vector.h"
 
 
-namespace XMLSP
-{
-	
-	static std::string lastParseError;
-	
-	class DOMParser: public Parser
-	{
-	public:
-		virtual ~DOMParser();
-	
-		DOMElement* getDOM() { return rootElement; }
-	
-		// parse events
-		virtual bool on_tag_open(const std::string& tag_name, StringMap& attributes);
-		virtual bool on_cdata(const std::string& cdata);
-		virtual bool on_tag_close(const std::string& tag_name);
-		virtual bool on_document_begin();
-		virtual bool on_document_end();
-		virtual void on_error(int errnr, int line, int col, const std::string& message);
-	protected:
-	
-		std::stack<DOMElement*> elementStack;
-		DOMElement* rootElement;
-	};
-	
-	
-	//===================================================================
-	//===================================================================
-	//===================================================================
-	
-	
-	DOMParser::~DOMParser()
-	{
-	
-	}
-	
-	
-	//===================================================================
-	
-	
-	bool DOMParser::on_tag_open(const std::string& tag_name, StringMap& attributes)
-	{
-		DOMElement *e = new DOMElement(tag_name);
-		StringMap::iterator i;
-	
-		// copy attributes
-		for(i = attributes.begin(); i != attributes.end(); i++)
-			e->setAttribute(i->first, i->second);
-	
-		// get parent element
-		if (elementStack.size()) {
-			// add child to parent
-			elementStack.top()->addChild(e);
-		} else {
-			// save root element
-			rootElement = e;
-		}
-	
-		// add element to stack
-		elementStack.push(e);
-		return true;
-	}
-	
-	
-	//===================================================================
-	
-	
-	bool DOMParser::on_cdata(const std::string& cdata)
-	{
-		DOMElement *e = elementStack.top();
-		std::string data;
-		data.assign(e->getCData());
-		data.append(cdata);
-		e->setCData(data);
-		return true;
-	}
-	
-	
-	//===================================================================
-	
-	
-	bool DOMParser::on_tag_close(const std::string& tag_name)
-	{
-		elementStack.pop();
-		return true;
-	}
-	
-	
-	//===================================================================
-	
-	
-	bool DOMParser::on_document_begin()
-	{
-		rootElement = NULL;
-		return true;
-	}
-	
-	
-	//===================================================================
-	
-	
-	bool DOMParser::on_document_end()
-	{
-		// ?? why ?
-		while(elementStack.size()) elementStack.pop();
-		return true;
-	}
-	
-	
-	//===================================================================
-	
-	
-	void DOMParser::on_error(int errnr, int line, int col, const std::string& message)
-	{
-		std::stringstream s;
-		s<<"Error("<<errnr<<"): "<<message<<" on "<<line<<":"<<col;
-		lastParseError = s.str();
-	
-		// free dom
-		delete rootElement;
-		while(elementStack.size()) elementStack.pop();
-	}
-	
-	
-	//===================================================================
-	//===================================================================
-	//===================================================================
-	
-	
-	std::string DOMElement::getLastError()
-	{
-		return lastParseError;
-	}
-	
-	
-	//===================================================================
-	
-	
-	DOMElement* DOMElement::loadXML(const std::string& xml)
-	{
-		DOMParser parser;
-		if (parser.parse(xml)) {
-			return parser.getDOM();
-		} else {
-			return NULL;
-		}
-	}
-	
-	
-	
-	//===================================================================
-	
-	
-	DOMElement::DOMElement(const std::string& tag_name)
-	{
-		elementName = tag_name;
-	}
-	
-	
-	//===================================================================
-	
-	
-	DOMElement::~DOMElement()
-	{
-		DOMElements::iterator mi;
-	
-		for(mi = childs.begin(); mi != childs.end(); mi++) {
-				delete *mi;
-		}
-	}
-	
-	
-	//===================================================================
-	
-	
-	int DOMElement::hasAttribute(const std::string& name)
-	{
-		DOMAttributes::iterator i;
-		for(i = attributes.begin(); i != attributes.end(); i++) {
-			if (i->first == name) return true;
-		}
-		return false;
-	}
-	
-	
-	//===================================================================
-	
-	
-	const std::string& DOMElement::getAttribute(const std::string& name)
-	{
-		return attributes[name];
-	}
-	
-	
-	//===================================================================
-	
-	
-	void DOMElement::setAttribute(const std::string& name, const std::string& value)
-	{
-		attributes[name] = value;
-	}
-	
-	
-	//===================================================================
-	
-	
-	DOMStringList DOMElement::getAttributeList()
-	{
-		DOMStringList r;
-		DOMAttributes::iterator i;
-		for(i = attributes.begin(); i != attributes.end(); i++)
-			r.push_back(i->first);
-	
-		return r;
-	}
-	
-	
-	//===================================================================
-	
-	
-	int DOMElement::childCount()
-	{
-		return childs.size();
-	}
-	
-		
-	//===================================================================
-	
-	
-	DOMElements DOMElement::getElementsByAttribute(const std::string& attribute, const std::string& value)
-	{
-		DOMElements::iterator mi;
-		DOMElements elements;
-	
-		for(mi = childs.begin(); mi != childs.end(); mi++) {
-			if ((*mi)->hasAttribute(attribute) && (*mi)->getAttribute(attribute) == value) {
-				elements.push_back(*mi);
-			}
-		}
-	
-		return elements;
-	}
-	
-	
-	//===================================================================
-	
-	
-	DOMElements DOMElement::getChilds()
-	{
-		return childs;
-	}
-	
-	
-	//===================================================================
-	
-	
-	void DOMElement::addChild(DOMElement* element)
-	{
-		childs.push_back(element);
-	}
-	
-	
-	//===================================================================
+namespace XMLSP {
 
-	
-}; // namespace XMLSP
+    static std::string lastParseError;
+
+    class DOMParser : public Parser {
+    public:
+        virtual ~DOMParser();
+
+        DOMElement* getDOM() {
+            return rootElement;
+        }
+
+        // parse events
+        virtual bool on_tag_open(const std::string& tag_name, StringMap& attributes);
+        virtual bool on_cdata(const std::string& cdata);
+        virtual bool on_tag_close(const std::string& tag_name);
+        virtual bool on_document_begin();
+        virtual bool on_document_end();
+        virtual void on_error(int errnr, int line, int col, const std::string& message);
+    protected:
+
+        std::stack<DOMElement*> elementStack;
+        DOMElement* rootElement;
+    };
+
+
+    //===================================================================
+    //===================================================================
+    //===================================================================
+
+    DOMParser::~DOMParser() {
+
+    }
+
+
+    //===================================================================
+
+    bool DOMParser::on_tag_open(const std::string& tag_name, StringMap& attributes) {
+        DOMElement *e = new DOMElement(tag_name);
+        StringMap::iterator i;
+
+        // copy attributes
+        for (i = attributes.begin(); i != attributes.end(); i++)
+            e->setAttribute(i->first, i->second);
+
+        // get parent element
+        if (elementStack.size()) {
+            // add child to parent
+            elementStack.top()->addChild(e);
+        } else {
+            // save root element
+            rootElement = e;
+        }
+
+        // add element to stack
+        elementStack.push(e);
+        return true;
+    }
+
+
+    //===================================================================
+
+    bool DOMParser::on_cdata(const std::string& cdata) {
+        DOMElement *e = elementStack.top();
+        std::string data;
+        data.assign(e->getCData());
+        data.append(cdata);
+        e->setCData(data);
+        return true;
+    }
+
+
+    //===================================================================
+
+    bool DOMParser::on_tag_close(const std::string& tag_name) {
+        elementStack.pop();
+        return true;
+    }
+
+
+    //===================================================================
+
+    bool DOMParser::on_document_begin() {
+        rootElement = NULL;
+        return true;
+    }
+
+
+    //===================================================================
+
+    bool DOMParser::on_document_end() {
+        // ?? why ?
+        while (elementStack.size()) elementStack.pop();
+        return true;
+    }
+
+
+    //===================================================================
+
+    void DOMParser::on_error(int errnr, int line, int col, const std::string& message) {
+        std::stringstream s;
+        s << "Error(" << errnr << "): " << message << " on " << line << ":" << col;
+        lastParseError = s.str();
+
+        // free dom
+        delete rootElement;
+        while (elementStack.size()) elementStack.pop();
+    }
+
+
+    //===================================================================
+    //===================================================================
+    //===================================================================
+
+    std::string DOMElement::getLastError() {
+        return lastParseError;
+    }
+
+
+    //===================================================================
+
+    DOMElement* DOMElement::loadXML(const std::string& xml) {
+        DOMParser parser;
+        if (parser.parse(xml)) {
+            return parser.getDOM();
+        } else {
+            return NULL;
+        }
+    }
+
+
+
+    //===================================================================
+
+    DOMElement::DOMElement(const std::string& tag_name) {
+        elementName = tag_name;
+    }
+
+
+    //===================================================================
+
+    DOMElement::~DOMElement() {
+        DOMElements::iterator mi;
+
+        for (mi = childs.begin(); mi != childs.end(); mi++) {
+            delete *mi;
+        }
+    }
+
+
+    //===================================================================
+
+    int DOMElement::hasAttribute(const std::string& name) {
+        DOMAttributes::iterator i;
+        for (i = attributes.begin(); i != attributes.end(); i++) {
+            if (i->first == name) return true;
+        }
+        return false;
+    }
+
+
+    //===================================================================
+
+    const std::string& DOMElement::getAttribute(const std::string& name) {
+        return attributes[name];
+    }
+
+
+    //===================================================================
+
+    void DOMElement::setAttribute(const std::string& name, const std::string& value) {
+        attributes[name] = value;
+    }
+
+
+    //===================================================================
+
+    DOMStringList DOMElement::getAttributeList() {
+        DOMStringList r;
+        DOMAttributes::iterator i;
+        for (i = attributes.begin(); i != attributes.end(); i++)
+            r.push_back(i->first);
+
+        return r;
+    }
+
+
+    //===================================================================
+
+    int DOMElement::childCount() {
+        return childs.size();
+    }
+
+
+    //===================================================================
+
+    DOMElements DOMElement::getElementsByAttribute(const std::string& attribute, const std::string& value) {
+        DOMElements::iterator mi;
+        DOMElements elements;
+
+        for (mi = childs.begin(); mi != childs.end(); mi++) {
+            if ((*mi)->hasAttribute(attribute) && (*mi)->getAttribute(attribute) == value) {
+                elements.push_back(*mi);
+            }
+        }
+
+        return elements;
+    }
+
+
+    //===================================================================
+
+    DOMElements DOMElement::getChilds() {
+        return childs;
+    }
+
+
+    //===================================================================
+
+    void DOMElement::addChild(DOMElement* element) {
+        childs.push_back(element);
+    }
+
+
+    //===================================================================
+
+
+} // namespace XMLSP

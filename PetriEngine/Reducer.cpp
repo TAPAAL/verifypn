@@ -7,410 +7,408 @@
 
 #include "Reducer.h"
 #include "PetriNet.h"
+#include "PetriNetBuilder.h"
 #include <PetriParse/PNMLParser.h>
 
-namespace PetriEngine{
+namespace PetriEngine {
 
-	Reducer::Reducer(PetriNet *net) : _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0) {
-		_nplaces = net->numberOfPlaces();
-		_ntransitions = net->numberOfTransitions();
-		unfoldTransitions = new unfoldTransitionsType[_ntransitions];
-		unfoldTransitionsInit = new unfoldTransitionsType[1];
-		_inArc = new int[_nplaces * _ntransitions];
-		_outArc = new int[_nplaces * _ntransitions];
-		for (int p = 0; p < _nplaces; p++) {
-			for (int t = 0; t < _ntransitions; t++) {
-				_inArc[_nplaces * t + p] = net->inArc(p, t);
-				_outArc[_nplaces * t + p] = net->outArc(t, p);
-			}
-		}
-	}
+    Reducer::Reducer(PetriNetBuilder* p) 
+    : _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0), parent(p) {
+    }
 
-	Reducer::~Reducer() {
-		delete[] unfoldTransitions;
-		delete[] unfoldTransitionsInit;
-		delete[] _inArc;
-		delete[] _outArc;
-	}
+    Reducer::~Reducer() {
 
-	void Reducer::CreateInhibitorPlacesAndTransitions(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
-		//Initialize
-		for (size_t i = 0; i < net->numberOfPlaces(); i++) {
-			placeInInhib[i] = 0;
-		}
+    }
 
-		for (size_t i = 0; i < net->numberOfTransitions(); i++) {
-			transitionInInhib[i] = 0;
-		}
+    void Reducer::Print(size_t* placeInQuery) {
+        fprintf(stdout, "\nNET INFO:\n");
+        fprintf(stdout, "Number of places: %zu\n", parent->numberOfPlaces());
+        fprintf(stdout, "Number of transitions: %zu\n\n", parent->numberOfTransitions());
+        for (size_t t = 0; t < parent->numberOfTransitions(); t++) {
+            fprintf(stdout, "Transition %zu:\n", t);
+            for(auto& arc : parent->_transitions[t].pre)
+            {
+                if (arc.weight > 0) 
+                    fprintf(stdout, "   Input place %zu with arc-weight %zu\n", arc.place, arc.weight);
+            }
+            for(auto& arc : parent->_transitions[t].post)
+            {
+                if (arc.weight > 0) 
+                    fprintf(stdout, "  Output place %zu with arc-weight %zu\n", arc.place, arc.weight);
+            }
+            fprintf(stdout, "\n");
+        }
+        for (size_t i = 0; i < parent->numberOfPlaces(); i++) {
+            fprintf(stdout, "Marking at place %zu is: %d\n", i, parent->initMarking()[i]);
+        }
+        for (size_t i = 0; i < parent->numberOfPlaces(); i++) {
+            fprintf(stdout, "Query count for place %zu is: %zu\n", i, placeInQuery[i]);
+        }
+    }
+    Transition& Reducer::getTransition(size_t transition)
+    {
+        return parent->_transitions[transition];
+    }
+    
+    ArcIter Reducer::getOutArc(Transition& trans, size_t place)
+    {
+        auto it = trans.post.begin();
+        for(; it != trans.post.end(); ++it)
+        {
+            if(it->place == place)
+            {
+                return it;
+            }
+        }
+        return it;
+    }
+    
+    ArcIter Reducer::getInArc(size_t place, Transition& trans)
+    {
+        auto it = trans.pre.begin();
+        for(; it != trans.pre.end(); ++it)
+        {
+            if(it->place == place)
+            {
+                return it;
+            }
+        }
+        return it;
+    }
+    
+    void Reducer::eraseTransition(std::vector<size_t>& set, size_t el)
+    {
+        for(auto it = set.begin(); it != set.end(); ++it )
+        {
+            if(*it == el)
+            {
+                set.erase(it);
+                return;
+            }
+        }
+    }
+    void Reducer::skipTransition(size_t t)
+    {
+        Transition& trans = getTransition(t);
+        for(auto p : trans.post)
+        {
+            eraseTransition(parent->_places[p.place].output, t);
+        }
+        for(auto p : trans.pre)
+        {
+            eraseTransition(parent->_places[p.place].input, t);
+        }
+        trans.post.clear();
+        trans.pre.clear();
+        trans.skip = true;
+    }
+    
+    void Reducer::skipPlace(size_t place)
+    {
+        Place& pl = parent->_places[place];
+        pl.skip = true;
+        for(auto& t : pl.input)
+        {
+            Transition& trans = getTransition(t);
+            for(auto it = trans.pre.begin(); it != trans.pre.end(); ++it)
+            {
+                if(it->place == place)
+                {
+                    trans.pre.erase(it);
+                    break;
+                }
+            }
+        }
+        
+        for(auto& t : pl.output)
+        {
+            Transition& trans = getTransition(t);
+            for(auto it = trans.post.begin(); it != trans.post.end(); ++it)
+            {
+                if(it->place == place)
+                {
+                    trans.post.erase(it);
+                    break;
+                }
+            }
+        }
+    }
+    
 
-		//Construct the inhibitor places/arcs
-		PNMLParser::InhibitorArcIter arcIter;
-		for (arcIter = inhibarcs.begin(); arcIter != inhibarcs.end(); arcIter++) {
-			size_t place = -1;
-			//Find place number
-			for (size_t i = 0; i < net->numberOfPlaces(); i++) {
-				if (net->placeNames()[i] == arcIter->source) {
-					place = i;
-					placeInInhib[place] = arcIter->weight;
-					break;
-				}
-			}
+    bool Reducer::ReducebyRuleA(size_t* placeInQuery) {
+        // Rule A  - find transition t that has exactly one place in pre and post and remove one of the places (and t)  
+        bool continueReductions = false;
+        for (size_t t = 0; t < parent->numberOfTransitions(); t++) {
 
-			size_t transition = -1;
-			//Find place number
-			for (size_t i = 0; i < net->numberOfTransitions(); i++) {
-				if (net->transitionNames()[i] == arcIter->target) {
-					transition = i;
-					transitionInInhib[transition] = arcIter->weight;
-					break;
-				}
-			}
+            Transition& trans = getTransition(t);
+            
+            // should skip, or we have more than one in pre or post
+            if(trans.skip || trans.pre.size() != 1 || trans.post.size() != 1) continue;
+            
+            // We have weight of more than one
+            if(trans.pre[0].weight != 1 || trans.post[0].weight != 1) continue;
+            
+            size_t pPre = trans.pre[0].place;
+            size_t pPost = trans.post[0].place;
+            
+            // dont mess with query!
+            if(placeInQuery[pPre] > 0 || placeInQuery[pPost]) continue;
+            
+            // cant remove if both are in initmarking
+            if(parent->initMarking()[pPre] > 0 && parent->initMarking()[pPost] > 0) continue;
+                 
+            // continue if we didn't find unique pPre and pPost that are different
+            if (pPre < 0 || pPost < 0 || pPre == pPost) continue;
 
-			assert(place >= 0 && transition >= 0);
-		}
-	}
-	
-   	void Reducer::Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
-		fprintf(stdout, "\nNET INFO:\n");
-		fprintf(stdout, "Number of places: %i\n", net->numberOfPlaces());
-		fprintf(stdout, "Number of transitions: %i\n\n", net->numberOfTransitions());
-		for (int j = 0; j < net->numberOfTransitions(); j++) {
-			fprintf(stdout, "Transition %d:\n", j);
-			for (int i = 0; i < net->numberOfPlaces(); i++) {
-				if (net->inArc(i, j) > 0) fprintf(stdout, "   Input place %d with arc-weight %d\n", i, net->inArc(i, j));
-			}
-			for (int i = 0; i < net->numberOfPlaces(); i++) {
-				if (net->outArc(j, i) > 0) fprintf(stdout, "  Output place %d with arc-weight %d\n", i, net->outArc(j, i));
-			}
-			fprintf(stdout, "\n");
-		}
-		for (int i = 0; i < net->numberOfPlaces(); i++) {
-			fprintf(stdout, "Marking at place %d is: %d\n", i, m0[i]);
-		}
-		for (int i = 0; i < net->numberOfPlaces(); i++) {
-			fprintf(stdout, "Query count for place %d is: %d\n", i, placeInQuery[i]);
-		}
-		for (int i = 0; i < net->numberOfPlaces(); i++) {
-			fprintf(stdout, "Inhibitor count for place %d is: %d\n", i, placeInInhib[i]);
-		}
-		for (int i = 0; i < net->numberOfTransitions(); i++) {
-			fprintf(stdout, "Inhibitor count for transition %d is: %d\n", i, transitionInInhib[i]);
-		}
-	}
+            // Check that pPre goes only to t
+            if(parent->_places[pPre].input.size() > 1) continue;
 
-	bool Reducer::ReducebyRuleA(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
-		// Rule A  - find transition t that has exactly one place in pre and post and remove one of the places   
-		bool continueReductions = false;
-		for (size_t t = 0; t < net->numberOfTransitions(); t++) {
-			if (transitionInInhib[t] > 0) {
-				continue;
-			} // if t has a connected inhibitor arc, it cannot be removed
-			int pPre = -1;
-			int pPost = -1;
-			bool ok = true;
-			for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-				if (net->inArc(p, t) > 0) {
-					if (pPre >= 0 || net->inArc(p, t) > 1 || placeInQuery[p] > 0 || placeInInhib[p] > 0) {
-						pPre = -1;
-						ok = false;
-						break;
-					}
-					pPre = p;
-				}
-				if (net->outArc(t, p) > 0) {
-					if (pPost >= 0 || net->outArc(t, p) > 1 || placeInQuery[p] > 0 || placeInInhib[p] > 0) {
-						pPost = -1;
-						ok = false;
-						break;
-					}
-					pPost = p;
-				}
-			}
-			if (!ok || pPre < 0 || pPost < 0 || pPre == pPost || (m0[pPre] > 0 && m0[pPost] > 0)) {
-				continue; // continue if we didn't find unique pPre and pPost that are different and at least of them with empty initial marking 
-			}
-			// Check that pPre goes only to t and that there is no other transition than t that gives to pPost
-			for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
-				if (net->inArc(pPre, _t) > 0 && _t != t) {
-					ok = false;
-					break;
-				}
-			}
-			if (!ok) {
-				continue;
-			}
-			continueReductions = true;
-			_ruleA++;
-			// Remember that if the initial marking has tokens in pPre, we should fire t initially
-			if (m0[pPre] > 0) {
-				std::pair<int, int> element(t, m0[pPre]); // first element is transition id, the second how many times it should fire
-				unfoldTransitionsInit->push_back(element);
-			}
-			// Remember that after any transition putting to pPre, we should fire immediately after that also t
-			for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
-				if (net->outArc(_t, pPre) > 0) {
-					std::pair<int, int> element(t, net->outArc(_t, pPre)); // first element is transition id, the second how many times it should fire
-					unfoldTransitions[_t].push_back(element);
-				}
-			}
-			// Remove transition t and the place that has no tokens in m0
-			net->updateinArc(pPre, t, 0);
-			net->updateoutArc(t, pPost, 0);
-			net->skipTransition(t);
-			_removedTransitions++;
-			if (m0[pPre] == 0) { // removing pPre
-				_removedPlaces++;
-				net->skipPlace(pPre);
-				for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
-					net->updateoutArc(_t, pPost, net->outArc(_t, pPost) + net->outArc(_t, pPre));
-					net->updateoutArc(_t, pPre, 0);
-				}
-			} else if (m0[pPost] == 0) { // removing pPost
-				_removedPlaces++;
-				net->skipPlace(pPost);
-				for (size_t _t = 0; _t < net->numberOfTransitions(); _t++) {
-					net->updateinArc(pPre, _t, net->inArc(pPost, _t));
-					net->updateoutArc(_t, pPre, net->outArc(_t, pPre) + net->outArc(_t, pPost));
-					net->updateinArc(pPost, _t, 0);
-					net->updateoutArc(_t, pPost, 0);
-				}
-			}
-		} // end of Rule A main for-loop
-		return continueReductions;
-	}
+            continueReductions = true;
+            _ruleA++;
 
-	bool Reducer::ReducebyRuleB(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
-		// Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
-		bool continueReductions = false;
-		for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-			if (placeInInhib[p] > 0 || m0[p] > 0) {
-				continue; // if p has inhibitor arc or nonzero initial marking it cannot be removed
-			}
-			int tPre = -1;
-			int tPost = -1;
-			bool ok = true;
-			for (size_t t = 0; t < net->numberOfTransitions(); t++) {
-				if (net->outArc(t, p) > 0) {
-					if (tPre >= 0) {
-						tPre = -1;
-						ok = false;
-						break;
-					}
-					tPre = t;
-				}
-				if (net->inArc(p, t) > 0) {
-					if (tPost >= 0) {
-						tPost = -1;
-						ok = false;
-						break;
-					}
-					tPost = t;
-				}
-			}
-			if (!ok || tPre < 0 || tPost < 0 || tPre == tPost || // no unique and different tPre and tPost found
-					(net->outArc(tPre, p) != net->inArc(p, tPost)) || // incoming and outgoing arcs to p have different weight
-					placeInQuery[p] > 0 || placeInInhib[p] > 0 || // p is part of query or has inhibitor arcs connected
-					m0[p] > 0 || // p is marked in the initial marking
-					transitionInInhib[tPre] > 0 || transitionInInhib[tPost] > 0) // tPre or tPost have inhibitor arcs
-			{
-				continue;
-			}
-			// Check if the output places of tPost do not have any inhibitor arcs connected and are not used in the query
-			for (size_t _p = 0; _p < net->numberOfPlaces(); _p++) {
-				if (net->outArc(tPost, _p) > 0 && (placeInInhib[_p] > 0 || placeInQuery[_p]>0)) {
-					ok = false;
-					break;
-				}
-			}
-			// Check that there is no other place than p that gives to tPost, tPre can give to other places
-			for (size_t _p = 0; _p < net->numberOfPlaces(); _p++) {
-				if (net->inArc(_p, tPost) > 0 && _p != p) {
-					ok = false;
-					break;
-				}
-			}
-			if (!ok) {
-				continue;
-			}
-			continueReductions = true;
-			_ruleB++;
-			// Remember that after tPre we should always fire also tPost
-			std::pair<int, int> element(tPost, 1); // first element is transition id, second how many times it should fire
-			unfoldTransitions[tPre].push_back(element);
-			// Remove place p
-			net->updateoutArc(tPre, p, 0);
-			net->updateinArc(p, tPost, 0);
-			_removedPlaces++;
-			net->skipPlace(p);
-			_removedTransitions++;
-			for (size_t _p = 0; _p < net->numberOfPlaces(); _p++) { // remove tPost
-				net->updateoutArc(tPre, _p, net->outArc(tPre, _p) + net->outArc(tPost, _p));
-				net->updateoutArc(tPost, _p, 0);
-			}
-			net->skipTransition(tPost);
-		} // end of Rule B main for-loop
-		return continueReductions;
-	}
+            // Remove transition t and the place that has no tokens in m0
+            _removedTransitions++; 
+            skipTransition(t);
+            
+            if (parent->initMarking()[pPre] == 0) { // removing pPre
+                for(auto& _t : parent->_places[pPre].output)
+                {
+                    // move output-arcs to post.
+                    Transition& trans = getTransition(_t);
+                    auto source = getOutArc(trans, pPre);
+                    auto dest = getOutArc(trans, pPost);
+                    if(dest == trans.post.end())
+                    {
+                        source->place = pPost;
+                        parent->_places[pPost].output.push_back(_t);
+                    }
+                    else
+                    {
+                        dest->weight += source->weight;
 
-	bool Reducer::ReducebyRuleC(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
-		// Rule C - two transitions that put and take from the same places
-		bool continueReductions = false;
-		bool removePlace[net->numberOfPlaces()]; // remember what places can be removed (one input and one output arc only with same weight)
-		for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-			removePlace[p] = false;
-			if (m0[p] > 0) {
-				continue; // places for removal must have empty initial marking
-			}
-			int inDegree = -1; // weight of transition giving to p (should be exactly one)
-			int outDegree = -1; // weight of transition taking out of p (should be exactly one and equal to inDegree)
-			bool ok = true;
-			for (size_t t = 0; t < net->numberOfTransitions(); t++) {
-				if (net->outArc(t, p) > 0) {
-					if (inDegree >= 0) {
-						ok = false;
-						break;
-					}
-					inDegree = net->outArc(t, p);
-				}
-				if (net->inArc(p, t) > 0) {
-					if (outDegree >= 0) {
-						ok = false;
-						break;
-					}
-					outDegree = net->inArc(p, t);
-				}
-			}
-			if (ok && inDegree == outDegree && inDegree > 0) {
-				removePlace[p] = true; // place p can be considered for removing
-			}
-		}
-		// remove place p1 if possible
-		for (size_t p1 = 0; p1 < net->numberOfPlaces(); p1++) {
-			for (size_t p2 = 0; p2 < net->numberOfPlaces(); p2++) {
-				if (!removePlace[p1] || !removePlace[p2] || p1 == p2 ||
-						placeInQuery[p1] > 0 || placeInInhib[p1] > 0) {
-					continue; // place p1 cannot be removed
-				}
-				bool ok = true;
-				int t1 = -1;
-				int t2 = -1;
-				for (size_t t = 0; t < net->numberOfTransitions(); t++) {
-					if (net->outArc(t, p1) > 0 || net->outArc(t, p2) > 0) {
-						if (net->outArc(t, p1) != net->outArc(t, p2) || (t1 >= 0 && t1 != t)) {
-							ok = false;
-							break;
-						} else {
-							t1 = t;
-						}
-					}
-					if (net->inArc(p1, t) > 0 || net->inArc(p2, t) > 0) {
-						if (net->inArc(p1, t) != net->inArc(p2, t) || (t2 >= 0 && t2 != t)) {
-							ok = false;
-							break;
-						} else {
-							t2 = t;
-						}
-					}
-				}
-				if (!ok || t1 == t2) {
-					continue;
-				}
-				assert(t1 != -1 && t2 != -1);
-				// remove place p1
-				continueReductions = true;
-				_ruleC++;
-				net->updateoutArc(t1, p1, 0);
-				net->updateinArc(p1, t2, 0);
-				removePlace[p1] = false;
-				_removedPlaces++;
-				net->skipPlace(p1);
-			}
-		}
-		return continueReductions;
-	}
+                    }
+                }                
+                _removedPlaces++;
+                skipPlace(pPre);
+            } else if (parent->initMarking()[pPost] == 0) { // removing pPost
+                parent->_places[pPost].skip = true;
+                for (auto& _t : parent->_places[pPost].input) {
+                    Transition& trans = getTransition(_t);
+                    auto source = getInArc(pPost, trans);
+                    auto dest = getInArc(pPre, trans);
+                    if(dest == trans.pre.end())
+                    {
+                        source->place = pPre;
+                        parent->_places[pPre].input.push_back(_t);
+                    }
+                    else
+                    {
+                        dest->weight += source->weight;
+                    }
+                }
+                _removedPlaces++;
+                skipPlace(pPost);
+            }
+        } // end of Rule A main for-loop
+        return continueReductions;
+    }
 
-	bool Reducer::ReducebyRuleD(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib) {
-		// Rule D - two transitions with the same pre and post and same inhibitor arcs 
-		bool continueReductions = false;
-		for (size_t t1 = 0; t1 < net->numberOfTransitions(); t1++) {
-			for (size_t t2 = 0; t2 < t1; t2++) {
-				if (transitionInInhib[t1] > 0 || transitionInInhib[t2] > 0) {
-					continue; // no reduction can take place if transitions connected to inhibitor arcs
-				}
-				bool ok = false;
-				for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-					if (net->inArc(p, t1) != net->inArc(p, t2) || net->outArc(t1, p) != net->outArc(t2, p)) {
-						ok = false; // different preset or postset
-						break;
-					}
-					if (net->inArc(p, t2) > 0 || net->outArc(t2, p) > 0) {
-						ok = true; // we do no want to remove isolated orphan transitions
-					} 
-				}
-				if (!ok) {
-					continue;
-				}
-				// Remove transition t2
-				continueReductions = true;
-				_ruleD++;
-				_removedTransitions++;
-				for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-					net->updateoutArc(t2, p, 0);
-					net->updateinArc(p, t2, 0);
-				}
-				net->skipTransition(t2);
-			}
-		} // end of main for loop for rule D
-		return continueReductions;
-	}
+    bool Reducer::ReducebyRuleB(size_t* placeInQuery) {
+        // Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
+        bool continueReductions = false;
+        for (size_t p = 0; p < parent->numberOfPlaces(); p++) {
+            
+            Place& place = parent->_places[p];
+            
+            if(place.skip) continue;    // allready removed           
+            if(placeInQuery[p] > 0 || parent->initMarking()[p]) continue; // to important       
+            if(place.input.size() > 1 || place.output.size() > 1) continue; // nogo
+            
+            int tOut = place.output[0];
+            int tIn = place.input[0];
+            
+            if (tOut == tIn) continue; // cannot remove this kind either
+                        
+            Transition& out = getTransition(tOut);
+            Transition& in = getTransition(tIn);
+            
+            auto inArc = getInArc(p, in);
+            auto outArc = getOutArc(out, p);
+            
+            if(inArc->weight != outArc->weight) continue;
+            
 
-	void Reducer::Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib, int enablereduction) {
-		if (enablereduction == 1) { // in the aggresive reduction all four rules are used as long as they remove something
-			while ( ReducebyRuleA(net, m0, placeInQuery, placeInInhib, transitionInInhib) ||
-					ReducebyRuleB(net, m0, placeInQuery, placeInInhib, transitionInInhib) || 
-					ReducebyRuleC(net, m0, placeInQuery, placeInInhib, transitionInInhib) ||
-					ReducebyRuleD(net, m0, placeInQuery, placeInInhib, transitionInInhib) ) { 
-			}
-		} else if (enablereduction ==2) { // for k-boundedness checking only rules A and D are applicable
-			while ( ReducebyRuleA(net, m0, placeInQuery, placeInInhib, transitionInInhib) ||
-					ReducebyRuleD(net, m0, placeInQuery, placeInInhib, transitionInInhib) ) { 
-			}
-		}
-	}
+            bool ok = true;
+            // Check if the output places of tPost do not have any inhibitor arcs connected and are not used in the query
+            for (auto& arc : in.post) {
+                if (arc.weight > 0 &&  placeInQuery[arc.place] > 0) {
+                    ok = false;
+                    break;
+                }
+            }
+            // Check that there is no other place than p that gives to tPost, tPre can give to other places
+            for (auto& arc : in.pre) {
+                if (arc.weight > 0 && arc.place != p) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (!ok) {
+                continue;
+            }
+            continueReductions = true;
+            _ruleB++;
+             // Remove place p
+            skipPlace(p);
+            _removedPlaces++;
 
-	void Reducer::expandTrace(unsigned int t, std::vector<unsigned int>& trace) {
-		trace.push_back(t);
-		for (unfoldTransitionsType::iterator it = unfoldTransitions[t].begin(); it != unfoldTransitions[t].end(); it++) {
-			for (int i = 1; i <= it->second; i++) {
-				expandTrace(it->first, trace);
-			}
-		}
-	}
+            for (auto& arc : in.post) { // remove tPost
+                auto _arc = getOutArc(out, arc.place);
+                if(_arc != out.post.end())
+                {
+                    _arc->weight += arc.weight;
+                }
+                else
+                {
+                    out.post.push_back(arc);
+                    parent->_places[arc.place].output.push_back(tOut);
+                }
+            }
+            _removedTransitions++;
+            skipTransition(tIn);
+        } // end of Rule B main for-loop
+        return continueReductions;
+    }
 
-	const std::vector<unsigned int> Reducer::NonreducedTrace(PetriNet* net, const std::vector<unsigned int>& trace) {
-		// recover the original net
-		for (int p = 0; p < _nplaces; p++) {
-			for (int t = 0; t < _ntransitions; t++) {
-				net->updateinArc(p, t, _inArc[_nplaces * t + p]);
-				net->updateoutArc(t, p, _outArc[_nplaces * t + p]);
-			}
-		}
-		// compute the expanded (nonreduced) trace)
-		std::vector<unsigned int> nonreducedTrace;
+    bool Reducer::ReducebyRuleC(size_t* placeInQuery) {
+        // Rule C - Places with same input and output-transitions which a modulo each other
+         bool continueReductions = false;
+        
+        for(size_t p1 = 0; p1 < parent->numberOfPlaces(); ++p1)
+        {
+            if( placeInQuery[p1] > 0 || parent->initMarking()[p1])
+                continue;
+            
+            Place& place1 = parent->_places[p1];
+            
+            if(place1.skip) continue;
+            
+            // use symmetry to speed up things
+            for (size_t p2 = p1 + 1; p2 < parent->numberOfPlaces(); ++p2) 
+            {
+                if(p1 == p2) continue;
+                
+                if(placeInQuery[p2] > 0 || parent->initMarking()[p2])
+                    continue;
+                
+                Place& place2 = parent->_places[p2];
+                
+                if(place2.skip) continue;
+                
+                if(place1.input.size() != place2.input.size() ||
+                   place1.output.size() != place2.output.size())
+                    continue;
+                
+                bool ok = true;
+                for(auto& in : place1.input)
+                {
+                    Transition& trans = getTransition(in);
+                    auto a1 = getInArc(p1, trans);
+                    auto a2 = getInArc(p2, trans);
+                    if( a2 == trans.pre.end() ||
+                        a2->weight != a1->weight)
+                    {
+                        ok = false;
+                    }
+                }
+                
+                if(!ok) continue;
+                
+                for(auto& in : place1.output)
+                {
+                    Transition& trans = getTransition(in);
+                    auto a1 = getOutArc(trans, p1);
+                    auto a2 = getOutArc(trans, p2);
+                    if( a2 == trans.post.end() ||
+                        a2->weight != a1->weight)
+                    {
+                        ok = false;
+                    }
+                }
+                
+                if(!ok) continue;
+                                
+                continueReductions = true;
+                _ruleC++;
+                skipPlace(p2);
+                _removedPlaces++;
+            }
+        }
+        return continueReductions;
+    }
 
-		// first expand the transitions that can be fired from the initial marking
-		for (unfoldTransitionsType::iterator it = unfoldTransitionsInit->begin(); it != unfoldTransitionsInit->end(); it++) {
-			for (int i = 1; i <= it->second; i++) {
-				nonreducedTrace.push_back(it->first);
-			}
-		}
-		// now expand the transitions from the trace
-		for (size_t i = 0; i < trace.size(); i++) {
-			expandTrace(trace[i], nonreducedTrace);
-		}
+    bool Reducer::ReducebyRuleD(size_t* placeInQuery) {
+        // Rule D - two transitions with the same pre and post and same inhibitor arcs 
+        bool continueReductions = false;
+        for (size_t t1 = 0; t1 < parent->numberOfTransitions(); t1++) {
+            Transition& trans1 = getTransition(t1);
+            if(trans1.skip) continue;
 
-		return nonreducedTrace; // this makes a copy of the vector, but the slowdown is insignificant
-	}
+            for (size_t t2 = 0; t2 < parent->numberOfTransitions(); t2++) {
+                if(t1 == t2) continue;
+                
+                Transition& trans2 = getTransition(t2);
+                if(trans2.skip) continue;
+                
+                if(trans1.post.size() != trans2.post.size()) continue;
+                if(trans1.pre.size() != trans2.pre.size()) continue;
+                
+                bool ok = true;
+                for(auto& arc : trans1.post)
+                {
+                    auto a2 = getOutArc(trans2, arc.place);
+                    if( a2 == trans2.post.end() ||
+                        a2->weight != arc.weight)
+                    {
+                        ok = false;
+                    }
+                }
+                
+                for(auto& arc : trans1.pre)
+                {
+                    auto a2 = getInArc(arc.place, trans2);
+                    if( a2 == trans2.pre.end() ||
+                        a2->weight != arc.weight)
+                    {
+                        ok = false;
+                    }
+                }
+                
+                if (!ok) {
+                    continue;
+                }
+                // Remove transition t2
+                continueReductions = true;
+                _ruleD++;
+                _removedTransitions++;
+                skipTransition(t2);
+            }
+        } // end of main for loop for rule D
+        return continueReductions;
+    }
 
+    void Reducer::Reduce(size_t* placeInQuery, int enablereduction) {
+        if (enablereduction == 1) { // in the aggresive reduction all four rules are used as long as they remove something
+            while (ReducebyRuleA(placeInQuery) ||
+                    ReducebyRuleB(placeInQuery) ||
+                    ReducebyRuleC(placeInQuery) ||
+                    ReducebyRuleD(placeInQuery)) {
+            }
+        } else if (enablereduction == 2) { // for k-boundedness checking only rules A and D are applicable
+            while (ReducebyRuleA(placeInQuery) ||
+                    ReducebyRuleD(placeInQuery)) {
+            }
+        }
+    }
 
 } //PetriNet namespace

@@ -19,182 +19,203 @@
 #ifndef CONTEXTS_H
 #define CONTEXTS_H
 
+
+#include <string>
+#include <vector>
+#include <list>
+#include <map>
+
 #include "../PetriNet.h"
 #include "PQL.h"
 #include "../Structures/DistanceMatrix.h"
 #include "../Structures/StateConstraints.h"
 
-#include <string>
-#include <vector>
-#include <list>
 
 namespace PetriEngine {
-namespace PQL{
+    namespace PQL {
 
-/** Context provided for context analysis */
-class AnalysisContext{
-protected:
-	std::vector<std::string> _places;
-	std::vector<std::string> _variables;
-	std::vector<ExprError> _errors;
-public:
-	/** A resolution result */
-	struct ResolutionResult {
-		/** Offset in relevant vector */
-		int offset;
-		/** True, if the resolution was successful */
-		bool success;
-		/** True if the identifer was resolved to a place */
-		bool isPlace;
-	};
-	AnalysisContext(const PetriNet& net)
-	 : _places(net.placeNames()), _variables(net.variableNames()) {}
-	AnalysisContext(const std::vector<std::string>& places,
-					const std::vector<std::string>& variables)
-	 : _places(places), _variables(variables) {}
+        /** Context provided for context analysis */
+        class AnalysisContext {
+        protected:
+            std::map<std::string, size_t> _places;
+            std::vector<ExprError> _errors;
+        public:
 
-	/** Resolve an identifier */
-	virtual ResolutionResult resolve(std::string identifier) const{
-		ResolutionResult result;
-       		result.offset = -1;
-		result.success = false;
-		for(size_t i = 0; i < _places.size(); i++){
-			if(_places[i] == identifier){
-				result.offset = i; 
-				result.isPlace = true;
-				result.success = true;
-                                return result;
-			}
-		}
-		for(size_t i = 0; i < _variables.size(); i++){
-			if(_variables[i] == identifier){
-				result.offset = i;
-				result.isPlace = false;
-				result.success = true;
-				return result;
-			}
-		}
-		return result;
-	}
+            /** A resolution result */
+            struct ResolutionResult {
+                /** Offset in relevant vector */
+                int offset;
+                /** True, if the resolution was successful */
+                bool success;
+                /** True if the identifer was resolved to a place */
+                bool isPlace;
+            };
 
-	/** Report error */
-	void reportError(const ExprError& error){
-		_errors.push_back(error);
-	}
-	/** Get list of errors */
-	const std::vector<ExprError>& errors() const{
-		return _errors;
-	}
-};
+            AnalysisContext(const std::map<std::string, size_t>& places)
+            : _places(places) {
+            }
 
-/** Context provided for evalation */
-class EvaluationContext{
-public:
-	/** Create evaluation context, this doesn't take ownership */
-	EvaluationContext(const MarkVal* marking,
-					  const VarVal* assignment,
-					  const PetriNet* net){
-		_marking = marking;
-		_assignment = assignment;
-		_net = net;
-	}
-	const MarkVal* marking() const {return _marking;}
-	const VarVal* assignment() const {return _assignment;}
-	const PetriNet* net() const {return _net;}
-private:
-	const MarkVal* _marking;
-	const VarVal* _assignment;
-	const PetriNet* _net;
-};
+            /** Resolve an identifier */
+            virtual ResolutionResult resolve(std::string identifier) const {
+                ResolutionResult result;
+                result.offset = -1;
+                result.success = false;
+                auto it = _places.find(identifier);
+                if(it != _places.end())
+                {
+                    result.offset = (int)it->second;
+                    result.isPlace = true;
+                    result.success = true;
+                    return result;
+                }                
+                return result;
+            }
 
-/** Context for distance computation */
-class DistanceContext : public EvaluationContext{
-public:
-	/** Strategy flags for distance computation */
-	enum DistanceStrategy{
-		AndExtreme	= 1<<0,
-		AndAverage	= 1<<1,
-		AndSum		= 1<<2,
-		OrExtreme	= 1<<3,
-		OrAverage	= 1<<4,
-		ArcCount	= 1<<5,
-		TokenCost	= 1<<6
-	};
+            /** Report error */
+            void reportError(const ExprError& error) {
+                _errors.push_back(error);
+            }
 
-	DistanceContext(const PetriNet& net,
-					DistanceStrategy strategy,
-					const MarkVal* marking,
-					const VarVal* valuation,
-					Structures::DistanceMatrix* dm)
-		: EvaluationContext(marking, valuation, &net), _net(net) {
-		_strategy = strategy;
-		_negated = false;
-		_dm = dm;
-	}
-	DistanceStrategy strategy() const { return _strategy; }
-	const PetriNet& net() const { return _net; }
-	void negate() { _negated = !_negated; }
-	bool negated() const { return _negated; }
-	const Structures::DistanceMatrix* distanceMatrix() const { return _dm; }
-private:
-	const PetriNet& _net;
-	DistanceStrategy _strategy;
-	bool _negated;
-	Structures::DistanceMatrix* _dm;
-};
+            /** Get list of errors */
+            const std::vector<ExprError>& errors() const {
+                return _errors;
+            }
+        };
 
-/** Constraint Analysis Context used for over-approximation */
-class ConstraintAnalysisContext{
-public:
-	typedef std::vector<Structures::StateConstraints*> ConstraintSet;
+        /** Context provided for evalation */
+        class EvaluationContext {
+        public:
 
-	ConstraintAnalysisContext(const PetriNet& net) : _net(net) {
-		canAnalyze = true;
-		negated = false;
-	}
-	const PetriNet& net() const { return _net; }
-	bool canAnalyze;
-	bool negated;
-	ConstraintSet retval;
-private:
-	const PetriNet& _net;
-};
+            /** Create evaluation context, this doesn't take ownership */
+            EvaluationContext(const MarkVal* marking,
+                    const PetriNet* net) {
+                _marking = marking;
+                _net = net;
+            }
 
-/** Context for condition to TAPAAL export */
-class TAPAALConditionExportContext{
-public:
-	bool failed;
-	std::string netName;
-};
+            const MarkVal* marking() const {
+                return _marking;
+            }
 
-/** Just-In-Time compilation context */
-class CodeGenerationContext{
-public:
-	CodeGenerationContext(llvm::Value* marking,
-						  llvm::Value* valuation,
-						  llvm::BasicBlock* label,
-						  llvm::LLVMContext& context)
-		: _context(context) {
-		_marking = marking;
-		_valuation = valuation;
-		_label = label;
-	}
-	/** Marking */
-	llvm::Value* marking() { return _marking; }
-	/** Variable valuation */
-	llvm::Value* valuation() { return _valuation; }
-	/** Label for the current code block */
-	llvm::BasicBlock* label() { return _label; }
-	/** LLVM Context that is currently generating */
-	llvm::LLVMContext& context() { return _context; }
-private:
-	llvm::Value* _marking;
-	llvm::Value* _valuation;
-	llvm::BasicBlock* _label;
-	llvm::LLVMContext& _context;
-};
+            const PetriNet* net() const {
+                return _net;
+            }
+        private:
+            const MarkVal* _marking;
+            const PetriNet* _net;
+        };
 
-} // PQL
+        /** Context for distance computation */
+        class DistanceContext : public EvaluationContext {
+        public:
+
+            /** Strategy flags for distance computation */
+            enum DistanceStrategy {
+                AndExtreme = 1 << 0,
+                AndAverage = 1 << 1,
+                AndSum = 1 << 2,
+                OrExtreme = 1 << 3,
+                OrAverage = 1 << 4,
+                ArcCount = 1 << 5,
+                TokenCost = 1 << 6
+            };
+
+            DistanceContext(const PetriNet& net,
+                    DistanceStrategy strategy,
+                    const MarkVal* marking,
+                    Structures::DistanceMatrix* dm)
+            : EvaluationContext(marking, &net), _net(net) {
+                _strategy = strategy;
+                _negated = false;
+                _dm = dm;
+            }
+
+            DistanceStrategy strategy() const {
+                return _strategy;
+            }
+
+            const PetriNet& net() const {
+                return _net;
+            }
+
+            void negate() {
+                _negated = !_negated;
+            }
+
+            bool negated() const {
+                return _negated;
+            }
+
+            const Structures::DistanceMatrix* distanceMatrix() const {
+                return _dm;
+            }
+        private:
+            const PetriNet& _net;
+            DistanceStrategy _strategy;
+            bool _negated;
+            Structures::DistanceMatrix* _dm;
+        };
+
+        /** Constraint Analysis Context used for over-approximation */
+        class ConstraintAnalysisContext {
+        public:
+            typedef std::vector<Structures::StateConstraints*> ConstraintSet;
+
+            ConstraintAnalysisContext(const PetriNet& net) : _net(net) {
+                canAnalyze = true;
+                negated = false;
+            }
+
+            const PetriNet& net() const {
+                return _net;
+            }
+            bool canAnalyze;
+            bool negated;
+            ConstraintSet retval;
+        private:
+            const PetriNet& _net;
+        };
+
+        /** Context for condition to TAPAAL export */
+        class TAPAALConditionExportContext {
+        public:
+            bool failed;
+            std::string netName;
+        };
+
+        /** Just-In-Time compilation context */
+        class CodeGenerationContext {
+        public:
+
+            CodeGenerationContext(llvm::Value* marking,
+                    llvm::BasicBlock* label,
+                    llvm::LLVMContext& context)
+            : _context(context) {
+                _marking = marking;
+                _label = label;
+            }
+
+            /** Marking */
+            llvm::Value* marking() {
+                return _marking;
+            }
+
+            /** Label for the current code block */
+            llvm::BasicBlock* label() {
+                return _label;
+            }
+
+            /** LLVM Context that is currently generating */
+            llvm::LLVMContext& context() {
+                return _context;
+            }
+        private:
+            llvm::Value* _marking;
+            llvm::BasicBlock* _label;
+            llvm::LLVMContext& _context;
+        };
+
+    } // PQL
 } // PetriEngine
 
 #endif // CONTEXTS_H

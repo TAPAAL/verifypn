@@ -19,55 +19,99 @@
 #ifndef PETRINETBUILDER_H
 #define PETRINETBUILDER_H
 
-#include "AbstractPetriNetBuilder.h"
 #include <vector>
 #include <string>
-
+#include "AbstractPetriNetBuilder.h"
+#include "PQL/PQL.h"
 #include "PetriNet.h"
+#include "Reducer.h"
+#include "NetStructures.h"
 
-namespace PetriEngine{
+namespace PetriEngine {
+    /** Builder for building engine representations of PetriNets */
+    class PetriNetBuilder : public AbstractPetriNetBuilder {
+    public:
+        friend class Reducer;
+        
+    public:
+        PetriNetBuilder();
+        void addPlace(const std::string& name, int tokens, double x, double y);
+        void addTransition(const std::string& name,
+                double x,
+                double y);
+        void addInputArc(const std::string& place,
+                const std::string& transition,
+                int weight);
+        void addOutputArc(const std::string& transition, const std::string& place, int weight);
+        /** Make the resulting petri net, you take ownership */
+        PetriNet* makePetriNet();
+        /** Make the resulting initial marking, you take ownership */
 
+        MarkVal const * initMarking()
+        {
+            return initialMarking.data();
+        }
+        
+        size_t numberOfPlaces(){
+            return _placenames.size();
+        }
+        
+        size_t numberOfTransitions()
+        {
+            return _transitionnames.size();
+        }
+        
+        const std::map<std::string, size_t>& getPlaceNames()
+        {
+            return _placenames;
+        }
+        
+        const std::map<std::string, size_t>& getTransitionNames()
+        {
+            return _transitionnames;
+        }
+        
+        void reduce(PQL::Condition* query, int reductiontype);
+        
+        size_t RemovedTransitions()
+        {
+            return reducer.RemovedTransitions();
+        }
+        
+        size_t RemovedPlaces()
+        {
+            return reducer.RemovedPlaces();
+        }
 
-/** Builder for building engine representations of PetriNets */
-class PetriNetBuilder : public AbstractPetriNetBuilder
-{
-	struct Arc{
-		std::string place;
-		std::string transition;
-		int weight;
-	};
-public:
-	PetriNetBuilder(bool JIT = false);
-	void addVariable(const std::string& name, int initialValue, int range);
-	void addPlace(const std::string& name, int tokens, double x, double y);
-	void addTransition(const std::string& name,
-					   const std::string& condition,
-					   const std::string& assignment,
-					   double x,
-					   double y);
-	void addInputArc(const std::string& place,
-					 const std::string& transition,
-					 int weight);
-	void addOutputArc(const std::string& transition, const std::string& place, int weight);
-	/** Make the resulting petri net, you take ownership */
-	PetriNet* makePetriNet();
-	/** Make the resulting initial marking, you take ownership */
-	MarkVal* makeInitialMarking();
-	/** Make the resulting initial assignment, you take ownership */
-	VarVal* makeInitialAssignment();
-private:
-	std::vector<std::string> places;
-	std::vector<std::string> transitions;
-	std::vector<std::string> conditions;
-	std::vector<std::string> assignments;
-	std::vector<std::string> variables;
-	std::vector<int> initialVariableValues;
-	std::vector<int> ranges;
-	std::vector<Arc> inputArcs;
-	std::vector<Arc> outputArcs;
-	std::vector<int> initialMarking;
-	bool _jit;
-};
+        size_t RuleA() {
+            return reducer.RuleA();
+        }
+
+        size_t RuleB() {
+            return reducer.RuleB();
+        }
+
+        size_t RuleC() {
+            return reducer.RuleC();
+        }
+
+        size_t RuleD() {
+            return reducer.RuleD();
+        }
+        
+    private:
+        size_t nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids);
+        
+    protected:
+        std::map<std::string, size_t> _placenames;
+        std::map<std::string, size_t> _transitionnames;
+        
+        std::vector<Transition> _transitions;
+        std::vector<Place> _places;
+        
+        std::vector<MarkVal> initialMarking;
+        Reducer reducer;
+    };
 
 }
 

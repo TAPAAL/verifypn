@@ -20,7 +20,6 @@
 #define REACHABILITYSEARCHSTRATEGY_H
 
 #include "../PetriNet.h"
-#include "../ProgressReporter.h"
 #include "../PQL/PQLParser.h"
 
 #include <string>
@@ -30,57 +29,30 @@
 
 namespace PetriEngine {
 
-namespace PQL{
-	class Condition;
-}
+    namespace PQL {
+        class Condition;
+    }
 
-namespace Reachability{
+    namespace Reachability {
 
-/** Represents an abstract reachability search strategy. */
-class ReachabilitySearchStrategy {
-public:
-	ReachabilitySearchStrategy(){
-		_reporter = NULL;
-	}
+        /** Represents an abstract reachability search strategy. */
+        class ReachabilitySearchStrategy {
+        public:
 
-	/** Determines if a petrinet is reachable w.r.t. a query */
-	virtual ReachabilityResult reachable(const PetriNet &net,
-										 const MarkVal* initialMarking,
-										 const VarVal* initialAssignment,
-										 PQL::Condition* query) = 0;
+            ReachabilitySearchStrategy() {
 
-	/** Sets the concrete progress reporter */
-	void setProgressReporter(ProgressReporter* reporter) {
-		_reporter = reporter;
-	}
+            }
 
-	/** List all reachability strategies, return unqiue display names */
-	static std::vector<std::string> listStrategies();
+            /** Determines if a petrinet is reachable w.r.t. a query */
+            virtual ReachabilityResult reachable(PetriNet &net,
+                    const MarkVal* initialMarking,
+                    PQL::Condition* query,
+                    size_t memorylimit) = 0;
 
-	/** Create a reachability strategy from string, NULL if not found */
-	static ReachabilitySearchStrategy* createStrategy(const std::string& strategy);
-
-	/** Get the progress reporter, used for nesting strategies */
-	ProgressReporter* reporter() {return _reporter; }
-protected:
-	/** Reports the progress of reachability search (number between 0 and 1) */
-	void reportProgress(double status){
-		if(_reporter)
-			_reporter->reportProgress(status);
-	}
-
-	/** Returns, true if abortion have been requested */
-	bool abortRequested(){
-		if(_reporter)
-			return _reporter->abortRequested();
-		return false;
-	}
-private:
-	ProgressReporter* _reporter;
-};
+        };
 
 
-} // Reachability
+    } // Reachability
 } // PetriEngine
 
 #endif // REACHABILITYSEARCHSTRATEGY_H

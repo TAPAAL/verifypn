@@ -16,174 +16,239 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <assert.h>
+#include <algorithm>
+
 #include "PetriNetBuilder.h"
 #include "PetriNet.h"
-
 #include "PQL/PQLParser.h"
 #include "PQL/PQL.h"
 #include "PQL/Contexts.h"
-//#include "PQL/CompiledCondition.h"
-
-#include <assert.h>
+#include "Reducer.h"
 
 using namespace std;
 
-namespace PetriEngine{
+namespace PetriEngine {
 
-PetriNetBuilder::PetriNetBuilder(bool JIT) : AbstractPetriNetBuilder(){
-	_jit = JIT;
-}
+    PetriNetBuilder::PetriNetBuilder() : AbstractPetriNetBuilder(), 
+    reducer(this){
+    }
 
-void PetriNetBuilder::addPlace(const string &name, int tokens, double, double){
-	places.push_back(name);
-	initialMarking.push_back(tokens);
-}
+    void PetriNetBuilder::addPlace(const string &name, int tokens, double, double) {
+        if(_placenames.count(name) == 0)
+        {
+            size_t next = _placenames.size();
+            _places.emplace_back();
+            _placenames[name] = next;
+        }
+        
+        size_t id = _placenames[name];
+        
+        while(initialMarking.size() <= id) initialMarking.emplace_back();
+        initialMarking[id] = tokens;
+        
+    }
 
-void PetriNetBuilder::addVariable(const string &name, int initialValue, int range){
-	variables.push_back(name);
-	initialVariableValues.push_back(initialValue);
-	ranges.push_back(range);
-}
+    void PetriNetBuilder::addTransition(const string &name,
+            double, double) {
+        if(_transitionnames.count(name) == 0)
+        {
+            size_t next = _transitionnames.size();
+            _transitions.emplace_back();
+            _transitionnames[name] = next;
+        }
+    }
 
-void PetriNetBuilder::addTransition(const string &name,
-									const string &condition,
-									const string &assignment,
-									double, double){
-	transitions.push_back(name);
-	conditions.push_back(condition);
-	assignments.push_back(assignment);
-}
+    void PetriNetBuilder::addInputArc(const string &place, const string &transition, int weight) {
+        if(_transitionnames.count(transition) == 0)
+        {
+            addTransition(transition,0.0,0.0);
+        }
+        if(_placenames.count(place) == 0)
+        {
+            addPlace(place,0,0,0);
+        }
+        size_t p = _placenames[place];
+        size_t t = _transitionnames[transition];
 
-void PetriNetBuilder::addInputArc(const string &place, const string &transition, int weight){
-	Arc arc;
-	arc.place = place;
-	arc.transition = transition;
-	arc.weight = weight;
-	inputArcs.push_back(arc);
-}
+        Arc arc;
+        arc.place = p;
+        arc.weight = weight;
+        arc.skip = false;
+        assert(t < _transitions.size());
+        assert(p < _places.size());
+        _transitions[t].pre.push_back(arc);
+        _places[p].input.push_back(t);
+    }
 
-void PetriNetBuilder::addOutputArc(const string &transition, const string &place, int weight){
-	Arc arc;
-	arc.transition = transition;
-	arc.place = place;
-	arc.weight = weight;
-	outputArcs.push_back(arc);
-}
+    void PetriNetBuilder::addOutputArc(const string &transition, const string &place, int weight) {
+        if(_transitionnames.count(transition) == 0)
+        {
+            addTransition(transition,0,0);
+        }
+        if(_placenames.count(place) == 0)
+        {
+            addPlace(place,0,0,0);
+        }
+        size_t p = _placenames[place];
+        size_t t = _transitionnames[transition];
 
-PetriNet* PetriNetBuilder::makePetriNet(){
-	PetriNet* net = new PetriNet(places.size(), transitions.size(), variables.size());
-	size_t i;
-	//Create variables
-	for(i = 0; i < variables.size(); i++){
-		net->_variables[i] = variables[i];
-		net->_ranges[i] = ranges[i];
-	}
-	//Create place names
-	for(i = 0; i < places.size(); i++)
-		net->_places[i] = places[i];
-	//Create transition names
-	for(i = 0; i < transitions.size(); i++)
-		net->_transitions[i] = transitions[i];
-	//Parse conditions and assignments
-	for(i = 0; i < transitions.size(); i++){
-		if(conditions[i] != ""){
-			net->_conditions[i] = PQL::ParseQuery(conditions[i]);
-			if(net->_conditions[i]){
-				PQL::AnalysisContext context(*net);
-				/*if(_jit){
-					PQL::CompiledCondition* CC = new PQL::CompiledCondition(net->_conditions[i]);
-					CC->analyze(context);
-					if(CC->compile())
-						net->_conditions[i] = CC;
-					else{
-						delete CC;
-						CC = NULL;
-						//TODO: Print to stderr
-					}
-				}else*/
-					net->_conditions[i]->analyze(context);
+        assert(t < _transitions.size());
+        assert(p < _places.size());
+        
+        Arc arc;
+        arc.place = p;
+        arc.weight = weight;
+        arc.skip = false;
+        _transitions[t].post.push_back(arc);
+        _places[p].output.push_back(t);
+    }
 
-				//Delete if there we're errors
-				if(context.errors().size() > 0){
-					delete net->_conditions[i];
-					net->_conditions[i] = NULL;
-					//TODO: Print to stderr
-				}
-			}
-		}
-		if(assignments[i] != ""){
-			net->_assignments[i] = PQL::ParseAssignment(assignments[i]);
-			if(net->_assignments[i]){
-				PQL::AnalysisContext context(*net);
-				net->_assignments[i]->analyze(context);
-				//Delete if there we're errors
-				if(context.errors().size() > 0){
-					delete net->_assignments[i];
-					net->_assignments[i] = NULL;
-					//TODO: Print to stderr
-				}
-			}
-		}
-	}
-	//Create input arcs
-	vector<Arc>::iterator arc;
-	for(arc = inputArcs.begin(); arc != inputArcs.end(); arc++){
-		int place = -1, transition = -1;
-		//Find place number
-		for(i = 0; i < places.size(); i++){
-			if(places[i] == arc->place){
-				place = i;
-				break;
-			}
-		}
-		//Find transition number
-		for(i = 0; i < transitions.size(); i++){
-			if(transitions[i] == arc->transition){
-				transition = i;
-				break;
-			}
-		}
-		//We should have found a places and transition
-		assert(place >= 0 && transition >= 0);
-		net->_tv(transition)[place] = arc->weight;
-	}
-	//Create output arcs
-	for(arc = outputArcs.begin(); arc != outputArcs.end(); arc++){
-		int place = -1, transition = -1;
-		//Find place number
-		for(i = 0; i < places.size(); i++){
-			if(places[i] == arc->place){
-				place = i;
-				break;
-			}
-		}
-		//Find transition number
-		for(i = 0; i < transitions.size(); i++){
-			if(transitions[i] == arc->transition){
-				transition = i;
-				break;
-			}
-		}
-		//We should have found a places and transition
-		assert(place >= 0 && transition >= 0);
-		net->_tv(transition)[place + places.size()] = arc->weight;
-	}
-	//Return the finished net
-	return net;
-}
+    size_t PetriNetBuilder::nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids)
+    {
+        size_t cand = std::numeric_limits<size_t>::max();
+        uint32_t cnt =  std::numeric_limits<uint32_t>::max();
+        for(size_t i = 0; i < _places.size(); ++i)
+        {
+            if( ids[i] == std::numeric_limits<uint32_t>::max() &&
+                counts[i] < cnt &&
+                !_places[i].skip)
+            {
+                cand = i;
+            }
+        }
+        
+        return cand;
+    }
+    
+    PetriNet* PetriNetBuilder::makePetriNet() {
+        
+        uint32_t nplaces = _places.size() - reducer.RemovedPlaces();
+        uint32_t ntrans = _transitions.size() - reducer.RemovedTransitions();
+        
+        std::vector<uint32_t> place_cons_count = std::vector<uint32_t>(_places.size());
+        std::vector<uint32_t> place_idmap = std::vector<uint32_t>(_places.size());
+        std::vector<uint32_t> trans_idmap = std::vector<uint32_t>(_transitions.size());
+        
+        uint32_t invariants = 0;
+        
+        for(size_t i = 0; i < _places.size(); ++i)
+        {
+            place_idmap[i] = std::numeric_limits<uint32_t>::max();
+            if(!_places[i].skip)
+            {
+                place_cons_count[i] = _places[i].input.size();
+                invariants += _places[i].input.size() + _places[i].output.size();
+            }
+        }
 
-MarkVal* PetriNetBuilder::makeInitialMarking(){
-	MarkVal* m = new MarkVal[places.size()];
-	for(size_t i = 0; i < places.size(); i++)
-		m[i] = initialMarking[i];
-	return m;
-}
-VarVal* PetriNetBuilder::makeInitialAssignment(){
-	VarVal* a = new VarVal[variables.size()];
-	for(size_t i = 0; i < variables.size(); i++)
-		a[i] = initialVariableValues[i];
-	return a;
-}
+        for(size_t i = 0; i < _transitions.size(); ++i)
+        {
+            trans_idmap[i] = std::numeric_limits<uint32_t>::max();
+        }
+        
+        PetriNet* net = new PetriNet(ntrans, invariants, nplaces);
+        
+        size_t next = nextPlaceId(place_cons_count, place_idmap);
+        size_t free = 0;
+        size_t freeinv = 0;
+        size_t freetrans = 0;
+        while(next != std::numeric_limits<size_t>::max())
+        {
+            place_idmap[next] = free;
+            net->_placeToPtrs[free] = freetrans;
+            for(auto t : _places[next].input)
+            {
+                Transition& trans = _transitions[t]; 
+                if(trans.skip) continue;
+
+                net->_transitions[freetrans].inputs = freeinv;
+
+                // check first, we are going to change state later, but we can 
+                // break here, so not statechange inside loop!
+                bool ok = true;
+                size_t cnt = 0;
+                for(auto pre : trans.pre)
+                {
+                    if(     place_idmap[pre.place] < free || 
+                            freeinv + cnt >= net->_ninvariants)
+                    {
+                        ok = false;
+                        break;
+                    }       
+                    ++cnt;
+                }
+
+                if(!ok) continue;
+                
+                trans_idmap[t] = freeinv;
+                
+                // everything is good, change state!.
+                for(auto pre : trans.pre)
+                {
+                    net->_invariants[freeinv].place = pre.place;
+                    net->_invariants[freeinv].tokens = pre.weight;
+                    ++freeinv;
+                    assert(place_cons_count[pre.place] > 0);
+                    --place_cons_count[pre.place];
+                }
+                
+                net->_transitions[freetrans].outputs = freeinv;
+                for(auto post : trans.post)
+                {
+                    assert(freeinv < net->_ninvariants);
+                    net->_invariants[freeinv].place = post.place;
+                    net->_invariants[freeinv].tokens = post.weight;                    
+                    ++freeinv;
+                }
+                
+                trans_idmap[t] = freetrans;
+                
+                ++freetrans;
+                assert(freeinv <= invariants);
+            }
+            ++free;
+            next = nextPlaceId(place_cons_count, place_idmap);
+        }
+        
+        // Reindex for great justice!
+        for(size_t i = 0; i < freeinv; i++)
+        {
+            net->_invariants[i].place = place_idmap[net->_invariants[i].place];
+            assert(net->_invariants[i].place < nplaces);
+        }
+        
+//        std::cout << "init" << std::endl;
+        for(size_t i = 0; i < _places.size(); ++i)
+        {
+            if(place_idmap[i] != std::numeric_limits<uint32_t>::max())
+            {
+                net->_initialMarking[place_idmap[i]] = initialMarking[i];
+//                std::cout << place_idmap[i] << " : " << initialMarking[i] << std::endl;
+            }
+        }
+        
+        // reindex place-names
+        for(auto& i : _placenames)
+        {
+            i.second = place_idmap[i.second];
+        }
+        
+        for(auto& i : _transitionnames)
+        {
+            i.second = trans_idmap[i.second];
+        }
+        
+        return net;
+    }
+    
+    void PetriNetBuilder::reduce(PQL::Condition* query, int reductiontype)
+    {
+        QueryPlaceAnalysisContext placecontext(getPlaceNames());
+        query->analyze(placecontext);        
+        reducer.Reduce(placecontext.getQueryPlaceCount(), reductiontype);
+    }
 
 
 } // PetriEngine

@@ -20,7 +20,6 @@
 #include "../PQL/PQL.h"
 #include "../PQL/Contexts.h"
 #include "../Structures/StateSet.h"
-#include "../Structures/LimitedStateAllocator.h"
 
 #include <list>
 #include <string.h>
@@ -28,84 +27,51 @@
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Structures;
 
-namespace PetriEngine{ namespace Reachability {
+namespace PetriEngine {
+    namespace Reachability {
 
-ReachabilityResult BreadthFirstReachabilitySearch::reachable(const PetriNet &net,
-															 const MarkVal *m0,
-															 const VarVal *v0,
-															 PQL::Condition *query){
-	//Create StateSet
-	StateSet states(net, _kbound);
-	std::list<State*> queue;
+        ReachabilityResult BreadthFirstReachabilitySearch::reachable(PetriNet &net,
+                const MarkVal *m0,
+                PQL::Condition *query,
+                size_t memorylimit) {
+            //Create StateSet
+            StateSet states(net, _kbound, memorylimit);
 
-	LimitedStateAllocator<> allocator(net, _memorylimit);
+            State* state = new State();
+            State* working = new State();
+            state->setMarking(net.makeInitialMarking());
+            working->setMarking(net.makeInitialMarking());
+            states.add(state);
 
-	State* s0 = allocator.createState();
-	if(!s0)
-		return ReachabilityResult(ReachabilityResult::Unknown, "Memory bound exceeded");
-	memcpy(s0->marking(), m0, sizeof(MarkVal)*net.numberOfPlaces());
-	memcpy(s0->valuation(), v0, sizeof(VarVal)*net.numberOfVariables());
+            BigInt expandedStates = 0;
+            BigInt exploredStates = 1;
+            std::vector<BigInt> enabledTransitionsCount(net.numberOfTransitions());
 
-	states.add(s0);
-	queue.push_back(s0);
+            if (query->evaluate(*state, &net)) {
+                return ReachabilityResult(ReachabilityResult::Satisfied, "Query was satisfied",
+                        expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
+            }
 
-	unsigned int max = 0;
-	int count = 0;
-	BigInt expandedStates = 0;
-	BigInt exploredStates = 1;
-	std::vector<BigInt> enabledTransitionsCount (net.numberOfTransitions());
-	
-	if(query->evaluate(*s0, &net)){
-		return ReachabilityResult(ReachabilityResult::Satisfied, "Query was satisfied",
-								  expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), s0->pathLength(), s0->trace());
-	}
-	
-	State* ns = allocator.createState();
-	if(!ns)
-		return ReachabilityResult(ReachabilityResult::Unknown, "Memory bound exceeded");
-	while(!queue.empty()){
-		// Progress reporting and abort checking
-		if(count++ & 1<<17){
-			if(queue.size() > max)
-				max = queue.size();
-			count = 0;
-			// Report progress
-			reportProgress((double)(max - queue.size())/(double)max);
-			// Check abort
-			if(abortRequested())
-				return ReachabilityResult(ReachabilityResult::Unknown,
-										"Search was aborted.");
-		}
+            while (states.nextWaiting(state)) {
 
-		State* s = queue.front();
-		queue.pop_front();
-		for(unsigned int t = 0; t < net.numberOfTransitions(); t++){
-			if(net.fire(t, s, ns, 1)){
-				enabledTransitionsCount[t]++;
-				if(states.add(ns)){
-					exploredStates++;
-					ns->setParent(s);
-					ns->setTransition(t);
-					if(query->evaluate(*ns, &net)){
-						//ns->dumpTrace(net);
-						return ReachabilityResult(ReachabilityResult::Satisfied,
-												"A state satisfying the query was found", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound(), ns->pathLength(), ns->trace());
-					}
+                net.reset(state);
+                while(net.next(working)){
+                    enabledTransitionsCount[net.fireing()]++;
+                    if (states.add(working)) {
+                        exploredStates++;
+                        if (query->evaluate(*working, &net)) {
+                            //ns->dumpTrace(net);
+                            return ReachabilityResult(ReachabilityResult::Satisfied,
+                                    "A state satisfying the query was found", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
+                        }
+                    }
+                }
+                expandedStates++;
+            }
 
-					queue.push_back(ns);
-					ns = allocator.createState();
-					if(!ns)
-						return ReachabilityResult(ReachabilityResult::Unknown,
-												   "Memory bound exceeded",
-												   expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
-				}
-			}
-		}
-		expandedStates++;
-	}
+            return ReachabilityResult(ReachabilityResult::NotSatisfied,
+                    "No state satisfying the query exists.", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
+        }
 
-	return ReachabilityResult(ReachabilityResult::NotSatisfied,
-						"No state satisfying the query exists.", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
+    }
 }
-
-}}

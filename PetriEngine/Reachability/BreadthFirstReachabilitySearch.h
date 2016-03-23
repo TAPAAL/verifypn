@@ -22,27 +22,28 @@
 #include "ReachabilitySearchStrategy.h"
 #include "../Structures/State.h"
 
-namespace PetriEngine { namespace Reachability {
+namespace PetriEngine {
+    namespace Reachability {
 
-/** Implements reachability check in a BFS manner using a hash table */
-class BreadthFirstReachabilitySearch : public ReachabilitySearchStrategy {
-public:
-	BreadthFirstReachabilitySearch(int kbound = 0, int memorylimit = 0)
-		: ReachabilitySearchStrategy(){
-		_kbound = kbound;
-		_memorylimit = memorylimit;
-	}
+        /** Implements reachability check in a BFS manner using a hash table */
+        class BreadthFirstReachabilitySearch : public ReachabilitySearchStrategy {
+        public:
 
-	/** Perform reachability check using BFS with hasing */
-	ReachabilityResult reachable(const PetriNet &net,
-								 const MarkVal *m0,
-								 const VarVal *v0,
-								 PQL::Condition *query);
-private:
-	int _kbound;
-	int _memorylimit;
-};
+            BreadthFirstReachabilitySearch(int kbound = 0)
+            : ReachabilitySearchStrategy() {
+                _kbound = kbound;
+            }
 
-}} // Namespaces
+            /** Perform reachability check using BFS with hasing */
+            ReachabilityResult reachable(PetriNet &net,
+                    const MarkVal *m0,
+                    PQL::Condition *query,
+                    size_t memorylimit);
+        private:
+            int _kbound;
+        };
+
+    }
+} // Namespaces
 
 #endif // BREADTHFIRSTREACHABILITYSEARCH_H

@@ -1,10 +1,13 @@
 %{
 #include <stdio.h>
+#include <memory>
+
 #include "PQL.h"
 #include "Expressions.h"
+
 using namespace PetriEngine::PQL;
 
-Condition* query;
+std::shared_ptr<PetriEngine::PQL::Condition> query;
 extern int pqlqlex();
 void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 %}
@@ -42,7 +45,7 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 %%
 
-query	: logic						{ query = $1; }
+query	: logic						{ query = std::shared_ptr<Condition>($1); }
 		| error						{ yyerrok; }
 		;
 

@@ -25,208 +25,209 @@
 #include <limits.h>
 
 namespace PetriEngine {
-namespace Structures {
+    namespace Structures {
 
-/** Representation of a BitField */
-class BitField {
-private:
-	/** Definition of underlying type for the bitfield*/
-	typedef unsigned int _word;
+        /** Representation of a BitField */
+        class BitField {
+        private:
+            /** Definition of underlying type for the bitfield*/
+            typedef unsigned int _word;
 
-	/** Number of bits per word */
-	static const size_t _bitsPerWord = CHAR_BIT * sizeof(_word);
+            /** Number of bits per word */
+            static const size_t _bitsPerWord = CHAR_BIT * sizeof (_word);
 
-	/** Number of words for size */
-	size_t _words() const{
-		return (_size + _bitsPerWord - 1) / _bitsPerWord;
-	}
+            /** Number of words for size */
+            size_t _words() const {
+                return (_size + _bitsPerWord - 1) / _bitsPerWord;
+            }
 
-	/** Word offset for a given position */
-	static size_t _wordOffset(size_t pos) {
-		return pos / _bitsPerWord;
-	}
+            /** Word offset for a given position */
+            static size_t _wordOffset(size_t pos) {
+                return pos / _bitsPerWord;
+            }
 
-	/** Bit offset offset for a given position */
-	static size_t _bitOffset(size_t pos) {
-		return pos % _bitsPerWord;
-	}
+            /** Bit offset offset for a given position */
+            static size_t _bitOffset(size_t pos) {
+                return pos % _bitsPerWord;
+            }
 
-	/** Bitmask for pos in a word */
-	static _word _bitmask(size_t pos) {
-		return ((_word)1)<<_bitOffset(pos);
-	}
+            /** Bitmask for pos in a word */
+            static _word _bitmask(size_t pos) {
+                return ((_word) 1) << _bitOffset(pos);
+            }
 
-	/** Underlying word array */
-	_word* _bits;
-	size_t _size;
-public:
-	/** Create a new empty bitfield */
-	BitField(size_t size){
-		_size = size;
-		_bits = new _word[_words()];
-		clear();
-	}
+            /** Underlying word array */
+            _word* _bits;
+            size_t _size;
+        public:
 
-	/** Copy create a bitfield from another */
-	BitField(const BitField& bf){
-		_size = bf._size;
-		_bits = new _word[_words()];
-		for(size_t i = 0; i < _words(); i++)
-			_bits[i] = bf._bits[i];
-	}
+            /** Create a new empty bitfield */
+            BitField(size_t size) {
+                _size = size;
+                _bits = new _word[_words()];
+                clear();
+            }
 
-	/** Destructor */
-	~BitField(){
-		if(_bits){
-			delete[] _bits;
-			_bits = NULL;
-		}
-	}
+            /** Copy create a bitfield from another */
+            BitField(const BitField& bf) {
+                _size = bf._size;
+                _bits = new _word[_words()];
+                for (size_t i = 0; i < _words(); i++)
+                    _bits[i] = bf._bits[i];
+            }
 
-	/** Get the size of the bitfield*/
-	size_t size() const{
-		return _size;
-	}
+            /** Destructor */
+            ~BitField() {
+                if (_bits) {
+                    delete[] _bits;
+                    _bits = NULL;
+                }
+            }
 
-	/** Clear all bits */
-	BitField& clear(){
-		for(size_t i = 0; i < _words(); i++)
-			_bits[i] = 0;
-		return *this;
-	}
+            /** Get the size of the bitfield*/
+            size_t size() const {
+                return _size;
+            }
 
-	/** Clear bit at position pos */
-	BitField& clear(size_t pos){
-		_bits[_wordOffset(pos)] &= ~_bitmask(pos);
-		return *this;
-	}
+            /** Clear all bits */
+            BitField& clear() {
+                for (size_t i = 0; i < _words(); i++)
+                    _bits[i] = 0;
+                return *this;
+            }
 
-	/** Test bit at position pos */
-	bool test(size_t pos) const{
-		return (_bits[_wordOffset(pos)] & _bitmask(pos)) != (_word)0;
-	}
+            /** Clear bit at position pos */
+            BitField& clear(size_t pos) {
+                _bits[_wordOffset(pos)] &= ~_bitmask(pos);
+                return *this;
+            }
 
-	/** Set all bits */
-	BitField& set(){
-		memset(_bits, 0xff, sizeof(_word) * _words());
-		//Sanitize
-		_bits[_words()-1] = _bits[_words()-1] & ~((~(_word)0)<< _bitOffset(_size));
-		return *this;
-	}
+            /** Test bit at position pos */
+            bool test(size_t pos) const {
+                return (_bits[_wordOffset(pos)] & _bitmask(pos)) != (_word) 0;
+            }
 
-	/** Set bit a position pos */
-	BitField& set(size_t pos){
-		_bits[_wordOffset(pos)] |= _bitmask(pos);
-		return *this;
-	}
+            /** Set all bits */
+            BitField& set() {
+                memset(_bits, 0xff, sizeof (_word) * _words());
+                //Sanitize
+                _bits[_words() - 1] = _bits[_words() - 1] & ~((~(_word) 0) << _bitOffset(_size));
+                return *this;
+            }
 
-	/** Set bit a position pos to value */
-	BitField& set(size_t pos, bool value){
-		if(value)
-			set(pos);
-		else
-			clear(pos);
-		return *this;
-	}
+            /** Set bit a position pos */
+            BitField& set(size_t pos) {
+                _bits[_wordOffset(pos)] |= _bitmask(pos);
+                return *this;
+            }
 
-	/** Flip all bits */
-	BitField& flip(){
-		for(size_t i = 0; i < _words()-1; i++)
-			_bits[i] = ~_bits[i];
-		//Sanitize
-		_bits[_words()-1] = ~_bits[_words()-1] & ~((~(_word)0)<<_bitOffset(_size));
-		return *this;
-	}
+            /** Set bit a position pos to value */
+            BitField& set(size_t pos, bool value) {
+                if (value)
+                    set(pos);
+                else
+                    clear(pos);
+                return *this;
+            }
 
-	/** Flip bit at position pos */
-	BitField& flip(size_t pos){
-		_bits[_wordOffset(pos)] ^= _bitmask(pos);
-		return *this;
-	}
+            /** Flip all bits */
+            BitField& flip() {
+                for (size_t i = 0; i < _words() - 1; i++)
+                    _bits[i] = ~_bits[i];
+                //Sanitize
+                _bits[_words() - 1] = ~_bits[_words() - 1] & ~((~(_word) 0) << _bitOffset(_size));
+                return *this;
+            }
 
-	/** Test if any bit is set */
-	bool any() const{
-		for(size_t i = 0; i < _words(); i++)
-			if(_bits[i] != (_word)0)
-				return true;
-		return false;
-	}
+            /** Flip bit at position pos */
+            BitField& flip(size_t pos) {
+                _bits[_wordOffset(pos)] ^= _bitmask(pos);
+                return *this;
+            }
 
-	/** Test if no bits are set */
-	bool none() const{
-		return !any();
-	}
+            /** Test if any bit is set */
+            bool any() const {
+                for (size_t i = 0; i < _words(); i++)
+                    if (_bits[i] != (_word) 0)
+                        return true;
+                return false;
+            }
 
-	/** Get the first set element, -1 if none */
-	int first() const{
-		for(size_t i = 0; i < _size; i++)
-			if(test(i))
-				return i;
-		return -1;
-	}
+            /** Test if no bits are set */
+            bool none() const {
+                return !any();
+            }
 
-	BitField& operator= (const BitField& rhs){
-		for(size_t i = 0; i < _words(); i++)
-			_bits[i] = rhs._bits[i];
-		return *this;
-	}
+            /** Get the first set element, -1 if none */
+            int first() const {
+                for (size_t i = 0; i < _size; i++)
+                    if (test(i))
+                        return i;
+                return -1;
+            }
 
-	BitField& operator&= (const BitField& rhs){
-		for(size_t i = 0; i < _words(); i++)
-			_bits[i] &= rhs._bits[i];
-		return *this;
-	}
+            BitField& operator=(const BitField& rhs) {
+                for (size_t i = 0; i < _words(); i++)
+                    _bits[i] = rhs._bits[i];
+                return *this;
+            }
 
-	BitField& operator|= (const BitField& rhs){
-		for(size_t i = 0; i < _words(); i++)
-			_bits[i] |= rhs._bits[i];
-		return *this;
-	}
+            BitField& operator&=(const BitField& rhs) {
+                for (size_t i = 0; i < _words(); i++)
+                    _bits[i] &= rhs._bits[i];
+                return *this;
+            }
 
-	BitField& operator^= (const BitField& rhs){
-		for(size_t i = 0; i < _words(); i++)
-			_bits[i] ^= rhs._bits[i];
-		return *this;
-	}
+            BitField& operator|=(const BitField& rhs) {
+                for (size_t i = 0; i < _words(); i++)
+                    _bits[i] |= rhs._bits[i];
+                return *this;
+            }
 
-	BitField operator~() const{
-		return BitField(*this).flip();
-	}
+            BitField& operator^=(const BitField& rhs) {
+                for (size_t i = 0; i < _words(); i++)
+                    _bits[i] ^= rhs._bits[i];
+                return *this;
+            }
 
-	bool operator== (const BitField& rhs) const{
-		for(size_t i = 0; i < _words(); i++)
-			if(_bits[i] != rhs._bits[i])
-				return false;
-		return true;
-	}
+            BitField operator~() const {
+                return BitField(*this).flip();
+            }
 
-	bool operator!= (const BitField& rhs) const{
-		for(size_t i = 0; i < _words(); i++)
-			if(_bits[i] != rhs._bits[i])
-				return true;
-		return false;
-	}
-};
+            bool operator==(const BitField& rhs) const {
+                for (size_t i = 0; i < _words(); i++)
+                    if (_bits[i] != rhs._bits[i])
+                        return false;
+                return true;
+            }
 
-inline BitField operator&(const BitField& lhs, const BitField& rhs){
-	BitField retval(lhs);
-	retval &= rhs;
-	return retval;
-}
+            bool operator!=(const BitField& rhs) const {
+                for (size_t i = 0; i < _words(); i++)
+                    if (_bits[i] != rhs._bits[i])
+                        return true;
+                return false;
+            }
+        };
 
-inline BitField operator|(const BitField& lhs, const BitField& rhs){
-	BitField retval(lhs);
-	retval |= rhs;
-	return retval;
-}
+        inline BitField operator&(const BitField& lhs, const BitField& rhs) {
+            BitField retval(lhs);
+            retval &= rhs;
+            return retval;
+        }
 
-inline BitField operator^(const BitField& lhs, const BitField& rhs){
-	BitField retval(lhs);
-	retval ^= rhs;
-	return retval;
-}
+        inline BitField operator|(const BitField& lhs, const BitField& rhs) {
+            BitField retval(lhs);
+            retval |= rhs;
+            return retval;
+        }
 
-} // Structures
+        inline BitField operator^(const BitField& lhs, const BitField& rhs) {
+            BitField retval(lhs);
+            retval ^= rhs;
+            return retval;
+        }
+
+    } // Structures
 } // PetriEngine
 
 #endif // BITFIELD_H

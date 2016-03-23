@@ -28,7 +28,7 @@
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 5
-#define YY_FLEX_SUBMINOR_VERSION 35
+#define YY_FLEX_SUBMINOR_VERSION 39
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
 #endif
@@ -161,15 +161,7 @@ typedef unsigned int flex_uint32_t;
 
 /* Size of default input buffer. */
 #ifndef YY_BUF_SIZE
-#ifdef __ia64__
-/* On IA-64, the buffer size is 16k, not 8k.
- * Moreover, YY_BUF_SIZE is 2*YY_READ_BUF_SIZE in the general case.
- * Ditto for the __ia64__ case accordingly.
- */
-#define YY_BUF_SIZE 32768
-#else
 #define YY_BUF_SIZE 16384
-#endif /* __ia64__ */
 #endif
 
 /* The state buf must be large enough to hold one state per character in the main buffer.
@@ -181,7 +173,12 @@ typedef unsigned int flex_uint32_t;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 #endif
 
-extern int pqlqleng;
+#ifndef YY_TYPEDEF_YY_SIZE_T
+#define YY_TYPEDEF_YY_SIZE_T
+typedef size_t yy_size_t;
+#endif
+
+extern yy_size_t pqlqleng;
 
 extern FILE *pqlqin, *pqlqout;
 
@@ -190,6 +187,7 @@ extern FILE *pqlqin, *pqlqout;
 #define EOB_ACT_LAST_MATCH 2
 
     #define YY_LESS_LINENO(n)
+    #define YY_LINENO_REWIND_TO(ptr)
     
 /* Return all but the first "n" matched characters back to the input stream. */
 #define yyless(n) \
@@ -206,11 +204,6 @@ extern FILE *pqlqin, *pqlqout;
 	while ( 0 )
 
 #define unput(c) yyunput( c, (yytext_ptr)  )
-
-#ifndef YY_TYPEDEF_YY_SIZE_T
-#define YY_TYPEDEF_YY_SIZE_T
-typedef size_t yy_size_t;
-#endif
 
 #ifndef YY_STRUCT_YY_BUFFER_STATE
 #define YY_STRUCT_YY_BUFFER_STATE
@@ -229,7 +222,7 @@ struct yy_buffer_state
 	/* Number of characters read into yy_ch_buf, not including EOB
 	 * characters.
 	 */
-	int yy_n_chars;
+	yy_size_t yy_n_chars;
 
 	/* Whether we "own" the buffer - i.e., we know we created it,
 	 * and can realloc() it to grow it, and should free() it to
@@ -299,8 +292,8 @@ static YY_BUFFER_STATE * yy_buffer_stack = 0; /**< Stack as an array. */
 
 /* yy_hold_char holds the character lost when pqlqtext is formed. */
 static char yy_hold_char;
-static int yy_n_chars;		/* number of characters read into yy_ch_buf */
-int pqlqleng;
+static yy_size_t yy_n_chars;		/* number of characters read into yy_ch_buf */
+yy_size_t pqlqleng;
 
 /* Points to current character in buffer. */
 static char *yy_c_buf_p = (char *) 0;
@@ -328,7 +321,7 @@ static void pqlq_init_buffer (YY_BUFFER_STATE b,FILE *file  );
 
 YY_BUFFER_STATE pqlq_scan_buffer (char *base,yy_size_t size  );
 YY_BUFFER_STATE pqlq_scan_string (yyconst char *yy_str  );
-YY_BUFFER_STATE pqlq_scan_bytes (yyconst char *bytes,int len  );
+YY_BUFFER_STATE pqlq_scan_bytes (yyconst char *bytes,yy_size_t len  );
 
 void *pqlqalloc (yy_size_t  );
 void *pqlqrealloc (void *,yy_size_t  );
@@ -525,15 +518,17 @@ char *pqlqtext;
 #line 1 "PetriEngine/PQL/PQLQueryTokens.l"
 #line 2 "PetriEngine/PQL/PQLQueryTokens.l"
 #include <string>
+#include <memory>
 #include "PQL.h"
 #include "PQLQueryParser.parser.hpp"
+
 #define SAVE_TOKEN pqlqlval.string = new std::string(pqlqtext, pqlqleng)
 #define SAVE_QUOTED_TOKEN pqlqlval.string = new std::string(pqlqtext+1, pqlqleng-2)
 #define TOKEN(t) (pqlqlval.token = t)
 extern "C" int pqlqwrap(){return 1;}
-extern PetriEngine::PQL::Condition* query;
+extern std::shared_ptr<PetriEngine::PQL::Condition> query;
 extern int pqlqparse();
-#line 537 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 532 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 
 #define INITIAL 0
 
@@ -572,7 +567,7 @@ FILE *pqlqget_out (void );
 
 void pqlqset_out  (FILE * out_str  );
 
-int pqlqget_leng (void );
+yy_size_t pqlqget_leng (void );
 
 char *pqlqget_text (void );
 
@@ -612,12 +607,7 @@ static int input (void );
 
 /* Amount of stuff to slurp up with each read. */
 #ifndef YY_READ_BUF_SIZE
-#ifdef __ia64__
-/* On IA-64, the buffer size is 16k, not 8k */
-#define YY_READ_BUF_SIZE 16384
-#else
 #define YY_READ_BUF_SIZE 8192
-#endif /* __ia64__ */
 #endif
 
 /* Copy whatever the last rule matched to the standard output. */
@@ -718,11 +708,6 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 18 "PetriEngine/PQL/PQLQueryTokens.l"
-
-
-#line 725 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
-
 	if ( !(yy_init) )
 		{
 		(yy_init) = 1;
@@ -749,6 +734,12 @@ YY_DECL
 		pqlq_load_buffer_state( );
 		}
 
+	{
+#line 19 "PetriEngine/PQL/PQLQueryTokens.l"
+
+
+#line 742 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+
 	while ( 1 )		/* loops until end-of-file is reached */
 		{
 		yy_cp = (yy_c_buf_p);
@@ -765,7 +756,7 @@ YY_DECL
 yy_match:
 		do
 			{
-			register YY_CHAR yy_c = yy_ec[YY_SC_TO_UI(*yy_cp)];
+			register YY_CHAR yy_c = yy_ec[YY_SC_TO_UI(*yy_cp)] ;
 			if ( yy_accept[yy_current_state] )
 				{
 				(yy_last_accepting_state) = yy_current_state;
@@ -807,156 +798,156 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 20 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 21 "PetriEngine/PQL/PQLQueryTokens.l"
 ;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 21 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 22 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(TRUE);}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 22 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 23 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(FALSE);}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 23 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 24 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(DEADLOCK);}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 24 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 25 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(AND);}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 25 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 26 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(AND);}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 26 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 27 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(OR);}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 27 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 28 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(OR);}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 28 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 29 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(NOT);}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 29 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 30 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(NOT);}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 30 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 31 "PetriEngine/PQL/PQLQueryTokens.l"
 {SAVE_TOKEN; return ID;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 31 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 32 "PetriEngine/PQL/PQLQueryTokens.l"
 {SAVE_TOKEN; return INT;}
 	YY_BREAK
 case 13:
 /* rule 13 can match eol */
 YY_RULE_SETUP
-#line 32 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 33 "PetriEngine/PQL/PQLQueryTokens.l"
 {SAVE_QUOTED_TOKEN; return ID;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 33 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 34 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(AND);}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 34 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 35 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(OR);}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 35 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 36 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(NOT);}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 36 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 37 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(EQUAL);}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 37 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 38 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(NEQUAL);}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 38 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 39 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(LESS);}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 39 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 40 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(LESSEQUAL);}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 40 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 41 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(GREATER);}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 41 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 42 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(GREATEREQUAL);}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 42 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 43 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(LPAREN);}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 43 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 44 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(RPAREN);}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 44 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 45 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(PLUS);}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 45 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 46 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(MINUS);}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 46 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 47 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(MULTIPLY);}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 47 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 48 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(EQUAL);}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 48 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 49 "PetriEngine/PQL/PQLQueryTokens.l"
 {printf("Unknown token %s!\n", pqlqtext); yyterminate();}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 50 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 51 "PetriEngine/PQL/PQLQueryTokens.l"
 ECHO;
 	YY_BREAK
-#line 960 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 951 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1087,6 +1078,7 @@ case YY_STATE_EOF(INITIAL):
 			"fatal flex scanner internal error--no action found" );
 	} /* end of action switch */
 		} /* end of scanning one token */
+	} /* end of user's declarations */
 } /* end of pqlqlex */
 
 /* yy_get_next_buffer - try to read in a new buffer
@@ -1142,21 +1134,21 @@ static int yy_get_next_buffer (void)
 
 	else
 		{
-			int num_to_read =
+			yy_size_t num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
 			{ /* Not enough room in the buffer - grow it. */
 
 			/* just a shorter name for the current buffer */
-			YY_BUFFER_STATE b = YY_CURRENT_BUFFER;
+			YY_BUFFER_STATE b = YY_CURRENT_BUFFER_LVALUE;
 
 			int yy_c_buf_p_offset =
 				(int) ((yy_c_buf_p) - b->yy_ch_buf);
 
 			if ( b->yy_is_our_buffer )
 				{
-				int new_size = b->yy_buf_size * 2;
+				yy_size_t new_size = b->yy_buf_size * 2;
 
 				if ( new_size <= 0 )
 					b->yy_buf_size += b->yy_buf_size / 8;
@@ -1187,7 +1179,7 @@ static int yy_get_next_buffer (void)
 
 		/* Read in more data. */
 		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
-			(yy_n_chars), (size_t) num_to_read );
+			(yy_n_chars), num_to_read );
 
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars = (yy_n_chars);
 		}
@@ -1282,7 +1274,7 @@ static int yy_get_next_buffer (void)
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 	yy_is_jam = (yy_current_state == 68);
 
-	return yy_is_jam ? 0 : yy_current_state;
+		return yy_is_jam ? 0 : yy_current_state;
 }
 
 #ifndef YY_NO_INPUT
@@ -1309,7 +1301,7 @@ static int yy_get_next_buffer (void)
 
 		else
 			{ /* need more input */
-			int offset = (yy_c_buf_p) - (yytext_ptr);
+			yy_size_t offset = (yy_c_buf_p) - (yytext_ptr);
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -1469,10 +1461,6 @@ static void pqlq_load_buffer_state  (void)
 	pqlqfree((void *) b  );
 }
 
-#ifndef __cplusplus
-extern int isatty (int );
-#endif /* __cplusplus */
-    
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
  * such as during a pqlqrestart() or at EOF.
@@ -1585,7 +1573,7 @@ void pqlqpop_buffer_state (void)
  */
 static void pqlqensure_buffer_stack (void)
 {
-	int num_to_alloc;
+	yy_size_t num_to_alloc;
     
 	if (!(yy_buffer_stack)) {
 
@@ -1682,12 +1670,12 @@ YY_BUFFER_STATE pqlq_scan_string (yyconst char * yystr )
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE pqlq_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
+YY_BUFFER_STATE pqlq_scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_len )
 {
 	YY_BUFFER_STATE b;
 	char *buf;
 	yy_size_t n;
-	int i;
+	yy_size_t i;
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = _yybytes_len + 2;
@@ -1769,7 +1757,7 @@ FILE *pqlqget_out  (void)
 /** Get the length of the current token.
  * 
  */
-int pqlqget_leng  (void)
+yy_size_t pqlqget_leng  (void)
 {
         return pqlqleng;
 }
@@ -1917,13 +1905,11 @@ void pqlqfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 50 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 51 "PetriEngine/PQL/PQLQueryTokens.l"
 
 
 namespace PetriEngine{ namespace PQL {
-Condition* ParseQuery(const std::string& queryString) {
-	query = NULL;
-
+std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool isInvariant, std::string placenameforbound) {
 	//Load up input buffer in Flex
 	YY_BUFFER_STATE buf = pqlq_scan_string(queryString.c_str());
 
@@ -1932,7 +1918,8 @@ Condition* ParseQuery(const std::string& queryString) {
 
 	//Delete the buffer
 	pqlq_delete_buffer(buf);
-
+        query->setInvariant(isInvariant);
+        query->setPlaceNameForBounds(placenameforbound);
 	return query;
 } 
 }}

@@ -26,80 +26,66 @@
 #include <string>
 #include <vector>
 
-class PNMLParser
-{
-	struct Arc{
-		std::string source,
-					target;
-		int weight;
-	};
-	typedef std::vector<Arc> ArcList;
-	typedef ArcList::iterator ArcIter;
-	struct Transition{
-		std::string id,
-					cond,
-					assign;
-		double x, y;
-	};
-	typedef std::vector<Transition> TransitionList;
-	typedef TransitionList::iterator TransitionIter;
-	struct NodeName{
-		std::string id;
-		bool isPlace;
-	};
-	typedef std::map<std::string, NodeName> NodeNameMap;
-        
+class PNMLParser {
+
+    struct Arc {
+        std::string source,
+        target;
+        int weight;
+    };
+    typedef std::vector<Arc> ArcList;
+    typedef ArcList::iterator ArcIter;
+
+    struct Transition {
+        std::string id;
+        double x, y;
+    };
+    typedef std::vector<Transition> TransitionList;
+    typedef TransitionList::iterator TransitionIter;
+
+    struct NodeName {
+        std::string id;
+        bool isPlace;
+    };
+    typedef std::map<std::string, NodeName> NodeNameMap;
+
 public:
 
-	struct Query{
-		std::string name,text;
-	};
-        
-        struct InhibitorArc{
-		std::string source,
-					target;
-		int			weight;
-	};
-	typedef std::vector<InhibitorArc> InhibitorArcList;
-        typedef InhibitorArcList::iterator InhibitorArcIter;
-        typedef std::map<std::string, std::string> TransitionEnablednessMap;
+    struct Query {
+        std::string name, text;
+    };
+    
+    typedef std::map<std::string, std::string> TransitionEnablednessMap;
 
-	PNMLParser(){
-		builder = NULL;
-	}
-	void parse(const std::string& xml,
-			   PetriEngine::AbstractPetriNetBuilder* builder);
-	void makePetriNet();
-	std::vector<Query> getQueries(){
-		return queries;
-	}
-        
-        InhibitorArcList getInhibitorArcs(){
-                return inhibarcs;
-        }
-        
-        TransitionEnablednessMap getTransitionEnabledness() {
-            return transitionEnabledness;
-        }
+    PNMLParser() {
+        builder = NULL;
+    }
+    void parse(const std::string& xml,
+            PetriEngine::AbstractPetriNetBuilder* builder);
+    void makePetriNet();
+
+    std::vector<Query> getQueries() {
+        return queries;
+    }
+
+    TransitionEnablednessMap getTransitionEnabledness() {
+        return transitionEnabledness;
+    }
 
 private:
-	void parseElement(XMLSP::DOMElement* element);
-	void parsePlace(XMLSP::DOMElement* element);
-	void parseArc(XMLSP::DOMElement* element);
-	void parseTransportArc(XMLSP::DOMElement* element);
-	void parseInhibitorArc(XMLSP::DOMElement* element);
-	void parseTransition(XMLSP::DOMElement* element);
-	void parseVariable(XMLSP::DOMElement* element);
-	void parseValue(XMLSP::DOMElement* element, std::string& text);
-	void parsePosition(XMLSP::DOMElement* element, double& x, double& y);
-	void parseQueries(XMLSP::DOMElement* element);
-	PetriEngine::AbstractPetriNetBuilder* builder;
-	NodeNameMap id2name;
-	ArcList arcs;
-	TransitionList transitions;
-	InhibitorArcList inhibarcs;
-	std::vector<Query> queries;
-        TransitionEnablednessMap transitionEnabledness; // encodes the enabledness condition for each transition
+    void parseElement(XMLSP::DOMElement* element);
+    void parsePlace(XMLSP::DOMElement* element);
+    void parseArc(XMLSP::DOMElement* element);
+    void parseTransition(XMLSP::DOMElement* element);
+    void parseValue(XMLSP::DOMElement* element, std::string& text);
+    void parsePosition(XMLSP::DOMElement* element, double& x, double& y);
+    void parseQueries(XMLSP::DOMElement* element);
+    PetriEngine::AbstractPetriNetBuilder* builder;
+    NodeNameMap id2name;
+    ArcList arcs;
+    TransitionList transitions;
+    std::vector<Query> queries;
+    TransitionEnablednessMap transitionEnabledness; // encodes the enabledness condition for each transition
 };
 
 #endif // PNMLPARSER_H

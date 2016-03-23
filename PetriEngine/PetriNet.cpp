@@ -28,198 +28,142 @@ using namespace std;
 
 namespace PetriEngine {
 
-	PetriNet::PetriNet(int places, int transitions, int variables)
-	: _places(places), _transitions(transitions), _variables(variables) {
-		//Store size for later
-		_nPlaces = places;
-		_nTransitions = transitions;
-		_nVariables = variables;
+    PetriNet::PetriNet(uint32_t trans, uint32_t invariants, uint32_t places)
+    : _ninvariants(invariants), _ntransitions(trans), _nplaces(places),
+            _transitions(_ntransitions+1),
+            _invariants(_ninvariants),            
+            _placeToPtrs(_nplaces+1) {
 
-		//Allocate space for ranges
-		_ranges = new VarVal[variables];
+        // to avoid special cases
+        _transitions[_ntransitions].inputs = _ninvariants;
+        _transitions[_ntransitions].outputs = _ninvariants;
+        _placeToPtrs[_nplaces] = _ntransitions;
+        _initialMarking = new MarkVal[_nplaces];
+    }
 
-		//Allocate space for conditions and assignments
-		size_t s = (sizeof (PQL::Condition*) + sizeof (PQL::AssignmentExpression*)) * transitions;
-		char* d = new char[s];
-		memset(d, 0, s);
-		_conditions = (PQL::Condition**)d;
-		_assignments = (PQL::AssignmentExpression**)(d + sizeof (PQL::Condition*) * transitions);
+    PetriNet::~PetriNet() {
+        delete[] _initialMarking;
+    }
 
-		//Allocate transition matrix
-		_tm = new MarkVal[places * transitions * 2];
-		for (int i = 0; i < places * transitions * 2; i++)
-			_tm[i] = 0;
+    int PetriNet::inArc(unsigned int place, unsigned int transition) const
+    {
+        uint32_t min = _placeToPtrs[place];
+        uint32_t max = _placeToPtrs[place+1];
+        if(transition < min || transition >= max) return 0;
+        
+        uint32_t imin = _transitions[transition].inputs;
+        uint32_t imax = _transitions[transition].outputs;
+        for(;imin < imax; ++imin)
+        {
+            if(_invariants[imin].place == place) return _invariants[imin].tokens;
+        }
+        return 0;
+    }
+    int PetriNet::outArc(unsigned int transition, unsigned int place) const
+    {
+        uint32_t min = _placeToPtrs[place];
+        uint32_t max = _placeToPtrs[place+1];
+        if(transition < min || transition >= max) return 0;
+        
+        uint32_t imin = _transitions[transition].outputs;
+        uint32_t imax = _transitions[transition+1].inputs;
+        for(;imin < imax; ++imin)
+        {
+            if(_invariants[imin].place == place) return _invariants[imin].tokens;
+        }
+        return 0;   
+    }
+    
+    bool PetriNet::deadlocked(const MarkVal* m) const {
+        
+        //Check that we can take from the marking
+        for (size_t i = 0; i < _nplaces; i++) {
+            if(m[i] > 0)
+            {
+                uint32_t first = _placeToPtrs[i];
+                uint32_t last = _placeToPtrs[i+1];
+                for(;first != last; ++first)
+                {
+                    const TransPtr& ptr = _transitions[first];
+                    uint32_t finv = ptr.inputs;
+                    uint32_t linv = ptr.outputs;
+                    for(;finv != linv; ++finv)
+                    {
+                        if(m[_invariants[finv].place] < _invariants[finv].tokens)
+                        {
+                            break;
+                        }
+                        return false;
+                    }
+                }
+            }
+        }
 
-		skipTransitions = new bool[transitions];
-		for (int i = 0; i < transitions; i++) {
-			skipTransitions[i] = false;
-		}
-		skipPlaces = new bool[places];
-		for (int i = 0; i < places; i++) {
-			skipPlaces[i] = false;
-		}
-	}
+        return true;
+    }    
+    
+    void PetriNet::reset(const Structures::State* p)
+    {
+        parent = p;
+        _suc_pcounter = 0;
+        _suc_tcounter = std::numeric_limits<uint32_t>::max();       
+//        std::cout << "RESET:" << std::endl;
+//        print(p->marking());
+    }
+    
+    bool PetriNet::next(Structures::State* write)
+    {
+//        std::cout << "BEGIN "<< std::endl;
+        for (; _suc_pcounter < _nplaces; _suc_pcounter++) {
+            if(this->parent->marking()[_suc_pcounter] > 0)
+            {
+                if(_suc_tcounter == std::numeric_limits<uint32_t>::max())
+                {
+                    _suc_tcounter = _placeToPtrs[_suc_pcounter];
+                }
+                uint32_t last = _placeToPtrs[_suc_pcounter+1];
+                for(;_suc_tcounter != last; ++_suc_tcounter)
+                {
+                    memcpy(write->marking(), parent->marking(), _nplaces*sizeof(MarkVal));
+                    
+                    TransPtr& ptr = _transitions[_suc_tcounter];
+                    uint32_t finv = ptr.inputs;
+                    uint32_t linv = ptr.outputs;
+                    bool ok = true;
+                    for(;finv < linv; ++finv)
+                    {
+                        if(this->parent->marking()[_invariants[finv].place] < _invariants[finv].tokens)
+                        {
+                            ok = false;
+                            break;
+                        }
+                        write->marking()[_invariants[finv].place] -= _invariants[finv].tokens;
+                    }
+                    if(!ok) continue;
+                    // else fire
+                    finv = linv;
+                    linv = _transitions[_suc_tcounter+1].inputs;
+                    for(;finv < linv; ++finv)
+                    {
+                        write->marking()[_invariants[finv].place] += _invariants[finv].tokens;
+                    }
+                    ++_suc_tcounter;
+//                    std::cout << "NEXT" << std::endl;
+//                    print(write->marking());
+                    return true;
+                }
+                _suc_tcounter = std::numeric_limits<uint32_t>::max();
+            }
+            _suc_tcounter = std::numeric_limits<uint32_t>::max();
+        }
+        return false;
+    }  
 
-	PetriNet::~PetriNet() {
-		if (_ranges)
-			delete[] _ranges;
-		_ranges = NULL;
-		if (_tm)
-			delete[] _tm;
-		_tm = NULL;
-		//Conditions and assignments is allocated in the same block
-		if (_conditions)
-			delete[] (char*) _conditions;
-		_conditions = NULL;
-		_assignments = NULL;
-		if (skipTransitions) {
-			delete[] skipTransitions;
-		}
-		skipTransitions = NULL;
-		if (skipPlaces) {
-			delete[] skipPlaces;
-		}
-		skipPlaces = NULL;
-	}
-
-bool PetriNet::fire(unsigned int t,
-					const MarkVal* m,
-					const VarVal* a,
-					MarkVal* result_m,
-					VarVal* result_a) const{
-        if (skipTransitions[t]) { return false;}
-        //Check the condition
-	if(_conditions[t] &&
-	   !_conditions[t]->evaluate(PQL::EvaluationContext(m, a, NULL)))
-		return false;
-
-	const MarkVal* tv = _tv(t);
-	//Check that we can take from the marking
-	for(size_t i = 0; i < _nPlaces; i++){
-		result_m[i] = m[i] - tv[i];
-		if(result_m[i] < 0)
-			return false;
-	}
-	//Add stuff that the marking gives us
-	for(size_t i = 0; i < _nPlaces; i++)
-		result_m[i] += tv[i+_nPlaces];
-
-
-	if(_assignments[t])
-		_assignments[t]->evaluate(m, a, result_a, _ranges, _nVariables);
-	else
-		memcpy(result_a, a, sizeof(VarVal) * _nVariables);
-
-	return true;
-}
-
-bool PetriNet::fire(unsigned int t,
-					const Structures::State* s,
-					Structures::State* ns,
-					int multiplicity) const{
-	if (skipTransitions[t]) { return false;}
-        //Check the condition
-	if(_conditions[t] &&
-	   !_conditions[t]->evaluate(PQL::EvaluationContext(s->marking(), s->valuation(), NULL)))
-		return false;
-
-	// We can handle multiplicity if there's conditions or assignments on the transition
-	if((_conditions[t] && multiplicity != 1) || (_assignments[t] && multiplicity != 1))
-		return false;
-
-	const MarkVal* tv = _tv(t);
-	//Check that we can take from the marking
-	for(size_t i = 0; i < _nPlaces; i++){
-		ns->marking()[i] = s->marking()[i] - tv[i] * multiplicity;
-		if(ns->marking()[i] < 0)
-			return false;
-	}
-	
-	//Add stuff that the marking gives us
-	for(size_t i = 0; i < _nPlaces; i++)
-		ns->marking()[i] += tv[i+_nPlaces] * multiplicity;
-
-	if(_assignments[t])
-		_assignments[t]->evaluate(s->marking(), s->valuation(), ns->valuation(), _ranges, _nVariables);
-	else
-		memcpy(ns->valuation(), s->valuation(), sizeof(VarVal) * _nVariables);
-
-	return true;
-}
-
-void PetriNet::fireWithoutCheck(unsigned int t,
-								const MarkVal *m0,
-								const VarVal *a0,
-								MarkVal *m2,
-								VarVal *a2,
-								int multiplicity) const {
-	//Don't check conditions
-
-	// Do assignment first, so that we can allow m0 == m2 and a0 == a2
-	// e.g. reuse of memory...
-	//Assume that multiplicity is zero if there's an assignment
-	if(_assignments[t])
-		_assignments[t]->evaluate(m0, a0, a2, _ranges, _nVariables);
-	else
-		memcpy(a2, a0, sizeof(VarVal) * _nVariables);
-
-	const MarkVal* tv = _tv(t);
-	//Check that we can take from the marking
-	for(size_t i = 0; i < _nPlaces; i++)
-		m2[i] = m0[i] - tv[i] * multiplicity + tv[i+_nPlaces] * multiplicity;
-}
-
-bool PetriNet::fireWithMarkInf(unsigned int t,
-							   const MarkVal* m,
-							   const VarVal* a,
-							   MarkVal* result_m,
-							   VarVal* result_a) const{
-	if (skipTransitions[t]) { return false;}
-        //Check the condition
-	if(_conditions[t] && //TODO: Use evaluate that respects MarkInf
-	   !_conditions[t]->evaluate(PQL::EvaluationContext(m, a, NULL)))
-		return false;
-
-	const MarkVal* tv = _tv(t);
-	//Check that we can take from the marking
-	for(size_t i = 0; i < _nPlaces; i++){
-		if(m[i] == MARK_INF)
-			continue;
-		result_m[i] = m[i] - tv[i];
-		if(result_m[i] < 0)
-			return false;
-	}
-	//Add stuff that the marking gives us
-	for(size_t i = 0; i < _nPlaces; i++){
-		if(m[i] == MARK_INF)
-			continue;
-		result_m[i] += tv[i+_nPlaces];
-	}
-
-
-	if(_assignments[t]) //TODO: Use evaluate that respects MarkInf
-		_assignments[t]->evaluate(m, a, result_a, _ranges, _nVariables);
-	else
-		memcpy(result_a, a, sizeof(VarVal) * _nVariables);
-
-	return true;
-}
-
-int PetriNet::inArc(unsigned int place, unsigned int transition) const{
-	return _tv(transition)[place];
-}
-
-int PetriNet::outArc(unsigned int transition, unsigned int place) const{
-	return _tv(transition)[place + _nPlaces];
-}
-
-void PetriNet::updateinArc(unsigned int place, unsigned int transition, int weight) {
-        _tv(transition)[place]=weight;       
-}
-      
-void PetriNet::updateoutArc(unsigned int transition, unsigned int place, int weight) {  
-        _tv(transition)[place + _nPlaces]=weight;
-}
-
-
+    MarkVal* PetriNet::makeInitialMarking()
+    {
+        MarkVal* marking = new MarkVal[_nplaces];
+        memcpy(marking, _initialMarking, sizeof(MarkVal)*_nplaces);
+        return marking;
+    }
+    
 } // PetriEngine

@@ -1,12 +1,14 @@
 %{
 #include <string>
+#include <memory>
 #include "PQL.h"
 #include "PQLQueryParser.parser.hpp"
+
 #define SAVE_TOKEN pqlqlval.string = new std::string(pqlqtext, pqlqleng)
 #define SAVE_QUOTED_TOKEN pqlqlval.string = new std::string(pqlqtext+1, pqlqleng-2)
 #define TOKEN(t) (pqlqlval.token = t)
 extern "C" int pqlqwrap(){return 1;}
-extern PetriEngine::PQL::Condition* query;
+extern std::shared_ptr<PetriEngine::PQL::Condition> query;
 extern int pqlqparse();
 %}
 %option prefix="pqlq"
@@ -48,9 +50,7 @@ letter        [a-zA-Z_]
 
 %%
 namespace PetriEngine{ namespace PQL {
-Condition* ParseQuery(const std::string& queryString) {
-	query = NULL;
-
+std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool isInvariant, std::string placenameforbound) {
 	//Load up input buffer in Flex
 	YY_BUFFER_STATE buf = pqlq_scan_string(queryString.c_str());
 
@@ -59,7 +59,8 @@ Condition* ParseQuery(const std::string& queryString) {
 
 	//Delete the buffer
 	pqlq_delete_buffer(buf);
-
+        query->setInvariant(isInvariant);
+        query->setPlaceNameForBounds(placenameforbound);
 	return query;
 } 
 }}

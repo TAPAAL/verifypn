@@ -22,100 +22,92 @@
 #include <string>
 #include <vector>
 #include <climits>
+#include <limits>
+#include <iostream>
 
-namespace PetriEngine{
+namespace PetriEngine {
 
-namespace PQL{
-	class Condition;
-	class AssignmentExpression;
-}
+    namespace PQL {
+        class Condition;
+    }
 
-namespace Structures{
-	class State;
-}
+    namespace Structures {
+        class State;
+    }
 
-class PetriNetBuilder;
+    class PetriNetBuilder;
 
-/** Type used for holding markings values */
-typedef int MarkVal;
-/** Type used for holding variable values */
-typedef int VarVal;
+    struct TransPtr {
+        uint32_t inputs;
+        uint32_t outputs;
+    };
+    
+    struct Invariant {
+        uint32_t place;
+        uint32_t tokens;
+    };
+    
+    /** Type used for holding markings values */
+    typedef uint32_t MarkVal;
+#define MARK_INF     INT_MAX
 
-#define MARK_INF					INT_MAX
-
-/** Efficient representation of PetriNet */
-class PetriNet
-{
-	PetriNet(int places, int transitions, int variables);
-public:
-	~PetriNet();
-	/** Fire transition if possible and store result in result */
-	bool fire(unsigned int transition,
-			  const MarkVal* marking,
-			  const VarVal* assignment,
-			  MarkVal* resultMarking,
-			  VarVal* resultAssignment) const;
-	bool fire(unsigned int transition, const Structures::State* s, Structures::State* ns, int multiplicity = 1) const;
-	/** Fire without checkings conditions */
-	void fireWithoutCheck(unsigned int transition,
-						  const MarkVal* marking,
-						  const VarVal* assignment,
-						  MarkVal* resultMarking,
-						  VarVal* resultAssignment,
-						  int multiplicity = 1) const;
-	/** Fire transition if possible and store result in result (Respect MARK_INF */
-	bool fireWithMarkInf(unsigned int transition,
-			  const MarkVal* marking,
-			  const VarVal* assignment,
-			  MarkVal* resultMarking,
-			  VarVal* resultAssignment) const;
-	unsigned int numberOfTransitions() const {return _nTransitions;}
-	unsigned int numberOfVariables() const {return _nVariables;}
-	unsigned int numberOfPlaces() const {return _nPlaces;}
-	int inArc(unsigned int place, unsigned int transition) const;
-	int outArc(unsigned int transition, unsigned int place) const;
-        void updateinArc(unsigned int place, unsigned int transition, int weight);
-        void updateoutArc(unsigned int transition, unsigned int place, int weight);
-        /** Get vector place names, don't use this to get the number of places */
-	const std::vector<std::string>& placeNames() const {return _places;}
-	/** Get vector variable names, don't use this to get the number of variable */
-	const std::vector<std::string>& variableNames() const {return _variables;}
-	/** Get vector transition names, don't use this to get the number of variable */
-	const std::vector<std::string>& transitionNames() const {return _transitions;}
-        void skipTransition(unsigned int t) { skipTransitions[t]=true; }
-        bool isTransitionSkipped(unsigned int t) { return skipTransitions[t]; }
-        void skipPlace(unsigned int p) { skipPlaces[p]=true; }
-        bool isPlaceSkipped(unsigned int p) { return skipPlaces[p]; }
+    /** Efficient representation of PetriNet */
+    class PetriNet {
+        PetriNet(uint32_t transitions, uint32_t invariants, uint32_t places);
+    public:
+        ~PetriNet();
         
+        MarkVal* makeInitialMarking();
+        /** Fire transition if possible and store result in result */
+        bool deadlocked(const MarkVal* marking) const;
+        bool next(Structures::State* write);
+        uint32_t fireing()
+        {
+            return _suc_tcounter -1;
+        }
+        void reset(const Structures::State* p);
+
+        uint32_t numberOfTransitions() const {
+            return _ntransitions;
+        }
+
+        uint32_t numberOfPlaces() const {
+            return _nplaces;
+        }
+        int inArc(unsigned int place, unsigned int transition) const;
+        int outArc(unsigned int transition, unsigned int place) const;
         
-private:
-	std::vector<std::string> _places;
-	std::vector<std::string> _transitions;
-	std::vector<std::string> _variables;
-	/** Number of x variables
-	 * @remarks We could also get this from the _places vector, but I don't see any
-	 * any complexity garentees for this type.
-	 */
-	size_t _nPlaces, _nTransitions, _nVariables;
-	/** Transition matrix, see transition vector */
-	MarkVal* _tm;
-	/** Get a transition vector
-	 * @remarks On form [p1-][p2-]...[p1+][p2+]...
-	 *			where p1- is number of tokens to be taken from p1.
-	 *			and p1+ is the number of tokens to given to p1.
-	 */
-	const MarkVal* _tv(unsigned int t) const {return _tm + t * _nPlaces * 2;}
-	MarkVal* _tv(unsigned int t) {return _tm + t * _nPlaces * 2;}
+    private:
+        
+        void print(MarkVal const * const val) const
+        {
+            for(size_t i = 0; i < _nplaces; ++i)
+            {
+                if(val[i] != 0)
+                {
+                    std::cout << i << " -> " << val[i] << std::endl;
+                }
+            }
+        }
+        
+        /** Number of x variables
+         * @remarks We could also get this from the _places vector, but I don't see any
+         * any complexity garentees for this type.
+         */
+        uint32_t _ninvariants, _ntransitions, _nplaces;
 
-	VarVal* _ranges;
-	PQL::Condition** _conditions;
-	PQL::AssignmentExpression** _assignments;
-        bool* skipTransitions;
-        bool* skipPlaces;
-
-	friend class PetriNetBuilder;
+        std::vector<TransPtr> _transitions;
+        std::vector<Invariant> _invariants;
+        std::vector<uint32_t> _placeToPtrs;
+        MarkVal* _initialMarking;
+        
+        const Structures::State* parent;
+        uint32_t _suc_pcounter;
+        uint32_t _suc_tcounter;
+        
+        friend class PetriNetBuilder;
         friend class Reducer;
-};
+    };
 
 } // PetriEngine
 

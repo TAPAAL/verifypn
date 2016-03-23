@@ -6,23 +6,26 @@
  */
 
 #ifndef REDUCER_H
-#define	REDUCER_H
+#define REDUCER_H
 
 #include "PetriNet.h"
 #include "PQL/Contexts.h"
-#include <PetriParse/PNMLParser.h>
+#include "PetriParse/PNMLParser.h"
+#include "NetStructures.h"
 
 namespace PetriEngine {
-
+    
+    using ArcIter = std::vector<Arc>::iterator;
+    
+    class PetriNetBuilder;
+    
     class Reducer {
     public:
-        Reducer(PetriNet *net);
+        Reducer(PetriNetBuilder*);
         ~Reducer();
-        void CreateInhibitorPlacesAndTransitions(PetriNet* net, PNMLParser::InhibitorArcList inhibarcs, MarkVal* placeInInhib, MarkVal* transitionsInInhib);
-        void Print(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionsInInhib); // prints the net, just for debugging
-        void Reduce(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionsInInhib, int enablereduction);
-        const std::vector<unsigned int> NonreducedTrace(PetriNet* net, const std::vector<unsigned int>& trace); // returns trace in the original net before reduction
-
+        void Print(size_t* placeInQuery); // prints the net, just for debugging
+        void Reduce(size_t* placeInQuery, int enablereduction);
+        
         int RemovedTransitions() const {
             return _removedTransitions;
         }
@@ -51,53 +54,57 @@ namespace PetriEngine {
         int _removedTransitions;
         int _removedPlaces;
         int _ruleA, _ruleB, _ruleC, _ruleD;
-
-        typedef std::list< std::pair<int, int> > unfoldTransitionsType;
-        unfoldTransitionsType* unfoldTransitions;
-        unfoldTransitionsType* unfoldTransitionsInit;
-
-        void expandTrace(unsigned int t, std::vector<unsigned int>& trace);
-
-        int _nplaces, _ntransitions;
-        int* _inArc;
-        int* _outArc;
+        PetriNetBuilder* parent;
 
         // The reduction methods return true if they reduced something and reductions should continue with other rules
-        bool ReducebyRuleA(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib);
-        bool ReducebyRuleB(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib);
-        bool ReducebyRuleC(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib);
-        bool ReducebyRuleD(PetriNet* net, MarkVal* m0, MarkVal* placeInQuery, MarkVal* placeInInhib, MarkVal* transitionInInhib);
+        bool ReducebyRuleA(size_t* placeInQuery);
+        bool ReducebyRuleB(size_t* placeInQuery);
+        bool ReducebyRuleC(size_t* placeInQuery);
+        bool ReducebyRuleD(size_t* placeInQuery);
+        
+        Transition& getTransition(size_t transition);
+        ArcIter getOutArc(Transition&, size_t place);
+        ArcIter getInArc(size_t place, Transition&);
+        void eraseTransition(std::vector<size_t>&, size_t);
+        void skipTransition(size_t);
+        void skipPlace(size_t);
     };
 
     class QueryPlaceAnalysisContext : public PQL::AnalysisContext {
-        PetriEngine::MarkVal* _placeInQuery;
+        size_t* _placeInQuery;
     public:
 
-        QueryPlaceAnalysisContext(const PetriNet& net, MarkVal* placeInQuery) : PQL::AnalysisContext(net) {
-            _placeInQuery = placeInQuery;
+        QueryPlaceAnalysisContext(const std::map<std::string, size_t>& places) : PQL::AnalysisContext(places) {
+            _placeInQuery = new size_t[this->_places.size()];
+            for (size_t i = 0; i < this->_places.size(); i++) {
+                _placeInQuery[i] = 0;
+            }
         };
+        
+        virtual ~QueryPlaceAnalysisContext()
+        {
+            delete[] _placeInQuery;
+        }
+        
+        size_t*  getQueryPlaceCount(){
+            return _placeInQuery;
+        }
 
         ResolutionResult resolve(std::string identifier) const {
             ResolutionResult result;
             result.offset = -1;
             result.success = false;
-            for (size_t i = 0; i < _places.size(); i++) {
-                if (_places[i] == identifier) {
-                    result.offset = i;
-                    result.isPlace = true;
-                    result.success = true;
-                    _placeInQuery[i]++;
-                    return result;
-                }
+            auto it = _places.find(identifier);
+            if(it != _places.end())
+            {
+                size_t i = it->second;
+                result.offset = (int)i;
+                result.isPlace = true;
+                result.success = true;
+                _placeInQuery[i]++;
+                return result;
             }
-            for (size_t i = 0; i < _variables.size(); i++) {
-                if (_variables[i] == identifier) {
-                    result.offset = i;
-                    result.isPlace = false;
-                    result.success = true;
-                    return result;
-                }
-            }
+            
             return result;
         }
 
@@ -107,5 +114,5 @@ namespace PetriEngine {
 }
 
 
-#endif	/* REDUCER_H */
+#endif /* REDUCER_H */
 
