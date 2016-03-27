@@ -219,7 +219,6 @@ namespace PetriEngine {
             AnalysisContext::ResolutionResult result = context.resolve(_name);
             if (result.success) {
                 _offsetInMarking = result.offset;
-                isPlace = result.isPlace;
             } else {
                 ExprError error("Unable to resolve identifier \"" + _name + "\"",
                         _srcOffset,
@@ -266,12 +265,11 @@ namespace PetriEngine {
 
         int IdentifierExpr::evaluate(const EvaluationContext& context) const {
             assert(_offsetInMarking != -1);
-            if (isPlace)
-                return context.marking()[_offsetInMarking];
-            return false;
+            return context.marking()[_offsetInMarking];
         }
 
         bool LogicalCondition::evaluate(const EvaluationContext& context) const {
+
             bool b1 = _cond1->evaluate(context);
             bool b2 = _cond2->evaluate(context);
             return apply(b1, b2);
@@ -415,7 +413,7 @@ namespace PetriEngine {
         }
 
         bool IdentifierExpr::pfree() const {
-            return !this->isPlace;
+            return false;
         }
 
         /******************** Expr::type() implementation ********************/
@@ -560,10 +558,8 @@ namespace PetriEngine {
         void EqualCondition::addConstraints(ConstraintAnalysisContext& context, IdentifierExpr* id, int value) const {
             if (!context.negated) {
                 Structures::StateConstraints* s = new Structures::StateConstraints(context.net());
-                if (!id->pfree()) {
-                    s->setPlaceMin(id->offset(), value);
-                    s->setPlaceMax(id->offset(), value);
-                }
+                s->setPlaceMin(id->offset(), value);
+                s->setPlaceMax(id->offset(), value);
                 assert(s);
                 context.retval.push_back(s);
             } else {
@@ -571,11 +567,9 @@ namespace PetriEngine {
                 Structures::StateConstraints* s2 = NULL;
                 if (value != 0)
                     s2 = new Structures::StateConstraints(context.net());
-                if (!id->pfree()) {
-                    s1->setPlaceMin(id->offset(), value + 1);
-                    if (value != 0)
-                        s2->setPlaceMax(id->offset(), value - 1);
-                }
+                s1->setPlaceMin(id->offset(), value + 1);
+                if (value != 0)
+                    s2->setPlaceMax(id->offset(), value - 1);
                 assert((s2 || value == 0) && s1);
                 context.retval.push_back(s1);
                 if (value != 0)
@@ -590,10 +584,8 @@ namespace PetriEngine {
         void NotEqualCondition::addConstraints(ConstraintAnalysisContext& context, IdentifierExpr* id, int value) const {
             if (context.negated) {
                 Structures::StateConstraints* s = new Structures::StateConstraints(context.net());
-                if (!id->pfree()) {
-                    s->setPlaceMin(id->offset(), value);
-                    s->setPlaceMax(id->offset(), value);
-                }
+                s->setPlaceMin(id->offset(), value);
+                s->setPlaceMax(id->offset(), value);
                 assert(s);
                 context.retval.push_back(s);
             } else {
@@ -601,11 +593,9 @@ namespace PetriEngine {
                 Structures::StateConstraints* s2 = NULL;
                 if (value != 0)
                     s2 = new Structures::StateConstraints(context.net());
-                if (!id->pfree()) {
-                    s1->setPlaceMin(id->offset(), value + 1);
-                    if (value != 0)
-                        s2->setPlaceMax(id->offset(), value - 1);
-                }
+                s1->setPlaceMin(id->offset(), value + 1);
+                if (value != 0)
+                    s2->setPlaceMax(id->offset(), value - 1);
                 assert((s2 || value == 0) && s1);
                 context.retval.push_back(s1);
                 if (value != 0)
@@ -620,11 +610,9 @@ namespace PetriEngine {
         void LessThanCondition::addConstraints(ConstraintAnalysisContext& context, IdentifierExpr* id, int value) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
             if (!context.negated) {
-                if (!id->pfree())
-                    nc->setPlaceMax(id->offset(), value - 1);
+                nc->setPlaceMax(id->offset(), value - 1);
             } else {
-                if (!id->pfree())
-                    nc->setPlaceMin(id->offset(), value);
+                nc->setPlaceMin(id->offset(), value);
             }
             context.retval.push_back(nc);
         }
@@ -632,11 +620,9 @@ namespace PetriEngine {
         void LessThanCondition::addConstraints(ConstraintAnalysisContext& context, int value, IdentifierExpr* id) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
             if (!context.negated) {
-                if (!id->pfree())
-                    nc->setPlaceMin(id->offset(), value + 1);
+                nc->setPlaceMin(id->offset(), value + 1);
             } else {
-                if (!id->pfree())
-                    nc->setPlaceMax(id->offset(), value);
+                nc->setPlaceMax(id->offset(), value);
             }
             context.retval.push_back(nc);
         }
@@ -644,11 +630,9 @@ namespace PetriEngine {
         void LessThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, IdentifierExpr* id, int value) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
             if (!context.negated) {
-                if (!id->pfree())
-                    nc->setPlaceMax(id->offset(), value);
+                nc->setPlaceMax(id->offset(), value);
             } else {
-                if (!id->pfree())
-                    nc->setPlaceMin(id->offset(), value + 1);
+                nc->setPlaceMin(id->offset(), value + 1);
             }
             context.retval.push_back(nc);
         }
@@ -656,11 +640,9 @@ namespace PetriEngine {
         void LessThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, IdentifierExpr* id) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
             if (!context.negated) {
-                if (!id->pfree())
-                    nc->setPlaceMin(id->offset(), value);
+                nc->setPlaceMin(id->offset(), value);
             } else {
-                if (!id->pfree())
-                    nc->setPlaceMax(id->offset(), value - 1);
+                nc->setPlaceMax(id->offset(), value - 1);
             }
             context.retval.push_back(nc);
         }
@@ -668,11 +650,9 @@ namespace PetriEngine {
         void GreaterThanCondition::addConstraints(ConstraintAnalysisContext& context, IdentifierExpr* id, int value) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
             if (!context.negated) {
-                if (!id->pfree()) // p1 > 5
-                    nc->setPlaceMin(id->offset(), value + 1);
+                nc->setPlaceMin(id->offset(), value + 1);
             } else {
-                if (!id->pfree())
-                    nc->setPlaceMax(id->offset(), value);
+                nc->setPlaceMax(id->offset(), value);
             }
             context.retval.push_back(nc);
         }
@@ -680,11 +660,9 @@ namespace PetriEngine {
         void GreaterThanCondition::addConstraints(ConstraintAnalysisContext& context, int value, IdentifierExpr* id) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
             if (!context.negated) {
-                if (!id->pfree()) // 5 > p1
-                    nc->setPlaceMax(id->offset(), value - 1);
+                nc->setPlaceMax(id->offset(), value - 1);
             } else {
-                if (!id->pfree()) // !(5 > p1)
-                    nc->setPlaceMin(id->offset(), value);
+                nc->setPlaceMin(id->offset(), value);
             }
             context.retval.push_back(nc);
         }
@@ -692,22 +670,18 @@ namespace PetriEngine {
         void GreaterThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, IdentifierExpr* id, int value) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
             if (!context.negated) {
-                if (!id->pfree()) // p1 >= 5
-                    nc->setPlaceMin(id->offset(), value);
+                nc->setPlaceMin(id->offset(), value);
             } else {
-                if (!id->pfree()) // !(p1 >= 5)
-                    nc->setPlaceMax(id->offset(), value - 1);
+                nc->setPlaceMax(id->offset(), value - 1);
             }
             context.retval.push_back(nc);
         }
 
         void GreaterThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, IdentifierExpr* id) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
-            if (!context.negated) {
-                if (!id->pfree()) // 5 >= p1
+            if (!context.negated) {                
                     nc->setPlaceMax(id->offset(), value);
             } else {
-                if (!id->pfree()) // !(5 >= p1)
                     nc->setPlaceMin(id->offset(), value + 1);
             }
             context.retval.push_back(nc);

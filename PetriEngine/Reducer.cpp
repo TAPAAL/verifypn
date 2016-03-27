@@ -20,37 +20,42 @@ namespace PetriEngine {
 
     }
 
-    void Reducer::Print(size_t* placeInQuery) {
-        fprintf(stdout, "\nNET INFO:\n");
-        fprintf(stdout, "Number of places: %zu\n", parent->numberOfPlaces());
-        fprintf(stdout, "Number of transitions: %zu\n\n", parent->numberOfTransitions());
-        for (size_t t = 0; t < parent->numberOfTransitions(); t++) {
-            fprintf(stdout, "Transition %zu:\n", t);
+    void Reducer::Print(uint32_t* placeInQuery) {
+        std::cout   << "\nNET INFO:\n" 
+                    << "Number of places: " << parent->numberOfPlaces() << std::endl
+                    << "Number of transitions: " << parent->numberOfTransitions() 
+                    << std::endl << std::endl;
+        for (uint32_t t = 0; t < parent->numberOfTransitions(); t++) {
+            std::cout << "Transition " << t << " :\n";
             for(auto& arc : parent->_transitions[t].pre)
             {
                 if (arc.weight > 0) 
-                    fprintf(stdout, "   Input place %zu with arc-weight %zu\n", arc.place, arc.weight);
+                    std::cout   << "   Input place " << arc.place 
+                                << " with arc-weight " << arc.weight << std::endl;
             }
             for(auto& arc : parent->_transitions[t].post)
             {
                 if (arc.weight > 0) 
-                    fprintf(stdout, "  Output place %zu with arc-weight %zu\n", arc.place, arc.weight);
+                    std::cout   << "  Output place " << arc.place 
+                                << " with arc-weight " << arc.weight << std::endl;
             }
-            fprintf(stdout, "\n");
+            std::cout << std::endl;
         }
-        for (size_t i = 0; i < parent->numberOfPlaces(); i++) {
-            fprintf(stdout, "Marking at place %zu is: %d\n", i, parent->initMarking()[i]);
+        for (uint32_t i = 0; i < parent->numberOfPlaces(); i++) {
+            std::cout <<    "Marking at place "<< i << 
+                            " is: " << parent->initMarking()[i] << std::endl;
         }
-        for (size_t i = 0; i < parent->numberOfPlaces(); i++) {
-            fprintf(stdout, "Query count for place %zu is: %zu\n", i, placeInQuery[i]);
+        for (uint32_t i = 0; i < parent->numberOfPlaces(); i++) {
+            std::cout   << "Query count for place " << i 
+                        << " is: " << placeInQuery[i] << std::endl;
         }
     }
-    Transition& Reducer::getTransition(size_t transition)
+    Transition& Reducer::getTransition(uint32_t transition)
     {
         return parent->_transitions[transition];
     }
     
-    ArcIter Reducer::getOutArc(Transition& trans, size_t place)
+    ArcIter Reducer::getOutArc(Transition& trans, uint32_t place)
     {
         auto it = trans.post.begin();
         for(; it != trans.post.end(); ++it)
@@ -63,7 +68,7 @@ namespace PetriEngine {
         return it;
     }
     
-    ArcIter Reducer::getInArc(size_t place, Transition& trans)
+    ArcIter Reducer::getInArc(uint32_t place, Transition& trans)
     {
         auto it = trans.pre.begin();
         for(; it != trans.pre.end(); ++it)
@@ -76,7 +81,7 @@ namespace PetriEngine {
         return it;
     }
     
-    void Reducer::eraseTransition(std::vector<size_t>& set, size_t el)
+    void Reducer::eraseTransition(std::vector<uint32_t>& set, uint32_t el)
     {
         for(auto it = set.begin(); it != set.end(); ++it )
         {
@@ -87,7 +92,7 @@ namespace PetriEngine {
             }
         }
     }
-    void Reducer::skipTransition(size_t t)
+    void Reducer::skipTransition(uint32_t t)
     {
         Transition& trans = getTransition(t);
         for(auto p : trans.post)
@@ -103,7 +108,7 @@ namespace PetriEngine {
         trans.skip = true;
     }
     
-    void Reducer::skipPlace(size_t place)
+    void Reducer::skipPlace(uint32_t place)
     {
         Place& pl = parent->_places[place];
         pl.skip = true;
@@ -135,10 +140,10 @@ namespace PetriEngine {
     }
     
 
-    bool Reducer::ReducebyRuleA(size_t* placeInQuery) {
+    bool Reducer::ReducebyRuleA(uint32_t* placeInQuery) {
         // Rule A  - find transition t that has exactly one place in pre and post and remove one of the places (and t)  
         bool continueReductions = false;
-        for (size_t t = 0; t < parent->numberOfTransitions(); t++) {
+        for (uint32_t t = 0; t < parent->numberOfTransitions(); t++) {
 
             Transition& trans = getTransition(t);
             
@@ -148,8 +153,8 @@ namespace PetriEngine {
             // We have weight of more than one
             if(trans.pre[0].weight != 1 || trans.post[0].weight != 1) continue;
             
-            size_t pPre = trans.pre[0].place;
-            size_t pPost = trans.post[0].place;
+            uint32_t pPre = trans.pre[0].place;
+            uint32_t pPost = trans.post[0].place;
             
             // dont mess with query!
             if(placeInQuery[pPre] > 0 || placeInQuery[pPost]) continue;
@@ -213,16 +218,16 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleB(size_t* placeInQuery) {
+    bool Reducer::ReducebyRuleB(uint32_t* placeInQuery) {
         // Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
         bool continueReductions = false;
-        for (size_t p = 0; p < parent->numberOfPlaces(); p++) {
+        for (uint32_t p = 0; p < parent->numberOfPlaces(); p++) {
             
             Place& place = parent->_places[p];
             
             if(place.skip) continue;    // allready removed           
-            if(placeInQuery[p] > 0 || parent->initMarking()[p]) continue; // to important       
-            if(place.input.size() > 1 || place.output.size() > 1) continue; // nogo
+            if(placeInQuery[p] > 0 || parent->initMarking()[p]) continue; // to important                   
+            if(place.input.size() != 1 || place.output.size() != 1) continue; // no orphan removal
             
             int tOut = place.output[0];
             int tIn = place.input[0];
@@ -280,11 +285,11 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleC(size_t* placeInQuery) {
+    bool Reducer::ReducebyRuleC(uint32_t* placeInQuery) {
         // Rule C - Places with same input and output-transitions which a modulo each other
          bool continueReductions = false;
         
-        for(size_t p1 = 0; p1 < parent->numberOfPlaces(); ++p1)
+        for(uint32_t p1 = 0; p1 < parent->numberOfPlaces(); ++p1)
         {
             if( placeInQuery[p1] > 0 || parent->initMarking()[p1])
                 continue;
@@ -294,7 +299,7 @@ namespace PetriEngine {
             if(place1.skip) continue;
             
             // use symmetry to speed up things
-            for (size_t p2 = p1 + 1; p2 < parent->numberOfPlaces(); ++p2) 
+            for (uint32_t p2 = p1 + 1; p2 < parent->numberOfPlaces(); ++p2) 
             {
                 if(p1 == p2) continue;
                 
@@ -347,14 +352,14 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleD(size_t* placeInQuery) {
+    bool Reducer::ReducebyRuleD(uint32_t* placeInQuery) {
         // Rule D - two transitions with the same pre and post and same inhibitor arcs 
         bool continueReductions = false;
-        for (size_t t1 = 0; t1 < parent->numberOfTransitions(); t1++) {
+        for (uint32_t t1 = 0; t1 < parent->numberOfTransitions(); t1++) {
             Transition& trans1 = getTransition(t1);
             if(trans1.skip) continue;
 
-            for (size_t t2 = 0; t2 < parent->numberOfTransitions(); t2++) {
+            for (uint32_t t2 = 0; t2 < parent->numberOfTransitions(); t2++) {
                 if(t1 == t2) continue;
                 
                 Transition& trans2 = getTransition(t2);
@@ -397,7 +402,7 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    void Reducer::Reduce(size_t* placeInQuery, int enablereduction) {
+    void Reducer::Reduce(uint32_t* placeInQuery, int enablereduction) {
         if (enablereduction == 1) { // in the aggresive reduction all four rules are used as long as they remove something
             while (ReducebyRuleA(placeInQuery) ||
                     ReducebyRuleB(placeInQuery) ||

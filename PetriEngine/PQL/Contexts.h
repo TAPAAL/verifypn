@@ -37,7 +37,7 @@ namespace PetriEngine {
         /** Context provided for context analysis */
         class AnalysisContext {
         protected:
-            std::map<std::string, size_t> _places;
+            std::map<std::string, uint32_t> _places;
             std::vector<ExprError> _errors;
         public:
 
@@ -47,11 +47,9 @@ namespace PetriEngine {
                 int offset;
                 /** True, if the resolution was successful */
                 bool success;
-                /** True if the identifer was resolved to a place */
-                bool isPlace;
             };
 
-            AnalysisContext(const std::map<std::string, size_t>& places)
+            AnalysisContext(const std::map<std::string, uint32_t>& places)
             : _places(places) {
             }
 
@@ -64,7 +62,6 @@ namespace PetriEngine {
                 if(it != _places.end())
                 {
                     result.offset = (int)it->second;
-                    result.isPlace = true;
                     result.success = true;
                     return result;
                 }                

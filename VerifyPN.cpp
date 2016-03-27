@@ -35,6 +35,7 @@
 #include "PetriParse/PNMLParser.h"
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriEngine/PQL/PQL.h"
+#include "PetriEngine/options.h"
 
 using namespace std;
 using namespace PetriEngine;
@@ -50,33 +51,23 @@ enum ReturnValue {
     ContinueCode = 4
 };
 
-struct options_t {
-//    bool outputtrace = false;
-    int kbound = 0;
-    char* modelfile = NULL;
-    char* queryfile = NULL;
-    bool disableoverapprox = false;
-    int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
-    bool statespaceexploration = false;
-    bool printstatistics = true;
-    size_t memorylimit = 2048;
-};
-
-
 #define VERSION  "1.2.0"
 
-ReturnValue contextAnalysis(PetriNetBuilder& builder, Condition* query)
+ReturnValue contextAnalysis(PetriNetBuilder& builder, std::vector<std::shared_ptr<Condition> >& queries)
 {
     //Context analysis
     AnalysisContext context(builder.getPlaceNames());
-    query->analyze(context);
+    for(auto& q : queries)
+    {
+        q->analyze(context);
 
-    //Print errors if any
-    if (context.errors().size() > 0) {
-        for (size_t i = 0; i < context.errors().size(); i++) {
-            fprintf(stderr, "Query Context Analysis Error: %s\n", context.errors()[i].toString().c_str());
+        //Print errors if any
+        if (context.errors().size() > 0) {
+            for (size_t i = 0; i < context.errors().size(); i++) {
+                fprintf(stderr, "Query Context Analysis Error: %s\n", context.errors()[i].toString().c_str());
+            }
+            return ErrorCode;
         }
-        return ErrorCode;
     }
     return ContinueCode;
 }
@@ -136,11 +127,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
                 return ErrorCode;
             }
-            ++i;
-/*            if (sscanf(argv[++i], "%zu", &options.xmlquery) != 1 || options.xmlquery <= 0) {
+            if (sscanf(argv[++i], "%zu", &options.querynumber) != 1) {
                 fprintf(stderr, "Argument Error: Query index to verify \"%s\"\n", argv[i]);
                 return ErrorCode;
-            }*/
+            }
         } else if (strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--reduction") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -224,10 +214,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 }
 
 auto
-readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options)
+readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std::vector<std::string>& qstrings)
 {
     QueryXMLParser XMLparser(tmap);
-    bool isInvariant = false;
+
     std::vector<std::shared_ptr<Condition > > conditions;
     string querystring; // excluding EF and AG
     if (!options.statespaceexploration) {
@@ -253,34 +243,43 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options)
             return conditions;
         }
         
+        size_t i = 0;
+        
         for(auto& q : XMLparser.queries)
         {
+            bool isInvariant = false;
+            if( i != options.querynumber && 
+                options.querynumber != std::numeric_limits<size_t>::max())
+            {
+                ++i;
+                continue;
+            }
+            ++i;
+            
             if (q.parsingResult == QueryXMLParser::QueryItem::UNSUPPORTED_QUERY) {
                 fprintf(stdout, "The selected query in the XML query file is not supported\n");
                 fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
-                conditions.clear();
-                return conditions;
+                continue;
             }
             // fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
             querystr = q.queryText;
             querystring = querystr.substr(2);
             isInvariant = q.negateResult;
 
-            fprintf(stdout, "FORMULA %s ", q.id.c_str());
-            fflush(stdout);
+
             conditions.push_back(ParseQuery(querystring, isInvariant, q.placeNameForBound));
             if (conditions.back() == NULL) {
                 fprintf(stderr, "Error: Failed to parse query \"%s\"\n", querystring.c_str()); //querystr.substr(2).c_str());
-                conditions.clear();
-                return conditions;
+                fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
+                conditions.pop_back();
             }
+            qstrings.push_back(q.id);
         }
         qfile.close();
         return conditions;
     } else { // state-space exploration
         querystring = "false";
-        isInvariant = false;
-        conditions.push_back(ParseQuery(querystring, isInvariant, ""));
+        conditions.push_back(ParseQuery(querystring, false, ""));
         return conditions;
     }
 
@@ -313,100 +312,18 @@ ReturnValue parseModel( PNMLParser::TransitionEnablednessMap& transitionEnabledn
     return ContinueCode;
 }
 
-ReturnValue printResult(Condition* query, ReachabilityResult& result, PetriNetBuilder& builder, options_t& options)
-{
-    
-    ReturnValue retval = ErrorCode;
-
-    if (options.statespaceexploration) {
-        retval = UnknownCode;
-        unsigned int placeBound = 0;
-        for (size_t p = 0; p < result.maxPlaceBound().size(); p++) {
-            placeBound = std::max<unsigned int>(placeBound, result.maxPlaceBound()[p]);
-        }
-        // fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
-        fprintf(stdout, "STATE_SPACE STATES %lli TECHNIQUES EXPLICIT\n", result.exploredStates());
-        fprintf(stdout, "STATE_SPACE TRANSITIONS -1 TECHNIQUES EXPLICIT\n");
-        fprintf(stdout, "STATE_SPACE MAX_TOKEN_PER_MARKING %d TECHNIQUES EXPLICIT\n", result.maxTokens());
-        fprintf(stdout, "STATE_SPACE MAX_TOKEN_IN_PLACE %d TECHNIQUES EXPLICIT\n", placeBound);
-        return retval;
-    }
-
-    //Find result code
-    if (result.result() == ReachabilityResult::Unknown)
-        retval = UnknownCode;
-    else if (result.result() == ReachabilityResult::Satisfied)
-        retval = query->isInvariant() ? FailedCode : SuccessCode;
-    else if (result.result() == ReachabilityResult::NotSatisfied)
-        retval = query->isInvariant() ? SuccessCode : FailedCode;
-
-    //Print result
-    if (retval == UnknownCode)
-        fprintf(stdout, "\nUnable to decide if query is satisfied.\n\n");
-    else if (retval == SuccessCode) {
-        if(!options.statespaceexploration)
-        {
-            fprintf(stdout, "TRUE TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n");
-        }
-        fprintf(stdout, "\nQuery is satisfied.\n\n");
-    } else if (retval == FailedCode) {
-        if (!query->placeNameForBound().empty()) {
-            // find index of the place for reporting place bound
-            assert(result.maxPlaceBound().size() > 0);
-            uint32_t p = builder.getPlaceNames().at(query->placeNameForBound());
-            fprintf(stdout, "%d TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n", result.maxPlaceBound()[p]);
-            fprintf(stdout, "\nMaximum number of tokens in place %s: %d\n\n", 
-                    query->placeNameForBound().c_str(), result.maxPlaceBound()[p]);
-            retval = UnknownCode;
-        } else {
-            if(!options.statespaceexploration)
-            {
-                fprintf(stdout, "FALSE TECHNIQUES EXPLICIT STRUCTURAL_REDUCTION\n");
-            }
-            fprintf(stdout, "\nQuery is NOT satisfied.\n\n");
-        }
-    }
-    return retval;
-}
-
-void printStats(ReachabilityResult& result, PetriNetBuilder& builder, options_t& options)
+void printStats(PetriNetBuilder& builder, options_t& options)
 {
     if (options.printstatistics) {
-        //Print statistics
-        fprintf(stdout, "STATS:\n");
-        fprintf(stdout, "\tdiscovered states: %lli\n", result.discoveredStates());
-        fprintf(stdout, "\texplored states:   %lli\n", result.exploredStates());
-        fprintf(stdout, "\texpanded states:   %lli\n", result.expandedStates());
-        fprintf(stdout, "\tmax tokens:        %i\n", result.maxTokens());
         if (options.enablereduction != 0) {
-            fprintf(stdout, "\nNet reduction is enabled.\n");
-            fprintf(stdout, "Removed transitions: %zu\n", builder.RemovedTransitions());
-            fprintf(stdout, "Removed places: %zu\n", builder.RemovedPlaces());
-            fprintf(stdout, "Applications of rule A: %zu\n", builder.RuleA());
-            fprintf(stdout, "Applications of rule B: %zu\n", builder.RuleB());
-            fprintf(stdout, "Applications of rule C: %zu\n", builder.RuleC());
-            fprintf(stdout, "Applications of rule D: %zu\n", builder.RuleD());
+            std::cout   << "\nNet reduction is enabled.\n"
+                        << "Removed transitions: " << builder.RemovedTransitions() << std::endl
+                        << "Removed places: " << builder.RemovedPlaces() << std::endl
+                        << "Applications of rule A: " << builder.RuleA() << std::endl
+                        << "Applications of rule B: " << builder.RuleB() << std::endl
+                        << "Applications of rule C: " << builder.RuleC() << std::endl
+                        << "Applications of rule D: " << builder.RuleD() << std::endl;
         }
-        fprintf(stdout, "\nTRANSITION STATISTICS\n");
-        for (auto& t : builder.getTransitionNames()) {
-            // report how many times transitions were enabled (? means that the transition was removed in net reduction)
-            if (t.second == std::numeric_limits<uint32_t>::max()) {
-                 std::cout << "<" << t.first << ";?>";
-            } else {
-                std::cout << "<" << t.first << ";" << result.enabledTransitionsCount()[t.second] << ">";
-            }
-        }
-        fprintf(stdout, "\n\nPLACE-BOUND STATISTICS\n");
-        for (auto& p : builder.getPlaceNames())
-        {
-            // report maximum bounds for each place (? means that the place was removed in net reduction)
-            if (p.second == numeric_limits<uint32_t>::max()) {
-                std::cout << "<" << p.first << ";?>";
-            } else {
-                std::cout << "<" << p.first << ";" << result.maxPlaceBound()[p.second] << ">";
-            }
-        }
-        std::cout << std::endl << std::endl;
     }
 }
 
@@ -422,50 +339,73 @@ int main(int argc, char* argv[]) {
     
     if(parseModel(transitionEnabledness, builder, options) != ContinueCode) return ErrorCode;
 
+    
+    std::vector<std::string> querynames;
     //----------------------- Parse Query -----------------------//
-    auto queries = readQueries(transitionEnabledness, options);
+    auto queries = readQueries(transitionEnabledness, options, querynames);
     
-    if(queries.size() == 0 || contextAnalysis(builder, queries[0].get()) != ContinueCode)  return ErrorCode;
+    if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
 
-    std::vector<ReachabilityResult::Result> results(queries.size());
+    std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
+       
+    ResultPrinter printer(&builder, &options, querynames);
     
+    bool alldone = !options.disableoverapprox;
     if (!options.disableoverapprox){
-        PetriNet* net = builder.makePetriNet();
-        MarkVal* m0 = net->makeInitialMarking();  
-        LinearOverApprox approx(NULL);
+        PetriNetBuilder b2(builder);
+        PetriNet* net = b2.makePetriNet(false);
+        MarkVal* m0 = net->makeInitialMarking(); 
+        ResultPrinter p2(&b2, &options, querynames);
+#ifdef DEBUG
+        for(size_t p = 0; p < net->numberOfPlaces(); ++p)
+        {
+            for(size_t t = 0; t < net->numberOfTransitions(); ++t)
+            {
+                if(net->inArc(p, t) > 0 || net->outArc(t, p) > 0)
+                {
+                    std::cout << net->placeNames()[p] << ":" << net->transitionNames()[t] << 
+                            "<" << net->inArc(p, t) << "," << net->outArc(t, p) << ">" << std::endl;
+                }
+            }
+        }
+        exit(1);
+#endif
+ 
+        LinearOverApprox approx(p2);
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            results[i] = approx.reachable(*net, m0, queries[i].get(), options.memorylimit).result();
+            results[i] = approx.reachable(*net, m0, i, queries[i].get());
+            if(results[i] == ResultPrinter::Unknown) alldone = false;
         }
         delete net;
         delete[] m0;
     }
     
+    if(alldone) return SuccessCode;
+    
     //--------------------- Apply Net Reduction ---------------//
         
     if (options.enablereduction == 1 || options.enablereduction == 2) {
         // Compute how many times each place appears in the query
-        builder.reduce(queries[0].get(), options.enablereduction);
+        builder.reduce(queries, results, options.enablereduction);
     }
 
     //----------------------- Reachability -----------------------//
 
     //Create reachability search strategy
-    ReachabilitySearchStrategy* strategy = new BreadthFirstReachabilitySearch(options.kbound);
+    BreadthFirstReachabilitySearch strategy(printer, options.kbound);
 
     PetriNet* net = builder.makePetriNet();
     MarkVal* m0 = net->makeInitialMarking();  
     
     // analyse context again to reindex query
-    contextAnalysis(builder, queries[0].get());
+    contextAnalysis(builder, queries);
     
     //Reachability search
-    ReachabilityResult result = strategy->reachable(*net, m0, queries[0].get(), options.memorylimit);
+    strategy.reachable(*net, m0, queries, options.memorylimit, results, options.printstatistics);
 
-    ReturnValue retval = printResult(queries[0].get(), result, builder, options);
-
-    printStats(result, builder, options);
-
-    return retval;
+    printStats(builder, options);
+    
+    return 0;
 }
 

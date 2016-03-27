@@ -25,10 +25,10 @@
 namespace PetriEngine {
     namespace Reachability {
 
-        ReachabilityResult LinearOverApprox::reachable(PetriNet &net,
+        ResultPrinter::Result LinearOverApprox::reachable(PetriNet &net,
                 const MarkVal *m0,
-                PQL::Condition *query, 
-                size_t memorylimit) {
+                size_t index,
+                PQL::Condition *query) {
 
             PQL::ConstraintAnalysisContext context(net);
             query->findConstraints(context);
@@ -42,7 +42,7 @@ namespace PetriEngine {
                 }
 
                 if (isImpossible) {
-                    return ReachabilityResult(ReachabilityResult::NotSatisfied,
+                    return printer.printResult(index, query, ResultPrinter::NotSatisfied,
                             "Query proved not satisfiable by over-approximation");
                 }
             }
@@ -51,18 +51,14 @@ namespace PetriEngine {
             for (size_t i = 0; i < context.retval.size(); i++)
                 delete context.retval[i];
 
-            // Try fallback strategy if there's one
-            if (fallback) {
-                return fallback->reachable(net, m0, query, memorylimit);
-            }
 
             // If there's complex expression we can't do anything
             if (!context.canAnalyze) {
-                return ReachabilityResult(ReachabilityResult::Unknown,
+                return printer.printResult(index, query, ResultPrinter::Unknown,
                         "Expressions are too complex for constraint analysis");
             }
 
-            return ReachabilityResult(ReachabilityResult::Unknown,
+            return printer.printResult(index, query, ResultPrinter::Unknown,
                     "Couldn't exclude query by over-approximation");
         }
 

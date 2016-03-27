@@ -9,6 +9,7 @@
 #define POOL_DYNAMIC_ALLOCATOR_H
 
 #include <array>
+#include <assert.h>
 #ifdef JEMALLOC
 extern "C"
 {

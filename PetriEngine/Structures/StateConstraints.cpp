@@ -139,10 +139,12 @@ namespace PetriEngine {
                 const int32_t* m0) const {
             assert(nPlaces == net.numberOfPlaces());
 
-            /*printf("-------\n");
+#ifdef DEBUG
+            printf("-------\n");
             for(int p = 0; p < nPlaces; p++)
                     printf("%s: [%i, %i]\n", net.placeNames()[p].c_str(), pcs[p].min, pcs[p].max);
-            printf("-------\n");*/
+            printf("-------\n");
+#endif
 
             // Create linary problem
             lprec* lp;
@@ -154,9 +156,11 @@ namespace PetriEngine {
             set_verbose(lp, IMPORTANT);
 
             // Set transition names (not strictly needed)
-//            for (size_t i = 0; i < net.numberOfTransitions(); i++)
-//                set_col_name(lp, i + 1, const_cast<char*> (net.transitionNames()[i].c_str()));
-
+#ifdef DEBUG
+            for (size_t i = 0; i < net.numberOfTransitions(); i++)
+                set_col_name(lp, i + 1, const_cast<char*> (net.transitionNames()[i].c_str()));
+#endif
+            
             // Start adding rows
             set_add_rowmode(lp, TRUE);
 
@@ -203,9 +207,11 @@ namespace PetriEngine {
                 set_int(lp, 1 + i, TRUE);
 
             // Write it to stdout
-            /*printf("--------------\n");
+#ifdef DEBUG
+            printf("--------------\n");
             write_LP(lp, stdout);
-            printf("--------------\n");*/
+            printf("--------------\n");
+#endif
 
             //Set timeout, and handle a timeout
             set_timeout(lp, OVER_APPROX_TIMEOUT);
@@ -216,13 +222,14 @@ namespace PetriEngine {
             // Limit on traps to test
             size_t traplimit = nPlaces * OVER_APPROX_TRAP_FACTOR;
             // Try to add a minimal trap constraint
-            std::vector<int32_t> rMark  = std::vector<int32_t>(net.numberOfPlaces());
+
             while ((result == OPTIMAL || result == SUBOPTIMAL) && traplimit-- < 0) {
+                
                 memset(row.data(), 0, sizeof (REAL) * net.numberOfTransitions() + 1);
                 // Get the firing vector
                 get_variables(lp, row.data());
                 // Compute the resulting marking
-
+                std::vector<int32_t> rMark  = std::vector<int32_t>(net.numberOfPlaces());
                 for (size_t p = 0; p < nPlaces; p++) {
                     rMark[p] = m0[p];
                     for (size_t t = 0; t < net.numberOfTransitions(); t++)
@@ -232,7 +239,8 @@ namespace PetriEngine {
                 // Find an M-trap
                 BitField trap(minimalTrap(net, m0, rMark.data()));
 
-                /*printf("Initial marking:\n");
+#ifdef DEBUG
+                printf("Initial marking:\n");
                 for(size_t p = 0; p < nPlaces; p++)
                         printf("\t %s = %i\n", net.placeNames()[p].c_str(), m0[p]);
                 // Debug information
@@ -247,7 +255,8 @@ namespace PetriEngine {
                         if(trap.test(p))
                                 printf("%s, ", net.placeNames()[p].c_str());
                 }
-                printf("\n");*/
+                printf("\n");
+#endif
 
                 //Break if there's no trap
                 if (trap.none()) break;
@@ -377,9 +386,11 @@ namespace PetriEngine {
             set_verbose(lp, IMPORTANT);
 
             // Set transition names (not strictly needed)
-//            for (size_t i = 0; i < net.numberOfTransitions(); i++)
-//                set_col_name(lp, i + 1, const_cast<char*> (net.transitionNames()[i].c_str()));
-
+#ifdef DEBUG
+            for (size_t i = 0; i < net.numberOfTransitions(); i++)
+                set_col_name(lp, i + 1, const_cast<char*> (net.transitionNames()[i].c_str()));
+#endif
+            
             // Start adding rows
             set_add_rowmode(lp, TRUE);
 
@@ -431,12 +442,12 @@ namespace PetriEngine {
             // Limit on traps to test
             size_t traplimit = nPlaces * OVER_APPROX_TRAP_FACTOR;
             // Try to add a minimal trap constraint
-            std::vector<int32_t> rMark = std::vector<int32_t>(net.numberOfPlaces());
             while ((result == OPTIMAL) && traplimit-- < 0) {
                 memset(row.data(), 0, sizeof (REAL) * net.numberOfTransitions() + 1);
                 // Get the firing vector
                 get_variables(lp, row.data());
                 // Compute the resulting marking
+                std::vector<int32_t> rMark = std::vector<int32_t>(net.numberOfPlaces());
                 for (size_t p = 0; p < nPlaces; p++) {
                     rMark[p] = m0[p];
                     for (size_t t = 0; t < net.numberOfTransitions(); t++)

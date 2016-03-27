@@ -12,6 +12,7 @@
 #include <typeinfo>
 #include <memory>
 #include <stack>
+#include <assert.h>
 
 #ifdef JEMALLOC
 extern "C"

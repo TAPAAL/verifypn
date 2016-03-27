@@ -74,8 +74,19 @@ namespace PetriEngine {
         uint32_t numberOfPlaces() const {
             return _nplaces;
         }
-        int inArc(unsigned int place, unsigned int transition) const;
-        int outArc(unsigned int transition, unsigned int place) const;
+        int inArc(uint32_t place, uint32_t transition) const;
+        int outArc(uint32_t transition, uint32_t place) const;
+        
+
+        const std::vector<std::string>& transitionNames() const
+        {
+            return _transitionnames;
+        }
+        
+        const std::vector<std::string>& placeNames() const
+        {
+            return _placenames;
+        }
         
     private:
         
@@ -104,6 +115,9 @@ namespace PetriEngine {
         const Structures::State* parent;
         uint32_t _suc_pcounter;
         uint32_t _suc_tcounter;
+        
+        std::vector<std::string> _transitionnames;
+        std::vector<std::string> _placenames;
         
         friend class PetriNetBuilder;
         friend class Reducer;

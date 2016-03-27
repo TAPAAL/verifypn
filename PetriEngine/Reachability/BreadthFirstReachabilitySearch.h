@@ -19,28 +19,47 @@
 #ifndef BREADTHFIRSTREACHABILITYSEARCH_H
 #define BREADTHFIRSTREACHABILITYSEARCH_H
 
-#include "ReachabilitySearchStrategy.h"
+#include <memory>
+#include <vector>
 #include "../Structures/State.h"
+#include "ReachabilityResult.h"
+#include "../PQL/PQL.h"
+#include "../PetriNet.h"
+#include "../Structures/StateSet.h"
 
 namespace PetriEngine {
     namespace Reachability {
 
         /** Implements reachability check in a BFS manner using a hash table */
-        class BreadthFirstReachabilitySearch : public ReachabilitySearchStrategy {
+        class BreadthFirstReachabilitySearch {
+        private:
+            ResultPrinter& printer;
         public:
 
-            BreadthFirstReachabilitySearch(int kbound = 0)
-            : ReachabilitySearchStrategy() {
+            BreadthFirstReachabilitySearch(ResultPrinter& printer, int kbound = 0)
+            : printer(printer) {
                 _kbound = kbound;
             }
 
             /** Perform reachability check using BFS with hasing */
-            ReachabilityResult reachable(PetriNet &net,
+            void reachable(PetriNet &net,
                     const MarkVal *m0,
-                    PQL::Condition *query,
-                    size_t memorylimit);
+                    std::vector<std::shared_ptr<PQL::Condition > >& queries,
+                    size_t memorylimit,
+                    std::vector<ResultPrinter::Result>& results,
+                    bool printstats = false);
         private:
+            void tryReach(PetriNet &net,
+                const MarkVal *m0,
+                std::vector<std::shared_ptr<PQL::Condition > >& queries,
+                size_t memorylimit,
+                std::vector<ResultPrinter::Result>& results);
+            void printStats(PetriNet &net);
             int _kbound;
+            BigInt expandedStates = 0;
+            BigInt exploredStates = 1;
+            Structures::StateSet* states = NULL;
+            std::vector<BigInt> enabledTransitionsCount;
         };
 
     }

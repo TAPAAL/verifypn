@@ -143,7 +143,6 @@ namespace PetriEngine {
             IdentifierExpr(const std::string& name, int srcOffset) : _name(name) {
                 _offsetInMarking = -1;
                 _srcOffset = srcOffset;
-                isPlace = false;
             }
             void analyze(AnalysisContext& context);
             bool pfree() const;
@@ -158,8 +157,6 @@ namespace PetriEngine {
             }
             void scale(int factor);
         private:
-            /** Is this identifier a place? Or a variable.. */
-            bool isPlace;
             /** Offset in marking, -1 if undefined, should be resolved during analysis */
             int _offsetInMarking;
             /** Offset in source, as provided to parser */

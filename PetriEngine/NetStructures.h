@@ -14,13 +14,13 @@
 namespace PetriEngine {
 
     struct Arc {
-        size_t place;
-        size_t weight;
+        uint32_t place;
+        uint32_t weight;
         bool skip;
 
         Arc() :
-        place(std::numeric_limits<size_t>::max()),
-        weight(std::numeric_limits<size_t>::max()),
+        place(std::numeric_limits<uint32_t>::max()),
+        weight(std::numeric_limits<uint32_t>::max()),
         skip(false) {
         };
     };
@@ -35,8 +35,8 @@ namespace PetriEngine {
     };
 
     struct Place {
-        std::vector<size_t> input; // things consuming
-        std::vector<size_t> output; // things producing
+        std::vector<uint32_t> input; // things consuming
+        std::vector<uint32_t> output; // things producing
         bool skip;
 
         Place() : input(), output(), skip(false) {

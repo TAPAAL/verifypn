@@ -30,48 +30,126 @@ using namespace PetriEngine::Structures;
 namespace PetriEngine {
     namespace Reachability {
 
-        ReachabilityResult BreadthFirstReachabilitySearch::reachable(PetriNet &net,
-                const MarkVal *m0,
-                PQL::Condition *query,
-                size_t memorylimit) {
-            //Create StateSet
-            StateSet states(net, _kbound, memorylimit);
+        void BreadthFirstReachabilitySearch::tryReach(
+            PetriNet &net,
+            const MarkVal *m0,
+            std::vector<std::shared_ptr<PQL::Condition > >& queries,
+            size_t memorylimit,
+            std::vector<ResultPrinter::Result>& results)
+        {
+                        //Create StateSet
+            states = new StateSet(net, _kbound, memorylimit);
 
             State* state = new State();
             State* working = new State();
             state->setMarking(net.makeInitialMarking());
             working->setMarking(net.makeInitialMarking());
-            states.add(state);
+            states->add(state);
 
-            BigInt expandedStates = 0;
-            BigInt exploredStates = 1;
-            std::vector<BigInt> enabledTransitionsCount(net.numberOfTransitions());
 
-            if (query->evaluate(*state, &net)) {
-                return ReachabilityResult(ReachabilityResult::Satisfied, "Query was satisfied",
-                        expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
+            enabledTransitionsCount.resize(net.numberOfTransitions(), 0);
+
+            bool usequeries = false;
+            {
+                bool alldone = true;
+                for(size_t i = 0; i < queries.size(); ++i)
+                {
+                    if(results[i] == ResultPrinter::Unknown)
+                    {
+                        usequeries |= queries[i]->placeNameForBound().empty();
+                        if(queries[i]->evaluate(*state, &net))
+                        {
+                            results[i] = printer.printResult(i, queries[i].get(), ResultPrinter::Satisfied, "Query was satisfied in the initial marking",
+                                expandedStates, exploredStates, states->discovered(), enabledTransitionsCount, states->maxTokens(), states->maxPlaceBound());
+                        }
+                        else
+                        {
+                            alldone = false;
+                        }
+                    }
+                }
+                if(alldone) return;
             }
 
-            while (states.nextWaiting(state)) {
+            while (states->nextWaiting(state)) {
 
                 net.reset(state);
+
                 while(net.next(working)){
                     enabledTransitionsCount[net.fireing()]++;
-                    if (states.add(working)) {
+                    if (states->add(working)) {
                         exploredStates++;
-                        if (query->evaluate(*working, &net)) {
-                            //ns->dumpTrace(net);
-                            return ReachabilityResult(ReachabilityResult::Satisfied,
-                                    "A state satisfying the query was found", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
+                        if (usequeries) {
+                            bool alldone = true;
+                            for(size_t i = 0; i < queries.size(); ++i)
+                            {
+                                if(results[i] == ResultPrinter::Unknown)
+                                {
+                                    if(queries[i]->evaluate(*working, &net))
+                                    {
+                                        results[i] = printer.printResult(i, queries[i].get(), ResultPrinter::Satisfied, "A state satisfying the query was found.",
+                                            expandedStates, exploredStates, states->discovered(), enabledTransitionsCount, states->maxTokens(), states->maxPlaceBound());                    
+                                    }
+                                    else
+                                    {
+                                        alldone = false;
+                                    }
+                                }
+                            }  
+                            if(alldone) return;
                         }
                     }
                 }
                 expandedStates++;
             }
-
-            return ReachabilityResult(ReachabilityResult::NotSatisfied,
-                    "No state satisfying the query exists.", expandedStates, exploredStates, states.discovered(), enabledTransitionsCount, states.maxTokens(), states.maxPlaceBound());
+            
+            for(size_t i= 0; i < queries.size(); ++i)
+            {
+                if(results[i] == ResultPrinter::Unknown)
+                {
+                    results[i] = printer.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied, "No state satisfying the query exists.",
+                        expandedStates, exploredStates, states->discovered(), enabledTransitionsCount, states->maxTokens(), states->maxPlaceBound());                    
+                }
+            }            
         }
+        
+        void BreadthFirstReachabilitySearch::printStats(PetriNet &net)
+        {
+            std::cout   << "STATS:\n"
+                        << "\tdiscovered states: " << states->discovered() << std::endl
+                        << "\texplored states:   " << exploredStates << std::endl
+                        << "\texpanded states:   " << expandedStates << std::endl
+                        << "\tmax tokens:        " << states->maxTokens() << std::endl;
+            
+            
+            std::cout << "\nTRANSITION STATISTICS\n";
+            for (size_t i = 0; i < net.transitionNames().size(); ++i) {
+                // report how many times transitions were enabled (? means that the transition was removed in net reduction)
+                std::cout << "<" << net.transitionNames()[i] << ";" 
+                        << enabledTransitionsCount[i] << ">";
+                
+            }
+            std::cout << "\n\nPLACE-BOUND STATISTICS\n";
+            for (size_t i = 0; i < net.placeNames().size(); ++i) 
+            {
+                // report maximum bounds for each place (? means that the place was removed in net reduction)
+                std::cout << "<" << net.placeNames()[i] << ";" << states->maxPlaceBound()[i] << ">";
+            }
+            std::cout << std::endl << std::endl;
+        }
+        
+        void BreadthFirstReachabilitySearch::reachable(
+                    PetriNet &net,
+                    const MarkVal *m0,
+                    std::vector<std::shared_ptr<PQL::Condition > >& queries,
+                    size_t memorylimit,
+                    std::vector<ResultPrinter::Result>& results,
+                    bool printstats)
+        {
 
+            tryReach(net, m0, queries, memorylimit, results);
+
+            if(printstats) printStats(net);
+        }
     }
 }

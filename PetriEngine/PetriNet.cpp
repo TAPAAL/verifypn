@@ -45,25 +45,24 @@ namespace PetriEngine {
         delete[] _initialMarking;
     }
 
-    int PetriNet::inArc(unsigned int place, unsigned int transition) const
+    int PetriNet::inArc(uint32_t place, uint32_t transition) const
     {
-        uint32_t min = _placeToPtrs[place];
-        uint32_t max = _placeToPtrs[place+1];
-        if(transition < min || transition >= max) return 0;
+        assert(place < _nplaces);
+        assert(transition < _ntransitions);
         
         uint32_t imin = _transitions[transition].inputs;
         uint32_t imax = _transitions[transition].outputs;
+        assert(imin != imax);
         for(;imin < imax; ++imin)
         {
             if(_invariants[imin].place == place) return _invariants[imin].tokens;
         }
         return 0;
     }
-    int PetriNet::outArc(unsigned int transition, unsigned int place) const
+    int PetriNet::outArc(uint32_t transition, uint32_t place) const
     {
-        uint32_t min = _placeToPtrs[place];
-        uint32_t max = _placeToPtrs[place+1];
-        if(transition < min || transition >= max) return 0;
+        assert(place < _nplaces);
+        assert(transition < _ntransitions);
         
         uint32_t imin = _transitions[transition].outputs;
         uint32_t imax = _transitions[transition+1].inputs;
@@ -87,14 +86,12 @@ namespace PetriEngine {
                     const TransPtr& ptr = _transitions[first];
                     uint32_t finv = ptr.inputs;
                     uint32_t linv = ptr.outputs;
+                    bool allgood = true;
                     for(;finv != linv; ++finv)
                     {
-                        if(m[_invariants[finv].place] < _invariants[finv].tokens)
-                        {
-                            break;
-                        }
-                        return false;
+                        allgood &= m[_invariants[finv].place] >= _invariants[finv].tokens;
                     }
+                    if(allgood) return false;
                 }
             }
         }

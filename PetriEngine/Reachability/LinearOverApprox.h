@@ -19,21 +19,24 @@
 #ifndef LINEAROVERAPPROX_H
 #define LINEAROVERAPPROX_H
 
-#include "ReachabilitySearchStrategy.h"
+#include <memory>
+#include <vector>
+#include "../Structures/State.h"
+#include "ReachabilityResult.h"
+#include "../PQL/PQL.h"
+#include "../PetriNet.h"
 
 namespace PetriEngine {
     namespace Reachability {
 
-        class LinearOverApprox : public ReachabilitySearchStrategy {
-        public:
-
-            LinearOverApprox(ReachabilitySearchStrategy* fallback = NULL) {
-                this->fallback = fallback;
-            }
-            ReachabilityResult reachable(PetriNet &net, const MarkVal *initialMarking, PQL::Condition *query,
-            size_t memorylimit);
+        class LinearOverApprox  {
         private:
-            ReachabilitySearchStrategy* fallback;
+            ResultPrinter& printer;
+        public:
+            
+            LinearOverApprox(ResultPrinter& printer) : printer(printer) {
+            }
+            ResultPrinter::Result reachable(PetriNet &net, const MarkVal *initialMarking, size_t index,  PQL::Condition *query);
         };
 
     } // Reachability

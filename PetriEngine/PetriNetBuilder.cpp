@@ -34,16 +34,23 @@ namespace PetriEngine {
     PetriNetBuilder::PetriNetBuilder() : AbstractPetriNetBuilder(), 
     reducer(this){
     }
+    PetriNetBuilder::PetriNetBuilder(const PetriNetBuilder& other)
+    : _placenames(other._placenames), _transitionnames(other._transitionnames),
+       _transitions(other._transitions), _places(other._places), 
+       initialMarking(other.initialMarking), reducer(this)
+    {
+
+    }
 
     void PetriNetBuilder::addPlace(const string &name, int tokens, double, double) {
         if(_placenames.count(name) == 0)
         {
-            size_t next = _placenames.size();
+            uint32_t next = _placenames.size();
             _places.emplace_back();
             _placenames[name] = next;
         }
         
-        size_t id = _placenames[name];
+        uint32_t id = _placenames[name];
         
         while(initialMarking.size() <= id) initialMarking.emplace_back();
         initialMarking[id] = tokens;
@@ -54,7 +61,7 @@ namespace PetriEngine {
             double, double) {
         if(_transitionnames.count(name) == 0)
         {
-            size_t next = _transitionnames.size();
+            uint32_t next = _transitionnames.size();
             _transitions.emplace_back();
             _transitionnames[name] = next;
         }
@@ -69,8 +76,8 @@ namespace PetriEngine {
         {
             addPlace(place,0,0,0);
         }
-        size_t p = _placenames[place];
-        size_t t = _transitionnames[transition];
+        uint32_t p = _placenames[place];
+        uint32_t t = _transitionnames[transition];
 
         Arc arc;
         arc.place = p;
@@ -91,8 +98,8 @@ namespace PetriEngine {
         {
             addPlace(place,0,0,0);
         }
-        size_t p = _placenames[place];
-        size_t t = _transitionnames[transition];
+        uint32_t p = _placenames[place];
+        uint32_t t = _transitionnames[transition];
 
         assert(t < _transitions.size());
         assert(p < _places.size());
@@ -105,24 +112,24 @@ namespace PetriEngine {
         _places[p].output.push_back(t);
     }
 
-    size_t PetriNetBuilder::nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids)
+    uint32_t PetriNetBuilder::nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids, bool reorder)
     {
-        size_t cand = std::numeric_limits<size_t>::max();
+        uint32_t cand = std::numeric_limits<uint32_t>::max();
         uint32_t cnt =  std::numeric_limits<uint32_t>::max();
-        for(size_t i = 0; i < _places.size(); ++i)
+        for(uint32_t i = 0; i < _places.size(); ++i)
         {
             if( ids[i] == std::numeric_limits<uint32_t>::max() &&
                 counts[i] < cnt &&
                 !_places[i].skip)
             {
+                if(!reorder) return i;
                 cand = i;
             }
-        }
-        
+        }        
         return cand;
     }
     
-    PetriNet* PetriNetBuilder::makePetriNet() {
+    PetriNet* PetriNetBuilder::makePetriNet(bool reorder) {
         
         uint32_t nplaces = _places.size() - reducer.RemovedPlaces();
         uint32_t ntrans = _transitions.size() - reducer.RemovedTransitions();
@@ -133,7 +140,7 @@ namespace PetriEngine {
         
         uint32_t invariants = 0;
         
-        for(size_t i = 0; i < _places.size(); ++i)
+        for(uint32_t i = 0; i < _places.size(); ++i)
         {
             place_idmap[i] = std::numeric_limits<uint32_t>::max();
             if(!_places[i].skip)
@@ -143,18 +150,18 @@ namespace PetriEngine {
             }
         }
 
-        for(size_t i = 0; i < _transitions.size(); ++i)
+        for(uint32_t i = 0; i < _transitions.size(); ++i)
         {
             trans_idmap[i] = std::numeric_limits<uint32_t>::max();
         }
         
         PetriNet* net = new PetriNet(ntrans, invariants, nplaces);
         
-        size_t next = nextPlaceId(place_cons_count, place_idmap);
-        size_t free = 0;
-        size_t freeinv = 0;
-        size_t freetrans = 0;
-        while(next != std::numeric_limits<size_t>::max())
+        uint32_t next = nextPlaceId(place_cons_count, place_idmap, reorder);
+        uint32_t free = 0;
+        uint32_t freeinv = 0;
+        uint32_t freetrans = 0;
+        while(next != std::numeric_limits<uint32_t>::max())
         {
             place_idmap[next] = free;
             net->_placeToPtrs[free] = freetrans;
@@ -168,7 +175,7 @@ namespace PetriEngine {
                 // check first, we are going to change state later, but we can 
                 // break here, so not statechange inside loop!
                 bool ok = true;
-                size_t cnt = 0;
+                uint32_t cnt = 0;
                 for(auto pre : trans.pre)
                 {
                     if(     place_idmap[pre.place] < free || 
@@ -209,18 +216,19 @@ namespace PetriEngine {
                 assert(freeinv <= invariants);
             }
             ++free;
-            next = nextPlaceId(place_cons_count, place_idmap);
+            next = nextPlaceId(place_cons_count, place_idmap, reorder);
         }
         
         // Reindex for great justice!
-        for(size_t i = 0; i < freeinv; i++)
+        for(uint32_t i = 0; i < freeinv; i++)
         {
             net->_invariants[i].place = place_idmap[net->_invariants[i].place];
             assert(net->_invariants[i].place < nplaces);
+            assert(net->_invariants[i].tokens > 0);
         }
         
 //        std::cout << "init" << std::endl;
-        for(size_t i = 0; i < _places.size(); ++i)
+        for(uint32_t i = 0; i < _places.size(); ++i)
         {
             if(place_idmap[i] != std::numeric_limits<uint32_t>::max())
             {
@@ -230,23 +238,43 @@ namespace PetriEngine {
         }
         
         // reindex place-names
+
+        net->_placenames.resize(_placenames.size());
         for(auto& i : _placenames)
         {
             i.second = place_idmap[i.second];
+            if(i.second != std::numeric_limits<uint32_t>::max())
+            {
+                net->_placenames[i.second] = i.first;
+                assert(_placenames[net->_placenames[i.second]] == i.second);
+            }
         }
-        
+
+        net->_transitionnames.resize(_transitionnames.size());
         for(auto& i : _transitionnames)
         {
             i.second = trans_idmap[i.second];
+            if(i.second != std::numeric_limits<uint32_t>::max())
+            {
+                net->_transitionnames[i.second] = i.first;
+            }
         }
         
         return net;
     }
     
-    void PetriNetBuilder::reduce(PQL::Condition* query, int reductiontype)
+    void PetriNetBuilder::reduce(   std::vector<std::shared_ptr<PQL::Condition> >& queries,
+                                    std::vector<Reachability::ResultPrinter::Result>& results, 
+                                    int reductiontype)
     {
         QueryPlaceAnalysisContext placecontext(getPlaceNames());
-        query->analyze(placecontext);        
+        for(uint32_t i = 0; i < queries.size(); ++i)
+        {
+            if(results[i] == Reachability::ResultPrinter::Unknown)
+            {
+                queries[i]->analyze(placecontext);        
+            }
+        }
         reducer.Reduce(placecontext.getQueryPlaceCount(), reductiontype);
     }
 

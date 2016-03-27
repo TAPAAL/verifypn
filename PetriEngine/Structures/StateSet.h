@@ -18,7 +18,6 @@
  */
 #ifndef STATESET_H
 #define STATESET_H
-//#define DEBUG
 #include <unordered_map>
 #include <iostream>
 #include "Memory/pool_fixed_allocator.h"
@@ -133,7 +132,9 @@ namespace PetriEngine {
             bool add(State* state) {
                 _discovered++;
 
+#ifdef DEBUG
                 if(_discovered % 1000000 == 0) std::cout << "Found number " << _discovered << std::endl;
+#endif
                 
                 MarkVal sum = 0;
                 bool allsame = true;
@@ -213,7 +214,7 @@ namespace PetriEngine {
                 
                 assert(type < 32);
                 if(_encoding) _encoderstats[type] += 1;
-                                
+                                                
                 result.first->second = nfree;  
                                 
                 ++_freebucket;                
@@ -223,8 +224,11 @@ namespace PetriEngine {
                     _maxPlaceBound[i] = std::max<MarkVal>( state->marking()[i],
                                                             _maxPlaceBound[i]);
                 }
-                if(_freebucket % 10000 == 1) std::cout << "Inserted number " << (_freebucket-1) << std::endl;
 
+#ifdef DEBUG
+                if(_freebucket % 10000 == 1) std::cout << "Inserted number " << (_freebucket-1) << std::endl;
+#endif
+                
                 if(!_encoding && _freebucket % 1000 == 0)
                 {
                     size_t mem =    (STATESET_BUCKETS*sizeof(bucket_t))*_buckets.size() + 
@@ -280,7 +284,7 @@ namespace PetriEngine {
             {
                 uint32_t hash = 0;
                 
-                uint16_t& h1 = ((uint16_t*)&hash)[0];
+                 uint16_t& h1 = ((uint16_t*)&hash)[0];
                 uint16_t& h2 = ((uint16_t*)&hash)[1];
                 uint32_t cnt = 0;
                 

@@ -21,12 +21,13 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 #include "AbstractPetriNetBuilder.h"
 #include "PQL/PQL.h"
 #include "PetriNet.h"
 #include "Reducer.h"
 #include "NetStructures.h"
-
+#include "Reachability/ReachabilityResult.h"
 namespace PetriEngine {
     /** Builder for building engine representations of PetriNets */
     class PetriNetBuilder : public AbstractPetriNetBuilder {
@@ -35,6 +36,7 @@ namespace PetriEngine {
         
     public:
         PetriNetBuilder();
+        PetriNetBuilder(const PetriNetBuilder& other);
         void addPlace(const std::string& name, int tokens, double x, double y);
         void addTransition(const std::string& name,
                 double x,
@@ -44,7 +46,7 @@ namespace PetriEngine {
                 int weight);
         void addOutputArc(const std::string& transition, const std::string& place, int weight);
         /** Make the resulting petri net, you take ownership */
-        PetriNet* makePetriNet();
+        PetriNet* makePetriNet(bool reorder = true);
         /** Make the resulting initial marking, you take ownership */
 
         MarkVal const * initMarking()
@@ -52,59 +54,61 @@ namespace PetriEngine {
             return initialMarking.data();
         }
         
-        size_t numberOfPlaces(){
+        uint32_t numberOfPlaces(){
             return _placenames.size();
         }
         
-        size_t numberOfTransitions()
+        uint32_t numberOfTransitions()
         {
             return _transitionnames.size();
         }
         
-        const std::map<std::string, size_t>& getPlaceNames()
+        const std::map<std::string, uint32_t>& getPlaceNames()
         {
             return _placenames;
         }
         
-        const std::map<std::string, size_t>& getTransitionNames()
+        const std::map<std::string, uint32_t>& getTransitionNames()
         {
             return _transitionnames;
         }
         
-        void reduce(PQL::Condition* query, int reductiontype);
+        void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query, 
+                    std::vector<Reachability::ResultPrinter::Result>& results, 
+                    int reductiontype);
         
-        size_t RemovedTransitions()
+        uint32_t RemovedTransitions()
         {
             return reducer.RemovedTransitions();
         }
         
-        size_t RemovedPlaces()
+        uint32_t RemovedPlaces()
         {
             return reducer.RemovedPlaces();
         }
 
-        size_t RuleA() {
+        uint32_t RuleA() {
             return reducer.RuleA();
         }
 
-        size_t RuleB() {
+        uint32_t RuleB() {
             return reducer.RuleB();
         }
 
-        size_t RuleC() {
+        uint32_t RuleC() {
             return reducer.RuleC();
         }
 
-        size_t RuleD() {
+        uint32_t RuleD() {
             return reducer.RuleD();
         }
         
     private:
-        size_t nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids);
+        uint32_t nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids, bool reorder);
         
     protected:
-        std::map<std::string, size_t> _placenames;
-        std::map<std::string, size_t> _transitionnames;
+        std::map<std::string, uint32_t> _placenames;
+        std::map<std::string, uint32_t> _transitionnames;
         
         std::vector<Transition> _transitions;
         std::vector<Place> _places;
