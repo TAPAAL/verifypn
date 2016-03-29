@@ -10,6 +10,8 @@
 
 #include <array>
 #include <assert.h>
+#include <vector>
+#include <memory>
 #ifdef JEMALLOC
 extern "C"
 {
@@ -69,6 +71,7 @@ namespace pdalloc
                 state = other.state;
             }
             T* allocate(std::size_t n);
+            T* reallocate(T*, std::size_t old, std::size_t n);
             void deallocate(T* p, std::size_t n);    
             template<typename U>
             struct rebind {
@@ -130,11 +133,34 @@ namespace pdalloc
     }
 
     template <class T, size_t C, size_t MINSIZE>
+    T* pool_dynamic_allocator<T,C,MINSIZE>::reallocate(T* od, std::size_t old, std::size_t n)
+    {
+        if(od != NULL && n*sizeof(T) <= MINSIZE && old*sizeof(T) <= MINSIZE)
+        {
+            return od;
+        }
+        else
+        {
+            T* d = allocate(n);
+            if(od != NULL) memcpy(d, od, old*sizeof(T));
+            deallocate(od, old);
+            return d;
+        }
+    }
+    
+    template <class T, size_t C, size_t MINSIZE>
     T* pool_dynamic_allocator<T,C,MINSIZE>::allocate(std::size_t n)
     {
         state->mem += n*sizeof(T);
         T* data = NULL;
-        if(n*sizeof(T) < MINSIZE || n*sizeof(T) > maxsize())
+        
+        if(n*sizeof(T) < MINSIZE)
+        {
+            n = MINSIZE/sizeof(T);
+            if(MINSIZE % sizeof(T) != 0)++n;
+        }
+        
+        if(n*sizeof(T) > maxsize())
         {
             data = static_cast<T*>(PREFMALLOC(n*sizeof(T))); 
         }
@@ -176,7 +202,14 @@ namespace pdalloc
     template <class T, size_t C, size_t MINSIZE>
     void pool_dynamic_allocator<T,C,MINSIZE>::deallocate(T* p, std::size_t n)
     {
-        if(n*sizeof(T) < MINSIZE || n*sizeof(T) > maxsize())
+        if(p == NULL) return;
+        if(n*sizeof(T) < MINSIZE)
+        {
+            n = MINSIZE / sizeof(T);
+            if(MINSIZE % sizeof(T) != 0) ++n;
+        }
+        
+        if(n*sizeof(T) > maxsize())
         {
             PREFFREE(p);
         }

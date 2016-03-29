@@ -40,6 +40,11 @@ namespace PetriEngine {
             : printer(printer) {
                 _kbound = kbound;
             }
+            
+            ~BreadthFirstReachabilitySearch()
+            {
+                delete states;
+            }
 
             /** Perform reachability check using BFS with hasing */
             void reachable(PetriNet &net,

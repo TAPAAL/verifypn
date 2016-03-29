@@ -15,7 +15,7 @@ AlignedEncoder::AlignedEncoder(uint32_t places, uint32_t k)
 {
 
     size_t bytes = 2*sizeof(uint32_t) + (places*sizeof(uint32_t));
-    _scratchpad = binarywrapper_t(bytes*8);
+    _scratchpad = scratchpad_t(bytes*8);
 
     if(_places < 256) _psize = 1;
     else if(_places < 65536) _psize = 2;
@@ -44,7 +44,7 @@ uint32_t AlignedEncoder::writeBitVector(size_t offset, const uint32_t* data)
     {
         _scratchpad.set(i+(offset*8), data[i] > 0);
     }
-    return offset + binarywrapper_t::bytes(_places);
+    return offset + scratchpad_t::bytes(_places);
 }
 
 uint32_t AlignedEncoder::writeTwoBitVector(size_t offset, const uint32_t* data)
@@ -66,12 +66,12 @@ uint32_t AlignedEncoder::writeTwoBitVector(size_t offset, const uint32_t* data)
             
         }
     }
-    return offset + binarywrapper_t::bytes(_places*2);
+    return offset + scratchpad_t::bytes(_places*2);
 }
 
 uint32_t AlignedEncoder::readTwoBitVector(uint32_t* destination, const unsigned char* source, uint32_t offset)
 {
-    binarywrapper_t b = binarywrapper_t((unsigned char*)&source[offset], _places*2);
+    scratchpad_t b = scratchpad_t((unsigned char*)&source[offset], _places*2);
     for(size_t i = 0; i < _places; ++i)
     {
         destination[i] = 0;
@@ -85,7 +85,7 @@ uint32_t AlignedEncoder::readTwoBitVector(uint32_t* destination, const unsigned 
             destination[i] += 2;
         }
     }
-    return offset + binarywrapper_t::bytes(_places*2);
+    return offset + scratchpad_t::bytes(_places*2);
 }
 
 template<typename T>
@@ -131,8 +131,8 @@ uint32_t AlignedEncoder::writeTokenCounts(size_t offset, const uint32_t* data)
 template<typename T>
 uint32_t AlignedEncoder::readBitTokenCounts(uint32_t* destination, const unsigned char* source, uint32_t offset)
 {
-    const unsigned char* ts = &source[offset + binarywrapper_t::bytes(_places)];
-    binarywrapper_t b = binarywrapper_t((unsigned char*)&source[offset], _places);
+    const unsigned char* ts = &source[offset + scratchpad_t::bytes(_places)];
+    scratchpad_t b = scratchpad_t((unsigned char*)&source[offset], _places);
 
     size_t cnt = 0;
     for(uint32_t i = 0; i < _places; ++i)
@@ -280,7 +280,7 @@ uint32_t AlignedEncoder::readPlaces(uint32_t* destination, const unsigned char* 
 
 uint32_t AlignedEncoder::readBitVector(uint32_t* destination, const unsigned char* source, uint32_t offset, uint32_t value)
 {
-    binarywrapper_t b = binarywrapper_t((unsigned char*)&source[offset], _places);
+    scratchpad_t b = scratchpad_t((unsigned char*)&source[offset], _places);
     for(uint32_t i = 0; i < _places; ++i)
     {
         if(b.at(i))
@@ -300,7 +300,7 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
     if(pwt == 0) return 0;
     if(same && val < 11)
     {
-        size_t bvsize = binarywrapper_t::bytes(_places);
+        size_t bvsize = scratchpad_t::bytes(_places);
         size_t indirect = _psize+pwt*_psize;
         
         if(bvsize <= indirect)
@@ -315,9 +315,9 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
     else
     {
         size_t tsize = tokenBytes(val);
-        size_t bvsize = binarywrapper_t::bytes(_places*2);
+        size_t bvsize = scratchpad_t::bytes(_places*2);
         size_t indirect = _psize+pwt*(_psize+tsize);   
-        size_t bvindirect = binarywrapper_t::bytes(_places)+pwt*tsize;
+        size_t bvindirect = scratchpad_t::bytes(_places)+pwt*tsize;
         size_t direct = _places*tsize;
         
         if(val < 4 && bvsize <= indirect && bvsize <= bvindirect)
