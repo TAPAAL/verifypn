@@ -5,8 +5,8 @@ CC				= g++
 CUT				= cut
 
 # Compiler and linker flags
-CFLAGS			= -DNDEBUG -flto -march=x86-64 -std=c++14 -static -m64 -O3 -I.
-LDFLAGS			= -DNDEBUG -flto -march=x86-64 -std=c++14 -static -m64 -O3 lpsolve/liblpsolve55-linux64.a -ldl \
+CFLAGS			= -flto -march=x86-64 -std=c++14  -m64 -I.
+LDFLAGS			= -flto -march=x86-64 -std=c++14  -m64 lpsolve/liblpsolve55-linux64.a -ldl \
               -static-libgcc -static-libstdc++
 
 # Input files

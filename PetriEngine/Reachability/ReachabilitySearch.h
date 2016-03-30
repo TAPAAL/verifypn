@@ -21,13 +21,13 @@
 
 #include <memory>
 #include <vector>
-#include <queue>
 
 #include "../Structures/State.h"
 #include "ReachabilityResult.h"
 #include "../PQL/PQL.h"
 #include "../PetriNet.h"
 #include "../Structures/StateSet.h"
+#include "../Structures/Queue.h"
 
 namespace PetriEngine {
     namespace Reachability {
@@ -46,19 +46,7 @@ namespace PetriEngine {
             
 
         public:
-            struct weighted_t {
-                uint32_t weight;
-                uint32_t item;
-                weighted_t(uint32_t w, uint32_t i) : weight(w), item(i) {};
-                bool operator <(const weighted_t& y) const {
-//                    if(weight == y.weight) return item < y.item;// do dfs if they match
-                    if(weight == y.weight) return item > y.item;// do bfs if they match
-                    return weight < y.weight;
-                }
-            };
-            
-            
-            
+
             ReachabilitySearch(ResultPrinter& printer, PetriNet& net, int kbound = 0)
             : printer(printer), states(net, kbound), _net(net) {
                 _kbound = kbound;
@@ -81,8 +69,7 @@ namespace PetriEngine {
                 size_t exploredStates = 1;
                 std::vector<size_t> enabledTransitionsCount;
                 Strategy strategy;
-                size_t heurquery = 0;
-                std::priority_queue<weighted_t> queue;
+                size_t heurquery = 0;               
                 bool usequeries;
             };
             
@@ -97,9 +84,8 @@ namespace PetriEngine {
                                 std::vector<ResultPrinter::Result>&,
                                 Structures::State&, searchstate_t& );
             ResultPrinter::Result printQuery(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result, searchstate_t& );
-            bool nextWaiting(Structures::State& state, searchstate_t& );
-            void pushOnQueue(   size_t id, Structures::State& state,
-                                std::shared_ptr<PQL::Condition>& query, searchstate_t& );
+            
+            std::shared_ptr<Structures::Queue> makeQueue(Strategy strat);
             
 
             int _kbound;

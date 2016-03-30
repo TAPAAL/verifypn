@@ -48,6 +48,16 @@ namespace PetriEngine {
             ss.strategy = strategy;
             ss.usequeries = !statespacesearch;
             
+            if(ss.usequeries)
+            {
+                for(size_t i = 0; i < queries.size(); ++i)
+                {
+                    if(results[i] == ResultPrinter::Unknown)
+                    {
+                        ss.usequeries &= queries[i]->placeNameForBound().empty();
+                    }
+                }
+            }
             // set up working area
             State state;
             State working;
@@ -61,20 +71,22 @@ namespace PetriEngine {
             // if we are searching for bounds
             if(!ss.usequeries) ss.strategy = BFS;
 
+            std::shared_ptr<Queue> queue = makeQueue(ss.strategy);
+            
             // add initial
-            auto r = states.add(&state);
-            if(r.first) pushOnQueue(r.second, state, queries[ss.heurquery], ss);
+            auto r = states.add(state);
+            if(r.first) queue->push(r.second, state, queries[ss.heurquery]);
             
             // Search!
-            while (nextWaiting(state, ss)) {
+            while (queue->pop(state)) {
 
                 generator.reset(&state);
 
                 while(generator.next(&working)){
                     ss.enabledTransitionsCount[generator.fired()]++;
-                    auto res = states.add(&working);
+                    auto res = states.add(working);
                     if (res.first) {
-                        pushOnQueue(res.second, working, queries[ss.heurquery], ss);
+                        queue->push(res.second, working, queries[ss.heurquery]);
                         ss.exploredStates++;
                         if (checkQueries(queries, results, working, ss)) {
                             delete[] state.marking();
@@ -114,7 +126,6 @@ namespace PetriEngine {
             {
                 if(results[i] == ResultPrinter::Unknown)
                 {
-                    ss.usequeries &= !queries[i]->placeNameForBound().empty();
                     if(queries[i]->evaluate(state, &_net))
                     {
                         results[i] = printQuery(queries[i], i, ResultPrinter::Satisfied, ss);                    
@@ -128,6 +139,19 @@ namespace PetriEngine {
                     results[i] != ResultPrinter::Unknown) ++ss.heurquery;
             }  
             return alldone;
+        }
+        
+        std::shared_ptr<Queue> ReachabilitySearch::makeQueue(Strategy strat)
+        {
+            switch(strat)
+            {
+                case HEUR:
+                    return std::shared_ptr<Queue>(new HeuristicQueue(states));
+                case DFS:
+                    return std::shared_ptr<Queue>(new DFSQueue(states));
+                default:
+                    return std::shared_ptr<Queue>(new BFSQueue(states));
+            }
         }
         
         ResultPrinter::Result ReachabilitySearch::printQuery(std::shared_ptr<PQL::Condition>& query, size_t i,  ResultPrinter::Result r,
@@ -162,44 +186,6 @@ namespace PetriEngine {
                 std::cout << "<" << _net.placeNames()[i] << ";" << states.maxPlaceBound()[i] << ">";
             }
             std::cout << std::endl << std::endl;
-        }
-        
-        bool ReachabilitySearch::nextWaiting(Structures::State& state, searchstate_t& ss)
-        {
-            switch(ss.strategy)
-            {
-                case DFS:
-                case HEUR:
-                {
-                    if(ss.queue.empty()) return false;
-                    auto it = ss.queue.top();
-                    ss.queue.pop();
-                    states.decode(&state, it.item);
-                    return true;
-                }           
-                default:
-                    return states.nextWaiting(&state);
-            }
-        }
-        
-        void ReachabilitySearch::pushOnQueue(size_t index, Structures::State& state, std::shared_ptr<PQL::Condition>& query, searchstate_t& ss)
-        {
-            switch(ss.strategy)
-            {
-                case DFS:
-                    ss.queue.emplace(index, index);
-                    return;
-                case HEUR:
-                    {
-                        DistanceContext context(&_net, state.marking());
-                        // invert result, highest numbers are on top!
-                        uint32_t dist = std::numeric_limits<uint32_t>::max() - query->distance(context);
-                        ss.queue.emplace(dist, index);
-                        return;
-                    }
-                default:
-                    ; // nothing
-            }
         }
         
         void ReachabilitySearch::reachable(

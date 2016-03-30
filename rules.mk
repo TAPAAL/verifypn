@@ -7,10 +7,11 @@ all: release
 $(TARGET): $(DEPS) $(OBJECTS)
 	$(CC) $^ $(LDFLAGS) -o $@
 
-release: CFLAGS += -Wall -pedantic-errors -O3
-release: LDFLAGS += -O3
+release: CFLAGS += -Wall -pedantic-errors -O3 -DNDEBUG -static
+release: LDFLAGS += -O3 -DNDEBUG -static
 release: $(TARGET)
 debug: CFLAGS += -g
+debug: LDFLAGS += -g
 debug: $(TARGET)
 
 # Rules for updating lexer and parser

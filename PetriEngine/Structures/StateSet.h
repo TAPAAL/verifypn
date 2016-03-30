@@ -41,17 +41,16 @@ namespace PetriEngine {
         public:
 
             StateSet(const PetriNet& net, uint32_t kbound) 
-            : _encoder(net.numberOfPlaces(), kbound) {
+            : _encoder(net.numberOfPlaces(), kbound), _net(net) {
                 _discovered = 0;
                 _kbound = kbound;
                 _maxTokens = 0;
-                _places = net.numberOfPlaces();
-                _maxPlaceBound = std::vector<uint32_t>(_places, 0);
+                _maxPlaceBound = std::vector<uint32_t>(_net.numberOfPlaces(), 0);
                 for(size_t i = 0; i < 32; ++i)
                 {
                     _encoderstats[i] = 0;
                 }
-                _sp = wrapper_t(sizeof(uint32_t)*_places*8);
+                _sp = wrapper_t(sizeof(uint32_t)*_net.numberOfPlaces()*8);
             }
             
             ~StateSet()
@@ -64,8 +63,10 @@ namespace PetriEngine {
                     std::cout << "\t type : " << i << " -> " << _encoderstats[i] << std::endl;
                 }
             }
+            
+            const PetriNet& net() { return _net;}
              
-            void decode(State* state, size_t id )
+            void decode(State& state, size_t id )
             {
                     ptrie_t::pointer_t ptr = ptrie_t::pointer_t(&_trie, id);
                     uint32_t bits = ptr.write_partial_encoding(_sp);
@@ -76,28 +77,14 @@ namespace PetriEngine {
                             ptr.remainder().const_raw(), 
                             ptr.remainder().size());
 
-                    _encoder.decode(state->marking(), _encoder.scratchpad().raw());
+                    _encoder.decode(state.marking(), _encoder.scratchpad().raw());
 
 #ifdef DEBUG
-                    assert(memcmp(state->marking(), _dbg[id], sizeof(uint32_t)*_places) == 0);
+                    assert(memcmp(state.marking(), _dbg[id], sizeof(uint32_t)*_places) == 0);
 #endif
             }
             
-            bool nextWaiting(State* state)
-            {
-                if(_waiting < _trie.size())
-                {
-                    decode(state, _waiting);
-                    ++_waiting;
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            
-            std::pair<bool, size_t> add(State* state) {
+            std::pair<bool, size_t> add(State& state) {
                 _discovered++;
 
 #ifdef DEBUG
@@ -109,7 +96,7 @@ namespace PetriEngine {
                 uint32_t val = 0;
                 uint32_t active = 0;
                 uint32_t last = 0;
-                uint32_t hash = hashMarking(state->marking(), sum, allsame, val, active, last);               
+                uint32_t hash = hashMarking(state.marking(), sum, allsame, val, active, last);               
 
                 if (_maxTokens < sum)
                     _maxTokens = sum;
@@ -121,7 +108,7 @@ namespace PetriEngine {
                 unsigned char type = _encoder.getType(sum, active, allsame, val);
 
 
-                size_t length = _encoder.encode(state->marking(), type);
+                size_t length = _encoder.encode(state.marking(), type);
 
                 wrapper_t w = wrapper_t(_encoder.scratchpad().raw(), length*8);
                 auto tit = _trie.insert(w);
@@ -140,9 +127,9 @@ namespace PetriEngine {
                 _encoderstats[type & 31] += 1;
            
                 // update the max token bound for each place in the net (only for newly discovered markings)
-                for (uint32_t i = 0; i < _places; i++) 
+                for (uint32_t i = 0; i < _net.numberOfPlaces(); i++) 
                 {
-                    _maxPlaceBound[i] = std::max<MarkVal>( state->marking()[i],
+                    _maxPlaceBound[i] = std::max<MarkVal>( state.marking()[i],
                                                             _maxPlaceBound[i]);
                 }
 #ifdef DEBUG    
@@ -157,6 +144,10 @@ namespace PetriEngine {
 
             uint32_t maxTokens() const {
                 return _maxTokens;
+            }
+            
+            size_t size() const {
+                return _trie.size();
             }
 
             std::vector<MarkVal> maxPlaceBound() const {
@@ -173,7 +164,7 @@ namespace PetriEngine {
                 uint16_t& h2 = ((uint16_t*)&hash)[1];
                 uint32_t cnt = 0;
                 
-                for (uint32_t i = 0; i < _places; i++)
+                for (uint32_t i = 0; i < _net.numberOfPlaces(); i++)
                 {
                     uint32_t old = val;
                     if(marking[i] != 0)
@@ -202,15 +193,14 @@ namespace PetriEngine {
             uint32_t _kbound;
             uint32_t _maxTokens;
             std::vector<uint32_t> _maxPlaceBound;
-            uint32_t _places;
 
-            size_t _waiting = 0;
             AlignedEncoder _encoder;
                     
             size_t _encoderstats[32];
             
             ptrie_t _trie;
             wrapper_t _sp;
+            const PetriNet& _net;
 #ifdef DEBUG
             std::vector<uint32_t*> _dbg;
 #endif
