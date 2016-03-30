@@ -31,17 +31,17 @@ namespace PetriEngine {
     namespace Reachability {
 
         /** Implements reachability check in a BFS manner using a hash table */
-        class BreadthFirstReachabilitySearch {
+        class ReachabilitySearch {
         private:
             ResultPrinter& printer;
         public:
 
-            BreadthFirstReachabilitySearch(ResultPrinter& printer, int kbound = 0)
+            ReachabilitySearch(ResultPrinter& printer, int kbound = 0)
             : printer(printer) {
                 _kbound = kbound;
             }
             
-            ~BreadthFirstReachabilitySearch()
+            ~ReachabilitySearch()
             {
                 delete states;
             }

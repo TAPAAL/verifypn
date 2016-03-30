@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "BreadthFirstReachabilitySearch.h"
+#include "ReachabilitySearch.h"
 #include "../PQL/PQL.h"
 #include "../PQL/Contexts.h"
 #include "../Structures/StateSet.h"
@@ -30,7 +30,7 @@ using namespace PetriEngine::Structures;
 namespace PetriEngine {
     namespace Reachability {
 
-        void BreadthFirstReachabilitySearch::tryReach(
+        void ReachabilitySearch::tryReach(
             PetriNet &net,
             const MarkVal *m0,
             std::vector<std::shared_ptr<PQL::Condition > >& queries,
@@ -113,7 +113,7 @@ namespace PetriEngine {
             }            
         }
         
-        void BreadthFirstReachabilitySearch::printStats(PetriNet &net)
+        void ReachabilitySearch::printStats(PetriNet &net)
         {
             std::cout   << "STATS:\n"
                         << "\tdiscovered states: " << states->discovered() << std::endl
@@ -138,7 +138,7 @@ namespace PetriEngine {
             std::cout << std::endl << std::endl;
         }
         
-        void BreadthFirstReachabilitySearch::reachable(
+        void ReachabilitySearch::reachable(
                     PetriNet &net,
                     const MarkVal *m0,
                     std::vector<std::shared_ptr<PQL::Condition > >& queries,

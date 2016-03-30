@@ -29,7 +29,7 @@
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/Reachability/LinearOverApprox.h"
-#include "PetriEngine/Reachability/BreadthFirstReachabilitySearch.h"
+#include "PetriEngine/Reachability/ReachabilitySearch.h"
 #include "PetriEngine/Reducer.h"
 #include "PetriParse/QueryXMLParser.h"
 #include "PetriParse/PNMLParser.h"
@@ -394,7 +394,7 @@ int main(int argc, char* argv[]) {
     //----------------------- Reachability -----------------------//
 
     //Create reachability search strategy
-    BreadthFirstReachabilitySearch strategy(printer, options.kbound);
+    ReachabilitySearch strategy(printer, options.kbound);
 
     PetriNet* net = builder.makePetriNet();
     MarkVal* m0 = net->makeInitialMarking();  
