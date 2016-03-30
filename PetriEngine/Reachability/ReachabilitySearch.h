@@ -21,6 +21,8 @@
 
 #include <memory>
 #include <vector>
+#include <queue>
+
 #include "../Structures/State.h"
 #include "ReachabilityResult.h"
 #include "../PQL/PQL.h"
@@ -30,15 +32,37 @@
 namespace PetriEngine {
     namespace Reachability {
 
+        enum Strategy {
+            BFS,
+            DFS,
+            HEUR,
+            APPROX
+        };
+        
         /** Implements reachability check in a BFS manner using a hash table */
         class ReachabilitySearch {
         private:
             ResultPrinter& printer;
-        public:
+            
 
-            ReachabilitySearch(ResultPrinter& printer, int kbound = 0)
+        public:
+            struct weighted_t {
+                uint32_t weight;
+                size_t item;
+                weighted_t(size_t w, size_t i) : weight(w), item(i) {};
+                bool operator <(const weighted_t& y) const {
+//                    if(weight == y.weight) return item < y.item;// do dfs if they match
+                    if(weight == y.weight) return item > y.item;// do bfs if they match
+                    return weight < y.weight;
+                }
+            };
+            
+            
+            
+            ReachabilitySearch(ResultPrinter& printer, int kbound = 0, Strategy strategy = BFS)
             : printer(printer) {
                 _kbound = kbound;
+                _strategy = strategy;
             }
             
             ~ReachabilitySearch()
@@ -60,11 +84,21 @@ namespace PetriEngine {
                 size_t memorylimit,
                 std::vector<ResultPrinter::Result>& results);
             void printStats(PetriNet &net);
+            
+            bool nextWaiting(Structures::State* state);
+            void pushOnQueue(   size_t id, Structures::State* state,
+                                PQL::Condition* query,
+                                PetriNet *net);
+            
+
             int _kbound;
             BigInt expandedStates = 0;
             BigInt exploredStates = 1;
             Structures::StateSet* states = NULL;
             std::vector<BigInt> enabledTransitionsCount;
+            Strategy _strategy;
+            std::priority_queue<weighted_t> _queue;
+            size_t _heurquery = 0;
         };
 
     }

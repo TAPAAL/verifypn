@@ -692,53 +692,45 @@ namespace PetriEngine {
 #define MAX(v1, v2)  (v1 > v2 ? v1 : v2)
 #define MIN(v1, v2)  (v1 < v2 ? v1 : v2)
 
-        double NotCondition::distance(DistanceContext& context) const {
+        uint32_t NotCondition::distance(DistanceContext& context) const {
             context.negate();
-            double retval = _cond->distance(context);
+            uint32_t retval = _cond->distance(context);
             context.negate();
             return retval;
         }
 
-        double BooleanCondition::distance(DistanceContext& context) const {
+        uint32_t BooleanCondition::distance(DistanceContext& context) const {
             if (context.negated() != _value)
                 return 0;
-            return INFINITE_DISTANCE;
+            return std::numeric_limits<uint32_t>::max();
         }
 
-        double DeadlockCondition::distance(DistanceContext& context) const {
-            return 0;
+        uint32_t DeadlockCondition::distance(DistanceContext& context) const {
+            uint32_t sum = 0;
+            for(size_t i = 0; i < context.net()->numberOfTransitions(); ++i)
+                sum += context.marking()[i];
+            return sum;
         }
 
-        double LogicalCondition::distance(DistanceContext& context) const {
-            double d1 = _cond1->distance(context);
-            double d2 = _cond2->distance(context);
+        uint32_t LogicalCondition::distance(DistanceContext& context) const {
+            uint32_t d1 = _cond1->distance(context);
+            uint32_t d2 = _cond2->distance(context);
             return delta(d1, d2, context);
         }
 
-        double AndCondition::delta(double d1,
-                double d2,
+        uint32_t AndCondition::delta(uint32_t d1,
+                uint32_t d2,
                 const DistanceContext& context) const {
-            if (context.strategy() & DistanceContext::AndExtreme)
-                if (context.negated())
-                    return MIN(d1, d2);
-                else
-                    return MAX(d1, d2);
-            else if (context.strategy() & DistanceContext::AndSum)
                 return d1 + d2;
-            else
-                return (d1 + d2) / 2;
         }
 
-        double OrCondition::delta(double d1,
-                double d2,
+        uint32_t OrCondition::delta(uint32_t d1,
+                uint32_t d2,
                 const DistanceContext& context) const {
-            if (context.strategy() & DistanceContext::OrExtreme)
-                if (context.negated())
-                    return MAX(d1, d2);
-                else
-                    return MIN(d1, d2);
+            if (context.negated())
+                return MAX(d1, d2);
             else
-                return (d1 + d2) / 2;
+                return MIN(d1, d2);
         }
 
         struct S {
@@ -746,109 +738,48 @@ namespace PetriEngine {
             unsigned int p;
         };
 
-        int dfsArcLen(const PetriNet& net,
-                const MarkVal *m,
-                unsigned int place) {
-            std::list<S> places;
-            std::set<unsigned int> visited;
-            S s;
-            s.d = 0;
-            s.p = place;
-            places.push_back(s);
-            visited.insert(place);
-            while (!places.empty()) {
-                s = places.front();
-                places.pop_front();
-                for (unsigned int t = 0; t < net.numberOfTransitions(); t++) {
-                    if (net.outArc(t, place)) {
-                        for (unsigned int p = 0; p < net.numberOfPlaces(); p++) {
-                            if (net.inArc(p, t)) {
-                                if (!visited.count(p)) {
-                                    if (m[p])
-                                        return s.d + 1;
-                                    visited.insert(p);
-                                    S sp;
-                                    sp.d = s.d + 1;
-                                    sp.p = p;
-                                    places.push_back(sp);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return s.d + 1;
-        }
-
-        double CompareCondition::distance(DistanceContext& context) const {
+        uint32_t CompareCondition::distance(DistanceContext& context) const {
             int v1 = _expr1->evaluate(context);
             int v2 = _expr2->evaluate(context);
-            if (context.strategy() & DistanceContext::ArcCount) {
-                int d = delta(v1, v2, context.negated());
-                if (!d) return 0;
-                if (_expr1->pfree() && !_expr2->pfree() && _expr2->type() == Expr::IdentifierExpr) {
-                    IdentifierExpr* id = (IdentifierExpr*) _expr2;
-                    return dfsArcLen(context.net(), context.marking(), id->offset()) * d;
-                } else if (_expr2->pfree() && !_expr1->pfree() && _expr1->type() == Expr::IdentifierExpr) {
-                    IdentifierExpr* id = (IdentifierExpr*) _expr1;
-                    return dfsArcLen(context.net(), context.marking(), id->offset()) * d;
-                }
-            } else if (context.strategy() & DistanceContext::TokenCost) {
-
-                //TODO: Account for when we have too many tokens instead of too few
-                if (_expr1->pfree() && !_expr2->pfree() && _expr2->type() == Expr::IdentifierExpr) {
-                    int d = delta(v2, v1, context.negated());
-                    if (d == 0) return 0;
-                    if (d < 0) return std::abs(d);
-                    IdentifierExpr* id = (IdentifierExpr*) _expr2;
-                    return context.distanceMatrix()->tokenCost(id->offset(), d, context.marking());
-                } else if (_expr2->pfree() && !_expr1->pfree() && _expr1->type() == Expr::IdentifierExpr) {
-                    int d = delta(v1, v2, context.negated());
-                    if (d == 0) return 0;
-                    if (d < 0) return std::abs(d);
-                    IdentifierExpr* id = (IdentifierExpr*) _expr1;
-                    return context.distanceMatrix()->tokenCost(id->offset(), d, context.marking());
-                }
-            }
             return std::abs(delta(v1, v2, context.negated()));
         }
 
-        double EqualCondition::delta(int v1, int v2, bool negated) const {
+        uint32_t EqualCondition::delta(int v1, int v2, bool negated) const {
             if (!negated)
                 return v1 - v2;
             else
                 return v1 == v2 ? 1 : 0;
         }
 
-        double NotEqualCondition::delta(int v1, int v2, bool negated) const {
+        uint32_t NotEqualCondition::delta(int v1, int v2, bool negated) const {
             if (negated)
                 return v1 - v2;
             else
                 return v1 == v2 ? 1 : 0;
         }
 
-        double LessThanCondition::delta(int v1, int v2, bool negated) const {
+        uint32_t LessThanCondition::delta(int v1, int v2, bool negated) const {
             if (!negated)
                 return v1 < v2 ? 0 : v1 - v2 + 1;
             else
                 return v1 >= v2 ? 0 : v2 - v1;
         }
 
-        double LessThanOrEqualCondition::delta(int v1, int v2, bool negated) const {
+        uint32_t LessThanOrEqualCondition::delta(int v1, int v2, bool negated) const {
             if (!negated)
                 return v1 <= v2 ? 0 : v1 - v2;
             else
                 return v1 > v2 ? 0 : v2 - v1 + 1;
         }
 
-        double GreaterThanCondition::delta(int v1, int v2, bool negated) const {
+        uint32_t GreaterThanCondition::delta(int v1, int v2, bool negated) const {
             if (!negated)
                 return v1 > v2 ? 0 : v2 - v1 + 1;
             else
                 return v1 <= v2 ? 0 : v1 - v2;
         }
 
-        double GreaterThanOrEqualCondition::delta(int v1, int v2, bool negated) const {
+        uint32_t GreaterThanOrEqualCondition::delta(int v1, int v2, bool negated) const {
             if (!negated)
                 return v1 >= v2 ? 0 : v2 - v1;
             else

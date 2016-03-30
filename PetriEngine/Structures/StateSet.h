@@ -97,7 +97,7 @@ namespace PetriEngine {
                 }
             }
             
-            bool add(State* state) {
+            std::pair<bool, size_t> add(State* state) {
                 _discovered++;
 
 #ifdef DEBUG
@@ -116,7 +116,7 @@ namespace PetriEngine {
 
                 //Check that we're within k-bound
                 if (_kbound != 0 && sum > _kbound)
-                    return false;
+                    return std::pair<bool, size_t>(false, std::numeric_limits<size_t>::max());
                     
                 unsigned char type = _encoder.getType(sum, active, allsame, val);
 
@@ -129,7 +129,7 @@ namespace PetriEngine {
                 
                 if(!tit.first)
                 {
-                    return false;
+                    return std::pair<bool, size_t>(false, std::numeric_limits<size_t>::max());
                 }
                 
 #ifdef DEBUG
@@ -148,7 +148,7 @@ namespace PetriEngine {
 #ifdef DEBUG    
                 if(_trie.size() % 100000 == 0) std::cout << "Inserted " << _trie.size() << std::endl;
 #endif     
-                return true;
+                return std::pair<bool, size_t>(true, _trie.size() - 1);
             }
 
             size_t discovered() const {

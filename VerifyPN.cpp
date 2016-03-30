@@ -91,22 +91,19 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                                 fprintf(stderr, "Missing search strategy after \"%s\"\n\n", argv[i]);
 				return ErrorCode;                           
                         }
-                        ++i;
-//                        char* s = argv[++i];
-/*			if(strcmp(s, "BestFS") == 0)
-				searchstrategy = BestFS;
+                        char* s = argv[++i];
+			if(strcmp(s, "BestFS") == 0)
+				options.strategy = HEUR;
 			else if(strcmp(s, "BFS") == 0)
-				searchstrategy = BFS;
+				options.strategy = BFS;
 			else if(strcmp(s, "DFS") == 0)
-				searchstrategy = DFS;
-			else if(strcmp(s, "RDFS") == 0)
-				searchstrategy = RDFS;
+				options.strategy = DFS;
 			else if(strcmp(s, "OverApprox") == 0)
-				searchstrategy = OverApprox;
+				options.strategy = APPROX;
 			else{
 				fprintf(stderr, "Argument Error: Unrecognized search strategy \"%s\"\n", s);
 				return ErrorCode;
-			}*/
+			}
 		} else if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--memory-limit") == 0) {
 			if (i == argc - 1) {
 				fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -379,7 +376,7 @@ int main(int argc, char* argv[]) {
             if(results[i] == ResultPrinter::Unknown) alldone = false;
         }
         delete net;
-        delete[] m0;
+        delete[] m0;        
     }
     
     if(alldone) return SuccessCode;
@@ -394,7 +391,7 @@ int main(int argc, char* argv[]) {
     //----------------------- Reachability -----------------------//
 
     //Create reachability search strategy
-    ReachabilitySearch strategy(printer, options.kbound);
+    ReachabilitySearch strategy(printer, options.kbound, options.strategy);
 
     PetriNet* net = builder.makePetriNet();
     MarkVal* m0 = net->makeInitialMarking();  

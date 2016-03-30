@@ -139,7 +139,7 @@ namespace PetriEngine {
             /** Export condition to TAPAAL query (add EF manually!) */
             virtual std::string toTAPAALQuery(TAPAALConditionExportContext& context) const = 0;
             /** Get distance to query */
-            virtual double distance(DistanceContext& context) const = 0;
+            virtual uint32_t distance(DistanceContext& context) const = 0;
             /** Scale all nested literals by factor */
             virtual void scale(int factor) = 0;
             

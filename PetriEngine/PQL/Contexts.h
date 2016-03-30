@@ -27,7 +27,6 @@
 
 #include "../PetriNet.h"
 #include "PQL.h"
-#include "../Structures/DistanceMatrix.h"
 #include "../Structures/StateConstraints.h"
 
 
@@ -106,34 +105,12 @@ namespace PetriEngine {
         class DistanceContext : public EvaluationContext {
         public:
 
-            /** Strategy flags for distance computation */
-            enum DistanceStrategy {
-                AndExtreme = 1 << 0,
-                AndAverage = 1 << 1,
-                AndSum = 1 << 2,
-                OrExtreme = 1 << 3,
-                OrAverage = 1 << 4,
-                ArcCount = 1 << 5,
-                TokenCost = 1 << 6
-            };
-
-            DistanceContext(const PetriNet& net,
-                    DistanceStrategy strategy,
-                    const MarkVal* marking,
-                    Structures::DistanceMatrix* dm)
-            : EvaluationContext(marking, &net), _net(net) {
-                _strategy = strategy;
+            DistanceContext(const PetriNet* net,
+                    const MarkVal* marking)
+            : EvaluationContext(marking, net) {
                 _negated = false;
-                _dm = dm;
             }
 
-            DistanceStrategy strategy() const {
-                return _strategy;
-            }
-
-            const PetriNet& net() const {
-                return _net;
-            }
 
             void negate() {
                 _negated = !_negated;
@@ -143,14 +120,8 @@ namespace PetriEngine {
                 return _negated;
             }
 
-            const Structures::DistanceMatrix* distanceMatrix() const {
-                return _dm;
-            }
         private:
-            const PetriNet& _net;
-            DistanceStrategy _strategy;
             bool _negated;
-            Structures::DistanceMatrix* _dm;
         };
 
         /** Constraint Analysis Context used for over-approximation */

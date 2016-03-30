@@ -3,6 +3,8 @@
 #include <ctype.h>
 #include <stddef.h>
 #include <limits>
+#include "Reachability/ReachabilitySearch.h"
+
 
 struct options_t {
 //    bool outputtrace = false;
@@ -15,6 +17,7 @@ struct options_t {
     bool printstatistics = true;
     size_t memorylimit = 2048;
     size_t querynumber = std::numeric_limits<size_t>::max();
+    PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
 };
 
 #endif

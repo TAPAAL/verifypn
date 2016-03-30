@@ -44,9 +44,7 @@ namespace PetriEngine {
             State* working = new State();
             state->setMarking(net.makeInitialMarking());
             working->setMarking(net.makeInitialMarking());
-            states->add(state);
-
-
+            
             enabledTransitionsCount.resize(net.numberOfTransitions(), 0);
 
             bool usequeries = false;
@@ -67,17 +65,26 @@ namespace PetriEngine {
                             alldone = false;
                         }
                     }
+                    if( i == _heurquery &&
+                        results[i] != ResultPrinter::Unknown) ++_heurquery;
                 }
                 if(alldone) return;
             }
+            
+            if(!usequeries) _strategy = BFS;
 
-            while (states->nextWaiting(state)) {
+            auto r = states->add(state);
+            if(r.first) pushOnQueue(r.second, state, queries[_heurquery].get(), &net);
+            
+            while (nextWaiting(state)) {
 
                 net.reset(state);
 
                 while(net.next(working)){
                     enabledTransitionsCount[net.fireing()]++;
-                    if (states->add(working)) {
+                    auto res = states->add(working);
+                    if (res.first) {
+                        pushOnQueue(res.second, working, queries[_heurquery].get(), &net);
                         exploredStates++;
                         if (usequeries) {
                             bool alldone = true;
@@ -95,6 +102,8 @@ namespace PetriEngine {
                                         alldone = false;
                                     }
                                 }
+                                if( i == _heurquery &&
+                                    results[i] != ResultPrinter::Unknown) ++_heurquery;
                             }  
                             if(alldone) return;
                         }
@@ -136,6 +145,45 @@ namespace PetriEngine {
                 std::cout << "<" << net.placeNames()[i] << ";" << states->maxPlaceBound()[i] << ">";
             }
             std::cout << std::endl << std::endl;
+        }
+        
+        bool ReachabilitySearch::nextWaiting(Structures::State* state)
+        {
+            switch(_strategy)
+            {
+                case DFS:
+                case HEUR:
+                {
+                    if(_queue.empty()) return false;
+                    auto it = _queue.top();
+                    _queue.pop();
+                    states->decode(state, it.item);
+                    return true;
+                }           
+                default:
+                    return states->nextWaiting(state);
+            }
+        }
+        
+        void ReachabilitySearch::pushOnQueue(size_t index, Structures::State* state, PQL::Condition* query,
+                PetriNet* net)
+        {
+            switch(_strategy)
+            {
+                case DFS:
+                    _queue.emplace(index, index);
+                    return;
+                case HEUR:
+                    {
+                        DistanceContext context(net, state->marking());
+                        // invert result, highest numbers are on top!
+                        size_t dist = std::numeric_limits<size_t>::max() - query->distance(context);
+                        _queue.emplace(dist, index);
+                        return;
+                    }
+                default:
+                    ; // nothing
+            }
         }
         
         void ReachabilitySearch::reachable(
