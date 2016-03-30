@@ -28,8 +28,6 @@ namespace PetriEngine {
     class PetriNetBuilder;
     namespace Reachability {
 
-        // Big int used for state space statistics
-        typedef unsigned long long int BigInt;
         /** Result of a reachability search */
 
         class ResultPrinter {
@@ -56,13 +54,12 @@ namespace PetriEngine {
                 size_t index,
                 PQL::Condition* query, 
                 ResultPrinter::Result result = Unknown,
-                const std::string& explanation = "",
-                BigInt expandedStates = 0,
-                BigInt exploredStates = 0,
-                BigInt discoveredStates = 0,
-                const std::vector<BigInt> enabledTransitionsCount = std::vector<BigInt>(),
+                size_t expandedStates = 0,
+                size_t exploredStates = 0,
+                size_t discoveredStates = 0,
+                const std::vector<size_t> enabledTransitionsCount = std::vector<size_t>(),
                 int maxTokens = 0,
-                const std::vector<unsigned int> maxPlaceBound = std::vector<unsigned int>());
+                const std::vector<uint32_t> maxPlaceBound = std::vector<uint32_t>());
 
         };
     } // Reachability

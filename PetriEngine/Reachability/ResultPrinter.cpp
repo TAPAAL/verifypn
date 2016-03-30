@@ -9,13 +9,12 @@ namespace PetriEngine {
                 size_t index,
                 PQL::Condition* query, 
                 ResultPrinter::Result result,
-                const std::string& explanation,
-                BigInt expandedStates,
-                BigInt exploredStates,
-                BigInt discoveredStates,
-                const std::vector<BigInt> enabledTransitionsCount,
+                size_t expandedStates,
+                size_t exploredStates,
+                size_t discoveredStates,
+                const std::vector<size_t> enabledTransitionsCount,
                 int maxTokens,
-                const std::vector<unsigned int> maxPlaceBound )
+                const std::vector<uint32_t> maxPlaceBound )
         {
             if(result == Unknown) return Unknown;
             Result retval = result;
@@ -26,9 +25,9 @@ namespace PetriEngine {
             }
             else {
                 retval = Satisfied;
-                unsigned int placeBound = 0;
+                uint32_t placeBound = 0;
                 for (size_t p = 0; p < maxPlaceBound.size(); p++) {
-                    placeBound = std::max<unsigned int>(placeBound, maxPlaceBound[p]);
+                    placeBound = std::max<uint32_t>(placeBound, maxPlaceBound[p]);
                 }
                 // fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
                 std::cout   << "STATE_SPACE STATES "<< exploredStates <<" TECHNIQUES EXPLICIT\n" 

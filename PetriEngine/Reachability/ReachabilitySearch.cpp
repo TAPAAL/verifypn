@@ -20,6 +20,7 @@
 #include "../PQL/PQL.h"
 #include "../PQL/Contexts.h"
 #include "../Structures/StateSet.h"
+#include "PetriEngine/SuccessorGenerator.h"
 
 #include <list>
 #include <string.h>
@@ -31,154 +32,169 @@ namespace PetriEngine {
     namespace Reachability {
 
         void ReachabilitySearch::tryReach(
-            PetriNet &net,
-            const MarkVal *m0,
             std::vector<std::shared_ptr<PQL::Condition > >& queries,
-            size_t memorylimit,
-            std::vector<ResultPrinter::Result>& results)
+            std::vector<ResultPrinter::Result>& results,
+            Strategy strategy,
+            bool statespacesearch,
+            bool printstats)
         {
-                        //Create StateSet
-            states = new StateSet(net, _kbound, memorylimit);
 
-            State* state = new State();
-            State* working = new State();
-            state->setMarking(net.makeInitialMarking());
-            working->setMarking(net.makeInitialMarking());
+            // set up state
+            searchstate_t ss;
+            ss.enabledTransitionsCount.resize(_net.numberOfTransitions(), 0);
+            ss.expandedStates = 0;
+            ss.exploredStates = 1;
+            ss.heurquery = 0;
+            ss.strategy = strategy;
+            ss.usequeries = !statespacesearch;
             
-            enabledTransitionsCount.resize(net.numberOfTransitions(), 0);
-
-            bool usequeries = false;
-            {
-                bool alldone = true;
-                for(size_t i = 0; i < queries.size(); ++i)
-                {
-                    if(results[i] == ResultPrinter::Unknown)
-                    {
-                        usequeries |= queries[i]->placeNameForBound().empty();
-                        if(queries[i]->evaluate(*state, &net))
-                        {
-                            results[i] = printer.printResult(i, queries[i].get(), ResultPrinter::Satisfied, "Query was satisfied in the initial marking",
-                                expandedStates, exploredStates, states->discovered(), enabledTransitionsCount, states->maxTokens(), states->maxPlaceBound());
-                        }
-                        else
-                        {
-                            alldone = false;
-                        }
-                    }
-                    if( i == _heurquery &&
-                        results[i] != ResultPrinter::Unknown) ++_heurquery;
-                }
-                if(alldone) return;
-            }
+            // set up working area
+            State state;
+            State working;
+            state.setMarking(_net.makeInitialMarking());
+            working.setMarking(_net.makeInitialMarking());
+            SuccessorGenerator generator(_net);
             
-            if(!usequeries) _strategy = BFS;
-
-            auto r = states->add(state);
-            if(r.first) pushOnQueue(r.second, state, queries[_heurquery].get(), &net);
+            // check initial marking
+            if(statespacesearch) checkQueries(queries, results, working, ss);
             
-            while (nextWaiting(state)) {
+            // if we are searching for bounds
+            if(!ss.usequeries) ss.strategy = BFS;
 
-                net.reset(state);
+            // add initial
+            auto r = states.add(&state);
+            if(r.first) pushOnQueue(r.second, state, queries[ss.heurquery], ss);
+            
+            // Search!
+            while (nextWaiting(state, ss)) {
 
-                while(net.next(working)){
-                    enabledTransitionsCount[net.fireing()]++;
-                    auto res = states->add(working);
+                generator.reset(&state);
+
+                while(generator.next(&working)){
+                    ss.enabledTransitionsCount[generator.fired()]++;
+                    auto res = states.add(&working);
                     if (res.first) {
-                        pushOnQueue(res.second, working, queries[_heurquery].get(), &net);
-                        exploredStates++;
-                        if (usequeries) {
-                            bool alldone = true;
-                            for(size_t i = 0; i < queries.size(); ++i)
-                            {
-                                if(results[i] == ResultPrinter::Unknown)
-                                {
-                                    if(queries[i]->evaluate(*working, &net))
-                                    {
-                                        results[i] = printer.printResult(i, queries[i].get(), ResultPrinter::Satisfied, "A state satisfying the query was found.",
-                                            expandedStates, exploredStates, states->discovered(), enabledTransitionsCount, states->maxTokens(), states->maxPlaceBound());                    
-                                    }
-                                    else
-                                    {
-                                        alldone = false;
-                                    }
-                                }
-                                if( i == _heurquery &&
-                                    results[i] != ResultPrinter::Unknown) ++_heurquery;
-                            }  
-                            if(alldone) return;
+                        pushOnQueue(res.second, working, queries[ss.heurquery], ss);
+                        ss.exploredStates++;
+                        if (checkQueries(queries, results, working, ss)) {
+                            delete[] state.marking();
+                            delete[] working.marking();         
+                            if(printstats) printStats(ss);
+                            return;
                         }
                     }
                 }
-                expandedStates++;
+                ss.expandedStates++;
             }
             
+            // no more successors, print last results
             for(size_t i= 0; i < queries.size(); ++i)
             {
                 if(results[i] == ResultPrinter::Unknown)
                 {
-                    results[i] = printer.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied, "No state satisfying the query exists.",
-                        expandedStates, exploredStates, states->discovered(), enabledTransitionsCount, states->maxTokens(), states->maxPlaceBound());                    
+                    results[i] = printQuery(queries[i], i, ResultPrinter::NotSatisfied, ss);                    
                 }
             }            
+            
+            delete[] state.marking();
+            delete[] working.marking();
+            
+            if(printstats) printStats(ss);
         }
         
-        void ReachabilitySearch::printStats(PetriNet &net)
+        bool ReachabilitySearch::checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >& queries,
+                                                std::vector<ResultPrinter::Result>& results,
+                                                State& state,
+                                                searchstate_t& ss)
+        {
+            if(!ss.usequeries) return false;
+            
+            bool alldone = true;
+            for(size_t i = 0; i < queries.size(); ++i)
+            {
+                if(results[i] == ResultPrinter::Unknown)
+                {
+                    ss.usequeries &= !queries[i]->placeNameForBound().empty();
+                    if(queries[i]->evaluate(state, &_net))
+                    {
+                        results[i] = printQuery(queries[i], i, ResultPrinter::Satisfied, ss);                    
+                    }
+                    else
+                    {
+                        alldone = false;
+                    }
+                }
+                if( i == ss.heurquery &&
+                    results[i] != ResultPrinter::Unknown) ++ss.heurquery;
+            }  
+            return alldone;
+        }
+        
+        ResultPrinter::Result ReachabilitySearch::printQuery(std::shared_ptr<PQL::Condition>& query, size_t i,  ResultPrinter::Result r,
+                                                                searchstate_t& ss)
+        {
+            return printer.printResult(i, query.get(), r,
+                            ss.expandedStates, ss.exploredStates, states.discovered(),
+                            ss.enabledTransitionsCount, states.maxTokens(), 
+                            states.maxPlaceBound());  
+        }
+        
+        void ReachabilitySearch::printStats(searchstate_t& ss)
         {
             std::cout   << "STATS:\n"
-                        << "\tdiscovered states: " << states->discovered() << std::endl
-                        << "\texplored states:   " << exploredStates << std::endl
-                        << "\texpanded states:   " << expandedStates << std::endl
-                        << "\tmax tokens:        " << states->maxTokens() << std::endl;
+                        << "\tdiscovered states: " << states.discovered() << std::endl
+                        << "\texplored states:   " << ss.exploredStates << std::endl
+                        << "\texpanded states:   " << ss.expandedStates << std::endl
+                        << "\tmax tokens:        " << states.maxTokens() << std::endl;
             
             
             std::cout << "\nTRANSITION STATISTICS\n";
-            for (size_t i = 0; i < net.transitionNames().size(); ++i) {
+            for (size_t i = 0; i < _net.transitionNames().size(); ++i) {
                 // report how many times transitions were enabled (? means that the transition was removed in net reduction)
-                std::cout << "<" << net.transitionNames()[i] << ";" 
-                        << enabledTransitionsCount[i] << ">";
+                std::cout << "<" << _net.transitionNames()[i] << ";" 
+                        << ss.enabledTransitionsCount[i] << ">";
                 
             }
             std::cout << "\n\nPLACE-BOUND STATISTICS\n";
-            for (size_t i = 0; i < net.placeNames().size(); ++i) 
+            for (size_t i = 0; i < _net.placeNames().size(); ++i) 
             {
                 // report maximum bounds for each place (? means that the place was removed in net reduction)
-                std::cout << "<" << net.placeNames()[i] << ";" << states->maxPlaceBound()[i] << ">";
+                std::cout << "<" << _net.placeNames()[i] << ";" << states.maxPlaceBound()[i] << ">";
             }
             std::cout << std::endl << std::endl;
         }
         
-        bool ReachabilitySearch::nextWaiting(Structures::State* state)
+        bool ReachabilitySearch::nextWaiting(Structures::State& state, searchstate_t& ss)
         {
-            switch(_strategy)
+            switch(ss.strategy)
             {
                 case DFS:
                 case HEUR:
                 {
-                    if(_queue.empty()) return false;
-                    auto it = _queue.top();
-                    _queue.pop();
-                    states->decode(state, it.item);
+                    if(ss.queue.empty()) return false;
+                    auto it = ss.queue.top();
+                    ss.queue.pop();
+                    states.decode(&state, it.item);
                     return true;
                 }           
                 default:
-                    return states->nextWaiting(state);
+                    return states.nextWaiting(&state);
             }
         }
         
-        void ReachabilitySearch::pushOnQueue(size_t index, Structures::State* state, PQL::Condition* query,
-                PetriNet* net)
+        void ReachabilitySearch::pushOnQueue(size_t index, Structures::State& state, std::shared_ptr<PQL::Condition>& query, searchstate_t& ss)
         {
-            switch(_strategy)
+            switch(ss.strategy)
             {
                 case DFS:
-                    _queue.emplace(index, index);
+                    ss.queue.emplace(index, index);
                     return;
                 case HEUR:
                     {
-                        DistanceContext context(net, state->marking());
+                        DistanceContext context(&_net, state.marking());
                         // invert result, highest numbers are on top!
-                        size_t dist = std::numeric_limits<size_t>::max() - query->distance(context);
-                        _queue.emplace(dist, index);
+                        uint32_t dist = std::numeric_limits<uint32_t>::max() - query->distance(context);
+                        ss.queue.emplace(dist, index);
                         return;
                     }
                 default:
@@ -187,17 +203,14 @@ namespace PetriEngine {
         }
         
         void ReachabilitySearch::reachable(
-                    PetriNet &net,
-                    const MarkVal *m0,
                     std::vector<std::shared_ptr<PQL::Condition > >& queries,
-                    size_t memorylimit,
                     std::vector<ResultPrinter::Result>& results,
+                    Strategy strategy,
+                    bool statespacesearch,
                     bool printstats)
         {
 
-            tryReach(net, m0, queries, memorylimit, results);
-
-            if(printstats) printStats(net);
+            tryReach(queries, results, strategy, statespacesearch, printstats);
         }
     }
 }

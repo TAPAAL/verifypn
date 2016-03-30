@@ -390,19 +390,19 @@ int main(int argc, char* argv[]) {
 
     //----------------------- Reachability -----------------------//
 
-    //Create reachability search strategy
-    ReachabilitySearch strategy(printer, options.kbound, options.strategy);
-
     PetriNet* net = builder.makePetriNet();
-    MarkVal* m0 = net->makeInitialMarking();  
-    
+    //Create reachability search strategy
+    ReachabilitySearch strategy(printer, *net, options.kbound);
+
     // analyse context again to reindex query
     contextAnalysis(builder, queries);
     
     //Reachability search
-    strategy.reachable(*net, m0, queries, options.memorylimit, results, options.printstatistics);
+    strategy.reachable(queries, results, options.strategy, options.statespaceexploration, options.printstatistics);
 
     printStats(builder, options);
+    
+    delete net;
     
     return 0;
 }

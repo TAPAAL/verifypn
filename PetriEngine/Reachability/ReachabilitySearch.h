@@ -48,8 +48,8 @@ namespace PetriEngine {
         public:
             struct weighted_t {
                 uint32_t weight;
-                size_t item;
-                weighted_t(size_t w, size_t i) : weight(w), item(i) {};
+                uint32_t item;
+                weighted_t(uint32_t w, uint32_t i) : weight(w), item(i) {};
                 bool operator <(const weighted_t& y) const {
 //                    if(weight == y.weight) return item < y.item;// do dfs if they match
                     if(weight == y.weight) return item > y.item;// do bfs if they match
@@ -59,46 +59,52 @@ namespace PetriEngine {
             
             
             
-            ReachabilitySearch(ResultPrinter& printer, int kbound = 0, Strategy strategy = BFS)
-            : printer(printer) {
+            ReachabilitySearch(ResultPrinter& printer, PetriNet& net, int kbound = 0)
+            : printer(printer), states(net, kbound), _net(net) {
                 _kbound = kbound;
-                _strategy = strategy;
             }
             
             ~ReachabilitySearch()
             {
-                delete states;
             }
 
             /** Perform reachability check using BFS with hasing */
-            void reachable(PetriNet &net,
-                    const MarkVal *m0,
+            void reachable(                    
                     std::vector<std::shared_ptr<PQL::Condition > >& queries,
-                    size_t memorylimit,
                     std::vector<ResultPrinter::Result>& results,
-                    bool printstats = false);
+                    Strategy strategy,
+                    bool statespacesearch,
+                    bool printstats);
         private:
-            void tryReach(PetriNet &net,
-                const MarkVal *m0,
-                std::vector<std::shared_ptr<PQL::Condition > >& queries,
-                size_t memorylimit,
-                std::vector<ResultPrinter::Result>& results);
-            void printStats(PetriNet &net);
+            struct searchstate_t {
+                size_t expandedStates = 0;
+                size_t exploredStates = 1;
+                std::vector<size_t> enabledTransitionsCount;
+                Strategy strategy;
+                size_t heurquery = 0;
+                std::priority_queue<weighted_t> queue;
+                bool usequeries;
+            };
             
-            bool nextWaiting(Structures::State* state);
-            void pushOnQueue(   size_t id, Structures::State* state,
-                                PQL::Condition* query,
-                                PetriNet *net);
+            void tryReach(
+                std::vector<std::shared_ptr<PQL::Condition > >& queries,
+                std::vector<ResultPrinter::Result>& results,
+                Strategy strategy,
+                bool statespacesearch,
+                bool printstats);
+            void printStats(searchstate_t& s);
+            bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
+                                std::vector<ResultPrinter::Result>&,
+                                Structures::State&, searchstate_t& );
+            ResultPrinter::Result printQuery(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result, searchstate_t& );
+            bool nextWaiting(Structures::State& state, searchstate_t& );
+            void pushOnQueue(   size_t id, Structures::State& state,
+                                std::shared_ptr<PQL::Condition>& query, searchstate_t& );
             
 
             int _kbound;
-            BigInt expandedStates = 0;
-            BigInt exploredStates = 1;
-            Structures::StateSet* states = NULL;
-            std::vector<BigInt> enabledTransitionsCount;
-            Strategy _strategy;
-            std::priority_queue<weighted_t> _queue;
-            size_t _heurquery = 0;
+            Structures::StateSet states;
+            PetriNet& _net;
         };
 
     }

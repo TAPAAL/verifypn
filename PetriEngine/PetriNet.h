@@ -36,7 +36,8 @@ namespace PetriEngine {
     }
 
     class PetriNetBuilder;
-
+    class SuccessorGenerator;
+    
     struct TransPtr {
         uint32_t inputs;
         uint32_t outputs;
@@ -49,7 +50,6 @@ namespace PetriEngine {
     
     /** Type used for holding markings values */
     typedef uint32_t MarkVal;
-#define MARK_INF     INT_MAX
 
     /** Efficient representation of PetriNet */
     class PetriNet {
@@ -60,13 +60,7 @@ namespace PetriEngine {
         MarkVal* makeInitialMarking();
         /** Fire transition if possible and store result in result */
         bool deadlocked(const MarkVal* marking) const;
-        bool next(Structures::State* write);
-        uint32_t fireing()
-        {
-            return _suc_tcounter -1;
-        }
-        void reset(const Structures::State* p);
-
+        
         uint32_t numberOfTransitions() const {
             return _ntransitions;
         }
@@ -112,15 +106,12 @@ namespace PetriEngine {
         std::vector<uint32_t> _placeToPtrs;
         MarkVal* _initialMarking;
         
-        const Structures::State* parent;
-        uint32_t _suc_pcounter;
-        uint32_t _suc_tcounter;
-        
         std::vector<std::string> _transitionnames;
         std::vector<std::string> _placenames;
         
         friend class PetriNetBuilder;
         friend class Reducer;
+        friend class SuccessorGenerator;
     };
 
 } // PetriEngine

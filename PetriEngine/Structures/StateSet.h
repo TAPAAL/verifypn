@@ -40,7 +40,7 @@ namespace PetriEngine {
 
         public:
 
-            StateSet(const PetriNet& net, uint32_t kbound, size_t memorylimit) 
+            StateSet(const PetriNet& net, uint32_t kbound) 
             : _encoder(net.numberOfPlaces(), kbound) {
                 _discovered = 0;
                 _kbound = kbound;

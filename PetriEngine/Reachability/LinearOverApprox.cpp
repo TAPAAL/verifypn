@@ -42,8 +42,7 @@ namespace PetriEngine {
                 }
 
                 if (isImpossible) {
-                    return printer.printResult(index, query, ResultPrinter::NotSatisfied,
-                            "Query proved not satisfiable by over-approximation");
+                    return printer.printResult(index, query, ResultPrinter::NotSatisfied);
                 }
             }
 
@@ -54,12 +53,10 @@ namespace PetriEngine {
 
             // If there's complex expression we can't do anything
             if (!context.canAnalyze) {
-                return printer.printResult(index, query, ResultPrinter::Unknown,
-                        "Expressions are too complex for constraint analysis");
+                return printer.printResult(index, query, ResultPrinter::Unknown);
             }
 
-            return printer.printResult(index, query, ResultPrinter::Unknown,
-                    "Couldn't exclude query by over-approximation");
+            return printer.printResult(index, query, ResultPrinter::Unknown);
         }
 
     } // Reachability
