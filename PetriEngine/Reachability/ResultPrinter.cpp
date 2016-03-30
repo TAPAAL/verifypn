@@ -62,16 +62,20 @@ namespace PetriEngine {
             } else if (retval == NotSatisfied) {
                 if (!query->placeNameForBound().empty()) {
                     // find index of the place for reporting place bound
-                    uint32_t p = builder->getPlaceNames().at(query->placeNameForBound());
-                    std::cout << maxPlaceBound[p] << " TECHNIQUES EXPLICIT ";
+                    for(auto& p : query->placeNameForBound())
+                    {
+                        uint32_t pi = builder->getPlaceNames().at(p);
+                        std::cout << maxPlaceBound[pi] << " ";
+                    }
+                    std::cout <<  "TECHNIQUES EXPLICIT ";
                     
                     if(options->enablereduction > 0)
                     {
                         std::cout << "STRUCTURAL_REDUCTION";
                     }
-                    std::cout << "\n\nMaximum number of tokens in place "<<
+/*                    std::cout << "\n\nMaximum number of tokens in place "<<
                             query->placeNameForBound() << ": " <<
-                            maxPlaceBound[p] << "\n\n"; 
+                            maxPlaceBound[p] << "\n\n"; */
                 } else {
                     if(!options->statespaceexploration)
                     {

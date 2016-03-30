@@ -21,13 +21,14 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 namespace PetriEngine {
     namespace PQL {
 
         class Condition;
 
-        std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool isinvariant, std::string placenameforbound);
+        std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool isinvariant, std::vector<std::string>& placenameforbound);
     }
 }
 #endif // PQLPARSER_H

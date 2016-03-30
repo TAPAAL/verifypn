@@ -1909,7 +1909,7 @@ void pqlqfree (void * ptr )
 
 
 namespace PetriEngine{ namespace PQL {
-std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool isInvariant, std::string placenameforbound) {
+std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool isInvariant, std::vector<std::string>& placenameforbound) {
 	//Load up input buffer in Flex
 	YY_BUFFER_STATE buf = pqlq_scan_string(queryString.c_str());
 

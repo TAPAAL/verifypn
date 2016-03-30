@@ -267,7 +267,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
             isInvariant = q.negateResult;
 
 
-            conditions.push_back(ParseQuery(querystring, isInvariant, q.placeNameForBound));
+            conditions.push_back(ParseQuery(querystring, isInvariant, q.boundNames));
             if (conditions.back() == NULL) {
                 fprintf(stderr, "Error: Failed to parse query \"%s\"\n", querystring.c_str()); //querystr.substr(2).c_str());
                 fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
@@ -279,7 +279,8 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
         return conditions;
     } else { // state-space exploration
         querystring = "false";
-        conditions.push_back(ParseQuery(querystring, false, ""));
+        std::vector<std::string> empty;
+        conditions.push_back(ParseQuery(querystring, false, empty));
         return conditions;
     }
 

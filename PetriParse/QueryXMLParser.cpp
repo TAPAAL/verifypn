@@ -72,8 +72,6 @@ bool QueryXMLParser::parseProperty(DOMElement* element) {
     string id;
     string queryText;
     bool negateResult = false;
-    bool isPlaceBound = false;
-    string placeNameForBound;
     bool tagsOK = true;
 
     DOMElements elements = element->getChilds();
@@ -96,17 +94,13 @@ bool QueryXMLParser::parseProperty(DOMElement* element) {
 
     QueryItem queryItem;
     queryItem.id = id;
-    if (tagsOK && parseFormula(*formulaPtr, queryText, negateResult, isPlaceBound, placeNameForBound)) {
+    if (tagsOK && parseFormula(*formulaPtr, queryText, negateResult, queryItem.boundNames)) {
         queryItem.queryText = queryText;
         queryItem.negateResult = negateResult;
-        queryItem.isPlaceBound = isPlaceBound;
-        queryItem.placeNameForBound = placeNameForBound;
         queryItem.parsingResult = QueryItem::PARSING_OK;
     } else {
         queryItem.queryText = "";
         queryItem.negateResult = false;
-        queryItem.isPlaceBound = false;
-        queryItem.placeNameForBound = "";
         queryItem.parsingResult = QueryItem::UNSUPPORTED_QUERY;
     }
     queries.push_back(queryItem);
@@ -125,7 +119,8 @@ bool QueryXMLParser::parseTags(DOMElement* element) {
     return true;
 }
 
-bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &negateResult, bool &isPlaceBound, string &placeNameForBound) {
+bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &negateResult,
+        std::vector<string> &placeBounds) {
     /*
      Describe here how to parse
      * INV phi =  AG phi =  not EF not phi
@@ -196,21 +191,20 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
             return false;
         }
     } else if (elementName == "place-bound") {
-        queryText = "EF ";
+        queryText = "EF true ";
         DOMElements children = booleanFormula->getChilds();
-        if (children.size() != 1) {
-            return false; // we support only place-bound for one place
+        for(size_t i = 0; i < children.size(); ++i)
+        {
+            if (children[0]->getElementName() != "place") {
+                return false;
+            }
+            placeBounds.push_back(parsePlace(children[0]));
+            if (placeBounds.back() == "") {
+                return false; // invalid place name
+            }
+            queryText += " and \"" + placeBounds.back() + "\"" + " < 0";
         }
-        if (children[0]->getElementName() != "place") {
-            return false;
-        }
-        placeNameForBound = parsePlace(children[0]);
-        if (placeNameForBound == "") {
-            return false; // invalid place name
-        }
-        queryText += "\"" + placeNameForBound + "\"" + " < 0";
         negateResult = false;
-        isPlaceBound = true;
         return true;
     } else {
         return false;
@@ -220,8 +214,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
         return false;
     }
     queryText += " )";
-    isPlaceBound = false;
-    placeNameForBound = "";
+    placeBounds.clear();
     return true;
 }
 
@@ -477,7 +470,7 @@ void QueryXMLParser::printQueries(size_t i) {
         return;
     }
     QueryItem it = queries[i - 1];
-    cout << it.id << ": " << (it.isPlaceBound ? "\tplace-bound " : "");
+    cout << it.id << ": " << (it.boundNames.size() > 0 ? "\tplace-bound " : "");
     if (it.parsingResult == QueryItem::UNSUPPORTED_QUERY) {
         cout << "\t---------- unsupported query ----------" << endl;
     } else {

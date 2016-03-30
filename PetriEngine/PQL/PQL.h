@@ -120,7 +120,7 @@ namespace PetriEngine {
         /** Base condition */
         class Condition {
             bool _inv;
-            std::string _placenameforbound;
+            std::vector<std::string> _placenameforbound;
         public:
             /** Virtual destructor */
             virtual ~Condition();
@@ -153,12 +153,12 @@ namespace PetriEngine {
                 return _inv;
             }
             
-            void setPlaceNameForBounds(std::string b)
+            void setPlaceNameForBounds(std::vector<std::string>& b)
             {
                 _placenameforbound  = b;
             }
             
-            std::string placeNameForBound(){
+            std::vector<std::string>& placeNameForBound(){
                 return _placenameforbound;
             }
         };
