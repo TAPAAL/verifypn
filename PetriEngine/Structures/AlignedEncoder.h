@@ -17,7 +17,7 @@ using namespace ptrie;
 
 class AlignedEncoder
 {
-    typedef binarywrapper_t<uint32_t> scratchpad_t;
+    typedef binarywrapper_t scratchpad_t;
     public:
         AlignedEncoder(uint32_t places, uint32_t k);
 
@@ -25,9 +25,9 @@ class AlignedEncoder
 
         size_t encode(const uint32_t* data, unsigned char type);
 
-        void decode(uint32_t* destination, const unsigned char* source, unsigned char type);
+        void decode(uint32_t* destination, const unsigned char* source);
      
-        binarywrapper_t<uint32_t>& scratchpad()
+        binarywrapper_t& scratchpad()
         {
             return _scratchpad;
         }

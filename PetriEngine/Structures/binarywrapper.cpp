@@ -5,11 +5,10 @@
  * Created on 10 June 2015, 19:20
  */
 
-
 #include "binarywrapper.h"
-
-namespace ptrie {
-     const uchar binarywrapper_t::_masks[8] = {
+namespace ptrie
+{
+    const uchar binarywrapper_t::_masks[8] = {
         static_cast <uchar>(0x01),
         static_cast <uchar>(0x02),
         static_cast <uchar>(0x04),
@@ -29,18 +28,22 @@ namespace ptrie {
             return 8 - size; 
     }
     
+    
     size_t binarywrapper_t::bytes(uint size)
     {
         return (size + overhead(size))/8;
     }
+    
     
     binarywrapper_t::~binarywrapper_t()
     {
         
     }
     
+    
     binarywrapper_t::binarywrapper_t()
     {}
+    
     
     binarywrapper_t::binarywrapper_t(uint size)
     {
@@ -48,6 +51,7 @@ namespace ptrie {
         _blob = new uchar[_nbytes];
         memset(_blob, 0x0, _nbytes);
     }
+    
     
     binarywrapper_t::binarywrapper_t(const binarywrapper_t& other, uint offset)
     {
@@ -64,6 +68,44 @@ namespace ptrie {
         memcpy(_blob, &(other._blob[offset]), _nbytes);
     }
     
+    
+    binarywrapper_t::binarywrapper_t(
+        const binarywrapper_t& other, uint size, uint offset, uint encodingsize,
+            pdalloc::pool_dynamic_allocator<unsigned char>& alloc)
+    {
+        uint so = size + offset;
+        offset = ((so - 1) / 8) - ((size - 1) / 8);
+
+        _nbytes = ((encodingsize + this->overhead(encodingsize)) / 8);
+        if (_nbytes > offset)
+            _nbytes -= offset;
+        else {
+            _nbytes = 0;
+        }
+
+        _blob = alloc.allocate(_nbytes);
+        memcpy(_blob, &(other._blob[offset]), _nbytes);
+    }
+    
+    
+    binarywrapper_t::binarywrapper_t
+        (uchar* raw, uint size, uint offset, uint encodingsize)
+    {
+        
+        uint so = size + offset;
+        offset = ((so - 1) / 8) - ((size - 1) / 8);
+
+        _nbytes = ((encodingsize + this->overhead(encodingsize)) / 8);
+        if (_nbytes > offset)
+            _nbytes -= offset;
+        else {
+            _nbytes = 0;
+        }
+
+        _blob = &(raw[offset]);
+    }
+    
+    
     binarywrapper_t::binarywrapper_t(uchar* raw, uint size)
     {
         _blob = raw;
@@ -71,6 +113,7 @@ namespace ptrie {
     }
     
     // Copy and clones
+    
     binarywrapper_t binarywrapper_t::clone() const
     {
         binarywrapper_t s;
@@ -80,15 +123,15 @@ namespace ptrie {
         return s; 
     }
     
+    
     void binarywrapper_t::copy(const binarywrapper_t& other, uint offset)
     {
-        assert(offset / 8 + other._nbytes <= _nbytes);
         memcpy(&(_blob[offset / 8]), other._blob, other._nbytes);
     }
     
+    
     void binarywrapper_t::copy(const uchar* raw, uint size)
     {
-        assert(size <= _nbytes);
         if(size > 0)
         {
             _blob = new uchar[size];
@@ -97,6 +140,7 @@ namespace ptrie {
     }
         
     // accessors
+    
     bool binarywrapper_t::at(const uint place) const
     {
         uint offset = place % 8;
@@ -109,20 +153,24 @@ namespace ptrie {
         return res2;  
     }
     
+    
     uint binarywrapper_t::size() const
     {
         return _nbytes;
     }
     
-    uchar*& binarywrapper_t::raw()
+    
+    uchar* binarywrapper_t::raw()
     {
         return _blob; 
     }
-
+    
+    
     uchar* binarywrapper_t::const_raw() const
     {
         return _blob; 
     }
+    
     
     void binarywrapper_t::print() const
     {
@@ -130,9 +178,8 @@ namespace ptrie {
                 std::cout << this->at(i);
             std::cout << std::endl;
     }
-    
-    
-    void binarywrapper_t::pop_front(unsigned short int topop)
+        
+    void binarywrapper_t::pop_front(unsigned short int topop, pdalloc::pool_dynamic_allocator<unsigned char>& alloc)
     {
         if(_nbytes == 0) return;  // Special case, nothing to do!
         unsigned short int nbytes;
@@ -150,18 +197,19 @@ namespace ptrie {
         
         if(nbytes > 0)
         {
-            uchar* tmpblob = new uchar[nbytes];
+            uchar* tmpblob = alloc.allocate(nbytes);
             memcpy(tmpblob, &(_blob[topop]), (nbytes));
-            delete[] _blob;
+            alloc.deallocate(_blob, _nbytes);
             _blob = tmpblob;
         }
         else
         {
-            delete[] _blob;
+            alloc.deallocate(_blob, _nbytes);
             _blob = NULL;
         }
         _nbytes = nbytes;
     }
+    
     
     void binarywrapper_t::set(const uint place, const bool value) const
     {
@@ -175,6 +223,7 @@ namespace ptrie {
         }    
     }
     
+    
     void binarywrapper_t::zero() const
     {
         if(_nbytes > 0 && _blob != NULL)
@@ -183,14 +232,14 @@ namespace ptrie {
         }
     }
     
+    
     void binarywrapper_t::release()
     {
         delete[] _blob;
         _blob = NULL;
-        _nbytes = 0;
     }
     
-    uchar binarywrapper_t::operator[](size_t i)
+    uchar binarywrapper_t::operator[](int i)
     {
        if (i >= _nbytes) {
             return 0x0;

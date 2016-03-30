@@ -27,14 +27,16 @@
 #include "ptrie.h"
 #include "binarywrapper.h"
 
+
 namespace PetriEngine {
     namespace Structures {
 #define STATESET_BUCKETS 1000000
         class StateSet {
         private:
 
-            using ptrie_t = ptrie::ptrie_t<ptrie::binarywrapper_t<unsigned char>,unsigned char>;
-            using wrapper_t = ptrie::binarywrapper_t<unsigned char>;
+            using wrapper_t = ptrie::binarywrapper_t;
+            using ptrie_t = ptrie::ptrie_t<wrapper_t>;
+            
 
         public:
 
@@ -62,23 +64,30 @@ namespace PetriEngine {
                     std::cout << "\t type : " << i << " -> " << _encoderstats[i] << std::endl;
                 }
             }
-                       
-            bool nextWaiting(State* state)
+             
+            void decode(State* state, size_t id )
             {
-                if(_waiting < _trie.size())
-                {
-                    ptrie_t::pointer_t ptr = ptrie_t::pointer_t(&_trie, _waiting);
+                    ptrie_t::pointer_t ptr = ptrie_t::pointer_t(&_trie, id);
                     uint32_t bits = ptr.write_partial_encoding(_sp);
-                    uint32_t bytes = bits/ 8;
                     for(size_t i = 0; i < bits; ++i)
                         _encoder.scratchpad().set(i, _sp.at((bits-1) - i));
                     
                     memcpy( &_encoder.scratchpad().raw()[bits/8],
                             ptr.remainder().const_raw(), 
                             ptr.remainder().size());
-                    
-                    _encoder.decode(state->marking(), _encoder.scratchpad().raw(), ptr.get_meta());
 
+                    _encoder.decode(state->marking(), _encoder.scratchpad().raw());
+
+#ifdef DEBUG
+                    assert(memcmp(state->marking(), _dbg[id], sizeof(uint32_t)*_places) == 0);
+#endif
+            }
+            
+            bool nextWaiting(State* state)
+            {
+                if(_waiting < _trie.size())
+                {
+                    decode(state, _waiting);
                     ++_waiting;
                     return true;
                 }
@@ -108,20 +117,13 @@ namespace PetriEngine {
                 //Check that we're within k-bound
                 if (_kbound != 0 && sum > _kbound)
                     return false;
-    
-                uint32_t nfree;
-
-                
+                    
                 unsigned char type = _encoder.getType(sum, active, allsame, val);
-                type += 32* last;
 
-                size_t size;
-                const unsigned char* tomatch;
+
                 size_t length = _encoder.encode(state->marking(), type);
-                _encoder.scratchpad().raw()[length] = type;
-                ++ length;
+
                 wrapper_t w = wrapper_t(_encoder.scratchpad().raw(), length*8);
-                w.set_meta(type);
                 auto tit = _trie.insert(w);
             
                 
@@ -129,7 +131,12 @@ namespace PetriEngine {
                 {
                     return false;
                 }
-
+                
+#ifdef DEBUG
+                _dbg.push_back(new uint32_t[_places]);
+                memcpy(_dbg.back(), state->marking(), _places*sizeof(uint32_t));
+                decode(state, _trie.size() - 1);
+#endif
                 _encoderstats[type & 31] += 1;
            
                 // update the max token bound for each place in the net (only for newly discovered markings)
@@ -138,9 +145,9 @@ namespace PetriEngine {
                     _maxPlaceBound[i] = std::max<MarkVal>( state->marking()[i],
                                                             _maxPlaceBound[i]);
                 }
-                
+#ifdef DEBUG    
                 if(_trie.size() % 100000 == 0) std::cout << "Inserted " << _trie.size() << std::endl;
-                
+#endif     
                 return true;
             }
 
@@ -204,6 +211,9 @@ namespace PetriEngine {
             
             ptrie_t _trie;
             wrapper_t _sp;
+#ifdef DEBUG
+            std::vector<uint32_t*> _dbg;
+#endif
         };
 
     }

@@ -12,16 +12,16 @@
 
 namespace ptrie
 {
-    template<typename W, typename T>
+    template<typename W>
     class ptriepointer_t;
     
-    template<typename W, typename T>
+    template<typename W>
     class visitor_t
     {
     public:
         virtual bool back(int index) = 0;
         virtual bool set(int index, bool value) = 0;
-        virtual bool set_remainder(int index, ptriepointer_t<W,T> pointer) = 0;
+        virtual bool set_remainder(int index, ptriepointer_t<W> pointer) = 0;
     };
 }
 

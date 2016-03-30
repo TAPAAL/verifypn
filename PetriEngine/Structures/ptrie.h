@@ -28,72 +28,70 @@ namespace ptrie
     typedef uint32_t uint;
     typedef unsigned char uchar;
     
-    template<typename W, typename T>
+    template<typename W>
     class ptrie_t;
     
-    template<typename W, typename T>
+    template<typename W>
     class ptriepointer_t
     {
         typedef W encoding_t;
         public:
-            ptrie_t<W, T>* container;
+            ptrie_t<W>* container;
             uint index;
         public:
-            ptriepointer_t(ptrie_t<W, T>* container, uint i); 
-            T& get_meta() const;
-            void set_meta(T);
+            ptriepointer_t(ptrie_t<W>* container, uint i); 
             uint write_partial_encoding(encoding_t&) const;
             encoding_t& remainder() const;
             
             ptriepointer_t() : container(NULL), index(0) {};
             
-            ptriepointer_t<W, T>& operator=(const ptriepointer_t<W, T>&);
-            ptriepointer_t<W, T>& operator++();
-            ptriepointer_t<W, T>& operator--();
-            bool operator==(const ptriepointer_t<W, T>& other);
-            bool operator!=(const ptriepointer_t<W, T>& other);
+            ptriepointer_t<W>& operator=(const ptriepointer_t<W>&);
+            ptriepointer_t<W>& operator++();
+            ptriepointer_t<W>& operator--();
+            bool operator==(const ptriepointer_t<W>& other);
+            bool operator!=(const ptriepointer_t<W>& other);
             
     };
     
-    template<typename W, typename T>
-    ptriepointer_t<W, T>::ptriepointer_t(ptrie_t<W, T>* container, uint i) : 
+    template<typename W>
+    ptriepointer_t<W>::ptriepointer_t(ptrie_t<W>* container, uint i) : 
     container(container), index(i)
     {        
     }
     
-    template<typename W, typename T>
+    template<typename W>
 
-    ptriepointer_t<W, T>& ptriepointer_t<W, T>::operator=
-                                                (const ptriepointer_t<W, T>& other)
+    ptriepointer_t<W>& ptriepointer_t<W>::operator=
+                                                (const ptriepointer_t<W>& other)
     {
         container = other.container;
         index = other.index;
         return *this;
     }
     
-    template<typename W, typename T>
-    ptriepointer_t<W, T>& ptriepointer_t<W, T>::operator++()
+    template<typename W>
+    ptriepointer_t<W>& ptriepointer_t<W>::operator++()
     {
         ++index;
         assert(index <= container->_next_free_entry);
         return *this;
     }
     
-    template<typename W, typename T>
-    ptriepointer_t<W, T>& ptriepointer_t<W, T>::operator--()
+    template<typename W>
+    ptriepointer_t<W>& ptriepointer_t<W>::operator--()
     {
         --index;
         return *this;
     }
     
-    template<typename W, typename T>
-    bool ptriepointer_t<W, T>::operator==(const ptriepointer_t<W, T>& other)
+    template<typename W>
+    bool ptriepointer_t<W>::operator==(const ptriepointer_t<W>& other)
     {
         return other.container == container && other.index == index;
     }
     
-    template<typename W, typename T>
-    bool ptriepointer_t<W, T>::operator!=(const ptriepointer_t<W, T>& other)
+    template<typename W>
+    bool ptriepointer_t<W>::operator!=(const ptriepointer_t<W>& other)
     {
         return !(*this == other);
     }
@@ -110,34 +108,22 @@ namespace ptrie
         rhs.container = container;
     }*/
     
-    template<typename W, typename T>
-    T &ptriepointer_t<W, T>::get_meta() const
-    {
-        return container->get_entry(index)->_data.get_meta();
-    }
-    
-    template<typename W, typename T>
-    void ptriepointer_t<W, T>::set_meta(T val)
-    {
-        container->get_entry(index)->_data.set_meta(val);
-    }
-    
-    template<typename W, typename T>
-    uint ptriepointer_t<W, T>::write_partial_encoding(encoding_t& encoding) const
+    template<typename W>
+    uint ptriepointer_t<W>::write_partial_encoding(encoding_t& encoding) const
     {
         return container->writePathToRoot(index, encoding);
     }
     
-    template<typename W, typename T>
-    W& ptriepointer_t<W, T>::remainder() const
+    template<typename W>
+    W& ptriepointer_t<W>::remainder() const
     {
         return container->get_entry(index)->_data;
     }
     
-    template<typename W, typename T>
+    template<typename W>
     class ptrie_t {
         typedef W encoding_t;  
-        friend class ptriepointer_t<W, T>;
+        friend class ptriepointer_t<W>;
 
         private:
             
@@ -169,7 +155,7 @@ namespace ptrie
             {
                 encoding_t _data;       // remainder-data, not in path of tree 
                 uint _nodeindex;        // index of node
-            };
+            } __attribute__((packed));
             
             const uint _blocksize;   // number to allocate at a time
             uint _next_free_node;      // location of next vacant node-location
@@ -203,7 +189,7 @@ namespace ptrie
             uint writePathToRoot(uint n_index, encoding_t& encoding) const;
             
         public:
-            typedef ptriepointer_t<W, T> pointer_t;
+            typedef ptriepointer_t<W> pointer_t;
             ptrie_t();
             ~ptrie_t();
 
@@ -216,17 +202,16 @@ namespace ptrie
             pointer_t last();
             pointer_t rend();
             
-            void visit(visitor_t<W, T>&);
+            void visit(visitor_t<W>&);
     };
     
-    template<typename W, typename T>
-    ptrie_t<W, T>::~ptrie_t() {
-        std::cout << "Nodes : " << _next_free_node << std::endl;
+    template<typename W>
+    ptrie_t<W>::~ptrie_t() {
         for(size_t i = 0; i < _nodevector.size(); ++i)
         {
             delete[] _nodevector[i];
         }
-        size_t deleted = 0;
+
         _nodevector.clear();
         for(size_t i = 0; i < _entryvector.size(); ++i)
         {
@@ -237,8 +222,8 @@ namespace ptrie
 
     }
     
-    template<typename W, typename T>
-    ptrie_t<W, T>::ptrie_t() :
+    template<typename W>
+    ptrie_t<W>::ptrie_t() :
             _blocksize(1024*1024), 
             _next_free_node(1), 
             _next_free_entry(0), 
@@ -267,40 +252,40 @@ namespace ptrie
         buffer = ballocator.allocate(buffersize);
     }
     
-    template<typename W, typename T>
-    typename ptrie_t<W,T>::pointer_t ptrie_t<W,T>::begin()
+    template<typename W>
+    typename ptrie_t<W>::pointer_t ptrie_t<W>::begin()
     {
         return pointer_t(this, 0);
     }
     
-    template<typename W, typename T>
-    typename ptrie_t<W,T>::pointer_t ptrie_t<W, T>::end()
+    template<typename W>
+    typename ptrie_t<W>::pointer_t ptrie_t<W>::end()
     {
         return pointer_t(this, _next_free_entry);
     }
     
-    template<typename W, typename T>
-    typename ptrie_t<W,T>::pointer_t ptrie_t<W,T>::last()
+    template<typename W>
+    typename ptrie_t<W>::pointer_t ptrie_t<W>::last()
     {
         return pointer_t(this, _next_free_entry-1);
     }
     
-    template<typename W, typename T>
-    typename ptrie_t<W, T>::pointer_t ptrie_t<W, T>::rend()
+    template<typename W>
+    typename ptrie_t<W>::pointer_t ptrie_t<W>::rend()
     {
         return pointer_t(this, std::numeric_limits<uint>::max());
     }
     
-    template<typename W, typename T>
-    typename ptrie_t<W,T>::node_t*
-    ptrie_t<W,T>::get_node(uint index) const
+    template<typename W>
+    typename ptrie_t<W>::node_t*
+    ptrie_t<W>::get_node(uint index) const
     {
         assert(index < _next_free_node);
         return &_nodevector[index / _blocksize][index % _blocksize];
     }
     
-    template<typename W, typename T>
-    uint ptrie_t<W,T>::new_node()
+    template<typename W>
+    uint ptrie_t<W>::new_node()
     {
         uint next = _next_free_node;
         if(next % _blocksize == 0)
@@ -312,16 +297,16 @@ namespace ptrie
         return next;
     }
     
-    template<typename W, typename T>
-    typename ptrie_t<W,T>::entry_t* 
-    ptrie_t<W,T>::get_entry(uint index) const
+    template<typename W>
+    typename ptrie_t<W>::entry_t* 
+    ptrie_t<W>::get_entry(uint index) const
     {
         assert(index < _next_free_entry);
         return &_entryvector[index / _blocksize][index % _blocksize];
     }
     
-    template<typename W, typename T>
-    uint ptrie_t<W,T>::new_entry()
+    template<typename W>
+    uint ptrie_t<W>::new_entry()
     {
         uint next = _next_free_entry;
         if(next % _blocksize == 0)
@@ -333,8 +318,8 @@ namespace ptrie
         return next;
     }
     
-    template<typename W, typename T>
-    bool ptrie_t<W,T>::consistent() const
+    template<typename W>
+    bool ptrie_t<W>::consistent() const
     {
         return true;
         assert(_next_free_node >= _nodevector.size());
@@ -368,8 +353,8 @@ namespace ptrie
         return true;
     }
     
-    template<typename W, typename T>
-    uint ptrie_t<W,T>::writePathToRoot(uint e_index, encoding_t& encoding) const
+    template<typename W>
+    uint ptrie_t<W>::writePathToRoot(uint e_index, encoding_t& encoding) const
     {
         entry_t* ent = get_entry(e_index);
         size_t count = 0;
@@ -403,8 +388,8 @@ namespace ptrie
         return count;
     }
     
-    template<typename W, typename T>
-    void ptrie_t<W,T>::visit(visitor_t<W, T>& visitor)
+    template<typename W>
+    void ptrie_t<W>::visit(visitor_t<W>& visitor)
     {
         std::stack<std::pair<uint, uint> > waiting;
         waiting.push(std::pair<int, uint>(-1, 0));
@@ -458,8 +443,8 @@ namespace ptrie
         } while(!waiting.empty() && !stop);
     }
     
-    template<typename W, typename T>
-    bool ptrie_t<W,T>::best_match(const encoding_t& encoding, uint& tree_pos, 
+    template<typename W>
+    bool ptrie_t<W>::best_match(const encoding_t& encoding, uint& tree_pos, 
                 uint& e_index, uint& enc_pos, uint& b_index, uint& bucketsize)
     {
         assert(consistent());
@@ -596,8 +581,8 @@ namespace ptrie
         return found;
     }
     
-    template<typename W, typename T>
-    uint ptrie_t<W,T>::split_node(node_t* node, uint tree_pos, uint enc_pos, 
+    template<typename W>
+    uint ptrie_t<W>::split_node(node_t* node, uint tree_pos, uint enc_pos, 
                                                 uint bucketsize, bool branch,
                                                 uint* lookup)
     {
@@ -743,9 +728,9 @@ namespace ptrie
         return n_node_index;
     }
     
-    template<typename W, typename T>
-    std::pair<bool, typename ptrie_t<W,T>::pointer_t > 
-    ptrie_t<W,T>::find(const encoding_t& encoding)
+    template<typename W>
+    std::pair<bool, typename ptrie_t<W>::pointer_t > 
+    ptrie_t<W>::find(const encoding_t& encoding)
     {
         uint tree_pos;
         uint enc_pos;
@@ -762,9 +747,9 @@ namespace ptrie
         }
     }
     
-    template<typename W, typename T>
-    std::pair<bool, typename ptrie_t<W,T>::pointer_t > 
-    ptrie_t<W,T>::insert(const encoding_t& encoding)
+    template<typename W>
+    std::pair<bool, typename ptrie_t<W>::pointer_t > 
+    ptrie_t<W>::insert(const encoding_t& encoding)
     {
         assert(consistent());
         size_t encsize = encoding.size() * 8;

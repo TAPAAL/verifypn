@@ -66,6 +66,7 @@ uint32_t AlignedEncoder::writeTwoBitVector(size_t offset, const uint32_t* data)
             
         }
     }
+
     return offset + scratchpad_t::bytes(_places*2);
 }
 
@@ -75,12 +76,12 @@ uint32_t AlignedEncoder::readTwoBitVector(uint32_t* destination, const unsigned 
     for(size_t i = 0; i < _places; ++i)
     {
         destination[i] = 0;
-        if(b.at((i*2)+(offset*8)))
+        if(b.at((i*2)))
         {
             destination[i] = 1;
         }
         
-        if(b.at((i*2)+(offset*8)+1))
+        if(b.at((i*2)+1))
         {
             destination[i] += 2;
         }
@@ -373,58 +374,59 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
 size_t AlignedEncoder::encode(const uint32_t* d, unsigned char type)
 {
     _scratchpad.zero();
+    _scratchpad.raw()[0] = type;
     type &= 31; // remove everything else than pure type
     if(type < 11)
     {
-        return writeBitVector(0, d);
+        return writeBitVector(1, d);
     }
     if(type < 22)
     {
-        return writePlaces(0, d);
+        return writePlaces(1, d);
     }
     
     switch(type)
     {
         case 22:
-            return writeTwoBitVector(0,d);
+            return writeTwoBitVector(1,d);
         case 23:
-            return writeTokens<unsigned char>(0, d);           
+            return writeTokens<unsigned char>(1, d);           
         case 24:
-            return writeTokens<uint16_t>(0, d);
+            return writeTokens<uint16_t>(1, d);
         case 25:
             {
                 uint32_t* raw = (uint32_t*)_scratchpad.raw();
                 memcpy(raw, d, _places*sizeof(uint32_t));
             }
-            return writeTokens<uint32_t>(0, d); 
+            return writeTokens<uint32_t>(1, d); 
         case 26:
             {
-                size_t size = writePlaces(0, d);
+                size_t size = writePlaces(1, d);
                 return writeTokenCounts<unsigned char>(size, d);
             }
         case 27:
             {
-                size_t size = writePlaces(0, d);
+                size_t size = writePlaces(1, d);
                 return writeTokenCounts<uint16_t>(size, d);
             }
         case 28:
             {
-                size_t size = writePlaces(0, d);
+                size_t size = writePlaces(1, d);
                 return writeTokenCounts<uint32_t>(size, d);
             }           
         case 29:
             {
-                size_t size = writeBitVector(0, d);
+                size_t size = writeBitVector(1, d);
                 return writeTokenCounts<unsigned char>(size, d);
             }
         case 30:
             {
-                size_t size = writeBitVector(0, d);
+                size_t size = writeBitVector(1, d);
                 return writeTokenCounts<uint16_t>(size, d);
             }
         case 31:
             {
-                size_t size = writeBitVector(0, d);
+                size_t size = writeBitVector(1, d);
                 return writeTokenCounts<uint32_t>(size, d);
             }
         default:
@@ -432,52 +434,52 @@ size_t AlignedEncoder::encode(const uint32_t* d, unsigned char type)
     }
 }
 
-void AlignedEncoder::decode(uint32_t* d, const unsigned char* s, unsigned char type)
+void AlignedEncoder::decode(uint32_t* d, const unsigned char* s)
 {
     memset(d, 0, sizeof(uint32_t)*_places);
-    type &= 31;
+    unsigned char type = s[0];
     if(type < 11)
     {
-        readBitVector(d, s, 0, type);
+        readBitVector(d, s, 1, type);
         return;
     }
     if(type < 22)
     {
-        readPlaces(d, s, 0, type-10);
+        readPlaces(d, s, 1, type-10);
         return;
     }
     
     switch(type)
     {
         case 22:
-            readTwoBitVector(d,s,0);
+            readTwoBitVector(d,s,1);
             return;
         case 23:
-            readTokens<unsigned char>(d,s,0);
+            readTokens<unsigned char>(d,s,1);
             return;
         case 24:
-            readTokens<uint16_t>(d,s,0);
+            readTokens<uint16_t>(d,s,1);
             return;
         case 25:
             memcpy(d, s, _places*sizeof(uint32_t));
             return;
         case 26:
-            readPlaceTokenCounts<unsigned char>(d, s, 0); 
+            readPlaceTokenCounts<unsigned char>(d, s, 1); 
             return;
         case 27:
-            readPlaceTokenCounts<uint16_t>(d, s, 0); 
+            readPlaceTokenCounts<uint16_t>(d, s, 1); 
             return;
         case 28:
-            readPlaceTokenCounts<uint32_t>(d, s, 0); 
+            readPlaceTokenCounts<uint32_t>(d, s, 1); 
             return;
         case 29:
-            readBitTokenCounts<unsigned char>(d, s, 0);
+            readBitTokenCounts<unsigned char>(d, s, 1);
             return;
         case 30:
-            readBitTokenCounts<uint16_t>(d, s, 0);
+            readBitTokenCounts<uint16_t>(d, s, 1);
             return;
         case 31:
-            readBitTokenCounts<uint32_t>(d, s, 0);
+            readBitTokenCounts<uint32_t>(d, s, 1);
             return;
         default:
             assert(false);
