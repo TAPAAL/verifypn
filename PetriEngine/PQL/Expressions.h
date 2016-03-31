@@ -47,7 +47,6 @@ namespace PetriEngine {
             int evaluate(const EvaluationContext& context) const;
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
-            void scale(int factor);
         private:
             virtual int apply(int v1, int v2) const = 0;
             /** LLVM binary operator (llvm::Instruction::BinaryOps) */
@@ -110,7 +109,6 @@ namespace PetriEngine {
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             Expr::Types type() const;
-            void scale(int factor);
         private:
             Expr* _expr;
         };
@@ -131,7 +129,6 @@ namespace PetriEngine {
             int value() const {
                 return _value;
             };
-            void scale(int factor);
         private:
             int _value;
         };
@@ -155,7 +152,6 @@ namespace PetriEngine {
             int offset() const {
                 return _offsetInMarking;
             }
-            void scale(int factor);
         private:
             /** Offset in marking, -1 if undefined, should be resolved during analysis */
             int _offsetInMarking;
@@ -182,7 +178,6 @@ namespace PetriEngine {
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
-            void scale(int factor);
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
         private:
             virtual bool apply(bool b1, bool b2) const = 0;
@@ -238,7 +233,6 @@ namespace PetriEngine {
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
-            void scale(int factor);
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
         private:
             virtual bool apply(int v1, int v2) const = 0;
@@ -374,7 +368,6 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
-            void scale(int factor);
         private:
             Condition* _cond;
         };
@@ -392,7 +385,6 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
-            void scale(int factor);
         private:
             bool _value;
         };
@@ -409,7 +401,6 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
-            void scale(int factor);
         };
 
     }

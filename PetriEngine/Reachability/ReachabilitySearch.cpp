@@ -30,89 +30,6 @@ using namespace PetriEngine::Structures;
 
 namespace PetriEngine {
     namespace Reachability {
-
-        void ReachabilitySearch::tryReach(
-            std::vector<std::shared_ptr<PQL::Condition > >& queries,
-            std::vector<ResultPrinter::Result>& results,
-            Strategy strategy,
-            bool statespacesearch,
-            bool printstats)
-        {
-
-            // set up state
-            searchstate_t ss;
-            ss.enabledTransitionsCount.resize(_net.numberOfTransitions(), 0);
-            ss.expandedStates = 0;
-            ss.exploredStates = 1;
-            ss.heurquery = 0;
-            ss.strategy = strategy;
-            ss.usequeries = !statespacesearch;
-            
-            if(ss.usequeries)
-            {
-                for(size_t i = 0; i < queries.size(); ++i)
-                {
-                    if(results[i] == ResultPrinter::Unknown)
-                    {
-                        ss.usequeries &= queries[i]->placeNameForBound().empty();
-                    }
-                }
-            }
-            // set up working area
-            State state;
-            State working;
-            state.setMarking(_net.makeInitialMarking());
-            working.setMarking(_net.makeInitialMarking());
-            SuccessorGenerator generator(_net);
-            
-            // check initial marking
-            if(statespacesearch) checkQueries(queries, results, working, ss);
-            
-            // if we are searching for bounds
-            if(!ss.usequeries) ss.strategy = BFS;
-
-            std::shared_ptr<Queue> queue = makeQueue(ss.strategy);
-            
-            // add initial
-            auto r = states.add(state);
-            if(r.first) queue->push(r.second, state, queries[ss.heurquery]);
-            
-            // Search!
-            while (queue->pop(state)) {
-
-                generator.reset(&state);
-
-                while(generator.next(&working)){
-                    ss.enabledTransitionsCount[generator.fired()]++;
-                    auto res = states.add(working);
-                    if (res.first) {
-                        queue->push(res.second, working, queries[ss.heurquery]);
-                        ss.exploredStates++;
-                        if (checkQueries(queries, results, working, ss)) {
-                            delete[] state.marking();
-                            delete[] working.marking();         
-                            if(printstats) printStats(ss);
-                            return;
-                        }
-                    }
-                }
-                ss.expandedStates++;
-            }
-            
-            // no more successors, print last results
-            for(size_t i= 0; i < queries.size(); ++i)
-            {
-                if(results[i] == ResultPrinter::Unknown)
-                {
-                    results[i] = printQuery(queries[i], i, ResultPrinter::NotSatisfied, ss);                    
-                }
-            }            
-            
-            delete[] state.marking();
-            delete[] working.marking();
-            
-            if(printstats) printStats(ss);
-        }
         
         bool ReachabilitySearch::checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >& queries,
                                                 std::vector<ResultPrinter::Result>& results,
@@ -139,20 +56,7 @@ namespace PetriEngine {
                     results[i] != ResultPrinter::Unknown) ++ss.heurquery;
             }  
             return alldone;
-        }
-        
-        std::shared_ptr<Queue> ReachabilitySearch::makeQueue(Strategy strat)
-        {
-            switch(strat)
-            {
-                case HEUR:
-                    return std::shared_ptr<Queue>(new HeuristicQueue(states));
-                case DFS:
-                    return std::shared_ptr<Queue>(new DFSQueue(states));
-                default:
-                    return std::shared_ptr<Queue>(new BFSQueue(states));
-            }
-        }
+        }        
         
         ResultPrinter::Result ReachabilitySearch::printQuery(std::shared_ptr<PQL::Condition>& query, size_t i,  ResultPrinter::Result r,
                                                                 searchstate_t& ss)
@@ -195,8 +99,35 @@ namespace PetriEngine {
                     bool statespacesearch,
                     bool printstats)
         {
-
-            tryReach(queries, results, strategy, statespacesearch, printstats);
+            bool usequeries = !statespacesearch;
+            if(usequeries)
+            {
+                for(size_t i = 0; i < queries.size(); ++i)
+                {
+                    if(results[i] == ResultPrinter::Unknown)
+                    {
+                        usequeries &= queries[i]->placeNameForBound().empty();
+                    }
+                }
+            }            
+                        
+            // if we are searching for bounds
+            if(!usequeries) strategy = BFS;
+            
+            switch(strategy)
+            {
+                case DFS:                    
+                    tryReach<DFSQueue>(queries, results, usequeries, printstats, DFSQueue(states));
+                    break;
+                case BFS:
+                    tryReach<BFSQueue>(queries, results, usequeries, printstats, BFSQueue(states));                    
+                    break;
+                case HEUR:
+                    tryReach<HeuristicQueue>(queries, results, usequeries, printstats, HeuristicQueue(states));                    
+                    break;
+                default:
+                    std::cout << "UNSUPPORTED SEARCH STRATEGY" << std::endl;
+            }
         }
     }
 }

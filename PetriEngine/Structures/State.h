@@ -47,6 +47,16 @@ namespace PetriEngine {
                 _marking = m;
             }
             
+            State()
+            {
+                _marking = NULL;
+            }
+            
+            ~State()
+            {
+                delete[] _marking;
+            }
+            
         private:
             MarkVal* _marking;
         };

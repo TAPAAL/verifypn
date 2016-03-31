@@ -15,20 +15,20 @@
 #define SUCCESSORGENERATOR_H
 
 #include "PetriNet.h"
+#include "Structures/State.h"
 namespace PetriEngine {
 class SuccessorGenerator {
 public:
-    SuccessorGenerator(const PetriNet& net);
+    SuccessorGenerator(const PetriNet& net, const Structures::State& state);
     virtual ~SuccessorGenerator();
-    bool next(Structures::State* write);
+    bool next(Structures::State& write);
     uint32_t fired()
     {
         return _suc_tcounter -1;
     }
-    void reset(const Structures::State* p);
 private:
     const PetriNet& _net;
-    const Structures::State* parent;
+    const Structures::State& _parent;
     uint32_t _suc_pcounter;
     uint32_t _suc_tcounter;
 };

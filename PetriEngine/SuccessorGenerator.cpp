@@ -14,24 +14,20 @@
 #include "SuccessorGenerator.h"
 #include "Structures/State.h"
 namespace PetriEngine {
-    SuccessorGenerator::SuccessorGenerator(const PetriNet& net) : _net(net) {
+    SuccessorGenerator::SuccessorGenerator(const PetriNet& net, const Structures::State& p ) 
+    : _net(net), _parent(p) {
+        _suc_pcounter = 0;
+        _suc_tcounter = std::numeric_limits<uint32_t>::max();  
     }
 
     SuccessorGenerator::~SuccessorGenerator() {
     }
     
-    
-    void SuccessorGenerator::reset(const Structures::State* p)
-    {
-        parent = p;
-        _suc_pcounter = 0;
-        _suc_tcounter = std::numeric_limits<uint32_t>::max();       
-    }
-    
-    bool SuccessorGenerator::next(Structures::State* write)
+       
+    bool SuccessorGenerator::next(Structures::State& write)
     {
         for (; _suc_pcounter < _net._nplaces; _suc_pcounter++) {
-            if(this->parent->marking()[_suc_pcounter] > 0)
+            if(_parent.marking()[_suc_pcounter] > 0)
             {
                 if(_suc_tcounter == std::numeric_limits<uint32_t>::max())
                 {
@@ -40,7 +36,7 @@ namespace PetriEngine {
                 uint32_t last = _net._placeToPtrs[_suc_pcounter+1];
                 for(;_suc_tcounter != last; ++_suc_tcounter)
                 {
-                    memcpy(write->marking(), parent->marking(), _net._nplaces*sizeof(MarkVal));
+                    memcpy(write.marking(), _parent.marking(), _net._nplaces*sizeof(MarkVal));
                     
                     const TransPtr& ptr = _net._transitions[_suc_tcounter];
                     uint32_t finv = ptr.inputs;
@@ -48,12 +44,12 @@ namespace PetriEngine {
                     bool ok = true;
                     for(;finv < linv; ++finv)
                     {
-                        if(this->parent->marking()[_net._invariants[finv].place] < _net._invariants[finv].tokens)
+                        if(_parent.marking()[_net._invariants[finv].place] < _net._invariants[finv].tokens)
                         {
                             ok = false;
                             break;
                         }
-                        write->marking()[_net._invariants[finv].place] -= _net._invariants[finv].tokens;
+                        write.marking()[_net._invariants[finv].place] -= _net._invariants[finv].tokens;
                     }
                     if(!ok) continue;
                     // else fire
@@ -61,7 +57,7 @@ namespace PetriEngine {
                     linv = _net._transitions[_suc_tcounter+1].inputs;
                     for(;finv < linv; ++finv)
                     {
-                        write->marking()[_net._invariants[finv].place] += _net._invariants[finv].tokens;
+                        write.marking()[_net._invariants[finv].place] += _net._invariants[finv].tokens;
                     }
                     ++_suc_tcounter;
                     return true;

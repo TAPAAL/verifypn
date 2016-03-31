@@ -113,8 +113,6 @@ namespace PetriEngine {
             virtual std::string toString() const = 0;
             /** Expression type */
             virtual Types type() const = 0;
-            /** Scale all nested literals by factor */
-            virtual void scale(int factor) = 0;
         };
 
         /** Base condition */
@@ -140,8 +138,6 @@ namespace PetriEngine {
             virtual std::string toTAPAALQuery(TAPAALConditionExportContext& context) const = 0;
             /** Get distance to query */
             virtual uint32_t distance(DistanceContext& context) const = 0;
-            /** Scale all nested literals by factor */
-            virtual void scale(int factor) = 0;
             
             void setInvariant(bool isInvariant)
             {
