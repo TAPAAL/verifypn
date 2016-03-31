@@ -25,6 +25,7 @@
 #include <sstream>
 #include <map>
 #include <memory>
+#include <utility>
 
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Contexts.h"
@@ -70,6 +71,20 @@ ReturnValue contextAnalysis(PetriNetBuilder& builder, std::vector<std::shared_pt
         }
     }
     return ContinueCode;
+}
+
+std::vector<std::string> explode(std::string const & s)
+{
+    std::vector<std::string> result;
+    std::istringstream iss(s);
+
+    for (std::string token; std::getline(iss, token, ','); )
+    {
+        result.push_back(std::move(token));
+        if(result.back().empty()) result.pop_back();
+    }
+
+    return result;
 }
 
 ReturnValue parseOptions(int argc, char* argv[], options_t& options)
@@ -124,9 +139,18 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
                 return ErrorCode;
             }
-            if (sscanf(argv[++i], "%zu", &options.querynumber) != 1) {
-                fprintf(stderr, "Argument Error: Query index to verify \"%s\"\n", argv[i]);
-                return ErrorCode;
+            std::vector<std::string> q = explode(argv[++i]);
+            for(auto& qn : q)
+            {
+                size_t n;
+                if(sscanf(qn.c_str(), "%zu", &n) != 1)
+                {
+                    std::cerr << "Error in query numbers : " << qn << std::endl;
+                }
+                else
+                {
+                    options.querynumbers.insert(n);
+                }
             }
         } else if (strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--reduction") == 0) {
             if (i == argc - 1) {
@@ -245,8 +269,8 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
         for(auto& q : XMLparser.queries)
         {
             bool isInvariant = false;
-            if( i != options.querynumber && 
-                options.querynumber != std::numeric_limits<size_t>::max())
+            if(!options.querynumbers.empty()
+                    && options.querynumbers.count(i) == 0)
             {
                 ++i;
                 continue;

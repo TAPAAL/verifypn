@@ -275,7 +275,7 @@ namespace PetriEngine {
                 queries[i]->analyze(placecontext);        
             }
         }
-        reducer.Reduce(placecontext.getQueryPlaceCount(), reductiontype);
+        reducer.Reduce(placecontext, reductiontype);
     }
 
 

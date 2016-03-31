@@ -244,7 +244,8 @@ namespace PetriEngine {
         void BooleanCondition::analyze(AnalysisContext&) {
         }
 
-        void DeadlockCondition::analyze(AnalysisContext&) {
+        void DeadlockCondition::analyze(AnalysisContext& c) {
+            c.setHasDeadlock();
         }
 
         /******************** Evaluation ********************/

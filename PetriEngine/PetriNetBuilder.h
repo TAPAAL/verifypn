@@ -77,29 +77,29 @@ namespace PetriEngine {
                     std::vector<Reachability::ResultPrinter::Result>& results, 
                     int reductiontype);
         
-        uint32_t RemovedTransitions()
+        size_t RemovedTransitions()
         {
             return reducer.RemovedTransitions();
         }
         
-        uint32_t RemovedPlaces()
+        size_t RemovedPlaces()
         {
             return reducer.RemovedPlaces();
         }
 
-        uint32_t RuleA() {
+        size_t RuleA() {
             return reducer.RuleA();
         }
 
-        uint32_t RuleB() {
+        size_t RuleB() {
             return reducer.RuleB();
         }
 
-        uint32_t RuleC() {
+        size_t RuleC() {
             return reducer.RuleC();
         }
 
-        uint32_t RuleD() {
+        size_t RuleD() {
             return reducer.RuleD();
         }
         

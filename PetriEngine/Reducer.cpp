@@ -20,7 +20,7 @@ namespace PetriEngine {
 
     }
 
-    void Reducer::Print(uint32_t* placeInQuery) {
+    void Reducer::Print(QueryPlaceAnalysisContext& context) {
         std::cout   << "\nNET INFO:\n" 
                     << "Number of places: " << parent->numberOfPlaces() << std::endl
                     << "Number of transitions: " << parent->numberOfTransitions() 
@@ -47,7 +47,7 @@ namespace PetriEngine {
         }
         for (uint32_t i = 0; i < parent->numberOfPlaces(); i++) {
             std::cout   << "Query count for place " << i 
-                        << " is: " << placeInQuery[i] << std::endl;
+                        << " is: " << context.getQueryPlaceCount()[i] << std::endl;
         }
     }
     Transition& Reducer::getTransition(uint32_t transition)
@@ -402,16 +402,16 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    void Reducer::Reduce(uint32_t* placeInQuery, int enablereduction) {
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction) {
         if (enablereduction == 1) { // in the aggresive reduction all four rules are used as long as they remove something
-            while (ReducebyRuleA(placeInQuery) ||
-                    ReducebyRuleB(placeInQuery) ||
-                    ReducebyRuleC(placeInQuery) ||
-                    ReducebyRuleD(placeInQuery)) {
+            while (ReducebyRuleA(context.getQueryPlaceCount()) ||
+                    ReducebyRuleB(context.getQueryPlaceCount()) ||
+                    ReducebyRuleC(context.getQueryPlaceCount()) ||
+                    ReducebyRuleD(context.getQueryPlaceCount())) {
             }
         } else if (enablereduction == 2) { // for k-boundedness checking only rules A and D are applicable
-            while (ReducebyRuleA(placeInQuery) ||
-                    ReducebyRuleD(placeInQuery)) {
+            while (ReducebyRuleA(context.getQueryPlaceCount()) ||
+                    ReducebyRuleD(context.getQueryPlaceCount())) {
             }
         }
     }

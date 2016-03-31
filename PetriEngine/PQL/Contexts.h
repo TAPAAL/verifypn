@@ -51,9 +51,11 @@ namespace PetriEngine {
             AnalysisContext(const std::map<std::string, uint32_t>& places)
             : _places(places) {
             }
+            
+            virtual void setHasDeadlock(){};
 
             /** Resolve an identifier */
-            virtual ResolutionResult resolve(std::string identifier) const {
+            virtual ResolutionResult resolve(std::string identifier) {
                 ResolutionResult result;
                 result.offset = -1;
                 result.success = false;
