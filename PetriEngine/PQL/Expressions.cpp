@@ -666,10 +666,7 @@ namespace PetriEngine {
         }
 
         uint32_t DeadlockCondition::distance(DistanceContext& context) const {
-            uint32_t sum = 0;
-            for(size_t i = 0; i < context.net()->numberOfTransitions(); ++i)
-                sum += context.marking()[i];
-            return sum;
+            return 0;
         }
 
         uint32_t LogicalCondition::distance(DistanceContext& context) const {
