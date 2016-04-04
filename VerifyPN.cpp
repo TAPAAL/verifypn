@@ -149,7 +149,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 }
                 else
                 {
-                    options.querynumbers.insert(n);
+                    options.querynumbers.insert(--n);
                 }
             }
         } else if (strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--reduction") == 0) {
