@@ -9,6 +9,8 @@
 
 #include "AlignedEncoder.h"
 
+#define SAMEBOUND 120
+#define DBOUND (SAMEBOUND*2)
 
 AlignedEncoder::AlignedEncoder(uint32_t places, uint32_t k)
 : _places(places)
@@ -299,7 +301,7 @@ uint32_t AlignedEncoder::readBitVector(uint32_t* destination, const unsigned cha
 unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uint32_t val)
 {
     if(pwt == 0) return 0;
-    if(same && val < 11)
+    if(same && val <= SAMEBOUND)
     {
         size_t bvsize = scratchpad_t::bytes(_places);
         size_t indirect = _psize+pwt*_psize;
@@ -310,7 +312,7 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
         }
         else
         {
-            return 10+val;            
+            return SAMEBOUND+val;            
         }
     }
     else
@@ -323,18 +325,18 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
         
         if(val < 4 && bvsize <= indirect && bvsize <= bvindirect)
         {
-            return 22;
+            return DBOUND+1;
         }
         else if(direct <= indirect && direct <= bvindirect)
         {
             switch(tsize)
             {
                 case 1:
-                    return 23;       
+                    return DBOUND+2;       
                 case 2:
-                    return 24;                 
+                    return DBOUND+3;                 
                 case 4:
-                    return 25;                
+                    return DBOUND+4;                
                 default:
                     assert(false);
             }
@@ -344,11 +346,11 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
             switch(tsize)
             {
                 case 1:
-                    return 26;     
+                    return DBOUND+5;     
                 case 2:
-                    return 27;                
+                    return DBOUND+6;                
                 case 4:
-                    return 28;
+                    return DBOUND+7;
                 default:
                     assert(false);
             }
@@ -358,11 +360,11 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
             switch(tsize)
             {
                 case 1:
-                    return 29;                
+                    return DBOUND+8;                
                 case 2:
-                    return 30;
+                    return DBOUND+9;
                 case 4:
-                    return 31;
+                    return DBOUND+10;
                 default:
                     assert(false);
             }
@@ -375,56 +377,55 @@ size_t AlignedEncoder::encode(const uint32_t* d, unsigned char type)
 {
     _scratchpad.zero();
     _scratchpad.raw()[0] = type;
-    type &= 31; // remove everything else than pure type
-    if(type < 11)
+    if(type <= SAMEBOUND)
     {
         return writeBitVector(1, d);
     }
-    if(type < 22)
+    if(type <= DBOUND)
     {
         return writePlaces(1, d);
     }
     
     switch(type)
     {
-        case 22:
+        case DBOUND+1:
             return writeTwoBitVector(1,d);
-        case 23:
+        case DBOUND+2:
             return writeTokens<unsigned char>(1, d);           
-        case 24:
+        case DBOUND+3:
             return writeTokens<uint16_t>(1, d);
-        case 25:
+        case DBOUND+4:
             {
                 uint32_t* raw = (uint32_t*)_scratchpad.raw();
                 memcpy(raw, d, _places*sizeof(uint32_t));
             }
             return writeTokens<uint32_t>(1, d); 
-        case 26:
+        case DBOUND+5:
             {
                 size_t size = writePlaces(1, d);
                 return writeTokenCounts<unsigned char>(size, d);
             }
-        case 27:
+        case DBOUND+6:
             {
                 size_t size = writePlaces(1, d);
                 return writeTokenCounts<uint16_t>(size, d);
             }
-        case 28:
+        case DBOUND+7:
             {
                 size_t size = writePlaces(1, d);
                 return writeTokenCounts<uint32_t>(size, d);
             }           
-        case 29:
+        case DBOUND+8:
             {
                 size_t size = writeBitVector(1, d);
                 return writeTokenCounts<unsigned char>(size, d);
             }
-        case 30:
+        case DBOUND+9:
             {
                 size_t size = writeBitVector(1, d);
                 return writeTokenCounts<uint16_t>(size, d);
             }
-        case 31:
+        case DBOUND+10:
             {
                 size_t size = writeBitVector(1, d);
                 return writeTokenCounts<uint32_t>(size, d);
@@ -438,47 +439,47 @@ void AlignedEncoder::decode(uint32_t* d, const unsigned char* s)
 {
     memset(d, 0, sizeof(uint32_t)*_places);
     unsigned char type = s[0];
-    if(type < 11)
+    if(type <= SAMEBOUND)
     {
         readBitVector(d, s, 1, type);
         return;
     }
-    if(type < 22)
+    if(type <= DBOUND)
     {
-        readPlaces(d, s, 1, type-10);
+        readPlaces(d, s, 1, type - SAMEBOUND);
         return;
     }
     
     switch(type)
     {
-        case 22:
+        case DBOUND+1:
             readTwoBitVector(d,s,1);
             return;
-        case 23:
+        case DBOUND+2:
             readTokens<unsigned char>(d,s,1);
             return;
-        case 24:
+        case DBOUND+3:
             readTokens<uint16_t>(d,s,1);
             return;
-        case 25:
+        case DBOUND+4:
             memcpy(d, s, _places*sizeof(uint32_t));
             return;
-        case 26:
+        case DBOUND+5:
             readPlaceTokenCounts<unsigned char>(d, s, 1); 
             return;
-        case 27:
+        case DBOUND+6:
             readPlaceTokenCounts<uint16_t>(d, s, 1); 
             return;
-        case 28:
+        case DBOUND+7:
             readPlaceTokenCounts<uint32_t>(d, s, 1); 
             return;
-        case 29:
+        case DBOUND+8:
             readBitTokenCounts<unsigned char>(d, s, 1);
             return;
-        case 30:
+        case DBOUND+9:
             readBitTokenCounts<uint16_t>(d, s, 1);
             return;
-        case 31:
+        case DBOUND+10:
             readBitTokenCounts<uint32_t>(d, s, 1);
             return;
         default:

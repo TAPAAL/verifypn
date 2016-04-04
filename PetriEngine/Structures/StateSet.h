@@ -46,22 +46,12 @@ namespace PetriEngine {
                 _kbound = kbound;
                 _maxTokens = 0;
                 _maxPlaceBound = std::vector<uint32_t>(_net.numberOfPlaces(), 0);
-                for(size_t i = 0; i < 32; ++i)
-                {
-                    _encoderstats[i] = 0;
-                }
                 _sp = wrapper_t(sizeof(uint32_t)*_net.numberOfPlaces()*8);
             }
             
             ~StateSet()
             {
 
-                std::cout << "Encoding stats : " << std::endl;
-                
-                for(size_t i = 0; i < 32; ++i)
-                {
-                    std::cout << "\t type : " << i << " -> " << _encoderstats[i] << std::endl;
-                }
             }
             
             const PetriNet& net() { return _net;}
@@ -80,7 +70,7 @@ namespace PetriEngine {
                     _encoder.decode(state.marking(), _encoder.scratchpad().raw());
 
 #ifdef DEBUG
-                    assert(memcmp(state.marking(), _dbg[id], sizeof(uint32_t)*_places) == 0);
+                    assert(memcmp(state.marking(), _dbg[id], sizeof(uint32_t)*_net.numberOfPlaces()) == 0);
 #endif
             }
             
@@ -120,11 +110,10 @@ namespace PetriEngine {
                 }
                 
 #ifdef DEBUG
-                _dbg.push_back(new uint32_t[_places]);
-                memcpy(_dbg.back(), state->marking(), _places*sizeof(uint32_t));
+                _dbg.push_back(new uint32_t[_net.numberOfPlaces()]);
+                memcpy(_dbg.back(), state.marking(), _net.numberOfPlaces()*sizeof(uint32_t));
                 decode(state, _trie.size() - 1);
 #endif
-                _encoderstats[type & 31] += 1;
            
                 // update the max token bound for each place in the net (only for newly discovered markings)
                 for (uint32_t i = 0; i < _net.numberOfPlaces(); i++) 
@@ -196,8 +185,6 @@ namespace PetriEngine {
 
             AlignedEncoder _encoder;
                     
-            size_t _encoderstats[32];
-            
             ptrie_t _trie;
             wrapper_t _sp;
             const PetriNet& _net;

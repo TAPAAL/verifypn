@@ -35,11 +35,11 @@ namespace PetriEngine {
     };
 
     struct Place {
-        std::vector<uint32_t> input; // things consuming
-        std::vector<uint32_t> output; // things producing
+        std::vector<uint32_t> consumers; // things consuming
+        std::vector<uint32_t> producers; // things producing
         bool skip;
 
-        Place() : input(), output(), skip(false) {
+        Place() : consumers(), producers(), skip(false) {
         }
     };
 }

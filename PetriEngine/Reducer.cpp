@@ -97,11 +97,11 @@ namespace PetriEngine {
         Transition& trans = getTransition(t);
         for(auto p : trans.post)
         {
-            eraseTransition(parent->_places[p.place].output, t);
+            eraseTransition(parent->_places[p.place].producers, t);
         }
         for(auto p : trans.pre)
         {
-            eraseTransition(parent->_places[p.place].input, t);
+            eraseTransition(parent->_places[p.place].consumers, t);
         }
         trans.post.clear();
         trans.pre.clear();
@@ -112,7 +112,7 @@ namespace PetriEngine {
     {
         Place& pl = parent->_places[place];
         pl.skip = true;
-        for(auto& t : pl.input)
+        for(auto& t : pl.consumers)
         {
             Transition& trans = getTransition(t);
             for(auto it = trans.pre.begin(); it != trans.pre.end(); ++it)
@@ -125,7 +125,7 @@ namespace PetriEngine {
             }
         }
         
-        for(auto& t : pl.output)
+        for(auto& t : pl.producers)
         {
             Transition& trans = getTransition(t);
             for(auto it = trans.post.begin(); it != trans.post.end(); ++it)
@@ -166,7 +166,7 @@ namespace PetriEngine {
             if (pPre < 0 || pPost < 0 || pPre == pPost) continue;
 
             // Check that pPre goes only to t
-            if(parent->_places[pPre].input.size() > 1) continue;
+            if(parent->_places[pPre].consumers.size() != 1) continue;
 
             continueReductions = true;
             _ruleA++;
@@ -174,10 +174,11 @@ namespace PetriEngine {
             // Remove transition t and the place that has no tokens in m0
             _removedTransitions++; 
             skipTransition(t);
-            
+            assert(pPost != pPre);
             if (parent->initMarking()[pPre] == 0) { // removing pPre
-                for(auto& _t : parent->_places[pPre].output)
+                for(auto& _t : parent->_places[pPre].producers)
                 {
+                    assert(_t != t);
                     // move output-arcs to post.
                     Transition& trans = getTransition(_t);
                     auto source = getOutArc(trans, pPre);
@@ -185,7 +186,7 @@ namespace PetriEngine {
                     if(dest == trans.post.end())
                     {
                         source->place = pPost;
-                        parent->_places[pPost].output.push_back(_t);
+                        parent->_places[pPost].producers.push_back(_t);
                     }
                     else
                     {
@@ -197,22 +198,42 @@ namespace PetriEngine {
                 skipPlace(pPre);
             } else if (parent->initMarking()[pPost] == 0) { // removing pPost
                 parent->_places[pPost].skip = true;
-                for (auto& _t : parent->_places[pPost].input) {
+                for (auto& _t : parent->_places[pPost].consumers) {
+                    assert(_t != t);
                     Transition& trans = getTransition(_t);
                     auto source = getInArc(pPost, trans);
                     auto dest = getInArc(pPre, trans);
                     if(dest == trans.pre.end())
                     {
                         source->place = pPre;
-                        parent->_places[pPre].input.push_back(_t);
+                        parent->_places[pPre].consumers.push_back(_t);
                     }
                     else
                     {
                         dest->weight += source->weight;
                     }
                 }
-                _removedPlaces++;
+                
+                for(auto& _t : parent->_places[pPost].producers)
+                {
+                    if(_t == t) continue;
+                    Transition& trans = getTransition(_t);
+                    auto source = getOutArc(trans, pPost);
+                    auto dest = getOutArc(trans, pPre);
+                    
+                    if(dest == trans.post.end())
+                    {
+                        source->place = pPre;
+                        parent->_places[pPre].producers.push_back(_t);
+                    }
+                    else
+                    {
+                        dest->weight += source->weight;
+                    }
+                }
+
                 skipPlace(pPost);
+                _removedPlaces++;
             }
         } // end of Rule A main for-loop
         return continueReductions;
@@ -226,11 +247,11 @@ namespace PetriEngine {
             Place& place = parent->_places[p];
             
             if(place.skip) continue;    // allready removed           
-            if(placeInQuery[p] > 0 || parent->initMarking()[p]) continue; // to important                   
-            if(place.input.size() != 1 || place.output.size() != 1) continue; // no orphan removal
+            if(placeInQuery[p] > 0 || parent->initMarking()[p] > 0) continue; // to important                   
+            if(place.consumers.size() != 1 || place.producers.size() != 1) continue; // no orphan removal
             
-            int tOut = place.output[0];
-            int tIn = place.input[0];
+            int tOut = place.producers[0];
+            int tIn = place.consumers[0];
             
             if (tOut == tIn) continue; // cannot remove this kind either
                         
@@ -276,7 +297,7 @@ namespace PetriEngine {
                 else
                 {
                     out.post.push_back(arc);
-                    parent->_places[arc.place].output.push_back(tOut);
+                    parent->_places[arc.place].producers.push_back(tOut);
                 }
             }
             _removedTransitions++;
@@ -310,12 +331,12 @@ namespace PetriEngine {
                 
                 if(place2.skip) continue;
                 
-                if(place1.input.size() != place2.input.size() ||
-                   place1.output.size() != place2.output.size())
+                if(place1.consumers.size() != place2.consumers.size() ||
+                   place1.producers.size() != place2.producers.size())
                     continue;
                 
                 bool ok = true;
-                for(auto& in : place1.input)
+                for(auto& in : place1.consumers)
                 {
                     Transition& trans = getTransition(in);
                     auto a1 = getInArc(p1, trans);
@@ -329,7 +350,7 @@ namespace PetriEngine {
                 
                 if(!ok) continue;
                 
-                for(auto& in : place1.output)
+                for(auto& in : place1.producers)
                 {
                     Transition& trans = getTransition(in);
                     auto a1 = getOutArc(trans, p1);

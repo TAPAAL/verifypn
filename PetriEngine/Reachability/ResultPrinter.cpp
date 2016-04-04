@@ -19,7 +19,7 @@ namespace PetriEngine {
             if(result == Unknown) return Unknown;
             Result retval = result;
             std::cout << std::endl;            
-            if(!options->statespaceexploration)
+            if(!options->statespaceexploration && retval != Unknown)
             {
                 std::cout << "FORMULA " << querynames[index] << " ";
             }
@@ -46,7 +46,9 @@ namespace PetriEngine {
 
             //Print result
             if (retval == Unknown)
-                std::cout << "\nUnable to decide if query is satisfied.\n\n";
+            {
+                std::cout << "\nUnable to decide if " << querynames[index] << " is satisfied.";
+            }
             else if (retval == Satisfied) {
                 if(!options->statespaceexploration)
                 {
@@ -57,24 +59,20 @@ namespace PetriEngine {
                     }
                     std::cout << std::endl;
                 }
-                std::cout << "\nQuery is satisfied.\n\n";
             } else if (retval == NotSatisfied) {
                 if (!query->placeNameForBound().empty()) {
                     // find index of the place for reporting place bound
+                    size_t bound = 0;
                     for(auto& p : query->placeNameForBound())
                     {
-                        uint32_t pi = builder->getPlaceNames().at(p);
-                        std::cout << maxPlaceBound[pi] << " ";
+                        bound += builder->getPlaceNames().at(p);
                     }
-                    std::cout <<  "TECHNIQUES EXPLICIT ";
+                    std::cout << bound <<  " TECHNIQUES EXPLICIT ";
                     
                     if(options->enablereduction > 0)
                     {
                         std::cout << "STRUCTURAL_REDUCTION";
                     }
-/*                    std::cout << "\n\nMaximum number of tokens in place "<<
-                            query->placeNameForBound() << ": " <<
-                            maxPlaceBound[p] << "\n\n"; */
                 } else {
                     if(!options->statespaceexploration)
                     {
@@ -83,9 +81,7 @@ namespace PetriEngine {
                         {
                             std::cout << "STRUCTURAL_REDUCTION";
                         }
-                        std::cout << "\n";
                     }
-                    std::cout << "\nQuery is NOT satisfied.\n\n";
                 }
             }
             std::cout << std::endl;

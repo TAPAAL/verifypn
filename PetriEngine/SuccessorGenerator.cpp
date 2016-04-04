@@ -57,7 +57,13 @@ namespace PetriEngine {
                     linv = _net._transitions[_suc_tcounter+1].inputs;
                     for(;finv < linv; ++finv)
                     {
-                        write.marking()[_net._invariants[finv].place] += _net._invariants[finv].tokens;
+                        size_t n = write.marking()[_net._invariants[finv].place];
+                        n += _net._invariants[finv].tokens;
+                        if(n >= std::numeric_limits<uint32_t>::max())
+                        {
+                            exit(-1);
+                        }
+                        write.marking()[_net._invariants[finv].place] = n;
                     }
                     ++_suc_tcounter;
                     return true;

@@ -86,7 +86,7 @@ namespace PetriEngine {
         assert(t < _transitions.size());
         assert(p < _places.size());
         _transitions[t].pre.push_back(arc);
-        _places[p].input.push_back(t);
+        _places[p].consumers.push_back(t);
     }
 
     void PetriNetBuilder::addOutputArc(const string &transition, const string &place, int weight) {
@@ -109,7 +109,7 @@ namespace PetriEngine {
         arc.weight = weight;
         arc.skip = false;
         _transitions[t].post.push_back(arc);
-        _places[p].output.push_back(t);
+        _places[p].producers.push_back(t);
     }
 
     uint32_t PetriNetBuilder::nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids, bool reorder)
@@ -145,8 +145,8 @@ namespace PetriEngine {
             place_idmap[i] = std::numeric_limits<uint32_t>::max();
             if(!_places[i].skip)
             {
-                place_cons_count[i] = _places[i].input.size();
-                invariants += _places[i].input.size() + _places[i].output.size();
+                place_cons_count[i] = _places[i].consumers.size();
+                invariants += _places[i].consumers.size() + _places[i].producers.size();
             }
         }
 
@@ -165,7 +165,7 @@ namespace PetriEngine {
         {
             place_idmap[next] = free;
             net->_placeToPtrs[free] = freetrans;
-            for(auto t : _places[next].input)
+            for(auto t : _places[next].consumers)
             {
                 Transition& trans = _transitions[t]; 
                 if(trans.skip) continue;
