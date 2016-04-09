@@ -5,9 +5,10 @@ CC				= g++
 CUT				= cut
 
 # Compiler and linker flags
-CFLAGS			= -flto -march=x86-64 -std=c++14  -m64 -I.
-LDFLAGS			= -flto -march=x86-64 -std=c++14  -m64 lpsolve/liblpsolve55-linux64.a -ldl \
-              -static-libgcc -static-libstdc++
+CFLAGS			= -fPIC -flto -march=x86-64 -std=c++14  -m64 -I.
+LDFLAGS			= -flto -march=x86-64 -std=c++14  -m64 lpsolve/liblpsolve55-linux64.a -Wl,-Bstatic -ldl -lm -lc \
+              -static-libgcc -static-libstdc++ 
+#-Wl,-Bdynamic -lpthread
 
 # Input files
 FLEX_SOURCES	= $(shell find * -name "*.l")

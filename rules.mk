@@ -7,8 +7,8 @@ all: release
 $(TARGET): $(DEPS) $(OBJECTS)
 	$(CC) $^ $(LDFLAGS) -o $@
 
-release: CFLAGS += -Wall -pedantic-errors -O3 -DNDEBUG -static
-release: LDFLAGS += -O3 -DNDEBUG -static
+release: CFLAGS += -Wall -pedantic-errors -O3 -DNDEBUG
+release: LDFLAGS += -O3 -DNDEBUG
 release: $(TARGET)
 debug: CFLAGS += -g
 debug: LDFLAGS += -g
