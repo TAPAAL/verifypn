@@ -6,9 +6,9 @@ CUT				= cut
 
 # Compiler and linker flags
 CFLAGS			= -fPIC -flto -march=x86-64 -std=c++14  -m64 -I.
-LDFLAGS			= -flto -march=x86-64 -std=c++14  -m64 lpsolve/liblpsolve55-linux64.a -Wl,-Bstatic -ldl -lm -lc \
+LDFLAGS			= -flto -march=x86-64 -std=c++14  -m64 lpsolve/liblpsolve55-linux64.a -static \
               -static-libgcc -static-libstdc++ 
-#-Wl,-Bdynamic -lpthread
+# -Wl,-Bstatic -ldl -lm -lc -Wl,-Bdynamic -lpthread 
 
 # Input files
 FLEX_SOURCES	= $(shell find * -name "*.l")
@@ -17,6 +17,6 @@ SOURCES			= $(shell find * -name "*.cpp" | grep -v ".\\(parser\\|lexer\\).cpp")	
 				  $(BISON_SOURCES:.y=.parser.cpp)											\
 				  $(FLEX_SOURCES:.l=.lexer.cpp)
 OBJECTS			= $(SOURCES:.cpp=.o)
-TARGET			= verifypn-linux64
+TARGET			= verifypn-experimental-linux64
 
 include rules.mk

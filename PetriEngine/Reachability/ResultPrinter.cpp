@@ -30,11 +30,11 @@ namespace PetriEngine {
                     placeBound = std::max<uint32_t>(placeBound, maxPlaceBound[p]);
                 }
                 // fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
-                std::cout   << "STATE_SPACE STATES "<< exploredStates <<" TECHNIQUES EXPLICIT\n" 
+                std::cout   << "STATE_SPACE STATES "<< exploredStates           << " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION\n" 
 //                            << "STATE_SPACE TRANSITIONS "<< discoveredStates <<" TECHNIQUES EXPLICIT\n" 
-                            << "STATE_SPACE TRANSITIONS "<< -1 <<" TECHNIQUES EXPLICIT\n" 
-                            << "STATE_SPACE MAX_TOKEN_PER_MARKING "<< maxTokens << " TECHNIQUES EXPLICIT\n" 
-                            << "STATE_SPACE MAX_TOKEN_IN_PLACE "<< placeBound <<" TECHNIQUES EXPLICIT\n"
+                            << "STATE_SPACE TRANSITIONS "<< -1                  << " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION\n" 
+                            << "STATE_SPACE MAX_TOKEN_PER_MARKING "<< maxTokens << " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION\n" 
+                            << "STATE_SPACE MAX_TOKEN_IN_PLACE "<< placeBound   << " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION\n"
                             << std::endl;
                 return retval;
             }
@@ -52,11 +52,11 @@ namespace PetriEngine {
             else if (retval == Satisfied) {
                 if(!options->statespaceexploration)
                 {
-                    std::cout << "TRUE TECHNIQUES EXPLICIT ";
-                    if(options->enablereduction > 0)
-                    {
-                        std::cout << "STRUCTURAL_REDUCTION";
-                    }
+                    std::cout << "TRUE TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT ";
+/*                    if(options->enablereduction > 0)
+                    {*/
+                        std::cout << "STRUCTURAL_REDUCTION STATE_COMPRESSION";
+//                    }
                     std::cout << std::endl;
                 }
             } else if (retval == NotSatisfied) {
@@ -65,22 +65,22 @@ namespace PetriEngine {
                     size_t bound = 0;
                     for(auto& p : query->placeNameForBound())
                     {
-                        bound += builder->getPlaceNames().at(p);
+                        bound += maxPlaceBound[builder->getPlaceNames().at(p)];
                     }
-                    std::cout << bound <<  " TECHNIQUES EXPLICIT ";
+                    std::cout << bound <<  " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT ";
                     
-                    if(options->enablereduction > 0)
-                    {
-                        std::cout << "STRUCTURAL_REDUCTION";
-                    }
+//                    if(options->enablereduction > 0)
+//                    {
+                        std::cout << "STRUCTURAL_REDUCTION STATE_COMPRESSION";
+//                    }
                 } else {
                     if(!options->statespaceexploration)
                     {
-                        std::cout << "FALSE TECHNIQUES EXPLICIT ";
-                        if(options->enablereduction > 0)
-                        {
-                            std::cout << "STRUCTURAL_REDUCTION";
-                        }
+                        std::cout << "FALSE TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT ";
+//                        if(options->enablereduction > 0)
+//                        {
+                            std::cout << "STRUCTURAL_REDUCTION STATE_COMPRESSION";
+//                        }
                     }
                 }
             }
