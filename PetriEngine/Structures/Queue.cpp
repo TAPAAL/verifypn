@@ -52,6 +52,7 @@ namespace PetriEngine {
         {
             if(_stack.empty()) return false;
             uint32_t n = _stack.top();
+            _stack.pop();
             _states.decode(state, n);
             return true;
         }
