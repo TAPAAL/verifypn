@@ -112,7 +112,7 @@ case "$BK_EXAMINATION" in
 		echo "*********************************************************"
                 LIST=$(getlist "ReachabilityDeadlock.xml")
                 verify 60 "$LIST" "-n -r 1 -s DFS" "ReachabilityDeadlock.xml"
-                verify 50 "$LIST" "-d -n -r 1 -s BFS" "ReachabilityDeadlock.xml"
+                verify 600 "$LIST" "-d -n -r 1 -s BFS" "ReachabilityDeadlock.xml"
                 verifyall 7200 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityDeadlock.xml"
                 exit 0 
 		;;
@@ -124,8 +124,8 @@ case "$BK_EXAMINATION" in
 		echo "*********************************************************"
                 LIST=$(getlist "ReachabilityCardinality.xml")
                 verify 60 "$LIST" "-n -r 1 -s BestFS" "ReachabilityCardinality.xml"
-                verify 30 "$LIST" "-n -r 1 -s DFS" "ReachabilityCardinality.xml"
-                verify 30 "$LIST" "-n -r 1 -s BFS" "ReachabilityCardinality.xml"
+                verify 30 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityCardinality.xml"
+                verify 30 "$LIST" "-d -n -r 1 -s BFS" "ReachabilityCardinality.xml"
                 verifyall 7200 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityCardinality.xml"
                 exit 0 
 		;;
@@ -137,8 +137,8 @@ case "$BK_EXAMINATION" in
 		echo "*********************************************************"
                 LIST=$(getlist "ReachabilityFireability.xml")
                 verify 60 "$LIST" "-n -r 1 -s BestFS" "ReachabilityFireability.xml"
-                verify 50 "$LIST" "-n -r 1 -s DFS" "ReachabilityFireability.xml"
-                verify 50 "$LIST" "-n -r 1 -s BFS" "ReachabilityFireability.xml"
+                verify 30 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityFireability.xml"
+                verify 30 "$LIST" "-d -n -r 1 -s BFS" "ReachabilityFireability.xml"
                 verifyall 7200 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityFireability.xml"
                 exit 0    
 		;;
