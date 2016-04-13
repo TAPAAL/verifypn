@@ -405,6 +405,12 @@ int main(int argc, char* argv[]) {
     
     if(alldone) return SuccessCode;
     
+    if(!alldone && options.strategy == PetriEngine::Reachability::APPROX)
+    {
+        std::cout << "Could not solve all queries with over approximation" << std::endl;
+        return ContinueCode;
+    }
+    
     //--------------------- Apply Net Reduction ---------------//
         
     if (options.enablereduction == 1 || options.enablereduction == 2) {

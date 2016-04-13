@@ -43,7 +43,7 @@ function verifyall {
 		exit 1 
 	fi
         
-        QS=${2/ /,}
+        QS=$(echo $2 | sed 's/ /,/g' ) 
 
         echo "verifypnall" $3 "-x" "$QS" "model.pnml" $4
         timeout $1 $VERIFYPN $3 "-x" "$QS" model.pnml $4	 
@@ -63,7 +63,7 @@ function verify {
                 timeout $1 $VERIFYPN $3 "-x" $QUERY model.pnml $4
                 RETVAL=$?
                 if [ $RETVAL = 124 ] || [ $RETVAL =  125 ] || [ $RETVAL =  126 ] || \
-                   [ $RETVAL =  127 ] || [ $RETVAL =  137 ] ; then
+                   [ $RETVAL =  127 ] || [ $RETVAL =  137 ] || [ $RETVAL =  4 ] ; then
                         RQ="$RQ $QUERY"
                 fi	 
 
@@ -100,7 +100,8 @@ case "$BK_EXAMINATION" in
 		echo "* TAPAAL Experimental verifying UpperBounds*"
 		echo "********************************************"
                 LIST=$(getlist "UpperBounds.xml")
-                verify 60 "$LIST" "-n -r 1 -s BFS" "UpperBounds.xml"
+                verify 10 "$LIST" "-n -s OverApprox" "UpperBounds.xml"
+                verify 60 "$LIST" "-d -n -r 1 -s BFS" "UpperBounds.xml"
                 verifyall 7200 "$LIST" "-d -n -r 1 -s BFS" "UpperBounds.xml"
                 exit 0 
 		;;
@@ -111,8 +112,9 @@ case "$BK_EXAMINATION" in
 		echo "* TAPAAL Experimental checking for ReachabilityDeadlock *"
 		echo "*********************************************************"
                 LIST=$(getlist "ReachabilityDeadlock.xml")
-                verify 60 "$LIST" "-n -r 1 -s DFS" "ReachabilityDeadlock.xml"
-                verify 600 "$LIST" "-d -n -r 1 -s BFS" "ReachabilityDeadlock.xml"
+                verify 10 "$LIST" "-n -s OverApprox" "ReachabilityDeadlock.xml"
+                verify 60 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityDeadlock.xml"
+                verify 60 "$LIST" "-d -n -r 1 -s BFS" "ReachabilityDeadlock.xml"
                 verifyall 7200 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityDeadlock.xml"
                 exit 0 
 		;;
@@ -123,10 +125,11 @@ case "$BK_EXAMINATION" in
 		echo "* TAPAAL Experimental verifying ReachabilityCardinality *"
 		echo "*********************************************************"
                 LIST=$(getlist "ReachabilityCardinality.xml")
-                verify 60 "$LIST" "-n -r 1 -s BestFS" "ReachabilityCardinality.xml"
+                verify 10 "$LIST" "-n -s OverApprox" "ReachabilityCardinality.xml"
+                verify 60 "$LIST" "-d -n -r 1 -s BestFS" "ReachabilityCardinality.xml"
                 verify 30 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityCardinality.xml"
                 verify 30 "$LIST" "-d -n -r 1 -s BFS" "ReachabilityCardinality.xml"
-                verifyall 7200 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityCardinality.xml"
+                verifyall 7200 "$LIST" "-d -n -r 1 -s BestFS" "ReachabilityCardinality.xml"
                 exit 0 
 		;;
 
@@ -136,10 +139,11 @@ case "$BK_EXAMINATION" in
 		echo "* TAPAAL Experimental verifying ReachabilityFireability *"
 		echo "*********************************************************"
                 LIST=$(getlist "ReachabilityFireability.xml")
-                verify 60 "$LIST" "-n -r 1 -s BestFS" "ReachabilityFireability.xml"
+                verify 10 "$LIST" "-n -s OverApprox" "ReachabilityFireability.xml"
+                verify 60 "$LIST" "-d -n -r 1 -s BestFS" "ReachabilityFireability.xml"
                 verify 30 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityFireability.xml"
                 verify 30 "$LIST" "-d -n -r 1 -s BFS" "ReachabilityFireability.xml"
-                verifyall 7200 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityFireability.xml"
+                verifyall 7200 "$LIST" "-d -n -r 1 -s BestFS" "ReachabilityFireability.xml"
                 exit 0    
 		;;
 
