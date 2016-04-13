@@ -100,7 +100,6 @@ case "$BK_EXAMINATION" in
 		echo "* TAPAAL Experimental verifying UpperBounds*"
 		echo "********************************************"
                 LIST=$(getlist "UpperBounds.xml")
-                verify 10 "$LIST" "-n -s OverApprox" "UpperBounds.xml"
                 verify 60 "$LIST" "-d -n -r 1 -s BFS" "UpperBounds.xml"
                 verifyall 7200 "$LIST" "-d -n -r 1 -s BFS" "UpperBounds.xml"
                 exit 0 
@@ -112,7 +111,6 @@ case "$BK_EXAMINATION" in
 		echo "* TAPAAL Experimental checking for ReachabilityDeadlock *"
 		echo "*********************************************************"
                 LIST=$(getlist "ReachabilityDeadlock.xml")
-                verify 10 "$LIST" "-n -s OverApprox" "ReachabilityDeadlock.xml"
                 verify 60 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityDeadlock.xml"
                 verify 60 "$LIST" "-d -n -r 1 -s BFS" "ReachabilityDeadlock.xml"
                 verifyall 7200 "$LIST" "-d -n -r 1 -s DFS" "ReachabilityDeadlock.xml"
