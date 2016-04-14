@@ -62,11 +62,9 @@ function verify {
                 echo "verifypn" $3 "-x" "$QUERY" "model.pnml" $4
                 timeout $1 $VERIFYPN $3 "-x" $QUERY model.pnml $4
                 RETVAL=$?
-                if [ $RETVAL = 124 ] || [ $RETVAL =  125 ] || [ $RETVAL =  126 ] || \
-                   [ $RETVAL =  127 ] || [ $RETVAL =  137 ] || [ $RETVAL =  4 ] ; then
+                if [ $RETVAL -ge 4 ] || [ $RETVAL -lt 0 ] ; then
                         RQ="$RQ $QUERY"
                 fi	 
-
         done
         LIST="$RQ"
 } 
