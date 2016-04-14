@@ -198,7 +198,7 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
             if (children[0]->getElementName() != "place") {
                 return false;
             }
-            placeBounds.push_back(parsePlace(children[0]));
+            placeBounds.push_back(parsePlace(children[i]));
             if (placeBounds.back() == "") {
                 return false; // invalid place name
             }

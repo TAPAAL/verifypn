@@ -23,6 +23,8 @@
 #include <string>
 #include <list>
 #include <vector>
+#include <algorithm>
+#include <map>
 
 namespace llvm {
     class Value;
@@ -119,11 +121,13 @@ namespace PetriEngine {
         class Condition {
             bool _inv;
             std::vector<std::string> _placenameforbound;
+            std::vector<size_t> _placeids;
+            size_t _bound = 0;
         public:
             /** Virtual destructor */
             virtual ~Condition();
             /** Evaluate condition */
-            bool evaluate(Structures::State& state, const PetriNet* net) const;
+            bool evaluate(Structures::State& state, const PetriNet* net);
             /** Perform context analysis  */
             virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate condition */
@@ -144,6 +148,11 @@ namespace PetriEngine {
                 _inv = isInvariant;
             }
            
+            size_t getBound()
+            {
+                return _bound;
+            }
+            
             bool isInvariant()
             {
                 return _inv;
@@ -152,6 +161,17 @@ namespace PetriEngine {
             void setPlaceNameForBounds(std::vector<std::string>& b)
             {
                 _placenameforbound  = b;
+            }
+            
+            void indexPlaces(const std::map<std::string, uint32_t>& map)
+            {
+                _placeids.clear();
+                for(auto& i : _placenameforbound)
+                {
+                    std::cout << i << std::endl;
+                    _placeids.push_back(map.at(i));
+                }
+                std::sort(_placeids.begin(), _placeids.end());
             }
             
             std::vector<std::string>& placeNameForBound(){

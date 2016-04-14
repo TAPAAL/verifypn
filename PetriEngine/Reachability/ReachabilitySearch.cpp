@@ -100,17 +100,7 @@ namespace PetriEngine {
                     bool printstats)
         {
             bool usequeries = !statespacesearch;
-            if(usequeries)
-            {
-                for(size_t i = 0; i < queries.size(); ++i)
-                {
-                    if(results[i] == ResultPrinter::Unknown)
-                    {
-                        usequeries &= queries[i]->placeNameForBound().empty();
-                    }
-                }
-            }            
-                        
+
             // if we are searching for bounds
             if(!usequeries) strategy = BFS;
             

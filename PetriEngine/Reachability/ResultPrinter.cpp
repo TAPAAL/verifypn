@@ -62,12 +62,8 @@ namespace PetriEngine {
             } else if (retval == NotSatisfied) {
                 if (!query->placeNameForBound().empty()) {
                     // find index of the place for reporting place bound
-                    size_t bound = 0;
-                    for(auto& p : query->placeNameForBound())
-                    {
-                        bound += maxPlaceBound[builder->getPlaceNames().at(p)];
-                    }
-                    std::cout << bound <<  " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT ";
+
+                    std::cout << query->getBound() <<  " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT ";
                     
 //                    if(options->enablereduction > 0)
 //                    {

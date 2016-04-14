@@ -421,6 +421,12 @@ int main(int argc, char* argv[]) {
     //----------------------- Reachability -----------------------//
 
     PetriNet* net = builder.makePetriNet();
+    
+    for(auto& q : queries)
+    {
+        q->indexPlaces(builder.getPlaceNames());
+    }
+    
     //Create reachability search strategy
     ReachabilitySearch strategy(printer, *net, options.kbound);
 

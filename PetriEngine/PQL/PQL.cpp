@@ -26,8 +26,23 @@ namespace PetriEngine {
         Expr::~Expr() {
         }
 
-        bool Condition::evaluate(Structures::State &state, const PetriNet* net) const {
-            return evaluate(EvaluationContext(state.marking(), net));
+        bool Condition::evaluate(Structures::State &state, const PetriNet* net) {
+            if(_placeids.size() > 0)
+            {
+                size_t sum = 0;
+                for(auto i : _placeids)
+                {
+                    sum += state.marking()[i];
+                }
+                
+                _bound = std::max(sum, _bound);
+                    
+                return false;
+            }
+            else
+            {
+                return evaluate(EvaluationContext(state.marking(), net));
+            }
         }
 
         Condition::~Condition() {
