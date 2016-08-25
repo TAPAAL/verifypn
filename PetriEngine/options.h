@@ -20,6 +20,7 @@ struct options_t {
     size_t memorylimit = 2048;
     std::set<size_t> querynumbers = std::set<size_t>();
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
+    bool mccoutput = false;
 };
 
 #endif

@@ -134,6 +134,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.statespaceexploration = true;
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--no-statistics") == 0) {
             options.printstatistics = false;
+        } else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--mcc") == 0) {
+            options.mccoutput = true;
         } else if (strcmp(argv[i], "-x") == 0 || strcmp(argv[i], "--xml-queries") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -179,6 +181,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
+                    "  -o, --mcc                          Use MCC output-format\n"
                     "  -m, --memory-limit <mb-memory>     Limit for when encoding kicks in, default 2048\n"
                     "\n"
                     "Return Values:\n"
