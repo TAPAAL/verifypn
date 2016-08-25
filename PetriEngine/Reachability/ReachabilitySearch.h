@@ -112,8 +112,15 @@ namespace PetriEngine {
             working.setMarking(_net.makeInitialMarking());
             
             // check initial marking
-            if(ss.usequeries) checkQueries(queries, results, working, ss);
-
+            if(ss.usequeries) 
+            {
+                if(checkQueries(queries, results, working, ss))
+                {
+                    if(printstats) printStats(ss);
+                        return;
+                }
+            }
+            
             // add initial
             auto r = states.add(state);
             if(r.first) queue.push(r.second, state, queries[ss.heurquery]);

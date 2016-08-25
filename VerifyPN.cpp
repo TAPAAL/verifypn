@@ -255,46 +255,68 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
         stringstream buffer;
         buffer << qfile.rdbuf();
         string querystr = buffer.str(); // including EF and AG
-        //Parse XML the queries and querystr let be the index of xmlquery 		
-
-        if (!XMLparser.parse(querystr)) {
-            fprintf(stderr, "Error: Failed parsing XML query file\n");
-            fprintf(stdout, "DO_NOT_COMPETE\n");
-            conditions.clear();
-            return conditions;
-        }
+        //Parse XML the queries and querystr let be the index of xmlquery 
         
-        size_t i = 0;
-        
-        for(auto& q : XMLparser.queries)
+        if(options.querynumbers.size() == 0)
         {
-            bool isInvariant = false;
-            if(!options.querynumbers.empty()
-                    && options.querynumbers.count(i) == 0)
-            {
-                ++i;
-                continue;
+            qstrings.push_back(querystring);
+            //Validate query type
+            if (querystr.substr(0, 2) != "EF" && querystr.substr(0, 2) != "AG") {
+                    fprintf(stderr, "Error: Query type \"%s\" not supported, only (EF and AG is supported)\n", querystr.substr(0, 2).c_str());
+                    return conditions;
             }
-            ++i;
-            
-            if (q.parsingResult == QueryXMLParser::QueryItem::UNSUPPORTED_QUERY) {
-                fprintf(stdout, "The selected query in the XML query file is not supported\n");
-                fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
-                continue;
-            }
-            // fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
-            querystr = q.queryText;
+            //Check if is invariant
+            bool isInvariant = querystr.substr(0, 2) == "AG";
+
+            //Wrap in not if isInvariant
             querystring = querystr.substr(2);
-            isInvariant = q.negateResult;
+            if (isInvariant)
+                    querystring = "not ( " + querystring + " )";
+            std::vector<std::string> tmp;
+            conditions.push_back(ParseQuery(querystring, isInvariant, tmp));
+        }
+        else
+        {
 
-
-            conditions.push_back(ParseQuery(querystring, isInvariant, q.boundNames));
-            if (conditions.back() == NULL) {
-                fprintf(stderr, "Error: Failed to parse query \"%s\"\n", querystring.c_str()); //querystr.substr(2).c_str());
-                fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
-                conditions.pop_back();
+            if (!XMLparser.parse(querystr)) {
+                fprintf(stderr, "Error: Failed parsing XML query file\n");
+                fprintf(stdout, "DO_NOT_COMPETE\n");
+                conditions.clear();
+                return conditions;
             }
-            qstrings.push_back(q.id);
+
+            size_t i = 0;
+
+            for(auto& q : XMLparser.queries)
+            {
+                bool isInvariant = false;
+                if(!options.querynumbers.empty()
+                        && options.querynumbers.count(i) == 0)
+                {
+                    ++i;
+                    continue;
+                }
+                ++i;
+
+                if (q.parsingResult == QueryXMLParser::QueryItem::UNSUPPORTED_QUERY) {
+                    fprintf(stdout, "The selected query in the XML query file is not supported\n");
+                    fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
+                    continue;
+                }
+                // fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
+                querystr = q.queryText;
+                querystring = querystr.substr(2);
+                isInvariant = q.negateResult;
+
+
+                conditions.push_back(ParseQuery(querystring, isInvariant, q.boundNames));
+                if (conditions.back() == NULL) {
+                    fprintf(stderr, "Error: Failed to parse query \"%s\"\n", querystring.c_str()); //querystr.substr(2).c_str());
+                    fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
+                    conditions.pop_back();
+                }
+                qstrings.push_back(q.id);
+            }
         }
         qfile.close();
         return conditions;
