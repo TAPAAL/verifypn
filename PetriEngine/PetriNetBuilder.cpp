@@ -67,7 +67,7 @@ namespace PetriEngine {
         }
     }
 
-    void PetriNetBuilder::addInputArc(const string &place, const string &transition, int weight) {
+    void PetriNetBuilder::addInputArc(const string &place, const string &transition, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
             addTransition(transition,0.0,0.0);
@@ -83,6 +83,7 @@ namespace PetriEngine {
         arc.place = p;
         arc.weight = weight;
         arc.skip = false;
+        arc.inhib = inhibitor;
         assert(t < _transitions.size());
         assert(p < _places.size());
         _transitions[t].pre.push_back(arc);
@@ -173,7 +174,7 @@ namespace PetriEngine {
                 net->_transitions[freetrans].inputs = freeinv;
 
                 // check first, we are going to change state later, but we can 
-                // break here, so not statechange inside loop!
+                // break here, so no statechange inside loop!
                 bool ok = true;
                 uint32_t cnt = 0;
                 for(auto pre : trans.pre)
@@ -194,8 +195,10 @@ namespace PetriEngine {
                 // everything is good, change state!.
                 for(auto pre : trans.pre)
                 {
-                    net->_invariants[freeinv].place = pre.place;
-                    net->_invariants[freeinv].tokens = pre.weight;
+                    Invariant& iv = net->_invariants[freeinv];
+                    iv.place = pre.place;
+                    iv.tokens = pre.weight;
+                    iv.inhibitor = pre.inhib;
                     ++freeinv;
                     assert(place_cons_count[pre.place] > 0);
                     --place_cons_count[pre.place];

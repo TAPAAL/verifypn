@@ -40,11 +40,12 @@ namespace PetriEngine {
         void addPlace(const std::string& name, int tokens, double x, double y);
         void addTransition(const std::string& name,
                 double x,
-                double y);
+                double y) override;
         void addInputArc(const std::string& place,
                 const std::string& transition,
-                int weight);
-        void addOutputArc(const std::string& transition, const std::string& place, int weight);
+                bool inhibitor,
+                int weight) override;
+        void addOutputArc(const std::string& transition, const std::string& place, int weight) override;
         /** Make the resulting petri net, you take ownership */
         PetriNet* makePetriNet(bool reorder = true);
         /** Make the resulting initial marking, you take ownership */

@@ -38,7 +38,8 @@ namespace PetriEngine {
         /** Add input arc with given weight */
         virtual void addInputArc(const std::string& place,
                 const std::string& transition,
-                int weight = 1) = 0;
+                bool inhibitor,
+                int) = 0;
         /** Add output arc with given weight */
         virtual void addOutputArc(const std::string& transition,
                 const std::string& place,

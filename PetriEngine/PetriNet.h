@@ -46,7 +46,9 @@ namespace PetriEngine {
     struct Invariant {
         uint32_t place;
         uint32_t tokens;
-    };
+        bool inhibitor;
+        // we can pack things here, but might give slowdown
+    } /*__attribute__((packed))*/; 
     
     /** Type used for holding markings values */
     typedef uint32_t MarkVal;

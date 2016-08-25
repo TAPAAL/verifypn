@@ -699,7 +699,7 @@ namespace PetriEngine {
         uint32_t CompareCondition::distance(DistanceContext& context) const {
             int v1 = _expr1->evaluate(context);
             int v2 = _expr2->evaluate(context);
-            return abs(delta(v1, v2, context.negated()));
+            return delta(v1, v2, context.negated());
         }
 
         uint32_t EqualCondition::delta(int v1, int v2, bool negated) const {

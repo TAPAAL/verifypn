@@ -42,15 +42,32 @@ namespace PetriEngine {
                     uint32_t finv = ptr.inputs;
                     uint32_t linv = ptr.outputs;
                     bool ok = true;
+                    
                     for(;finv < linv; ++finv)
                     {
-                        if(_parent.marking()[_net._invariants[finv].place] < _net._invariants[finv].tokens)
+                        const Invariant& inv = _net._invariants[finv];
+                        if(_parent.marking()[inv.place] < inv.tokens)
                         {
-                            ok = false;
-                            break;
+                            if(!inv.inhibitor)
+                            {
+                                ok = false;
+                                break;
+                            }
                         }
-                        write.marking()[_net._invariants[finv].place] -= _net._invariants[finv].tokens;
+                        else
+                        {
+                            if(inv.inhibitor)
+                            {
+                                ok = false;
+                                break;
+                            }
+                            else
+                            {
+                                write.marking()[_net._invariants[finv].place] -= _net._invariants[finv].tokens;
+                            }
+                        }
                     }
+                    
                     if(!ok) continue;
                     // else fire
                     finv = linv;

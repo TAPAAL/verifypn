@@ -51,7 +51,7 @@ namespace PetriEngine {
             
             ~StateSet()
             {
-
+                
             }
             
             const PetriNet& net() { return _net;}
@@ -99,7 +99,6 @@ namespace PetriEngine {
 
 
                 size_t length = _encoder.encode(state.marking(), type);
-
                 wrapper_t w = wrapper_t(_encoder.scratchpad().raw(), length*8);
                 auto tit = _trie.insert(w);
             

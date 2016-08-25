@@ -72,7 +72,7 @@ void PNMLParser::parse(const std::string& xml,
         NodeName target = id2name[it->target];
 
         if (source.isPlace && !target.isPlace) {
-            builder->addInputArc(source.id, target.id, it->weight);
+            builder->addInputArc(source.id, target.id, false, it->weight);
 
             // cout << "ARC: " << source.id << " to " << target.id << " weight " << it->weight << endl;
             char weight[sizeof (int) * 8 + 1];
@@ -85,12 +85,28 @@ void PNMLParser::parse(const std::string& xml,
             builder->addOutputArc(source.id, target.id, it->weight);
         } else {
             fprintf(stderr,
-                    "XML Parsing error: Arc from \"%s\" to \"%s\" is neight input nor output!\n",
+                    "XML Parsing error: Arc from \"%s\" to \"%s\" is neither input nor output!\n",
                     source.id.c_str(),
                     target.id.c_str());
         }
     }
 
+    for(Arc& inhibitor : inhibarcs)
+    {
+        NodeName source = id2name[inhibitor.source];
+        NodeName target = id2name[inhibitor.target];
+        if (source.isPlace && !target.isPlace) {
+            builder->addInputArc(source.id, target.id, true, inhibitor.weight);
+        }
+        else
+        {
+            fprintf(stderr,
+                    "XML Parsing error: Inhibitor from \"%s\" to \"%s\" is not valid!\n",
+                    source.id.c_str(),
+                    target.id.c_str());
+        }
+    }
+    
     // finalize transitionEnabledness
     for (TransitionIter it = transitions.begin(); it != transitions.end(); it++) {
         transitionEnabledness[it->id] += ")";
@@ -106,7 +122,7 @@ void PNMLParser::parse(const std::string& xml,
     id2name.clear();
     arcs.clear();
     transitions.clear();
-    //inhibarcs.clear(); We need those for the use in net reductions
+    inhibarcs.clear();
 }
 
 void PNMLParser::makePetriNet() {
@@ -129,8 +145,7 @@ void PNMLParser::parseElement(DOMElement* element) {
             std::cout << "transportArc not supported" << std::endl;
             exit(-1);
         } else if ((*it)->getElementName() == "inhibitorArc") {
-            std::cout << "inhibitorArc not supported" << std::endl;
-            exit(-1);
+            parseArc(*it, true);
         } else if ((*it)->getElementName() == "variable") {
             std::cout << "variable not supported" << std::endl;
             exit(-1);
@@ -182,7 +197,7 @@ void PNMLParser::parsePlace(DOMElement* element) {
     id2name[id] = nn;
 }
 
-void PNMLParser::parseArc(DOMElement* element) {
+void PNMLParser::parseArc(DOMElement* element, bool inhibitor) {
     string source = element->getAttribute("source"),
             target = element->getAttribute("target");
     int weight = 1;
@@ -200,7 +215,14 @@ void PNMLParser::parseArc(DOMElement* element) {
     arc.source = source;
     arc.target = target;
     arc.weight = weight;
-    arcs.push_back(arc);
+    if(inhibitor)
+    {
+        inhibarcs.push_back(arc);   
+    }
+    else
+    {
+        arcs.push_back(arc);
+    }
 }
 
 void PNMLParser::parseTransition(DOMElement* element) {

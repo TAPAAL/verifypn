@@ -75,7 +75,7 @@ public:
 private:
     void parseElement(XMLSP::DOMElement* element);
     void parsePlace(XMLSP::DOMElement* element);
-    void parseArc(XMLSP::DOMElement* element);
+    void parseArc(XMLSP::DOMElement* element, bool inhibitor = false);
     void parseTransition(XMLSP::DOMElement* element);
     void parseValue(XMLSP::DOMElement* element, std::string& text);
     void parsePosition(XMLSP::DOMElement* element, double& x, double& y);
@@ -83,6 +83,7 @@ private:
     PetriEngine::AbstractPetriNetBuilder* builder;
     NodeNameMap id2name;
     ArcList arcs;
+    ArcList inhibarcs;
     TransitionList transitions;
     std::vector<Query> queries;
     TransitionEnablednessMap transitionEnabledness; // encodes the enabledness condition for each transition
