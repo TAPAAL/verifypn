@@ -120,6 +120,7 @@ namespace PetriEngine {
                     _maxPlaceBound[i] = std::max<MarkVal>( state.marking()[i],
                                                             _maxPlaceBound[i]);
                 }
+
 #ifdef DEBUG    
                 if(_trie.size() % 100000 == 0) std::cout << "Inserted " << _trie.size() << std::endl;
 #endif     

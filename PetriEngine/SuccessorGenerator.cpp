@@ -27,7 +27,7 @@ namespace PetriEngine {
     bool SuccessorGenerator::next(Structures::State& write)
     {
         for (; _suc_pcounter < _net._nplaces; _suc_pcounter++) {
-            if(_parent.marking()[_suc_pcounter] > 0)
+            if(true || _parent.marking()[_suc_pcounter] > 0) // only works if there are no invariants
             {
                 if(_suc_tcounter == std::numeric_limits<uint32_t>::max())
                 {

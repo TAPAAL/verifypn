@@ -167,6 +167,10 @@ namespace PetriEngine {
 
             // Check that pPre goes only to t
             if(parent->_places[pPre].consumers.size() != 1) continue;
+            
+            // Do inhibitor check, neither T, pPre or pPost can be involved with any inhibitor
+            if(parent->_places[pPre].inhib || parent->_places[pPost].inhib || trans.inhib) continue;
+            
 
             continueReductions = true;
             _ruleA++;
@@ -263,6 +267,19 @@ namespace PetriEngine {
             
             if(inArc->weight != outArc->weight) continue;
             
+            // Do inhibitor check, neither In, out or place can be involved with any inhibitor
+            if(place.inhib || in.inhib || out.inhib) continue;
+            
+            // also, none of the places in the post-set of out can be participating in inhibitors.
+            {
+                bool post_inhib = false;
+                for(const Arc& a : out.post)
+                {
+                    post_inhib |= parent->_places[a.place].inhib;
+                    if(post_inhib) break;
+                }
+                if(post_inhib) continue;
+            }
 
             bool ok = true;
             // Check if the output places of tPost do not have any inhibitor arcs connected and are not used in the query
@@ -317,7 +334,7 @@ namespace PetriEngine {
             
             Place& place1 = parent->_places[p1];
             
-            if(place1.skip) continue;
+            if(place1.skip || place1.inhib) continue;
             
             // use symmetry to speed up things
             for (uint32_t p2 = p1 + 1; p2 < parent->numberOfPlaces(); ++p2) 
@@ -329,7 +346,7 @@ namespace PetriEngine {
                 
                 Place& place2 = parent->_places[p2];
                 
-                if(place2.skip) continue;
+                if(place2.skip || place2.inhib) continue;
                 
                 if(place1.consumers.size() != place2.consumers.size() ||
                    place1.producers.size() != place2.producers.size())

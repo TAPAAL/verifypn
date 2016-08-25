@@ -31,8 +31,9 @@ namespace PetriEngine {
         std::vector<Arc> pre;
         std::vector<Arc> post;
         bool skip;
+        bool inhib;
 
-        Transition() : pre(), post(), skip(false) {
+        Transition() : pre(), post(), skip(false), inhib(false) {
         }
     };
 
@@ -40,8 +41,9 @@ namespace PetriEngine {
         std::vector<uint32_t> consumers; // things consuming
         std::vector<uint32_t> producers; // things producing
         bool skip;
+        bool inhib;
 
-        Place() : consumers(), producers(), skip(false) {
+        Place() : consumers(), producers(), skip(false), inhib(false) {
         }
     };
 }

@@ -87,7 +87,9 @@ namespace PetriEngine {
         assert(t < _transitions.size());
         assert(p < _places.size());
         _transitions[t].pre.push_back(arc);
+        _transitions[t].inhib |= inhibitor;
         _places[p].consumers.push_back(t);
+        _places[p].inhib |= inhibitor;
     }
 
     void PetriNetBuilder::addOutputArc(const string &transition, const string &place, int weight) {

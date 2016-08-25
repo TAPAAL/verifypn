@@ -55,7 +55,11 @@ namespace PetriEngine {
         assert(imin != imax);
         for(;imin < imax; ++imin)
         {
-            if(_invariants[imin].place == place) return _invariants[imin].tokens;
+            const Invariant& inv = _invariants[imin];
+            if(inv.place == place)
+            {
+                return inv.inhibitor ? 0 :  _invariants[imin].tokens;
+            }
         }
         return 0;
     }
@@ -89,9 +93,25 @@ namespace PetriEngine {
                     bool allgood = true;
                     for(;finv != linv; ++finv)
                     {
-                        allgood &= m[_invariants[finv].place] >= _invariants[finv].tokens;
+                        allgood &= m[_invariants[finv].place] >= _invariants[finv].tokens; // match tokens
+                        if(_invariants[finv].inhibitor)
+                        {
+                            if(allgood)
+                            {
+                                allgood = false;
+                                break;
+                            }
+                            else
+                            {
+                                allgood = true;
+                            }
+                        }
                     }
-                    if(allgood) return false;
+                    
+                    if(allgood) 
+                    {
+                        return false;
+                    }
                 }
             }
         }
