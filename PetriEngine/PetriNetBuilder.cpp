@@ -164,10 +164,64 @@ namespace PetriEngine {
         uint32_t free = 0;
         uint32_t freeinv = 0;
         uint32_t freetrans = 0;
+        
+        // first handle orphans
+        
+        place_idmap[next] = free;
+        net->_placeToPtrs[free] = freetrans;
+        for(size_t t = 0; t < _transitions.size(); ++t)
+        {
+            Transition& trans = _transitions[t]; 
+            if (std::all_of(trans.pre.begin(), trans.pre.end(), [](Arc& a){return a.inhib;}))
+            {
+                // ALL have to be inhibitor, if any. Otherwise not orphan
+                
+                if(trans.skip) continue;
+                net->_transitions[freetrans].inputs = freeinv;
+                
+                // add inhibitors
+                for(auto pre : trans.pre)
+                {
+                    Invariant& iv = net->_invariants[freeinv];
+                    iv.place = pre.place;
+                    iv.tokens = pre.weight;
+                    iv.inhibitor = pre.inhib;
+                    assert(pre.inhib);
+                    assert(place_cons_count[pre.place] > 0);
+                    --place_cons_count[pre.place];
+                    ++freeinv;
+                }
+                
+                net->_transitions[freetrans].outputs = freeinv;
+                
+                for(auto post : trans.post)
+                {
+                    assert(freeinv < net->_ninvariants);
+                    net->_invariants[freeinv].place = post.place;
+                    net->_invariants[freeinv].tokens = post.weight;                    
+                    ++freeinv;
+                }
+                
+                trans_idmap[t] = freetrans;
+                
+                ++freetrans;
+            }
+        }
+        
+        
+        bool first = true;
         while(next != std::numeric_limits<uint32_t>::max())
         {
-            place_idmap[next] = free;
-            net->_placeToPtrs[free] = freetrans;
+            if(first) // already set for first iteration to handle orphans
+            {
+                first = false;
+            }
+            else
+            {
+                place_idmap[next] = free;
+                net->_placeToPtrs[free] = freetrans;
+            }
+            
             for(auto t : _places[next].consumers)
             {
                 Transition& trans = _transitions[t]; 
@@ -178,19 +232,32 @@ namespace PetriEngine {
                 // check first, we are going to change state later, but we can 
                 // break here, so no statechange inside loop!
                 bool ok = true;
+                bool all_inhib = true;
                 uint32_t cnt = 0;
-                for(auto pre : trans.pre)
+                for(const Arc& pre : trans.pre)
                 {
-                    if(     place_idmap[pre.place] < free || 
+                    all_inhib &= pre.inhib;
+                    
+                    // if transition belongs to previous place
+                    if(     (!pre.inhib && place_idmap[pre.place] < free) || 
                             freeinv + cnt >= net->_ninvariants)
                     {
                         ok = false;
                         break;
-                    }       
+                    }  
+                    
+                    // or arc from place is an inhibitor
+                    if(pre.place == next &&  pre.inhib)
+                    {
+                        ok = false;
+                        break;
+                    }
                     ++cnt;
                 }
 
-                if(!ok) continue;
+                // skip for now, either T-a->P is inhibitor, or was allready added for other P'
+                // or all a's are inhibitors. 
+                if(!ok || all_inhib) continue; 
                 
                 trans_idmap[t] = freeinv;
                 

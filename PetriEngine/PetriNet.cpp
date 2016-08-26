@@ -52,7 +52,12 @@ namespace PetriEngine {
         
         uint32_t imin = _transitions[transition].inputs;
         uint32_t imax = _transitions[transition].outputs;
-        assert(imin != imax);
+        if(imin == imax)
+        {
+            // NO INPUT!
+            return 0;
+        }
+        
         for(;imin < imax; ++imin)
         {
             const Invariant& inv = _invariants[imin];
@@ -81,7 +86,7 @@ namespace PetriEngine {
         
         //Check that we can take from the marking
         for (size_t i = 0; i < _nplaces; i++) {
-            if(m[i] > 0)
+            if(i == 0 || m[i] > 0) // orphans are currently under "place 0" as a special case
             {
                 uint32_t first = _placeToPtrs[i];
                 uint32_t last = _placeToPtrs[i+1];
