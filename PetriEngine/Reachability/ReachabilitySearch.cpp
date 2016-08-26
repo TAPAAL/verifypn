@@ -115,6 +115,10 @@ namespace PetriEngine {
                 case HEUR:
                     tryReach<HeuristicQueue>(queries, results, usequeries, printstats, HeuristicQueue(states));                    
                     break;
+                case RDFS:
+                    tryReach<RDFSQueue>(queries, results, usequeries, printstats, RDFSQueue(states));                    
+                    break;
+                    break;
                 default:
                     std::cout << "UNSUPPORTED SEARCH STRATEGY" << std::endl;
             }

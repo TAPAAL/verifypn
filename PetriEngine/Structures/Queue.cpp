@@ -63,6 +63,39 @@ namespace PetriEngine {
             _stack.push(id);
         }
         
+        RDFSQueue::RDFSQueue(StateSet& states) : Queue(states) {}
+        RDFSQueue::~RDFSQueue(){}
+                
+        bool RDFSQueue::pop(Structures::State& state)
+        {
+            if(_cache.empty())
+            {
+                if(_stack.empty()) return false;
+                uint32_t n = _stack.top();
+                _stack.pop();
+                _states.decode(state, n);
+                return true;                
+            }
+            else
+            {
+                std::random_shuffle ( _cache.begin(), _cache.end() );
+                uint32_t n = _cache.back();
+                _states.decode(state, n);
+                for(size_t i = 0; i < (_cache.size() - 1); ++i)
+                {
+                    _stack.push(_cache[i]);
+                }
+                _cache.clear();
+                return true;
+            }
+        }
+        
+        void RDFSQueue::push(size_t id, Structures::State& state,
+            std::shared_ptr<PQL::Condition>& query)
+        {
+            _cache.push_back(id);
+        }
+        
         HeuristicQueue::HeuristicQueue(StateSet& states) : Queue(states) {}
         HeuristicQueue::~HeuristicQueue(){}
                 

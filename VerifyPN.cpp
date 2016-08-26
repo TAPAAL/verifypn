@@ -115,6 +115,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 				options.strategy = DFS;
 			else if(strcmp(s, "OverApprox") == 0)
 				options.strategy = APPROX;
+                        else if(strcmp(s, "RDFS") == 0)
+                                options.strategy = RDFS;
 			else{
 				fprintf(stderr, "Argument Error: Unrecognized search strategy \"%s\"\n", s);
 				return ErrorCode;

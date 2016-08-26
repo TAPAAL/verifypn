@@ -58,6 +58,19 @@ namespace PetriEngine {
             std::stack<uint32_t> _stack;
         };
         
+        class RDFSQueue : public Queue {
+        public:
+            RDFSQueue(StateSet& states);
+            virtual ~RDFSQueue();
+            
+            virtual bool pop(Structures::State& state);
+            virtual void push(size_t id, Structures::State& state,
+                std::shared_ptr<PQL::Condition>& query);
+        private:
+            std::stack<uint32_t> _stack;
+            std::vector<uint32_t> _cache;
+        };
+        
         class HeuristicQueue : public Queue {
         public:
             struct weighted_t {
