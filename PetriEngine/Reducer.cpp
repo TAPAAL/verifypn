@@ -270,10 +270,10 @@ namespace PetriEngine {
             // Do inhibitor check, neither In, out or place can be involved with any inhibitor
             if(place.inhib || in.inhib || out.inhib) continue;
             
-            // also, none of the places in the post-set of out can be participating in inhibitors.
+            // also, none of the places in the post-set of consuming transition can be participating in inhibitors.
             {
                 bool post_inhib = false;
-                for(const Arc& a : out.post)
+                for(const Arc& a : in.post)
                 {
                     post_inhib |= parent->_places[a.place].inhib;
                     if(post_inhib) break;
@@ -299,6 +299,7 @@ namespace PetriEngine {
             if (!ok) {
                 continue;
             }
+
             continueReductions = true;
             _ruleB++;
              // Remove place p
@@ -421,7 +422,8 @@ namespace PetriEngine {
                 {
                     auto a2 = getInArc(arc.place, trans2);
                     if( a2 == trans2.pre.end() ||
-                        a2->weight != arc.weight)
+                        a2->weight != arc.weight ||
+                        a2->inhib != arc.inhib)
                     {
                         ok = false;
                     }
