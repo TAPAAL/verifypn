@@ -50,7 +50,7 @@ namespace PetriEngine {
         public:
 
             ReachabilitySearch(ResultPrinter& printer, PetriNet& net, int kbound = 0)
-            : printer(printer), states(net, kbound), _net(net) {
+            : printer(printer), _net(net) {
                 _kbound = kbound;
             }
             
@@ -79,23 +79,21 @@ namespace PetriEngine {
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
                 bool usequeries,
-                bool printstats,
-                Q queue);
-            void printStats(searchstate_t& s);
+                bool printstats);
+            void printStats(searchstate_t& s, Structures::StateSet*);
             bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
                                 std::vector<ResultPrinter::Result>&,
-                                Structures::State&, searchstate_t& );
-            ResultPrinter::Result printQuery(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result, searchstate_t& );
+                                Structures::State&, searchstate_t&, Structures::StateSet*);
+            ResultPrinter::Result printQuery(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result, searchstate_t&, Structures::StateSet*);
             
             int _kbound;
-            Structures::StateSet states;
             PetriNet& _net;
         };
         
         template<typename Q>
         void ReachabilitySearch::tryReach(   std::vector<std::shared_ptr<PQL::Condition> >& queries, 
                                         std::vector<ResultPrinter::Result>& results, bool usequeries, 
-                                        bool printstats, Q queue)
+                                        bool printstats)
         {
 
             // set up state
@@ -112,15 +110,19 @@ namespace PetriEngine {
             state.setMarking(_net.makeInitialMarking());
             working.setMarking(_net.makeInitialMarking());
             
+            Structures::StateSet states(_net, _kbound);
             // check initial marking
             if(ss.usequeries) 
             {
-                if(checkQueries(queries, results, working, ss))
+                if(checkQueries(queries, results, working, ss, &states))
                 {
-                    if(printstats) printStats(ss);
+                    if(printstats) printStats(ss, &states);
                         return;
                 }
             }
+            
+
+            Q queue(states);
             
             // add initial
             auto r = states.add(state);
@@ -137,8 +139,8 @@ namespace PetriEngine {
                     if (res.first) {
                         queue.push(res.second, working, queries[ss.heurquery]);
                         ss.exploredStates++;
-                        if (checkQueries(queries, results, working, ss)) {
-                            if(printstats) printStats(ss);
+                        if (checkQueries(queries, results, working, ss, &states)) {
+                            if(printstats) printStats(ss, &states);
                             return;
                         }
                     }
@@ -151,11 +153,11 @@ namespace PetriEngine {
             {
                 if(results[i] == ResultPrinter::Unknown)
                 {
-                    results[i] = printQuery(queries[i], i, ResultPrinter::NotSatisfied, ss);                    
+                    results[i] = printQuery(queries[i], i, ResultPrinter::NotSatisfied, ss, &states);                    
                 }
             }            
 
-            if(printstats) printStats(ss);
+            if(printstats) printStats(ss, &states);
         }
 
     }

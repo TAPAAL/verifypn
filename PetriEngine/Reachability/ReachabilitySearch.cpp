@@ -34,7 +34,7 @@ namespace PetriEngine {
         bool ReachabilitySearch::checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >& queries,
                                                 std::vector<ResultPrinter::Result>& results,
                                                 State& state,
-                                                searchstate_t& ss)
+                                                searchstate_t& ss, StateSet* states)
         {
             if(!ss.usequeries) return false;
             
@@ -45,7 +45,7 @@ namespace PetriEngine {
                 {
                     if(queries[i]->evaluate(state, &_net))
                     {
-                        results[i] = printQuery(queries[i], i, ResultPrinter::Satisfied, ss);                    
+                        results[i] = printQuery(queries[i], i, ResultPrinter::Satisfied, ss, states);                    
                     }
                     else
                     {
@@ -59,21 +59,21 @@ namespace PetriEngine {
         }        
         
         ResultPrinter::Result ReachabilitySearch::printQuery(std::shared_ptr<PQL::Condition>& query, size_t i,  ResultPrinter::Result r,
-                                                                searchstate_t& ss)
+                                                                searchstate_t& ss, Structures::StateSet* states)
         {
             return printer.printResult(i, query.get(), r,
-                            ss.expandedStates, ss.exploredStates, states.discovered(),
-                            ss.enabledTransitionsCount, states.maxTokens(), 
-                            states.maxPlaceBound());  
+                            ss.expandedStates, ss.exploredStates, states->discovered(),
+                            ss.enabledTransitionsCount, states->maxTokens(), 
+                            states->maxPlaceBound());  
         }
         
-        void ReachabilitySearch::printStats(searchstate_t& ss)
+        void ReachabilitySearch::printStats(searchstate_t& ss, Structures::StateSet* states)
         {
             std::cout   << "STATS:\n"
-                        << "\tdiscovered states: " << states.discovered() << std::endl
+                        << "\tdiscovered states: " << states->discovered() << std::endl
                         << "\texplored states:   " << ss.exploredStates << std::endl
                         << "\texpanded states:   " << ss.expandedStates << std::endl
-                        << "\tmax tokens:        " << states.maxTokens() << std::endl;
+                        << "\tmax tokens:        " << states->maxTokens() << std::endl;
             
             
             std::cout << "\nTRANSITION STATISTICS\n";
@@ -87,7 +87,7 @@ namespace PetriEngine {
             for (size_t i = 0; i < _net.placeNames().size(); ++i) 
             {
                 // report maximum bounds for each place (? means that the place was removed in net reduction)
-                std::cout << "<" << _net.placeNames()[i] << ";" << states.maxPlaceBound()[i] << ">";
+                std::cout << "<" << _net.placeNames()[i] << ";" << states->maxPlaceBound()[i] << ">";
             }
             std::cout << std::endl << std::endl;
         }
@@ -107,16 +107,16 @@ namespace PetriEngine {
             switch(strategy)
             {
                 case DFS:                    
-                    tryReach<DFSQueue>(queries, results, usequeries, printstats, DFSQueue(states));
+                    tryReach<DFSQueue>(queries, results, usequeries, printstats);
                     break;
                 case BFS:
-                    tryReach<BFSQueue>(queries, results, usequeries, printstats, BFSQueue(states));                    
+                    tryReach<BFSQueue>(queries, results, usequeries, printstats);                    
                     break;
                 case HEUR:
-                    tryReach<HeuristicQueue>(queries, results, usequeries, printstats, HeuristicQueue(states));                    
+                    tryReach<HeuristicQueue>(queries, results, usequeries, printstats);                    
                     break;
                 case RDFS:
-                    tryReach<RDFSQueue>(queries, results, usequeries, printstats, RDFSQueue(states));                    
+                    tryReach<RDFSQueue>(queries, results, usequeries, printstats);                    
                     break;
                     break;
                 default:
