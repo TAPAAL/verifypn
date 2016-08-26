@@ -134,6 +134,26 @@ namespace PetriEngine {
     
     PetriNet* PetriNetBuilder::makePetriNet(bool reorder) {
         
+        /*
+         * The basic idea is to construct three arrays, the first array, 
+         * _invariants points to "arcs" - they are triplets (weight, place, inhibitor)
+         * _transitions are pairs, (input, output) are indexes in the _invariants array
+         * _placeToPtrs is an indirection going from a place-index to the FIRST transition
+         *              with a non-inhibitor arc consuming from the given place.
+         * 
+         * For all the indexes and indirections, notice that we only track the 
+         * beginning. We can naturally use the "next" value as the end. eg. the 
+         * inputs of a transition are between "input" and "output". The outputs 
+         * are between "output" and the "input" of the next transition.
+         * 
+         * This allows us to quickly skip a lot of checks when generating successors
+         * Beware that currently "orphans" and "inhibitor orphans" are special-cases
+         * and currently handled as "consuming" from place id=0.
+         * 
+         * If anybody wants to spend time on it, this is the first step towards
+         * a decision-tree like construction, possibly improving successor generation. 
+         */
+        
         uint32_t nplaces = _places.size() - reducer.RemovedPlaces();
         uint32_t ntrans = _transitions.size() - reducer.RemovedTransitions();
         
