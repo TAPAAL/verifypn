@@ -64,7 +64,8 @@ namespace PetriEngine {
                     std::vector<ResultPrinter::Result>& results,
                     Strategy strategy,
                     bool statespacesearch,
-                    bool printstats);
+                    bool printstats,
+                    bool keep_trace);
         private:
             struct searchstate_t {
                 size_t expandedStates = 0;
@@ -74,23 +75,24 @@ namespace PetriEngine {
                 bool usequeries;
             };
             
-            template<typename Q>
+            template<typename Q, typename W = Structures::StateSet >
             void tryReach(
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
                 bool usequeries,
                 bool printstats);
-            void printStats(searchstate_t& s, Structures::StateSet*);
+            void printStats(searchstate_t& s, Structures::StateSetInterface*);
             bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
                                 std::vector<ResultPrinter::Result>&,
-                                Structures::State&, searchstate_t&, Structures::StateSet*);
-            ResultPrinter::Result printQuery(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result, searchstate_t&, Structures::StateSet*);
+                                Structures::State&, searchstate_t&, Structures::StateSetInterface*);
+            ResultPrinter::Result printQuery(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result, searchstate_t&, Structures::StateSetInterface*);
             
             int _kbound;
             PetriNet& _net;
+            size_t _satisfyingMarking = 0;
         };
         
-        template<typename Q>
+        template<typename Q, typename W>
         void ReachabilitySearch::tryReach(   std::vector<std::shared_ptr<PQL::Condition> >& queries, 
                                         std::vector<ResultPrinter::Result>& results, bool usequeries, 
                                         bool printstats)
@@ -110,23 +112,25 @@ namespace PetriEngine {
             state.setMarking(_net.makeInitialMarking());
             working.setMarking(_net.makeInitialMarking());
             
-            Structures::StateSet states(_net, _kbound);
-            // check initial marking
-            if(ss.usequeries) 
+            W states(_net, _kbound); // stateset
+            Q queue(&states);        // working queue
             {
-                if(checkQueries(queries, results, working, ss, &states))
+                // add initial to states, check queries on initial state
+                auto r = states.add(state);
+                assert(r.first);
+                _satisfyingMarking = r.second;
+                // check initial marking
+                if(ss.usequeries) 
                 {
-                    if(printstats) printStats(ss, &states);
-                        return;
+                    if(checkQueries(queries, results, working, ss, &states))
+                    {
+                        if(printstats) printStats(ss, &states);
+                            return;
+                    }
                 }
+                // add initial to queue
+                if(r.first) queue.push(r.second, state, queries[ss.heurquery]);
             }
-            
-
-            Q queue(states);
-            
-            // add initial
-            auto r = states.add(state);
-            if(r.first) queue.push(r.second, state, queries[ss.heurquery]);
 
             // Search!
             while (queue.pop(state)) {
@@ -138,6 +142,8 @@ namespace PetriEngine {
                     auto res = states.add(working);
                     if (res.first) {
                         queue.push(res.second, working, queries[ss.heurquery]);
+                        states.setHistory(res.second, generator.fired());
+                        _satisfyingMarking = res.second;
                         ss.exploredStates++;
                         if (checkQueries(queries, results, working, ss, &states)) {
                             if(printstats) printStats(ss, &states);

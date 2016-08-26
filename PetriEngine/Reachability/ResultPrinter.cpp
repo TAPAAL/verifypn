@@ -14,11 +14,15 @@ namespace PetriEngine {
                 size_t discoveredStates,
                 const std::vector<size_t> enabledTransitionsCount,
                 int maxTokens,
-                const std::vector<uint32_t> maxPlaceBound )
+                const std::vector<uint32_t> maxPlaceBound, Structures::StateSetInterface* stateset,
+                size_t lastmarking)
         {
             if(result == Unknown) return Unknown;
             Result retval = result;
-            std::cout << std::endl;      
+            std::cout << std::endl;    
+            
+            bool showTrace = (result == Satisfied);
+            
             if(options->mccoutput)
             {
                 if(!options->statespaceexploration && retval != Unknown)
@@ -105,10 +109,59 @@ namespace PetriEngine {
                     std::cout << "NOT ";
                 }
                 std::cout << "satisfied." << std::endl;
+                
             }
+            
+            if(showTrace)
+            {
+                if(stateset == NULL)
+                {
+                    std::cout << "No trace could be generated, try disabeling the overapproximaton" << std::endl;
+                }
+                else
+                {
+                    printTrace(stateset, lastmarking);                        
+                }
+            }
+            
             std::cout << std::endl;
             return retval;
-        }            
+        }
+        
+        void ResultPrinter::printTrace(Structures::StateSetInterface* ss, size_t lastmarking)
+        {
+            std::cerr << "Trace:\n<trace>\n";
+            std::stack<size_t> transitions;
+            size_t next = lastmarking;
+            while(next != 0) // assume 0 is the index of the first marking.
+            {
+                // (parent, transition)
+                std::pair<size_t, size_t> p = ss->getHistory(next);
+                next = p.first;
+                transitions.push(p.second);
+            }
+            
+            while(transitions.size() > 0)
+            {
+                size_t trans = transitions.top();
+                transitions.pop();
+                std::cerr << "\t<transition id=\"" << ss->net().transitionNames()[trans] << "\">\n";
+                
+                // well, yeah, we are not really efficient in constructing the trace.
+                // feel free to improve
+                for(size_t p = 0; p < ss->net().numberOfPlaces(); ++p)
+                {
+                    size_t cnt = ss->net().inArc(p, trans);
+                    for(size_t token = 0; token < cnt; ++token )
+                    {
+                        std::cerr << "\t\t<token place=\"" << ss->net().placeNames()[p] << "\" age=\"0\"/>\n";
+                    }
+                }
+                std::cerr << "\t</transition>\n";
+            }
+            
+            std::cerr << "</trace>\n" << std::endl;
+        }
 
     }
 }

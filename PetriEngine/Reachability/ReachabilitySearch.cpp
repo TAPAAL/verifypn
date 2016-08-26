@@ -34,7 +34,7 @@ namespace PetriEngine {
         bool ReachabilitySearch::checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >& queries,
                                                 std::vector<ResultPrinter::Result>& results,
                                                 State& state,
-                                                searchstate_t& ss, StateSet* states)
+                                                searchstate_t& ss, StateSetInterface* states)
         {
             if(!ss.usequeries) return false;
             
@@ -59,15 +59,15 @@ namespace PetriEngine {
         }        
         
         ResultPrinter::Result ReachabilitySearch::printQuery(std::shared_ptr<PQL::Condition>& query, size_t i,  ResultPrinter::Result r,
-                                                                searchstate_t& ss, Structures::StateSet* states)
+                                                                searchstate_t& ss, Structures::StateSetInterface* states)
         {
             return printer.printResult(i, query.get(), r,
                             ss.expandedStates, ss.exploredStates, states->discovered(),
                             ss.enabledTransitionsCount, states->maxTokens(), 
-                            states->maxPlaceBound());  
+                            states->maxPlaceBound(), states, _satisfyingMarking);  
         }
         
-        void ReachabilitySearch::printStats(searchstate_t& ss, Structures::StateSet* states)
+        void ReachabilitySearch::printStats(searchstate_t& ss, Structures::StateSetInterface* states)
         {
             std::cout   << "STATS:\n"
                         << "\tdiscovered states: " << states->discovered() << std::endl
@@ -92,12 +92,18 @@ namespace PetriEngine {
             std::cout << std::endl << std::endl;
         }
         
+#define TRYREACHPAR (queries, results, usequeries, printstats)
+#define TRYREACH(X) if(keep_trace) tryReach<X>TRYREACHPAR ; \
+                    else tryReach<X, Structures::TracableStateSet> TRYREACHPAR;
+        
+        
         void ReachabilitySearch::reachable(
                     std::vector<std::shared_ptr<PQL::Condition > >& queries,
                     std::vector<ResultPrinter::Result>& results,
                     Strategy strategy,
                     bool statespacesearch,
-                    bool printstats)
+                    bool printstats,
+                    bool keep_trace)
         {
             bool usequeries = !statespacesearch;
 
@@ -106,18 +112,17 @@ namespace PetriEngine {
             
             switch(strategy)
             {
-                case DFS:                    
-                    tryReach<DFSQueue>(queries, results, usequeries, printstats);
+                case DFS:    
+                    TRYREACH(DFSQueue)                        
                     break;
                 case BFS:
-                    tryReach<BFSQueue>(queries, results, usequeries, printstats);                    
+                    TRYREACH(BFSQueue)
                     break;
                 case HEUR:
-                    tryReach<HeuristicQueue>(queries, results, usequeries, printstats);                    
+                    TRYREACH(HeuristicQueue)
                     break;
                 case RDFS:
-                    tryReach<RDFSQueue>(queries, results, usequeries, printstats);                    
-                    break;
+                    TRYREACH(RDFSQueue)
                     break;
                 default:
                     std::cout << "UNSUPPORTED SEARCH STRATEGY" << std::endl;

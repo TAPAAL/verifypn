@@ -21,6 +21,7 @@ struct options_t {
     std::set<size_t> querynumbers = std::set<size_t>();
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
     bool mccoutput = false;
+    bool trace = false;
 };
 
 #endif

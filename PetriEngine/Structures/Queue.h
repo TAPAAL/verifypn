@@ -25,18 +25,23 @@ namespace PetriEngine {
     namespace Structures {
         class Queue {
         public:
-            Queue(StateSet& states);
+            Queue(StateSetInterface* states);
             virtual ~Queue();
             virtual bool pop(Structures::State& state) = 0;
             virtual void push(size_t id, Structures::State& state,
                 std::shared_ptr<PQL::Condition>& query) = 0;
+            size_t lastPopped()
+            {
+                return last;
+            }
         protected:
-            StateSet& _states;
+            StateSetInterface* _states;
+            size_t last = 0;
         };
         
         class BFSQueue : public Queue {
         public:
-            BFSQueue(StateSet& states);
+            BFSQueue(StateSetInterface* states);
             virtual ~BFSQueue();
             
             virtual bool pop(Structures::State& state);
@@ -48,7 +53,7 @@ namespace PetriEngine {
         
         class DFSQueue : public Queue {
         public:
-            DFSQueue(StateSet& states);
+            DFSQueue(StateSetInterface* states);
             virtual ~DFSQueue();
             
             virtual bool pop(Structures::State& state);
@@ -60,7 +65,7 @@ namespace PetriEngine {
         
         class RDFSQueue : public Queue {
         public:
-            RDFSQueue(StateSet& states);
+            RDFSQueue(StateSetInterface* states);
             virtual ~RDFSQueue();
             
             virtual bool pop(Structures::State& state);
@@ -84,7 +89,7 @@ namespace PetriEngine {
                 }
             };
 
-            HeuristicQueue(StateSet& states);
+            HeuristicQueue(StateSetInterface* states);
             virtual ~HeuristicQueue();
             
             virtual bool pop(Structures::State& state);

@@ -21,6 +21,7 @@
 
 #include <vector>
 #include "../PQL/PQL.h"
+#include "../Structures/StateSet.h"
 
 struct options_t;
 
@@ -59,7 +60,10 @@ namespace PetriEngine {
                 size_t discoveredStates = 0,
                 const std::vector<size_t> enabledTransitionsCount = std::vector<size_t>(),
                 int maxTokens = 0,
-                const std::vector<uint32_t> maxPlaceBound = std::vector<uint32_t>());
+                const std::vector<uint32_t> maxPlaceBound = std::vector<uint32_t>(),
+                Structures::StateSetInterface* stateset = NULL, size_t lastmarking = 0 );
+            
+            void printTrace(Structures::StateSetInterface*, size_t lastmarking);
 
         };
     } // Reachability

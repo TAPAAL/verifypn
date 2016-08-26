@@ -138,6 +138,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.printstatistics = false;
         } else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--mcc") == 0) {
             options.mccoutput = true;
+        } else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--trace") == 0) {
+            options.trace = true;
         } else if (strcmp(argv[i], "-x") == 0 || strcmp(argv[i], "--xml-queries") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -461,7 +463,11 @@ int main(int argc, char* argv[]) {
     contextAnalysis(builder, queries);
     
     //Reachability search
-    strategy.reachable(queries, results, options.strategy, options.statespaceexploration, options.printstatistics);
+    strategy.reachable(queries, results, 
+            options.strategy, 
+            options.statespaceexploration, 
+            options.printstatistics, 
+            options.trace);
 
     printStats(builder, options);
     

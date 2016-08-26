@@ -16,20 +16,20 @@
 
 namespace PetriEngine {
     namespace Structures {
-        Queue::Queue(StateSet& states) : _states(states) {} 
+        Queue::Queue(StateSetInterface* states) : _states(states) {} 
 
         Queue::~Queue() {
         }
         
         
-        BFSQueue::BFSQueue(StateSet& states) : Queue(states), _cnt(0) {}
+        BFSQueue::BFSQueue(StateSetInterface* states) : Queue(states), _cnt(0) {}
         BFSQueue::~BFSQueue(){}
                 
         bool BFSQueue::pop(Structures::State& state)
         {
-            if(_cnt < _states.size())
+            if(_cnt < _states->size())
             {
-                _states.decode(state, _cnt);
+                _states->decode(state, _cnt);
                 ++_cnt;
                 return true;
             }
@@ -45,7 +45,7 @@ namespace PetriEngine {
             // nothing
         }
         
-        DFSQueue::DFSQueue(StateSet& states) : Queue(states) {}
+        DFSQueue::DFSQueue(StateSetInterface* states) : Queue(states) {}
         DFSQueue::~DFSQueue(){}
                 
         bool DFSQueue::pop(Structures::State& state)
@@ -53,7 +53,7 @@ namespace PetriEngine {
             if(_stack.empty()) return false;
             uint32_t n = _stack.top();
             _stack.pop();
-            _states.decode(state, n);
+            _states->decode(state, n);
             return true;
         }
         
@@ -63,7 +63,7 @@ namespace PetriEngine {
             _stack.push(id);
         }
         
-        RDFSQueue::RDFSQueue(StateSet& states) : Queue(states) {}
+        RDFSQueue::RDFSQueue(StateSetInterface* states) : Queue(states) {}
         RDFSQueue::~RDFSQueue(){}
                 
         bool RDFSQueue::pop(Structures::State& state)
@@ -73,14 +73,14 @@ namespace PetriEngine {
                 if(_stack.empty()) return false;
                 uint32_t n = _stack.top();
                 _stack.pop();
-                _states.decode(state, n);
+                _states->decode(state, n);
                 return true;                
             }
             else
             {
                 std::random_shuffle ( _cache.begin(), _cache.end() );
                 uint32_t n = _cache.back();
-                _states.decode(state, n);
+                _states->decode(state, n);
                 for(size_t i = 0; i < (_cache.size() - 1); ++i)
                 {
                     _stack.push(_cache[i]);
@@ -96,7 +96,7 @@ namespace PetriEngine {
             _cache.push_back(id);
         }
         
-        HeuristicQueue::HeuristicQueue(StateSet& states) : Queue(states) {}
+        HeuristicQueue::HeuristicQueue(StateSetInterface* states) : Queue(states) {}
         HeuristicQueue::~HeuristicQueue(){}
                 
         bool HeuristicQueue::pop(Structures::State& state)
@@ -104,14 +104,14 @@ namespace PetriEngine {
             if(_queue.empty()) return false;
             uint32_t n = _queue.top().item;
             _queue.pop();
-            _states.decode(state, n);
+            _states->decode(state, n);
             return true;
         }
         
         void HeuristicQueue::push(size_t id, Structures::State& state,
             std::shared_ptr<PQL::Condition>& query)
         {
-            PQL::DistanceContext context(&_states.net(), state.marking());
+            PQL::DistanceContext context(&_states->net(), state.marking());
             // invert result, highest numbers are on top!
             uint32_t dist = std::numeric_limits<uint32_t>::max() - query->distance(context);
             _queue.emplace(dist, (uint32_t)id);
