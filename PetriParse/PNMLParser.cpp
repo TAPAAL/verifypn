@@ -142,8 +142,7 @@ void PNMLParser::parseElement(DOMElement* element) {
                 (*it)->getElementName() == "outputArc") {
             parseArc(*it);
         } else if ((*it)->getElementName() == "transportArc") {
-            std::cout << "transportArc not supported" << std::endl;
-            exit(-1);
+            parseTransportArc(*it);
         } else if ((*it)->getElementName() == "inhibitorArc") {
             parseArc(*it, true);
         } else if ((*it)->getElementName() == "variable") {
@@ -223,6 +222,35 @@ void PNMLParser::parseArc(DOMElement* element, bool inhibitor) {
     {
         arcs.push_back(arc);
     }
+}
+
+void PNMLParser::parseTransportArc(DOMElement* element){
+    string source	= element->getAttribute("source"),
+           transiton	= element->getAttribute("transition"),
+           target	= element->getAttribute("target");
+    int weight = 1;
+
+    DOMElements elements = element->getChilds();
+    DOMElements::iterator it;
+    for(it = elements.begin(); it != elements.end(); it++){
+            if((*it)->getElementName() == "inscription"){
+                    string text;
+                    parseValue(*it, text);
+                    weight = atoi(text.c_str());
+            }
+    }
+
+    Arc inArc;
+    inArc.source = source;
+    inArc.target = transiton;
+    inArc.weight = weight;
+    arcs.push_back(inArc);
+
+    Arc outArc;
+    outArc.source = transiton;
+    outArc.target = target;
+    outArc.weight = weight;
+    arcs.push_back(outArc);
 }
 
 void PNMLParser::parseTransition(DOMElement* element) {

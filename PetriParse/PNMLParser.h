@@ -77,6 +77,7 @@ private:
     void parsePlace(XMLSP::DOMElement* element);
     void parseArc(XMLSP::DOMElement* element, bool inhibitor = false);
     void parseTransition(XMLSP::DOMElement* element);
+    void parseTransportArc(XMLSP::DOMElement* element);
     void parseValue(XMLSP::DOMElement* element, std::string& text);
     void parsePosition(XMLSP::DOMElement* element, double& x, double& y);
     void parseQueries(XMLSP::DOMElement* element);
