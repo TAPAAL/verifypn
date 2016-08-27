@@ -14,7 +14,7 @@
 #include "NetStructures.h"
 
 namespace PetriEngine {
-    
+
     using ArcIter = std::vector<Arc>::iterator;
     
     class PetriNetBuilder;
@@ -61,13 +61,29 @@ namespace PetriEngine {
         }
 
     };
+
+   struct ExpandedArc
+   {
+       ExpandedArc(std::string place, size_t weight) : place(place), weight(weight) {}
+       
+        friend std::ostream& operator<<(std::ostream& os, ExpandedArc const & ea) {
+            for(size_t i = 0; i < ea.weight; ++i)
+            {
+                os << "\t\t<token place=\"" << ea.place << "\" age=\"0\"/>\n";
+            }
+            return os;
+        }
+       
+        std::string place;        
+        size_t weight;
+   };
     
     class Reducer {
     public:
         Reducer(PetriNetBuilder*);
         ~Reducer();
         void Print(QueryPlaceAnalysisContext& context); // prints the net, just for debugging
-        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction);
+        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace);
         
         size_t RemovedTransitions() const {
             return _removedTransitions;
@@ -92,19 +108,26 @@ namespace PetriEngine {
         size_t RuleD() const {
             return _ruleD;
         }
+        
+        void postFire(std::ostream&, std::string transition);
+        void extraConsume(std::ostream&, std::string transition);
+        void initFire(std::ostream&);
 
     private:
         size_t _removedTransitions;
         size_t _removedPlaces;
         size_t _ruleA, _ruleB, _ruleC, _ruleD, _ruleX;
         PetriNetBuilder* parent;
+        bool reconstructTrace = false;;
 
         // The reduction methods return true if they reduced something and reductions should continue with other rules
         bool ReducebyRuleA(uint32_t* placeInQuery);
         bool ReducebyRuleB(uint32_t* placeInQuery);
         bool ReducebyRuleC(uint32_t* placeInQuery);
         bool ReducebyRuleD(uint32_t* placeInQuery);
-        bool ReducebyRuleX(uint32_t* placeInQuery);
+        
+        std::string getTransitionName(uint32_t transition);
+        std::string getPlaceName(uint32_t place);
         
         Transition& getTransition(uint32_t transition);
         ArcIter getOutArc(Transition&, uint32_t place);
@@ -112,6 +135,10 @@ namespace PetriEngine {
         void eraseTransition(std::vector<uint32_t>&, uint32_t);
         void skipTransition(uint32_t);
         void skipPlace(uint32_t);
+        
+        std::vector<std::string> _initfire;
+        std::map<std::string, std::vector<std::string>> _postfire;
+        std::map<std::string, std::vector<ExpandedArc>> _extraconsume;
     };
 
     

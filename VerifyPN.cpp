@@ -99,9 +99,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid number of tokens \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
-        } else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--trace") == 0) {
-//            outputtrace = true;
-		}else if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--search-strategy") == 0){
+        } else if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--search-strategy") == 0){
 			if (i==argc-1) {
                                 fprintf(stderr, "Missing search strategy after \"%s\"\n\n", argv[i]);
 				return ErrorCode;                           
@@ -444,7 +442,8 @@ int main(int argc, char* argv[]) {
         
     if (options.enablereduction == 1 || options.enablereduction == 2) {
         // Compute how many times each place appears in the query
-        builder.reduce(queries, results, options.enablereduction);
+        builder.reduce(queries, results, options.enablereduction, options.trace);
+        printer.setReducer(builder.getReducer());        
     }
 
     //----------------------- Reachability -----------------------//

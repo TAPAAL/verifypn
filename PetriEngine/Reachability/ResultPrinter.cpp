@@ -112,7 +112,7 @@ namespace PetriEngine {
                 
             }
             
-            if(showTrace)
+            if(showTrace && options->trace)
             {
                 if(stateset == NULL)
                 {
@@ -141,11 +141,15 @@ namespace PetriEngine {
                 transitions.push(p.second);
             }
             
+            if(reducer != NULL)
+                reducer->initFire(std::cerr);
+            
             while(transitions.size() > 0)
             {
                 size_t trans = transitions.top();
                 transitions.pop();
-                std::cerr << "\t<transition id=\"" << ss->net().transitionNames()[trans] << "\">\n";
+                std::string tname = ss->net().transitionNames()[trans];
+                std::cerr << "\t<transition id=\"" << tname << "\">\n";
                 
                 // well, yeah, we are not really efficient in constructing the trace.
                 // feel free to improve
@@ -157,7 +161,15 @@ namespace PetriEngine {
                         std::cerr << "\t\t<token place=\"" << ss->net().placeNames()[p] << "\" age=\"0\"/>\n";
                     }
                 }
+                
+                if(reducer != NULL)
+                    reducer->extraConsume(std::cerr, tname);
+                
                 std::cerr << "\t</transition>\n";
+                
+                if(reducer != NULL)
+                    reducer->postFire(std::cerr, tname);
+                
             }
             
             std::cerr << "</trace>\n" << std::endl;

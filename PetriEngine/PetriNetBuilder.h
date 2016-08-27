@@ -76,7 +76,7 @@ namespace PetriEngine {
         
         void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query, 
                     std::vector<Reachability::ResultPrinter::Result>& results, 
-                    int reductiontype);
+                    int reductiontype, bool reconstructTrace);
         
         size_t RemovedTransitions()
         {
@@ -103,6 +103,8 @@ namespace PetriEngine {
         size_t RuleD() {
             return reducer.RuleD();
         }
+        
+        Reducer* getReducer() { return &reducer; }
         
     private:
         uint32_t nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids, bool reorder);

@@ -9,6 +9,7 @@
 #include "PetriNet.h"
 #include "PetriNetBuilder.h"
 #include <PetriParse/PNMLParser.h>
+#include <queue>
 
 namespace PetriEngine {
 
@@ -50,6 +51,27 @@ namespace PetriEngine {
                         << " is: " << context.getQueryPlaceCount()[i] << std::endl;
         }
     }
+    
+    std::string Reducer::getTransitionName(uint32_t transition)
+    {
+        for(auto t : parent->_transitionnames)
+        {
+            if(t.second == transition) return t.first;
+        }
+        assert(false);
+        return "";
+    }
+    
+    std::string Reducer::getPlaceName(uint32_t place)
+    {
+        for(auto t : parent->_placenames)
+        {
+            if(t.second == place) return t.first;
+        }
+        assert(false);
+        return "";
+    }
+    
     Transition& Reducer::getTransition(uint32_t transition)
     {
         return parent->_transitions[transition];
@@ -174,6 +196,28 @@ namespace PetriEngine {
 
             continueReductions = true;
             _ruleA++;
+            
+            // here we need to remember when a token is created in pPre (some 
+            // transition with an output in P is fired), t is fired instantly!.
+
+            if(reconstructTrace) {
+                Place& pre = parent->_places[pPre];
+                std::string tname = getTransitionName(t);
+                for(size_t pp : pre.producers)
+                {
+                    std::string prefire = getTransitionName(pp);
+                    _postfire[prefire].push_back(tname);
+                }
+                _extraconsume[tname].emplace_back(getPlaceName(pPre), trans.pre[0].weight);
+                for(size_t i = 0; i < parent->initMarking()[pPre]; ++i)
+                {
+                    _initfire.push_back(tname);
+                }                
+            }
+            
+            // move the token for the initial marking, makes things simpler.
+            parent->initialMarking[pPost] += parent->initialMarking[pPre];
+            parent->initialMarking[pPre] = 0;
 
             // Remove transition t and the place that has no tokens in m0
             _removedTransitions++; 
@@ -201,43 +245,8 @@ namespace PetriEngine {
                 _removedPlaces++;
                 skipPlace(pPre);
             } else if (parent->initMarking()[pPost] == 0) { // removing pPost
-                parent->_places[pPost].skip = true;
-                for (auto& _t : parent->_places[pPost].consumers) {
-                    assert(_t != t);
-                    Transition& trans = getTransition(_t);
-                    auto source = getInArc(pPost, trans);
-                    auto dest = getInArc(pPre, trans);
-                    if(dest == trans.pre.end())
-                    {
-                        source->place = pPre;
-                        parent->_places[pPre].consumers.push_back(_t);
-                    }
-                    else
-                    {
-                        dest->weight += source->weight;
-                    }
-                }
-                
-                for(auto& _t : parent->_places[pPost].producers)
-                {
-                    if(_t == t) continue;
-                    Transition& trans = getTransition(_t);
-                    auto source = getOutArc(trans, pPost);
-                    auto dest = getOutArc(trans, pPre);
-                    
-                    if(dest == trans.post.end())
-                    {
-                        source->place = pPre;
-                        parent->_places[pPre].producers.push_back(_t);
-                    }
-                    else
-                    {
-                        dest->weight += source->weight;
-                    }
-                }
-
-                skipPlace(pPost);
-                _removedPlaces++;
+                // should _NEVER_ happen.
+                assert(false);                
             }
         } // end of Rule A main for-loop
         return continueReductions;
@@ -282,30 +291,39 @@ namespace PetriEngine {
             }
 
             bool ok = true;
-            // Check if the output places of tPost do not have any inhibitor arcs connected and are not used in the query
-            for (auto& arc : in.post) {
-                if (arc.weight > 0 &&  placeInQuery[arc.place] > 0) {
-                    ok = false;
-                    break;
-                }
-            }
-            // Check that there is no other place than p that gives to tPost, tPre can give to other places
+            // Check that there is no other place than p that gives to tPost, 
+            // tPre can give to other places
             for (auto& arc : in.pre) {
                 if (arc.weight > 0 && arc.place != p) {
                     ok = false;
                     break;
                 }
             }
+            
             if (!ok) {
                 continue;
             }
 
+            if(reconstructTrace)
+            {
+                // remember reduction for recreation of trace
+                std::string toutname    = getTransitionName(tOut);
+                std::string tinname     = getTransitionName(tIn);
+                std::string pname       = getPlaceName(p);
+                Arc& a = *getInArc(p, in);
+                _extraconsume[tinname].emplace_back(pname, a.weight);
+                _postfire[toutname].push_back(tinname);
+            }
+            
             continueReductions = true;
             _ruleB++;
              // Remove place p
             skipPlace(p);
             _removedPlaces++;
 
+            // We need to remember that when tOut fires, tIn fires just after.
+            // this should fix the trace
+            
             for (auto& arc : in.post) { // remove tPost
                 auto _arc = getOutArc(out, arc.place);
                 if(_arc != out.post.end())
@@ -381,6 +399,18 @@ namespace PetriEngine {
                 }
                 
                 if(!ok) continue;
+                
+                // We need to remember to consume from p2 when place1.consumers[0] fires
+                // otherwise, trace is inconsistent
+                if(reconstructTrace)
+                {
+                    for(auto t : place2.consumers)
+                    {
+                        std::string tname = getTransitionName(t);
+                        const ArcIter arc = getInArc(p2, getTransition(t));
+                        _extraconsume[tname].emplace_back(getPlaceName(p2), arc->weight);
+                    }
+                }
                                 
                 continueReductions = true;
                 _ruleC++;
@@ -393,6 +423,7 @@ namespace PetriEngine {
 
     bool Reducer::ReducebyRuleD(uint32_t* placeInQuery) {
         // Rule D - two transitions with the same pre and post and same inhibitor arcs 
+        // This does not alter the trace.
         bool continueReductions = false;
         for (uint32_t t1 = 0; t1 < parent->numberOfTransitions(); t1++) {
             Transition& trans1 = getTransition(t1);
@@ -442,7 +473,8 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction) {
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace) {
+        this->reconstructTrace = reconstructTrace;
         if (enablereduction == 1) { // in the aggresive reduction all four rules are used as long as they remove something
             while (ReducebyRuleA(context.getQueryPlaceCount()) ||
                     ReducebyRuleB(context.getQueryPlaceCount()) ||
@@ -452,6 +484,47 @@ namespace PetriEngine {
         } else if (enablereduction == 2) { // for k-boundedness checking only rules A and D are applicable
             while (ReducebyRuleA(context.getQueryPlaceCount()) ||
                     ReducebyRuleD(context.getQueryPlaceCount())) {
+            }
+        }
+    }
+    
+    void Reducer::postFire(std::ostream& out, std::string transition)
+    {
+        if(_postfire.count(transition) > 0)
+        {
+            std::queue<std::string> tofire;
+            
+            for(auto& el : _postfire[transition]) tofire.push(el);
+            
+            for(auto& el : _postfire[transition])
+            {
+                tofire.pop();
+                out << "\t<transition id=\"" << el << "\">\n";
+                extraConsume(out, el);
+                out << "\t</transition>\n";               
+                postFire(out, el);
+            }
+        }
+    }
+    
+    void Reducer::initFire(std::ostream& out)
+    {
+        for(std::string& init : _initfire)
+        {
+            out << "\t<transition id=\"" << init << "\">\n";
+            extraConsume(out, init);            
+            out << "\t</transition>\n";
+            postFire(out, init);
+        }
+    }
+    
+    void Reducer::extraConsume(std::ostream& out, std::string transition)
+    {
+        if(_extraconsume.count(transition) > 0)
+        {
+            for(auto& ec : _extraconsume[transition])
+            {
+                out << ec;
             }
         }
     }

@@ -22,6 +22,7 @@
 #include <vector>
 #include "../PQL/PQL.h"
 #include "../Structures/StateSet.h"
+#include "../Reducer.h"
 
 struct options_t;
 
@@ -32,10 +33,11 @@ namespace PetriEngine {
         /** Result of a reachability search */
 
         class ResultPrinter {
-        private:
+        protected:
             PetriNetBuilder* builder;
             options_t* options;
             std::vector<std::string>& querynames;
+            Reducer* reducer;
         public:
                         /** Types of results */
             enum Result {
@@ -48,8 +50,10 @@ namespace PetriEngine {
             };
             
             ResultPrinter(PetriNetBuilder* b, options_t* o, std::vector<std::string>& querynames) 
-            : builder(b), options(o), querynames(querynames)
+            : builder(b), options(o), querynames(querynames), reducer(NULL)
             {};
+            
+            void setReducer(Reducer* r) { this->reducer = r; }
             
             Result printResult(
                 size_t index,
@@ -64,7 +68,7 @@ namespace PetriEngine {
                 Structures::StateSetInterface* stateset = NULL, size_t lastmarking = 0 );
             
             void printTrace(Structures::StateSetInterface*, size_t lastmarking);
-
+            
         };
     } // Reachability
 } // PetriEngine
