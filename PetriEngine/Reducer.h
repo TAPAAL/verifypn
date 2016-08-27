@@ -118,7 +118,7 @@ namespace PetriEngine {
         size_t _removedPlaces;
         size_t _ruleA, _ruleB, _ruleC, _ruleD, _ruleX;
         PetriNetBuilder* parent;
-        bool reconstructTrace = false;;
+        bool reconstructTrace = false;
 
         // The reduction methods return true if they reduced something and reductions should continue with other rules
         bool ReducebyRuleA(uint32_t* placeInQuery);
