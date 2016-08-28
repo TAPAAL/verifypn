@@ -100,7 +100,7 @@ namespace PetriEngine {
                 uint32_t val = 0;
                 uint32_t active = 0;
                 uint32_t last = 0;
-                uint32_t hash = hashMarking(state.marking(), sum, allsame, val, active, last);               
+                markingStats(state.marking(), sum, allsame, val, active, last);               
 
                 if (_maxTokens < sum)
                     _maxTokens = sum;
@@ -156,12 +156,8 @@ namespace PetriEngine {
             
         protected:
             
-            uint32_t hashMarking(const uint32_t* marking, MarkVal& sum, bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last)
+            void markingStats(const uint32_t* marking, MarkVal& sum, bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last)
             {
-                uint32_t hash = 0;
-                
-                 uint16_t& h1 = ((uint16_t*)&hash)[0];
-                uint16_t& h2 = ((uint16_t*)&hash)[1];
                 uint32_t cnt = 0;
                 
                 for (uint32_t i = 0; i < _net.numberOfPlaces(); i++)
@@ -169,15 +165,6 @@ namespace PetriEngine {
                     uint32_t old = val;
                     if(marking[i] != 0)
                     {
-                        if(allsame)
-                        {
-                            hash ^= (1 << (i % 32));
-                        }
-                        else
-                        {
-                            h1 ^= (1 << (i % 16));
-                            h2 ^= (marking[i] << (cnt % 16));
-                        }
                         ++cnt;
                         last = std::max(last, i);
                         val = std::max(marking[i], val);
@@ -186,7 +173,6 @@ namespace PetriEngine {
                         sum += marking[i];
                     }
                 }
-                return hash;
             }
         };
         

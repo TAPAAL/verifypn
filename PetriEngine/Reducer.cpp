@@ -172,8 +172,9 @@ namespace PetriEngine {
             // should skip, or we have more than one in pre or post
             if(trans.skip || trans.pre.size() != 1 || trans.post.size() != 1) continue;
             
-            // We have weight of more than one
-            if(trans.pre[0].weight != 1 || trans.post[0].weight != 1) continue;
+            // We have weight of more than one on input
+            // and is empty on output (should not happen).
+            if(trans.pre[0].weight != 1 || trans.post[0].weight < 1) continue;
             
             uint32_t pPre = trans.pre[0].place;
             uint32_t pPost = trans.post[0].place;
@@ -199,7 +200,7 @@ namespace PetriEngine {
             
             // here we need to remember when a token is created in pPre (some 
             // transition with an output in P is fired), t is fired instantly!.
-
+            size_t weight = trans.post[0].weight;
             if(reconstructTrace) {
                 Place& pre = parent->_places[pPre];
                 std::string tname = getTransitionName(t);
@@ -216,7 +217,7 @@ namespace PetriEngine {
             }
             
             // move the token for the initial marking, makes things simpler.
-            parent->initialMarking[pPost] += parent->initialMarking[pPre];
+            parent->initialMarking[pPost] += (parent->initialMarking[pPre] * weight);
             parent->initialMarking[pPre] = 0;
 
             // Remove transition t and the place that has no tokens in m0
@@ -234,11 +235,12 @@ namespace PetriEngine {
                     if(dest == trans.post.end())
                     {
                         source->place = pPost;
+                        source->weight *= weight;
                         parent->_places[pPost].producers.push_back(_t);
                     }
                     else
                     {
-                        dest->weight += source->weight;
+                        dest->weight += (source->weight * weight);
 
                     }
                 }                
@@ -274,7 +276,10 @@ namespace PetriEngine {
             auto inArc = getInArc(p, in);
             auto outArc = getOutArc(out, p);
             
-            if(inArc->weight != outArc->weight) continue;
+            if(outArc->weight < inArc->weight) continue;
+            
+            if((outArc->weight % inArc->weight) != 0) continue;
+            size_t multiplier = outArc->weight / inArc->weight;
             
             // Do inhibitor check, neither In, out or place can be involved with any inhibitor
             if(place.inhib || in.inhib || out.inhib) continue;
@@ -312,7 +317,10 @@ namespace PetriEngine {
                 std::string pname       = getPlaceName(p);
                 Arc& a = *getInArc(p, in);
                 _extraconsume[tinname].emplace_back(pname, a.weight);
-                _postfire[toutname].push_back(tinname);
+                for(size_t i = 0; i < multiplier; ++i)
+                {
+                    _postfire[toutname].push_back(tinname);
+                }
             }
             
             continueReductions = true;
@@ -321,6 +329,7 @@ namespace PetriEngine {
             skipPlace(p);
             _removedPlaces++;
 
+            outArc->weight /= multiplier;
             // We need to remember that when tOut fires, tIn fires just after.
             // this should fix the trace
             
@@ -370,29 +379,66 @@ namespace PetriEngine {
                 if(place1.consumers.size() != place2.consumers.size() ||
                    place1.producers.size() != place2.producers.size())
                     continue;
-                
+
                 bool ok = true;
-                for(auto& in : place1.consumers)
                 {
-                    Transition& trans = getTransition(in);
-                    auto a1 = getInArc(p1, trans);
-                    auto a2 = getInArc(p2, trans);
-                    if( a2 == trans.pre.end() ||
-                        a2->weight != a1->weight)
+                    // check for symmetry between places
+                    for(auto& in : place1.consumers)
                     {
-                        ok = false;
+                        Transition& trans = getTransition(in);
+                        auto a1 = getInArc(p1, trans);
+                        auto a2 = getInArc(p2, trans);
+                        if( a2 == trans.pre.end() ||
+                            a2->weight != a1->weight)
+                        {
+                            ok = false;
+                        }
+                    }
+
+                    if(ok)
+                    {
+                        for(auto& in : place1.producers)
+                        {
+                            Transition& trans = getTransition(in);
+                            auto a1 = getOutArc(trans, p1);
+                            auto a2 = getOutArc(trans, p2);
+                            if( a2 == trans.post.end() ||
+                                a2->weight != a1->weight)
+                            {
+                                ok = false;
+                            }
+                        }
                     }
                 }
                 
-                if(!ok) continue;
-                
-                for(auto& in : place1.producers)
+                if(!ok)
                 {
-                    Transition& trans = getTransition(in);
-                    auto a1 = getOutArc(trans, p1);
-                    auto a2 = getOutArc(trans, p2);
-                    if( a2 == trans.post.end() ||
-                        a2->weight != a1->weight)
+                    ok = true;
+                    if (place1.consumers.size() == 1 && place1.producers.size() == 1)
+                    {
+                        assert(place2.consumers.size() == 1 && place2.producers.size() == 1);
+                        if( place1.consumers[0] == place2.consumers[0] &&
+                            place1.producers[0] == place2.producers[0] &&
+                            place1.producers[0] != place1.consumers[0])
+                        {
+                            Transition& t1 = getTransition(place1.consumers[0]);
+                            Transition& t2 = getTransition(place1.producers[0]);
+                            if(getInArc(p1, t1)->weight == getOutArc(t2, p1)->weight &&
+                               getInArc(p2, t1)->weight == getOutArc(t2, p2)->weight)
+                            {
+                                // all ok, we can continue
+                            }
+                            else
+                            {
+                                ok = false;
+                            }
+                        }
+                        else
+                        {
+                            ok = false;
+                        }
+                    }
+                    else
                     {
                         ok = false;
                     }

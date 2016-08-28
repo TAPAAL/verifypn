@@ -371,6 +371,7 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
         }
     }
     assert(false);
+    return 0;
 }
 
 size_t AlignedEncoder::encode(const uint32_t* d, unsigned char type)
@@ -433,6 +434,8 @@ size_t AlignedEncoder::encode(const uint32_t* d, unsigned char type)
         default:
             assert(false);
     }
+    assert(false);
+    return 0;
 }
 
 void AlignedEncoder::decode(uint32_t* d, const unsigned char* s)

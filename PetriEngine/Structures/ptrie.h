@@ -592,11 +592,15 @@ namespace ptrie
         uint* o_entries = NULL;
 
         // if we are overflowing in, split bucket
+#ifndef NDEBUG
         uint n_node_count;
         uint node_count = 0;
+#endif
 
         if (branch) {
+#ifndef NDEBUG
             n_node_count = node->_count[1];
+#endif
             n_node->_entries = ballocator.allocate(node->_count[1]);
 
             node->_positions[1] = n_node_index;
@@ -604,12 +608,16 @@ namespace ptrie
 
             if (node->_count[0] > 0)
             {
+#ifndef NDEBUG
                 node_count = node->_count[0];
+#endif
                 o_entries = ballocator.allocate(node->_count[0]);
             }
 
         } else {
+#ifndef NDEBUG
             n_node_count = node->_count[0];
+#endif
             n_node->_entries = ballocator.allocate(node->_count[0]);
             
             node->_positions[0] = n_node_index;
@@ -617,7 +625,9 @@ namespace ptrie
 
             if (node->_count[1] > 0)
             {
+#ifndef NDEBUG
                 node_count = node->_count[1];
+#endif
                 o_entries = ballocator.allocate(node->_count[1]);
             }
         }
