@@ -165,6 +165,7 @@ uint32_t AlignedEncoder::readPlaceTokenCounts(uint32_t* destination, const unsig
             size = *(uint32_t*)(&source[offset]);
             break;   
         default:
+            size = std::numeric_limits<size_t>::max(); // should provoke an error
             assert(false);
     }
     
@@ -254,6 +255,7 @@ uint32_t AlignedEncoder::readPlaces(uint32_t* destination, const unsigned char* 
             size = *(uint32_t*)(&source[offset]);
             break;   
         default:
+            size = std::numeric_limits<size_t>::max(); // should provoke an error
             assert(false);
     }
     

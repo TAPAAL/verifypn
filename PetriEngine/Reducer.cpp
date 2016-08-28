@@ -186,7 +186,7 @@ namespace PetriEngine {
             if(parent->initMarking()[pPre] > 0 && parent->initMarking()[pPost] > 0) continue;
                  
             // continue if we didn't find unique pPre and pPost that are different
-            if (pPre < 0 || pPost < 0 || pPre == pPost) continue;
+            if (pPre == pPost) continue;
 
             // Check that pPre goes only to t
             if(parent->_places[pPre].consumers.size() != 1) continue;

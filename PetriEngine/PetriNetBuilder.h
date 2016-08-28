@@ -37,7 +37,7 @@ namespace PetriEngine {
     public:
         PetriNetBuilder();
         PetriNetBuilder(const PetriNetBuilder& other);
-        void addPlace(const std::string& name, int tokens, double x, double y);
+        void addPlace(const std::string& name, int tokens, double x, double y) override;
         void addTransition(const std::string& name,
                 double x,
                 double y) override;

@@ -116,7 +116,7 @@ namespace PetriEngine {
     private:
         size_t _removedTransitions;
         size_t _removedPlaces;
-        size_t _ruleA, _ruleB, _ruleC, _ruleD, _ruleX;
+        size_t _ruleA, _ruleB, _ruleC, _ruleD;
         PetriNetBuilder* parent;
         bool reconstructTrace = false;
 
