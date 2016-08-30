@@ -286,7 +286,7 @@ namespace PetriEngine {
                 ptr.remainder().transition = transition;
             }
             
-            virtual std::pair<size_t, size_t> getHistory(size_t markingid) 
+            virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
             {
                 ptrie_t::pointer_t ptr = ptrie_t::pointer_t(&_trie, markingid);
                 size_t p = ptr.remainder().parent;
