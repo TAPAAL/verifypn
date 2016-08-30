@@ -93,7 +93,7 @@ namespace PetriEngine {
         }
         
 #define TRYREACHPAR (queries, results, usequeries, printstats)
-#define TRYREACH(X) if(keep_trace) tryReach<X>TRYREACHPAR ; \
+#define TRYREACH(X) if(keep_trace) tryReach<X, Structures::TracableStateSet>TRYREACHPAR ; \
                     else tryReach<X, Structures::TracableStateSet> TRYREACHPAR;
         
         

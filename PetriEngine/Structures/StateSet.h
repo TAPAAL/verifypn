@@ -53,7 +53,7 @@ namespace PetriEngine {
             
             virtual void setHistory(size_t id, size_t transition) = 0;
             
-            virtual std::pair<size_t, size_t> getHistory(size_t markingid) { return std::make_pair(0,0); }
+            virtual std::pair<size_t, size_t> getHistory(size_t markingid) = 0;
             
         protected:
             size_t _discovered;
@@ -211,6 +211,12 @@ namespace PetriEngine {
 
             virtual void setHistory(size_t id, size_t transition) override {}
 
+            virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
+            { 
+                assert(false); 
+                return std::make_pair(0,0); 
+            }
+            
         private:
             wrapper_t _sp;                    
             ptrie_t _trie;
