@@ -16,12 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "PNMLParser.h"
 
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <limits>
+
+#include "PNMLParser.h"
+#include "../PetriEngine/errorcodes.h"
 
 using namespace PetriEngine;
 using namespace XMLSP;
@@ -173,7 +176,8 @@ void PNMLParser::parseQueries(DOMElement* element) {
 void PNMLParser::parsePlace(DOMElement* element) {
     double x = 0, y = 0;
     string id = element->getAttribute("id");
-    int initialMarking = atoi(element->getAttribute("initialMarking").c_str());
+
+    long long initialMarking = atoll(element->getAttribute("initialMarking").c_str());
 
     DOMElements elements = element->getChilds();
     DOMElements::iterator it;
@@ -184,8 +188,14 @@ void PNMLParser::parsePlace(DOMElement* element) {
         } else if ((*it)->getElementName() == "initialMarking") {
             string text;
             parseValue(*it, text);
-            initialMarking = atoi(text.c_str());
+            initialMarking = atoll(text.c_str());
         }
+    }
+    
+    if(initialMarking > std::numeric_limits<int>::max())
+    {
+        std::cerr << "Number of tokens in " << id << " exceeded " << std::numeric_limits<int>::max() << std::endl;
+        exit(ErrorCode);
     }
     //Create place
     builder->addPlace(id, initialMarking, x, y);

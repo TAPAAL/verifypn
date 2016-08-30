@@ -26,6 +26,7 @@
 #include "AlignedEncoder.h"
 #include "ptrie.h"
 #include "binarywrapper.h"
+#include "../errorcodes.h"
 
 
 namespace PetriEngine {
@@ -90,7 +91,12 @@ namespace PetriEngine {
             template<typename T>
             std::pair<bool, size_t> _add(State& state, ptrie::ptrie_t<T>& _trie, T& _sp) {
                 _discovered++;
-
+                
+                if(_trie.size() >= std::numeric_limits<uint32_t>::max())
+                {
+                    std::cerr << "Exceeded " << std::numeric_limits<uint32_t>::max() << " markings" << std::endl;
+                    exit(ErrorCode);
+                }
 #ifdef DEBUG
                 if(_discovered % 1000000 == 0) std::cout << "Found number " << _discovered << std::endl;
 #endif

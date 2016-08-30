@@ -37,20 +37,12 @@
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/options.h"
+#include "PetriEngine/errorcodes.h"
 
 using namespace std;
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
-
-/** Enumeration of return values from VerifyPN */
-enum ReturnValue {
-    SuccessCode = 0,
-    FailedCode = 1,
-    UnknownCode = 2,
-    ErrorCode = 3,
-    ContinueCode = 4
-};
 
 #define VERSION  "1.2.0"
 
