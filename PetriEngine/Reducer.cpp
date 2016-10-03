@@ -168,39 +168,38 @@ namespace PetriEngine {
         for (uint32_t t = 0; t < parent->numberOfTransitions(); t++) {
 
             Transition& trans = getTransition(t);
-            
-            // should skip, or we have more than one in pre or post
-            if(trans.skip || trans.pre.size() != 1 || trans.post.size() != 1) continue;
-            
-            // We have weight of more than one on input
-            // and is empty on output (should not happen).
-            if(trans.pre[0].weight != 1 || trans.post[0].weight < 1) continue;
-            
+                        
+            // we have already removed
+            if(trans.skip) continue;
+
+            // A2. we have more/less than one arc in pre or post
+            // checked first to avoid out-of-bounds when looking up indexes.
+            if(trans.pre.size() != 1 || trans.post.size() != 1) continue;
+
             uint32_t pPre = trans.pre[0].place;
             uint32_t pPost = trans.post[0].place;
             
-            // dont mess with query!
-            if(placeInQuery[pPre] > 0 || placeInQuery[pPost]) continue;
-            
-            // cant remove if both are in initmarking
-            if(parent->initMarking()[pPre] > 0 && parent->initMarking()[pPost] > 0) continue;
-                 
-            // continue if we didn't find unique pPre and pPost that are different
+            // A1. continue if source and destination are the same
             if (pPre == pPost) continue;
-
-            // Check that pPre goes only to t
+            
+            // A2. Check that pPre goes only to t
             if(parent->_places[pPre].consumers.size() != 1) continue;
             
-            // Do inhibitor check, neither T, pPre or pPost can be involved with any inhibitor
+            // A3. We have weight of more than one on input
+            // and is empty on output (should not happen).
+            if(trans.pre[0].weight != 1 || trans.post[0].weight < 1) continue;
+                        
+            // A4. Do inhibitor check, neither T, pPre or pPost can be involved with any inhibitor
             if(parent->_places[pPre].inhib || parent->_places[pPost].inhib || trans.inhib) continue;
-            
 
+            // A5. dont mess with query!
+            if(placeInQuery[pPre] > 0 || placeInQuery[pPost]) continue;
+             
             continueReductions = true;
             _ruleA++;
             
             // here we need to remember when a token is created in pPre (some 
             // transition with an output in P is fired), t is fired instantly!.
-            size_t weight = trans.post[0].weight;
             if(reconstructTrace) {
                 Place& pre = parent->_places[pPre];
                 std::string tname = getTransitionName(t);
@@ -216,40 +215,41 @@ namespace PetriEngine {
                 }                
             }
             
-            // move the token for the initial marking, makes things simpler.
+            size_t weight = trans.post[0].weight;
+            
+            // UA2. move the token for the initial marking, makes things simpler.
             parent->initialMarking[pPost] += (parent->initialMarking[pPre] * weight);
             parent->initialMarking[pPre] = 0;
 
             // Remove transition t and the place that has no tokens in m0
             _removedTransitions++; 
+            // UA1. remove transition
             skipTransition(t);
             assert(pPost != pPre);
-            if (parent->initMarking()[pPre] == 0) { // removing pPre
-                for(auto& _t : parent->_places[pPre].producers)
-                {
-                    assert(_t != t);
-                    // move output-arcs to post.
-                    Transition& trans = getTransition(_t);
-                    auto source = getOutArc(trans, pPre);
-                    auto dest = getOutArc(trans, pPost);
-                    if(dest == trans.post.end())
-                    {
-                        source->place = pPost;
-                        source->weight *= weight;
-                        parent->_places[pPost].producers.push_back(_t);
-                    }
-                    else
-                    {
-                        dest->weight += (source->weight * weight);
 
-                    }
-                }                
-                _removedPlaces++;
-                skipPlace(pPre);
-            } else if (parent->initMarking()[pPost] == 0) { // removing pPost
-                // should _NEVER_ happen.
-                assert(false);                
-            }
+            // UA2. update arcs
+            for(auto& _t : parent->_places[pPre].producers)
+            {
+                assert(_t != t);
+                // move output-arcs to post.
+                Transition& trans = getTransition(_t);
+                auto source = getOutArc(trans, pPre);
+                auto dest = getOutArc(trans, pPost);
+                if(dest == trans.post.end())
+                {
+                    source->place = pPost;
+                    source->weight *= weight;
+                    parent->_places[pPost].producers.push_back(_t);
+                }
+                else
+                {
+                    dest->weight += (source->weight * weight);
+
+                }
+            }                
+            _removedPlaces++;
+            // UA1. remove place
+            skipPlace(pPre);
         } // end of Rule A main for-loop
         return continueReductions;
     }
@@ -261,13 +261,18 @@ namespace PetriEngine {
             
             Place& place = parent->_places[p];
             
-            if(place.skip) continue;    // allready removed           
+            if(place.skip) continue;    // allready removed    
+            
+            // B4 and B6. dont mess up query and initial state
             if(placeInQuery[p] > 0 || parent->initMarking()[p] > 0) continue; // to important                   
+            
+            // B2. Only one consumer/producer
             if(place.consumers.size() != 1 || place.producers.size() != 1) continue; // no orphan removal
             
             int tOut = place.producers[0];
             int tIn = place.consumers[0];
             
+            // B1. producer is not consumer
             if (tOut == tIn) continue; // cannot remove this kind either
                         
             Transition& out = getTransition(tOut);
@@ -276,27 +281,30 @@ namespace PetriEngine {
             auto inArc = getInArc(p, in);
             auto outArc = getOutArc(out, p);
             
-            if(outArc->weight < inArc->weight) continue;
-            
+            // B3. Output is a multiple of input and nonzero.
+            if(outArc->weight < inArc->weight) continue;            
             if((outArc->weight % inArc->weight) != 0) continue;
+            
             size_t multiplier = outArc->weight / inArc->weight;
             
-            // Do inhibitor check, neither In, out or place can be involved with any inhibitor
+            // B5. Do inhibitor check, neither In, out or place can be involved with any inhibitor
             if(place.inhib || in.inhib || out.inhib) continue;
             
-            // also, none of the places in the post-set of consuming transition can be participating in inhibitors.
+            // B7. also, none of the places in the post-set of consuming transition can be participating in inhibitors.
+            // B8. nor can they appear in the query.
             {
-                bool post_inhib = false;
+                bool post_ok = false;
                 for(const Arc& a : in.post)
                 {
-                    post_inhib |= parent->_places[a.place].inhib;
-                    if(post_inhib) break;
+                    post_ok |= parent->_places[a.place].inhib;
+                    post_ok |= placeInQuery[a.place];
+                    if(post_ok) break;
                 }
-                if(post_inhib) continue;
+                if(post_ok) continue;
             }
 
             bool ok = true;
-            // Check that there is no other place than p that gives to tPost, 
+            // B2. Check that there is no other place than p that gives to tPost, 
             // tPre can give to other places
             for (auto& arc : in.pre) {
                 if (arc.weight > 0 && arc.place != p) {
@@ -325,27 +333,29 @@ namespace PetriEngine {
             
             continueReductions = true;
             _ruleB++;
-             // Remove place p
+             // UB1. Remove place p
             skipPlace(p);
             _removedPlaces++;
 
-            outArc->weight /= multiplier;
             // We need to remember that when tOut fires, tIn fires just after.
             // this should fix the trace
             
+            // UB2. move arcs from t' to t
             for (auto& arc : in.post) { // remove tPost
                 auto _arc = getOutArc(out, arc.place);
                 if(_arc != out.post.end())
                 {
-                    _arc->weight += arc.weight;
+                    _arc->weight += arc.weight*multiplier;
                 }
                 else
                 {
                     out.post.push_back(arc);
+                    out.post.back().weight *= multiplier;
                     parent->_places[arc.place].producers.push_back(tOut);
                 }
             }
             _removedTransitions++;
+            // UB1. remove transition
             skipTransition(tIn);
         } // end of Rule B main for-loop
         return continueReductions;
@@ -353,99 +363,68 @@ namespace PetriEngine {
 
     bool Reducer::ReducebyRuleC(uint32_t* placeInQuery) {
         // Rule C - Places with same input and output-transitions which a modulo each other
-         bool continueReductions = false;
+        bool continueReductions = false;
         
         for(uint32_t p1 = 0; p1 < parent->numberOfPlaces(); ++p1)
-        {
-            if( placeInQuery[p1] > 0 || parent->initMarking()[p1])
-                continue;
-            
+        {            
             Place& place1 = parent->_places[p1];
             
-            if(place1.skip || place1.inhib) continue;
+            // Already removed
+            if(place1.skip) continue;
+
+            // C1. Producer/consumer must be different
+            if( place1.consumers[0] == place1.producers[0])
+                continue;
             
-            // use symmetry to speed up things
-            for (uint32_t p2 = p1 + 1; p2 < parent->numberOfPlaces(); ++p2) 
+            // C2, C3. Only one ingoing/outgoing edge
+            if( place1.consumers.size() != 1 ||
+                place1.producers.size() != 1)
+                    continue;     
+            
+            // we could probably be clever and use symmetry here
+            for (uint32_t p2 = 0; p2 < parent->numberOfPlaces(); ++p2) 
             {
+                // C1. places have to differ
                 if(p1 == p2) continue;
                 
-                if(placeInQuery[p2] > 0 || parent->initMarking()[p2])
+                // C6. agree on initial marking
+                if(parent->initMarking()[p1] != parent->initMarking()[p2]) 
                     continue;
-                
+
+                // C8. place we remove cannot be in query
+                if(placeInQuery[p2] > 0)
+                    continue;
+ 
                 Place& place2 = parent->_places[p2];
                 
-                if(place2.skip || place2.inhib) continue;
+                // already removed
+                if(place2.skip) continue;
                 
+                // C7. either they agree on inhibiting, or removed place is non-inhibit
+                if(place2.inhib != place1.inhib && place2.inhib) continue;
+                
+                // C2, C3. Only one ingoing/outgoing edge
                 if(place1.consumers.size() != place2.consumers.size() ||
                    place1.producers.size() != place2.producers.size())
                     continue;
 
-                bool ok = true;
-                {
-                    // check for symmetry between places
-                    for(auto& in : place1.consumers)
-                    {
-                        Transition& trans = getTransition(in);
-                        auto a1 = getInArc(p1, trans);
-                        auto a2 = getInArc(p2, trans);
-                        if( a2 == trans.pre.end() ||
-                            a2->weight != a1->weight)
-                        {
-                            ok = false;
-                        }
-                    }
+                // C2. producers are the same
+                if( place1.producers[0] == place2.producers[0])
+                    continue;
 
-                    if(ok)
-                    {
-                        for(auto& in : place1.producers)
-                        {
-                            Transition& trans = getTransition(in);
-                            auto a1 = getOutArc(trans, p1);
-                            auto a2 = getOutArc(trans, p2);
-                            if( a2 == trans.post.end() ||
-                                a2->weight != a1->weight)
-                            {
-                                ok = false;
-                            }
-                        }
-                    }
-                }
+                // C3. consumers are the same
+                if( place1.consumers[0] == place2.consumers[0])
+                    continue;
                 
-                if(!ok)
+                // C4, C5. Match between weights
+                Transition& t1 = getTransition(place1.consumers[0]);
+                Transition& t2 = getTransition(place1.producers[0]);
+                if(getInArc(p1, t1)->weight != getOutArc(t2, p1)->weight ||
+                   getInArc(p2, t1)->weight != getOutArc(t2, p2)->weight)
                 {
-                    ok = true;
-                    if (place1.consumers.size() == 1 && place1.producers.size() == 1)
-                    {
-                        assert(place2.consumers.size() == 1 && place2.producers.size() == 1);
-                        if( place1.consumers[0] == place2.consumers[0] &&
-                            place1.producers[0] == place2.producers[0] &&
-                            place1.producers[0] != place1.consumers[0])
-                        {
-                            Transition& t1 = getTransition(place1.consumers[0]);
-                            Transition& t2 = getTransition(place1.producers[0]);
-                            if(getInArc(p1, t1)->weight == getOutArc(t2, p1)->weight &&
-                               getInArc(p2, t1)->weight == getOutArc(t2, p2)->weight)
-                            {
-                                // all ok, we can continue
-                            }
-                            else
-                            {
-                                ok = false;
-                            }
-                        }
-                        else
-                        {
-                            ok = false;
-                        }
-                    }
-                    else
-                    {
-                        ok = false;
-                    }
-                }
-                
-                if(!ok) continue;
-                
+                    continue;
+                }          
+                                
                 // We need to remember to consume from p2 when place1.consumers[0] fires
                 // otherwise, trace is inconsistent
                 if(reconstructTrace)
@@ -460,6 +439,7 @@ namespace PetriEngine {
                                 
                 continueReductions = true;
                 _ruleC++;
+                // UC1. Remove place
                 skipPlace(p2);
                 _removedPlaces++;
             }
@@ -471,30 +451,32 @@ namespace PetriEngine {
         // Rule D - two transitions with the same pre and post and same inhibitor arcs 
         // This does not alter the trace.
         bool continueReductions = false;
-        for (uint32_t t1 = 0; t1 < parent->numberOfTransitions(); t1++) {
+        for (uint32_t t1 = 0; t1 < parent->numberOfTransitions(); ++t1) {
             Transition& trans1 = getTransition(t1);
+            
+            // already skipped
             if(trans1.skip) continue;
 
-            for (uint32_t t2 = 0; t2 < parent->numberOfTransitions(); t2++) {
+            // use symmetry
+            for (uint32_t t2 = t1+1; t2 < parent->numberOfTransitions(); ++t2) {
+                
+                // D1. Need to differ
                 if(t1 == t2) continue;
                 
                 Transition& trans2 = getTransition(t2);
+                
+                // already removed
                 if(trans2.skip) continue;
                 
-                if(trans1.post.size() != trans2.post.size()) continue;
+                // D2. Same number of inputs
                 if(trans1.pre.size() != trans2.pre.size()) continue;
                 
+                // D3. Same number of outputs
+                if(trans1.post.size() != trans2.post.size()) continue;
+
                 bool ok = true;
-                for(auto& arc : trans1.post)
-                {
-                    auto a2 = getOutArc(trans2, arc.place);
-                    if( a2 == trans2.post.end() ||
-                        a2->weight != arc.weight)
-                    {
-                        ok = false;
-                    }
-                }
-                
+                // D2. same weights on inputs, and
+                // D4. agree on inhibiting
                 for(auto& arc : trans1.pre)
                 {
                     auto a2 = getInArc(arc.place, trans2);
@@ -505,10 +487,20 @@ namespace PetriEngine {
                         ok = false;
                     }
                 }
-                
-                if (!ok) {
-                    continue;
+                if (!ok) continue;
+                // D3. same weights on inputs                
+                for(auto& arc : trans1.post)
+                {
+                    auto a2 = getOutArc(trans2, arc.place);
+                    if( a2 == trans2.post.end() ||
+                        a2->weight != arc.weight)
+                    {
+                        ok = false;
+                    }
                 }
+                                
+                if (!ok) continue;
+                
                 // Remove transition t2
                 continueReductions = true;
                 _ruleD++;
