@@ -28,16 +28,22 @@ namespace PetriEngine {
                     << std::endl << std::endl;
         for (uint32_t t = 0; t < parent->numberOfTransitions(); t++) {
             std::cout << "Transition " << t << " :\n";
+            if(parent->_transitions[t].skip)
+            {
+                std::cout << "\tSKIPPED" << std::endl;
+            }
             for(auto& arc : parent->_transitions[t].pre)
             {
                 if (arc.weight > 0) 
-                    std::cout   << "   Input place " << arc.place 
+                    std::cout   << "\tInput place " << arc.place  
+                                << " (" << getPlaceName(arc.place) << ")"
                                 << " with arc-weight " << arc.weight << std::endl;
             }
             for(auto& arc : parent->_transitions[t].post)
             {
                 if (arc.weight > 0) 
-                    std::cout   << "  Output place " << arc.place 
+                    std::cout   << "\tOutput place " << arc.place 
+                                << " (" << getPlaceName(arc.place) << ")" 
                                 << " with arc-weight " << arc.weight << std::endl;
             }
             std::cout << std::endl;
@@ -133,6 +139,7 @@ namespace PetriEngine {
     void Reducer::skipPlace(uint32_t place)
     {
         Place& pl = parent->_places[place];
+        
         pl.skip = true;
         for(auto& t : pl.consumers)
         {
@@ -364,22 +371,41 @@ namespace PetriEngine {
     bool Reducer::ReducebyRuleC(uint32_t* placeInQuery) {
         // Rule C - Places with same input and output-transitions which a modulo each other
         bool continueReductions = false;
-        
         for(uint32_t p1 = 0; p1 < parent->numberOfPlaces(); ++p1)
         {            
             Place& place1 = parent->_places[p1];
             
             // Already removed
             if(place1.skip) continue;
+                        
+            // C2. Only one intoing arc
+            if(place1.producers.size() != 1) continue;
+            uint tin = place1.producers[0];
 
-            // C1. Producer/consumer must be different
-            if( place1.consumers[0] == place1.producers[0])
-                continue;
+            uint tout = std::numeric_limits<uint>::max();
+            for(uint cons : place1.consumers)
+            {
+                auto t = getTransition(cons);
+                auto a = getInArc(cons, t);
+                
+                if(!a->inhib && !a->skip)
+                {
+                    if(tout != std::numeric_limits<uint>::max()) 
+                    {
+                        tout = std::numeric_limits<uint>::max();
+                        break;
+                    }
+                    tout = cons;
+                }
+            }
             
-            // C2, C3. Only one ingoing/outgoing edge
-            if( place1.consumers.size() != 1 ||
-                place1.producers.size() != 1)
-                    continue;     
+            // C1, C3. Consumer, producer must differ, there must be 
+            // one (non-inhibiting) outgoing arc
+            if( tin == tout || 
+                tout == std::numeric_limits<uint>::max())
+            {
+                continue;
+            }
             
             // we could probably be clever and use symmetry here
             for (uint32_t p2 = 0; p2 < parent->numberOfPlaces(); ++p2) 
@@ -403,19 +429,53 @@ namespace PetriEngine {
                 // C7. either they agree on inhibiting, or removed place is non-inhibit
                 if(place2.inhib != place1.inhib && place2.inhib) continue;
                 
-                // C2, C3. Only one ingoing/outgoing edge
+                // C2, C3. Same number of ingoing/outgoing (including inhib)
                 if(place1.consumers.size() != place2.consumers.size() ||
                    place1.producers.size() != place2.producers.size())
                     continue;
 
-                // C2. producers are the same
-                if( place1.producers[0] == place2.producers[0])
-                    continue;
+                // C3. Only one input
+                if(place2.producers.size() != 1) continue;
+                uint tin2 = place2.producers[0];
 
-                // C3. consumers are the same
-                if( place1.consumers[0] == place2.consumers[0])
-                    continue;
+                // C2. inputs must match
+                if(tin2 != tin) continue;
                 
+                uint tout2 = std::numeric_limits<uint>::max();
+                for(uint cons : place2.consumers)
+                {
+                    auto t = getTransition(cons);
+                    auto a = getInArc(cons, t);
+                    if(!a->inhib && !a->skip) 
+                    {
+                        if(tout2 != std::numeric_limits<uint>::max()) 
+                        {
+                            tout2 = std::numeric_limits<uint>::max();
+                            break;
+                        }
+                        tout2 = cons;
+                    }
+                    
+                    if(place2.inhib)
+                    {
+                        // C7. We must make sure inhibitors match
+                        if(std::find(place1.consumers.begin(), place1.consumers.end(), cons) == place1.consumers.end())
+                        {
+                            tout2 = std::numeric_limits<uint>::max();
+                            break;
+                        }
+                        // C7. also weights of inhib must match
+                        if(getInArc(p1, t)->weight != getInArc(p2, t)->weight)
+                        {
+                            tout2 = std::numeric_limits<uint>::max();
+                            break;
+                        }
+                    }
+                }
+
+                // C3. Outputs must match
+                if( tout2 != tout) continue;
+                                
                 // C4, C5. Match between weights
                 Transition& t1 = getTransition(place1.consumers[0]);
                 Transition& t2 = getTransition(place1.producers[0]);
