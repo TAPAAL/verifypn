@@ -139,7 +139,6 @@ namespace PetriEngine {
     void Reducer::skipPlace(uint32_t place)
     {
         Place& pl = parent->_places[place];
-        
         pl.skip = true;
         for(auto& t : pl.consumers)
         {
@@ -372,9 +371,8 @@ namespace PetriEngine {
         // Rule C - Places with same input and output-transitions which a modulo each other
         bool continueReductions = false;
         for(uint32_t p1 = 0; p1 < parent->numberOfPlaces(); ++p1)
-        {            
+        {     
             Place& place1 = parent->_places[p1];
-            
             // Already removed
             if(place1.skip) continue;
                         
@@ -386,7 +384,7 @@ namespace PetriEngine {
             for(uint cons : place1.consumers)
             {
                 auto t = getTransition(cons);
-                auto a = getInArc(cons, t);
+                auto a = getInArc(p1, t);
                 
                 if(!a->inhib && !a->skip)
                 {
@@ -412,40 +410,54 @@ namespace PetriEngine {
             {
                 // C1. places have to differ
                 if(p1 == p2) continue;
-                
                 // C6. agree on initial marking
                 if(parent->initMarking()[p1] != parent->initMarking()[p2]) 
+                {
                     continue;
+                }
 
                 // C8. place we remove cannot be in query
                 if(placeInQuery[p2] > 0)
+                {
                     continue;
+                }
  
                 Place& place2 = parent->_places[p2];
                 
                 // already removed
-                if(place2.skip) continue;
+                if(place2.skip)
+                {
+                    continue;
+                }
                 
                 // C7. either they agree on inhibiting, or removed place is non-inhibit
-                if(place2.inhib != place1.inhib && place2.inhib) continue;
+                if(place2.inhib != place1.inhib && place2.inhib)
+                {
+                    continue;
+                }
                 
                 // C2, C3. Same number of ingoing/outgoing (including inhib)
                 if(place1.consumers.size() != place2.consumers.size() ||
                    place1.producers.size() != place2.producers.size())
+                {
                     continue;
+                }
 
                 // C3. Only one input
                 if(place2.producers.size() != 1) continue;
                 uint tin2 = place2.producers[0];
 
                 // C2. inputs must match
-                if(tin2 != tin) continue;
+                if(tin2 != tin)
+                {
+                    continue;
+                }
                 
                 uint tout2 = std::numeric_limits<uint>::max();
                 for(uint cons : place2.consumers)
                 {
                     auto t = getTransition(cons);
-                    auto a = getInArc(cons, t);
+                    auto a = getInArc(p2, t);
                     if(!a->inhib && !a->skip) 
                     {
                         if(tout2 != std::numeric_limits<uint>::max()) 
@@ -474,7 +486,10 @@ namespace PetriEngine {
                 }
 
                 // C3. Outputs must match
-                if( tout2 != tout) continue;
+                if(tout2 != tout)
+                {
+                    continue;
+                }
                                 
                 // C4, C5. Match between weights
                 Transition& t1 = getTransition(place1.consumers[0]);
@@ -484,7 +499,7 @@ namespace PetriEngine {
                 {
                     continue;
                 }          
-                                
+                                            
                 // We need to remember to consume from p2 when place1.consumers[0] fires
                 // otherwise, trace is inconsistent
                 if(reconstructTrace)
