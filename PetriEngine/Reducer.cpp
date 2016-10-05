@@ -269,8 +269,9 @@ namespace PetriEngine {
             
             if(place.skip) continue;    // allready removed    
             
-            // B4 and B6. dont mess up query and initial state
-            if(placeInQuery[p] > 0 || parent->initMarking()[p] > 0) continue; // to important                   
+            // B6. dont mess up query and initial state
+            if(placeInQuery[p] > 0) continue; // to important      
+            size_t initm = parent->initMarking()[p];
             
             // B2. Only one consumer/producer
             if(place.consumers.size() != 1 || place.producers.size() != 1) continue; // no orphan removal
@@ -349,6 +350,8 @@ namespace PetriEngine {
             // UB2. move arcs from t' to t
             for (auto& arc : in.post) { // remove tPost
                 auto _arc = getOutArc(out, arc.place);
+                // UB3. Update initial marking
+                parent->initialMarking[arc.place] += initm*_arc->weight;
                 if(_arc != out.post.end())
                 {
                     _arc->weight += arc.weight*multiplier;
