@@ -170,7 +170,6 @@ namespace PetriEngine {
 
     bool Reducer::ReducebyRuleA(uint32_t* placeInQuery) {
         // Rule A  - find transition t that has exactly one place in pre and post and remove one of the places (and t)  
-        bool continueReductions = false;
         for (uint32_t t = 0; t < parent->numberOfTransitions(); t++) {
 
             Transition& trans = getTransition(t);
@@ -201,7 +200,6 @@ namespace PetriEngine {
             // A5. dont mess with query!
             if(placeInQuery[pPre] > 0 || placeInQuery[pPost]) continue;
              
-            continueReductions = true;
             _ruleA++;
             
             // here we need to remember when a token is created in pPre (some 
@@ -256,8 +254,9 @@ namespace PetriEngine {
             _removedPlaces++;
             // UA1. remove place
             skipPlace(pPre);
+            return true;
         } // end of Rule A main for-loop
-        return continueReductions;
+        return false;
     }
 
     bool Reducer::ReducebyRuleB(uint32_t* placeInQuery) {
@@ -643,14 +642,14 @@ namespace PetriEngine {
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace) {
         this->reconstructTrace = reconstructTrace;
         if (enablereduction == 1) { // in the aggresive reduction all four rules are used as long as they remove something
-            while (ReducebyRuleA(context.getQueryPlaceCount()) ||
-                    ReducebyRuleB(context.getQueryPlaceCount()) ||
+            while (ReducebyRuleB(context.getQueryPlaceCount()) ||
                     ReducebyRuleC(context.getQueryPlaceCount()) ||
-                    ReducebyRuleD(context.getQueryPlaceCount())) {
+                    ReducebyRuleD(context.getQueryPlaceCount()) ||
+                    ReducebyRuleA(context.getQueryPlaceCount())) {
             }
         } else if (enablereduction == 2) { // for k-boundedness checking only rules A and D are applicable
-            while (ReducebyRuleA(context.getQueryPlaceCount()) ||
-                    ReducebyRuleD(context.getQueryPlaceCount())) {
+            while (ReducebyRuleD(context.getQueryPlaceCount()) ||
+                    ReducebyRuleA(context.getQueryPlaceCount())) {
             }
         }
     }
