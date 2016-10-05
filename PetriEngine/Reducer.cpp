@@ -559,8 +559,7 @@ namespace PetriEngine {
             // already skipped
             if(trans1.skip) continue;
 
-            // use symmetry
-            for (uint32_t t2 = t1+1; t2 < parent->numberOfTransitions(); ++t2) {
+            for (uint32_t t2 = 0; t2 < parent->numberOfTransitions(); ++t2) {
                 
                 // D1. Need to differ
                 if(t1 == t2) continue;
@@ -576,6 +575,8 @@ namespace PetriEngine {
                 // D3. Same number of outputs
                 if(trans1.post.size() != trans2.post.size()) continue;
 
+                uint m = std::numeric_limits<uint>::max();
+                
                 bool ok = true;
                 // D2. same weights on inputs, and
                 // D4. agree on inhibiting
@@ -583,10 +584,35 @@ namespace PetriEngine {
                 {
                     auto a2 = getInArc(arc.place, trans2);
                     if( a2 == trans2.pre.end() ||
-                        a2->weight != arc.weight ||
                         a2->inhib != arc.inhib)
                     {
                         ok = false;
+                        break;
+                    }
+                    
+                    if(m == std::numeric_limits<uint>::max())
+                    {
+                        m = arc.weight;
+                        if(m < a2->weight)
+                        {
+                            if((a2->weight % m) != 0) 
+                            {
+                                ok = false;
+                                break;
+                            }
+                            m = a2->weight/m;
+                        }
+                        else
+                        {
+                            ok = false;
+                            break;
+                        }
+                    }
+                    
+                    if(a2->weight != arc.weight*m)
+                    {
+                        ok = false;
+                        break;
                     }
                 }
                 if (!ok) continue;
@@ -595,9 +621,10 @@ namespace PetriEngine {
                 {
                     auto a2 = getOutArc(trans2, arc.place);
                     if( a2 == trans2.post.end() ||
-                        a2->weight != arc.weight)
+                        a2->weight != arc.weight*m)
                     {
                         ok = false;
+                        break;
                     }
                 }
                                 
