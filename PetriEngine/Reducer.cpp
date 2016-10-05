@@ -271,7 +271,7 @@ namespace PetriEngine {
             
             // B6. dont mess up query and initial state
             if(placeInQuery[p] > 0) continue; // to important      
-            size_t initm = parent->initMarking()[p];
+            uint initm = parent->initMarking()[p];
             
             // B2. Only one consumer/producer
             if(place.consumers.size() != 1 || place.producers.size() != 1) continue; // no orphan removal
@@ -293,6 +293,9 @@ namespace PetriEngine {
             if((outArc->weight % inArc->weight) != 0) continue;
             
             size_t multiplier = outArc->weight / inArc->weight;
+
+            if((initm % inArc->weight) != 0) continue;
+
             
             // B5. Do inhibitor check, neither In, out or place can be involved with any inhibitor
             if(place.inhib || in.inhib || out.inhib) continue;
@@ -335,6 +338,11 @@ namespace PetriEngine {
                 for(size_t i = 0; i < multiplier; ++i)
                 {
                     _postfire[toutname].push_back(tinname);
+                }
+                
+                for(size_t i = 0; initm > 0 && i < initm / inArc->weight; ++i )
+                {
+                    _initfire.push_back(tinname);
                 }
             }
             
@@ -413,12 +421,7 @@ namespace PetriEngine {
             {
                 // C1. places have to differ
                 if(p1 == p2) continue;
-                // C6. agree on initial marking
-                if(parent->initMarking()[p1] != parent->initMarking()[p2]) 
-                {
-                    continue;
-                }
-
+                
                 // C8. place we remove cannot be in query
                 if(placeInQuery[p2] > 0)
                 {
@@ -439,13 +442,6 @@ namespace PetriEngine {
                     continue;
                 }
                 
-                // C2, C3. Same number of ingoing/outgoing (including inhib)
-                if(place1.consumers.size() != place2.consumers.size() ||
-                   place1.producers.size() != place2.producers.size())
-                {
-                    continue;
-                }
-
                 // C3. Only one input
                 if(place2.producers.size() != 1) continue;
                 uint tin2 = place2.producers[0];
@@ -455,6 +451,36 @@ namespace PetriEngine {
                 {
                     continue;
                 }
+                Transition& t1 = getTransition(tin);
+                Transition& t2 = getTransition(tout);
+                
+                // find multiplier
+                uint m1 = getOutArc(t1, p1)->weight;
+                uint m2 = getOutArc(t1, p2)->weight;
+                if(m1 == 0 || m2 == 0) continue;
+                if(m1 < m2)
+                {
+                    if((m2 % m1) != 0) continue;
+                    m2 /= m1;
+                    m1 = 1;
+                }
+                else
+                {
+                    if((m1 % m2) != 0) continue;
+                    m1 /= m2;
+                    m2 = 1;
+                }
+
+                // we now know that m1 and m2 contains the relationship between weights,
+                // if we swap them, they are multipliers instead; m1*w1 = m2*w2
+                std::swap(m1, m2);
+                
+                // if inhibiting, we need exact number of tokens
+                if(place2.inhib && parent->initialMarking[p1]*m1 != parent->initialMarking[p2]*m2) continue;
+                
+                // otherwise, we can do with just "more" in the place we keep
+                if(parent->initialMarking[p1]*m1 < parent->initialMarking[p2]*m2) continue;
+                
                 
                 uint tout2 = std::numeric_limits<uint>::max();
                 for(uint cons : place2.consumers)
@@ -480,7 +506,7 @@ namespace PetriEngine {
                             break;
                         }
                         // C7. also weights of inhib must match
-                        if(getInArc(p1, t)->weight != getInArc(p2, t)->weight)
+                        if(getInArc(p1, t)->weight*m1 != getInArc(p2, t)->weight*m2)
                         {
                             tout2 = std::numeric_limits<uint>::max();
                             break;
@@ -495,10 +521,8 @@ namespace PetriEngine {
                 }
                                 
                 // C4, C5. Match between weights
-                Transition& t1 = getTransition(place1.consumers[0]);
-                Transition& t2 = getTransition(place1.producers[0]);
-                if(getInArc(p1, t1)->weight != getOutArc(t2, p1)->weight ||
-                   getInArc(p2, t1)->weight != getOutArc(t2, p2)->weight)
+                if(getInArc(p1, t2)->weight*m1 != getInArc(p2, t2)->weight*m2 ||
+                   getOutArc(t1, p1)->weight*m1 != getOutArc(t1, p2)->weight*m2)
                 {
                     continue;
                 }          
