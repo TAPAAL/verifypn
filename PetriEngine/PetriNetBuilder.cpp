@@ -332,6 +332,7 @@ namespace PetriEngine {
         // reindex place-names
 
         net->_placenames.resize(_placenames.size());
+        int rindex = _placenames.size() - 1;
         for(auto& i : _placenames)
         {
             i.second = place_idmap[i.second];
@@ -340,15 +341,26 @@ namespace PetriEngine {
                 net->_placenames[i.second] = i.first;
                 assert(_placenames[net->_placenames[i.second]] == i.second);
             }
+            else
+            {
+                net->_placenames[rindex] = i.first;
+                --rindex;
+            }
         }
 
         net->_transitionnames.resize(_transitionnames.size());
+        int trindex = _transitionnames.size() - 1;
         for(auto& i : _transitionnames)
         {
             i.second = trans_idmap[i.second];
             if(i.second != std::numeric_limits<uint32_t>::max())
             {
                 net->_transitionnames[i.second] = i.first;
+            }
+            else
+            {
+                net->_transitionnames[trindex] = i.first;
+                --trindex;
             }
         }
         
