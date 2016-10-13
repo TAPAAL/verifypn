@@ -49,6 +49,7 @@ namespace PetriEngine {
                 std::shared_ptr<PQL::Condition>& query);
         private:
             size_t _cnt;
+            size_t _nstates;
         };
         
         class DFSQueue : public Queue {

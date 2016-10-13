@@ -5,17 +5,15 @@
  * Created on 10 June 2015, 19:20
  */
 
-#include <math.h>
-#include <stdio.h>
 #include <iostream>
 #include <string.h>
 #include <assert.h>
-#include <stdint.h>
-
-#include "Memory/pool_dynamic_allocator.h"
+#include <limits>
 
 #ifndef BINARYWRAPPER_H
 #define	BINARYWRAPPER_H
+
+#define __BW_BSIZE__ sizeof(size_t) // SIZE OF POINTER!
 namespace ptrie
 {
     typedef unsigned int uint;
@@ -35,7 +33,9 @@ namespace ptrie
          * Empty constructor, no data is allocated
          */
         
-        binarywrapper_t();        
+        binarywrapper_t()
+        {            
+        }
         
         /**
          Allocates a room for at least size bits
@@ -51,9 +51,26 @@ namespace ptrie
          */
         
         binarywrapper_t(const binarywrapper_t& other, uint offset);
-        binarywrapper_t(const binarywrapper_t& other, uint size, uint offset, 
-                                                            uint encodingsize,
-                pdalloc::pool_dynamic_allocator<unsigned char>& alloc);
+        
+        inline void init(const binarywrapper_t& other, uint size, uint offset, 
+                                                            uint encodingsize)
+        {
+            uint so = size + offset;
+            offset = ((so - 1) / 8) - ((size - 1) / 8);
+
+            _nbytes = ((encodingsize + this->overhead(encodingsize)) / 8);
+            if (_nbytes > offset)
+                _nbytes -= offset;
+            else {
+                _nbytes = 0;
+            }
+
+            _blob = allocate(_nbytes);
+
+            memcpy(raw(), &(other.const_raw()[offset]), _nbytes);
+        }
+        
+        
         binarywrapper_t(uchar* raw, uint size, uint offset, uint encsize);
 	
 	/**
@@ -69,14 +86,16 @@ namespace ptrie
          * call to release().
          */
         
-        ~binarywrapper_t();
+        ~binarywrapper_t()
+        {        
+        }
         
         /**
          * Makes a complete copy, including new heap-allocation
          * @return an exact copy, but in a different area of the heap.
          */
         
-        binarywrapper_t clone() const;
+        //binarywrapper_t clone() const;
         
         /**
          * Copy over data and meta-data from other, but insert only into target
@@ -104,34 +123,55 @@ namespace ptrie
          * @param place: bit index
          * @return 
          */
-        bool at(const uint place) const;
+        inline bool at(const uint place) const
+        {
+            uint offset = place % 8;
+            bool res2;
+            if (place / 8 < _nbytes)
+                res2 = (const_raw()[place / 8] & _masks[offset]) != 0;
+            else
+                res2 = false;
+
+            return res2;  
+        } 
         
         /**
          * number of bytes allocated in heap
          * @return 
          */
         
-        uint size() const;
-        
-        /**
-         * Raw access to data
-         * @return 
-         */
-        
-        uchar* raw();
-        
+        inline uint size() const
+        {
+            return _nbytes;
+        }
+                
         /**
          * Raw access to data when in const setting
          * @return 
          */
         
-        uchar* const_raw() const;
+        inline uchar* const_raw() const
+        {
+            if(_nbytes <= __BW_BSIZE__) return offset((uchar*)&_blob, _nbytes);
+            else 
+                return offset(_blob, _nbytes);
+        }
         
+        /**
+         * Raw access to data
+         * @return 
+         */
+               
+        inline uchar* raw()
+        {
+            return const_raw();
+        }
+
         /**
          * pretty print of content
          */
         
-        void print() const;
+        void print(size_t length = std::numeric_limits<size_t>::max()) const;
         
         /**
          * finds the overhead (unused number of bits) when allocating for size
@@ -151,19 +191,40 @@ namespace ptrie
          * @param value: desired value
          */
         
-        void set(const uint place, const bool value) const;
+        inline void set(const uint place, const bool value) const
+        {
+            assert(place < _nbytes*8);
+            uint offset = place % 8;
+            uint theplace = place / 8;
+            if (value) {
+                const_raw()[theplace] |= _masks[offset];
+            } else {
+                const_raw()[theplace] &= ~_masks[offset];
+            }    
+        }   
         
         /**
          * Sets all memory on heap to 0 
          */
         
-        void zero() const;
+        inline void zero() const
+        {
+            if(_nbytes > 0 && _blob != NULL)
+            {
+                memset(const_raw(), 0x0, _nbytes); 
+            }
+        }
         
         /**
          * Deallocates memory stored on heap
          */
         
-        void release();
+        inline void release()
+        {
+            if(_nbytes > __BW_BSIZE__)
+                dealloc(_blob);
+            _blob = NULL;
+        }
                 
         /**
          * Nice access to single bits
@@ -171,15 +232,14 @@ namespace ptrie
          * @return 
          */
         
-        uchar operator[](int i);
-        
-        /**
-         * Removes a number of bytes from end of heap-allocated data if any is 
-         * allocated nothing happens if not. Bound-checks.
-         * @param number of bytes to remove.
-         */
-        
-        void pop_front(unsigned short, pdalloc::pool_dynamic_allocator<unsigned char>&);
+        inline uchar operator[](int i) const
+        {
+            if (i >= _nbytes) {
+                 return 0x0;
+            }
+            return const_raw()[i]; 
+        }
+               
         
         /**
          * Compares two wrappers. Assumes that smaller number of bytes also means
@@ -187,15 +247,13 @@ namespace ptrie
          * @param other: wrapper to compare to
          * @return -1 if other is smaller, 0 if same, 1 if other is larger
          */
-         int cmp(const binarywrapper_t &other) const
+        inline int cmp(const binarywrapper_t &other) const
         {
-            if(_nbytes != other._nbytes)
-            {
-                if(_nbytes < other._nbytes) return -1;
-                else return 1;
-            }
-                
-            return memcmp(_blob, other.const_raw(), other._nbytes );
+            if(_nbytes < other._nbytes) return -1;
+            else if(_nbytes > other._nbytes) return 1;
+            
+            size_t bcmp = std::min(_nbytes, other._nbytes);
+            return memcmp(const_raw(), other.const_raw(), bcmp);
         }
             
         /**
@@ -209,18 +267,58 @@ namespace ptrie
                                         const binarywrapper_t &enc2) {
             return enc1.cmp(enc2) == 0;
         }
-        
+         
+        const static uchar _masks[8];
     private:
-            
+         
+        static inline uchar* allocate(size_t n)
+        {
+            if(n <= __BW_BSIZE__) return 0;
+#ifndef NDEBUG
+            size_t on = n;
+#endif            
+            if(n % __BW_BSIZE__ != 0) n = (1+(n/__BW_BSIZE__))*(__BW_BSIZE__);
+            assert(n % __BW_BSIZE__ == 0);
+            assert(on <= n);
+            return (uchar*)malloc(n);
+        }
+        
+        static inline uchar* zallocate(size_t n)
+        {
+            if(n <= __BW_BSIZE__) return 0;
+#ifndef NDEBUG
+            size_t on = n;
+#endif
+            if(n % __BW_BSIZE__ != 0)
+            {
+                n = (1+(n/__BW_BSIZE__))*(__BW_BSIZE__);
+                assert(n == on + (__BW_BSIZE__ - (on % __BW_BSIZE__)));
+            }
+            assert(n % __BW_BSIZE__ == 0);
+            assert(on <= n);
+            return (uchar*)calloc(n, 1);            
+        }
+        
+        static inline void dealloc(uchar* data)
+        {
+            free(data);
+        }
+        
+        static inline uchar* offset(uchar* data, uint16_t size)
+        {
+//            if((size % __BW_BSIZE__) == 0) return data;
+//            else return &data[(__BW_BSIZE__ - (size % __BW_BSIZE__))];
+            return data;
+        }
+        
         // blob of heap-allocated data
         uchar* _blob;
             
         // number of bytes allocated on heap
-         unsigned short _nbytes;
-        
+        uint16_t _nbytes;
+               
         // masks for single-bit access
-        const static uchar _masks[8];
-    } __attribute__((packed));
+     } __attribute__((packed));
 }
 
 

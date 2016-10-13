@@ -24,7 +24,8 @@
 #include "Memory/pool_dynamic_allocator.h"
 #include "State.h"
 #include "AlignedEncoder.h"
-#include "ptrie.h"
+#include "ptrie_stable.h"
+#include "ptrie_map.h"
 #include "binarywrapper.h"
 #include "../errorcodes.h"
 
@@ -42,13 +43,12 @@ namespace PetriEngine {
                 _kbound = kbound;
                 _maxTokens = 0;
                 _maxPlaceBound = std::vector<uint32_t>(_net.numberOfPlaces(), 0);
+                _sp = binarywrapper_t(sizeof(uint32_t)*_net.numberOfPlaces()*8);
             }
             
             virtual std::pair<bool, size_t> add(State& state) = 0;
             
             virtual void decode(State& state, size_t id) = 0;
-            
-            virtual size_t size() const  = 0;
             
             const PetriNet& net() { return _net;}
             
@@ -63,24 +63,14 @@ namespace PetriEngine {
             std::vector<uint32_t> _maxPlaceBound;
             AlignedEncoder _encoder;
             const PetriNet& _net;
-
+            binarywrapper_t _sp;     
 #ifdef DEBUG
             std::vector<uint32_t*> _dbg;
 #endif
-            
             template<typename T>
-            void _decode(State& state, size_t id, ptrie::ptrie_t<T>& _trie, T& _sp )
+            void _decode(State& state, size_t id, T& _trie)
             {
-                    typename ptrie::ptrie_t<T>::pointer_t ptr = 
-                                            typename ptrie::ptrie_t<T>::pointer_t(&_trie, id);
-                    uint32_t bits = ptr.write_partial_encoding(_sp);
-                    for(size_t i = 0; i < bits; ++i)
-                        _encoder.scratchpad().set(i, _sp.at((bits-1) - i));
-                    
-                    memcpy( &_encoder.scratchpad().raw()[bits/8],
-                            ptr.remainder().const_raw(), 
-                            ptr.remainder().size());
-
+                    _trie.unpack(id, _encoder.scratchpad().raw());
                     _encoder.decode(state.marking(), _encoder.scratchpad().raw());
 
 #ifdef DEBUG
@@ -89,14 +79,9 @@ namespace PetriEngine {
             }             
             
             template<typename T>
-            std::pair<bool, size_t> _add(State& state, ptrie::ptrie_t<T>& _trie, T& _sp) {
+            std::pair<bool, size_t> _add(State& state, T& _trie) {
                 _discovered++;
                 
-                if(_trie.size() >= std::numeric_limits<uint32_t>::max())
-                {
-                    std::cerr << "Exceeded " << std::numeric_limits<uint32_t>::max() << " markings" << std::endl;
-                    exit(ErrorCode);
-                }
 #ifdef DEBUG
                 if(_discovered % 1000000 == 0) std::cout << "Found number " << _discovered << std::endl;
 #endif
@@ -119,7 +104,7 @@ namespace PetriEngine {
 
 
                 size_t length = _encoder.encode(state.marking(), type);
-                T w = T(_encoder.scratchpad().raw(), length*8);
+                binarywrapper_t w = binarywrapper_t(_encoder.scratchpad().raw(), length*8);
                 auto tit = _trie.insert(w);
             
                 
@@ -144,7 +129,7 @@ namespace PetriEngine {
 #ifdef DEBUG    
                 if(_trie.size() % 100000 == 0) std::cout << "Inserted " << _trie.size() << std::endl;
 #endif     
-                return std::pair<bool, size_t>(true, _trie.size() - 1);
+                return std::pair<bool, size_t>(true, tit.second);
             }
 
         public:
@@ -186,35 +171,22 @@ namespace PetriEngine {
         class StateSet : public StateSetInterface {
         private:
             using wrapper_t = ptrie::binarywrapper_t;
-            using ptrie_t = ptrie::ptrie_t<wrapper_t>;
+            using ptrie_t = ptrie::set_stable<128,128,(1024 * 64),256,void,uint32_t>;
             
         public:
-
-            StateSet(const PetriNet& net, uint32_t kbound) 
-            : StateSetInterface(net, kbound) {
-                _sp = wrapper_t(sizeof(uint32_t)*_net.numberOfPlaces()*8);
-            }
-            
-            ~StateSet()
-            {
-                
-            }
+            using StateSetInterface::StateSetInterface;
              
             virtual std::pair<bool, size_t> add(State& state) override
             {
-                return _add<wrapper_t>(state, _trie, _sp);
+                return _add(state, _trie);
             }
             
             virtual void decode(State& state, size_t id) override
             {
-                _decode<wrapper_t>(state, id, _trie, _sp);
+                _decode(state, id, _trie);
             }
             
             
-            virtual size_t size() const override {
-                return _trie.size();
-            }
-
             virtual void setHistory(size_t id, size_t transition) override {}
 
             virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
@@ -223,45 +195,31 @@ namespace PetriEngine {
                 return std::make_pair(0,0); 
             }
             
-        private:
-            wrapper_t _sp;                    
+        private:               
             ptrie_t _trie;
         };
 
         class TracableStateSet : public StateSetInterface
         {
         public:
-            struct traceable_t : public ptrie::binarywrapper_t
+            struct traceable_t
             {
-                using binarywrapper_t::binarywrapper_t; // inherit all constructors
                 ptrie::uint parent;
                 ptrie::uint transition;
-            } __attribute__((packed));
+            };
             
         private:
-
-            using wrapper_t = traceable_t;
-            using ptrie_t = ptrie::ptrie_t<wrapper_t>;
+            using ptrie_t = ptrie::map<traceable_t>;
             
-
         public:
+            using StateSetInterface::StateSetInterface;
 
-            TracableStateSet(const PetriNet& net, uint32_t kbound) 
-            : StateSetInterface(net, kbound) {
-                _sp = wrapper_t(sizeof(uint32_t)*_net.numberOfPlaces()*8);
-            }
-            
-            ~TracableStateSet()
-            {
-                
-            }
-             
             virtual std::pair<bool, size_t> add(State& state) override
             {
 #ifdef DEBUG
                 size_t tmppar = _parent; // we might change this while debugging.
 #endif
-                auto res = _add<wrapper_t>(state, _trie, _sp);
+                auto res = _add(state, _trie);
 #ifdef DEBUG
                 _parent = tmppar;
 #endif
@@ -271,31 +229,23 @@ namespace PetriEngine {
             virtual void decode(State& state, size_t id) override
             {
                 _parent = id;
-                _decode<wrapper_t>(state, id, _trie, _sp);
+                _decode(state, id, _trie);
             }
-            
-            
-            virtual size_t size() const override {
-                return _trie.size();
-            }
-            
+                       
             virtual void setHistory(size_t id, size_t transition) override 
             {
-                ptrie_t::pointer_t ptr = ptrie_t::pointer_t(&_trie, id);
-                ptr.remainder().parent = _parent;
-                ptr.remainder().transition = transition;
+                traceable_t& t = _trie.getData(id);
+                t.parent = _parent;
+                t.transition = transition;
             }
             
             virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
             {
-                ptrie_t::pointer_t ptr = ptrie_t::pointer_t(&_trie, markingid);
-                size_t p = ptr.remainder().parent;
-                size_t t = ptr.remainder().transition;
-                return std::pair<size_t, size_t>(p, t);
+                traceable_t& t = _trie.getData(markingid);
+                return std::pair<size_t, size_t>(t.parent, t.transition);
             }
             
         private:
-            wrapper_t _sp;                    
             ptrie_t _trie;
             size_t _parent = 0;
         };

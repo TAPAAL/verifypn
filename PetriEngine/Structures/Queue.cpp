@@ -22,12 +22,12 @@ namespace PetriEngine {
         }
         
         
-        BFSQueue::BFSQueue(StateSetInterface* states) : Queue(states), _cnt(0) {}
+        BFSQueue::BFSQueue(StateSetInterface* states) : Queue(states), _cnt(0), _nstates(0) {}
         BFSQueue::~BFSQueue(){}
                 
         bool BFSQueue::pop(Structures::State& state)
         {
-            if(_cnt < _states->size())
+            if(_cnt < _nstates)
             {
                 _states->decode(state, _cnt);
                 ++_cnt;
@@ -42,6 +42,7 @@ namespace PetriEngine {
         void BFSQueue::push(size_t id, Structures::State& state,
             std::shared_ptr<PQL::Condition>& query)
         {
+            ++_nstates;
             // nothing
         }
         
