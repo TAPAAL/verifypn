@@ -267,14 +267,14 @@ namespace PetriEngine {
             
             Place& place = parent->_places[p];
             
-            if(place.skip) continue;    // allready removed    
+            if(place.skip) continue;    // already removed    
             
-            // B6. dont mess up query and initial state
-            if(placeInQuery[p] > 0) continue; // to important      
-            uint initm = parent->initMarking()[p];
-            
+            // B5. dont mess up query
+            if(placeInQuery[p] > 0) continue;
+                        
             // B2. Only one consumer/producer
-            if(place.consumers.size() != 1 || place.producers.size() != 1) continue; // no orphan removal
+            if( place.consumers.size() != 1 || 
+                place.producers.size() != 1) continue; // no orphan removal
             
             int tOut = place.producers[0];
             int tIn = place.consumers[0];
@@ -293,15 +293,12 @@ namespace PetriEngine {
             if((outArc->weight % inArc->weight) != 0) continue;
             
             size_t multiplier = outArc->weight / inArc->weight;
-
-            if((initm % inArc->weight) != 0) continue;
-
             
-            // B5. Do inhibitor check, neither In, out or place can be involved with any inhibitor
+            // B4. Do inhibitor check, neither In, out or place can be involved with any inhibitor
             if(place.inhib || in.inhib || out.inhib) continue;
             
-            // B7. also, none of the places in the post-set of consuming transition can be participating in inhibitors.
-            // B8. nor can they appear in the query.
+            // B6. also, none of the places in the post-set of consuming transition can be participating in inhibitors.
+            // B7. nor can they appear in the query.
             {
                 bool post_ok = false;
                 for(const Arc& a : in.post)
@@ -327,6 +324,10 @@ namespace PetriEngine {
                 continue;
             }
 
+            // UB2. we need to remember initial marking
+            uint initm = parent->initMarking()[p];
+            initm /= inArc->weight; // integer-devision is floor by default
+
             if(reconstructTrace)
             {
                 // remember reduction for recreation of trace
@@ -351,15 +352,15 @@ namespace PetriEngine {
              // UB1. Remove place p
             skipPlace(p);
             _removedPlaces++;
-
+            parent->initialMarking[p] = 0;
             // We need to remember that when tOut fires, tIn fires just after.
             // this should fix the trace
-            
-            // UB2. move arcs from t' to t
+
+            // UB3. move arcs from t' to t
             for (auto& arc : in.post) { // remove tPost
                 auto _arc = getOutArc(out, arc.place);
-                // UB3. Update initial marking
-                parent->initialMarking[arc.place] += initm*_arc->weight;
+                // UB2. Update initial marking
+                parent->initialMarking[arc.place] += initm*arc.weight;
                 if(_arc != out.post.end())
                 {
                     _arc->weight += arc.weight*multiplier;
@@ -387,10 +388,11 @@ namespace PetriEngine {
             // Already removed
             if(place1.skip) continue;
                         
-            // C2. Only one intoing arc
+            // C2. Only one ingoing arc
             if(place1.producers.size() != 1) continue;
             uint tin = place1.producers[0];
 
+            // C3. Find outgoing arc (there must only be one, except for inhibitors)
             uint tout = std::numeric_limits<uint>::max();
             for(uint cons : place1.consumers)
             {
@@ -408,8 +410,8 @@ namespace PetriEngine {
                 }
             }
             
-            // C1, C3. Consumer, producer must differ, there must be 
-            // one (non-inhibiting) outgoing arc
+            // C1. Consumer, producer must differ
+            // C3. there must be only one (non-inhibiting) outgoing arc
             if( tin == tout || 
                 tout == std::numeric_limits<uint>::max())
             {
@@ -436,8 +438,8 @@ namespace PetriEngine {
                     continue;
                 }
                 
-                // C7. either they agree on inhibiting, or removed place is non-inhibit
-                if(place2.inhib != place1.inhib && place2.inhib)
+                // C7. place removed is not inhibiting
+                if(!place2.inhib)
                 {
                     continue;
                 }
@@ -454,65 +456,30 @@ namespace PetriEngine {
                 Transition& t1 = getTransition(tin);
                 Transition& t2 = getTransition(tout);
                 
-                // find multiplier
-                uint m1 = getOutArc(t1, p1)->weight;
-                uint m2 = getOutArc(t1, p2)->weight;
-                if(m1 == 0 || m2 == 0) continue;
-                if(m1 < m2)
+                // find multiplier k
+                uint w1 = getOutArc(t1, p1)->weight;
+                uint w2 = getOutArc(t1, p2)->weight;
+                uint mult = 0;
+                if(w1 == 0 || w2 == 0) continue;
+                if(w1 <= w2)
                 {
-                    if((m2 % m1) != 0) continue;
-                    m2 /= m1;
-                    m1 = 1;
+                    if((w2 % w1) != 0) continue;
+                    mult = w2 / w1;
                 }
                 else
                 {
-                    if((m1 % m2) != 0) continue;
-                    m1 /= m2;
-                    m2 = 1;
-                }
-
-                // we now know that m1 and m2 contains the relationship between weights,
-                // if we swap them, they are multipliers instead; m1*w1 = m2*w2
-                std::swap(m1, m2);
+                    // k must be > 0
+                    continue;
+                }                
                 
-                // if inhibiting, we need exact number of tokens
-                if(place2.inhib && parent->initialMarking[p1]*m1 != parent->initialMarking[p2]*m2) continue;
+                // C6. we can do with just "same or more" tokens in the place we keep
+                if(parent->initialMarking[p1]*mult < parent->initialMarking[p2]) continue;
                 
-                // otherwise, we can do with just "more" in the place we keep
-                if(parent->initialMarking[p1]*m1 < parent->initialMarking[p2]*m2) continue;
+                // C3. we know removed place is not inhibited, then must have 
+                // on consumer only
+                if(place2.consumers.size() != 1) continue;
                 
-                
-                uint tout2 = std::numeric_limits<uint>::max();
-                for(uint cons : place2.consumers)
-                {
-                    auto t = getTransition(cons);
-                    auto a = getInArc(p2, t);
-                    if(!a->inhib && !a->skip) 
-                    {
-                        if(tout2 != std::numeric_limits<uint>::max()) 
-                        {
-                            tout2 = std::numeric_limits<uint>::max();
-                            break;
-                        }
-                        tout2 = cons;
-                    }
-                    
-                    if(place2.inhib)
-                    {
-                        // C7. We must make sure inhibitors match
-                        if(std::find(place1.consumers.begin(), place1.consumers.end(), cons) == place1.consumers.end())
-                        {
-                            tout2 = std::numeric_limits<uint>::max();
-                            break;
-                        }
-                        // C7. also weights of inhib must match
-                        if(getInArc(p1, t)->weight*m1 != getInArc(p2, t)->weight*m2)
-                        {
-                            tout2 = std::numeric_limits<uint>::max();
-                            break;
-                        }
-                    }
-                }
+                uint tout2 = place2.consumers[0];                
 
                 // C3. Outputs must match
                 if(tout2 != tout)
@@ -521,8 +488,8 @@ namespace PetriEngine {
                 }
                                 
                 // C4, C5. Match between weights
-                if(getInArc(p1, t2)->weight*m1 != getInArc(p2, t2)->weight*m2 ||
-                   getOutArc(t1, p1)->weight*m1 != getOutArc(t1, p2)->weight*m2)
+                if(getInArc(p1, t2)->weight*mult != getInArc(p2, t2)->weight ||
+                   getOutArc(t1, p1)->weight*mult != getOutArc(t1, p2)->weight)
                 {
                     continue;
                 }          
@@ -558,6 +525,9 @@ namespace PetriEngine {
             
             // already skipped
             if(trans1.skip) continue;
+            
+            // D2. Not inhibiting
+            if(trans1.inhib) continue;
 
             for (uint32_t t2 = 0; t2 < parent->numberOfTransitions(); ++t2) {
                 
@@ -568,28 +538,31 @@ namespace PetriEngine {
                 
                 // already removed
                 if(trans2.skip) continue;
+
+                // D2. Not inhibiting
+                if(trans2.inhib) continue;
+
                 
-                // D2. Same number of inputs
+                // D3. Same number of inputs
                 if(trans1.pre.size() != trans2.pre.size()) continue;
                 
-                // D3. Same number of outputs
+                // D4. Same number of outputs
                 if(trans1.post.size() != trans2.post.size()) continue;
 
                 uint m = std::numeric_limits<uint>::max();
                 
                 bool ok = true;
-                // D2. same weights on inputs, and
-                // D4. agree on inhibiting
+                // D3. same weights on inputs
                 for(auto& arc : trans1.pre)
                 {
                     auto a2 = getInArc(arc.place, trans2);
-                    if( a2 == trans2.pre.end() ||
-                        a2->inhib != arc.inhib)
+                    if( a2 == trans2.pre.end())
                     {
                         ok = false;
                         break;
                     }
                     
+                    // find multiplier if not set yet
                     if(m == std::numeric_limits<uint>::max())
                     {
                         m = arc.weight;
@@ -609,6 +582,7 @@ namespace PetriEngine {
                         }
                     }
                     
+                    // check that weights match (given multiplier)
                     if(a2->weight != arc.weight*m)
                     {
                         ok = false;
@@ -616,7 +590,7 @@ namespace PetriEngine {
                     }
                 }
                 if (!ok) continue;
-                // D3. same weights on inputs                
+                // D4. same weights on outputs                
                 for(auto& arc : trans1.post)
                 {
                     auto a2 = getOutArc(trans2, arc.place);

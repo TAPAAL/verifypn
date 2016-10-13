@@ -114,10 +114,10 @@ namespace PetriEngine {
             
             W states(_net, _kbound); // stateset
             Q queue(&states);        // working queue
-            {
+            auto r = states.add(state);
+            // this can fail due to reductions; we push tokens around and violate K
+            if(r.first){ 
                 // add initial to states, check queries on initial state
-                auto r = states.add(state);
-                assert(r.first);
                 _satisfyingMarking = r.second;
                 // check initial marking
                 if(ss.usequeries) 
@@ -129,29 +129,30 @@ namespace PetriEngine {
                     }
                 }
                 // add initial to queue
-                if(r.first) queue.push(r.second, state, queries[ss.heurquery]);
-            }
+                queue.push(r.second, state, queries[ss.heurquery]);
+            
 
-            // Search!
-            while (queue.pop(state)) {
+                // Search!
+                while (queue.pop(state)) {
 
-                 SuccessorGenerator generator(_net, state);
+                     SuccessorGenerator generator(_net, state);
 
-                while(generator.next(working)){
-                    ss.enabledTransitionsCount[generator.fired()]++;
-                    auto res = states.add(working);
-                    if (res.first) {
-                        queue.push(res.second, working, queries[ss.heurquery]);
-                        states.setHistory(res.second, generator.fired());
-                        _satisfyingMarking = res.second;
-                        ss.exploredStates++;
-                        if (checkQueries(queries, results, working, ss, &states)) {
-                            if(printstats) printStats(ss, &states);
-                            return;
+                    while(generator.next(working)){
+                        ss.enabledTransitionsCount[generator.fired()]++;
+                        auto res = states.add(working);
+                        if (res.first) {
+                            queue.push(res.second, working, queries[ss.heurquery]);
+                            states.setHistory(res.second, generator.fired());
+                            _satisfyingMarking = res.second;
+                            ss.exploredStates++;
+                            if (checkQueries(queries, results, working, ss, &states)) {
+                                if(printstats) printStats(ss, &states);
+                                return;
+                            }
                         }
                     }
+                    ss.expandedStates++;
                 }
-                ss.expandedStates++;
             }
 
             // no more successors, print last results
