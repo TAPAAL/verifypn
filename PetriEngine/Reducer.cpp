@@ -14,7 +14,7 @@
 namespace PetriEngine {
 
     Reducer::Reducer(PetriNetBuilder* p) 
-    : _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0), parent(p) {
+    : _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0), _ruleE(0), parent(p) {
     }
 
     Reducer::~Reducer() {
@@ -600,6 +600,54 @@ namespace PetriEngine {
         return continueReductions;
     }
     
+    bool Reducer::ReducebyRuleE(uint32_t* placeInQuery) {
+        bool continueReductions = false;
+        for(uint32_t p = 0; p < parent->numberOfPlaces(); ++p)
+        {
+            continue;
+            Place& place = parent->_places[p];
+            
+            if(place.skip) continue;
+            if(place.inhib) continue;
+            if(placeInQuery[p] > 0) continue;
+            if(place.producers.size() > place.consumers.size()) continue;
+            
+            bool ok = true;
+            for(uint cons : place.consumers)
+            {
+                Transition& t = getTransition(cons);
+                if(getInArc(p, t)->weight <= parent->initialMarking[p])
+                {
+                    ok = false;
+                    break;
+                }
+                
+                ArcIter it = getOutArc(t, p);
+                if(it == t.post.end())
+                {
+                    ok = false;
+                    break;
+                }
+            }
+            
+            if(!ok) continue;
+            
+            parent->initialMarking[p] = 0;
+            
+            auto torem = place.consumers;
+            for(uint cons : torem)
+            {
+                skipTransition(cons);                
+                _removedTransitions++;
+            }
+            
+            skipPlace(p);
+            _removedPlaces++;
+            _ruleE++;
+            continueReductions = true;
+        }
+        return continueReductions;
+    }
 
 
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace) {

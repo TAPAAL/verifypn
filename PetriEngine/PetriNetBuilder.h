@@ -104,6 +104,10 @@ namespace PetriEngine {
             return reducer.RuleD();
         }
         
+        size_t RuleE() {
+            return reducer.RuleE();
+        }
+        
         Reducer* getReducer() { return &reducer; }
         
     private:
