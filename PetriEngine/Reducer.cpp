@@ -665,7 +665,8 @@ namespace PetriEngine {
             while (ReducebyRuleA(context.getQueryPlaceCount()) ||
                     ReducebyRuleB(context.getQueryPlaceCount()) ||
                     ReducebyRuleC(context.getQueryPlaceCount()) ||
-                    ReducebyRuleD(context.getQueryPlaceCount())) {
+                    ReducebyRuleD(context.getQueryPlaceCount()) ||
+                    ReducebyRuleE(context.getQueryPlaceCount())) {
             }
         } else if (enablereduction == 2) { // for k-boundedness checking only rules A and D are applicable
             while (ReducebyRuleA(context.getQueryPlaceCount()) ||
