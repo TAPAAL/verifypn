@@ -381,134 +381,109 @@ namespace PetriEngine {
 
     bool Reducer::ReducebyRuleC(uint32_t* placeInQuery) {
         // Rule C - Places with same input and output-transitions which a modulo each other
-        bool continueReductions = false;
+         bool continueReductions = false;
+        
         for(uint32_t p1 = 0; p1 < parent->numberOfPlaces(); ++p1)
-        {     
+        {            
             Place& place1 = parent->_places[p1];
-            // Already removed
+            
             if(place1.skip) continue;
-                        
-            // C2. Only one ingoing arc
-            if(place1.producers.size() != 1) continue;
-            uint tin = place1.producers[0];
-
-            // C3. Find outgoing arc (there must only be one, except for inhibitors)
-            uint tout = std::numeric_limits<uint>::max();
-            for(uint cons : place1.consumers)
-            {
-                auto t = getTransition(cons);
-                auto a = getInArc(p1, t);
-                
-                if(!a->inhib && !a->skip)
-                {
-                    if(tout != std::numeric_limits<uint>::max()) 
-                    {
-                        tout = std::numeric_limits<uint>::max();
-                        break;
-                    }
-                    tout = cons;
-                }
-            }
             
-            // C1. Consumer, producer must differ
-            // C3. there must be only one (non-inhibiting) outgoing arc
-            if( tin == tout || 
-                tout == std::numeric_limits<uint>::max())
-            {
-                continue;
-            }
+            // C4. No inhib
+            if(place1.inhib) continue;
             
-            // we could probably be clever and use symmetry here
             for (uint32_t p2 = 0; p2 < parent->numberOfPlaces(); ++p2) 
             {
-                // C1. places have to differ
+                // C1. Not same place
                 if(p1 == p2) continue;
                 
-                // C8. place we remove cannot be in query
+                // C5. Dont mess with query
                 if(placeInQuery[p2] > 0)
-                {
                     continue;
-                }
- 
+                
                 Place& place2 = parent->_places[p2];
                 
-                // already removed
-                if(place2.skip)
-                {
-                    continue;
-                }
-                
-                // C7. place removed is not inhibiting
-                if(!place2.inhib)
-                {
-                    continue;
-                }
-                
-                // C3. Only one input
-                if(place2.producers.size() != 1) continue;
-                uint tin2 = place2.producers[0];
+                if(place2.skip) continue;
 
-                // C2. inputs must match
-                if(tin2 != tin)
-                {
-                    continue;
-                }
-                Transition& t1 = getTransition(tin);
-                Transition& t2 = getTransition(tout);
+                // C4. No inhib
+                if(place2.inhib) continue;
                 
-                // find multiplier k
-                uint w1 = getOutArc(t1, p1)->weight;
-                uint w2 = getOutArc(t1, p2)->weight;
-                uint mult = 0;
-                if(w1 == 0 || w2 == 0) continue;
-                if(w1 <= w2)
-                {
-                    if((w2 % w1) != 0) continue;
-                    mult = w2 / w1;
-                }
-                else
-                {
-                    // k must be > 0
+                // C2, C3. Consumer and producer-sets must match
+                if(place1.consumers.size() != place2.consumers.size() ||
+                   place1.producers.size() != place2.producers.size())
                     continue;
-                }                
                 
-                // C6. we can do with just "same or more" tokens in the place we keep
-                if(parent->initialMarking[p1]*mult < parent->initialMarking[p2]) continue;
+                uint mult = std::numeric_limits<uint>::max();
                 
-                // C3. we know removed place is not inhibited, then must have 
-                // on consumer only
-                if(place2.consumers.size() != 1) continue;
-                
-                uint tout2 = place2.consumers[0];                
-
-                // C3. Outputs must match
-                if(tout2 != tout)
+                // C8. Consumers must match with weights
+                bool ok = true;
+                for(auto& in : place1.consumers)
                 {
-                    continue;
-                }
-                                
-                // C4, C5. Match between weights
-                if(getInArc(p1, t2)->weight*mult != getInArc(p2, t2)->weight ||
-                   getOutArc(t1, p1)->weight*mult != getOutArc(t1, p2)->weight)
-                {
-                    continue;
-                }          
-                                            
-                // We need to remember to consume from p2 when place1.consumers[0] fires
-                // otherwise, trace is inconsistent
-                if(reconstructTrace)
-                {
-                    for(auto t : place2.consumers)
+                    Transition& trans = getTransition(in);
+                    auto a1 = getInArc(p1, trans);
+                    auto a2 = getInArc(p2, trans);
+                    if(a2 == trans.pre.end())
                     {
-                        std::string tname = getTransitionName(t);
-                        const ArcIter arc = getInArc(p2, getTransition(t));
-                        _extraconsume[tname].emplace_back(getPlaceName(p2), arc->weight);
+                        ok = false;
+                        break;
+                    }
+                    
+                    if(mult == std::numeric_limits<uint>::max())
+                    {
+                        if(a2->weight < a1->weight || (a2->weight % a1->weight) != 0)
+                        {
+                            ok = false;
+                            break;
+                        }
+                        mult = a2->weight / a1->weight;
+                    }
+                    else if(a1->weight != a2->weight)
+                    {
+                        ok = false;
+                        break;
                     }
                 }
+                
+                if(!ok) continue;
+                
+                // C7. Producers must match with weights
+                for(auto& in : place1.producers)
+                {
+                    Transition& trans = getTransition(in);
+                    auto a1 = getOutArc(trans, p1);
+                    auto a2 = getOutArc(trans, p2);
+                    if( a2 == trans.post.end())
+                    {
+                        ok = false;
+                        break;
+                    }
+                    if(mult == std::numeric_limits<uint>::max())
+                    {
+                        if(a2->weight < a1->weight || (a2->weight % a1->weight) != 0)
+                        {
+                            ok = false;
+                            break;
+                        }
+                        mult = a2->weight / a1->weight;
+                    }
+                    else if(a1->weight != a2->weight)
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+                
+                // C6. We do not care about excess markings in p2.
+                if(mult != std::numeric_limits<uint>::max() &&
+                        (parent->initialMarking[p1] * mult) > parent->initialMarking[p2])
+                    continue;
+
+                parent->initialMarking[p2] = 0;
+                if(!ok) continue;
                                 
                 continueReductions = true;
                 _ruleC++;
-                // UC1. Remove place
+                // UC1. Remove p2
                 skipPlace(p2);
                 _removedPlaces++;
             }
@@ -613,6 +588,8 @@ namespace PetriEngine {
         } // end of main for loop for rule D
         return continueReductions;
     }
+    
+
 
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace) {
         this->reconstructTrace = reconstructTrace;
