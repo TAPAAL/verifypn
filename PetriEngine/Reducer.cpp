@@ -478,9 +478,9 @@ namespace PetriEngine {
                         (parent->initialMarking[p1] * mult) > parent->initialMarking[p2])
                     continue;
 
-                parent->initialMarking[p2] = 0;
                 if(!ok) continue;
-                                
+                parent->initialMarking[p2] = 0;
+                
                 continueReductions = true;
                 _ruleC++;
                 // UC1. Remove p2
