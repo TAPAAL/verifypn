@@ -508,37 +508,58 @@ namespace PetriEngine {
         bool continueReductions = false;
         for (uint32_t t1 = 0; t1 < parent->numberOfTransitions(); ++t1) {
             Transition& trans1 = getTransition(t1);
-            
-            // already skipped
             if(trans1.skip) continue;
-            
-            // D2. Not inhibiting
-            if(trans1.inhib) continue;
 
+            // D2. No inhibitors
+            if(trans1.inhib) continue;
+            
             for (uint32_t t2 = 0; t2 < parent->numberOfTransitions(); ++t2) {
                 
-                // D1. Need to differ
+                // D1. not same transition
                 if(t1 == t2) continue;
-                
+                                
                 Transition& trans2 = getTransition(t2);
-                
-                // already removed
                 if(trans2.skip) continue;
-
-                // D2. Not inhibiting
-                if(trans2.inhib) continue;
-
                 
-                // D3. Same number of inputs
+                // D2. No inhibitors
+                if(trans2.inhib) continue;
+                
+                // From D3, and D4 we have that pre and post-sets are the same
+                if(trans1.post.size() != trans2.post.size()) continue;
                 if(trans1.pre.size() != trans2.pre.size()) continue;
                 
-                // D4. Same number of outputs
-                if(trans1.post.size() != trans2.post.size()) continue;
-
-                uint m = std::numeric_limits<uint>::max();
-                
                 bool ok = true;
-                // D3. same weights on inputs
+                uint mult = std::numeric_limits<uint>::max();
+                // D4. postsets must match
+                for(auto& arc : trans1.post)
+                {
+                    auto a2 = getOutArc(trans2, arc.place);
+                    if( a2 == trans2.post.end())
+                    {
+                        ok = false;
+                        break;
+                    }
+                    
+                    if(mult == std::numeric_limits<uint>::max())
+                    {
+                        if(a2->weight < arc.weight || (a2->weight % arc.weight) != 0)
+                        {
+                            ok = false;
+                            break;
+                        }
+                        else
+                        {
+                            mult = a2->weight / arc.weight;
+                        }
+                    }
+                    else if(a2->weight != arc.weight*mult)
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+                
+                // D3. Presets must match
                 for(auto& arc : trans1.pre)
                 {
                     auto a2 = getInArc(arc.place, trans2);
@@ -547,50 +568,31 @@ namespace PetriEngine {
                         ok = false;
                         break;
                     }
-                    
-                    // find multiplier if not set yet
-                    if(m == std::numeric_limits<uint>::max())
+
+                    if(mult == std::numeric_limits<uint>::max())
                     {
-                        m = arc.weight;
-                        if(m < a2->weight)
-                        {
-                            if((a2->weight % m) != 0) 
-                            {
-                                ok = false;
-                                break;
-                            }
-                            m = a2->weight/m;
-                        }
-                        else
+                        if(a2->weight < arc.weight || (a2->weight % arc.weight) != 0)
                         {
                             ok = false;
                             break;
                         }
+                        else
+                        {
+                            mult = a2->weight / arc.weight;
+                        }
                     }
-                    
-                    // check that weights match (given multiplier)
-                    if(a2->weight != arc.weight*m)
-                    {
-                        ok = false;
-                        break;
-                    }
-                }
-                if (!ok) continue;
-                // D4. same weights on outputs                
-                for(auto& arc : trans1.post)
-                {
-                    auto a2 = getOutArc(trans2, arc.place);
-                    if( a2 == trans2.post.end() ||
-                        a2->weight != arc.weight*m)
+                    else if(a2->weight != arc.weight*mult)
                     {
                         ok = false;
                         break;
                     }
                 }
                                 
-                if (!ok) continue;
+                if (!ok) {
+                    continue;
+                }
                 
-                // Remove transition t2
+                // UD1. Remove transition t2
                 continueReductions = true;
                 _ruleD++;
                 _removedTransitions++;
@@ -604,7 +606,6 @@ namespace PetriEngine {
         bool continueReductions = false;
         for(uint32_t p = 0; p < parent->numberOfPlaces(); ++p)
         {
-            continue;
             Place& place = parent->_places[p];
             
             if(place.skip) continue;
@@ -620,10 +621,18 @@ namespace PetriEngine {
                 {
                     ok = false;
                     break;
-                }
-                
-                ArcIter it = getOutArc(t, p);
-                if(it == t.post.end())
+                }               
+            }
+            
+            if(!ok) continue;
+            
+            for(uint prod : place.producers)
+            {
+                // check that producing arcs originate from transition also 
+                // consuming. If so, we know it will never fire.
+                Transition& t = getTransition(prod);
+                ArcIter it = getInArc(p, t);
+                if(it != t.post.end())
                 {
                     ok = false;
                     break;
