@@ -479,8 +479,19 @@ namespace PetriEngine {
                     continue;
 
                 if(!ok) continue;
+                
                 parent->initialMarking[p2] = 0;
                 
+                if(reconstructTrace)
+                {
+                    for(auto t : place2.consumers)
+                    {
+                        std::string tname = getTransitionName(t);
+                        const ArcIter arc = getInArc(p2, getTransition(t));
+                        _extraconsume[tname].emplace_back(getPlaceName(p2), arc->weight);
+                    }
+                }
+                                
                 continueReductions = true;
                 _ruleC++;
                 // UC1. Remove p2
