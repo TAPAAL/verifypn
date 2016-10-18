@@ -337,13 +337,10 @@ ReturnValue parseModel( PNMLParser::TransitionEnablednessMap& transitionEnabledn
         return ErrorCode;
     }
 
-    //Read everything
-    stringstream buffer;
-    buffer << mfile.rdbuf();
 
     //Parse and build the petri net
     PNMLParser parser;
-    parser.parse(buffer.str(), &builder);
+    parser.parse(mfile, &builder);
     parser.makePetriNet();
 
     transitionEnabledness = parser.getTransitionEnabledness(); // Remember conditions for transitions
