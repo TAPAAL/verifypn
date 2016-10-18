@@ -22,15 +22,17 @@
 #include <stdlib.h>
 #include <iostream>
 #include <limits>
+#include <fstream>
+#include <string.h>
+
 
 #include "PNMLParser.h"
 #include "../PetriEngine/errorcodes.h"
 
 using namespace PetriEngine;
-using namespace XMLSP;
 using namespace std;
 
-void PNMLParser::parse(const std::string& xml,
+void PNMLParser::parse(ifstream& xml,
         AbstractPetriNetBuilder* builder) {
     //Clear any left overs
     id2name.clear();
@@ -42,8 +44,11 @@ void PNMLParser::parse(const std::string& xml,
     this->builder = builder;
 
     //Parser the xml
-    DOMElement* root = DOMElement::loadXML(xml);
-    parseElement(root);
+    rapidxml::xml_document<> doc;
+    vector<char> buffer((istreambuf_iterator<char>(xml)), istreambuf_iterator<char>());
+    buffer.push_back('\0');
+    doc.parse<0>(&buffer[0]);
+    parseElement(doc.first_node());
 
     // initialize transitionEnabledness
     for (TransitionIter it = transitions.begin(); it != transitions.end(); it++) {
@@ -115,9 +120,6 @@ void PNMLParser::parse(const std::string& xml,
         transitionEnabledness[it->id] += ")";
     }
 
-    //Release DOM tree
-    delete root;
-
     //Unset the builder
     this->builder = NULL;
 
@@ -132,39 +134,38 @@ void PNMLParser::makePetriNet() {
     builder = NULL;
 }
 
-void PNMLParser::parseElement(DOMElement* element) {
-    DOMElements elements = element->getChilds();
-    DOMElements::iterator it;
-    for (it = elements.begin(); it != elements.end(); it++) {
-        if ((*it)->getElementName() == "place") {
-            parsePlace(*it);
-        } else if ((*it)->getElementName() == "transition") {
-            parseTransition(*it);
-        } else if ((*it)->getElementName() == "arc" ||
-                (*it)->getElementName() == "inputArc" ||
-                (*it)->getElementName() == "outputArc") {
-            parseArc(*it);
-        } else if ((*it)->getElementName() == "transportArc") {
-            parseTransportArc(*it);
-        } else if ((*it)->getElementName() == "inhibitorArc") {
-            parseArc(*it, true);
-        } else if ((*it)->getElementName() == "variable") {
+void PNMLParser::parseElement(rapidxml::xml_node<>* element) {
+    
+    for (auto it = element->first_node(); it; it = it->next_sibling()) {
+        if (strcmp(it->name(), "place") == 0) {
+            parsePlace(it);
+        } else if (strcmp(it->name(),"transition") == 0) {
+            parseTransition(it);
+        } else if ( strcmp(it->name(),"arc") == 0 ||
+                    strcmp(it->name(), "inputArc") == 0 ||
+                    strcmp(it->name(), "outputArc") == 0) {
+            parseArc(it);
+        } else if (strcmp(it->name(),"transportArc") == 0) {
+            parseTransportArc(it);
+        } else if (strcmp(it->name(),"inhibitorArc") == 0) {
+            parseArc(it, true);
+        } else if (strcmp(it->name(), "variable") == 0) {
             std::cout << "variable not supported" << std::endl;
             exit(-1);
-        } else if ((*it)->getElementName() == "queries") {
-            parseQueries(*it);
+        } else if (strcmp(it->name(),"queries") == 0) {
+            parseQueries(it);
         } else
-            parseElement(*it);
+        {
+            parseElement(it);
+        }
     }
 }
 
-void PNMLParser::parseQueries(DOMElement* element) {
-    string name, query;
+void PNMLParser::parseQueries(rapidxml::xml_node<>* element) {
+    string query;
 
-    DOMElements elements = element->getChilds();
-    DOMElements::iterator it;
-    for (it = elements.begin(); it != elements.end(); it++) {
-        name = element->getAttribute("name");
+    for (auto it = element->first_node(); it; it = it->next_sibling()) {
+        string name(element->first_attribute("name")->value());
         parseValue(element, query);
         Query q;
         q.name = name;
@@ -173,21 +174,22 @@ void PNMLParser::parseQueries(DOMElement* element) {
     }
 }
 
-void PNMLParser::parsePlace(DOMElement* element) {
+void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
     double x = 0, y = 0;
-    string id = element->getAttribute("id");
+    string id(element->first_attribute("id")->value());
 
-    long long initialMarking = atoll(element->getAttribute("initialMarking").c_str());
+    auto initial = element->first_attribute("initialMarking");
+    long long initialMarking = 0;
+    if(initial)
+         initialMarking = atoll(initial->value());
 
-    DOMElements elements = element->getChilds();
-    DOMElements::iterator it;
-    for (it = elements.begin(); it != elements.end(); it++) {
+    for (auto it = element->first_node(); it; it = it->next_sibling()) {
         // name element is ignored
-        if ((*it)->getElementName() == "graphics") {
-            parsePosition(*it, x, y);
-        } else if ((*it)->getElementName() == "initialMarking") {
+        if (strcmp(it->name(), "graphics") == 0) {
+            parsePosition(it, x, y);
+        } else if (strcmp(it->name(),"initialMarking") == 0) {
             string text;
-            parseValue(*it, text);
+            parseValue(it, text);
             initialMarking = atoll(text.c_str());
         }
     }
@@ -206,19 +208,15 @@ void PNMLParser::parsePlace(DOMElement* element) {
     id2name[id] = nn;
 }
 
-void PNMLParser::parseArc(DOMElement* element, bool inhibitor) {
-    string source = element->getAttribute("source"),
-            target = element->getAttribute("target");
+void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
+    string source = element->first_attribute("source")->value(),
+            target = element->first_attribute("target")->value();
     int weight = 1;
 
-    DOMElements elements = element->getChilds();
-    DOMElements::iterator it;
-    for (it = elements.begin(); it != elements.end(); it++) {
-        if ((*it)->getElementName() == "inscription") {
+    for (auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")) {
             string text;
-            parseValue(*it, text);
+            parseValue(it, text);
             weight = atoi(text.c_str());
-        }
     }
     Arc arc;
     arc.source = source;
@@ -234,20 +232,16 @@ void PNMLParser::parseArc(DOMElement* element, bool inhibitor) {
     }
 }
 
-void PNMLParser::parseTransportArc(DOMElement* element){
-    string source	= element->getAttribute("source"),
-           transiton	= element->getAttribute("transition"),
-           target	= element->getAttribute("target");
+void PNMLParser::parseTransportArc(rapidxml::xml_node<>* element){
+    string source	= element->first_attribute("source")->value(),
+           transiton	= element->first_attribute("transition")->value(),
+           target	= element->first_attribute("target")->value();
     int weight = 1;
 
-    DOMElements elements = element->getChilds();
-    DOMElements::iterator it;
-    for(it = elements.begin(); it != elements.end(); it++){
-            if((*it)->getElementName() == "inscription"){
-                    string text;
-                    parseValue(*it, text);
-                    weight = atoi(text.c_str());
-            }
+    for(auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")){
+        string text;
+        parseValue(it, text);
+        weight = atoi(text.c_str());
     }
 
     Arc inArc;
@@ -263,22 +257,21 @@ void PNMLParser::parseTransportArc(DOMElement* element){
     arcs.push_back(outArc);
 }
 
-void PNMLParser::parseTransition(DOMElement* element) {
+void PNMLParser::parseTransition(rapidxml::xml_node<>* element) {
     Transition t;
     t.x = 0;
     t.y = 0;
-    t.id = element->getAttribute("id");
+    t.id = element->first_attribute("id")->value();
 
-    DOMElements elements = element->getChilds();
-    DOMElements::iterator it;
-    for (it = elements.begin(); it != elements.end(); it++) {
+
+    for (auto it = element->first_node(); it; it = it->next_sibling()) {
         // name element is ignored
-        if ((*it)->getElementName() == "graphics") {
-            parsePosition(*it, t.x, t.y);
-        } else if ((*it)->getElementName() == "conditions") {
+        if (strcmp(it->name(), "graphics") == 0) {
+            parsePosition(it, t.x, t.y);
+        } else if (strcmp(it->name(), "conditions") == 0) {
             std::cout << "conditions not supported" << std::endl;
             exit(-1);
-        } else if ((*it)->getElementName() == "assignments") {
+        } else if (strcmp(it->name(), "assignments") == 0) {
             std::cout << "assignments not supported" << std::endl;
             exit(-1);
         }
@@ -292,25 +285,23 @@ void PNMLParser::parseTransition(DOMElement* element) {
     id2name[t.id] = nn;
 }
 
-void PNMLParser::parseValue(DOMElement* element, string& text) {
-    DOMElements elements = element->getChilds();
-    DOMElements::iterator it;
-    for (it = elements.begin(); it != elements.end(); it++) {
-        if ((*it)->getElementName() == "value" || (*it)->getElementName() == "text") {
-            text = (*it)->getCData();
+void PNMLParser::parseValue(rapidxml::xml_node<>* element, string& text) {
+    for (auto it = element->first_node(); it; it = it->next_sibling()) {
+        if (strcmp(it->name(), "value") == 0 || strcmp(it->name(), "text") == 0) {
+            text = it->value();
         } else
-            parseValue(*it, text);
+            parseValue(it, text);
     }
 }
 
-void PNMLParser::parsePosition(DOMElement* element, double& x, double& y) {
-    DOMElements elements = element->getChilds();
-    DOMElements::iterator it;
-    for (it = elements.begin(); it != elements.end(); it++) {
-        if ((*it)->getElementName() == "position") {
-            x = atof((*it)->getAttribute("x").c_str());
-            y = atof((*it)->getAttribute("y").c_str());
+void PNMLParser::parsePosition(rapidxml::xml_node<>* element, double& x, double& y) {
+    for (auto it = element->first_node(); it; it = it->first_node()) {
+        if (strcmp(it->name(), "position") == 0) {
+            x = atof(it->first_attribute("x")->value());
+            y = atof(it->first_attribute("y")->value());
         } else
-            parsePosition(*it, x, y);
+        {
+            parsePosition(it, x, y);
+        }
     }
 }

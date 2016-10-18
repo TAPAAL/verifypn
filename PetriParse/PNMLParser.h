@@ -20,11 +20,12 @@
 #define PNMLPARSER_H
 
 #include <PetriEngine/AbstractPetriNetBuilder.h>
-#include "xmlsp/xmlsp_dom_vector.h"
+#include "rapidxml/rapidxml.hpp"
 
 #include <map>
 #include <string>
 #include <vector>
+#include <fstream>
 
 class PNMLParser {
 
@@ -60,7 +61,7 @@ public:
     PNMLParser() {
         builder = NULL;
     }
-    void parse(const std::string& xml,
+    void parse(std::ifstream& xml,
             PetriEngine::AbstractPetriNetBuilder* builder);
     void makePetriNet();
 
@@ -73,14 +74,14 @@ public:
     }
 
 private:
-    void parseElement(XMLSP::DOMElement* element);
-    void parsePlace(XMLSP::DOMElement* element);
-    void parseArc(XMLSP::DOMElement* element, bool inhibitor = false);
-    void parseTransition(XMLSP::DOMElement* element);
-    void parseTransportArc(XMLSP::DOMElement* element);
-    void parseValue(XMLSP::DOMElement* element, std::string& text);
-    void parsePosition(XMLSP::DOMElement* element, double& x, double& y);
-    void parseQueries(XMLSP::DOMElement* element);
+    void parseElement(rapidxml::xml_node<>* element);
+    void parsePlace(rapidxml::xml_node<>* element);
+    void parseArc(rapidxml::xml_node<>* element, bool inhibitor = false);
+    void parseTransition(rapidxml::xml_node<>* element);
+    void parseTransportArc(rapidxml::xml_node<>* element);
+    void parseValue(rapidxml::xml_node<>* element, std::string& text);
+    void parsePosition(rapidxml::xml_node<>* element, double& x, double& y);
+    void parseQueries(rapidxml::xml_node<>* element);
     PetriEngine::AbstractPetriNetBuilder* builder;
     NodeNameMap id2name;
     ArcList arcs;
