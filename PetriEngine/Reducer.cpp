@@ -117,10 +117,9 @@ namespace PetriEngine {
     void Reducer::eraseTransition(std::vector<uint32_t>& set, uint32_t el)
     {
         auto lb = std::lower_bound(set.begin(), set.end(), el);
-        if(lb != set.end() && *lb == el)
-        {
-            set.erase(lb);
-        }
+        assert(lb != set.end());
+        assert(*lb == el);
+        set.erase(lb);
     }
     
     void Reducer::skipTransition(uint32_t t)
@@ -137,6 +136,7 @@ namespace PetriEngine {
         trans.post.clear();
         trans.pre.clear();
         trans.skip = true;
+        assert(consistent());
     }
     
     void Reducer::skipPlace(uint32_t place)
@@ -148,9 +148,7 @@ namespace PetriEngine {
             Transition& trans = getTransition(t);
             auto ait = getInArc(place, trans);
             if(ait != trans.pre.end() && ait->place == place)
-            {
                 trans.pre.erase(ait);
-            }
         }
 
         for(auto& t : pl.producers)
@@ -158,14 +156,65 @@ namespace PetriEngine {
             Transition& trans = getTransition(t);
             auto ait = getOutArc(trans, place);
             if(ait != trans.post.end() && ait->place == place)
-            {
                 trans.post.erase(ait);
-            }
         }
         pl.consumers.clear();
         pl.producers.clear();
+        assert(consistent());
     }
     
+    
+    bool Reducer::consistent()
+    {
+#ifndef NDEBUG
+        for(size_t i = 0; i < parent->numberOfTransitions(); ++i)
+        {
+            Transition& t = parent->_transitions[i];
+            assert(std::is_sorted(t.pre.begin(), t.pre.end()));
+            assert(std::is_sorted(t.post.end(), t.post.end()));
+            assert(!t.skip || (t.pre.size() == 0 && t.post.size() == 0));
+            for(Arc& a : t.pre)
+            {
+                Place& p = parent->_places[a.place];
+                assert(!p.skip);
+                assert(std::find(p.consumers.begin(), p.consumers.end(), i) != p.consumers.end());
+            }
+            for(Arc& a : t.post)
+            {
+                Place& p = parent->_places[a.place];
+                assert(!p.skip);
+                assert(std::find(p.producers.begin(), p.producers.end(), i) != p.producers.end());
+            }
+        }
+
+        for(size_t i = 0; i < parent->numberOfPlaces(); ++i)
+        {
+            Place& p = parent->_places[i];
+            assert(std::is_sorted(p.consumers.begin(), p.consumers.end()));
+            assert(std::is_sorted(p.producers.begin(), p.producers.end()));
+            assert(!p.skip || (p.consumers.size() == 0 && p.producers.size() == 0));
+            
+            for(uint c : p.consumers)
+            {
+                Transition& t = parent->_transitions[c];
+                assert(!t.skip);
+                auto a = getInArc(i, t);
+                assert(a != t.pre.end());
+                assert(a->place == i);
+            }
+            
+            for(uint prod : p.producers)
+            {
+                Transition& t = parent->_transitions[prod];
+                assert(!t.skip);
+                auto a = getOutArc(t, i);
+                assert(a != t.post.end());
+                assert(a->place == i);
+            }
+        }
+#endif
+        return true;
+    }
 
     bool Reducer::ReducebyRuleA(uint32_t* placeInQuery) {
         // Rule A  - find transition t that has exactly one place in pre and post and remove one of the places (and t)  
@@ -200,7 +249,7 @@ namespace PetriEngine {
 
             // A5. dont mess with query!
             if(placeInQuery[pPre] > 0 || placeInQuery[pPost]) continue;
-             
+            
             continueReductions = true;
             _ruleA++;
             
@@ -236,21 +285,26 @@ namespace PetriEngine {
             // UA2. update arcs
             for(auto& _t : parent->_places[pPre].producers)
             {
+                assert(pPre != pPost);
                 assert(_t != t);
                 // move output-arcs to post.
                 Transition& trans = getTransition(_t);
                 auto source = getOutArc(trans, pPre);
+                assert(source != trans.pre.end());
                 auto dest = getOutArc(trans, pPost);
                 if(dest == trans.post.end())
                 {
                     source->place = pPost;
                     source->weight *= weight;
                     parent->_places[pPost].producers.push_back(_t);
+
+                    std::sort(trans.post.begin(), trans.post.end());
+                    std::sort(  parent->_places[pPost].producers.begin(), 
+                                parent->_places[pPost].producers.end());
                 }
                 else
                 {
                     dest->weight += (source->weight * weight);
-
                 }
             }                
             _removedPlaces++;
@@ -371,12 +425,17 @@ namespace PetriEngine {
                     out.post.push_back(arc);
                     out.post.back().weight *= multiplier;
                     parent->_places[arc.place].producers.push_back(tOut);
+                    
+                    std::sort(out.post.begin(), out.post.end());
+                    std::sort(parent->_places[arc.place].producers.begin(),
+                              parent->_places[arc.place].producers.end());
                 }
             }
             _removedTransitions++;
             // UB1. remove transition
             skipTransition(tIn);
         } // end of Rule B main for-loop
+        assert(consistent());
         return continueReductions;
     }
 
@@ -526,6 +585,7 @@ namespace PetriEngine {
                 }
             }
         }
+        assert(consistent());
         return continueReductions;
     }
 
@@ -625,6 +685,7 @@ namespace PetriEngine {
                 }
             }
         } // end of main for loop for rule D
+        assert(consistent());
         return continueReductions;
     }
     
@@ -682,19 +743,21 @@ namespace PetriEngine {
             _ruleE++;
             continueReductions = true;
         }
+        assert(consistent());
         return continueReductions;
     }
 
 
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace) {
         parent->sort();
+        assert(consistent());
         this->reconstructTrace = reconstructTrace;
         if (enablereduction == 1) { // in the aggresive reduction all four rules are used as long as they remove something
             bool changed = false;
             do
             {
                 do{
-                    changed = false;                
+                    changed = false;
                     changed |= ReducebyRuleA(context.getQueryPlaceCount());
                     changed |= ReducebyRuleB(context.getQueryPlaceCount());
                     changed |= ReducebyRuleE(context.getQueryPlaceCount());

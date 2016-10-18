@@ -141,6 +141,8 @@ namespace PetriEngine {
         void skipTransition(uint32_t);
         void skipPlace(uint32_t);
         
+        bool consistent();
+        
         std::vector<std::string> _initfire;
         std::map<std::string, std::vector<std::string>> _postfire;
         std::map<std::string, std::vector<ExpandedArc>> _extraconsume;
