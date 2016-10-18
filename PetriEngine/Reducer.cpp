@@ -700,8 +700,8 @@ namespace PetriEngine {
                     changed |= ReducebyRuleE(context.getQueryPlaceCount());
                 } while(changed);
                 // RuleC and RuleD are expensive, so wait with those till nothing else changes
-                ReducebyRuleD(context.getQueryPlaceCount());
-                ReducebyRuleC(context.getQueryPlaceCount());
+                changed |= ReducebyRuleD(context.getQueryPlaceCount());
+                changed |= ReducebyRuleC(context.getQueryPlaceCount());
             } while(changed);
 
         } else if (enablereduction == 2) { // for k-boundedness checking only rules A and D are applicable
