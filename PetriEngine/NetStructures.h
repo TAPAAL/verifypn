@@ -25,6 +25,11 @@ namespace PetriEngine {
         skip(false),
         inhib(false) {
         };
+        
+        bool operator < (const Arc& other)
+        {
+            return place < other.place;
+        }
     };
 
     struct Transition {

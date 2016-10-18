@@ -74,6 +74,8 @@ namespace PetriEngine {
             return _transitionnames;
         }
         
+        void sort();
+        
         void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query, 
                     std::vector<Reachability::ResultPrinter::Result>& results, 
                     int reductiontype, bool reconstructTrace);

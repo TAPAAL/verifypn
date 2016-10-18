@@ -10,6 +10,7 @@
 #include "PetriNetBuilder.h"
 #include <PetriParse/PNMLParser.h>
 #include <queue>
+#include <bits/algorithmfwd.h>
 
 namespace PetriEngine {
 
@@ -85,41 +86,43 @@ namespace PetriEngine {
     
     ArcIter Reducer::getOutArc(Transition& trans, uint32_t place)
     {
-        auto it = trans.post.begin();
-        for(; it != trans.post.end(); ++it)
+        Arc a;
+        a.place = place;
+        auto ait = std::lower_bound(trans.post.begin(), trans.post.end(), a);
+        if(ait != trans.post.end() && ait->place == place)
         {
-            if(it->place == place)
+            return ait;
+        }
+        else 
             {
-                return it;
+            return trans.post.end();
             }
         }
-        return it;
-    }
     
     ArcIter Reducer::getInArc(uint32_t place, Transition& trans)
     {
-        auto it = trans.pre.begin();
-        for(; it != trans.pre.end(); ++it)
+        Arc a;
+        a.place = place;
+        auto ait = std::lower_bound(trans.pre.begin(), trans.pre.end(), a);
+        if(ait != trans.pre.end() && ait->place == place)
         {
-            if(it->place == place)
-            {
-                return it;
-            }
+            return ait;
         }
-        return it;
+        else 
+        {
+        return trans.pre.end();
+        }
     }
     
     void Reducer::eraseTransition(std::vector<uint32_t>& set, uint32_t el)
     {
-        for(auto it = set.begin(); it != set.end(); ++it )
+        auto lb = std::lower_bound(set.begin(), set.end(), el);
+        if(lb != set.end() && *lb == el)
         {
-            if(*it == el)
-            {
-                set.erase(it);
-                return;
-            }
+            set.erase(lb);
         }
     }
+    
     void Reducer::skipTransition(uint32_t t)
     {
         Transition& trans = getTransition(t);
@@ -143,35 +146,32 @@ namespace PetriEngine {
         for(auto& t : pl.consumers)
         {
             Transition& trans = getTransition(t);
-            for(auto it = trans.pre.begin(); it != trans.pre.end(); ++it)
+            auto ait = getInArc(place, trans);
+            if(ait != trans.pre.end() && ait->place == place)
             {
-                if(it->place == place)
-                {
-                    trans.pre.erase(it);
-                    break;
-                }
+                trans.pre.erase(ait);
             }
         }
-        
+
         for(auto& t : pl.producers)
         {
             Transition& trans = getTransition(t);
-            for(auto it = trans.post.begin(); it != trans.post.end(); ++it)
+            auto ait = getOutArc(trans, place);
+            if(ait != trans.post.end() && ait->place == place)
             {
-                if(it->place == place)
-                {
-                    trans.post.erase(it);
-                    break;
-                }
+                trans.post.erase(ait);
             }
         }
+        pl.consumers.clear();
+        pl.producers.clear();
     }
     
 
     bool Reducer::ReducebyRuleA(uint32_t* placeInQuery) {
         // Rule A  - find transition t that has exactly one place in pre and post and remove one of the places (and t)  
         bool continueReductions = false;
-        for (uint32_t t = 0; t < parent->numberOfTransitions(); t++) {
+        const size_t numberoftransitions = parent->numberOfTransitions();
+        for (uint32_t t = 0; t < numberoftransitions; t++) {
 
             Transition& trans = getTransition(t);
                         
@@ -263,7 +263,8 @@ namespace PetriEngine {
     bool Reducer::ReducebyRuleB(uint32_t* placeInQuery) {
         // Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
         bool continueReductions = false;
-        for (uint32_t p = 0; p < parent->numberOfPlaces(); p++) {
+        const size_t numberofplaces = parent->numberOfPlaces();
+        for (uint32_t p = 0; p < numberofplaces; p++) {
             
             Place& place = parent->_places[p];
             
@@ -381,122 +382,148 @@ namespace PetriEngine {
 
     bool Reducer::ReducebyRuleC(uint32_t* placeInQuery) {
         // Rule C - Places with same input and output-transitions which a modulo each other
-         bool continueReductions = false;
+        bool continueReductions = false;
         
-        for(uint32_t p1 = 0; p1 < parent->numberOfPlaces(); ++p1)
-        {            
-            Place& place1 = parent->_places[p1];
-            
-            if(place1.skip) continue;
+        const size_t numberofplaces = parent->numberOfPlaces();
+        
+        for(uint32_t pouter = 0; pouter < numberofplaces; ++pouter)
+        {                        
+            if(parent->_places[pouter].skip) continue;
             
             // C4. No inhib
-            if(place1.inhib) continue;
+            if(parent->_places[pouter].inhib) continue;
             
-            for (uint32_t p2 = 0; p2 < parent->numberOfPlaces(); ++p2) 
+            for (uint32_t pinner = pouter + 1; pinner < numberofplaces; ++pinner) 
             {
-                // C1. Not same place
-                if(p1 == p2) continue;
-                
-                // C5. Dont mess with query
-                if(placeInQuery[p2] > 0)
-                    continue;
-                
-                Place& place2 = parent->_places[p2];
-                
-                if(place2.skip) continue;
+                if(parent->_places[pinner].skip) continue;
 
                 // C4. No inhib
-                if(place2.inhib) continue;
-                
-                // C2, C3. Consumer and producer-sets must match
-                if(place1.consumers.size() != place2.consumers.size() ||
-                   place1.producers.size() != place2.producers.size())
-                    continue;
-                
-                uint mult = std::numeric_limits<uint>::max();
-                
-                // C8. Consumers must match with weights
-                bool ok = true;
-                for(auto& in : place1.consumers)
-                {
-                    Transition& trans = getTransition(in);
-                    auto a1 = getInArc(p1, trans);
-                    auto a2 = getInArc(p2, trans);
-                    if(a2 == trans.pre.end())
-                    {
-                        ok = false;
-                        break;
-                    }
-                    
-                    if(mult == std::numeric_limits<uint>::max())
-                    {
-                        if(a2->weight < a1->weight || (a2->weight % a1->weight) != 0)
-                        {
-                            ok = false;
-                            break;
-                        }
-                        mult = a2->weight / a1->weight;
-                    }
-                    else if(a1->weight != a2->weight)
-                    {
-                        ok = false;
-                        break;
-                    }
-                }
-                
-                if(!ok) continue;
-                
-                // C7. Producers must match with weights
-                for(auto& in : place1.producers)
-                {
-                    Transition& trans = getTransition(in);
-                    auto a1 = getOutArc(trans, p1);
-                    auto a2 = getOutArc(trans, p2);
-                    if( a2 == trans.post.end())
-                    {
-                        ok = false;
-                        break;
-                    }
-                    if(mult == std::numeric_limits<uint>::max())
-                    {
-                        if(a2->weight < a1->weight || (a2->weight % a1->weight) != 0)
-                        {
-                            ok = false;
-                            break;
-                        }
-                        mult = a2->weight / a1->weight;
-                    }
-                    else if(a1->weight != a2->weight)
-                    {
-                        ok = false;
-                        break;
-                    }
-                }
-                
-                // C6. We do not care about excess markings in p2.
-                if(mult != std::numeric_limits<uint>::max() &&
-                        (parent->initialMarking[p1] * mult) > parent->initialMarking[p2])
-                    continue;
+                if(parent->_places[pinner].inhib) continue;
 
-                if(!ok) continue;
-                
-                parent->initialMarking[p2] = 0;
-                
-                if(reconstructTrace)
+                for(size_t swp = 0; swp < 2; ++swp)
                 {
-                    for(auto t : place2.consumers)
+                    uint p1 = pouter;
+                    uint p2 = pinner;
+                    
+                    if(swp == 1) std::swap(p1, p2);
+                    
+                    Place& place1 = parent->_places[p1];
+
+                    // C1. Not same place
+                    if(p1 == p2) break;
+
+                    // C5. Dont mess with query
+                    if(placeInQuery[p2] > 0)
+                        continue;
+
+                    Place& place2 = parent->_places[p2];
+
+                    // C2, C3. Consumer and producer-sets must match
+                    if(place1.consumers.size() != place2.consumers.size() ||
+                       place1.producers.size() != place2.producers.size())
+                        break;
+
+                    uint mult = std::numeric_limits<uint>::max();
+
+                    // C8. Consumers must match with weights
+                    int ok = 0;
+                    for(int i = place1.consumers.size() - 1; i >= 0; --i)
                     {
-                        std::string tname = getTransitionName(t);
-                        const ArcIter arc = getInArc(p2, getTransition(t));
-                        _extraconsume[tname].emplace_back(getPlaceName(p2), arc->weight);
+                        if(place1.consumers[i] != place2.consumers[i])
+                        {
+                            ok = 2;
+                            break;
+                        }
+
+                        Transition& trans = getTransition(place1.consumers[i]);
+                        auto a1 = getInArc(p1, trans);
+                        auto a2 = getInArc(p2, trans);
+                        if(a2 == trans.pre.end())
+                        {
+                            ok = 2;
+                            break;
+                        }
+                        assert(a1 != trans.pre.end());
+
+                        if(mult == std::numeric_limits<uint>::max())
+                        {
+                            if(a2->weight < a1->weight || (a2->weight % a1->weight) != 0)
+                            {
+                                ok = 1;
+                                break;
+                            }
+                            mult = a2->weight / a1->weight;
+                        }
+                        else if(a1->weight*mult != a2->weight)
+                        {
+                            ok = 2;
+                            break;
+                        }
                     }
+
+                    if(ok == 2) break;
+                    else if(ok == 1) continue;
+
+                    // C7. Producers must match with weights
+                    for(int i = place1.producers.size() - 1; i >= 0; --i)
+                    {
+                        if(place1.producers[i] != place2.producers[i])
+                        {
+                            ok = 2;
+                            break;
+                        }
+
+                        Transition& trans = getTransition(place1.producers[i]);
+                        auto a1 = getOutArc(trans, p1);
+                        auto a2 = getOutArc(trans, p2);
+                        if( a2 == trans.post.end())
+                        {
+                            ok = 2;
+                            break;
+                        }
+                        assert(a1 != trans.post.end());
+                        if(mult == std::numeric_limits<uint>::max())
+                        {
+                            if(a2->weight < a1->weight || (a2->weight % a1->weight) != 0)
+                            {
+                                ok = 1;
+                                break;
+                            }
+                            mult = a2->weight / a1->weight;
+                        }
+                        else if(a1->weight*mult != a2->weight)
+                        {
+                            ok = 2;
+                            break;
+                        }
+                    }
+
+                    if(ok == 2) break;
+                    else if(ok == 1) continue;
+
+                    // C6. We do not care about excess markings in p2.
+                    if(mult != std::numeric_limits<uint>::max() &&
+                            (parent->initialMarking[p1] * mult) > parent->initialMarking[p2])
+                        continue;
+
+                    parent->initialMarking[p2] = 0;
+
+                    if(reconstructTrace)
+                    {
+                        for(auto t : place2.consumers)
+                        {
+                            std::string tname = getTransitionName(t);
+                            const ArcIter arc = getInArc(p2, getTransition(t));
+                            _extraconsume[tname].emplace_back(getPlaceName(p2), arc->weight);
+                        }
+                    }
+
+                    continueReductions = true;
+                    _ruleC++;
+                    // UC1. Remove p2
+                    skipPlace(p2);
+                    _removedPlaces++;
                 }
-                                
-                continueReductions = true;
-                _ruleC++;
-                // UC1. Remove p2
-                skipPlace(p2);
-                _removedPlaces++;
             }
         }
         return continueReductions;
@@ -506,97 +533,96 @@ namespace PetriEngine {
         // Rule D - two transitions with the same pre and post and same inhibitor arcs 
         // This does not alter the trace.
         bool continueReductions = false;
-        for (uint32_t t1 = 0; t1 < parent->numberOfTransitions(); ++t1) {
-            Transition& trans1 = getTransition(t1);
-            if(trans1.skip) continue;
+        const size_t ntrans = parent->numberOfTransitions();
+        for (uint32_t touter = 0; touter < ntrans; ++touter) {
+            Transition& tout = getTransition(touter);
+            if (tout.skip) continue;
 
             // D2. No inhibitors
-            if(trans1.inhib) continue;
-            
-            for (uint32_t t2 = 0; t2 < parent->numberOfTransitions(); ++t2) {
-                
-                // D1. not same transition
-                if(t1 == t2) continue;
-                                
-                Transition& trans2 = getTransition(t2);
-                if(trans2.skip) continue;
-                
+            if (tout.inhib) continue;
+
+            for (uint32_t tinner = touter + 1; tinner < ntrans; ++tinner) {
+
+                Transition& tin = getTransition(tinner);
+                if (tin.skip || tout.skip) continue;
+
                 // D2. No inhibitors
-                if(trans2.inhib) continue;
-                
-                // From D3, and D4 we have that pre and post-sets are the same
-                if(trans1.post.size() != trans2.post.size()) continue;
-                if(trans1.pre.size() != trans2.pre.size()) continue;
-                
-                bool ok = true;
-                uint mult = std::numeric_limits<uint>::max();
-                // D4. postsets must match
-                for(auto& arc : trans1.post)
-                {
-                    auto a2 = getOutArc(trans2, arc.place);
-                    if( a2 == trans2.post.end())
-                    {
-                        ok = false;
-                        break;
-                    }
-                    
-                    if(mult == std::numeric_limits<uint>::max())
-                    {
-                        if(a2->weight < arc.weight || (a2->weight % arc.weight) != 0)
-                        {
-                            ok = false;
+                if (tin.inhib) continue;
+
+                for (size_t swp = 0; swp < 2; ++swp) {
+                    uint t1 = touter;
+                    uint t2 = tinner;
+                    if (swp == 1) std::swap(t1, t2);
+
+                    // D1. not same transition
+                    assert(t1 != t2);
+
+                    Transition& trans1 = getTransition(t1);
+                    Transition& trans2 = getTransition(t2);
+
+                    // From D3, and D4 we have that pre and post-sets are the same
+                    if (trans1.post.size() != trans2.post.size()) break;
+                    if (trans1.pre.size() != trans2.pre.size()) break;
+
+                    int ok = 0;
+                    uint mult = std::numeric_limits<uint>::max();
+                    // D4. postsets must match
+                    for (int i = trans1.post.size() - 1; i >= 0; --i) {
+                        Arc& arc = trans1.post[i];
+                        Arc& arc2 = trans2.post[i];
+                        if (arc2.place != arc.place) {
+                            ok = 2;
                             break;
                         }
-                        else
-                        {
-                            mult = a2->weight / arc.weight;
+
+                        if (mult == std::numeric_limits<uint>::max()) {
+                            if (arc2.weight < arc.weight || (arc2.weight % arc.weight) != 0) {
+                                ok = 1;
+                                break;
+                            } else {
+                                mult = arc2.weight / arc.weight;
+                            }
+                        } else if (arc2.weight != arc.weight * mult) {
+                            ok = 2;
+                            break;
                         }
-                    }
-                    else if(a2->weight != arc.weight*mult)
-                    {
-                        ok = false;
-                        break;
-                    }
-                }
-                
-                // D3. Presets must match
-                for(auto& arc : trans1.pre)
-                {
-                    auto a2 = getInArc(arc.place, trans2);
-                    if( a2 == trans2.pre.end())
-                    {
-                        ok = false;
-                        break;
                     }
 
-                    if(mult == std::numeric_limits<uint>::max())
-                    {
-                        if(a2->weight < arc.weight || (a2->weight % arc.weight) != 0)
-                        {
-                            ok = false;
+                    if (ok == 2) break;
+                    else if (ok == 1) continue;
+
+                    // D3. Presets must match
+                    for (int i = trans1.pre.size() - 1; i >= 0; --i) {
+                        Arc& arc = trans1.pre[i];
+                        Arc& arc2 = trans2.pre[i];
+                        if (arc2.place != arc.place) {
+                            ok = 2;
                             break;
                         }
-                        else
-                        {
-                            mult = a2->weight / arc.weight;
+
+                        if (mult == std::numeric_limits<uint>::max()) {
+                            if (arc2.weight < arc.weight || (arc2.weight % arc.weight) != 0) {
+                                ok = 1;
+                                break;
+                            } else {
+                                mult = arc2.weight / arc.weight;
+                            }
+                        } else if (arc2.weight != arc.weight * mult) {
+                            ok = 2;
+                            break;
                         }
                     }
-                    else if(a2->weight != arc.weight*mult)
-                    {
-                        ok = false;
-                        break;
-                    }
+
+                    if (ok == 2) break;
+                    else if (ok == 1) continue;
+
+                    // UD1. Remove transition t2
+                    continueReductions = true;
+                    _ruleD++;
+                    _removedTransitions++;
+                    skipTransition(t2);
+                    break; // break the swap loop
                 }
-                                
-                if (!ok) {
-                    continue;
-                }
-                
-                // UD1. Remove transition t2
-                continueReductions = true;
-                _ruleD++;
-                _removedTransitions++;
-                skipTransition(t2);
             }
         } // end of main for loop for rule D
         return continueReductions;
@@ -604,7 +630,8 @@ namespace PetriEngine {
     
     bool Reducer::ReducebyRuleE(uint32_t* placeInQuery) {
         bool continueReductions = false;
-        for(uint32_t p = 0; p < parent->numberOfPlaces(); ++p)
+        const size_t numberofplaces = parent->numberOfPlaces();
+        for(uint32_t p = 0; p < numberofplaces; ++p)
         {
             Place& place = parent->_places[p];
             
@@ -646,7 +673,7 @@ namespace PetriEngine {
             auto torem = place.consumers;
             for(uint cons : torem)
             {
-                skipTransition(cons);                
+                skipTransition(cons);
                 _removedTransitions++;
             }
             
@@ -660,14 +687,23 @@ namespace PetriEngine {
 
 
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace) {
+        parent->sort();
         this->reconstructTrace = reconstructTrace;
         if (enablereduction == 1) { // in the aggresive reduction all four rules are used as long as they remove something
-            while (ReducebyRuleA(context.getQueryPlaceCount()) ||
-                    ReducebyRuleB(context.getQueryPlaceCount()) ||
-                    ReducebyRuleC(context.getQueryPlaceCount()) ||
-                    ReducebyRuleD(context.getQueryPlaceCount()) ||
-                    ReducebyRuleE(context.getQueryPlaceCount())) {
-            }
+            bool changed = false;
+            do
+            {
+                do{
+                    changed = false;                
+                    changed |= ReducebyRuleA(context.getQueryPlaceCount());
+                    changed |= ReducebyRuleB(context.getQueryPlaceCount());
+                    changed |= ReducebyRuleE(context.getQueryPlaceCount());
+                } while(changed);
+                // RuleC and RuleD are expensive, so wait with those till nothing else changes
+                ReducebyRuleD(context.getQueryPlaceCount());
+                ReducebyRuleC(context.getQueryPlaceCount());
+            } while(changed);
+
         } else if (enablereduction == 2) { // for k-boundedness checking only rules A and D are applicable
             while (ReducebyRuleA(context.getQueryPlaceCount()) ||
                     ReducebyRuleD(context.getQueryPlaceCount())) {

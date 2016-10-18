@@ -367,6 +367,21 @@ namespace PetriEngine {
         return net;
     }
     
+    void PetriNetBuilder::sort()
+    {
+        for(Place& p : _places)
+        {
+            std::sort(p.consumers.begin(), p.consumers.end());
+            std::sort(p.producers.begin(), p.producers.end());
+        }
+        
+        for(Transition& t : _transitions)
+        {
+            std::sort(t.pre.begin(), t.pre.end());
+            std::sort(t.post.begin(), t.post.end());
+        }
+    }
+    
     void PetriNetBuilder::reduce(   std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                     std::vector<Reachability::ResultPrinter::Result>& results, 
                                     int reductiontype, bool reconstructTrace)
