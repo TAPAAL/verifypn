@@ -234,7 +234,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 auto
 readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std::vector<std::string>& qstrings)
 {
-    QueryXMLParser XMLparser(tmap);
 
     std::vector<std::shared_ptr<Condition > > conditions;
     string querystring; // excluding EF and AG
@@ -248,14 +247,14 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
             return conditions;
         }
 
+        if(options.querynumbers.size() == 0)
+        {
         //Read everything
         stringstream buffer;
         buffer << qfile.rdbuf();
         string querystr = buffer.str(); // including EF and AG
         //Parse XML the queries and querystr let be the index of xmlquery 
         
-        if(options.querynumbers.size() == 0)
-        {
             qstrings.push_back(querystring);
             //Validate query type
             if (querystr.substr(0, 2) != "EF" && querystr.substr(0, 2) != "AG") {
@@ -274,13 +273,15 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
         }
         else
         {
-
-            if (!XMLparser.parse(querystr)) {
+            QueryXMLParser XMLparser(tmap);
+            if (!XMLparser.parse(qfile)) {
                 fprintf(stderr, "Error: Failed parsing XML query file\n");
                 fprintf(stdout, "DO_NOT_COMPETE\n");
                 conditions.clear();
                 return conditions;
             }
+
+            XMLparser.printQueries();
 
             size_t i = 0;
 
@@ -301,7 +302,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
                     continue;
                 }
                 // fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
-                querystr = q.queryText;
+                std::string querystr = q.queryText;
                 querystring = querystr.substr(2);
                 isInvariant = q.negateResult;
 
