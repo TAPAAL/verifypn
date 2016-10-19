@@ -22,12 +22,15 @@
 #include <string>
 #include <string.h>
 #include <vector>
+#include <memory>
 #include <sstream> 
 
+#include "../PetriEngine/PQL/PQL.h"
 #include "PNMLParser.h"
 #include "rapidxml/rapidxml.hpp"
 
 using namespace std;
+using namespace PetriEngine::PQL;
 
 class QueryXMLParser {
 public:
@@ -36,8 +39,7 @@ public:
 
     struct QueryItem {
         string id; // query name
-        string queryText; // only EF queries will be here
-        bool negateResult; // true if the final result should be negated
+        std::shared_ptr<Condition> query;
         std::vector<std::string> boundNames;
 
         enum {
@@ -46,7 +48,6 @@ public:
         } parsingResult;
     };
 
-    typedef vector<QueryItem>::iterator QueryIterator;
     vector<QueryItem>  queries;
 
     bool parse(std::ifstream& xml);
@@ -57,9 +58,9 @@ private:
     bool parsePropertySet(rapidxml::xml_node<>* element);
     bool parseProperty(rapidxml::xml_node<>*  element);
     bool parseTags(rapidxml::xml_node<>*  element);
-    bool parseFormula(rapidxml::xml_node<>*  element, stringstream& queryText, bool &negateResult, std::vector<string> &boundNames);
-    bool parseBooleanFormula(rapidxml::xml_node<>*  element, stringstream& queryText);
-    bool parseIntegerExpression(rapidxml::xml_node<>*  element, stringstream& queryText);
+    Condition* parseFormula(rapidxml::xml_node<>*  element);
+    Condition* parseBooleanFormula(rapidxml::xml_node<>*  element);
+    Expr* parseIntegerExpression(rapidxml::xml_node<>*  element);
     string parsePlace(rapidxml::xml_node<>*  element);
     PNMLParser::TransitionEnablednessMap _transitionEnabledness;
 };

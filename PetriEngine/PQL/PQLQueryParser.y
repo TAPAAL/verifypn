@@ -79,5 +79,5 @@ term	: term MULTIPLY factor	{ $$ = new MultiplyExpr($1, $3); }
 
 factor	: LPAREN expr RPAREN	{ $$ = $2; }
 		| INT			{ $$ = new LiteralExpr(atol($1->c_str())); delete $1; }
-		| ID			{ $$ = new IdentifierExpr(*$1, @1.first_column); delete $1; }
+		| ID			{ $$ = new IdentifierExpr(*$1); delete $1; }
 		;

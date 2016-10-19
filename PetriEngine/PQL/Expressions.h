@@ -137,9 +137,8 @@ namespace PetriEngine {
         class IdentifierExpr : public Expr {
         public:
 
-            IdentifierExpr(const std::string& name, int srcOffset) : _name(name) {
+            IdentifierExpr(const std::string& name) : _name(name) {
                 _offsetInMarking = -1;
-                _srcOffset = srcOffset;
             }
             void analyze(AnalysisContext& context);
             bool pfree() const;
@@ -155,8 +154,6 @@ namespace PetriEngine {
         private:
             /** Offset in marking, -1 if undefined, should be resolved during analysis */
             int _offsetInMarking;
-            /** Offset in source, as provided to parser */
-            int _srcOffset;
             /** Identifier text */
             std::string _name;
         };

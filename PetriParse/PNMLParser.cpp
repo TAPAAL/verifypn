@@ -28,9 +28,11 @@
 
 #include "PNMLParser.h"
 #include "../PetriEngine/errorcodes.h"
+#include "PetriEngine/PQL/Expressions.h"
 
 using namespace PetriEngine;
 using namespace std;
+using namespace PetriEngine::PQL;
 
 void PNMLParser::parse(ifstream& xml,
         AbstractPetriNetBuilder* builder) {
@@ -52,7 +54,7 @@ void PNMLParser::parse(ifstream& xml,
 
     // initialize transitionEnabledness
     for (TransitionIter it = transitions.begin(); it != transitions.end(); it++) {
-        transitionEnabledness[it->id] = "(true";
+        transitionEnabledness[it->id] = new BooleanCondition(true);
     }
 
     //Add all the transition
@@ -83,12 +85,13 @@ void PNMLParser::parse(ifstream& xml,
             builder->addInputArc(source.id, target.id, false, it->weight);
 
             // cout << "ARC: " << source.id << " to " << target.id << " weight " << it->weight << endl;
-            char weight[sizeof (int) * 8 + 1];
-            sprintf(weight, "%i", it->weight);
-
-            string cond = " and \"" + source.id + "\" >= " + weight;
-            transitionEnabledness[target.id] += cond;
-
+            Condition* cond = new AndCondition(
+                    transitionEnabledness[target.id],
+                    new GreaterThanOrEqualCondition(
+                        new IdentifierExpr(source.id),
+                        new LiteralExpr(it->weight)
+                    ));
+            transitionEnabledness[target.id] = cond;
         } else if (!source.isPlace && target.isPlace) {
             builder->addOutputArc(source.id, target.id, it->weight);
         } else {
@@ -115,11 +118,6 @@ void PNMLParser::parse(ifstream& xml,
         }
     }
     
-    // finalize transitionEnabledness
-    for (TransitionIter it = transitions.begin(); it != transitions.end(); it++) {
-        transitionEnabledness[it->id] += ")";
-    }
-
     //Unset the builder
     this->builder = NULL;
 

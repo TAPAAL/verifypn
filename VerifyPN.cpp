@@ -236,7 +236,6 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
 {
 
     std::vector<std::shared_ptr<Condition > > conditions;
-    string querystring; // excluding EF and AG
     if (!options.statespaceexploration) {
         //Open query file
         ifstream qfile(options.queryfile, ifstream::in);
@@ -249,11 +248,13 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
 
         if(options.querynumbers.size() == 0)
         {
-        //Read everything
-        stringstream buffer;
-        buffer << qfile.rdbuf();
-        string querystr = buffer.str(); // including EF and AG
-        //Parse XML the queries and querystr let be the index of xmlquery 
+            string querystring; // excluding EF and AG
+
+            //Read everything
+            stringstream buffer;
+            buffer << qfile.rdbuf();
+            string querystr = buffer.str(); // including EF and AG
+            //Parse XML the queries and querystr let be the index of xmlquery 
         
             qstrings.push_back(querystring);
             //Validate query type
@@ -281,8 +282,6 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
                 return conditions;
             }
 
-            XMLparser.printQueries();
-
             size_t i = 0;
 
             for(auto& q : XMLparser.queries)
@@ -302,14 +301,10 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
                     continue;
                 }
                 // fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
-                std::string querystr = q.queryText;
-                querystring = querystr.substr(2);
-                isInvariant = q.negateResult;
 
-
-                conditions.push_back(ParseQuery(querystring, isInvariant, q.boundNames));
+                conditions.push_back(q.query);
                 if (conditions.back() == NULL) {
-                    fprintf(stderr, "Error: Failed to parse query \"%s\"\n", querystring.c_str()); //querystr.substr(2).c_str());
+                    fprintf(stderr, "Error: Failed to parse query \"%s\"\n", q.id.c_str()); //querystr.substr(2).c_str());
                     fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
                     conditions.pop_back();
                 }
@@ -319,7 +314,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
         qfile.close();
         return conditions;
     } else { // state-space exploration
-        querystring = "false";
+        std::string querystring = "false";
         std::vector<std::string> empty;
         conditions.push_back(ParseQuery(querystring, false, empty));
         return conditions;

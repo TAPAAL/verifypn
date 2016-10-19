@@ -19,13 +19,14 @@
 #ifndef PNMLPARSER_H
 #define PNMLPARSER_H
 
-#include <PetriEngine/AbstractPetriNetBuilder.h>
-#include "rapidxml/rapidxml.hpp"
-
 #include <map>
 #include <string>
 #include <vector>
 #include <fstream>
+
+#include "PetriEngine/AbstractPetriNetBuilder.h"
+#include "rapidxml/rapidxml.hpp"
+#include "../PetriEngine/PQL/PQL.h"
 
 class PNMLParser {
 
@@ -56,7 +57,7 @@ public:
         std::string name, text;
     };
     
-    typedef std::map<std::string, std::string> TransitionEnablednessMap;
+    typedef std::map<std::string, PetriEngine::PQL::Condition*> TransitionEnablednessMap;
 
     PNMLParser() {
         builder = NULL;

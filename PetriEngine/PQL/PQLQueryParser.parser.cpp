@@ -68,7 +68,6 @@
 
 #define yylval          pqlqlval
 #define yychar          pqlqchar
-#define yylloc          pqlqlloc
 
 /* Copy the first part of user declarations.  */
 #line 1 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:339  */
@@ -85,7 +84,7 @@ std::shared_ptr<PetriEngine::PQL::Condition> query;
 extern int pqlqlex();
 void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
-#line 89 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:339  */
+#line 88 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -154,7 +153,7 @@ union YYSTYPE
 	std::string *string;
 	int token;
 
-#line 158 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:355  */
+#line 157 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -162,30 +161,16 @@ typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
-/* Location type.  */
-#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
-typedef struct YYLTYPE YYLTYPE;
-struct YYLTYPE
-{
-  int first_line;
-  int first_column;
-  int last_line;
-  int last_column;
-};
-# define YYLTYPE_IS_DECLARED 1
-# define YYLTYPE_IS_TRIVIAL 1
-#endif
-
 
 extern YYSTYPE pqlqlval;
-extern YYLTYPE pqlqlloc;
+
 int pqlqparse (void);
 
 #endif /* !YY_PQLQ_PETRIENGINE_PQL_PQLQUERYPARSER_PARSER_HPP_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
-#line 189 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:358  */
+#line 174 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -366,15 +351,13 @@ void free (void *); /* INFRINGES ON USER NAME SPACE */
 
 #if (! defined yyoverflow \
      && (! defined __cplusplus \
-         || (defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL \
-             && defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
+         || (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
 
 /* A type that is properly aligned for any stack member.  */
 union yyalloc
 {
   yytype_int16 yyss_alloc;
   YYSTYPE yyvs_alloc;
-  YYLTYPE yyls_alloc;
 };
 
 /* The size of the maximum gap between one aligned stack and the next.  */
@@ -383,8 +366,8 @@ union yyalloc
 /* The size of an array large to enough to hold all stacks, each with
    N elements.  */
 # define YYSTACK_BYTES(N) \
-     ((N) * (sizeof (yytype_int16) + sizeof (YYSTYPE) + sizeof (YYLTYPE)) \
-      + 2 * YYSTACK_GAP_MAXIMUM)
+     ((N) * (sizeof (yytype_int16) + sizeof (YYSTYPE)) \
+      + YYSTACK_GAP_MAXIMUM)
 
 # define YYCOPY_NEEDED 1
 
@@ -649,32 +632,6 @@ while (0)
 #define YYERRCODE       256
 
 
-/* YYLLOC_DEFAULT -- Set CURRENT to span from RHS[1] to RHS[N].
-   If N is 0, then set CURRENT to the empty location which ends
-   the previous symbol: RHS[0] (always defined).  */
-
-#ifndef YYLLOC_DEFAULT
-# define YYLLOC_DEFAULT(Current, Rhs, N)                                \
-    do                                                                  \
-      if (N)                                                            \
-        {                                                               \
-          (Current).first_line   = YYRHSLOC (Rhs, 1).first_line;        \
-          (Current).first_column = YYRHSLOC (Rhs, 1).first_column;      \
-          (Current).last_line    = YYRHSLOC (Rhs, N).last_line;         \
-          (Current).last_column  = YYRHSLOC (Rhs, N).last_column;       \
-        }                                                               \
-      else                                                              \
-        {                                                               \
-          (Current).first_line   = (Current).last_line   =              \
-            YYRHSLOC (Rhs, 0).last_line;                                \
-          (Current).first_column = (Current).last_column =              \
-            YYRHSLOC (Rhs, 0).last_column;                              \
-        }                                                               \
-    while (0)
-#endif
-
-#define YYRHSLOC(Rhs, K) ((Rhs)[K])
-
 
 /* Enable debugging if requested.  */
 #if YYDEBUG
@@ -690,48 +647,9 @@ do {                                            \
     YYFPRINTF Args;                             \
 } while (0)
 
-
-/* YY_LOCATION_PRINT -- Print the location on the stream.
-   This macro was not mandated originally: define only if we know
-   we won't break user code: when these are the locations we know.  */
-
+/* This macro is provided for backward compatibility. */
 #ifndef YY_LOCATION_PRINT
-# if defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL
-
-/* Print *YYLOCP on YYO.  Private, do not rely on its existence. */
-
-YY_ATTRIBUTE_UNUSED
-static unsigned
-yy_location_print_ (FILE *yyo, YYLTYPE const * const yylocp)
-{
-  unsigned res = 0;
-  int end_col = 0 != yylocp->last_column ? yylocp->last_column - 1 : 0;
-  if (0 <= yylocp->first_line)
-    {
-      res += YYFPRINTF (yyo, "%d", yylocp->first_line);
-      if (0 <= yylocp->first_column)
-        res += YYFPRINTF (yyo, ".%d", yylocp->first_column);
-    }
-  if (0 <= yylocp->last_line)
-    {
-      if (yylocp->first_line < yylocp->last_line)
-        {
-          res += YYFPRINTF (yyo, "-%d", yylocp->last_line);
-          if (0 <= end_col)
-            res += YYFPRINTF (yyo, ".%d", end_col);
-        }
-      else if (0 <= end_col && yylocp->first_column < end_col)
-        res += YYFPRINTF (yyo, "-%d", end_col);
-    }
-  return res;
- }
-
-#  define YY_LOCATION_PRINT(File, Loc)          \
-  yy_location_print_ (File, &(Loc))
-
-# else
-#  define YY_LOCATION_PRINT(File, Loc) ((void) 0)
-# endif
+# define YY_LOCATION_PRINT(File, Loc) ((void) 0)
 #endif
 
 
@@ -741,7 +659,7 @@ do {                                                                      \
     {                                                                     \
       YYFPRINTF (stderr, "%s ", Title);                                   \
       yy_symbol_print (stderr,                                            \
-                  Type, Value, Location); \
+                  Type, Value); \
       YYFPRINTF (stderr, "\n");                                           \
     }                                                                     \
 } while (0)
@@ -752,11 +670,10 @@ do {                                                                      \
 `----------------------------------------*/
 
 static void
-yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp)
+yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
 {
   FILE *yyo = yyoutput;
   YYUSE (yyo);
-  YYUSE (yylocationp);
   if (!yyvaluep)
     return;
 # ifdef YYPRINT
@@ -772,14 +689,12 @@ yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvalue
 `--------------------------------*/
 
 static void
-yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp)
+yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
 {
   YYFPRINTF (yyoutput, "%s %s (",
              yytype < YYNTOKENS ? "token" : "nterm", yytname[yytype]);
 
-  YY_LOCATION_PRINT (yyoutput, *yylocationp);
-  YYFPRINTF (yyoutput, ": ");
-  yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp);
+  yy_symbol_value_print (yyoutput, yytype, yyvaluep);
   YYFPRINTF (yyoutput, ")");
 }
 
@@ -812,7 +727,7 @@ do {                                                            \
 `------------------------------------------------*/
 
 static void
-yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule)
+yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, int yyrule)
 {
   unsigned long int yylno = yyrline[yyrule];
   int yynrhs = yyr2[yyrule];
@@ -826,7 +741,7 @@ yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule
       yy_symbol_print (stderr,
                        yystos[yyssp[yyi + 1 - yynrhs]],
                        &(yyvsp[(yyi + 1) - (yynrhs)])
-                       , &(yylsp[(yyi + 1) - (yynrhs)])                       );
+                                              );
       YYFPRINTF (stderr, "\n");
     }
 }
@@ -834,7 +749,7 @@ yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule
 # define YY_REDUCE_PRINT(Rule)          \
 do {                                    \
   if (yydebug)                          \
-    yy_reduce_print (yyssp, yyvsp, yylsp, Rule); \
+    yy_reduce_print (yyssp, yyvsp, Rule); \
 } while (0)
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
@@ -1092,10 +1007,9 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
 `-----------------------------------------------*/
 
 static void
-yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocationp)
+yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep)
 {
   YYUSE (yyvaluep);
-  YYUSE (yylocationp);
   if (!yymsg)
     yymsg = "Deleting";
   YY_SYMBOL_PRINT (yymsg, yytype, yyvaluep, yylocationp);
@@ -1113,12 +1027,6 @@ int yychar;
 
 /* The semantic value of the lookahead symbol.  */
 YYSTYPE yylval;
-/* Location data for the lookahead symbol.  */
-YYLTYPE yylloc
-# if defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL
-  = { 1, 1, 1, 1 }
-# endif
-;
 /* Number of syntax errors so far.  */
 int yynerrs;
 
@@ -1137,7 +1045,6 @@ yyparse (void)
     /* The stacks and their tools:
        'yyss': related to states.
        'yyvs': related to semantic values.
-       'yyls': related to locations.
 
        Refer to the stacks through separate pointers, to allow yyoverflow
        to reallocate them elsewhere.  */
@@ -1152,14 +1059,6 @@ yyparse (void)
     YYSTYPE *yyvs;
     YYSTYPE *yyvsp;
 
-    /* The location stack.  */
-    YYLTYPE yylsa[YYINITDEPTH];
-    YYLTYPE *yyls;
-    YYLTYPE *yylsp;
-
-    /* The locations where the error started and ended.  */
-    YYLTYPE yyerror_range[3];
-
     YYSIZE_T yystacksize;
 
   int yyn;
@@ -1169,7 +1068,6 @@ yyparse (void)
   /* The variables used to return semantic value and location from the
      action routines.  */
   YYSTYPE yyval;
-  YYLTYPE yyloc;
 
 #if YYERROR_VERBOSE
   /* Buffer for error messages, and its allocated size.  */
@@ -1178,7 +1076,7 @@ yyparse (void)
   YYSIZE_T yymsg_alloc = sizeof yymsgbuf;
 #endif
 
-#define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N), yylsp -= (N))
+#define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N))
 
   /* The number of symbols on the RHS of the reduced rule.
      Keep to zero when no symbol should be popped.  */
@@ -1186,7 +1084,6 @@ yyparse (void)
 
   yyssp = yyss = yyssa;
   yyvsp = yyvs = yyvsa;
-  yylsp = yyls = yylsa;
   yystacksize = YYINITDEPTH;
 
   YYDPRINTF ((stderr, "Starting parse\n"));
@@ -1195,7 +1092,6 @@ yyparse (void)
   yyerrstatus = 0;
   yynerrs = 0;
   yychar = YYEMPTY; /* Cause a token to be read.  */
-  yylsp[0] = yylloc;
   goto yysetstate;
 
 /*------------------------------------------------------------.
@@ -1221,7 +1117,6 @@ yyparse (void)
            memory.  */
         YYSTYPE *yyvs1 = yyvs;
         yytype_int16 *yyss1 = yyss;
-        YYLTYPE *yyls1 = yyls;
 
         /* Each stack pointer address is followed by the size of the
            data in use in that stack, in bytes.  This used to be a
@@ -1230,10 +1125,8 @@ yyparse (void)
         yyoverflow (YY_("memory exhausted"),
                     &yyss1, yysize * sizeof (*yyssp),
                     &yyvs1, yysize * sizeof (*yyvsp),
-                    &yyls1, yysize * sizeof (*yylsp),
                     &yystacksize);
 
-        yyls = yyls1;
         yyss = yyss1;
         yyvs = yyvs1;
       }
@@ -1256,7 +1149,6 @@ yyparse (void)
           goto yyexhaustedlab;
         YYSTACK_RELOCATE (yyss_alloc, yyss);
         YYSTACK_RELOCATE (yyvs_alloc, yyvs);
-        YYSTACK_RELOCATE (yyls_alloc, yyls);
 #  undef YYSTACK_RELOCATE
         if (yyss1 != yyssa)
           YYSTACK_FREE (yyss1);
@@ -1266,7 +1158,6 @@ yyparse (void)
 
       yyssp = yyss + yysize - 1;
       yyvsp = yyvs + yysize - 1;
-      yylsp = yyls + yysize - 1;
 
       YYDPRINTF ((stderr, "Stack size increased to %lu\n",
                   (unsigned long int) yystacksize));
@@ -1344,7 +1235,7 @@ yybackup:
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
   *++yyvsp = yylval;
   YY_IGNORE_MAYBE_UNINITIALIZED_END
-  *++yylsp = yylloc;
+
   goto yynewstate;
 
 
@@ -1375,163 +1266,162 @@ yyreduce:
      GCC warning that YYVAL may be used uninitialized.  */
   yyval = yyvsp[1-yylen];
 
-  /* Default location.  */
-  YYLLOC_DEFAULT (yyloc, (yylsp - yylen), yylen);
+
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
         case 2:
 #line 48 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { query = std::shared_ptr<Condition>((yyvsp[0].cond)); }
-#line 1387 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1277 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 3:
 #line 49 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { yyerrok; }
-#line 1393 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1283 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 4:
 #line 52 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = new AndCondition((yyvsp[-2].cond), (yyvsp[0].cond)); }
-#line 1399 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1289 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 5:
 #line 53 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = new OrCondition((yyvsp[-2].cond), (yyvsp[0].cond)); }
-#line 1405 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1295 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 6:
 #line 54 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = new NotCondition((yyvsp[0].cond)); }
-#line 1411 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1301 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 7:
 #line 55 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = (yyvsp[-1].cond); }
-#line 1417 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1307 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 8:
 #line 56 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = (yyvsp[0].cond); }
-#line 1423 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1313 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 9:
 #line 57 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = new BooleanCondition(true);}
-#line 1429 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1319 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 10:
 #line 58 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = new BooleanCondition(false);}
-#line 1435 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1325 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 11:
 #line 59 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = new DeadlockCondition();}
-#line 1441 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1331 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 12:
 #line 62 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = new EqualCondition((yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1447 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1337 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 13:
 #line 63 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = new NotEqualCondition((yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1453 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1343 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 14:
 #line 64 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = new LessThanCondition((yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1459 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1349 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 15:
 #line 65 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = new LessThanOrEqualCondition((yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1465 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1355 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 16:
 #line 66 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = new GreaterThanCondition((yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1471 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1361 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 17:
 #line 67 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.cond) = new GreaterThanOrEqualCondition((yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1477 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1367 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 18:
 #line 70 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.expr) = new PlusExpr((yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1483 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1373 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 19:
 #line 71 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.expr) = new SubtractExpr((yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1489 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1379 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 20:
 #line 72 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.expr) = new MinusExpr((yyvsp[0].expr)); }
-#line 1495 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1385 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 21:
 #line 73 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.expr) = (yyvsp[0].expr); }
-#line 1501 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1391 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 22:
 #line 76 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.expr) = new MultiplyExpr((yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1507 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1397 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 23:
 #line 77 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.expr) = (yyvsp[0].expr); }
-#line 1513 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1403 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 24:
 #line 80 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.expr) = (yyvsp[-1].expr); }
-#line 1519 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1409 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 25:
 #line 81 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
     { (yyval.expr) = new LiteralExpr(atol((yyvsp[0].string)->c_str())); delete (yyvsp[0].string); }
-#line 1525 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1415 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 26:
 #line 82 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.expr) = new IdentifierExpr(*(yyvsp[0].string), (yylsp[0]).first_column); delete (yyvsp[0].string); }
-#line 1531 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+    { (yyval.expr) = new IdentifierExpr(*(yyvsp[0].string)); delete (yyvsp[0].string); }
+#line 1421 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
 
-#line 1535 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
+#line 1425 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1552,7 +1442,6 @@ yyreduce:
   YY_STACK_PRINT (yyss, yyssp);
 
   *++yyvsp = yyval;
-  *++yylsp = yyloc;
 
   /* Now 'shift' the result of the reduction.  Determine what state
      that goes to, based on the state we popped back to and the rule
@@ -1617,7 +1506,7 @@ yyerrlab:
 #endif
     }
 
-  yyerror_range[1] = yylloc;
+
 
   if (yyerrstatus == 3)
     {
@@ -1633,7 +1522,7 @@ yyerrlab:
       else
         {
           yydestruct ("Error: discarding",
-                      yytoken, &yylval, &yylloc);
+                      yytoken, &yylval);
           yychar = YYEMPTY;
         }
     }
@@ -1654,7 +1543,6 @@ yyerrorlab:
   if (/*CONSTCOND*/ 0)
      goto yyerrorlab;
 
-  yyerror_range[1] = yylsp[1-yylen];
   /* Do not reclaim the symbols of the rule whose action triggered
      this YYERROR.  */
   YYPOPSTACK (yylen);
@@ -1688,9 +1576,9 @@ yyerrlab1:
       if (yyssp == yyss)
         YYABORT;
 
-      yyerror_range[1] = *yylsp;
+
       yydestruct ("Error: popping",
-                  yystos[yystate], yyvsp, yylsp);
+                  yystos[yystate], yyvsp);
       YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
@@ -1700,11 +1588,6 @@ yyerrlab1:
   *++yyvsp = yylval;
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 
-  yyerror_range[2] = yylloc;
-  /* Using YYLLOC is tempting, but would change the location of
-     the lookahead.  YYLOC is available though.  */
-  YYLLOC_DEFAULT (yyloc, yyerror_range, 2);
-  *++yylsp = yyloc;
 
   /* Shift the error token.  */
   YY_SYMBOL_PRINT ("Shifting", yystos[yyn], yyvsp, yylsp);
@@ -1744,7 +1627,7 @@ yyreturn:
          user semantic actions for why this is necessary.  */
       yytoken = YYTRANSLATE (yychar);
       yydestruct ("Cleanup: discarding lookahead",
-                  yytoken, &yylval, &yylloc);
+                  yytoken, &yylval);
     }
   /* Do not reclaim the symbols of the rule whose action triggered
      this YYABORT or YYACCEPT.  */
@@ -1753,7 +1636,7 @@ yyreturn:
   while (yyssp != yyss)
     {
       yydestruct ("Cleanup: popping",
-                  yystos[*yyssp], yyvsp, yylsp);
+                  yystos[*yyssp], yyvsp);
       YYPOPSTACK (1);
     }
 #ifndef yyoverflow

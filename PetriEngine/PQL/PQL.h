@@ -45,24 +45,17 @@ namespace PetriEngine {
         /** Representation of a PQL error */
         class ExprError {
             std::string _text;
-            int _offset;
             int _length;
         public:
 
-            ExprError(std::string text = "", int offset = -1, int length = 0) {
+            ExprError(std::string text = "", int length = 0) {
                 _text = text;
-                _offset = offset;
                 _length = length;
             }
 
             /** Human readable explaination of the error */
             const std::string& text() const {
                 return _text;
-            }
-
-            /** Offset in the source, -1 if undefined */
-            int offset() const {
-                return _offset;
             }
 
             /** length in the source, 0 if not applicable */
@@ -77,7 +70,7 @@ namespace PetriEngine {
 
             /** True, if this is a default created ExprError without any information */
             bool isEmpty() const {
-                return _text.empty() && _offset == -1 && _length == 0;
+                return _text.empty() && _length == 0;
             }
         };
 

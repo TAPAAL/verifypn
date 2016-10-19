@@ -221,7 +221,6 @@ namespace PetriEngine {
                 _offsetInMarking = result.offset;
             } else {
                 ExprError error("Unable to resolve identifier \"" + _name + "\"",
-                        _srcOffset,
                         _name.length());
                 context.reportError(error);
             }
