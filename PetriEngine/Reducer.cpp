@@ -124,7 +124,9 @@ namespace PetriEngine {
     
     void Reducer::skipTransition(uint32_t t)
     {
+        ++_removedTransitions;
         Transition& trans = getTransition(t);
+        assert(!trans.skip);
         for(auto p : trans.post)
         {
             eraseTransition(parent->_places[p.place].producers, t);
@@ -141,7 +143,9 @@ namespace PetriEngine {
     
     void Reducer::skipPlace(uint32_t place)
     {
+        ++_removedPlaces;
         Place& pl = parent->_places[place];
+        assert(!pl.skip);
         pl.skip = true;
         for(auto& t : pl.consumers)
         {
@@ -167,9 +171,11 @@ namespace PetriEngine {
     bool Reducer::consistent()
     {
 #ifndef NDEBUG
+        size_t strans = 0;
         for(size_t i = 0; i < parent->numberOfTransitions(); ++i)
         {
             Transition& t = parent->_transitions[i];
+            if(t.skip) ++strans;
             assert(std::is_sorted(t.pre.begin(), t.pre.end()));
             assert(std::is_sorted(t.post.end(), t.post.end()));
             assert(!t.skip || (t.pre.size() == 0 && t.post.size() == 0));
@@ -186,10 +192,14 @@ namespace PetriEngine {
                 assert(std::find(p.producers.begin(), p.producers.end(), i) != p.producers.end());
             }
         }
+        
+        assert(strans == _removedTransitions);
 
+        size_t splaces = 0;
         for(size_t i = 0; i < parent->numberOfPlaces(); ++i)
         {
             Place& p = parent->_places[i];
+            if(p.skip) ++splaces;
             assert(std::is_sorted(p.consumers.begin(), p.consumers.end()));
             assert(std::is_sorted(p.producers.begin(), p.producers.end()));
             assert(!p.skip || (p.consumers.size() == 0 && p.producers.size() == 0));
@@ -212,6 +222,7 @@ namespace PetriEngine {
                 assert(a->place == i);
             }
         }
+        assert(splaces == _removedPlaces);
 #endif
         return true;
     }
@@ -277,7 +288,6 @@ namespace PetriEngine {
             parent->initialMarking[pPre] = 0;
 
             // Remove transition t and the place that has no tokens in m0
-            _removedTransitions++; 
             // UA1. remove transition
             skipTransition(t);
             assert(pPost != pPre);
@@ -307,7 +317,6 @@ namespace PetriEngine {
                     dest->weight += (source->weight * weight);
                 }
             }                
-            _removedPlaces++;
             // UA1. remove place
             skipPlace(pPre);
         } // end of Rule A main for-loop
@@ -406,7 +415,6 @@ namespace PetriEngine {
             _ruleB++;
              // UB1. Remove place p
             skipPlace(p);
-            _removedPlaces++;
             parent->initialMarking[p] = 0;
             // We need to remember that when tOut fires, tIn fires just after.
             // this should fix the trace
@@ -431,7 +439,6 @@ namespace PetriEngine {
                               parent->_places[arc.place].producers.end());
                 }
             }
-            _removedTransitions++;
             // UB1. remove transition
             skipTransition(tIn);
         } // end of Rule B main for-loop
@@ -461,6 +468,9 @@ namespace PetriEngine {
 
                 for(size_t swp = 0; swp < 2; ++swp)
                 {
+                    if( parent->_places[pinner].skip ||
+                        parent->_places[pouter].skip) break;
+                    
                     uint p1 = pouter;
                     uint p2 = pinner;
                     
@@ -581,7 +591,7 @@ namespace PetriEngine {
                     _ruleC++;
                     // UC1. Remove p2
                     skipPlace(p2);
-                    _removedPlaces++;
+                    break;
                 }
             }
         }
@@ -610,6 +620,9 @@ namespace PetriEngine {
                 if (tin.inhib) continue;
 
                 for (size_t swp = 0; swp < 2; ++swp) {
+
+                    if (tin.skip || tout.skip) break;
+                    
                     uint t1 = touter;
                     uint t2 = tinner;
                     if (swp == 1) std::swap(t1, t2);
@@ -679,7 +692,6 @@ namespace PetriEngine {
                     // UD1. Remove transition t2
                     continueReductions = true;
                     _ruleD++;
-                    _removedTransitions++;
                     skipTransition(t2);
                     break; // break the swap loop
                 }
@@ -735,11 +747,9 @@ namespace PetriEngine {
             for(uint cons : torem)
             {
                 skipTransition(cons);
-                _removedTransitions++;
             }
-            
+
             skipPlace(p);
-            _removedPlaces++;
             _ruleE++;
             continueReductions = true;
         }
