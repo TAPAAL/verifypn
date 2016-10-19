@@ -24,8 +24,17 @@
 #include <sstream> 
 #include <algorithm> 
 
-using namespace XMLSP;
 using namespace std;
+
+int getChildCount(rapidxml::xml_node<> *n)
+{
+  int c = 0;
+  for (rapidxml::xml_node<> *child = n->first_node(); child != NULL; child = child->next_sibling())
+  {
+    c++;
+  } 
+  return c;
+} 
 
 QueryXMLParser::QueryXMLParser(const PNMLParser::TransitionEnablednessMap &transitionEnabledness) {
     _transitionEnabledness = transitionEnabledness;
@@ -33,9 +42,13 @@ QueryXMLParser::QueryXMLParser(const PNMLParser::TransitionEnablednessMap &trans
 
 QueryXMLParser::~QueryXMLParser() { }
 
-bool QueryXMLParser::parse(const std::string& xml) {
+bool QueryXMLParser::parse(std::ifstream& xml) {
     //Parse the xml
-    DOMElement* root = DOMElement::loadXML(xml);
+    rapidxml::xml_document<> doc;
+    vector<char> buffer((istreambuf_iterator<char>(xml)), istreambuf_iterator<char>());
+    buffer.push_back('\0');
+    doc.parse<0>(&buffer[0]);
+    rapidxml::xml_node<>*  root = doc.first_node();
     bool parsingOK;
     if (root) {
         parsingOK = parsePropertySet(root);
@@ -44,28 +57,25 @@ bool QueryXMLParser::parse(const std::string& xml) {
     }
 
     //Release DOM tree
-    delete root;
-    root = NULL;
     return parsingOK;
 }
 
-bool QueryXMLParser::parsePropertySet(DOMElement* element) {
-    if (element->getElementName() != "property-set") {
+bool QueryXMLParser::parsePropertySet(rapidxml::xml_node<>*  element) {
+    if (strcmp(element->name(), "property-set") != 0) {
         fprintf(stderr, "ERROR missing property-set\n");
         return false; // missing property-set element
     }
-    DOMElements elements = element->getChilds();
-    DOMElements::iterator it;
-    for (it = elements.begin(); it != elements.end(); it++) {
-        if (!parseProperty(*it)) {
+    
+    for (auto it = element->first_node(); it; it = it->next_sibling()) {
+        if (!parseProperty(it)) {
             return false;
         };
     }
     return true;
 }
 
-bool QueryXMLParser::parseProperty(DOMElement* element) {
-    if (element->getElementName() != "property") {
+bool QueryXMLParser::parseProperty(rapidxml::xml_node<>*  element) {
+    if (strcmp(element->name(), "property") != 0) {
         fprintf(stderr, "ERROR missing property\n");
         return false; // unexpected element (only property is allowed)
     }
@@ -73,17 +83,14 @@ bool QueryXMLParser::parseProperty(DOMElement* element) {
     string queryText;
     bool negateResult = false;
     bool tagsOK = true;
-
-    DOMElements elements = element->getChilds();
-    DOMElements::iterator it;
-    DOMElements::iterator formulaPtr;
-    for (it = elements.begin(); it != elements.end(); it++) {
-        if ((*it)->getElementName() == "id") {
-            id = (*it)->getCData();
-        } else if ((*it)->getElementName() == "formula") {
+    rapidxml::xml_node<>* formulaPtr = NULL;
+    for (auto it = element->first_node(); it; it = it->next_sibling()) {
+        if (strcmp(it->name(), "id") == 0) {
+            id = it->value();
+        } else if (strcmp(it->name(), "formula") == 0) {
             formulaPtr = it;
-        } else if ((*it)->getElementName() == "tags") {
-            tagsOK = parseTags(*it);
+        } else if (strcmp(it->name(), "tags") == 0) {
+            tagsOK = parseTags(it);
         }
     }
 
@@ -94,7 +101,7 @@ bool QueryXMLParser::parseProperty(DOMElement* element) {
 
     QueryItem queryItem;
     queryItem.id = id;
-    if (tagsOK && parseFormula(*formulaPtr, queryText, negateResult, queryItem.boundNames)) {
+    if (tagsOK && parseFormula(formulaPtr, queryText, negateResult, queryItem.boundNames)) {
         queryItem.queryText = queryText;
         queryItem.negateResult = negateResult;
         queryItem.parsingResult = QueryItem::PARSING_OK;
@@ -107,19 +114,17 @@ bool QueryXMLParser::parseProperty(DOMElement* element) {
     return true;
 }
 
-bool QueryXMLParser::parseTags(DOMElement* element) {
+bool QueryXMLParser::parseTags(rapidxml::xml_node<>*  element) {
     // we can accept only reachability query
-    DOMElements elements = element->getChilds();
-    DOMElements::iterator it;
-    for (it = elements.begin(); it != elements.end(); it++) {
-        if ((*it)->getElementName() == "is-reachability" && (*it)->getCData() != "true") {
+    for (auto it = element->first_node(); it; it = it->next_sibling()) {
+        if (strcmp(it->name(), "is-reachability") == 0 && strcmp(it->value(), "true") == 0) {
             return false;
         }
     }
     return true;
 }
 
-bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &negateResult,
+bool QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element, string &queryText, bool &negateResult,
         std::vector<string> &placeBounds) {
     /*
      Describe here how to parse
@@ -130,12 +135,11 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
      * NEG IMPOS phi = not AG not phi = EF phi
      * NEG POS phi = not EF phi
      */
-    DOMElements elements = element->getChilds();
-    if (elements.size() != 1) {
+    if (getChildCount(element) != 1) {
         return false;
     }
-    DOMElement* booleanFormula = elements[0];
-    string elementName = booleanFormula->getElementName();
+    rapidxml::xml_node<>*  booleanFormula = element->first_node();
+    string elementName = booleanFormula->name();
     if (elementName == "invariant") {
         queryText = "EF not(";
         negateResult = true;
@@ -146,38 +150,38 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
         queryText = "EF ( ";
         negateResult = false;
     } else if (elementName == "all-paths") { // new A operator for 2015 competition
-        DOMElements children = elements[0]->getChilds();
-        if (children.size() != 1) {
+        rapidxml::xml_node<>* children = booleanFormula->first_node();
+        if (getChildCount(children) != 1) {
             return false;
         }
-        booleanFormula = children[0];
-        string subElementName = booleanFormula->getElementName();
-        if (subElementName == "globally") {
+        booleanFormula = children;
+        if (booleanFormula && strcmp(booleanFormula->name(), "globally") == 0) {
             queryText = "EF not ( ";
             negateResult = true;
         } else {
             return false;
         }
     } else if (elementName == "exists-path") { // new E operator for 2015 competition
-        DOMElements children = elements[0]->getChilds();
-        if (children.size() != 1) {
+        rapidxml::xml_node<>* children = booleanFormula->first_node();
+        if (getChildCount(children) != 1) {
             return false;
         }
-        booleanFormula = children[0];
-        string subElementName = booleanFormula->getElementName();
-        if (subElementName == "finally") {
+
+        booleanFormula = children;
+        if (booleanFormula && strcmp(children->name(), "finally") == 0) {
             queryText = "EF ( ";
             negateResult = false;
         } else {
             return false;
         }
     } else if (elementName == "negation") {
-        DOMElements children = elements[0]->getChilds();
-        if (children.size() != 1) {
+        rapidxml::xml_node<>* children = booleanFormula->first_node();
+        if (getChildCount(children) != 1) {
             return false;
         }
-        booleanFormula = children[0];
-        string negElementName = booleanFormula->getElementName();
+        booleanFormula = children->first_node();
+        if (!booleanFormula) return false;
+        string negElementName = booleanFormula->name();
         if (negElementName == "invariant") {
             queryText = "EF not( ";
             negateResult = false;
@@ -192,13 +196,12 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
         }
     } else if (elementName == "place-bound") {
         queryText = "EF true ";
-        DOMElements children = booleanFormula->getChilds();
-        for(size_t i = 0; i < children.size(); ++i)
+        for(auto it = booleanFormula->first_node(); it ; it = it->next_sibling())
         {
-            if (children[0]->getElementName() != "place") {
+            if (strcmp(it->name(), "place") != 0) {
                 return false;
             }
-            placeBounds.push_back(parsePlace(children[i]));
+            placeBounds.push_back(parsePlace(it));
             if (placeBounds.back() == "") {
                 return false; // invalid place name
             }
@@ -209,8 +212,8 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
     } else {
         return false;
     }
-    DOMElements nextElements = booleanFormula->getChilds();
-    if (nextElements.size() != 1 || !parseBooleanFormula(nextElements[0], queryText)) {
+    auto nextElements = booleanFormula->first_node();
+    if (nextElements == NULL || getChildCount(booleanFormula) != 1 || !parseBooleanFormula(nextElements, queryText)) {
         return false;
     }
     queryText += " )";
@@ -218,8 +221,8 @@ bool QueryXMLParser::parseFormula(DOMElement* element, string &queryText, bool &
     return true;
 }
 
-bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText) {
-    string elementName = element->getElementName();
+bool QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element, string &queryText) {
+    string elementName = element->name();
     if (elementName == "deadlock") {
         queryText += "deadlock";
         return true;
@@ -230,91 +233,89 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
         queryText += "false";
         return true;
     } else if (elementName == "negation") {
-        DOMElements children = element->getChilds();
+        auto children = element->first_node();
         queryText += "not(";
-        if (children.size() == 1 && parseBooleanFormula(children[0], queryText)) {
+        if (getChildCount(element) == 1 && parseBooleanFormula(children, queryText)) {
             queryText += ")";
         } else {
             return false;
         }
         return true;
     } else if (elementName == "conjunction") {
-        DOMElements children = element->getChilds();
-        if (children.size() < 2) {
+        auto children = element->first_node();
+        if (getChildCount(element) < 2) {
             return false;
         }
         queryText += "(";
-        if (!(parseBooleanFormula(children[0], queryText))) {
-            return false;
-        }
-        DOMElements::iterator it;
-        for (it = (children.begin()) + 1; it != children.end(); it++) {
-            queryText += " and ";
-            if (!(parseBooleanFormula(*it, queryText))) {
+        // skip a sibling
+        bool first = true;
+        for (auto it = children; it; it = it->next_sibling()) {
+            if(!first) queryText += " and ";
+            first = false;
+            if (!(parseBooleanFormula(it, queryText))) {
                 return false;
             }
         }
         queryText += ")";
         return true;
     } else if (elementName == "disjunction") {
-        DOMElements children = element->getChilds();
-        if (children.size() < 2) {
+        auto children = element->first_node();
+        if (getChildCount(element) < 2) {
             return false;
         }
         queryText += "(";
-        if (!(parseBooleanFormula(children[0], queryText))) {
-            return false;
-        }
-        DOMElements::iterator it;
-        for (it = children.begin() + 1; it != children.end(); it++) {
-            queryText += " or ";
-            if (!(parseBooleanFormula(*it, queryText))) {
+
+        bool first = true;
+        for (auto it = children; it; it = it->next_sibling()) {
+            if(!first) queryText += " or ";
+            first = false;
+            if (!(parseBooleanFormula(it, queryText))) {
                 return false;
             }
         }
         queryText += ")";
         return true;
     } else if (elementName == "exclusive-disjunction") {
-        DOMElements children = element->getChilds();
-        if (children.size() != 2) { // we support only two subformulae here
+        auto children = element->first_node();
+        if (getChildCount(element) != 2) { // we support only two subformulae here
             return false;
         }
         string subformula1;
         string subformula2;
-        if (!(parseBooleanFormula(children[0], subformula1))) {
+        if (!(parseBooleanFormula(children, subformula1))) {
             return false;
         }
-        if (!(parseBooleanFormula(children[1], subformula2))) {
+        if (!(parseBooleanFormula(children->next_sibling(), subformula2))) {
             return false;
         }
         queryText += "(((" + subformula1 + " and not(" + subformula2 + ")) or (not(" + subformula1 + ") and " + subformula2 + ")))";
         return true;
     } else if (elementName == "implication") {
-        DOMElements children = element->getChilds();
-        if (children.size() != 2) { // implication has only two subformulae
+        auto children = element->first_node();
+        if (getChildCount(element) != 2) { // implication has only two subformulae
             return false;
         }
         string subformula1;
         string subformula2;
-        if (!(parseBooleanFormula(children[0], subformula1))) {
+        if (!(parseBooleanFormula(children, subformula1))) {
             return false;
         }
-        if (!(parseBooleanFormula(children[1], subformula2))) {
+        if (!(parseBooleanFormula(children->next_sibling(), subformula2))) {
             return false;
         }
         queryText += "(not(" + subformula1 + ") or ( " + subformula2 + " ))";
         return true;
     } else if (elementName == "equivalence") {
-        DOMElements children = element->getChilds();
-        if (children.size() != 2) { // we support only two subformulae here
+        auto children = element->first_node();
+        if (getChildCount(element) != 2) { // we support only two subformulae here
             return false;
         }
         string subformula1;
         string subformula2;
-        if (!(parseBooleanFormula(children[0], subformula1))) {
+        if (!(parseBooleanFormula(children, subformula1))) {
             return false;
         }
-        if (!(parseBooleanFormula(children[1], subformula2))) {
+        if (!(parseBooleanFormula(children->next_sibling(), subformula2))) {
             return false;
         }
         queryText += "((" + subformula1 + " and " + subformula2 + ") or (not(" + subformula1 + ") and not(" + subformula2 + ")))";
@@ -325,16 +326,16 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
             elementName == "integer-le" ||
             elementName == "integer-gt" ||
             elementName == "integer-ge") {
-        DOMElements children = element->getChilds();
-        if (children.size() != 2) { // exactly two integer subformulae are required
+        auto children = element->first_node();
+        if (getChildCount(element) != 2) { // exactly two integer subformulae are required
             return false;
         }
         string subformula1;
         string subformula2;
-        if (!(parseIntegerExpression(children[0], subformula1))) {
+        if (!(parseIntegerExpression(children, subformula1))) {
             return false;
         }
-        if (!(parseIntegerExpression(children[1], subformula2))) {
+        if (!(parseIntegerExpression(children->next_sibling(), subformula2))) {
             return false;
         }
         string mathoperator;
@@ -348,21 +349,27 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
         queryText += "(" + subformula1 + mathoperator + subformula2 + ")";
         return true;
     } else if (elementName == "is-fireable") {
-        DOMElements children = element->getChilds();
-        if (children.size() == 0) {
+        auto children = element->first_node();
+        
+        size_t nrOfChildren = getChildCount(element);
+        
+        if (nrOfChildren == 0) {
             return false;
         }
-        if (children.size() > 1) {
+        if (nrOfChildren > 1) {
             queryText += "(";
         }
-        for (size_t i = 0; i < children.size(); i++) {
-            if (children[i]->getElementName() != "transition") {
+        
+        bool first = true;
+        for (auto it = children; it; it = it->next_sibling()) {
+            if (strcmp(it->name(), "transition") != 0) {
                 return false;
             }
-            if (i > 0) {
+            if (!first) {
                 queryText += " or ";
             }
-            string transitionName = children[i]->getCData();
+            first = false;
+            string transitionName = it->value();
             if (_transitionEnabledness.find(transitionName) == _transitionEnabledness.end()) {
                 fprintf(stderr,
                         "XML Query Parsing error: Transition id=\"%s\" was not found!\n",
@@ -371,7 +378,7 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
             }
             queryText += _transitionEnabledness[transitionName];
         }
-        if (children.size() > 1) {
+        if (nrOfChildren > 1) {
             queryText += ")";
         }
         return true;
@@ -379,11 +386,11 @@ bool QueryXMLParser::parseBooleanFormula(DOMElement* element, string &queryText)
     return false;
 }
 
-bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryText) {
-    string elementName = element->getElementName();
+bool QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element, string &queryText) {
+    string elementName = element->name();
     if (elementName == "integer-constant") {
         int i;
-        if (sscanf((element->getCData()).c_str(), "%d", &i) == EOF) {
+        if (sscanf(element->value(), "%d", &i) == EOF) {
             return false; // expected integer at this place
         }
         stringstream ss; //create a stringstream
@@ -391,61 +398,68 @@ bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryTe
         queryText += ss.str();
         return true;
     } else if (elementName == "tokens-count") {
-        DOMElements children = element->getChilds();
-        if (children.size() == 0) {
+        auto children = element->first_node();
+        size_t nrOfChildren = getChildCount(element);
+        if (nrOfChildren == 0) {
             return false;
         }
-        if (children.size() > 1) {
+        if (nrOfChildren > 1) {
             queryText += "(";
         }
-        for (size_t i = 0; i < children.size(); i++) {
-            if (children[i]->getElementName() != "place") {
+        bool first = true;
+        for (auto it = children; it; it = it->next_sibling()) {
+            if (strcmp(it->name(), "place") != 0) {
                 return false;
             }
-            if (i > 0) {
+            if (!first) {
                 queryText += " + ";
             }
-            string placeName = parsePlace(children[i]);
+            first = false;
+            string placeName = parsePlace(it);
             if (placeName == "") {
                 return false; // invalid place name
             }
             queryText += "\"" + placeName + "\"";
         }
-        if (children.size() > 1) {
+        if (nrOfChildren > 1) {
             queryText += ")";
         }
         return true;
     } else if (elementName == "integer-sum" ||
             elementName == "integer-product") {
-        DOMElements children = element->getChilds();
-        if (children.size() < 2) { // at least two integer subexpression are required
+        auto children = element->first_node();
+        size_t nrOfChildren = getChildCount(element);
+        if (nrOfChildren < 2) { // at least two integer subexpression are required
             return false;
         }
         string mathoperator;
         if (elementName == "integer-sum") mathoperator = " + ";
         else if (elementName == "integer-product") mathoperator = " * ";
         queryText += "(";
-        for (size_t i = 0; i < children.size(); i++) {
-            if (i > 0) {
+        bool first = true;
+        for (auto it = children; it; it = it->next_sibling()) {
+            if (!first) {
                 queryText += mathoperator;
             }
-            if (!parseIntegerExpression(children[i], queryText)) {
+            first = false;
+            if (!parseIntegerExpression(it, queryText)) {
                 return false;
             }
         }
         queryText += ")";
         return true;
     } else if (elementName == "integer-difference") {
-        DOMElements children = element->getChilds();
-        if (children.size() != 2) { // at least two integer subexpression are required
+        auto children = element->first_node();
+        size_t nrOfChildren = getChildCount(element);
+        if (nrOfChildren != 2) { // at least two integer subexpression are required
             return false;
         }
         queryText += "(";
-        if (!parseIntegerExpression(children[0], queryText)) {
+        if (!parseIntegerExpression(children, queryText)) {
             return false;
         }
         queryText += " - ";
-        if (!parseIntegerExpression(children[1], queryText)) {
+        if (!parseIntegerExpression(children->next_sibling(), queryText)) {
             return false;
         }
         queryText += ")";
@@ -454,11 +468,11 @@ bool QueryXMLParser::parseIntegerExpression(DOMElement* element, string &queryTe
     return false;
 }
 
-string QueryXMLParser::parsePlace(XMLSP::DOMElement* element) {
-    if (element->getElementName() != "place") {
+string QueryXMLParser::parsePlace(rapidxml::xml_node<>*  element) {
+    if (strcmp(element->name(), "place")) {
         return ""; // missing place tag
     }
-    string placeName = element->getCData();
+    string placeName = element->value();
     placeName.erase(std::remove_if(placeName.begin(), placeName.end(), ::isspace), placeName.end());
     return placeName;
 }

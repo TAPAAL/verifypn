@@ -18,14 +18,14 @@
 #ifndef QUERYXMLPARSER_H
 #define QUERYXMLPARSER_H
 
-#include "xmlsp/xmlsp_dom_vector.h"
-#include "PNMLParser.h"
-
 #include <map>
 #include <string>
 #include <string.h>
 #include <vector>
 #include <sstream> 
+
+#include "PNMLParser.h"
+#include "rapidxml/rapidxml.hpp"
 
 using namespace std;
 
@@ -49,18 +49,18 @@ public:
     typedef vector<QueryItem>::iterator QueryIterator;
     vector<QueryItem>  queries;
 
-    bool parse(const string& xml);
+    bool parse(std::ifstream& xml);
     void printQueries();
     void printQueries(size_t i);
 
 private:
-    bool parsePropertySet(XMLSP::DOMElement* element);
-    bool parseProperty(XMLSP::DOMElement* element);
-    bool parseTags(XMLSP::DOMElement* element);
-    bool parseFormula(XMLSP::DOMElement* element, string &queryText, bool &negateResult, std::vector<string> &boundNames);
-    bool parseBooleanFormula(XMLSP::DOMElement* element, string &queryText);
-    bool parseIntegerExpression(XMLSP::DOMElement* element, string &queryText);
-    string parsePlace(XMLSP::DOMElement* element);
+    bool parsePropertySet(rapidxml::xml_node<>* element);
+    bool parseProperty(rapidxml::xml_node<>*  element);
+    bool parseTags(rapidxml::xml_node<>*  element);
+    bool parseFormula(rapidxml::xml_node<>*  element, string &queryText, bool &negateResult, std::vector<string> &boundNames);
+    bool parseBooleanFormula(rapidxml::xml_node<>*  element, string &queryText);
+    bool parseIntegerExpression(rapidxml::xml_node<>*  element, string &queryText);
+    string parsePlace(rapidxml::xml_node<>*  element);
     PNMLParser::TransitionEnablednessMap _transitionEnabledness;
 };
 
