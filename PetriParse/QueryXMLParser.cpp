@@ -80,7 +80,7 @@ bool QueryXMLParser::parseProperty(rapidxml::xml_node<>*  element) {
         return false; // unexpected element (only property is allowed)
     }
     string id;
-    string queryText;
+    stringstream queryText;
     bool negateResult = false;
     bool tagsOK = true;
     rapidxml::xml_node<>* formulaPtr = NULL;
@@ -102,7 +102,7 @@ bool QueryXMLParser::parseProperty(rapidxml::xml_node<>*  element) {
     QueryItem queryItem;
     queryItem.id = id;
     if (tagsOK && parseFormula(formulaPtr, queryText, negateResult, queryItem.boundNames)) {
-        queryItem.queryText = queryText;
+        queryItem.queryText = queryText.str();
         queryItem.negateResult = negateResult;
         queryItem.parsingResult = QueryItem::PARSING_OK;
     } else {
@@ -124,7 +124,7 @@ bool QueryXMLParser::parseTags(rapidxml::xml_node<>*  element) {
     return true;
 }
 
-bool QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element, string &queryText, bool &negateResult,
+bool QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element, stringstream &queryText, bool &negateResult,
         std::vector<string> &placeBounds) {
     /*
      Describe here how to parse
@@ -141,13 +141,13 @@ bool QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element, string &queryT
     rapidxml::xml_node<>*  booleanFormula = element->first_node();
     string elementName = booleanFormula->name();
     if (elementName == "invariant") {
-        queryText = "EF not(";
+        queryText << "EF not(";
         negateResult = true;
     } else if (elementName == "impossibility") {
-        queryText = "EF ( ";
+        queryText << "EF ( ";
         negateResult = true;
     } else if (elementName == "possibility") {
-        queryText = "EF ( ";
+        queryText << "EF ( ";
         negateResult = false;
     } else if (elementName == "all-paths") { // new A operator for 2015 competition
         rapidxml::xml_node<>* children = booleanFormula->first_node();
@@ -156,7 +156,7 @@ bool QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element, string &queryT
         }
         booleanFormula = children;
         if (booleanFormula && strcmp(booleanFormula->name(), "globally") == 0) {
-            queryText = "EF not ( ";
+            queryText << "EF not ( ";
             negateResult = true;
         } else {
             return false;
@@ -169,7 +169,7 @@ bool QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element, string &queryT
 
         booleanFormula = children;
         if (booleanFormula && strcmp(children->name(), "finally") == 0) {
-            queryText = "EF ( ";
+            queryText << "EF ( ";
             negateResult = false;
         } else {
             return false;
@@ -183,19 +183,19 @@ bool QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element, string &queryT
         if (!booleanFormula) return false;
         string negElementName = booleanFormula->name();
         if (negElementName == "invariant") {
-            queryText = "EF not( ";
+            queryText << "EF not( ";
             negateResult = false;
         } else if (negElementName == "impossibility") {
-            queryText = "EF ( ";
+            queryText << "EF ( ";
             negateResult = false;
         } else if (negElementName == "possibility") {
-            queryText = "EF ( ";
+            queryText << "EF ( ";
             negateResult = true;
         } else {
             return false;
         }
     } else if (elementName == "place-bound") {
-        queryText = "EF true ";
+        queryText << "EF true ";
         for(auto it = booleanFormula->first_node(); it ; it = it->next_sibling())
         {
             if (strcmp(it->name(), "place") != 0) {
@@ -205,7 +205,7 @@ bool QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element, string &queryT
             if (placeBounds.back() == "") {
                 return false; // invalid place name
             }
-            queryText += " and \"" + placeBounds.back() + "\"" + " < 0";
+            queryText << " and \"" << placeBounds.back() << "\"" << " < 0";
         }
         negateResult = false;
         return true;
@@ -216,27 +216,27 @@ bool QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element, string &queryT
     if (nextElements == NULL || getChildCount(booleanFormula) != 1 || !parseBooleanFormula(nextElements, queryText)) {
         return false;
     }
-    queryText += " )";
+    queryText << " )";
     placeBounds.clear();
     return true;
 }
 
-bool QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element, string &queryText) {
+bool QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element, stringstream &queryText) {
     string elementName = element->name();
     if (elementName == "deadlock") {
-        queryText += "deadlock";
+        queryText << "deadlock";
         return true;
     } else if (elementName == "true") {
-        queryText += "true";
+        queryText << "true";
         return true;
     } else if (elementName == "false") {
-        queryText += "false";
+        queryText << "false";
         return true;
     } else if (elementName == "negation") {
         auto children = element->first_node();
-        queryText += "not(";
+        queryText << "not(";
         if (getChildCount(element) == 1 && parseBooleanFormula(children, queryText)) {
-            queryText += ")";
+            queryText << ")";
         } else {
             return false;
         }
@@ -246,79 +246,79 @@ bool QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element, string 
         if (getChildCount(element) < 2) {
             return false;
         }
-        queryText += "(";
+        queryText << "(";
         // skip a sibling
         bool first = true;
         for (auto it = children; it; it = it->next_sibling()) {
-            if(!first) queryText += " and ";
+            if(!first) queryText << " and ";
             first = false;
             if (!(parseBooleanFormula(it, queryText))) {
                 return false;
             }
         }
-        queryText += ")";
+        queryText << ")";
         return true;
     } else if (elementName == "disjunction") {
         auto children = element->first_node();
         if (getChildCount(element) < 2) {
             return false;
         }
-        queryText += "(";
+        queryText << "(";
 
         bool first = true;
         for (auto it = children; it; it = it->next_sibling()) {
-            if(!first) queryText += " or ";
+            if(!first) queryText << " or ";
             first = false;
             if (!(parseBooleanFormula(it, queryText))) {
                 return false;
             }
         }
-        queryText += ")";
+        queryText << ")";
         return true;
     } else if (elementName == "exclusive-disjunction") {
         auto children = element->first_node();
         if (getChildCount(element) != 2) { // we support only two subformulae here
             return false;
         }
-        string subformula1;
-        string subformula2;
+        stringstream subformula1;
+        stringstream subformula2;
         if (!(parseBooleanFormula(children, subformula1))) {
             return false;
         }
         if (!(parseBooleanFormula(children->next_sibling(), subformula2))) {
             return false;
         }
-        queryText += "(((" + subformula1 + " and not(" + subformula2 + ")) or (not(" + subformula1 + ") and " + subformula2 + ")))";
+        queryText << "(((" << subformula1.str() << " and not(" << subformula2.str() << ")) or (not(" << subformula1.str() << ") and " << subformula2.str() << ")))";
         return true;
     } else if (elementName == "implication") {
         auto children = element->first_node();
         if (getChildCount(element) != 2) { // implication has only two subformulae
             return false;
         }
-        string subformula1;
-        string subformula2;
-        if (!(parseBooleanFormula(children, subformula1))) {
+        queryText << "(not(";
+        if (!(parseBooleanFormula(children, queryText))) {
             return false;
         }
-        if (!(parseBooleanFormula(children->next_sibling(), subformula2))) {
+        queryText << ") or ( ";
+        if (!(parseBooleanFormula(children->next_sibling(), queryText))) {
             return false;
         }
-        queryText += "(not(" + subformula1 + ") or ( " + subformula2 + " ))";
+        queryText << " ))";
         return true;
     } else if (elementName == "equivalence") {
         auto children = element->first_node();
         if (getChildCount(element) != 2) { // we support only two subformulae here
             return false;
         }
-        string subformula1;
-        string subformula2;
+        stringstream subformula1;
+        stringstream subformula2;
         if (!(parseBooleanFormula(children, subformula1))) {
             return false;
         }
         if (!(parseBooleanFormula(children->next_sibling(), subformula2))) {
             return false;
         }
-        queryText += "((" + subformula1 + " and " + subformula2 + ") or (not(" + subformula1 + ") and not(" + subformula2 + ")))";
+        queryText << "((" << subformula1.str() << " and " << subformula2.str() << ") or (not(" << subformula1.str() << ") and not(" << subformula2.str() << ")))";
         return true;
     } else if (elementName == "integer-eq" ||
             elementName == "integer-ne" ||
@@ -330,14 +330,7 @@ bool QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element, string 
         if (getChildCount(element) != 2) { // exactly two integer subformulae are required
             return false;
         }
-        string subformula1;
-        string subformula2;
-        if (!(parseIntegerExpression(children, subformula1))) {
-            return false;
-        }
-        if (!(parseIntegerExpression(children->next_sibling(), subformula2))) {
-            return false;
-        }
+        
         string mathoperator;
         if (elementName == "integer-eq") mathoperator = " == ";
         else if (elementName == "integer-ne") mathoperator = " != ";
@@ -345,8 +338,15 @@ bool QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element, string 
         else if (elementName == "integer-le") mathoperator = " <= ";
         else if (elementName == "integer-gt") mathoperator = " > ";
         else if (elementName == "integer-ge") mathoperator = " >= ";
-
-        queryText += "(" + subformula1 + mathoperator + subformula2 + ")";
+        queryText << "(";
+        if (!(parseIntegerExpression(children, queryText))) {
+            return false;
+        }
+        queryText << mathoperator;
+        if (!(parseIntegerExpression(children->next_sibling(), queryText))) {
+            return false;
+        }
+        queryText << ")";
         return true;
     } else if (elementName == "is-fireable") {
         auto children = element->first_node();
@@ -357,7 +357,7 @@ bool QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element, string 
             return false;
         }
         if (nrOfChildren > 1) {
-            queryText += "(";
+            queryText << "(";
         }
         
         bool first = true;
@@ -366,7 +366,7 @@ bool QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element, string 
                 return false;
             }
             if (!first) {
-                queryText += " or ";
+                queryText << " or ";
             }
             first = false;
             string transitionName = it->value();
@@ -376,17 +376,17 @@ bool QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element, string 
                         transitionName.c_str());
                 return false;
             }
-            queryText += _transitionEnabledness[transitionName];
+            queryText << _transitionEnabledness[transitionName];
         }
         if (nrOfChildren > 1) {
-            queryText += ")";
+            queryText << ")";
         }
         return true;
     }
     return false;
 }
 
-bool QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element, string &queryText) {
+bool QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element, stringstream &queryText) {
     string elementName = element->name();
     if (elementName == "integer-constant") {
         int i;
@@ -395,7 +395,7 @@ bool QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element, stri
         }
         stringstream ss; //create a stringstream
         ss << i; //add number to the stream
-        queryText += ss.str();
+        queryText << ss.str();
         return true;
     } else if (elementName == "tokens-count") {
         auto children = element->first_node();
@@ -404,7 +404,7 @@ bool QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element, stri
             return false;
         }
         if (nrOfChildren > 1) {
-            queryText += "(";
+            queryText << "(";
         }
         bool first = true;
         for (auto it = children; it; it = it->next_sibling()) {
@@ -412,17 +412,17 @@ bool QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element, stri
                 return false;
             }
             if (!first) {
-                queryText += " + ";
+                queryText << " + ";
             }
             first = false;
             string placeName = parsePlace(it);
             if (placeName == "") {
                 return false; // invalid place name
             }
-            queryText += "\"" + placeName + "\"";
+            queryText << "\"" << placeName << "\"";
         }
         if (nrOfChildren > 1) {
-            queryText += ")";
+            queryText << ")";
         }
         return true;
     } else if (elementName == "integer-sum" ||
@@ -435,18 +435,18 @@ bool QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element, stri
         string mathoperator;
         if (elementName == "integer-sum") mathoperator = " + ";
         else if (elementName == "integer-product") mathoperator = " * ";
-        queryText += "(";
+        queryText << "(";
         bool first = true;
         for (auto it = children; it; it = it->next_sibling()) {
             if (!first) {
-                queryText += mathoperator;
+                queryText << mathoperator;
             }
             first = false;
             if (!parseIntegerExpression(it, queryText)) {
                 return false;
             }
         }
-        queryText += ")";
+        queryText << ")";
         return true;
     } else if (elementName == "integer-difference") {
         auto children = element->first_node();
@@ -454,15 +454,15 @@ bool QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element, stri
         if (nrOfChildren != 2) { // at least two integer subexpression are required
             return false;
         }
-        queryText += "(";
+        queryText << "(";
         if (!parseIntegerExpression(children, queryText)) {
             return false;
         }
-        queryText += " - ";
+        queryText << " - ";
         if (!parseIntegerExpression(children->next_sibling(), queryText)) {
             return false;
         }
-        queryText += ")";
+        queryText << ")";
         return true;
     }
     return false;

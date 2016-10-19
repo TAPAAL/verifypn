@@ -57,9 +57,9 @@ private:
     bool parsePropertySet(rapidxml::xml_node<>* element);
     bool parseProperty(rapidxml::xml_node<>*  element);
     bool parseTags(rapidxml::xml_node<>*  element);
-    bool parseFormula(rapidxml::xml_node<>*  element, string &queryText, bool &negateResult, std::vector<string> &boundNames);
-    bool parseBooleanFormula(rapidxml::xml_node<>*  element, string &queryText);
-    bool parseIntegerExpression(rapidxml::xml_node<>*  element, string &queryText);
+    bool parseFormula(rapidxml::xml_node<>*  element, stringstream& queryText, bool &negateResult, std::vector<string> &boundNames);
+    bool parseBooleanFormula(rapidxml::xml_node<>*  element, stringstream& queryText);
+    bool parseIntegerExpression(rapidxml::xml_node<>*  element, stringstream& queryText);
     string parsePlace(rapidxml::xml_node<>*  element);
     PNMLParser::TransitionEnablednessMap _transitionEnabledness;
 };
