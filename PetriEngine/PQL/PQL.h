@@ -18,13 +18,15 @@
  */
 #ifndef PQL_H
 #define PQL_H
-#include "../PetriNet.h"
-#include "../Structures/State.h"
 #include <string>
 #include <list>
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <memory>
+
+#include "../PetriNet.h"
+#include "../Structures/State.h"
 
 namespace llvm {
     class Value;
@@ -39,7 +41,6 @@ namespace PetriEngine {
         class EvaluationContext;
         class DistanceContext;
         class ConstraintAnalysisContext;
-        class CodeGenerationContext;
         class TAPAALConditionExportContext;
 
         /** Representation of a PQL error */
@@ -171,7 +172,8 @@ namespace PetriEngine {
                 return _placenameforbound;
             }
         };
-
+        typedef std::shared_ptr<Condition> Condition_ptr;
+        typedef std::shared_ptr<Expr> Expr_ptr;
     } // PQL
 } // PetriEngine
 

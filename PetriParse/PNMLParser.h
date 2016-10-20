@@ -57,7 +57,7 @@ public:
         std::string name, text;
     };
     
-    typedef std::map<std::string, PetriEngine::PQL::Condition*> TransitionEnablednessMap;
+    typedef std::map<std::string, PetriEngine::PQL::Condition_ptr> TransitionEnablednessMap;
 
     PNMLParser() {
         builder = NULL;

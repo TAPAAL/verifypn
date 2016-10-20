@@ -286,7 +286,6 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
 
             for(auto& q : XMLparser.queries)
             {
-                bool isInvariant = false;
                 if(!options.querynumbers.empty()
                         && options.querynumbers.count(i) == 0)
                 {
@@ -308,6 +307,8 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
                     fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
                     conditions.pop_back();
                 }
+
+
                 qstrings.push_back(q.id);
             }
         }
@@ -378,6 +379,7 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> querynames;
     //----------------------- Parse Query -----------------------//
     auto queries = readQueries(transitionEnabledness, options, querynames);
+    
     
     if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
 

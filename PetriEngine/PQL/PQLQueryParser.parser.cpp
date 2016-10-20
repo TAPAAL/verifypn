@@ -1272,7 +1272,7 @@ yyreduce:
     {
         case 2:
 #line 48 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { query = std::shared_ptr<Condition>((yyvsp[0].cond)); }
+    { query = Condition_ptr((yyvsp[0].cond)); }
 #line 1277 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
@@ -1284,19 +1284,19 @@ yyreduce:
 
   case 4:
 #line 52 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.cond) = new AndCondition((yyvsp[-2].cond), (yyvsp[0].cond)); }
+    { (yyval.cond) = new AndCondition(Condition_ptr((yyvsp[-2].cond)), Condition_ptr((yyvsp[0].cond))); }
 #line 1289 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 5:
 #line 53 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.cond) = new OrCondition((yyvsp[-2].cond), (yyvsp[0].cond)); }
+    { (yyval.cond) = new OrCondition(Condition_ptr((yyvsp[-2].cond)), Condition_ptr((yyvsp[0].cond))); }
 #line 1295 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 6:
 #line 54 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.cond) = new NotCondition((yyvsp[0].cond)); }
+    { (yyval.cond) = new NotCondition(Condition_ptr((yyvsp[0].cond))); }
 #line 1301 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
@@ -1332,55 +1332,55 @@ yyreduce:
 
   case 12:
 #line 62 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.cond) = new EqualCondition((yyvsp[-2].expr), (yyvsp[0].expr)); }
+    { (yyval.cond) = new EqualCondition(Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))); }
 #line 1337 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 13:
 #line 63 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.cond) = new NotEqualCondition((yyvsp[-2].expr), (yyvsp[0].expr)); }
+    { (yyval.cond) = new NotEqualCondition(Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))); }
 #line 1343 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 14:
 #line 64 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.cond) = new LessThanCondition((yyvsp[-2].expr), (yyvsp[0].expr)); }
+    { (yyval.cond) = new LessThanCondition(Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))); }
 #line 1349 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 15:
 #line 65 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.cond) = new LessThanOrEqualCondition((yyvsp[-2].expr), (yyvsp[0].expr)); }
+    { (yyval.cond) = new LessThanOrEqualCondition(Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))); }
 #line 1355 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 16:
 #line 66 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.cond) = new GreaterThanCondition((yyvsp[-2].expr), (yyvsp[0].expr)); }
+    { (yyval.cond) = new GreaterThanCondition(Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))); }
 #line 1361 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 17:
 #line 67 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.cond) = new GreaterThanOrEqualCondition((yyvsp[-2].expr), (yyvsp[0].expr)); }
+    { (yyval.cond) = new GreaterThanOrEqualCondition(Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))); }
 #line 1367 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 18:
 #line 70 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.expr) = new PlusExpr((yyvsp[-2].expr), (yyvsp[0].expr)); }
+    { (yyval.expr) = new PlusExpr(Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))); }
 #line 1373 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 19:
 #line 71 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.expr) = new SubtractExpr((yyvsp[-2].expr), (yyvsp[0].expr)); }
+    { (yyval.expr) = new SubtractExpr(Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))); }
 #line 1379 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 20:
 #line 72 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.expr) = new MinusExpr((yyvsp[0].expr)); }
+    { (yyval.expr) = new MinusExpr(Expr_ptr((yyvsp[0].expr))); }
 #line 1385 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
@@ -1392,7 +1392,7 @@ yyreduce:
 
   case 22:
 #line 76 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.expr) = new MultiplyExpr((yyvsp[-2].expr), (yyvsp[0].expr)); }
+    { (yyval.expr) = new MultiplyExpr(Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))); }
 #line 1397 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 

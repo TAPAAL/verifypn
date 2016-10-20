@@ -58,9 +58,9 @@ private:
     bool parsePropertySet(rapidxml::xml_node<>* element);
     bool parseProperty(rapidxml::xml_node<>*  element);
     bool parseTags(rapidxml::xml_node<>*  element);
-    Condition* parseFormula(rapidxml::xml_node<>*  element);
-    Condition* parseBooleanFormula(rapidxml::xml_node<>*  element);
-    Expr* parseIntegerExpression(rapidxml::xml_node<>*  element);
+    Condition_ptr parseFormula(rapidxml::xml_node<>*  element);
+    Condition_ptr parseBooleanFormula(rapidxml::xml_node<>*  element);
+    Expr_ptr parseIntegerExpression(rapidxml::xml_node<>*  element);
     string parsePlace(rapidxml::xml_node<>*  element);
     PNMLParser::TransitionEnablednessMap _transitionEnabledness;
 };

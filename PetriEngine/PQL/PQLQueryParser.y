@@ -45,13 +45,13 @@ void pqlqerror(const char *s) {printf("ERROR: %s\n", s);}
 
 %%
 
-query	: logic						{ query = std::shared_ptr<Condition>($1); }
+query	: logic						{ query = Condition_ptr($1); }
 		| error						{ yyerrok; }
 		;
 
-logic	: logic AND logic			{ $$ = new AndCondition($1, $3); }
-		| logic OR logic 			{ $$ = new OrCondition($1, $3); }
-		| NOT logic					{ $$ = new NotCondition($2); }
+logic	: logic AND logic			{ $$ = new AndCondition(Condition_ptr($1), Condition_ptr($3)); }
+		| logic OR logic 			{ $$ = new OrCondition(Condition_ptr($1), Condition_ptr($3)); }
+		| NOT logic					{ $$ = new NotCondition(Condition_ptr($2)); }
 		| LPAREN logic RPAREN		{ $$ = $2; }
 		| compare					{ $$ = $1; }
 		| TRUE						{ $$ = new BooleanCondition(true);}
@@ -59,21 +59,21 @@ logic	: logic AND logic			{ $$ = new AndCondition($1, $3); }
 		| DEADLOCK					{ $$ = new DeadlockCondition();}
 		;
 
-compare	: expr EQUAL expr			{ $$ = new EqualCondition($1, $3); }
-		| expr NEQUAL expr			{ $$ = new NotEqualCondition($1, $3); }
-		| expr LESS expr			{ $$ = new LessThanCondition($1, $3); }
-		| expr LESSEQUAL expr 		{ $$ = new LessThanOrEqualCondition($1, $3); }
-		| expr GREATER expr			{ $$ = new GreaterThanCondition($1, $3); }
-		| expr GREATEREQUAL expr	{ $$ = new GreaterThanOrEqualCondition($1, $3); }
+compare	: expr EQUAL expr			{ $$ = new EqualCondition(Expr_ptr($1), Expr_ptr($3)); }
+		| expr NEQUAL expr			{ $$ = new NotEqualCondition(Expr_ptr($1), Expr_ptr($3)); }
+		| expr LESS expr			{ $$ = new LessThanCondition(Expr_ptr($1), Expr_ptr($3)); }
+		| expr LESSEQUAL expr 		{ $$ = new LessThanOrEqualCondition(Expr_ptr($1), Expr_ptr($3)); }
+		| expr GREATER expr			{ $$ = new GreaterThanCondition(Expr_ptr($1), Expr_ptr($3)); }
+		| expr GREATEREQUAL expr	{ $$ = new GreaterThanOrEqualCondition(Expr_ptr($1), Expr_ptr($3)); }
 		;
 
-expr	: expr PLUS term			{ $$ = new PlusExpr($1, $3); }
-		| expr MINUS term			{ $$ = new SubtractExpr($1, $3); }
-		| MINUS expr				{ $$ = new MinusExpr($2); }
+expr	: expr PLUS term			{ $$ = new PlusExpr(Expr_ptr($1), Expr_ptr($3)); }
+		| expr MINUS term			{ $$ = new SubtractExpr(Expr_ptr($1), Expr_ptr($3)); }
+		| MINUS expr				{ $$ = new MinusExpr(Expr_ptr($2)); }
 		| term						{ $$ = $1; }
 		;
 
-term	: term MULTIPLY factor	{ $$ = new MultiplyExpr($1, $3); }
+term	: term MULTIPLY factor	{ $$ = new MultiplyExpr(Expr_ptr($1), Expr_ptr($3)); }
 		| factor				{ $$ = $1; }
 		;
 

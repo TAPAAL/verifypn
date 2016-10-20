@@ -23,7 +23,7 @@
 namespace PetriEngine {
     namespace PQL {
 
-        Expr::~Expr() {
+        Expr::~Expr(){
         }
 
         bool Condition::evaluate(Structures::State &state, const PetriNet* net) {
@@ -46,6 +46,7 @@ namespace PetriEngine {
         }
 
         Condition::~Condition() {
+
         }
 
     } // PQL

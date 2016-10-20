@@ -29,48 +29,11 @@
 
 namespace PetriEngine {
     namespace PQL {
-
-        /******************** Destructors ********************/
-
-        BinaryExpr::~BinaryExpr() {
-            if (_expr1)
-                delete _expr1;
-            _expr1 = NULL;
-            if (_expr2)
-                delete _expr2;
-            _expr2 = NULL;
-        }
-
-        MinusExpr::~MinusExpr() {
-            if (_expr)
-                delete _expr;
-            _expr = NULL;
-        }
-
-        LogicalCondition::~LogicalCondition() {
-            if (_cond1)
-                delete _cond1;
-            _cond1 = NULL;
-            if (_cond2)
-                delete _cond2;
-            _cond2 = NULL;
-        }
-
-        CompareCondition::~CompareCondition() {
-            if (_expr1)
-                delete _expr1;
-            _expr1 = NULL;
-            if (_expr2)
-                delete _expr2;
-            _expr2 = NULL;
-        }
-
-        NotCondition::~NotCondition() {
-            if (_cond)
-                delete _cond;
-            _cond = NULL;
-        }
-
+        // CONSTANTS
+        Condition_ptr BooleanCondition::FALSE = std::make_shared<BooleanCondition>(false);
+        Condition_ptr BooleanCondition::TRUE = std::make_shared<BooleanCondition>(true);
+        
+        
         /******************** To String ********************/
 
         std::string LiteralExpr::toString() const {
@@ -477,13 +440,11 @@ namespace PetriEngine {
                 return;
             context.retval.clear();
             if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
-                IdentifierExpr* id = (IdentifierExpr*) _expr2;
-                LiteralExpr* literal = (LiteralExpr*) _expr1;
-                addConstraints(context, literal->value(), id);
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();
+                addConstraints(context, literal->value(), _expr2);
             } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
-                IdentifierExpr* id = (IdentifierExpr*) _expr1;
-                LiteralExpr* literal = (LiteralExpr*) _expr2;
-                addConstraints(context, id, literal->value());
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                addConstraints(context, _expr1, literal->value());
             } else
                 context.canAnalyze = false;
         }
@@ -515,7 +476,8 @@ namespace PetriEngine {
         /******************** CompareCondition::addConstraints ********************/
 
 
-        void EqualCondition::addConstraints(ConstraintAnalysisContext& context, IdentifierExpr* id, int value) const {
+        void EqualCondition::addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& _id, int value) const {
+            auto id = static_cast<IdentifierExpr*>(_id.get());
             if (!context.negated) {
                 Structures::StateConstraints* s = new Structures::StateConstraints(context.net());
                 s->setPlaceMin(id->offset(), value);
@@ -537,11 +499,12 @@ namespace PetriEngine {
             }
         }
 
-        void EqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, IdentifierExpr* id) const {
+        void EqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const {
             addConstraints(context, id, value);
         }
 
-        void NotEqualCondition::addConstraints(ConstraintAnalysisContext& context, IdentifierExpr* id, int value) const {
+        void NotEqualCondition::addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& _id, int value) const {
+            auto id = static_cast<IdentifierExpr*>(_id.get());
             if (context.negated) {
                 Structures::StateConstraints* s = new Structures::StateConstraints(context.net());
                 s->setPlaceMin(id->offset(), value);
@@ -563,12 +526,13 @@ namespace PetriEngine {
             }
         }
 
-        void NotEqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, IdentifierExpr* id) const {
+        void NotEqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const {
             addConstraints(context, id, value);
         }
 
-        void LessThanCondition::addConstraints(ConstraintAnalysisContext& context, IdentifierExpr* id, int value) const {
+        void LessThanCondition::addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& _id, int value) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
+            auto id = static_cast<IdentifierExpr*>(_id.get());
             if (!context.negated) {
                 nc->setPlaceMax(id->offset(), value - 1);
             } else {
@@ -577,8 +541,9 @@ namespace PetriEngine {
             context.retval.push_back(nc);
         }
 
-        void LessThanCondition::addConstraints(ConstraintAnalysisContext& context, int value, IdentifierExpr* id) const {
+        void LessThanCondition::addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& _id) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
+            auto id = static_cast<IdentifierExpr*>(_id.get());
             if (!context.negated) {
                 nc->setPlaceMin(id->offset(), value + 1);
             } else {
@@ -587,8 +552,9 @@ namespace PetriEngine {
             context.retval.push_back(nc);
         }
 
-        void LessThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, IdentifierExpr* id, int value) const {
+        void LessThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& _id, int value) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
+            auto id = static_cast<IdentifierExpr*>(_id.get());
             if (!context.negated) {
                 nc->setPlaceMax(id->offset(), value);
             } else {
@@ -597,8 +563,9 @@ namespace PetriEngine {
             context.retval.push_back(nc);
         }
 
-        void LessThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, IdentifierExpr* id) const {
+        void LessThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& _id) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
+            auto id = static_cast<IdentifierExpr*>(_id.get());
             if (!context.negated) {
                 nc->setPlaceMin(id->offset(), value);
             } else {
@@ -607,8 +574,9 @@ namespace PetriEngine {
             context.retval.push_back(nc);
         }
 
-        void GreaterThanCondition::addConstraints(ConstraintAnalysisContext& context, IdentifierExpr* id, int value) const {
+        void GreaterThanCondition::addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& _id, int value) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
+            auto id = static_cast<IdentifierExpr*>(_id.get());
             if (!context.negated) {
                 nc->setPlaceMin(id->offset(), value + 1);
             } else {
@@ -617,8 +585,9 @@ namespace PetriEngine {
             context.retval.push_back(nc);
         }
 
-        void GreaterThanCondition::addConstraints(ConstraintAnalysisContext& context, int value, IdentifierExpr* id) const {
+        void GreaterThanCondition::addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& _id) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
+            auto id = static_cast<IdentifierExpr*>(_id.get());
             if (!context.negated) {
                 nc->setPlaceMax(id->offset(), value - 1);
             } else {
@@ -627,8 +596,9 @@ namespace PetriEngine {
             context.retval.push_back(nc);
         }
 
-        void GreaterThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, IdentifierExpr* id, int value) const {
+        void GreaterThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& _id, int value) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
+            auto id = static_cast<IdentifierExpr*>(_id.get());
             if (!context.negated) {
                 nc->setPlaceMin(id->offset(), value);
             } else {
@@ -637,8 +607,9 @@ namespace PetriEngine {
             context.retval.push_back(nc);
         }
 
-        void GreaterThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, IdentifierExpr* id) const {
+        void GreaterThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& _id) const {
             Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
+            auto id = static_cast<IdentifierExpr*>(_id.get());
             if (!context.negated) {                
                     nc->setPlaceMax(id->offset(), value);
             } else {
