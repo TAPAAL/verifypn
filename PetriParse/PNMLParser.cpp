@@ -54,7 +54,7 @@ void PNMLParser::parse(ifstream& xml,
 
     // initialize transitionEnabledness
     for (TransitionIter it = transitions.begin(); it != transitions.end(); it++) {
-        transitionEnabledness[it->id] = std::make_shared<BooleanCondition>(true);
+        transitionEnabledness[it->id] = BooleanCondition::TRUE;
     }
 
     //Add all the transition

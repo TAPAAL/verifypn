@@ -113,7 +113,7 @@ namespace PetriEngine {
 
         /** Base condition */
         class Condition {
-            bool _inv;
+            bool _inv = false;
             std::vector<std::string> _placenameforbound;
             std::vector<size_t> _placeids;
             size_t _bound = 0;
@@ -162,7 +162,6 @@ namespace PetriEngine {
                 _placeids.clear();
                 for(auto& i : _placenameforbound)
                 {
-                    std::cout << i << std::endl;
                     _placeids.push_back(map.at(i));
                 }
                 std::sort(_placeids.begin(), _placeids.end());
