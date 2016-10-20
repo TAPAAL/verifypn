@@ -85,12 +85,18 @@ void PNMLParser::parse(ifstream& xml,
             builder->addInputArc(source.id, target.id, false, it->weight);
 
             // cout << "ARC: " << source.id << " to " << target.id << " weight " << it->weight << endl;
-            transitionEnabledness[target.id] = std::make_shared<AndCondition>(
-                    transitionEnabledness[target.id],
-                    std::make_shared<GreaterThanOrEqualCondition>(
-                        std::make_shared<IdentifierExpr>(source.id),
-                        std::make_shared<LiteralExpr>(it->weight)
-                    ));
+            auto cond = std::make_shared<GreaterThanOrEqualCondition>(
+                            std::make_shared<IdentifierExpr>(source.id),
+                            std::make_shared<LiteralExpr>(it->weight)
+                        );
+            if(transitionEnabledness[target.id] == BooleanCondition::TRUE)
+            {
+                transitionEnabledness[target.id] = cond;
+            }
+            else
+            {
+                transitionEnabledness[target.id] = std::make_shared<AndCondition>(cond, transitionEnabledness[target.id]);
+            }
         } else if (!source.isPlace && target.isPlace) {
             builder->addOutputArc(source.id, target.id, it->weight);
         } else {
