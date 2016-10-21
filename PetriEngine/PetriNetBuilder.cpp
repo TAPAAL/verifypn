@@ -187,7 +187,7 @@ namespace PetriEngine {
         
         // first handle orphans
         
-        place_idmap[next] = free;
+        if(place_idmap.size() > next) place_idmap[next] = free;
         net->_placeToPtrs[free] = freetrans;
         for(size_t t = 0; t < _transitions.size(); ++t)
         {
