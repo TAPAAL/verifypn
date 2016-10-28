@@ -20,7 +20,7 @@ namespace ptrie {
     typename I = size_t>
     class map :
     public set_stable<HEAPBOUND, SPLITBOUND, ALLOCSIZE, FWDALLOC, T, I> {
-        using pt = set_stable<PTRIEDEF>;
+#define pt set_stable<PTRIEDEF>
     public:
         using pt::set_stable;
         T& getData(I index);

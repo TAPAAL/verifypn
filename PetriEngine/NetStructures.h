@@ -26,7 +26,7 @@ namespace PetriEngine {
         inhib(false) {
         };
         
-        bool operator < (const Arc& other)
+        bool operator < (const Arc& other) const
         {
             return place < other.place;
         }

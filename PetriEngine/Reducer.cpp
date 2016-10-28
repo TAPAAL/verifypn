@@ -10,7 +10,6 @@
 #include "PetriNetBuilder.h"
 #include <PetriParse/PNMLParser.h>
 #include <queue>
-#include <bits/algorithmfwd.h>
 
 namespace PetriEngine {
 

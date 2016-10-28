@@ -472,7 +472,7 @@ namespace ptrie {
                     uchar* f = (uchar*)&(low_n->_data->first(low_n->_count, i));
                     f[0] = src[0];
 
-                    mempcpy(dest,
+                    memcpy(dest,
                             &(src[1]),
                             LLENGTH(i));
 
@@ -519,7 +519,7 @@ namespace ptrie {
 
                     f[0] = src[0];
 
-                    mempcpy(dest,
+                    memcpy(dest,
                             &(src[1]),
                             LLENGTH(i));
 
