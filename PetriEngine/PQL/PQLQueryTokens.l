@@ -7,6 +7,13 @@
 #define SAVE_TOKEN pqlqlval.string = new std::string(pqlqtext, pqlqleng)
 #define SAVE_QUOTED_TOKEN pqlqlval.string = new std::string(pqlqtext+1, pqlqleng-2)
 #define TOKEN(t) (pqlqlval.token = t)
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wkeyword-macro"
+#endif
+
+#define register      // Deprecated in C++11.
 extern "C" int pqlqwrap(){return 1;}
 extern std::shared_ptr<PetriEngine::PQL::Condition> query;
 extern int pqlqparse();
@@ -64,3 +71,6 @@ std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool isInv
 	return query;
 } 
 }}
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
