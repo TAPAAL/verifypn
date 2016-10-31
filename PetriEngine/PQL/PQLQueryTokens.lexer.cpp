@@ -543,7 +543,7 @@ char *pqlqtext;
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wkeyword-macro"
-#pragma clang diagnistic ignored "-Wunneeded-internal-declaration"
+#pragma clang diagnostic ignored "-Wunneeded-internal-declaration"
 #endif
 
 #define register      // Deprecated in C++11.
@@ -1165,7 +1165,7 @@ static int yy_get_next_buffer (void)
 
 	else
 		{
-			int num_to_read =
+			yy_size_t num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
@@ -1963,3 +1963,4 @@ std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool isInv
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
+
