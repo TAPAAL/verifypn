@@ -1,7 +1,7 @@
 /* PeTe - Petri Engine exTremE
  * Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
- *                     Lars Kærlund Østergaard <larsko@gmail.com>,
+ *                     Lars Kærlund Østergaard <larsko@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

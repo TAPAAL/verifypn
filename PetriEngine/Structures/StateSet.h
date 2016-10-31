@@ -1,7 +1,5 @@
-/* PeTe - Petri Engine exTremE
- * Copyright (C) 2011  Jonas Finnemann Jensen <jopsen@gmail.com>,
- *                     Thomas Søndersø Nielsen <primogens@gmail.com>,
- *                     Lars Kærlund Østergaard <larsko@gmail.com>,
+/* VerifyPN - TAPAAL Petri Net Engine
+ * Copyright (C) 2016  Peter Gjøl Jensen <root@petergjoel.dk>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

@@ -2,7 +2,8 @@
  * Copyright (C) 2011-2014  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                          Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                          Lars Kærlund Østergaard <larsko@gmail.com>,
- *			    Jiri Srba <srba.jiri@gmail.com>
+ *			    Jiri Srba <srba.jiri@gmail.com>,
+ *                          Peter Gjøl Jensen <root@petergjoel.dk>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -193,7 +194,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("Copyright (C) 2011-2014 Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
             printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>,\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>,\n");
-            printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
+            printf("                        Jiri Srba <srba.jiri@gmail.com>,\n");
+            printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
         } else if (options.modelfile == NULL) {

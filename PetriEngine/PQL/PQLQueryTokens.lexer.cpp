@@ -543,13 +543,14 @@ char *pqlqtext;
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wkeyword-macro"
+#pragma clang diagnistic ignored "-Wunneeded-internal-declaration"
 #endif
 
 #define register      // Deprecated in C++11.
 extern "C" int pqlqwrap(){return 1;}
 extern std::shared_ptr<PetriEngine::PQL::Condition> query;
 extern int pqlqparse();
-#line 553 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 554 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 
 #define INITIAL 0
 
@@ -765,10 +766,10 @@ YY_DECL
 		}
 
 	{
-#line 26 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 27 "PetriEngine/PQL/PQLQueryTokens.l"
 
 
-#line 772 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 773 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -828,156 +829,156 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 28 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 29 "PetriEngine/PQL/PQLQueryTokens.l"
 ;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 29 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 30 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(TRUE);}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 30 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 31 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(FALSE);}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 31 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 32 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(DEADLOCK);}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 32 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 33 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(AND);}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 33 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 34 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(AND);}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 34 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 35 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(OR);}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 35 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 36 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(OR);}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 36 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 37 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(NOT);}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 37 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 38 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(NOT);}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 38 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 39 "PetriEngine/PQL/PQLQueryTokens.l"
 {SAVE_TOKEN; return ID;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 39 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 40 "PetriEngine/PQL/PQLQueryTokens.l"
 {SAVE_TOKEN; return INT;}
 	YY_BREAK
 case 13:
 /* rule 13 can match eol */
 YY_RULE_SETUP
-#line 40 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 41 "PetriEngine/PQL/PQLQueryTokens.l"
 {SAVE_QUOTED_TOKEN; return ID;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 41 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 42 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(AND);}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 42 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 43 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(OR);}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 43 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 44 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(NOT);}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 44 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 45 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(EQUAL);}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 45 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 46 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(NEQUAL);}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 46 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 47 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(LESS);}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 47 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 48 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(LESSEQUAL);}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 48 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 49 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(GREATER);}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 49 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 50 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(GREATEREQUAL);}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 50 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 51 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(LPAREN);}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 51 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 52 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(RPAREN);}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 52 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 53 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(PLUS);}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 53 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 54 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(MINUS);}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 54 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 55 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(MULTIPLY);}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 55 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 56 "PetriEngine/PQL/PQLQueryTokens.l"
 {return TOKEN(EQUAL);}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 56 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 57 "PetriEngine/PQL/PQLQueryTokens.l"
 {printf("Unknown token %s!\n", pqlqtext); yyterminate();}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 58 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 59 "PetriEngine/PQL/PQLQueryTokens.l"
 ECHO;
 	YY_BREAK
-#line 981 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
+#line 982 "PetriEngine/PQL/PQLQueryTokens.lexer.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1941,7 +1942,7 @@ void pqlqfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 58 "PetriEngine/PQL/PQLQueryTokens.l"
+#line 59 "PetriEngine/PQL/PQLQueryTokens.l"
 
 
 namespace PetriEngine{ namespace PQL {

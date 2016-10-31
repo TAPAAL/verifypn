@@ -11,6 +11,7 @@
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wkeyword-macro"
+#pragma clang diagnistic ignored "-Wunneeded-internal-declaration"
 #endif
 
 #define register      // Deprecated in C++11.
