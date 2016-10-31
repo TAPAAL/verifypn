@@ -18,8 +18,6 @@
 #define STATESET_H
 #include <unordered_map>
 #include <iostream>
-#include "Memory/pool_fixed_allocator.h"
-#include "Memory/pool_dynamic_allocator.h"
 #include "State.h"
 #include "AlignedEncoder.h"
 #include "ptrie_stable.h"
