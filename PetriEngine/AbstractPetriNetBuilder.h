@@ -47,6 +47,8 @@ namespace PetriEngine {
         virtual void addOutputArc(const std::string& transition,
                 const std::string& place,
                 int weight = 1) = 0;
+
+        virtual void sort() = 0;
         
         virtual ~AbstractPetriNetBuilder() {
         }

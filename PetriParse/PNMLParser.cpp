@@ -132,10 +132,7 @@ void PNMLParser::parse(ifstream& xml,
     arcs.clear();
     transitions.clear();
     inhibarcs.clear();
-}
-
-void PNMLParser::makePetriNet() {
-    builder = NULL;
+    builder->sort();
 }
 
 void PNMLParser::parseElement(rapidxml::xml_node<>* element) {

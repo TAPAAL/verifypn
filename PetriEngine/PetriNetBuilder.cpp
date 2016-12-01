@@ -364,7 +364,6 @@ namespace PetriEngine {
                 --trindex;
             }
         }
-        
         return net;
     }
     

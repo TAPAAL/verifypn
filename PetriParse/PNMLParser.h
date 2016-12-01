@@ -65,7 +65,6 @@ public:
     }
     void parse(std::ifstream& xml,
             PetriEngine::AbstractPetriNetBuilder* builder);
-    void makePetriNet();
 
     std::vector<Query> getQueries() {
         return queries;

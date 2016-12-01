@@ -340,7 +340,6 @@ ReturnValue parseModel( PNMLParser::TransitionEnablednessMap& transitionEnabledn
     //Parse and build the petri net
     PNMLParser parser;
     parser.parse(mfile, &builder);
-    parser.makePetriNet();
 
     transitionEnabledness = parser.getTransitionEnabledness(); // Remember conditions for transitions
 

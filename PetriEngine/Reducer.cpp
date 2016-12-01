@@ -758,7 +758,6 @@ namespace PetriEngine {
 
 
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace) {
-        parent->sort();
         assert(consistent());
         this->reconstructTrace = reconstructTrace;
         if (enablereduction == 1) { // in the aggresive reduction all four rules are used as long as they remove something

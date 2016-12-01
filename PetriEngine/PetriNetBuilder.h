@@ -73,9 +73,7 @@ namespace PetriEngine {
         {
             return _transitionnames;
         }
-        
-        void sort();
-        
+                
         void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query, 
                     std::vector<Reachability::ResultPrinter::Result>& results, 
                     int reductiontype, bool reconstructTrace);
@@ -112,9 +110,11 @@ namespace PetriEngine {
         
         Reducer* getReducer() { return &reducer; }
         
+        virtual void sort();
+
     private:
         uint32_t nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids, bool reorder);
-        
+
     protected:
         std::map<std::string, uint32_t> _placenames;
         std::map<std::string, uint32_t> _transitionnames;
