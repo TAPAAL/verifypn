@@ -706,7 +706,6 @@ namespace PetriEngine {
         for(uint32_t p = 0; p < numberofplaces; ++p)
         {
             Place& place = parent->_places[p];
-            
             if(place.skip) continue;
             if(place.inhib) continue;
             if(placeInQuery[p] > 0) continue;
@@ -731,7 +730,7 @@ namespace PetriEngine {
                 // consuming. If so, we know it will never fire.
                 Transition& t = getTransition(prod);
                 ArcIter it = getInArc(p, t);
-                if(it != t.post.end())
+                if(it == t.pre.end())
                 {
                     ok = false;
                     break;
