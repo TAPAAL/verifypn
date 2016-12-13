@@ -51,7 +51,15 @@ void PNMLParser::parse(ifstream& xml,
     vector<char> buffer((istreambuf_iterator<char>(xml)), istreambuf_iterator<char>());
     buffer.push_back('\0');
     doc.parse<0>(&buffer[0]);
-    parseElement(doc.first_node());
+    
+    rapidxml::xml_node<>* root = doc.first_node();
+    if(strcmp(root->name(), "pnml") != 0)
+    {
+        std::cout << "expecting <pnml> tag as root-node in xml tree." << std::endl;
+        exit(-1);
+    }
+    
+    parseElement(root);
 
     // initialize transitionEnabledness
     for (TransitionIter it = transitions.begin(); it != transitions.end(); it++) {
