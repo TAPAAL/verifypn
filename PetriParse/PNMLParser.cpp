@@ -155,7 +155,14 @@ void PNMLParser::parseElement(rapidxml::xml_node<>* element) {
             exit(-1);
         } else if (strcmp(it->name(),"queries") == 0) {
             parseQueries(it);
-        } else
+        } else if (strcmp(it->name(), "k-bound") == 0) {
+            std::cout << "k-bound should be given as command line option -k" << std::endl;
+            exit(-1);
+        } else if (strcmp(it->name(),"query") == 0) {
+            std::cout << "query tag not supported, please use PQL or XML-style queries instead" << std::endl;
+            exit(-1);            
+        }
+        else
         {
             parseElement(it);
         }
@@ -213,7 +220,13 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
     string source = element->first_attribute("source")->value(),
             target = element->first_attribute("target")->value();
     int weight = 1;
-
+    auto type = element->first_attribute("type");
+    if(type && strcmp(type->value(), "timed") == 0)
+    {
+        std::cout << "timed arcs are not supported" << std::endl;
+        exit(-1);
+    }
+    
     for (auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")) {
             string text;
             parseValue(it, text);
