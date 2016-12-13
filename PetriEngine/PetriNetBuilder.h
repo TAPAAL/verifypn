@@ -46,6 +46,8 @@ namespace PetriEngine {
                 bool inhibitor,
                 int weight) override;
         void addOutputArc(const std::string& transition, const std::string& place, int weight) override;
+
+        virtual void sort() override;
         /** Make the resulting petri net, you take ownership */
         PetriNet* makePetriNet(bool reorder = true);
         /** Make the resulting initial marking, you take ownership */
@@ -110,7 +112,6 @@ namespace PetriEngine {
         
         Reducer* getReducer() { return &reducer; }
         
-        virtual void sort();
 
     private:
         uint32_t nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids, bool reorder);
