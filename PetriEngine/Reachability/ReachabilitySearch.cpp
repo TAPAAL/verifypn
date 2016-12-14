@@ -80,13 +80,13 @@ namespace PetriEngine {
             
             std::cout << "\nTRANSITION STATISTICS\n";
             for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
-                std::cout << "<" << _net.transitionNames()[i] << ";" 
+                std::cout << "<" << _net.transitionNames()[i] << ":" 
                         << ss.enabledTransitionsCount[i] << ">";                
             }
             // report how many times transitions were enabled (? means that the transition was removed in net reduction)
             for(size_t i = _net.numberOfTransitions(); i < _net.transitionNames().size(); ++i)
             {
-                std::cout << "<" << _net.transitionNames()[i] << ";?>";                
+                std::cout << "<" << _net.transitionNames()[i] << ":?>";                
             }
             
             
