@@ -40,6 +40,8 @@
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
 
+#include "CTL/CTLEngine.h"
+
 using namespace std;
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -94,20 +96,20 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
         } else if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--search-strategy") == 0){
 			if (i==argc-1) {
-                                fprintf(stderr, "Missing search strategy after \"%s\"\n\n", argv[i]);
+                fprintf(stderr, "Missing search strategy after \"%s\"\n\n", argv[i]);
 				return ErrorCode;                           
-                        }
-                        char* s = argv[++i];
-			if(strcmp(s, "BestFS") == 0)
+            }
+            char* s = argv[++i];
+            if(strcmp(s, "BestFS") == 0)
 				options.strategy = HEUR;
 			else if(strcmp(s, "BFS") == 0)
 				options.strategy = BFS;
 			else if(strcmp(s, "DFS") == 0)
 				options.strategy = DFS;
-			else if(strcmp(s, "OverApprox") == 0)
+            else if(strcmp(s, "OverApprox") == 0)
 				options.strategy = APPROX;
-                        else if(strcmp(s, "RDFS") == 0)
-                                options.strategy = RDFS;
+            else if(strcmp(s, "RDFS") == 0)
+                options.strategy = RDFS;
 			else{
 				fprintf(stderr, "Argument Error: Unrecognized search strategy \"%s\"\n", s);
 				return ErrorCode;
@@ -158,6 +160,27 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid reduction argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        //Enable CTL engine
+        } else if (strcmp(argv[i], "-ctl") == 0){
+            if (i==argc-1) {
+                fprintf(stderr, "Missing CTL algorithm after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            options.isctl = true;
+
+            char* s = argv[++i];
+            if (strcmp(s, "local") == 0){
+                options.ctlalgorithm = CTL::Local;
+            }
+            else if (strcmp(s, "czero") == 0){
+                options.ctlalgorithm = CTL::CZero;
+            }
+            else {
+                fprintf(stderr, "Argument Error: Invalid CTL algorithm argument \"%s\"\n", argv[i]);
+            }
+        //Enable game mode
+        } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
+            options.gamemode = true;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
                     "A tool for answering reachability of place cardinality queries (including deadlock)\n"
@@ -236,6 +259,19 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         fprintf(stderr, "Argument Error: No query-file provided\n");
         return ErrorCode;
     }
+
+    // Check strategy when is CTL (CTLEngine does not support all of them)
+    if(options.isctl){
+        //Default to DFS (No heuristic strategy)
+        if(options.strategy == PetriEngine::Reachability::HEUR){
+            options.strategy = PetriEngine::Reachability::DFS;
+        }
+        else if(options.strategy != PetriEngine::Reachability::DFS && options.strategy != PetriEngine::Reachability::BFS){
+            std::cerr << "Argument Error: Invalid CTL search strategy. Valid ones are DFS (default) and BFS." << std::endl;
+            return ErrorCode;
+        }
+    }
+
     return ContinueCode;
 }
 
@@ -382,7 +418,20 @@ int main(int argc, char* argv[]) {
     
     if(parseModel(transitionEnabledness, builder, options) != ContinueCode) return ErrorCode;
 
-    
+    //----------------------- CTL Engine ------------------------//
+    if(options.isctl){
+        auto* net = builder.makePetriNet();
+        v = CTLMain(net,
+                    options.queryfile,
+                    options.ctlalgorithm,
+                    options.strategy,
+                    options.querynumbers,
+                    options.gamemode,
+                    options.printstatistics,
+                    options.mccoutput);
+        return v;
+    }
+
     std::vector<std::string> querynames;
     //----------------------- Parse Query -----------------------//
     auto queries = readQueries(transitionEnabledness, options, querynames);

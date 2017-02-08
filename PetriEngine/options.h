@@ -1,4 +1,5 @@
 #ifndef OPTIONS_H
+#define OPTIONS_H
 
 #include <ctype.h>
 #include <stddef.h>
@@ -6,7 +7,7 @@
 #include <set>
 
 #include "Reachability/ReachabilitySearch.h"
-
+#include "../CTL/Algorithm/AlgorithmTypes.h"
 
 struct options_t {
 //    bool outputtrace = false;
@@ -22,6 +23,11 @@ struct options_t {
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
     bool mccoutput = false;
     bool trace = false;
+
+//CTL Specific options
+    bool gamemode = false;
+    bool isctl = false;
+    CTL::CTLAlgorithmType ctlalgorithm;
 };
 
 #endif
