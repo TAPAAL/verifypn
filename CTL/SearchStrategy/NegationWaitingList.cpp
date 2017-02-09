@@ -21,7 +21,7 @@ bool SearchStrategy::NegationWaitingList::pop(DependencyGraph::Edge *&t)
 
 void SearchStrategy::NegationWaitingList::push(DependencyGraph::Edge *&e)
 {
-    int dist = (int) e->source->getDistance();
+    size_t dist = (int) e->source->getDistance();
     while (unsafe_edges.size() <= dist) {
         unsafe_edges.push_back(std::vector<Edge*>());
     }

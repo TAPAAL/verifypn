@@ -22,11 +22,12 @@ private:
         MarkingEqualityHasher(PetriEngine::PetriNet *net){length = net->numberOfPlaces();}
         uint32_t length = 0;
         bool operator()(const Marking* rhs, const Marking* lhs) const{
-            for(int i = 0; i < length; i++){
-                if(!(*lhs)[i] == (*rhs)[i]){
+            for(uint32_t i = 0; i < length; i++){
+                if((*rhs)[i] != (*lhs)[i]){
                     return false;
                 }
             }
+            return true;
         }
         size_t operator()(const PetriNets::Marking* pmarking ) const {
             size_t hash = 0;

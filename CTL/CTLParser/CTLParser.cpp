@@ -51,6 +51,7 @@ std::string CTLParser::QueryToString(CTLQuery* query){
         }
     }
     else assert(false && "Could not print unknown query type");
+    exit(EXIT_FAILURE);
 }
 
 CTLQuery* CTLParser::FormatQuery(CTLQuery* query, PetriEngine::PetriNet *net){
@@ -96,6 +97,7 @@ CTLQuery* CTLParser::TemporalSetting(CTLQuery* query) {
         //this should not happen
         assert(false);
     }
+    exit(EXIT_FAILURE);
 }
 
 //returns next available id
@@ -139,6 +141,7 @@ int CTLParser::IdSetting(CTLQuery *query, int id)
         //this should not happen
         assert(false);
     }
+    exit(EXIT_FAILURE);
 }
 
 
@@ -171,6 +174,7 @@ CTLQuery* CTLParser::FillAtom(CTLQuery* query, PetriEngine::PetriNet *net) {
         return query;
     }
     else assert(false && "Could not traverse unknown query type");
+    exit(EXIT_FAILURE);
 }
 
 CTLQuery* CTLParser::ConvertAG(CTLQuery* query) {
@@ -212,6 +216,7 @@ CTLQuery* CTLParser::ConvertAG(CTLQuery* query) {
         return query;
     }
     else assert(false && "Could not traverse unknown query type");
+    exit(EXIT_FAILURE);
 }
 
 CTLQuery* CTLParser::ConvertEG(CTLQuery* query) {
@@ -253,6 +258,7 @@ CTLQuery* CTLParser::ConvertEG(CTLQuery* query) {
         return query;
     }
     else assert(false && "Could not traverse unknown query type");
+    exit(EXIT_FAILURE);
 }
 
 
@@ -289,6 +295,7 @@ CTLQuery* CTLParser::ParseXMLQuery(std::vector<char> buffer, int query_number) {
         i++;
     }
     assert(false && "Query number did not match a property in the provided .xml file.");
+    exit(EXIT_FAILURE);
 }
 
 QueryMeta* CTLParser::GetQueryMetaData(std::vector<char> buffer) {
@@ -442,6 +449,7 @@ Path CTLParser::getPathOperator(xml_node<> * quantifyer_node){
     else if (path_firstLetter == 'u')
         return U;
     else assert(false && "Failed parsing path operator. Incorrect format.");
+    return Path();
 }
 
 std::string CTLParser::parsePar(xml_node<> * parameter){
@@ -525,12 +533,13 @@ CTLQuery * CTLParser::CopyQuery(CTLQuery *source){
         return dest;
     }
     else assert(false && "ERROR::: Copying query failed");
+    exit(EXIT_FAILURE);
 }
 
 std::string CTLParser::choppy( char *s )
 {
     std::string res_str = "";
-    for(int s_index = 0; s_index < strlen(s); s_index++){
+    for(size_t s_index = 0; s_index < strlen(s); s_index++){
         if(s[s_index] != '\n' && s[s_index] != '\t' && s[s_index] != '\r'){
             res_str = res_str + s[s_index];
         }

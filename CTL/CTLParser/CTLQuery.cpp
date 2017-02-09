@@ -153,6 +153,7 @@ std::string CTLQuery::ToString(){
         std::cout<<"::::::Error Printing: Q was empty::::"<<std::endl;
         assert(false);
     }
+    exit(EXIT_FAILURE);
 }
 
 

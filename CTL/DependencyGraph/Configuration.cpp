@@ -63,7 +63,7 @@ std::string DependencyGraph::Configuration::assignmentToStr(DependencyGraph::Ass
 void DependencyGraph::Configuration::updateInterest(int worker, long id)
 {
     bool found = false;
-    for (int i=0; i<interested.size(); i++) {
+    for (size_t i=0; i<interested.size(); i++) {
         if (interested[i].first == worker) {
             found = true;
             if (abs(interested[i].second) < abs(id)) {

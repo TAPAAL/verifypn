@@ -369,6 +369,7 @@ bool OnTheFlyDG::evaluateQuery(CTLQuery &query, Marking &marking)
     }
     else
         assert(false && "Incorrect query proposition type was attempted evaluated");
+    exit(EXIT_FAILURE);
 }
 
 int OnTheFlyDG::GetParamValue(CardinalityParameter *param, Marking& marking) {
@@ -396,6 +397,7 @@ bool OnTheFlyDG::EvalCardianlity(int a, LoperatorType lop, int b) {
     else if (lop == GRQ)
         return a >= b;
     assert(false && "Unsupported LOperator attemped evaluated");
+    exit(EXIT_FAILURE);
 }
 
 
@@ -416,11 +418,9 @@ std::vector<Marking*> OnTheFlyDG::nextState(Marking& t_marking){
     std::vector<Marking*> nextStates;
 
     //Update cache
-    size_t old_size = cached_successors.capacity();
+    //size_t old_size = cached_successors.capacity();
     cached_marking = &t_marking;
     cached_successors.clear();
-
-    assert(old_size == cached_successors.capacity());
 
     for(int t : fireable){
         Marking *m2 = createMarking(t_marking, t);
@@ -435,10 +435,10 @@ std::list<int> OnTheFlyDG::calculateFireableTransistions(Marking &t_marking){
 
     std::list<int> fireableTransistions;
     
-    for(int t = 0; t < n_transitions; t++){
+    for(uint32_t t = 0; t < n_transitions; t++){
         bool transitionFound = true;
-        for(int p = 0; p < n_places; p++){
-            if(t_marking[p] < net->inArc(p,t)){
+        for(uint32_t p = 0; p < n_places; p++){
+            if((int)t_marking[p] < net->inArc(p,t)){
                 transitionFound = false;
                 break;
             }
@@ -567,7 +567,7 @@ Marking *OnTheFlyDG::createMarking(const Marking& t_marking, int t_transition){
     new_marking->copyMarking(t_marking, n_places);
 
     //TODO: Use Peters successor generator here?
-    for(int p = 0; p < n_places; p++){
+    for(uint_fast32_t p = 0; p < n_places; p++){
         int place = (*new_marking)[p] - net->inArc(p,t_transition);
         (*new_marking)[p] = place + net->outArc(t_transition,p);
     }

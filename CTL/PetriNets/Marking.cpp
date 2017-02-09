@@ -34,7 +34,7 @@ namespace PetriNets {
     void Marking::copyMarking(const Marking &marking, uint32_t nplaces)
     {
         auto m = (MarkVal*) malloc(sizeof(MarkVal) * nplaces);
-        for(int i = 0; i < nplaces; i++){
+        for(uint32_t i = 0; i < nplaces; i++){
             m[i] = marking[i];
         }
         this->setMarking(m);

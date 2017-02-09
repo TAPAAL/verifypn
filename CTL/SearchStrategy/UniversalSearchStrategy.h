@@ -34,7 +34,7 @@ public:
             NegationList negation_edge_list = NegationList(),
             MessageList message_list = MessageList(),
             DependencyList dependency_list = DependencyList()
-    ) : W(edge_list), N(negation_edge_list), M(message_list), D(dependency_list) {}
+    ) : W(edge_list), M(message_list), N(negation_edge_list), D(dependency_list) {}
 
 
     virtual bool empty() const override {

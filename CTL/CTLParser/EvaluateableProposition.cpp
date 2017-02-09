@@ -14,6 +14,7 @@
 #include <string>
 #include <stdexcept> 
 #include <sstream>
+#include <cstdint>
 
 #include "EvaluateableProposition.h"
 #include "CTLParser.h"
@@ -113,7 +114,7 @@ void EvaluateableProposition::SetFireset(std::string fireset_str, std::vector<st
     std::string restof_firestring = fireset_str;
     
     if(fireset_str.compare("all") == 0){
-        for(int i = 0; i < numberof_t; i++){
+        for(uint i = 0; i < numberof_t; i++){
             _fireset.push_back(i);
         }
         return;
@@ -122,12 +123,12 @@ void EvaluateableProposition::SetFireset(std::string fireset_str, std::vector<st
     while(restof_firestring.length() > 0){
         size_t position = restof_firestring.find(',');
         std::string current_t = restof_firestring.substr(0, position);
-        for(int i = 0; i < numberof_t; i++){
+        for(uint i = 0; i < numberof_t; i++){
             if (current_t.compare(t_names[i]) == 0){
                 _fireset.push_back(i);
             }
         }
-        if (position != -1)
+        if (position != SIZE_MAX)
             restof_firestring = restof_firestring.substr(position);
         else
             restof_firestring = "";
@@ -163,7 +164,7 @@ CardinalityParameter* EvaluateableProposition::CreateParameter(std::string param
         
         places_str.push_back(parameter_str);
         
-        for(int i = 0; i < numberof_p; i++){
+        for(uint i = 0; i < numberof_p; i++){
             for(std::string place : places_str){
                 if(p_names[i].compare(place) == 0){
                     param->places_i.push_back(i);
@@ -190,6 +191,7 @@ LoperatorType EvaluateableProposition::SetLoperator(std::string atom_str){
     else if (loperator_str.compare(" ne ")== 0)
         return NE;
     else assert(false && "Could not parse the given logical operator");
+    exit(EXIT_FAILURE);
 }
 
 std::string EvaluateableProposition::ToString() {
@@ -217,6 +219,7 @@ std::string EvaluateableProposition::ToString() {
     }
     else
         assert(false && "Proposition had no type");
+    exit(EXIT_FAILURE);
 }
 
 CardinalityParameter* EvaluateableProposition::GetFirstParameter() {

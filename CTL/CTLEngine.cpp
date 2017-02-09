@@ -58,16 +58,16 @@ ReturnValue makeCTLResults(vector<CTLResult>& results,
 {
     if(querynumbers.empty()){
         for(size_t i = 0; i < queries.size(); ++i)
-            querynumbers.insert(i + 1);
+            querynumbers.insert(i);
     }
 
     for(auto qnbr: querynumbers){
-        if(qnbr > queries.size()){
+        if(qnbr > queries.size() || qnbr < 0){
             cerr << "Error: Invalid query number. Requested " << qnbr << " out of " << queries.size() << " queries" << endl;
             return ErrorCode;
         }
 
-        CTLQuery* q = queries[qnbr - 1];
+        CTLQuery* q = queries[qnbr];
         CTLResult r(q,
                      meta.model_name,
                      qnbr,
@@ -97,20 +97,24 @@ ReturnValue getStrategy(SearchStrategy::iSequantialSearchStrategy*& strategy,
 
 void printResult(CTLResult& result, bool statisticslevel, bool mccouput){
     const static string techniques = "TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT";
+    const string resultstring = result.result ? "TRUE" : "FALSE";
 
     if(statisticslevel){
-        cout << result.modelName << "-" << result.queryNumber << endl
-             << "   [Total Eval. Time]   " << result.duration << " ms" << endl
-             << "   [No. Configurations] " << result.numberOfConfigurations << endl
-             << "   [No. Markings]       " << result.numberOfMarkings << endl
-             << "   [Query Number]       " << result.queryNumber << endl
-             << "   [Query Result]       " << (result.result ? "TRUE" : "FALSE" ) << endl << endl;
+        cout << result.modelName << "-" << result.queryNumber << endl;
+        cout << "   [Total Eval. Time]   " << result.duration << " ms" << endl;
+        cout << "   [No. Configurations] " << result.numberOfConfigurations << endl;
+        cout << "   [No. Markings]       " << result.numberOfMarkings << endl;
+        cout << "   [Query Number]       " << result.queryNumber + 1 << endl;
+        cout << "   [Query Result]       " << resultstring << endl;
+    }
+    else if(!statisticslevel && !mccouput){
+        cout << result.modelName << "-" << result.queryNumber << " " << resultstring << endl;
     }
     if(mccouput){
         cout << "FORMULA "
              << result.modelName
-             << "-" << result.queryNumber
-             << (result.result ? " TRUE " : " FALSE " )
+             << "-" << result.queryNumber - 1
+             << resultstring << " "
              << techniques
              << endl << endl;
     }
@@ -162,8 +166,8 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
     totaltimer.stop();
 
     if(printstatistics){
-        cout << "[Total Evl. Time] " << totaltimer.duration() << endl
-             << "[Total Evl. Time w/o clean-up] " << totaltimer.duration() << endl;
+        cout << "[Total Eval. Time]              " << totaltimer.duration() << " ms" << endl
+             << "[Total Eval. Time w/o clean-up] " << totaltimer.duration() << " ms" << endl;
     }
 
     return SuccessCode;
