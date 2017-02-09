@@ -1,6 +1,8 @@
 #include "OnTheFlyDG.h"
-#include <algorithm>
 
+#include "../../PetriEngine/SuccessorGenerator.h"
+
+#include <algorithm>
 #include <string.h>
 #include <iostream>
 
@@ -410,12 +412,31 @@ Configuration* OnTheFlyDG::initialConfiguration()
 
 std::vector<Marking*> OnTheFlyDG::nextState(Marking& t_marking){
 
+    std::vector<Marking*> nextStates;
+    PetriEngine::SuccessorGenerator PNGen(*net, t_marking);
+    Marking working;
+    working.copyMarking(t_marking, net->numberOfPlaces());
+
+    while(PNGen.next(working)){
+        auto result = markings.find(&working);
+
+        if(result == markings.end()){
+            auto new_marking = new Marking();
+            new_marking->copyMarking(working, net->numberOfPlaces());
+            result = (markings.insert(new_marking).first);
+        }
+
+        nextStates.push_back(*result);
+    }
+
+    return nextStates;
+
     if(cached_marking == &t_marking){
         return cached_successors;
     }
 
     auto fireable = calculateFireableTransistions(t_marking);
-    std::vector<Marking*> nextStates;
+
 
     //Update cache
     //size_t old_size = cached_successors.capacity();

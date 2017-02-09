@@ -45,7 +45,6 @@ bool Algorithm::CertainZeroFPA::search(DependencyGraph::BasicDependencyGraph &t_
         }
 
         if (e->is_negated) {
-            auto pNE = _processedNegationEdges;
             _processedNegationEdges += 1;
             //Process negation edge
             if (allOne) {
@@ -67,8 +66,7 @@ bool Algorithm::CertainZeroFPA::search(DependencyGraph::BasicDependencyGraph &t_
                 }
             }
         } else {
-            size_t pE = _processedEdges;
-            _processedEdges = pE + 1;
+            _processedEdges += 1;
             //Process hyper edge
             if (allOne) {
                 finalAssign(e->source, ONE);
