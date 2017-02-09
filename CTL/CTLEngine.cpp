@@ -133,7 +133,7 @@ void printResult(CTLResult& result, bool statisticslevel, bool mccouput){
     if(mccouput){
         cout << "FORMULA "
              << result.modelName
-             << "-" << result.queryNumber - 1
+             << "-" << result.queryNumber
              << " " << resultstring << " "
              << techniques
              << endl;
