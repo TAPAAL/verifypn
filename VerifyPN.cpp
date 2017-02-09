@@ -183,7 +183,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.gamemode = true;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
-                    "A tool for answering reachability of place cardinality queries (including deadlock)\n"
+                    "A tool for answering CTL and reachability of place cardinality queries (including deadlock)\n"
                     "for weighted P/T Petri nets extended with inhibitor arcs.\n"
                     "\n"
                     "Options:\n"
@@ -192,7 +192,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -s, --search-strategy <strategy>   Search strategy:\n"
                     "                                     - BestFS       Heuristic search (default)\n"
                     "                                     - BFS          Breadth first search\n"
-                    "                                     - DFS          Depth first search\n"
+                    "                                     - DFS          Depth first search (CTL default)\n"
                     "                                     - RDFS         Random depth first search\n"
                     "                                     - OverApprox   Linear Over Approx\n"
                     "  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
@@ -207,6 +207,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -v, --version                      Display version information\n"
                     "  -o, --mcc                          Use MCC output-format\n"
                     "  -m, --memory-limit <mb-memory>     Limit for when encoding kicks in, default 2048\n"
+                    "  -ctl                               Verify CTL properties"
+                    "                                     - local        Liu and Smolka's on-the-fly algorithm\n"
+                    "                                     - czero        local with certain zero extension\n"
+                    //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -225,6 +229,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>,\n");
             printf("                        Jiri Srba <srba.jiri@gmail.com>,\n");
             printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
+            printf("                        Isabella Kaufmann\n");
+            printf("                        Søren Moss Nielsen\n");
+            printf("                        Lasse Steen Jensen\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
         } else if (options.modelfile == NULL) {
