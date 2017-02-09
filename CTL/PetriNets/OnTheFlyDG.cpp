@@ -430,26 +430,6 @@ std::vector<Marking*> OnTheFlyDG::nextState(Marking& t_marking){
     }
 
     return nextStates;
-
-    if(cached_marking == &t_marking){
-        return cached_successors;
-    }
-
-    auto fireable = calculateFireableTransistions(t_marking);
-
-
-    //Update cache
-    //size_t old_size = cached_successors.capacity();
-    cached_marking = &t_marking;
-    cached_successors.clear();
-
-    for(int t : fireable){
-        Marking *m2 = createMarking(t_marking, t);
-        nextStates.push_back(m2);
-        cached_successors.push_back(m2);
-    }
-
-    return nextStates;
 }
 
 std::list<int> OnTheFlyDG::calculateFireableTransistions(Marking &t_marking){
