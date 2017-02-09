@@ -29,6 +29,7 @@ template<
 class UniversalSearchStrategy : public iSequantialSearchStrategy, public iDistributedSearchStrategy {
 
 public:
+    virtual ~UniversalSearchStrategy(){}
     UniversalSearchStrategy(
             EdgeList edge_list = EdgeList(),
             NegationList negation_edge_list = NegationList(),

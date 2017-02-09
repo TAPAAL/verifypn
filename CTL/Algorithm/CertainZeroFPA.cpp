@@ -11,34 +11,19 @@ using namespace DependencyGraph;
 bool Algorithm::CertainZeroFPA::search(DependencyGraph::BasicDependencyGraph &t_graph,
         SearchStrategy::iSequantialSearchStrategy &t_strategy)
 {
-//    std::cout << "Instantiating" << std::endl;
-
     using namespace SearchStrategy;
     using TaskType = SearchStrategy::TaskType;
 
     graph = &t_graph;
     strategy = &t_strategy;
 
-//    std::cout << "Initial Configuration" << std::endl;
     Configuration *v = graph->initialConfiguration();
     explore(v);
 
-//    std::cout << "Exploring" << std::endl;
     Edge *e;
     int r = strategy->pickTask(e);
 
-//    v->printConfiguration();
-
     while (r != TaskType::EMPTY) {
-//        std::cout << std::endl;
-//        e->source->printConfiguration();
-//        for (Configuration *c : e->targets) {
-//            c->printConfiguration();
-//        }
-//        std::cout << std::endl;
-
-
-
         if (v->isDone()) {
             break;
         }
@@ -58,10 +43,10 @@ bool Algorithm::CertainZeroFPA::search(DependencyGraph::BasicDependencyGraph &t_
                 lastUndecided = c;
             }
         }
-        //std::cout << "all one " << allOne << " has czero " << hasCZero << "last: " << lastUndecided << std::endl;
 
         if (e->is_negated) {
-            if (STATS) s_negation_edges += 1;
+            auto pNE = _processedNegationEdges;
+            _processedNegationEdges += 1;
             //Process negation edge
             if (allOne) {
                 e->source->removeSuccessor(e);
@@ -82,7 +67,8 @@ bool Algorithm::CertainZeroFPA::search(DependencyGraph::BasicDependencyGraph &t_
                 }
             }
         } else {
-            if (STATS) s_edges += 1;
+            size_t pE = _processedEdges;
+            _processedEdges = pE + 1;
             //Process hyper edge
             if (allOne) {
                 finalAssign(e->source, ONE);
@@ -99,18 +85,9 @@ bool Algorithm::CertainZeroFPA::search(DependencyGraph::BasicDependencyGraph &t_
             }
         }
         e->processed = true;
-//        std::cout << "Picking task" << std::endl;
         r = strategy->pickTask(e);
-//        std::cout << "Picked" << std::endl;
     }
 
-    if (STATS) {
-        std::cout << "[Processed edges] " << s_edges << std::endl;
-        std::cout << "[Processed negation edges] " << s_negation_edges << std::endl;
-        std::cout << "[Configurations explored] " << s_explored << std::endl;
-        std::cout << "[Avr. succ edges per configuration] " << (((double) s_total_succ) / ((double) s_total_targets)) << std::endl;
-        std::cout << "[Avr. targets per edge] " << (((double) s_total_targets) / ((double) s_total_succ)) << std::endl;
-    }
     return (v->assignment == ONE) ? true : false;
 }
 
@@ -138,13 +115,8 @@ void Algorithm::CertainZeroFPA::explore(Configuration *c)
             strategy->pushEdge(succ);
         }
     }
-    if (STATS) {
-        s_explored += 1;
-        s_total_succ += c->successors.size();
-        for (Edge *s : c->successors) {
-            s_total_targets += s->targets.size();
-        }
-    }
+    _exploredConfigurations += 1;
+    _numberOfEdges += c->successors.size();
 }
 
 void Algorithm::CertainZeroFPA::addDependency(Edge *e, Configuration *target)

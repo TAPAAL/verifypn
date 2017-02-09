@@ -12,17 +12,8 @@ namespace Algorithm {
 
 class CertainZeroFPA : public FixedPointAlgorithm
 {
-    struct edge_prioritizer {
-        bool operator()(DependencyGraph::Edge* const &l,
-                        DependencyGraph::Edge* const &r) const {
-            return l->source->getDistance() > r->source->getDistance();
-        }
-    };
-    using Edge = DependencyGraph::Edge;
-    using QueueContainer = std::vector<Edge*>;
-    using Queue = std::priority_queue<Edge*, QueueContainer, edge_prioritizer>;
-
 public:
+    virtual ~CertainZeroFPA(){}
     virtual bool search(DependencyGraph::BasicDependencyGraph &t_graph,
                         SearchStrategy::iSequantialSearchStrategy &t_strategy) override;
 protected:

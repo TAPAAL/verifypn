@@ -95,17 +95,37 @@ ReturnValue getStrategy(SearchStrategy::iSequantialSearchStrategy*& strategy,
     return ContinueCode;
 }
 
+ReturnValue getAlgorithm(Algorithm::FixedPointAlgorithm*& algorithm,
+                         CTL::CTLAlgorithmType algorithmtype)
+{
+    if(algorithmtype == CTL::CTLAlgorithmType::Local){
+        algorithm = new Algorithm::LocalFPA();
+    }
+    else if (algorithmtype == CTL::CTLAlgorithmType::CZero){
+        algorithm = new Algorithm::CertainZeroFPA();
+    }
+    else {
+        cerr << "Error: Unknown algorithm" << endl;
+        return ErrorCode;
+    }
+    return ContinueCode;
+}
+
 void printResult(CTLResult& result, bool statisticslevel, bool mccouput){
     const static string techniques = "TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT";
     const string resultstring = result.result ? "TRUE" : "FALSE";
 
     if(statisticslevel){
         cout << result.modelName << "-" << result.queryNumber << endl;
-        cout << "   [Total Eval. Time]   " << result.duration << " ms" << endl;
-        cout << "   [No. Configurations] " << result.numberOfConfigurations << endl;
-        cout << "   [No. Markings]       " << result.numberOfMarkings << endl;
-        cout << "   [Query Number]       " << result.queryNumber + 1 << endl;
-        cout << "   [Query Result]       " << resultstring << endl;
+        cout << "   [Total Eval. Time]       " << result.duration << " ms" << endl;
+        cout << "   [No. Configurations]     " << result.numberOfConfigurations << endl;
+        cout << "   [No. Markings]           " << result.numberOfMarkings << endl;
+        cout << "   [No. Edges]              " << result.numberOfEdges << endl;
+        cout << "   [No. Processed Edges]    " << result.processedEdges << endl;
+        cout << "   [No. Processed N. Edges] " << result.processedNegationEdges << endl;
+        cout << "   [No. Explored Configs]   " << result.exploredConfigurations << endl;
+        cout << "   [Query Number]           " << result.queryNumber + 1 << endl;
+        cout << "   [Query Result]           " << resultstring << endl;
     }
     else if(!statisticslevel && !mccouput){
         cout << result.modelName << "-" << result.queryNumber << " " << resultstring << endl;
@@ -114,10 +134,11 @@ void printResult(CTLResult& result, bool statisticslevel, bool mccouput){
         cout << "FORMULA "
              << result.modelName
              << "-" << result.queryNumber - 1
-             << resultstring << " "
+             << " " << resultstring << " "
              << techniques
-             << endl << endl;
+             << endl;
     }
+    if(statisticslevel) cout << endl;
 }
 
 ReturnValue CTLMain(PetriEngine::PetriNet* net,
@@ -133,6 +154,8 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
     vector<CTLResult> results;
     QueryMeta meta;
     PetriNets::OnTheFlyDG& graph = *new PetriNets::OnTheFlyDG(net);
+    SearchStrategy::iSequantialSearchStrategy* strategy = nullptr;
+    Algorithm::FixedPointAlgorithm* alg = nullptr;
 
     if(parseQueries(queryfile, net, queries, meta) == ErrorCode) return ErrorCode;
     if(makeCTLResults(results, queries, meta, querynumbers, printstatistics, mccoutput) == ErrorCode) return ErrorCode;
@@ -142,24 +165,26 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
     totaltimer.start();
     for(CTLResult& result : results){
 
-        SearchStrategy::iSequantialSearchStrategy* strategy = nullptr;
+        if(strategy != nullptr) delete strategy;
         if(getStrategy(strategy, strategytype) == ErrorCode) return ErrorCode;
+
+        if(alg != nullptr) delete alg;
+        if(getAlgorithm(alg, algorithmtype) == ErrorCode) return ErrorCode;
 
         graph.setQuery(result.query);
 
         stopwatch timer;
         timer.start();
-        if(algorithmtype == CTL::CTLAlgorithmType::Local){
-            result.result = Algorithm::LocalFPA().search(graph, *strategy);
-        }
-        else if (algorithmtype == CTL::CTLAlgorithmType::CZero){
-            result.result = Algorithm::CertainZeroFPA().search(graph, *strategy);
-        }
+        result.result = alg->search(graph, *strategy);
         timer.stop();
+        totaltime += result.duration = timer.duration();
 
         result.numberOfConfigurations = graph.configurationCount();
         result.numberOfMarkings = graph.markingCount();
-        totaltime += result.duration = timer.duration();
+        result.processedEdges = alg->processedEdges();
+        result.processedNegationEdges = alg->processedNegationEdges();
+        result.exploredConfigurations = alg->exploredConfigurations();
+        result.numberOfEdges = alg->numberOfEdges();
 
         printResult(result, printstatistics, mccoutput);
     }

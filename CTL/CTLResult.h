@@ -30,6 +30,10 @@ struct CTLResult {
     double duration;
     size_t numberOfMarkings;
     size_t numberOfConfigurations;
+    size_t processedEdges;
+    size_t processedNegationEdges;
+    size_t exploredConfigurations;
+    size_t numberOfEdges;
 };
 
 #endif // CTLRESULT_H

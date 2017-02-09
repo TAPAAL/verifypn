@@ -30,6 +30,7 @@ struct Message {
 
 class iSequantialSearchStrategy{
 public:
+    virtual ~iSequantialSearchStrategy(){}
     virtual bool empty() const =0;
     virtual void pushEdge(DependencyGraph::Edge *edge) =0;
     virtual void pushDependency(DependencyGraph::Edge *edge) =0;

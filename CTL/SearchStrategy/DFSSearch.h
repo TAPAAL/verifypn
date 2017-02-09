@@ -13,6 +13,7 @@ namespace SearchStrategy {
 class DFSSearch : public iSequantialSearchStrategy, public iDistributedSearchStrategy
 {
 public:
+    virtual ~DFSSearch(){}
     DFSSearch() {}
 
     virtual bool empty() const override;
