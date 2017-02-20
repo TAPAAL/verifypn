@@ -58,7 +58,6 @@ private:
     CTLQuery* ConvertEG(CTLQuery* query);
     CTLQuery* TemporalSetting(CTLQuery* query);
     int IdSetting(CTLQuery* query, int id);
-    QueryMeta *_meta;
     std::string choppy( char *s );
 
 };

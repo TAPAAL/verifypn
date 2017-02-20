@@ -62,7 +62,7 @@ ReturnValue makeCTLResults(vector<CTLResult>& results,
     }
 
     for(auto qnbr: querynumbers){
-        if(qnbr > queries.size() || qnbr < 0){
+        if(qnbr > queries.size()){
             cerr << "Error: Invalid query number. Requested " << qnbr << " out of " << queries.size() << " queries" << endl;
             return ErrorCode;
         }

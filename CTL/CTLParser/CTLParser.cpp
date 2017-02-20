@@ -321,7 +321,7 @@ QueryMeta* CTLParser::GetQueryMetaData(std::vector<char> buffer) {
 CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
     char *root_name = root->name();
     char firstLetter = root_name[0];
-    CTLQuery *query;
+    CTLQuery *query = nullptr;
     if (firstLetter == 'a') {
         //Construct all-paths
         query = new CTLQuery(A, getPathOperator(root), false, "");
@@ -402,7 +402,9 @@ CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
         query->Depth = 0;
         return query;
     }
-    else assert(false && "Failed parsing .xml file provided. Incorrect format.");
+    else {
+        assert(false && "Failed parsing .xml file provided. Incorrect format.");
+    }
     
     if (query->GetPath() == U) {
         xml_node<> * child_node = root->first_node()->first_node();

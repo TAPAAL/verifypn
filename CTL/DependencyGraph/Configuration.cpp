@@ -2,6 +2,7 @@
 //#include <stdlib.h> //abs
 #include <iostream>
 #include <sstream>
+#include <complex>
 
 DependencyGraph::Configuration::~Configuration() {
     for(Edge *e : successors)
@@ -66,7 +67,7 @@ void DependencyGraph::Configuration::updateInterest(int worker, long id)
     for (size_t i=0; i<interested.size(); i++) {
         if (interested[i].first == worker) {
             found = true;
-            if (abs(interested[i].second) < abs(id)) {
+            if (std::abs(interested[i].second) < std::abs(id)) {
                 interested[i] = std::pair<int, long>(worker, id);
             }
         }
