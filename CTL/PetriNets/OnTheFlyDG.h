@@ -87,7 +87,6 @@ protected:
     std::vector<Marking*> nextState(Marking &marking);
     bool EvalCardianlity(int a, LoperatorType lop, int b);
     int GetParamValue(CardinalityParameter *param, Marking& marking);
-    std::list<int> calculateFireableTransistions(Marking &marking);
     DependencyGraph::Configuration *createConfiguration(Marking &marking, CTLQuery &query);
     Marking *createMarking(const Marking &marking, int t_transition);
 

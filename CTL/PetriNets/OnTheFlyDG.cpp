@@ -54,7 +54,7 @@ bool OnTheFlyDG::fastEval(CTLQuery &query, Marking &marking)
 void OnTheFlyDG::successors(Configuration *c)
 {
     PetriConfig *v = static_cast<PetriConfig*>(c);
-//    v->printConfiguration();
+    //    v->printConfiguration();
 
     CTLType query_type = v->query->GetQueryType();
     if(query_type == EVAL){
@@ -352,13 +352,11 @@ bool OnTheFlyDG::evaluateQuery(CTLQuery &query, Marking &marking)
     EvaluateableProposition *proposition = query.GetProposition();
 
     if (proposition->GetPropositionType() == FIREABILITY) {
-        std::list<int> transistions = calculateFireableTransistions(marking);
-        std::list<int>::iterator it;
-        transistions.sort();
-
         for(const auto f : proposition->GetFireset()){
-            it = std::find(transistions.begin(), transistions.end(), f);
-            if(it != transistions.end()){
+            // We might be able to optimize this out
+            // by keeping track of the fired transitions
+            // during successor generation
+            if(net->fireable(marking.marking(), f)){
                 return true;
             }
         }
@@ -375,7 +373,7 @@ bool OnTheFlyDG::evaluateQuery(CTLQuery &query, Marking &marking)
 }
 
 int OnTheFlyDG::GetParamValue(CardinalityParameter *param, Marking& marking) {
-if(param->isPlace){
+    if(param->isPlace){
         int res = 0;
         for(int place : param->places_i){
             res = res + marking[place];
@@ -432,27 +430,6 @@ std::vector<Marking*> OnTheFlyDG::nextState(Marking& t_marking){
     return nextStates;
 }
 
-std::list<int> OnTheFlyDG::calculateFireableTransistions(Marking &t_marking){
-
-    std::list<int> fireableTransistions;
-    
-    for(uint32_t t = 0; t < n_transitions; t++){
-        bool transitionFound = true;
-        for(uint32_t p = 0; p < n_places; p++){
-            if((int)t_marking[p] < net->inArc(p,t)){
-                transitionFound = false;
-                break;
-            }
-        }
-
-        if(transitionFound)
-            fireableTransistions.push_back(t);
-    }
-    
-    return fireableTransistions;
-}
-
-
 void OnTheFlyDG::cleanUp()
 {    
     //Note: we clean up the markings in the destructor
@@ -461,7 +438,7 @@ void OnTheFlyDG::cleanUp()
             delete c;
         }
         m->configurations.resize(0);
-    }   
+    }
 }
 
 //std::pair<int, int *> OnTheFlyDG::serialize(SearchStrategy::Message &m)
@@ -520,7 +497,7 @@ CTLQuery *OnTheFlyDG::findQueryById(int id, CTLQuery *root)
                     root->GetPath() == Path::G ||
                     root->GetPath() == Path::X ||
                     root->GetQuantifier() == Quantifier::NEG
-            ) && result == nullptr) {
+                    ) && result == nullptr) {
             //we are sure we have the second child and we haven't found the query yet
             result = findQueryById(id, root->GetSecondChild());
         }

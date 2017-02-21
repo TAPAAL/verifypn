@@ -123,7 +123,22 @@ namespace PetriEngine {
         }
 
         return true;
-    }    
+    }
+
+    bool PetriNet::fireable(const MarkVal *marking, int transitionIndex)
+    {
+        const TransPtr& transition = _transitions[transitionIndex];
+        uint32_t first = transition.inputs;
+        uint32_t last = transition.outputs;
+
+        for(;first < last; ++first){
+            const Invariant& inv = _invariants[first];
+            if(marking[inv.place] < inv.tokens){
+                return false;
+            }
+        }
+        return true;
+    }
     
 
     MarkVal* PetriNet::makeInitialMarking()
