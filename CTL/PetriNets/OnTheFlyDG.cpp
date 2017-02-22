@@ -416,15 +416,7 @@ std::vector<Marking*> OnTheFlyDG::nextState(Marking& t_marking){
     working.copyMarking(t_marking, net->numberOfPlaces());
 
     while(PNGen.next(working)){
-        auto result = markings.find(&working);
-
-        if(result == markings.end()){
-            auto new_marking = new Marking();
-            new_marking->copyMarking(working, net->numberOfPlaces());
-            result = (markings.insert(new_marking).first);
-        }
-
-        nextStates.push_back(*result);
+         nextStates.push_back(createMarking(working));
     }
 
     return nextStates;
@@ -539,16 +531,10 @@ Configuration *OnTheFlyDG::createConfiguration(Marking &t_marking, CTLQuery &t_q
 
 
 
-Marking *OnTheFlyDG::createMarking(const Marking& t_marking, int t_transition){
+Marking *OnTheFlyDG::createMarking(const Marking& t_marking){
     Marking* new_marking = new Marking();
 
     new_marking->copyMarking(t_marking, n_places);
-
-    //TODO: Use Peters successor generator here?
-    for(uint_fast32_t p = 0; p < n_places; p++){
-        int place = (*new_marking)[p] - net->inArc(p,t_transition);
-        (*new_marking)[p] = place + net->outArc(t_transition,p);
-    }
 
     auto result = markings.find(new_marking);
 

@@ -37,6 +37,7 @@ class Marking : public PetriEngine::Structures::State
     //this constructor assumes ownership of t_marking
     //TODO: Make a proper move constructor
     Marking(PetriEngine::MarkVal* t_marking);
+    ~Marking(){}
 
     void copyMarking(const Marking& marking, uint32_t nplaces);
 
