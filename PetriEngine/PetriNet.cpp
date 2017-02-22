@@ -134,7 +134,8 @@ namespace PetriEngine {
         for(;first < last; ++first){
             const Invariant& inv = _invariants[first];
             if(marking[inv.place] < inv.tokens){
-                return false;
+                if(!inv.inhibitor)
+                    return false;
             }
         }
         return true;
