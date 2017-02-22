@@ -115,29 +115,27 @@ void printResult(CTLResult& result, bool statisticslevel, bool mccouput){
     const string resultstring = result.result ? "TRUE" : "FALSE";
 
     if(statisticslevel){
-        cout << result.modelName << "-" << result.queryNumber << endl;
-        cout << "   [Total Eval. Time]       " << result.duration << " ms" << endl;
-        cout << "   [No. Configurations]     " << result.numberOfConfigurations << endl;
-        cout << "   [No. Markings]           " << result.numberOfMarkings << endl;
-        cout << "   [No. Edges]              " << result.numberOfEdges << endl;
-        cout << "   [No. Processed Edges]    " << result.processedEdges << endl;
-        cout << "   [No. Processed N. Edges] " << result.processedNegationEdges << endl;
-        cout << "   [No. Explored Configs]   " << result.exploredConfigurations << endl;
-        cout << "   [Query Number]           " << result.queryNumber + 1 << endl;
-        cout << "   [Query Result]           " << resultstring << endl;
+        cout << "Time (seconds):     " << setprecision(4) << result.duration / 1000 << endl;
+        cout << "Configurations:     " << result.numberOfConfigurations << endl;
+        cout << "Markings:           " << result.numberOfMarkings << endl;
+        cout << "Edges:              " << result.numberOfEdges << endl;
+        cout << "Processed Edges:    " << result.processedEdges << endl;
+        cout << "Processed N. Edges: " << result.processedNegationEdges << endl;
+        cout << "Explored Configs:   " << result.exploredConfigurations << endl;
     }
-    else if(!statisticslevel && !mccouput){
-        cout << result.modelName << "-" << result.queryNumber << " " << resultstring << endl;
-    }
+
     if(mccouput){
-        cout << "FORMULA "
+        cout << endl
+             << "FORMULA "
              << result.modelName
              << "-" << result.queryNumber
              << " " << resultstring << " "
              << techniques
              << endl;
     }
-    if(statisticslevel) cout << endl;
+    else {
+        cout << endl << "Query is" << (result.result ? "" : " NOT") << " satisfied." << endl;
+    }
 }
 
 ReturnValue CTLMain(PetriEngine::PetriNet* net,
@@ -188,11 +186,6 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
         printResult(result, printstatistics, mccoutput);
     }
     totaltimer.stop();
-
-    if(printstatistics){
-        cout << "[Total Eval. Time]              " << totaltimer.duration() << " ms" << endl
-             << "[Total Eval. Time w/o clean-up] " << totaltimer.duration() << " ms" << endl;
-    }
 
     return SuccessCode;
 }
