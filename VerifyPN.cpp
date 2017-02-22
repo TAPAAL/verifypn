@@ -162,21 +162,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
         //Enable CTL engine
         } else if (strcmp(argv[i], "-ctl") == 0){
-            if (i==argc-1) {
-                fprintf(stderr, "Missing CTL algorithm after \"%s\"\n\n", argv[i]);
-                return ErrorCode;
-            }
             options.isctl = true;
-
-            char* s = argv[++i];
-            if (strcmp(s, "local") == 0){
+            if (strcmp(argv[i + 1], "local") == 0){
+                i++;
                 options.ctlalgorithm = CTL::Local;
-            }
-            else if (strcmp(s, "czero") == 0){
-                options.ctlalgorithm = CTL::CZero;
-            }
-            else {
-                fprintf(stderr, "Argument Error: Invalid CTL algorithm argument \"%s\"\n", argv[i]);
             }
         //Enable game mode
         } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
@@ -209,7 +198,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -m, --memory-limit <mb-memory>     Limit for when encoding kicks in, default 2048\n"
                     "  -ctl                               Verify CTL properties"
                     "                                     - local        Liu and Smolka's on-the-fly algorithm\n"
-                    "                                     - czero        local with certain zero extension\n"
+                    "                                     - czero        local with certain zero extension (default)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
                     "\n"
                     "Return Values:\n"

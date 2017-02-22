@@ -27,7 +27,7 @@ struct options_t {
 //CTL Specific options
     bool gamemode = false;
     bool isctl = false;
-    CTL::CTLAlgorithmType ctlalgorithm;
+    CTL::CTLAlgorithmType ctlalgorithm = CTL::CZero;
 };
 
 #endif
