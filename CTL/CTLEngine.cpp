@@ -57,10 +57,9 @@ ReturnValue makeCTLResults(vector<CTLResult>& results,
                            bool mccoutput)
 {
     if(querynumbers.empty()){
-        for(size_t i = 0; i < queries.size(); ++i)
-            querynumbers.insert(i);
+        cerr << "Error: No query was specified out of " << queries.size() << " queries " << endl;
+        return ErrorCode;
     }
-
     for(auto qnbr: querynumbers){
         if(qnbr > queries.size()){
             cerr << "Error: Invalid query number. Requested " << qnbr << " out of " << queries.size() << " queries" << endl;

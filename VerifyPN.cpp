@@ -163,7 +163,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         //Enable CTL engine
         } else if (strcmp(argv[i], "-ctl") == 0){
             options.isctl = true;
-            if (strcmp(argv[i + 1], "local") == 0){
+            if (argc > i + 1 && strcmp(argv[i + 1], "local") == 0){
                 i++;
                 options.ctlalgorithm = CTL::Local;
             }
