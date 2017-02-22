@@ -112,29 +112,31 @@ ReturnValue getAlgorithm(Algorithm::FixedPointAlgorithm*& algorithm,
 
 void printResult(CTLResult& result, bool statisticslevel, bool mccouput){
     const static string techniques = "TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT";
-    const string resultstring = result.result ? "TRUE" : "FALSE";
 
-    if(statisticslevel){
-        cout << "Time (seconds):     " << setprecision(4) << result.duration / 1000 << endl;
-        cout << "Configurations:     " << result.numberOfConfigurations << endl;
-        cout << "Markings:           " << result.numberOfMarkings << endl;
-        cout << "Edges:              " << result.numberOfEdges << endl;
-        cout << "Processed Edges:    " << result.processedEdges << endl;
-        cout << "Processed N. Edges: " << result.processedNegationEdges << endl;
-        cout << "Explored Configs:   " << result.exploredConfigurations << endl;
-    }
-
+    cout << endl;
     if(mccouput){
-        cout << endl
-             << "FORMULA "
+        cout << "FORMULA "
              << result.modelName
              << "-" << result.queryNumber
-             << " " << resultstring << " "
+             << " " << (result.result ? "TRUE" : "FALSE") << " "
              << techniques
              << endl;
     }
     else {
-        cout << endl << "Query is" << (result.result ? "" : " NOT") << " satisfied." << endl;
+        cout << "Query is" << (result.result ? "" : " NOT") << " satisfied." << endl;
+    }
+    cout << endl;
+
+    if(statisticslevel){
+        cout << "STATS:" << endl;
+        cout << "	Time (seconds):     " << setprecision(4) << result.duration / 1000 << endl;
+        cout << "	Configurations:     " << result.numberOfConfigurations << endl;
+        cout << "	Markings:           " << result.numberOfMarkings << endl;
+        cout << "	Edges:              " << result.numberOfEdges << endl;
+        cout << "	Processed Edges:    " << result.processedEdges << endl;
+        cout << "	Processed N. Edges: " << result.processedNegationEdges << endl;
+        cout << "	Explored Configs:   " << result.exploredConfigurations << endl
+             << endl;
     }
 }
 
