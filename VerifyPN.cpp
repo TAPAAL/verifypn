@@ -2,8 +2,16 @@
  * Copyright (C) 2011-2017  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                          Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                          Lars Kærlund Østergaard <larsko@gmail.com>,
- *			    Jiri Srba <srba.jiri@gmail.com>,
+ *                          Jiri Srba <srba.jiri@gmail.com>,
  *                          Peter Gjøl Jensen <root@petergjoel.dk>
+ * CTL Extension
+ *                          Peter Fogh <pfogh12@student.aau.dk>
+ *                          Isabella Kaufmann <ikaufm12@student.aau.dk>
+ *                          Tobias Skovgaard Jepsen <tjeps12@student.aau.dk>
+ *                          Lasse Steen Jensen <lasjen12@student.aau.dk>
+ *                          Søren Moss Nielsen <smni12@student.aau.dk>
+ *                          Samuel Pastva <daemontus@gmail.com>
+ *                          Jiri Srba <srba.jiri@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -224,9 +232,12 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>,\n");
             printf("                        Jiri Srba <srba.jiri@gmail.com>,\n");
             printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
-            printf("                        Isabella Kaufmann\n");
-            printf("                        Søren Moss Nielsen\n");
-            printf("                        Lasse Steen Jensen\n");
+            printf("                        Peter Fogh <pfogh12@student.aau.dk>");
+            printf("                        Isabella Kaufmann <ikaufm12@student.aau.dk>");
+            printf("                        Tobias Skovgaard Jepsen <tjeps12@student.aau.dk>");
+            printf("                        Lasse Steen Jensen <lasjen12@student.aau.dk>");
+            printf("                        Søren Moss Nielsen <smni12@student.aau.dk>");
+            printf("                        Samuel Pastva <daemontus@gmail.com>");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
         } else if (options.modelfile == NULL) {
