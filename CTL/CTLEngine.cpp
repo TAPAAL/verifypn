@@ -159,9 +159,6 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
     if(parseQueries(queryfile, net, queries, meta) == ErrorCode) return ErrorCode;
     if(makeCTLResults(results, queries, meta, querynumbers, printstatistics, mccoutput) == ErrorCode) return ErrorCode;
 
-    stopwatch totaltimer;
-    double totaltime = 0;
-    totaltimer.start();
     for(CTLResult& result : results){
 
         if(strategy != nullptr) delete strategy;
@@ -187,7 +184,6 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
 
         printResult(result, printstatistics, mccoutput);
     }
-    totaltimer.stop();
 
     return SuccessCode;
 }
