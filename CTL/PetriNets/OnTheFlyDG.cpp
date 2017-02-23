@@ -367,6 +367,9 @@ bool OnTheFlyDG::evaluateQuery(CTLQuery &query, Marking &marking)
         int second_param = GetParamValue(proposition->GetSecondParameter(), marking);
         return EvalCardianlity(first_param, proposition->GetLoperator(), second_param);
     }
+    else if (proposition->GetPropositionType() == DEADLOCK) {
+        return net->deadlocked(marking.marking());
+    }
     else
         assert(false && "Incorrect query proposition type was attempted evaluated");
     exit(EXIT_FAILURE);
