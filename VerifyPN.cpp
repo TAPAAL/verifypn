@@ -163,9 +163,15 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         //Enable CTL engine
         } else if (strcmp(argv[i], "-ctl") == 0){
             options.isctl = true;
-            if (argc > i + 1 && strcmp(argv[i + 1], "local") == 0){
-                i++;
-                options.ctlalgorithm = CTL::Local;
+            if(argc > i + 1){
+                if(strcmp(argv[i + 1], "local") == 0){
+                    i++;
+                    options.ctlalgorithm = CTL::Local;
+                }
+                else if(strcmp(argv[i + 1], "czero") == 0){
+                    i++;
+                    options.ctlalgorithm = CTL::CZero;
+                }
             }
         //Enable game mode
         } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){

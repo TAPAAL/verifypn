@@ -173,7 +173,6 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
         timer.start();
         result.result = alg->search(graph, *strategy);
         timer.stop();
-        totaltime += result.duration = timer.duration();
 
         result.numberOfConfigurations = graph.configurationCount();
         result.numberOfMarkings = graph.markingCount();

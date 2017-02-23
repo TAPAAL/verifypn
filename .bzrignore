@@ -1,6 +1,6 @@
-trunk-qt.config
-trunk-qt.creator
-trunk-qt.files
-trunk-qt.includes
+*.config
+*.creator
+*.files
+*.includes
 verifypn-experimental-linux64
-trunk-qt.creator.user
+*.user

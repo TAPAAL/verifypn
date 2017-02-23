@@ -93,10 +93,8 @@ void Algorithm::LocalFPA::explore(DependencyGraph::Configuration *c)
         strategy->pushEdge(succ);
     }
 
-    if (STATS) {
-        _exploredConfigurations += 1;
-        _numberOfEdges += c->successors.size();
-    }
+    _exploredConfigurations += 1;
+    _numberOfEdges += c->successors.size();
 }
 
 void Algorithm::LocalFPA::addDependency(DependencyGraph::Edge *e, DependencyGraph::Configuration *target)
