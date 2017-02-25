@@ -234,7 +234,11 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
         std::cout << "timed arcs are not supported" << std::endl;
         exit(-1);
     }
-    
+    else if(type && strcmp(type->value(), "inhibitor") == 0)
+    {
+        inhibitor = true;
+    }
+
     for (auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")) {
             string text;
             parseValue(it, text);
