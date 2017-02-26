@@ -174,6 +174,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
         result.result = alg->search(graph, *strategy);
         timer.stop();
 
+        result.duration = timer.duration();
         result.numberOfConfigurations = graph.configurationCount();
         result.numberOfMarkings = graph.markingCount();
         result.processedEdges = alg->processedEdges();
