@@ -133,8 +133,7 @@ namespace PetriEngine {
 
         for(;first < last; ++first){
             const Invariant& inv = _invariants[first];
-            bool allGood = inv.inhibitor ^ marking[inv.place] >= inv.tokens;
-            if(!allGood)
+            if(inv.inhibitor == (marking[inv.place] >= inv.tokens))
                 return false;
         }
         return true;
