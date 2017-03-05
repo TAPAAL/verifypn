@@ -27,6 +27,7 @@
 
 #include "../PetriNet.h"
 #include "../Structures/State.h"
+#include "../ReducingSuccessorGenerator.h"
 
 namespace llvm {
     class Value;
@@ -35,6 +36,7 @@ namespace llvm {
 }
 
 namespace PetriEngine {
+    class ReducingSuccessorGenerator;
     namespace PQL {
 
         class AnalysisContext;
@@ -77,8 +79,8 @@ namespace PetriEngine {
 
         /** Representation of an expression */
         class Expr {
+            int _eval = 0;
         public:
-
             /** Types of expressions */
             enum Types {
                 /** Binary addition expression */
@@ -102,13 +104,24 @@ namespace PetriEngine {
             /** True, if the expression is p-free */
             virtual bool pfree() const = 0;
             /** Evaluate the expression given marking and assignment */
-            virtual int evaluate(const EvaluationContext& context) const = 0;
+            virtual int evaluate(const EvaluationContext& context) = 0;
             /** Generate LLVM intermediate code for this expr  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert expression to string */
             virtual std::string toString() const = 0;
             /** Expression type */
             virtual Types type() const = 0;
+            /** Stubborn reduction: increasing and decreasing sets */
+            virtual void incr(ReducingSuccessorGenerator& generator) const = 0;
+            virtual void decr(ReducingSuccessorGenerator& generator) const = 0;
+            
+            void setEval(int eval) {
+                _eval = eval;
+            }
+            
+            int getEval() {
+                return _eval;
+            }
         };
 
         /** Base condition */
@@ -117,6 +130,7 @@ namespace PetriEngine {
             std::vector<std::string> _placenameforbound;
             std::vector<size_t> _placeids;
             size_t _bound = 0;
+            bool _satisfied = false;
         public:
             /** Virtual destructor */
             virtual ~Condition();
@@ -125,7 +139,7 @@ namespace PetriEngine {
             /** Perform context analysis  */
             virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate condition */
-            virtual bool evaluate(const EvaluationContext& context) const = 0;
+            virtual bool evaluate(const EvaluationContext& context) = 0;
             /** Analyze constraints for over-approximation */
             virtual void findConstraints(ConstraintAnalysisContext& context) const = 0;
             /** Generate LLVM intermediate code for this condition  */
@@ -136,6 +150,24 @@ namespace PetriEngine {
             virtual std::string toTAPAALQuery(TAPAALConditionExportContext& context) const = 0;
             /** Get distance to query */
             virtual uint32_t distance(DistanceContext& context) const = 0;
+            /** Resolve negation (move this to parsing?) */
+            virtual std::shared_ptr<Condition> resolveNegation(bool negated) const = 0;
+            /** Resolve orphans */
+            virtual std::shared_ptr<Condition> resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const = 0;
+            /** Seek and destroy */
+            virtual std::shared_ptr<Condition> seekAndDestroy(ConstraintAnalysisContext& context) const = 0;
+            /** Find interesting transitions in stubborn reduction*/
+            virtual void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const = 0;
+
+            bool isSatisfied()
+            {
+                return _satisfied;
+            }
+            
+            void setSatisfied(bool isSatisfied)
+            {
+                _satisfied = isSatisfied;
+            }
             
             void setInvariant(bool isInvariant)
             {

@@ -136,6 +136,16 @@ namespace PetriEngine {
                 canAnalyze = true;
                 negated = false;
             }
+            
+            ConstraintAnalysisContext(const PetriNet& net, const MarkVal* marking) : _net(net) {
+                _marking = marking;
+                canAnalyze = true;
+                negated = false;
+            }
+            
+            const MarkVal* marking() const {
+                return _marking;
+            }
 
             const PetriNet& net() const {
                 return _net;
@@ -144,6 +154,7 @@ namespace PetriEngine {
             bool negated;
             ConstraintSet retval;
         private:
+            const MarkVal* _marking;
             const PetriNet& _net;
         };
 

@@ -106,8 +106,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 				options.strategy = DFS;
 			else if(strcmp(s, "OverApprox") == 0)
 				options.strategy = APPROX;
-                        else if(strcmp(s, "RDFS") == 0)
-                                options.strategy = RDFS;
+            else if(strcmp(s, "RDFS") == 0)
+                    options.strategy = RDFS;
 			else{
 				fprintf(stderr, "Argument Error: Unrecognized search strategy \"%s\"\n", s);
 				return ErrorCode;
@@ -158,6 +158,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid reduction argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        } else if(strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--partial-order-reduction") == 0) {
+            options.stubbornreduction = true;
+        } else if(strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--query-simplification") == 0) {
+            options.querysimplification = true;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
                     "A tool for answering reachability of place cardinality queries (including deadlock)\n"
@@ -179,6 +183,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 0  disabled (default)\n"
                     "                                     - 1  aggressive reduction\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
+                    "  -p, --partial-order-reduction      Enable partial order reduction (stubborn sets)\n"
+                    "  -i, --query-simplification         Enable query simplification\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
@@ -331,6 +337,29 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
 
  }
 
+std::vector<std::shared_ptr<Condition > > simplifyQueries(PetriNetBuilder builder, std::vector<std::shared_ptr<Condition > >& queries)
+{
+    
+    std::vector<std::pair<std::string, uint32_t>> orphans = builder.orphanPlaces();
+    PetriNetBuilder b(builder);
+    PetriNet* net = b.makePetriNet(false);
+    MarkVal* m0 = net->makeInitialMarking();
+        
+    PQL::ConstraintAnalysisContext context(*net, m0);
+    std::vector<std::shared_ptr<Condition > > simplified;
+    
+    for(auto &q : queries)
+    {
+        std::shared_ptr<Condition > tmp1 = q->resolveNegation(false);
+        std::shared_ptr<Condition > tmp2 = tmp1->resolveOrphans(orphans);
+        std::shared_ptr<Condition > tmp3 = tmp2->seekAndDestroy(context);
+        tmp3->setInvariant(q->isInvariant());
+        simplified.push_back(tmp3);
+    }
+
+    return simplified;
+}
+
 ReturnValue parseModel( PNMLParser::TransitionEnablednessMap& transitionEnabledness,
                         PetriNetBuilder& builder, options_t& options)
 {
@@ -389,7 +418,11 @@ int main(int argc, char* argv[]) {
     
     
     if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
-
+    
+    if(options.querysimplification) {
+        queries = simplifyQueries(builder, queries);
+    }
+    
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
        
     ResultPrinter printer(&builder, &options, querynames);
@@ -458,7 +491,8 @@ int main(int argc, char* argv[]) {
     
     //Reachability search
     strategy.reachable(queries, results, 
-            options.strategy, 
+            options.strategy,
+            options.stubbornreduction,
             options.statespaceexploration, 
             options.printstatistics, 
             options.trace);

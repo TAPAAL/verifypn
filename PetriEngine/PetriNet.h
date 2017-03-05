@@ -115,6 +115,8 @@ namespace PetriEngine {
         friend class PetriNetBuilder;
         friend class Reducer;
         friend class SuccessorGenerator;
+        friend class ReducingSuccessorGenerator;
+        friend class Filter;
     };
 
 } // PetriEngine

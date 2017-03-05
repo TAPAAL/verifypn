@@ -15,6 +15,8 @@ struct options_t {
     char* queryfile = NULL;
     bool disableoverapprox = false;
     int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
+    bool stubbornreduction = false;
+    bool querysimplification = false;
     bool statespaceexploration = false;
     bool printstatistics = true;
     size_t memorylimit = 2048;

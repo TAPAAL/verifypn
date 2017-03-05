@@ -30,6 +30,7 @@
 #include "../Structures/StateSet.h"
 #include "../Structures/Queue.h"
 #include "../SuccessorGenerator.h"
+#include "../ReducingSuccessorGenerator.h"
 
 namespace PetriEngine {
     namespace Reachability {
@@ -64,6 +65,7 @@ namespace PetriEngine {
                     std::vector<std::shared_ptr<PQL::Condition > >& queries,
                     std::vector<ResultPrinter::Result>& results,
                     Strategy strategy,
+                    bool usestubborn,
                     bool statespacesearch,
                     bool printstats,
                     bool keep_trace);
@@ -76,7 +78,7 @@ namespace PetriEngine {
                 bool usequeries;
             };
             
-            template<typename Q, typename W = Structures::StateSet >
+            template<typename Q, typename W = Structures::StateSet, typename G>
             void tryReach(
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
@@ -93,9 +95,9 @@ namespace PetriEngine {
             size_t _satisfyingMarking = 0;
         };
         
-        template<typename Q, typename W>
+        template<typename Q, typename W, typename G>
         void ReachabilitySearch::tryReach(   std::vector<std::shared_ptr<PQL::Condition> >& queries, 
-                                        std::vector<ResultPrinter::Result>& results, bool usequeries, 
+                                        std::vector<ResultPrinter::Result>& results, bool usequeries,
                                         bool printstats)
         {
 
@@ -113,8 +115,9 @@ namespace PetriEngine {
             state.setMarking(_net.makeInitialMarking());
             working.setMarking(_net.makeInitialMarking());
             
-            W states(_net, _kbound); // stateset
-            Q queue(&states);        // working queue
+            W states(_net, _kbound);    // stateset
+            Q queue(&states);           // working queue
+            G generator(_net, queries); // successor generator
             auto r = states.add(state);
             // this can fail due to reductions; we push tokens around and violate K
             if(r.first){ 
@@ -131,12 +134,12 @@ namespace PetriEngine {
                 }
                 // add initial to queue
                 queue.push(r.second, state, queries[ss.heurquery]);
-            
+
 
                 // Search!
                 while (queue.pop(state)) {
 
-                     SuccessorGenerator generator(_net, state);
+                    generator.prepare(&state);
 
                     while(generator.next(working)){
                         ss.enabledTransitionsCount[generator.fired()]++;

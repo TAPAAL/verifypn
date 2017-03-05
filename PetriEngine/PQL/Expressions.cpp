@@ -213,53 +213,58 @@ namespace PetriEngine {
 
         /******************** Evaluation ********************/
 
-        int BinaryExpr::evaluate(const EvaluationContext& context) const {
+        int BinaryExpr::evaluate(const EvaluationContext& context) {
             int v1 = _expr1->evaluate(context);
             int v2 = _expr2->evaluate(context);
-            return apply(v1, v2);
+            setEval(apply(v1, v2));
+            return getEval(); // Add evaluation value
         }
 
-        int MinusExpr::evaluate(const EvaluationContext& context) const {
-            return -(_expr->evaluate(context));
+        int MinusExpr::evaluate(const EvaluationContext& context) {
+            setEval(-(_expr->evaluate(context)));
+            return getEval();
         }
 
-        int LiteralExpr::evaluate(const EvaluationContext&) const {
-            return _value;
+        int LiteralExpr::evaluate(const EvaluationContext&) {
+            setEval(_value);
+            return getEval();
         }
 
-        int IdentifierExpr::evaluate(const EvaluationContext& context) const {
+        int IdentifierExpr::evaluate(const EvaluationContext& context) {
             assert(_offsetInMarking != -1);
-            return context.marking()[_offsetInMarking];
+            setEval(context.marking()[_offsetInMarking]);
+            return getEval();
         }
 
-        bool LogicalCondition::evaluate(const EvaluationContext& context) const {
-
+        bool LogicalCondition::evaluate(const EvaluationContext& context) {
             bool b1 = _cond1->evaluate(context);
             bool b2 = _cond2->evaluate(context);
-            return apply(b1, b2);
+            setSatisfied(apply(b1, b2));
+            return isSatisfied();
         }
 
-        bool CompareCondition::evaluate(const EvaluationContext& context) const {
+        bool CompareCondition::evaluate(const EvaluationContext& context) {
             int v1 = _expr1->evaluate(context);
             int v2 = _expr2->evaluate(context);
-            return apply(v1, v2);
+            setSatisfied(apply(v1, v2));
+            return isSatisfied();
         }
 
-        bool NotCondition::evaluate(const EvaluationContext& context) const {
-            return !(_cond->evaluate(context));
+        bool NotCondition::evaluate(const EvaluationContext& context) {
+            setSatisfied(!(_cond->evaluate(context)));
+            return isSatisfied();
         }
 
-        bool BooleanCondition::evaluate(const EvaluationContext&) const {
-            return _value;
+        bool BooleanCondition::evaluate(const EvaluationContext&) {
+            setSatisfied(_value);
+            return isSatisfied();
         }
 
-        bool DeadlockCondition::evaluate(const EvaluationContext& context) const {
+        bool DeadlockCondition::evaluate(const EvaluationContext& context) {
             if (!context.net())
                 return false;
-            if (!context.net()->deadlocked(context.marking())) {
-                return false;
-            }
-            return true;
+            setSatisfied(context.net()->deadlocked(context.marking()));
+            return isSatisfied();
         }
 
         /******************** Apply (BinaryExpr subclasses) ********************/
@@ -715,7 +720,690 @@ namespace PetriEngine {
                 return v1 < v2 ? 0 : v1 - v2 + 1;
         }
 
+        /******************** Resolve negation ********************/
+        
+        Condition_ptr AndCondition::resolveNegation(bool negated) const {
+            Condition_ptr cond1 = _cond1->resolveNegation(negated);
+            Condition_ptr cond2 = _cond2->resolveNegation(negated);
+            if (negated) {
+                return std::make_shared<OrCondition>(cond1, cond2);
+            } else {
+                return std::make_shared<AndCondition>(cond1, cond2);                
+            }
+        }
+        
+        Condition_ptr OrCondition::resolveNegation(bool negated) const {
+            Condition_ptr cond1 = _cond1->resolveNegation(negated);
+            Condition_ptr cond2 = _cond2->resolveNegation(negated);
+            if (negated) {
+                return std::make_shared<AndCondition>(cond1, cond2);
+            } else {
+                return std::make_shared<OrCondition>(cond1, cond2);                
+            }
+        }
+        
+        Condition_ptr EqualCondition::resolveNegation(bool negated) const {
+            if (negated) {
+                return std::make_shared<NotEqualCondition>(_expr1, _expr2);
+            } else {
+                return std::make_shared<EqualCondition>(_expr1, _expr2);                
+            }
+        }
+        
+        Condition_ptr NotEqualCondition::resolveNegation(bool negated) const {
+            if (negated) {
+                return std::make_shared<EqualCondition>(_expr1, _expr2);
+            } else {
+                return std::make_shared<NotEqualCondition>(_expr1, _expr2);                
+            }
+        }
+        
+        Condition_ptr LessThanCondition::resolveNegation(bool negated) const {
+            if (negated) {
+                return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
+            } else {
+                return std::make_shared<LessThanCondition>(_expr1, _expr2);                
+            }
+        }
+        
+        Condition_ptr LessThanOrEqualCondition::resolveNegation(bool negated) const {
+            if(negated) {
+                return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
+            } else {
+                return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);                
+            }
+        }
+        
+        Condition_ptr GreaterThanCondition::resolveNegation(bool negated) const {
+            if(negated) {
+                return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
+            } else {
+                return std::make_shared<GreaterThanCondition>(_expr1, _expr2);                
+            }
+        }
+        
+        Condition_ptr GreaterThanOrEqualCondition::resolveNegation(bool negated) const {
+            if(negated) {
+                return std::make_shared<LessThanCondition>(_expr1, _expr2);
+            } else {
+                return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);                
+            }
+        }
+        
+        Condition_ptr NotCondition::resolveNegation(bool negated) const {
+            return _cond->resolveNegation(!negated);
+        }
+        
+        Condition_ptr BooleanCondition::resolveNegation(bool negated) const {
+            if(negated) {
+                return std::make_shared<BooleanCondition>(!_value);
+            } else {
+                return std::make_shared<BooleanCondition>(_value);                
+            }
+        }
+        
+        Condition_ptr DeadlockCondition::resolveNegation(bool negated) const {
+            return std::make_shared<DeadlockCondition>();
+        }
+        
+        /******************** Resolve orphans ********************/
+ 
+        /*  TODO We could also replace eg. (p2 < p4) with (3 < p4) if p2 is an orphan */
+        
+        int isOrphan(std::string place, std::vector<std::pair<std::string, uint32_t>> orphans) {
+            for(auto &o : orphans) {
+                if (o.first == place) {
+                    return o.second;
+                }
+            }
+            return -1;
+        }
+        
+        Condition_ptr AndCondition::resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const {
+            Condition_ptr cond1 = _cond1->resolveOrphans(orphans);
+            if(cond1->toString() == "false"){
+                return std::make_shared<BooleanCondition>(false);
+            }
+            Condition_ptr cond2 = _cond2->resolveOrphans(orphans);
+            if(cond2->toString() == "false"){
+                return std::make_shared<BooleanCondition>(false);
+            }
+            
+            if(cond1->toString() == "true" && cond2->toString() == "true"){
+                return std::make_shared<BooleanCondition>(true);
+            } else if(cond1->toString() == "true"){
+                return cond2;
+            } else if(cond2->toString() == "true") {
+                return cond1;
+            }
+            return std::make_shared<AndCondition>(cond1, cond2);
+        }
+        
+        Condition_ptr OrCondition::resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const {
+            Condition_ptr cond1 = _cond1->resolveOrphans(orphans);
+            if(cond1->toString() == "true"){
+                return std::make_shared<BooleanCondition>(true);
+            }
+            Condition_ptr cond2 = _cond2->resolveOrphans(orphans);
+            if(cond2->toString() == "true"){
+                return std::make_shared<BooleanCondition>(true);
+            }
+            
+            if(cond1->toString() == "false" && cond2->toString() == "false"){
+                return std::make_shared<BooleanCondition>(false);
+            } else if(cond1->toString() == "false") {
+                return cond2;
+            } else if(cond2->toString() == "false") {
+                return cond1;
+            }
+            return std::make_shared<OrCondition>(cond1, cond2);
+        }
+        
+        Condition_ptr EqualCondition::resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const {
+            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();              
+                int marking = isOrphan(_expr2->toString(), orphans);
+                if(marking != -1) {
+                    if(apply(literal->value(), marking)){
+                        return std::make_shared<BooleanCondition>(true);
+                    } else {
+                        return std::make_shared<BooleanCondition>(false);
+                    }
+                }
+            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                int marking = isOrphan(_expr1->toString(), orphans);
+                if(marking != -1) {
+                    if(apply(marking, literal->value())){
+                        return std::make_shared<BooleanCondition>(true);
+                    } else {
+                        return std::make_shared<BooleanCondition>(false);
+                    }
+                }
+            }
+            return std::make_shared<EqualCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr NotEqualCondition::resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const {
+            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();           
+                int marking = isOrphan(_expr2->toString(), orphans);
+                if(marking != -1) {
+                    if(apply(literal->value(), marking)){
+                        return std::make_shared<BooleanCondition>(true);
+                    } else {
+                        return std::make_shared<BooleanCondition>(false);
+                    }
+                }
+            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                int marking = isOrphan(_expr1->toString(), orphans);
+                if(marking != -1) {
+                    if(apply(marking, literal->value())){
+                        return std::make_shared<BooleanCondition>(true);
+                    } else {
+                        return std::make_shared<BooleanCondition>(false);
+                    }
+                }
+            }
+            return std::make_shared<NotEqualCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr LessThanCondition::resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const {
+            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();              
+                int marking = isOrphan(_expr2->toString(), orphans);
+                if(marking != -1) {
+                    if(apply(literal->value(), marking)){
+                        return std::make_shared<BooleanCondition>(true);
+                    } else {
+                        return std::make_shared<BooleanCondition>(false);
+                    }
+                }
+            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                int marking = isOrphan(_expr1->toString(), orphans);
+                if(marking != -1) {
+                    if(apply(marking, literal->value())){
+                        return std::make_shared<BooleanCondition>(true);
+                    } else {
+                        return std::make_shared<BooleanCondition>(false);
+                    }
+                }
+            }
+            return std::make_shared<LessThanCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr LessThanOrEqualCondition::resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const {
+            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();  
+                int marking = isOrphan(_expr2->toString(), orphans);
+                if(marking != -1) {
+                    if(apply(literal->value(), marking)){
+                        return std::make_shared<BooleanCondition>(true);
+                    } else {
+                        return std::make_shared<BooleanCondition>(false);
+                    }
+                }
+            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                int marking = isOrphan(_expr1->toString(), orphans);
+                if(marking != -1) {
+                    if(apply(marking, literal->value())){
+                        return std::make_shared<BooleanCondition>(true);
+                    } else {
+                        return std::make_shared<BooleanCondition>(false);
+                    }
+                }
+            }
+            return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr GreaterThanCondition::resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const {
+            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();         
+                int marking = isOrphan(_expr2->toString(), orphans);
+                if(marking != -1) {
+                    if(apply(literal->value(), marking)){
+                        return std::make_shared<BooleanCondition>(true);
+                    } else {
+                        return std::make_shared<BooleanCondition>(false);
+                    }
+                }
+            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                int marking = isOrphan(_expr1->toString(), orphans);
+                if(marking != -1) {
+                    if(apply(marking, literal->value())){
+                        return std::make_shared<BooleanCondition>(true);
+                    } else {
+                        return std::make_shared<BooleanCondition>(false);
+                    }
+                }
+            }
+            return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr GreaterThanOrEqualCondition::resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const {
+            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();            
+                int marking = isOrphan(_expr2->toString(), orphans);
+                if(marking != -1) {
+                    if(apply(literal->value(), marking)){
+                        return std::make_shared<BooleanCondition>(true);
+                    } else {
+                        return std::make_shared<BooleanCondition>(false);
+                    }
+                }
+            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                int marking = isOrphan(_expr1->toString(), orphans);
+                if(marking != -1) {
+                    if(apply(marking, literal->value())){
+                        return std::make_shared<BooleanCondition>(true);
+                    } else {
+                        return std::make_shared<BooleanCondition>(false);
+                    }
+                }
+            }
+            return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr NotCondition::resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const {
+            Condition_ptr cond = _cond->resolveOrphans(orphans);
+            return std::make_shared<NotCondition>(cond);
+        }
+        
+        Condition_ptr BooleanCondition::resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const {
+            return std::make_shared<BooleanCondition>(_value);
+        }
+        
+        Condition_ptr DeadlockCondition::resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const {
+            return std::make_shared<DeadlockCondition>();
+        }
+        
+        /******************** Simplify ********************/
+        
+        bool unreachable(ConstraintAnalysisContext& context) {
+            bool isImpossible = true;
+            if(context.canAnalyze) {
+                for (size_t i = 0; i < context.retval.size(); i++) {
+                    isImpossible &= context.retval[i]->isImpossible(context.net(), (int32_t*)context.marking());
+                    if (!isImpossible) return false;
+                }
+                return true;
+            }
+            return false;
+        }
+        
+        Condition_ptr AndCondition::seekAndDestroy(ConstraintAnalysisContext& context) const {
+            context.canAnalyze = true;
+            Condition_ptr cond1 = _cond1->seekAndDestroy(context);            
+            ConstraintAnalysisContext::ConstraintSet left = context.retval;
+            
+            bool leftAnalyze = context.canAnalyze;
+            bool leftUnreach = unreachable(context);
+            
+            context.retval.clear();
+            context.canAnalyze = true;
+            Condition_ptr cond2 = _cond2->seekAndDestroy(context);
+            bool rightUnreach = unreachable(context);
+                        
+            if(!leftUnreach && !rightUnreach){
+                context.canAnalyze &= leftAnalyze;
+                mergeConstraints(context.retval, left, context.negated);
+                return std::make_shared<AndCondition>(cond1, cond2);
+            } else {
+                context.retval.clear();
+                context.canAnalyze = true;
+                return std::make_shared<BooleanCondition>(false);
+            }
+        }
+         
+        Condition_ptr OrCondition::seekAndDestroy(ConstraintAnalysisContext& context) const {
+            context.canAnalyze = true;
+            Condition_ptr cond1 = _cond1->seekAndDestroy(context);            
+            ConstraintAnalysisContext::ConstraintSet left = context.retval;
+            
+            bool leftAnalyze = context.canAnalyze;
+            bool leftUnreach = unreachable(context);  // TODO rename unreachable
+            
+            context.retval.clear();
+            context.canAnalyze = true;
+            Condition_ptr cond2 = _cond2->seekAndDestroy(context);
+            bool rightUnreach = unreachable(context);
+                        
+            if(!leftUnreach && !rightUnreach){
+                context.canAnalyze &= leftAnalyze;
+                mergeConstraints(context.retval, left, context.negated);
+                return std::make_shared<OrCondition>(cond1, cond2);
+            } else if (leftUnreach && !rightUnreach) {
+                return cond2;
+            } else if (!leftUnreach && rightUnreach) {
+                context.retval = left;
+                context.canAnalyze = leftAnalyze;
+                return cond1;
+            } else {
+                context.retval.clear();
+                context.canAnalyze = true;
+                return std::make_shared<BooleanCondition>(false);
+            }
+        }
 
+        Condition_ptr EqualCondition::seekAndDestroy(ConstraintAnalysisContext& context) const {
+            context.retval.clear();
+            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();
+                addConstraints(context, literal->value(), _expr2);
+            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                addConstraints(context, _expr1, literal->value());
+            } else {
+                context.canAnalyze = false;
+                return std::make_shared<EqualCondition>(_expr1, _expr2);
+            }
+            
+            if (unreachable(context)) {
+                context.retval.clear();
+                return std::make_shared<BooleanCondition>(false);
+            }
+            return std::make_shared<EqualCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr NotEqualCondition::seekAndDestroy(ConstraintAnalysisContext& context) const {
+            context.retval.clear();
+            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();
+                addConstraints(context, literal->value(), _expr2);
+            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                addConstraints(context, _expr1, literal->value());
+            } else {
+                context.canAnalyze = false;
+                return std::make_shared<NotEqualCondition>(_expr1, _expr2);
+            }
+ 
+            if (unreachable(context)) {
+                context.retval.clear();
+                return std::make_shared<BooleanCondition>(false);
+            }
+            return std::make_shared<NotEqualCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr LessThanCondition::seekAndDestroy(ConstraintAnalysisContext& context) const {
+            context.retval.clear();
+            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();
+                addConstraints(context, literal->value(), _expr2);
+            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                addConstraints(context, _expr1, literal->value());
+            } else {
+                context.canAnalyze = false;
+                return std::make_shared<LessThanCondition>(_expr1, _expr2);
+            }
+
+            if (unreachable(context)) {
+                context.retval.clear();
+                return std::make_shared<BooleanCondition>(false);
+            }   
+            return std::make_shared<LessThanCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr LessThanOrEqualCondition::seekAndDestroy(ConstraintAnalysisContext& context) const {
+            context.retval.clear();
+            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();
+                addConstraints(context, literal->value(), _expr2);
+            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                addConstraints(context, _expr1, literal->value());
+            } else {
+                context.canAnalyze = false;
+                return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
+            }
+
+            if (unreachable(context)) {
+                context.retval.clear();
+                return std::make_shared<BooleanCondition>(false);
+            }
+            return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr GreaterThanCondition::seekAndDestroy(ConstraintAnalysisContext& context) const {
+            context.retval.clear();
+            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();
+                addConstraints(context, literal->value(), _expr2);
+            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                addConstraints(context, _expr1, literal->value());
+            } else {
+                context.canAnalyze = false;
+                return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
+            }
+
+            if (unreachable(context)) {
+                context.retval.clear();
+                return std::make_shared<BooleanCondition>(false);
+            }
+            return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr GreaterThanOrEqualCondition::seekAndDestroy(ConstraintAnalysisContext& context) const {
+            context.retval.clear();
+            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr1.get();
+                addConstraints(context, literal->value(), _expr2);
+            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
+                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
+                addConstraints(context, _expr1, literal->value());
+            } else {
+                context.canAnalyze = false;
+                return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
+            }
+            
+            if (unreachable(context)) {
+                context.retval.clear();
+                return std::make_shared<BooleanCondition>(false);
+            }
+            return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
+        }
+
+        Condition_ptr NotCondition::seekAndDestroy(ConstraintAnalysisContext& context) const {
+            context.canAnalyze = false; // NotConditions should have been resolved
+            return std::make_shared<NotCondition>(_cond);
+        }
+
+        Condition_ptr BooleanCondition::seekAndDestroy(ConstraintAnalysisContext& context) const {  
+            if (context.canAnalyze) {
+                context.retval.clear();
+                if (context.negated != _value) {
+                    Structures::StateConstraints* s = new Structures::StateConstraints(context.net());
+                    context.retval.push_back(s);
+                }
+            }
+            return std::make_shared<BooleanCondition>(_value);
+        }
+
+        Condition_ptr DeadlockCondition::seekAndDestroy(ConstraintAnalysisContext& context) const {
+            context.canAnalyze = false;
+            context.retval.clear();
+            return std::make_shared<DeadlockCondition>();
+        }
+        
+        /******************** Stubborn reduction interesting transitions ********************/
+        
+        void PlusExpr::incr(ReducingSuccessorGenerator& generator) const { 
+            _expr1->incr(generator);
+            _expr2->incr(generator);
+        }
+        
+        void PlusExpr::decr(ReducingSuccessorGenerator& generator) const {
+            _expr1->decr(generator);
+            _expr2->decr(generator);
+        }
+        
+        void SubtractExpr::incr(ReducingSuccessorGenerator& generator) const {
+            _expr1->incr(generator);
+            _expr2->decr(generator);
+        }
+        
+        void SubtractExpr::decr(ReducingSuccessorGenerator& generator) const {
+            _expr1->decr(generator);
+            _expr2->incr(generator);
+        }
+        
+        void MultiplyExpr::incr(ReducingSuccessorGenerator& generator) const {
+            _expr1->incr(generator);
+            _expr1->decr(generator);
+            _expr2->incr(generator);
+            _expr2->decr(generator);
+        }
+        
+        void MultiplyExpr::decr(ReducingSuccessorGenerator& generator) const {
+            _expr1->incr(generator);
+            _expr1->decr(generator);
+            _expr2->incr(generator);
+            _expr2->decr(generator);
+        }
+        
+        void MinusExpr::incr(ReducingSuccessorGenerator& generator) const {
+            // TODO not implemented
+        }
+        
+        void MinusExpr::decr(ReducingSuccessorGenerator& generatort) const {
+            // TODO not implemented
+        }
+
+        void LiteralExpr::incr(ReducingSuccessorGenerator& generator) const {
+            // Add nothing
+        }
+        
+        void LiteralExpr::decr(ReducingSuccessorGenerator& generator) const {
+            // Add nothing
+        }
+
+        void IdentifierExpr::incr(ReducingSuccessorGenerator& generator) const {
+            generator.presetOf(_offsetInMarking);
+        }
+        
+        void IdentifierExpr::decr(ReducingSuccessorGenerator& generator) const {
+             generator.postsetOf(_offsetInMarking);
+        }
+        
+        void AndCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // and
+                if(!_cond1->isSatisfied()) {            // TODO If both conditions are false, maybe use a heuristic to pick condition?
+                    _cond1->findInteresting(generator, negated);
+                } else {
+                    _cond2->findInteresting(generator, negated);
+                }
+            } else {                    // or
+                _cond1->findInteresting(generator, negated);
+                _cond2->findInteresting(generator, negated);
+            }
+        }
+        
+        void OrCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // or
+                _cond1->findInteresting(generator, negated);
+                _cond2->findInteresting(generator, negated);
+            } else {                    // and
+                if(_cond1->isSatisfied()) {       
+                    _cond1->findInteresting(generator, negated);
+                } else {
+                    _cond2->findInteresting(generator, negated);
+                }
+            }
+        }
+        
+        void EqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // equal
+                if(_expr1->getEval() > _expr2->getEval()){
+                    _expr1->decr(generator);
+                    _expr2->incr(generator);
+                } else {
+                    _expr1->incr(generator);
+                    _expr2->decr(generator);
+                }   
+            } else {                    // not equal
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            }
+        }
+        
+        void NotEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // not equal
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            } else {                    // equal
+                if(_expr1->getEval() > _expr2->getEval()){
+                    _expr1->decr(generator);
+                    _expr2->incr(generator);
+                } else {
+                    _expr1->incr(generator);
+                    _expr2->decr(generator);
+                }   
+            }
+        }
+        
+        void LessThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // less than
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+            } else {                    // greater than or equal
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            }
+        }
+        
+        void LessThanOrEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // less than or equal
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+            } else {                    // greater than
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            }
+        }
+        
+        void GreaterThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // greater than
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            } else {                    // less than or equal
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+            }
+        }
+        
+        void GreaterThanOrEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // greater than or equal
+                _expr1->incr(generator);
+                _expr2->decr(generator); 
+            } else {                    // less than
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+            }
+        }
+        
+        void NotCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            _cond->findInteresting(generator, !negated);
+        }
+        
+        void BooleanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            // Add nothing
+        }
+        
+        void DeadlockCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            // TODO implement this
+        }
+        
         /******************** Just-In-Time Compilation ********************/
 
     } // PQL

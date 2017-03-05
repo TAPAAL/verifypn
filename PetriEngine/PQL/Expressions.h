@@ -44,10 +44,10 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool pfree() const;
-            int evaluate(const EvaluationContext& context) const;
+            int evaluate(const EvaluationContext& context);
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
-        private:
+        protected:
             virtual int apply(int v1, int v2) const = 0;
             /** LLVM binary operator (llvm::Instruction::BinaryOps) */
             //virtual int binaryOp() const = 0;
@@ -62,6 +62,8 @@ namespace PetriEngine {
 
             using BinaryExpr::BinaryExpr;
             Expr::Types type() const;
+            void incr(ReducingSuccessorGenerator& generator) const;
+            void decr(ReducingSuccessorGenerator& generator) const;
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -74,6 +76,8 @@ namespace PetriEngine {
 
             using BinaryExpr::BinaryExpr;
             Expr::Types type() const;
+            void incr(ReducingSuccessorGenerator& generator) const;
+            void decr(ReducingSuccessorGenerator& generator) const;
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -86,6 +90,8 @@ namespace PetriEngine {
 
             using BinaryExpr::BinaryExpr;
             Expr::Types type() const;
+            void incr(ReducingSuccessorGenerator& generator) const;
+            void decr(ReducingSuccessorGenerator& generator) const;
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -101,10 +107,12 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool pfree() const;
-            int evaluate(const EvaluationContext& context) const;
+            int evaluate(const EvaluationContext& context);
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             Expr::Types type() const;
+            void incr(ReducingSuccessorGenerator& generator) const;
+            void decr(ReducingSuccessorGenerator& generator) const;
         private:
             Expr_ptr _expr;
         };
@@ -117,10 +125,12 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool pfree() const;
-            int evaluate(const EvaluationContext& context) const;
+            int evaluate(const EvaluationContext& context);
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             Expr::Types type() const;
+            void incr(ReducingSuccessorGenerator& generator) const;
+            void decr(ReducingSuccessorGenerator& generator) const;
 
             int value() const {
                 return _value;
@@ -138,10 +148,12 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool pfree() const;
-            int evaluate(const EvaluationContext& context) const;
+            int evaluate(const EvaluationContext& context);
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             Expr::Types type() const;
+            void incr(ReducingSuccessorGenerator& generator) const;
+            void decr(ReducingSuccessorGenerator& generator) const;
 
             /** Offset in marking or valuation */
             int offset() const {
@@ -165,7 +177,7 @@ namespace PetriEngine {
                 _cond2 = cond2;
             }
             void analyze(AnalysisContext& context);
-            bool evaluate(const EvaluationContext& context) const;
+            bool evaluate(const EvaluationContext& context);
             void findConstraints(ConstraintAnalysisContext& context) const;
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
@@ -178,6 +190,7 @@ namespace PetriEngine {
             virtual uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const = 0;
             virtual std::string op() const = 0;
             virtual void mergeConstraints(ConstraintAnalysisContext::ConstraintSet& result, ConstraintAnalysisContext::ConstraintSet& other, bool negated) const = 0;
+        protected:
             Condition_ptr _cond1;
             Condition_ptr _cond2;
         };
@@ -187,7 +200,10 @@ namespace PetriEngine {
         public:
 
             using LogicalCondition::LogicalCondition;
-
+            Condition_ptr resolveNegation(bool negated) const;
+            Condition_ptr resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const;
+            Condition_ptr seekAndDestroy(ConstraintAnalysisContext& context) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(bool b1, bool b2) const;
             //int logicalOp() const;
@@ -201,7 +217,10 @@ namespace PetriEngine {
         public:
 
             using LogicalCondition::LogicalCondition;
-            
+            Condition_ptr resolveNegation(bool negated) const;
+            Condition_ptr resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const;
+            Condition_ptr seekAndDestroy(ConstraintAnalysisContext& context) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;   
         private:
             bool apply(bool b1, bool b2) const;
             //int logicalOp() const;
@@ -219,7 +238,7 @@ namespace PetriEngine {
                 _expr2 = expr2;
             }
             void analyze(AnalysisContext& context);
-            bool evaluate(const EvaluationContext& context) const;
+            bool evaluate(const EvaluationContext& context);
             void findConstraints(ConstraintAnalysisContext& context) const;
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
@@ -237,6 +256,7 @@ namespace PetriEngine {
             virtual std::string sopTAPAAL() const = 0;
             virtual void addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& id, int value) const = 0;
             virtual void addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const = 0;
+        protected:
             Expr_ptr _expr1;
             Expr_ptr _expr2;
         };
@@ -246,6 +266,10 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
+            Condition_ptr resolveNegation(bool negated) const;
+            Condition_ptr resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const;
+            Condition_ptr seekAndDestroy(ConstraintAnalysisContext& context) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -263,6 +287,10 @@ namespace PetriEngine {
 
             using CompareCondition::CompareCondition;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            Condition_ptr resolveNegation(bool negated) const;
+            Condition_ptr resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const;
+            Condition_ptr seekAndDestroy(ConstraintAnalysisContext& context) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -279,6 +307,10 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
+            Condition_ptr resolveNegation(bool negated) const;
+            Condition_ptr resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const;
+            Condition_ptr seekAndDestroy(ConstraintAnalysisContext& context) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -295,6 +327,10 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
+            Condition_ptr resolveNegation(bool negated) const;
+            Condition_ptr resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const;
+            Condition_ptr seekAndDestroy(ConstraintAnalysisContext& context) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -311,6 +347,10 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
+            Condition_ptr resolveNegation(bool negated) const;
+            Condition_ptr resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const;
+            Condition_ptr seekAndDestroy(ConstraintAnalysisContext& context) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -326,7 +366,10 @@ namespace PetriEngine {
         class GreaterThanOrEqualCondition : public CompareCondition {
         public:
             using CompareCondition::CompareCondition;
-
+            Condition_ptr resolveNegation(bool negated) const;
+            Condition_ptr resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const;
+            Condition_ptr seekAndDestroy(ConstraintAnalysisContext& context) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -346,12 +389,16 @@ namespace PetriEngine {
                 _cond = cond;
             }
             void analyze(AnalysisContext& context);
-            bool evaluate(const EvaluationContext& context) const;
+            bool evaluate(const EvaluationContext& context);
             void findConstraints(ConstraintAnalysisContext& context) const;
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            Condition_ptr resolveNegation(bool negated) const;
+            Condition_ptr resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const;
+            Condition_ptr seekAndDestroy(ConstraintAnalysisContext& context) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             Condition_ptr _cond;
         };
@@ -363,13 +410,17 @@ namespace PetriEngine {
             BooleanCondition(bool value) : _value(value) {
             }
             void analyze(AnalysisContext& context);
-            bool evaluate(const EvaluationContext& context) const;
+            bool evaluate(const EvaluationContext& context);
             void findConstraints(ConstraintAnalysisContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             static Condition_ptr TRUE;
             static Condition_ptr FALSE;
+            Condition_ptr resolveNegation(bool negated) const;
+            Condition_ptr resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const;
+            Condition_ptr seekAndDestroy(ConstraintAnalysisContext& context) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             const bool _value;
         };
@@ -381,11 +432,15 @@ namespace PetriEngine {
             DeadlockCondition() {
             }
             void analyze(AnalysisContext& context);
-            bool evaluate(const EvaluationContext& context) const;
+            bool evaluate(const EvaluationContext& context);
             void findConstraints(ConstraintAnalysisContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            Condition_ptr resolveNegation(bool negated) const;
+            Condition_ptr resolveOrphans(std::vector<std::pair<std::string, uint32_t>> orphans) const;
+            Condition_ptr seekAndDestroy(ConstraintAnalysisContext& context) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         };
 
     }

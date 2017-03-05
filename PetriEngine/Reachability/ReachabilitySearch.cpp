@@ -105,15 +105,18 @@ namespace PetriEngine {
             std::cout << std::endl << std::endl;
         }
         
-#define TRYREACHPAR (queries, results, usequeries, printstats)
-#define TRYREACH(X) if(keep_trace) tryReach<X, Structures::TracableStateSet>TRYREACHPAR ; \
-                    else tryReach<X, Structures::StateSet> TRYREACHPAR;
+#define TRYREACHPAR    (queries, results, usequeries, printstats)
+#define TEMPPAR(X, Y)  if(keep_trace) tryReach<X, Structures::TracableStateSet, Y>TRYREACHPAR ; \
+                       else tryReach<X, Structures::StateSet, Y> TRYREACHPAR;
+#define TRYREACH(X)    if(stubbornreduction) TEMPPAR(X, ReducingSuccessorGenerator) \
+                       else TEMPPAR(X, SuccessorGenerator)
         
-        
+
         void ReachabilitySearch::reachable(
                     std::vector<std::shared_ptr<PQL::Condition > >& queries,
                     std::vector<ResultPrinter::Result>& results,
                     Strategy strategy,
+                    bool stubbornreduction,
                     bool statespacesearch,
                     bool printstats,
                     bool keep_trace)
