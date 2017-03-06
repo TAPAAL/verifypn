@@ -1294,10 +1294,10 @@ namespace PetriEngine {
         
         void AndCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // and
-                if(!_cond1->isSatisfied()) {            // TODO If both conditions are false, maybe use a heuristic to pick condition?
-                    _cond1->findInteresting(generator, negated);
-                } else {
+                if(!_cond2->isSatisfied()) {            // TODO If both conditions are false, maybe use a heuristic to pick condition?
                     _cond2->findInteresting(generator, negated);
+                } else {
+                    _cond1->findInteresting(generator, negated);
                 }
             } else {                    // or
                 _cond1->findInteresting(generator, negated);
@@ -1310,10 +1310,10 @@ namespace PetriEngine {
                 _cond1->findInteresting(generator, negated);
                 _cond2->findInteresting(generator, negated);
             } else {                    // and
-                if(_cond1->isSatisfied()) {       
-                    _cond1->findInteresting(generator, negated);
-                } else {
+                if(_cond2->isSatisfied()) {       
                     _cond2->findInteresting(generator, negated);
+                } else {
+                    _cond1->findInteresting(generator, negated);
                 }
             }
         }
