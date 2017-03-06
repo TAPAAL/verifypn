@@ -22,6 +22,8 @@ public:
     bool next(Structures::State& write);
     void presetOf(uint32_t place);
     void postsetOf(uint32_t place);
+    void postPresetOf(uint32_t t);
+    uint32_t leastDependentEnabled();
     uint32_t fired()
     {
        return _current;
@@ -38,7 +40,6 @@ private:
     void constructEnabled();
     void constructPrePost();
     void constructDependency();
-    bool leastDependentEnabled(uint32_t& t);
 };
 }
 

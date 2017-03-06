@@ -159,7 +159,7 @@ namespace PetriEngine {
             /** Find interesting transitions in stubborn reduction*/
             virtual void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const = 0;
 
-            bool isSatisfied()
+            bool isSatisfied() const
             {
                 return _satisfied;
             }

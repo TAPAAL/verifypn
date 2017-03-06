@@ -1401,7 +1401,10 @@ namespace PetriEngine {
         }
         
         void DeadlockCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            // TODO implement this
+            if(!isSatisfied()){
+                generator.postPresetOf(generator.leastDependentEnabled());
+            } // else add nothing
+            
         }
         
         /******************** Just-In-Time Compilation ********************/

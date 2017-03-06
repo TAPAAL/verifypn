@@ -133,6 +133,15 @@ namespace PetriEngine {
             }
         }
     }
+    
+    void ReducingSuccessorGenerator::postPresetOf(uint32_t t) {
+        const TransPtr& ptr = _net._transitions[t];
+        uint32_t finv = ptr.inputs;
+        uint32_t linv = ptr.outputs;
+        for (; finv < linv; finv++) {                // pre-set of t
+            postsetOf(_net._invariants[finv].place); // add post-set of p
+        }        
+    }
 
     void ReducingSuccessorGenerator::prepare(const Structures::State* state) {
         _parent = state;
@@ -176,9 +185,9 @@ namespace PetriEngine {
         reset();
         return false;
     }
-
-    bool ReducingSuccessorGenerator::leastDependentEnabled(uint32_t& t) {
-        uint32_t tLeast;
+    
+    uint32_t ReducingSuccessorGenerator::leastDependentEnabled() {
+        uint32_t tLeast = -1;
         bool foundLeast = false;
         for (uint32_t t = 0; t < _net._ntransitions; t++) {
             if (_enabled[t]) {
@@ -192,11 +201,7 @@ namespace PetriEngine {
                 }
             }
         }
-        if (foundLeast) {
-            t = tLeast;
-            return true;
-        } else
-            return false;
+        return tLeast;
     }
 
     void ReducingSuccessorGenerator::reset() {
