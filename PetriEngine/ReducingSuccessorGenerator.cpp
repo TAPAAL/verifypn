@@ -137,9 +137,9 @@ namespace PetriEngine {
     void ReducingSuccessorGenerator::prepare(const Structures::State* state) {
         _parent = state;
         constructEnabled();
-        _queries.front()->evaluate(PQL::EvaluationContext((*_parent).marking(), &_net));
+        _queries.front()->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
         _queries.front()->findInteresting(*this, false);
-
+        
         while (!_unprocessed.empty()) {
             uint32_t tr = _unprocessed.front();
             _unprocessed.pop_front();

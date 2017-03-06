@@ -44,7 +44,8 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool pfree() const;
-            int evaluate(const EvaluationContext& context);
+            int evaluate(const EvaluationContext& context) const;
+            int evalAndSet(const EvaluationContext& context);
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
         protected:
@@ -107,7 +108,8 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool pfree() const;
-            int evaluate(const EvaluationContext& context);
+            int evaluate(const EvaluationContext& context) const;
+            int evalAndSet(const EvaluationContext& context);
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             Expr::Types type() const;
@@ -125,7 +127,8 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool pfree() const;
-            int evaluate(const EvaluationContext& context);
+            int evaluate(const EvaluationContext& context) const;
+            int evalAndSet(const EvaluationContext& context);
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             Expr::Types type() const;
@@ -148,7 +151,8 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool pfree() const;
-            int evaluate(const EvaluationContext& context);
+            int evaluate(const EvaluationContext& context) const;
+            int evalAndSet(const EvaluationContext& context);
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             Expr::Types type() const;
@@ -177,7 +181,8 @@ namespace PetriEngine {
                 _cond2 = cond2;
             }
             void analyze(AnalysisContext& context);
-            bool evaluate(const EvaluationContext& context);
+            bool evaluate(const EvaluationContext& context) const;
+            bool evalAndSet(const EvaluationContext& context);
             void findConstraints(ConstraintAnalysisContext& context) const;
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
@@ -238,7 +243,8 @@ namespace PetriEngine {
                 _expr2 = expr2;
             }
             void analyze(AnalysisContext& context);
-            bool evaluate(const EvaluationContext& context);
+            bool evaluate(const EvaluationContext& context) const;
+            bool evalAndSet(const EvaluationContext& context);
             void findConstraints(ConstraintAnalysisContext& context) const;
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
@@ -389,7 +395,8 @@ namespace PetriEngine {
                 _cond = cond;
             }
             void analyze(AnalysisContext& context);
-            bool evaluate(const EvaluationContext& context);
+            bool evaluate(const EvaluationContext& context) const;
+            bool evalAndSet(const EvaluationContext& context);
             void findConstraints(ConstraintAnalysisContext& context) const;
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
@@ -410,7 +417,8 @@ namespace PetriEngine {
             BooleanCondition(bool value) : _value(value) {
             }
             void analyze(AnalysisContext& context);
-            bool evaluate(const EvaluationContext& context);
+            bool evaluate(const EvaluationContext& context) const;
+            bool evalAndSet(const EvaluationContext& context);
             void findConstraints(ConstraintAnalysisContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
@@ -432,7 +440,8 @@ namespace PetriEngine {
             DeadlockCondition() {
             }
             void analyze(AnalysisContext& context);
-            bool evaluate(const EvaluationContext& context);
+            bool evaluate(const EvaluationContext& context) const;
+            bool evalAndSet(const EvaluationContext& context);
             void findConstraints(ConstraintAnalysisContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;

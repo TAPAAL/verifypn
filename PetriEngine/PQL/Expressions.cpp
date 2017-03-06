@@ -213,60 +213,120 @@ namespace PetriEngine {
 
         /******************** Evaluation ********************/
 
-        int BinaryExpr::evaluate(const EvaluationContext& context) {
+        int BinaryExpr::evaluate(const EvaluationContext& context) const {
             int v1 = _expr1->evaluate(context);
             int v2 = _expr2->evaluate(context);
-            setEval(apply(v1, v2));
-            return getEval(); // Add evaluation value
+            return apply(v1, v2);
         }
 
-        int MinusExpr::evaluate(const EvaluationContext& context) {
-            setEval(-(_expr->evaluate(context)));
-            return getEval();
+        int MinusExpr::evaluate(const EvaluationContext& context) const {
+            return -(_expr->evaluate(context));
         }
 
-        int LiteralExpr::evaluate(const EvaluationContext&) {
-            setEval(_value);
-            return getEval();
+        int LiteralExpr::evaluate(const EvaluationContext&) const {
+            return _value;
         }
 
-        int IdentifierExpr::evaluate(const EvaluationContext& context) {
+        int IdentifierExpr::evaluate(const EvaluationContext& context) const {
             assert(_offsetInMarking != -1);
-            setEval(context.marking()[_offsetInMarking]);
-            return getEval();
+            return context.marking()[_offsetInMarking];
         }
 
-        bool LogicalCondition::evaluate(const EvaluationContext& context) {
+        bool LogicalCondition::evaluate(const EvaluationContext& context) const {
             bool b1 = _cond1->evaluate(context);
             bool b2 = _cond2->evaluate(context);
-            setSatisfied(apply(b1, b2));
-            return isSatisfied();
+            return apply(b1, b2);
         }
 
-        bool CompareCondition::evaluate(const EvaluationContext& context) {
+        bool CompareCondition::evaluate(const EvaluationContext& context) const {
             int v1 = _expr1->evaluate(context);
             int v2 = _expr2->evaluate(context);
-            setSatisfied(apply(v1, v2));
-            return isSatisfied();
+            return apply(v1, v2);
         }
 
-        bool NotCondition::evaluate(const EvaluationContext& context) {
-            setSatisfied(!(_cond->evaluate(context)));
-            return isSatisfied();
+        bool NotCondition::evaluate(const EvaluationContext& context) const {
+            return !(_cond->evaluate(context));
         }
 
-        bool BooleanCondition::evaluate(const EvaluationContext&) {
-            setSatisfied(_value);
-            return isSatisfied();
+        bool BooleanCondition::evaluate(const EvaluationContext&) const {
+            return _value;
         }
 
-        bool DeadlockCondition::evaluate(const EvaluationContext& context) {
+        bool DeadlockCondition::evaluate(const EvaluationContext& context) const {
             if (!context.net())
                 return false;
-            setSatisfied(context.net()->deadlocked(context.marking()));
-            return isSatisfied();
+            if (!context.net()->deadlocked(context.marking())) {
+                return false;
+            }
+            return true;
+        }
+        
+        /******************** Evaluation - save result ********************/
+        
+        int BinaryExpr::evalAndSet(const EvaluationContext& context) {
+            int v1 = _expr1->evalAndSet(context);
+            int v2 = _expr2->evalAndSet(context);
+            int res = apply(v1, v2);
+            setEval(res);
+            return res;
         }
 
+        int MinusExpr::evalAndSet(const EvaluationContext& context) {
+            int res = -(_expr->evalAndSet(context));
+            setEval(res);
+            return res;
+        }
+
+        int LiteralExpr::evalAndSet(const EvaluationContext&) {
+            setEval(_value);
+            return _value;
+        }
+
+        int IdentifierExpr::evalAndSet(const EvaluationContext& context) {
+            assert(_offsetInMarking != -1);
+            int res = context.marking()[_offsetInMarking];
+            setEval(res);
+            return res;
+        }
+
+        bool LogicalCondition::evalAndSet(const EvaluationContext& context) {
+            bool b1 = _cond1->evalAndSet(context);
+            bool b2 = _cond2->evalAndSet(context);
+            bool res = apply(b1, b2);
+            setSatisfied(res);
+            return res;
+        }
+
+        bool CompareCondition::evalAndSet(const EvaluationContext& context) {
+            int v1 = _expr1->evalAndSet(context);
+            int v2 = _expr2->evalAndSet(context);
+            bool res = apply(v1, v2);
+            setSatisfied(res);
+            return res;
+        }
+
+        bool NotCondition::evalAndSet(const EvaluationContext& context) {
+            bool res = !(_cond->evalAndSet(context));
+            setSatisfied(res);
+            return res;
+        }
+
+        bool BooleanCondition::evalAndSet(const EvaluationContext&) {
+            setSatisfied(_value);
+            return _value;
+        }
+
+        bool DeadlockCondition::evalAndSet(const EvaluationContext& context) {
+            if (!context.net())
+                return false;
+            bool res = context.net()->deadlocked(context.marking());
+            setSatisfied(res);
+            if (!res) {
+                return false;
+            }
+            return true;
+        }
+        
         /******************** Apply (BinaryExpr subclasses) ********************/
 
         int PlusExpr::apply(int v1, int v2) const {
@@ -280,7 +340,7 @@ namespace PetriEngine {
         int MultiplyExpr::apply(int v1, int v2) const {
             return v1 * v2;
         }
-
+        
         /******************** Apply (LogicalCondition subclasses) ********************/
 
         bool AndCondition::apply(bool b1, bool b2) const {
@@ -1272,7 +1332,7 @@ namespace PetriEngine {
             // TODO not implemented
         }
         
-        void MinusExpr::decr(ReducingSuccessorGenerator& generatort) const {
+        void MinusExpr::decr(ReducingSuccessorGenerator& generator) const {
             // TODO not implemented
         }
 
@@ -1294,7 +1354,7 @@ namespace PetriEngine {
         
         void AndCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // and
-                if(!_cond2->isSatisfied()) {            // TODO If both conditions are false, maybe use a heuristic to pick condition?
+                if(!_cond2->isSatisfied()) { // TODO If both conditions are false, maybe use a heuristic to pick condition?
                     _cond2->findInteresting(generator, negated);
                 } else {
                     _cond1->findInteresting(generator, negated);

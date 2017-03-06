@@ -104,7 +104,8 @@ namespace PetriEngine {
             /** True, if the expression is p-free */
             virtual bool pfree() const = 0;
             /** Evaluate the expression given marking and assignment */
-            virtual int evaluate(const EvaluationContext& context) = 0;
+            virtual int evaluate(const EvaluationContext& context) const = 0;
+            virtual int evalAndSet(const EvaluationContext& context) = 0;
             /** Generate LLVM intermediate code for this expr  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert expression to string */
@@ -130,7 +131,7 @@ namespace PetriEngine {
             std::vector<std::string> _placenameforbound;
             std::vector<size_t> _placeids;
             size_t _bound = 0;
-            bool _satisfied = false;
+            bool _eval = false;
         public:
             /** Virtual destructor */
             virtual ~Condition();
@@ -139,7 +140,8 @@ namespace PetriEngine {
             /** Perform context analysis  */
             virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate condition */
-            virtual bool evaluate(const EvaluationContext& context) = 0;
+            virtual bool evaluate(const EvaluationContext& context) const = 0;
+            virtual bool evalAndSet(const EvaluationContext& context) = 0;
             /** Analyze constraints for over-approximation */
             virtual void findConstraints(ConstraintAnalysisContext& context) const = 0;
             /** Generate LLVM intermediate code for this condition  */
@@ -161,12 +163,12 @@ namespace PetriEngine {
 
             bool isSatisfied()
             {
-                return _satisfied;
+                return _eval;
             }
             
             void setSatisfied(bool isSatisfied)
             {
-                _satisfied = isSatisfied;
+                _eval = isSatisfied;
             }
             
             void setInvariant(bool isInvariant)
