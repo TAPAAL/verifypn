@@ -50,7 +50,7 @@ std::string CTLParser::QueryToString(CTLQuery* query){
             return query->ToString() + "(" + QueryToString(query->GetFirstChild()) + ")";
         }
     }
-    else assert(false && "Could not print unknown query type");
+    std::cerr << "Error: Could not print query. This surgests the query was not well-formed. " << std::endl;
     exit(EXIT_FAILURE);
 }
 
@@ -94,8 +94,8 @@ CTLQuery* CTLParser::TemporalSetting(CTLQuery* query) {
         }
         return query;
     } else {
-        //this should not happen
-        assert(false);
+        std::cerr << "Error: An unknown error occured while setting temporal attribute onto the query elements. " << std::endl;
+        exit(EXIT_FAILURE);
     }
     exit(EXIT_FAILURE);
 }
@@ -138,8 +138,8 @@ int CTLParser::IdSetting(CTLQuery *query, int id)
             return afterFirst;
         }
     } else {
-        //this should not happen
-        assert(false);
+        std::cerr << "Error: An unknown error occured while setting Id attribute onto the query elements. " << std::endl;
+        exit(EXIT_FAILURE);
     }
     exit(EXIT_FAILURE);
 }
@@ -173,7 +173,7 @@ CTLQuery* CTLParser::FillAtom(CTLQuery* query, PetriEngine::PetriNet *net) {
         }
         return query;
     }
-    else assert(false && "Could not traverse unknown query type");
+    else std::cerr << "Error: Could not traverse unknown query type, while filling atoms with propositions. " << std::endl;
     exit(EXIT_FAILURE);
 }
 
@@ -215,7 +215,7 @@ CTLQuery* CTLParser::ConvertAG(CTLQuery* query) {
         }
         return query;
     }
-    else assert(false && "Could not traverse unknown query type");
+    else std::cerr << "Error: Could not traverse unknown query type, while converting AG queries to the \"negated EF negated\"-type. " << std::endl;
     exit(EXIT_FAILURE);
 }
 
@@ -257,7 +257,7 @@ CTLQuery* CTLParser::ConvertEG(CTLQuery* query) {
         }
         return query;
     }
-    else assert(false && "Could not traverse unknown query type");
+    else std::cerr << "Error: Could not traverse unknown query type, while converting EG queries to the \"negated AF negated\"-type. " << std::endl;
     exit(EXIT_FAILURE);
 }
 
@@ -294,7 +294,7 @@ CTLQuery* CTLParser::ParseXMLQuery(std::vector<char> buffer, int query_number) {
         }
         i++;
     }
-    assert(false && "Query number did not match a property in the provided .xml file.");
+    std::cerr << "Error: Query number did not match a property in the provided query file." << std::endl;
     exit(EXIT_FAILURE);
 }
 
@@ -355,7 +355,10 @@ CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
             query->Depth = 0;
             return query;
         }
-        else assert(false && "Failed parsing .xml file provided. Incorrect format.");
+        else {
+            std::cerr << "Error: Failed parsing query file provided. Incorrect format around " << root_name << ". Please check spelling." << std::endl;
+            exit(EXIT_FAILURE);
+        }
     }
     else if (firstLetter == 'i' ) {
         //Construct Atom
@@ -385,7 +388,10 @@ CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
             atom_str = first + loperator + second;
             
         }
-        else assert(false && "Incorrectly format of .xml file provided");
+        else {
+            std::cerr << "Error: Failed parsing query file provided. Incorrect format around " << root_name << ". Please check spelling." << std::endl;
+            exit(EXIT_FAILURE);
+        }
         query = new CTLQuery(EMPTY, pError, true, atom_str);
         query->Depth = 0;
         return query;
@@ -403,7 +409,8 @@ CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
         return query;
     }
     else {
-        assert(false && "Failed parsing .xml file provided. Incorrect format.");
+        std::cerr << "Error: Failed parsing query file provided. Incorrect format around " << root_name << ". Please check spelling." << std::endl;
+        exit(EXIT_FAILURE);
     }
     
     if (query->GetPath() == U) {
@@ -434,7 +441,8 @@ CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
         query->Depth = query->GetFirstChild()->Depth + 1;
     }
     else{
-        assert(false && "Attemting to give atom children - ERROR");
+        std::cerr << "Error: Failed parsing query file provided. Incorrect format around " << root_name << ". Please check spelling." << std::endl;
+        exit(EXIT_FAILURE);
     }
     
     return query;
@@ -450,7 +458,10 @@ Path CTLParser::getPathOperator(xml_node<> * quantifyer_node){
         return X;
     else if (path_firstLetter == 'u')
         return U;
-    else assert(false && "Failed parsing path operator. Incorrect format.");
+    else {
+        std::cerr << "Error: Failed parsing query file provided. Incorrect format around the path operator: " << quantifyer_node->first_node()->name() << ". Please check spelling." << std::endl;
+        exit(EXIT_FAILURE);
+    }
     return Path();
 }
 
@@ -470,7 +481,10 @@ std::string CTLParser::parsePar(xml_node<> * parameter){
     else if(parameter->name()[0] == 'i'){
         parameter_str = parameter_str + choppy(parameter->value()) + ")";
     }
-    else assert(false && "Failed parsing cardinality parameter. Incorrect format.");
+    else {
+        std::cerr << "Error: Failed parsing query file provided. Incorrect format around the parameter: " << parameter->name() << ". Please check spelling." << std::endl;
+        exit(EXIT_FAILURE);
+    }
     return parameter_str;
 }
 
@@ -504,7 +518,10 @@ std::string CTLParser::loperator_sym(std::string loperator){
     else if(loperator.compare("integer-ne")== 0){
         return " ne ";
     }
-    else assert(true && "Could not parse unsupported logical operator");
+    else {
+        std::cerr << "Error: Failed parsing query file provided. Incorrect format around the logical operator: " << loperator << ". \n--- Supoorted Logical Operators ---\n<integer-le>\n<integer-ge>\n<integer-eq>\n<integer-lt>\n<integer-gt>\n<integer-ne>\n" << std::endl;
+        exit(EXIT_FAILURE);
+    }
     return "";
 }
 
