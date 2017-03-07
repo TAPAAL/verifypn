@@ -64,6 +64,7 @@ CTLType CTLQuery::GetQueryType(){
         return PATHQEURY;
     else if(_q == AND || _q == OR || _q == NEG)
         return LOPERATOR;
+    std::cerr << "Error: Query Type Error - Query does not have a defined type, but the type of the query was requested." << std::endl;
     return TYPE_ERROR;
 }
 

@@ -399,7 +399,9 @@ bool OnTheFlyDG::EvalCardianlity(int a, LoperatorType lop, int b) {
         return a > b;
     else if (lop == GRQ)
         return a >= b;
-    assert(false && "Unsupported LOperator attemped evaluated");
+    else if (lop == NE)
+        return a != b;
+    std::cerr << "Error: Query unsupported - Attempted to compare " << a << " with " << b << " by an unknown logical operator " << std::endl;
     exit(EXIT_FAILURE);
 }
 
