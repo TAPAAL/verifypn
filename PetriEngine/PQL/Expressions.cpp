@@ -319,12 +319,8 @@ namespace PetriEngine {
         bool DeadlockCondition::evalAndSet(const EvaluationContext& context) {
             if (!context.net())
                 return false;
-            bool res = context.net()->deadlocked(context.marking());
-            setSatisfied(res);
-            if (!res) {
-                return false;
-            }
-            return true;
+            setSatisfied(context.net()->deadlocked(context.marking()));
+            return isSatisfied();
         }
         
         /******************** Apply (BinaryExpr subclasses) ********************/
