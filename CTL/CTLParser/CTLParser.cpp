@@ -418,7 +418,11 @@ CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
         query->SetFirstChild(xmlToCTLquery(child_node->first_node()));
         child_node = child_node->next_sibling();
         query->SetSecondChild(xmlToCTLquery(child_node->first_node()));
-        
+        if(child_node->next_sibling() != 0)
+        {
+            std::cerr << "Error: Failed parsing query file provided. \"" << root_name << "\" has too many children - must have 2. Please correct the query file." << std::endl;
+            exit(EXIT_FAILURE);
+        }
         query->Depth = (max_depth(query->GetFirstChild()->Depth, query->GetSecondChild()->Depth)) + 1;
     }
     else if (query->GetQuantifier() == AND || query->GetQuantifier() == OR) {
@@ -426,18 +430,33 @@ CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
         query->SetFirstChild(xmlToCTLquery(child_node));
         child_node = child_node->next_sibling();
         query->SetSecondChild(xmlToCTLquery(child_node));
-        
+        if(child_node->next_sibling() != 0)
+        {
+            std::cerr << "Error: Failed parsing query file provided. \"" << root_name << "\" has too many children - must have 2. Please correct the query file." << std::endl;
+            exit(EXIT_FAILURE);
+        }
         query->Depth = (max_depth(query->GetFirstChild()->Depth, query->GetSecondChild()->Depth)) + 1;
     }
     else if (query->GetQuantifier() == NEG) {
         query->SetFirstChild(xmlToCTLquery(root->first_node()));
+        if(root->first_node()->next_sibling() != 0)
+        {
+            std::cerr << "Error: Failed parsing query file provided. \"" << root_name << "\" has too many children - must have 1. Please correct the query file." << std::endl;
+            exit(EXIT_FAILURE);
+        }
         query->Depth = query->GetFirstChild()->Depth + 1;
     }
     else if (query->GetPath() == pError){
-        assert(false && "Failed setting Path operator");
+        std::cerr << "Error: Failed parsing query file provided. Path error in the file, coused the parser to reject the file. Please correct the query file." << std::endl;
+        exit(EXIT_FAILURE);
     }
     else if (query->GetQueryType() == PATHQEURY) {
         query->SetFirstChild(xmlToCTLquery(root->first_node()->first_node()));
+        if(root->first_node()->next_sibling() != 0)
+        {
+            std::cerr << "Error: Failed parsing query file provided. \"" << root_name << "\" has too many children - must have 1. Please correct the query file." << std::endl;
+            exit(EXIT_FAILURE);
+        }
         query->Depth = query->GetFirstChild()->Depth + 1;
     }
     else{

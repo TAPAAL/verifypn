@@ -135,7 +135,8 @@ void printResult(CTLResult& result, bool statisticslevel, bool mccouput){
         cout << "	Edges:              " << result.numberOfEdges << endl;
         cout << "	Processed Edges:    " << result.processedEdges << endl;
         cout << "	Processed N. Edges: " << result.processedNegationEdges << endl;
-        cout << "	Explored Configs:   " << result.exploredConfigurations << endl
+        cout << "	Explored Configs:   " << result.exploredConfigurations << endl;
+        cout << "	Query:              " << result.query->ToString() << endl
              << endl;
     }
 }
