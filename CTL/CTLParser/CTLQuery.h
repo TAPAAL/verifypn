@@ -19,37 +19,6 @@ enum CTLType {PATHQEURY = 1, LOPERATOR = 2, EVAL = 3, TYPE_ERROR = -1};
 enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, EMPTY = -1 };
 enum Path { G = 1, X = 2, F = 3, U = 4, pError = -1 };
 
-struct TokenCount{
-    int sizeoftokencount = -1;
-    int* cardinality = nullptr;
-};
-
-struct Cardinality {
-    int intSmaller = -1;
-    TokenCount placeSmaller;
-    int intLarger = -1;
-    TokenCount placeLarger;
-};
-
-struct Dependency{
-    int intSmaller = -1;
-    int placeSmaller = -1;
-    int intLarger = -1;
-    int placeLarger = -1;
-};
-
-struct Fireability{
-    int sizeofdenpencyplaces = -1;
-    Dependency* denpencyplaces = nullptr;
-};
-
-struct Atom {
-    bool isFireable = false;
-    int firesize = -1;
-    Fireability* fireset = nullptr;
-    Cardinality cardinality;
-};
-
 class CTLQuery {
     
 public:
