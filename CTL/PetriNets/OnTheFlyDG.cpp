@@ -162,7 +162,7 @@ void OnTheFlyDG::successors(Configuration *c)
                 }
                 if (valid || left != NULL) {
                     //if left side is guaranteed to be not satisfied, skip successor generation
-                    auto targets = nextState (*(v->marking));
+                    auto targets = nextStates (*(v->marking));
 
                     if(!targets.empty()){
                         Edge* leftEdge = new Edge(*v);
@@ -196,7 +196,7 @@ void OnTheFlyDG::successors(Configuration *c)
                     subquery->targets.push_back(c);
                 }
 
-                auto targets = nextState(*(v->marking));
+                auto targets = nextStates(*(v->marking));
 
                 if(!targets.empty()){
                     Edge* e1 = new Edge(*v);
@@ -213,7 +213,7 @@ void OnTheFlyDG::successors(Configuration *c)
                 }
             }
             else if(v->query->GetPath() == X){
-                auto targets = nextState(*v->marking);
+                auto targets = nextStates(*v->marking);
                 if (v->query->GetFirstChild()->IsTemporal) {   //regular check
                     Edge* e = new Edge(*v);
                     for (auto m : targets){
@@ -257,7 +257,7 @@ void OnTheFlyDG::successors(Configuration *c)
                     }   // else: right condition is not satisfied, no need to add an edge
                 }
 
-                auto targets = nextState(*(v->marking));
+                auto targets = nextStates(*(v->marking));
 
                 if(!targets.empty()){
                     Configuration *left = NULL;
@@ -298,7 +298,7 @@ void OnTheFlyDG::successors(Configuration *c)
                     subquery->targets.push_back(c);
                 }
 
-                auto targets = nextState(*(v->marking));
+                auto targets = nextStates(*(v->marking));
 
                 if(!targets.empty()){
                     for(auto m : targets){
@@ -314,7 +314,7 @@ void OnTheFlyDG::successors(Configuration *c)
                 }
             }
             else if(v->query->GetPath() == X){
-                auto targets = nextState(*(v->marking));
+                auto targets = nextStates(*(v->marking));
                 CTLQuery* query = v->query->GetFirstChild();
 
                 if(!targets.empty())
@@ -413,7 +413,7 @@ Configuration* OnTheFlyDG::initialConfiguration()
     return v;
 }
 
-std::vector<Marking*> OnTheFlyDG::nextState(Marking& t_marking){
+std::vector<Marking*> OnTheFlyDG::nextStates(Marking& t_marking){
 
     std::vector<Marking*> nextStates;
     PetriEngine::SuccessorGenerator PNGen(*net, t_marking);
@@ -438,70 +438,6 @@ void OnTheFlyDG::cleanUp()
     }
 }
 
-//std::pair<int, int *> OnTheFlyDG::serialize(SearchStrategy::Message &m)
-//{
-//    //serialized message format: sender | distance | type | id | query_id | marking;
-//    PetriConfig *v = static_cast<PetriConfig*>(m.configuration);
-//    int size = v->marking->length() + 5;
-//    int *buffer = (int*) malloc(sizeof(int) * size);
-//    buffer[0] = m.sender;
-//    buffer[1] = m.distance;
-//    buffer[2] = m.type;
-//    buffer[3] = m.id;
-//    buffer[4] = v->query->Id;
-//    for (int i=0; i < v->marking->length(); i++) {
-//        buffer[i+5] = v->marking->value()[i];
-//    }
-//    return std::pair<int, int*>(size, buffer);
-//}
-
-//SearchStrategy::Message OnTheFlyDG::deserialize(int *message, int messageSize)
-//{
-//    //serialized message format: sender | distance | type | id | query_id | marking;
-//    int *markingStart = message + 5;
-//    //this constructor will make a copy (that way the message can be safely freed
-//    Marking *marking = new Marking(markingStart, messageSize - 5);
-
-//    auto result = markings.find(marking);
-
-//    if(result == markings.end()){
-//        marking = *(markings.insert(marking).first);
-//    }
-//    else{
-//        delete marking;
-//        marking = *result;
-//    }
-
-//    CTLQuery *query = findQueryById(message[4], this->query);
-//    assert(query != nullptr);
-
-//    Configuration *c = createConfiguration(*marking, *query);
-
-//    SearchStrategy::Message m(message[0], message[1], (SearchStrategy::Message::Type) message[2], message[3], c);
-//    return m;
-//}
-
-CTLQuery *OnTheFlyDG::findQueryById(int id, CTLQuery *root)
-{
-    CTLQuery * result = nullptr;
-    if (root->Id == id) {
-        result = root;
-    } else if (root->GetQueryType() == CTLType::PATHQEURY || root->GetQueryType() == CTLType::LOPERATOR) {
-        //we are sure we have the first child
-        result = findQueryById(id, root->GetFirstChild());
-        if (!(
-                    root->GetPath() == Path::F ||
-                    root->GetPath() == Path::G ||
-                    root->GetPath() == Path::X ||
-                    root->GetQuantifier() == Quantifier::NEG
-                    ) && result == nullptr) {
-            //we are sure we have the second child and we haven't found the query yet
-            result = findQueryById(id, root->GetSecondChild());
-        }
-    }
-    return result;
-}
-
 void OnTheFlyDG::setQuery(CTLQuery *query)
 {
     cleanUp();
@@ -510,16 +446,12 @@ void OnTheFlyDG::setQuery(CTLQuery *query)
 
 int OnTheFlyDG::configurationCount() const
 {
-    int count = 0;
-    for (Marking *m : markings) {
-        count += m->configurations.size();
-    }
-    return count;
+    return _configurationCount;
 }
 
 int OnTheFlyDG::markingCount() const
 {
-    return markings.size();
+    return _markingCount;
 }
 
 Configuration *OnTheFlyDG::createConfiguration(Marking &t_marking, CTLQuery &t_query)
@@ -529,6 +461,7 @@ Configuration *OnTheFlyDG::createConfiguration(Marking &t_marking, CTLQuery &t_q
             return c;
     }
 
+    _configurationCount++;
     PetriConfig* newConfig = new PetriConfig(&t_marking, &t_query);
     t_marking.configurations.push_back(newConfig);
     return newConfig;
@@ -544,6 +477,7 @@ Marking *OnTheFlyDG::createMarking(const Marking& t_marking){
     auto result = markings.find(new_marking);
 
     if(result == markings.end()){
+        _markingCount++;
         return *(markings.insert(new_marking).first);
     }
     else{

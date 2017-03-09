@@ -24,7 +24,7 @@ public:
     bool is_deleted = false;
     bool is_negated = false;
 
-    std::string toString();
+    //std::string toString();
 };
 }
 #endif // EDGE_H
