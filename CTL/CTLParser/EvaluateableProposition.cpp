@@ -163,12 +163,18 @@ CardinalityParameter* EvaluateableProposition::CreateParameter(std::string param
         
         places_str.push_back(parameter_str);
         
+        int found_count = 0;
         for(uint i = 0; i < numberof_p; i++){
             for(std::string place : places_str){
                 if(p_names[i].compare(place) == 0){
                     param->places_i.push_back(i);
+                    found_count++;
                 }
             }
+        }
+        if (found_count != places_str.size()) {
+            std::cerr << "Error: The query file contains identifiers that are not in the net. Please check spelling." << std::endl;
+            exit(EXIT_FAILURE);
         }
     }
     return param;
@@ -189,7 +195,7 @@ LoperatorType EvaluateableProposition::SetLoperator(std::string atom_str){
         return LE;
     else if (loperator_str.compare(" ne ")== 0)
         return NE;
-    else assert(false && "Could not parse the given logical operator");
+    else std::cerr << "Error: Could not parse the logical operator: \"" << loperator_str << "\"" << std::endl;
     exit(EXIT_FAILURE);
 }
 
@@ -217,7 +223,7 @@ std::string EvaluateableProposition::ToString() {
         return cardi_str + ")";
     }
     else
-        assert(false && "Proposition had no type");
+        std::cerr << "Error: An unknown error occured while converting a proposition to string. " << std::endl;
     exit(EXIT_FAILURE);
 }
 
