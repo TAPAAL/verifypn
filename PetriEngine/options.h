@@ -24,6 +24,7 @@ struct options_t {
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
     bool mccoutput = false;
     bool trace = false;
+    bool siphontrap = false;
 };
 
 #endif

@@ -39,6 +39,7 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
+#include "PetriEngine/STSolver.h"
 
 using namespace std;
 using namespace PetriEngine;
@@ -160,6 +161,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
         } else if(strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--partial-order-reduction") == 0) {
             options.stubbornreduction = true;
+        } else if(strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--siphon-trap") == 0) {
+            options.siphontrap = true;
         } else if(strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--query-simplification") == 0) {
             options.querysimplification = true;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
@@ -184,6 +187,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 1  aggressive reduction\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
                     "  -p, --partial-order-reduction      Enable partial order reduction (stubborn sets)\n"
+                    "  -a, --siphon-trap                  Analyse for deadlock freedom using Siphon-Trap property\n"
                     "  -i, --query-simplification         Enable query simplification\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
@@ -474,14 +478,29 @@ int main(int argc, char* argv[]) {
         printer.setReducer(builder.getReducer());        
     }
 
-    //----------------------- Reachability -----------------------//
-
+    
     PetriNet* net = builder.makePetriNet();
     
     for(auto& q : queries)
     {
         q->indexPlaces(builder.getPlaceNames());
     }
+    
+    //----------------------- Siphon Trap ------------------------//
+    if(options.siphontrap){
+        STSolver stSolver(*net);
+        stSolver.Solve();
+        stSolver.PrintResult();
+        
+        if(stSolver.getResult() == 1 ){
+            return SuccessCode;
+        }
+        else{
+            return ErrorCode;
+        }   
+    }
+    
+    //----------------------- Reachability -----------------------//
     
     //Create reachability search strategy
     ReachabilitySearch strategy(printer, *net, options.kbound);
