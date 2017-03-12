@@ -25,7 +25,7 @@
 
 struct QueryMeta{
     int numberof_queries = 0;
-    std::string model_name = "EmptyString";
+    std::vector<std::string>* model_names = new std::vector<std::string>();
 };
 
 struct RemoveDelimiter
@@ -59,7 +59,7 @@ private:
     CTLQuery* TemporalSetting(CTLQuery* query);
     int IdSetting(CTLQuery* query, int id);
     int GetNumberofChildren(rapidxml::xml_node<>* root);
-    std::vector<CTLQuery*> *GetChildren(rapidxml::xml_node<>* node);
+    CTLQuery* GetChildren(CTLQuery* query, rapidxml::xml_node<>* node);
     std::string choppy( char *s );
 
 };

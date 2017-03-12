@@ -31,7 +31,6 @@ bool Algorithm::CertainZeroFPA::search(DependencyGraph::BasicDependencyGraph &t_
         bool allOne = true;
         bool hasCZero = false;
         Configuration *lastUndecided = nullptr;
-
         for (DependencyGraph::Configuration *c : e->targets) {
             if (c->assignment == CZERO) {
                 hasCZero = true;

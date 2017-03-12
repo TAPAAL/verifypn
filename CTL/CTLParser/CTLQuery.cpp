@@ -65,29 +65,38 @@ CTLType CTLQuery::GetQueryType(){
     else if(_q == AND || _q == OR || _q == NEG)
         return LOPERATOR;
     std::cerr << "Error: Query Type Error - Query does not have a defined type, but the type of the query was requested." << std::endl;
-    return TYPE_ERROR;
+    exit(EXIT_FAILURE);
 }
 
 CTLQuery* CTLQuery::GetFirstChild(){
     if(_hasAtom){
-        std::cout<<"Query " << ToString() << " does not have child"<<std::endl;
-        throw 20;
+        std::cerr<<"Query does not have child"<<std::endl;
+        exit(EXIT_FAILURE);
     }
     return _firstchild;
 }
 
 CTLQuery* CTLQuery::GetSecondChild(){
-    assert(!_hasAtom && "Query does not have children");
-    assert(!(_path == F || _path == G || _path == X) && "Query does not have second child");
-    assert(!(_q == NEG) && "Query does not have second child");
+    if(_hasAtom || _path == F || _path == G || _path == X){
+        std::cerr<<"Query does not have child"<<std::endl;
+        exit(EXIT_FAILURE);
+    }
     return _secondchild;
 }
 
 void CTLQuery::SetFirstChild(CTLQuery *q){
+    if(_hasAtom){
+        std::cerr<<"Query cannot be given a child"<<std::endl;
+        exit(EXIT_FAILURE);
+    }
     _firstchild = q;
 }
 
 void CTLQuery::SetSecondChild(CTLQuery *q){
+    if(_hasAtom){
+        std::cerr<<"Query cannot be given a child"<<std::endl;
+        exit(EXIT_FAILURE);
+    }
     _secondchild = q;
 }
 
@@ -100,16 +109,26 @@ Path CTLQuery::GetPath(){
 }
 
 std::string CTLQuery::GetAtom(){
+    if (!_hasAtom){
+        std::cerr<<"Query does not have an atom " <<std::endl;
+        exit(EXIT_FAILURE);
+    }
     return _a;
 }
 
 EvaluateableProposition* CTLQuery::GetProposition(){
-    assert(_hasAtom && "Query does not have proposition");
+    if (!_hasAtom){
+        std::cerr<<"Query does not have proposition " <<std::endl;
+        exit(EXIT_FAILURE);
+    }
     return _proposition;
 }
 
 void CTLQuery::SetProposition(EvaluateableProposition *p){
-    assert(_hasAtom && "Query does not have proposition");
+    if (!_hasAtom){
+        std::cerr<<"Query cannot be given a proposition " <<std::endl;
+        exit(EXIT_FAILURE);
+    }
     _proposition = p;
 }
 
@@ -118,13 +137,13 @@ std::string CTLQuery::ToString(){
         return _a;
     }
     else if(_q == AND){
-        return " & ";
+        return "(" + _firstchild->ToString() + " & " +  _secondchild->ToString() + ")";
     }
     else if(_q == OR){
-        return " | ";
+        return "(" + _firstchild->ToString() + " | " +  _secondchild->ToString() + ")";
     }
     else if(_q == NEG){
-        return "!";
+        return "!(" + _firstchild->ToString() + ")";
     }
     else if(_q == A || _q == E){
         std::string quanti = "";
@@ -133,26 +152,25 @@ std::string CTLQuery::ToString(){
         }
         else quanti = "E";
         if(_path == F){
-            return quanti + "F";
+            return quanti + "F" + _firstchild->ToString();
         }
         else if(_path == G){
-            return quanti + "G";
+            return quanti + "G" + _firstchild->ToString();
         }
         else if(_path == X){
-            return quanti + "X";
+            return quanti + "X" + _firstchild->ToString();
         }
         else if(_path == U){
-            
-            return quanti.append("U");
+            return quanti + "("  + _firstchild->ToString() + ") U (" + _secondchild->ToString() + ")";
         }
         else{
-            std::cout<<"::::::Error Printing: Path was empty::::"<<std::endl;
-            assert(false);
+            std::cerr<<"::::::Error Printing: Path was empty::::"<<std::endl;
+            exit(EXIT_FAILURE);
         }
     }
     else{
-        std::cout<<"::::::Error Printing: Q was empty::::"<<std::endl;
-        assert(false);
+        std::cerr<<"::::::Error Printing: Q was empty::::"<<std::endl;
+        exit(EXIT_FAILURE);
     }
     exit(EXIT_FAILURE);
 }

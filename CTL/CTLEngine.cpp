@@ -68,7 +68,7 @@ ReturnValue makeCTLResults(vector<CTLResult>& results,
 
         CTLQuery* q = queries[qnbr];
         CTLResult r(q,
-                     meta.model_name,
+                     meta.model_names->at(qnbr),
                      qnbr,
                      printstatistics,
                      mccoutput);
@@ -158,6 +158,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
     Algorithm::FixedPointAlgorithm* alg = nullptr;
 
     if(parseQueries(queryfile, net, queries, meta) == ErrorCode) return ErrorCode;
+    //exit(EXIT_FAILURE);
     if(makeCTLResults(results, queries, meta, querynumbers, printstatistics, mccoutput) == ErrorCode) return ErrorCode;
 
     for(CTLResult& result : results){
