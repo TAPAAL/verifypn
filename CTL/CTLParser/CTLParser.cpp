@@ -286,6 +286,7 @@ CTLQuery* CTLParser::ParseXMLQuery(std::vector<char> buffer, int query_number) {
 #endif
     int i = 1;
     for (xml_node<> * property_node = root_node->first_node("property"); property_node; property_node = property_node->next_sibling()) {
+        std::cout << "I is: " << i << " and Number is " << query_number << std::endl;
         if(i == query_number){
             xml_node<> * id_node = property_node->first_node("id");
             xml_node<> * formula_node = id_node->next_sibling("description")->next_sibling("formula");
@@ -317,10 +318,30 @@ QueryMeta* CTLParser::GetQueryMetaData(std::vector<char> buffer) {
     return meta_d;
 }
 
+int CTLParser::GetNumberofChildren(xml_node<>* root) {
+    xml_node<>* node = root->first_node();
+    int res = 1;
+    while (node->next_sibling() != 0) {
+        node = node->next_sibling();
+        res++;
+    }
+    return res;
+}
+
+std::vector<CTLQuery*>* CTLParser::GetChildren(xml_node<>* node) {
+    std::vector<CTLQuery*>* res = new std::vector<CTLQuery*>();
+    res->push_back(xmlToCTLquery(node));
+    while (node->next_sibling() != 0) {
+        res->push_back(xmlToCTLquery(node));
+        node = node->next_sibling();
+    }
+    return res;
+}
 
 CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
     char *root_name = root->name();
     char firstLetter = root_name[0];
+    int children = 0;
     CTLQuery *query = nullptr;
     if (firstLetter == 'a') {
         //Construct all-paths
@@ -341,12 +362,14 @@ CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
         //Construct conjunction
         query = new CTLQuery(AND, pError, false, "");
         assert(query->GetQuantifier() == AND && "Failed setting and operator");
+        children = GetNumberofChildren(root);
     }
     else if (firstLetter == 'd' ) {
         if( root_name[1] == 'i' ){
             //Construct disjunction
             query = new CTLQuery(OR, pError, false, "");
             assert(query->GetQuantifier() == OR && "Failed setting or operator");
+            children = GetNumberofChildren(root);
         }
         else if (root_name[1] == 'e'){
             //Deadlock query
@@ -425,7 +448,7 @@ CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
         }
         query->Depth = (max_depth(query->GetFirstChild()->Depth, query->GetSecondChild()->Depth)) + 1;
     }
-    else if (query->GetQuantifier() == AND || query->GetQuantifier() == OR) {
+    /*else if (query->GetQuantifier() == AND || query->GetQuantifier() == OR) {
         xml_node<> * child_node = root->first_node();
         query->SetFirstChild(xmlToCTLquery(child_node));
         child_node = child_node->next_sibling();
@@ -434,6 +457,41 @@ CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
         {
             std::cerr << "Error: Failed parsing query file provided. \"" << root_name << "\" has too many children - must have 2. Please correct the query file." << std::endl;
             exit(EXIT_FAILURE);
+        }
+        query->Depth = (max_depth(query->GetFirstChild()->Depth, query->GetSecondChild()->Depth)) + 1;
+    }*/
+    else if (query->GetQuantifier() == AND || query->GetQuantifier() == OR) {
+        if (children == 0 || children == 1) {
+            std::cerr << "Error: Failed parsing query file provided. \"" << root_name << "\" has too few children. It has " << children << " - it must have at the least 2. Please correct the query file." << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        xml_node<> * child_node = root->first_node();
+        query->SetFirstChild(xmlToCTLquery(child_node));
+        if (children == 2) {
+            query->SetSecondChild(xmlToCTLquery(child_node->next_sibling()));
+        }
+        else{
+            child_node = child_node->next_sibling();
+            std::vector<CTLQuery*>* additional_operators = new std::vector<CTLQuery*>();
+            std::vector<CTLQuery*>* additional_children = GetChildren(child_node);
+            for (int i = 0; i < children-2; ++i) {
+                additional_operators->push_back(new CTLQuery(query->GetQuantifier(), pError, false, ""));
+            }
+            int i = 0;
+            for (auto ope = additional_operators->begin(); ope != additional_operators->end(); ++ope) {
+                if (ope == additional_operators->end()) {
+                    (*ope)->SetFirstChild(additional_children->at(i));
+                    (*ope)->SetSecondChild(additional_children->at(i+1));
+                }
+                else{
+                    (*ope)->SetFirstChild(additional_children->at(i));
+                }
+                i++;
+            }
+            for (auto ope = additional_operators->end(); ope != additional_operators->begin(); --ope) {
+                (*ope)->Depth = (max_depth((*ope)->GetFirstChild()->Depth, (*ope)->GetSecondChild()->Depth)) + 1;
+            }
+            query->SetSecondChild(additional_operators->front());
         }
         query->Depth = (max_depth(query->GetFirstChild()->Depth, query->GetSecondChild()->Depth)) + 1;
     }

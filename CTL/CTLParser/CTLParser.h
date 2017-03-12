@@ -58,6 +58,8 @@ private:
     CTLQuery* ConvertEG(CTLQuery* query);
     CTLQuery* TemporalSetting(CTLQuery* query);
     int IdSetting(CTLQuery* query, int id);
+    int GetNumberofChildren(rapidxml::xml_node<>* root);
+    std::vector<CTLQuery*> *GetChildren(rapidxml::xml_node<>* node);
     std::string choppy( char *s );
 
 };
