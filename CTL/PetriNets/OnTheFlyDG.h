@@ -75,6 +75,8 @@ protected:
     Marking *initial_marking = new Marking();
     uint32_t n_transitions = 0;
     uint32_t n_places = 0;
+    size_t _markingCount = 0;
+    size_t _configurationCount = 0;
 
     //used after query is set
     DependencyGraph::Configuration *initial = nullptr;
@@ -84,13 +86,11 @@ protected:
 
     bool evaluateQuery(CTLQuery &query, Marking &marking);
     bool fastEval(CTLQuery &query, Marking &marking);
-    std::vector<Marking*> nextState(Marking &marking);
+    std::vector<Marking*> nextStates(Marking &marking);
     bool EvalCardianlity(int a, LoperatorType lop, int b);
     int GetParamValue(CardinalityParameter *param, Marking& marking);
     DependencyGraph::Configuration *createConfiguration(Marking &marking, CTLQuery &query);
     Marking *createMarking(const Marking &marking);
-
-    CTLQuery *findQueryById(int id, CTLQuery *root);
 
     MarkingContainer markings;
 };
