@@ -117,7 +117,6 @@ void printResult(CTLResult& result, bool statisticslevel, bool mccouput){
     if(mccouput){
         cout << "FORMULA "
              << result.modelName
-             << "-" << result.queryNumber
              << " " << (result.result ? "TRUE" : "FALSE") << " "
              << techniques
              << endl;
