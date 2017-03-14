@@ -159,7 +159,7 @@ CardinalityParameter* EvaluateableProposition::CreateParameter(std::string param
         
         places_str.push_back(parameter_str);
         
-        int found_count = 0;
+        uint found_count = 0;
         for(uint i = 0; i < numberof_p; i++){
             for(std::string place : places_str){
                 if(p_names[i].compare(place) == 0){
