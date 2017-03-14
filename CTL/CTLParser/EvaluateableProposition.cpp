@@ -128,16 +128,12 @@ void EvaluateableProposition::SetFireset(std::string fireset_str, std::vector<st
                 _fireset.push_back(i);
             }
         }
-        if (position != SIZE_MAX)
-            restof_firestring = restof_firestring.substr(position);
+        if (position != SIZE_MAX){
+            restof_firestring = restof_firestring.substr(position + 1);
+        }
         else
             restof_firestring = "";
     }
-#ifdef DEBUG
-    for ( auto f : _fireset){
-        std::cout<<f<<" is id of "<< t_names[f]<<std::endl;
-    }
-#endif
 }
 
 CardinalityParameter* EvaluateableProposition::CreateParameter(std::string parameter_str, std::vector<std::string> p_names, unsigned int numberof_p){
