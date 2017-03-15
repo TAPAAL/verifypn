@@ -529,9 +529,11 @@ std::string CTLParser::parsePar(xml_node<> * parameter){
             atom_str = atom_str + ")";
  */
 
-int CTLParser::max_depth(int a, int b){
-    if(a < b) return b; return a;
-}
+//int CTLParser::max_depth(int a, int b){
+//    if(a < b)
+//        return b;
+//    return a;
+//}
 
 std::string CTLParser::loperator_sym(std::string loperator){
     if(loperator.compare("integer-le")== 0){
