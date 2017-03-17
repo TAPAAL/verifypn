@@ -389,12 +389,27 @@ int main(int argc, char* argv[]) {
     
     
     if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
-
+    
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
        
     ResultPrinter printer(&builder, &options, querynames);
     
     bool alldone = !options.disableoverapprox;
+    
+    for(size_t i = 0; i < queries.size(); ++i)
+    {
+        PQL::Condition *query = queries[i].get();
+        bool invariant = query->isInvariant();
+        //query->simplify(context here);
+        if(query->toString() == "True"){ // TODO implement type() function for conditions
+            results[i] = printer.printResult(i, query, ResultPrinter::Satisfied);
+        } else if (query->toString() == "False") {
+            results[i] = printer.printResult(i, query, ResultPrinter::NotSatisfied);
+        } else {
+            alldone = false;
+        }
+    }
+    
     if (!options.disableoverapprox){
         PetriNetBuilder b2(builder);
         PetriNet* net = b2.makePetriNet(false);
