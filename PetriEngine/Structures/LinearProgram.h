@@ -59,19 +59,29 @@ struct Member{
 class LinearProgram {
 public:
     LinearProgram();
-    LinearProgram(std::vector<Equation> equations) : _equations(equations){
+    LinearProgram(std::vector<Equation> eqs) : equations(eqs){
     }
     void addEquation(Equation equation){
-        _equations.push_back(equation);
+        equations.push_back(equation);
     }
-    void addEquations(std::vector<Equation> equations){
-        std::copy (equations.begin(), equations.end(), std::back_inserter(_equations));
+    void addEquations(std::vector<Equation> eqs){
+        for(Equation& eq : eqs){
+            equations.push_back(eq);
+        }
     }
     virtual ~LinearProgram();
-    
     bool isimpossible(const PetriEngine::PetriNet& net, const PetriEngine::MarkVal* m0);
+    
+    static LinearProgram merge(LinearProgram& lp1, LinearProgram& lp2){
+        LinearProgram res;
+        res.addEquations(lp1.equations);
+        res.addEquations(lp2.equations);
+        return res;
+    }
+    
+    std::vector<Equation> equations;
 private:
-    std::vector<Equation> _equations;
+    
 };
 
 #endif /* LINEARPROGRAM_H */
