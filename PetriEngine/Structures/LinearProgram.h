@@ -73,7 +73,7 @@ public:
     virtual ~LinearProgram();
     bool isimpossible(const PetriEngine::PetriNet& net, const PetriEngine::MarkVal* m0);
     
-    static LinearProgram merge(LinearProgram& lp1, LinearProgram& lp2){
+    static LinearProgram lpUnion(LinearProgram& lp1, LinearProgram& lp2){
         LinearProgram res;
         res.addEquations(lp1.equations);
         res.addEquations(lp2.equations);
