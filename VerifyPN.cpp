@@ -398,12 +398,12 @@ int main(int argc, char* argv[]) {
     
     for(size_t i = 0; i < queries.size(); ++i)
     {
-        PQL::Condition *query = queries[i].get();
-        bool invariant = query->isInvariant();
-        //query->simplify(context here);
-        if(query->toString() == "True"){ // TODO implement type() function for conditions
+        SimplificationContext context;
+        PQL::Condition *query = queries[i].get()->simplify(context);
+        queries[i] = query;
+        if(query->toString() == "true"){
             results[i] = printer.printResult(i, query, ResultPrinter::Satisfied);
-        } else if (query->toString() == "False") {
+        } else if (query->toString() == "false") {
             results[i] = printer.printResult(i, query, ResultPrinter::NotSatisfied);
         } else {
             alldone = false;

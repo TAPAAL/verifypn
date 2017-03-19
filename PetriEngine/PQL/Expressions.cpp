@@ -716,8 +716,67 @@ namespace PetriEngine {
         }
 
 
-        /******************** Just-In-Time Compilation ********************/
+        /******************** Query Simplification ********************/       
+        
+        void LiteralExpr::constraint(SimplificationContext context) const {            
+        }
+        
+        void IdentifierExpr::constraint(SimplificationContext context) const {            
+        }
+        
+        void PlusExpr::constraint(SimplificationContext context) const {
+        }
 
+        void SubtractExpr::constraint(SimplificationContext context) const {
+        }
+
+        void MultiplyExpr::constraint(SimplificationContext context) const {
+        }   
+        
+        bool satisfiable(SimplificationContext context, ) {
+            for(LinearProgram &lp : _lps){
+                if(!lp->isimpossible(net, m0)){
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        std::pair<Condition_ptr, std::vector<LinearProgram> AndCondition::simplify(SimplificationContext context) const{
+            (phi1,LPS1) = _cond1->simplify(context);
+            (phi2,LPS2) = _cond2->simplify(context);
+            
+            if(LPS1->cananalyze)
+            
+            LPS combi = merge(fist, second);
+            
+            if(!merge->satisfiable(context, combi)) {
+                
+            } else {
+                
+            }
+        }
+        
+        OrCondition::simplify(SimplificationContext context) const {
+            (phi1,LPS1) = _cond1->simplify(context);
+            (phi2,LPS2) = _cond2->simplify(context);
+            
+            if(LPS1->cananalyze)
+            
+            LPS combi = merge(fist, second);
+            
+            if(!merge->satisfiable(context, combi)) {
+                
+            } else {
+                
+            }
+        }
+        
+        CompareCondition::simplify(SimplificationContext context) const {
+            
+        }
+        
+        /******************** Just-In-Time Compilation ********************/
     } // PQL
 } // PetriEngine
 
