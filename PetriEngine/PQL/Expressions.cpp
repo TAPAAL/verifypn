@@ -19,6 +19,8 @@
  */
 #include "Contexts.h"
 #include "Expressions.h"
+#include "../Structures/LinearProgram.h"
+#include "../Structures/LinearPrograms.h"
 
 #include <sstream>
 #include <assert.h>
@@ -733,46 +735,62 @@ namespace PetriEngine {
         void MultiplyExpr::constraint(SimplificationContext context) const {
         }   
         
-        bool satisfiable(SimplificationContext context, ) {
-            for(LinearProgram &lp : _lps){
-                if(!lp->isimpossible(net, m0)){
-                    return true;
-                }
+        struct Retval {
+            Condition_ptr formula;
+            LinearPrograms lps;       
+            Retval (Condition_ptr formula, LinearPrograms lps) : formula(formula), lps(lps) {           
             }
-            return false;
-        }
+        };
         
-        std::pair<Condition_ptr, std::vector<LinearProgram> AndCondition::simplify(SimplificationContext context) const{
-            (phi1,LPS1) = _cond1->simplify(context);
-            (phi2,LPS2) = _cond2->simplify(context);
+        retval AndCondition::simplify(SimplificationContext context) const {
+            r1 = _cond1->simplify(context);
+            r2 = _cond2->simplify(context);
             
-            if(LPS1->cananalyze)
+            if(r1.formula.toString() == "false" || r1.formula.toString() == "false") {
+                return Retval(std::make_shared<BooleanCondition>(false), new LinearPrograms());
+            } else if (r1.formula.toString() == "true") {
+                return Retval(r2.formula, r2.lps);
+            } else if (r2.formula.toString() == "true") {
+                return Retval(r1.formula, r1.lps);
+            }
             
-            LPS combi = merge(fist, second);
+            LinearPrograms merged = LinearPrograms::merge(r1.lps, r2.lps);
             
-            if(!merge->satisfiable(context, combi)) {
-                
+            if(merged->satisfiable(context)) {
+                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), merged);
             } else {
-                
+                return Retval(std::make_shared<BooleanCondition>(false), new LinearPrograms()); 
             }
         }
         
-        OrCondition::simplify(SimplificationContext context) const {
-            (phi1,LPS1) = _cond1->simplify(context);
-            (phi2,LPS2) = _cond2->simplify(context);
+        retval OrCondition::simplify(SimplificationContext context) const {
+            r1 = _cond1->simplify(context);
+            r2 = _cond2->simplify(context);
             
-            if(LPS1->cananalyze)
-            
-            LPS combi = merge(fist, second);
-            
-            if(!merge->satisfiable(context, combi)) {
-                
+            if(r1.formula.toString() == "true" || r1.formula.toString() == "true") {
+                return Retval(std::make_shared<BooleanCondition>(true), new LinearPrograms());
+            } else if (r1.formula.toString() == "false") {
+                return Retval(r2.formula, r2.lps);
+            } else if (r2.formula.toString() == "false") {
+                return Retval(r1.formula, r1.lps);
             } else {
-                
+                return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), LinearProgram::merge(r1.lps, r2.lps));
             }
         }
         
-        CompareCondition::simplify(SimplificationContext context) const {
+        retval CompareCondition::simplify(SimplificationContext context) const {
+            
+        }
+        
+        retval NotCondition::simplify(SimplificationContext context) const {
+            
+        }
+        
+        retval BooleanCondition::simplify(SimplificationContext context) const {
+            
+        }
+        
+        retval DeadlockCondition::simplify(SimplificationContext context) const {
             
         }
         

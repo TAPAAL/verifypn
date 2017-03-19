@@ -178,6 +178,7 @@ namespace PetriEngine {
             virtual uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const = 0;
             virtual std::string op() const = 0;
             virtual void mergeConstraints(ConstraintAnalysisContext::ConstraintSet& result, ConstraintAnalysisContext::ConstraintSet& other, bool negated) const = 0;
+        protected:
             Condition_ptr _cond1;
             Condition_ptr _cond2;
         };

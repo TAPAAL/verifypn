@@ -399,7 +399,7 @@ int main(int argc, char* argv[]) {
     for(size_t i = 0; i < queries.size(); ++i)
     {
         SimplificationContext context;
-        PQL::Condition *query = queries[i].get()->simplify(context);
+        PQL::Condition *query = queries[i].get()->simplify(context).formula;
         queries[i] = query;
         if(query->toString() == "true"){
             results[i] = printer.printResult(i, query, ResultPrinter::Satisfied);
