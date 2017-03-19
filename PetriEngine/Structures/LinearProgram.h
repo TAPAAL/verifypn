@@ -54,6 +54,7 @@ struct Member{
         std::vector<REAL> row;
         int constr_type;
         REAL constant;
+        bool canAnalyze = true;
     };
     
 class LinearProgram {

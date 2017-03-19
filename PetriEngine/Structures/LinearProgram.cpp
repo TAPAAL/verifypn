@@ -35,6 +35,10 @@ bool LinearProgram::isimpossible(const PetriEngine::PetriNet& net, const PetriEn
     }
     
     for(Equation& eq : equations){
+        // skip equations that cannot be analyzed
+        if(!eq.canAnalyze){  
+            continue;
+        }
         // nasty work-around to make the rows 1-based instead of 0-based.
         // would be nicer if we can just insert eq.row.data() into lpsolve
         memset(row.data(), 0, sizeof (REAL) * nCol + 1);
