@@ -9,8 +9,7 @@ LinearProgram::~LinearProgram() {
 }
 
 bool LinearProgram::isimpossible(const PetriEngine::PetriNet& net, const PetriEngine::MarkVal* m0){
-//    int nCol = net.numberOfTransitions();
-    int nCol = 3;
+    int nCol = net.numberOfTransitions();
     lprec* lp;
     lp = make_lp(0, nCol);
     assert(lp);
@@ -23,16 +22,29 @@ bool LinearProgram::isimpossible(const PetriEngine::PetriNet& net, const PetriEn
     }
        
     set_add_rowmode(lp, TRUE);
-    // TODO: add constraints p >= 0 for all places...
+    std::vector<REAL> row = std::vector<REAL>(nCol + 1);
     
-    std::vector<REAL> row;
-    for(Equation& eq : _equations){
+    // restrict all places to contain 0+ tokens
+    for (size_t p = 0; p < net.numberOfPlaces(); p++) {
+        memset(row.data(), 0, sizeof (REAL) * nCol + 1);
+        for (size_t t = 0; t < nCol; t++) {
+            int d = net.outArc(t, p) - net.inArc(p, t);
+            row[1 + t] = d;
+        }
+        add_constraint(lp, row.data(), GE, (0 - (int)m0[p]));
+    }
+    
+    for(Equation& eq : equations){
+        // skip equations that cannot be analyzed
+        if(!eq.canAnalyze){  
+            continue;
+        }
         // nasty work-around to make the rows 1-based instead of 0-based.
-        row.clear();
-        row.push_back(0);
-        for(REAL& r : eq.row)
-            row.push_back(r);
-      
+        // would be nicer if we can just insert eq.row.data() into lpsolve
+        memset(row.data(), 0, sizeof (REAL) * nCol + 1);
+        for(int t = 0; t < nCol; t++){
+            row[t + 1] = eq.row[t];
+        }
         add_constraint(lp, row.data(), eq.constr_type, eq.constant);
     }
     set_add_rowmode(lp, FALSE);
