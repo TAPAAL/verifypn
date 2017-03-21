@@ -391,53 +391,32 @@ int main(int argc, char* argv[]) {
     if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
     
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
-       
     ResultPrinter printer(&builder, &options, querynames);
+    //bool alldone = !options.disableoverapprox;
+    bool alldone = true; // TODO add query simplification option (as above)
     
-    bool alldone = !options.disableoverapprox;
-    
-    for(size_t i = 0; i < queries.size(); ++i)
-    {
-        SimplificationContext context;
-        PQL::Condition *query = queries[i].get()->simplify(context).formula;
-        queries[i] = query;
-        if(query->toString() == "true"){
-            results[i] = printer.printResult(i, query, ResultPrinter::Satisfied);
-        } else if (query->toString() == "false") {
-            results[i] = printer.printResult(i, query, ResultPrinter::NotSatisfied);
-        } else {
-            alldone = false;
-        }
-    }
-    
-    if (!options.disableoverapprox){
+    if (true) { // TODO add query simplification option
         PetriNetBuilder b2(builder);
         PetriNet* net = b2.makePetriNet(false);
-        MarkVal* m0 = net->makeInitialMarking(); 
+        MarkVal* m0 = net->makeInitialMarking();
         ResultPrinter p2(&b2, &options, querynames);
-#ifdef DEBUG
-        for(size_t p = 0; p < net->numberOfPlaces(); ++p)
-        {
-            for(size_t t = 0; t < net->numberOfTransitions(); ++t)
-            {
-                if(net->inArc(p, t) > 0 || net->outArc(t, p) > 0)
-                {
-                    std::cout << net->placeNames()[p] << ":" << net->transitionNames()[t] << 
-                            "<" << net->inArc(p, t) << "," << net->outArc(t, p) << ">" << std::endl;
-                }
-            }
-        }
-        exit(1);
-#endif
- 
-        LinearOverApprox approx(p2);
+        SimplificationContext context(m0, net);
+
+
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            results[i] = approx.reachable(*net, m0, i, queries[i].get());
-            if(results[i] == ResultPrinter::Unknown) alldone = false;
+            PQL::Condition *query = queries[i].get()->simplify(context).formula;
+            queries[i] = query;
+            if(query->toString() == "true"){
+                results[i] = p2.printResult(i, query, ResultPrinter::Satisfied);
+            } else if (query->toString() == "false") {
+                results[i] = p2.printResult(i, query, ResultPrinter::NotSatisfied);
+            } else {
+                alldone = false;
+            }
         }
         delete net;
-        delete[] m0;        
+        delete[] m0; 
     }
     
     if(alldone) return SuccessCode;

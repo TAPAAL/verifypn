@@ -720,78 +720,257 @@ namespace PetriEngine {
 
         /******************** Query Simplification ********************/       
         
-        void LiteralExpr::constraint(SimplificationContext context) const {            
+        Member LiteralExpr::constraint(SimplificationContext context) const {
+            return Member(_value);
         }
         
-        void IdentifierExpr::constraint(SimplificationContext context) const {            
-        }
-        
-        void PlusExpr::constraint(SimplificationContext context) const {
-        }
-
-        void SubtractExpr::constraint(SimplificationContext context) const {
-        }
-
-        void MultiplyExpr::constraint(SimplificationContext context) const {
-        }   
-        
-        struct Retval {
-            Condition_ptr formula;
-            LinearPrograms lps;       
-            Retval (Condition_ptr formula, LinearPrograms lps) : formula(formula), lps(lps) {           
+        Member IdentifierExpr::constraint(SimplificationContext context) const {
+            // Reserve index 0 to LPsolve
+            std:vector<double> row(context.net().numberOfTransitions() + 1);
+            uint32_t p = offset();
+            for (size_t t = 0; t < context.net().numberOfTransitions(); t++) {
+                row[1 + t] = net().outArc(t, p) - net.inArc(p, t);
             }
-        };
+            return Member(row, context.marking()[p]);
+        }
         
-        retval AndCondition::simplify(SimplificationContext context) const {
-            r1 = _cond1->simplify(context);
-            r2 = _cond2->simplify(context);
-            
+        Member PlusExpr::constraint(SimplificationContext context) const {
+            return _expr1->constraint(context) + _expr2->constraint(context);
+        }
+        
+        Member SubtractExpr::constraint(SimplificationContext context) const {
+            return _expr1->constraint(context) - _expr2->constraint(context);
+        }
+        
+        Member MultiplyExpr::constraint(SimplificationContext context) const {
+            return _expr1->constraint(context) * _expr2->constraint(context);
+        }
+        
+        Member MinusExpr::constraint(SimplificationContext context) const {
+            return -_expr->constraint(context);
+        }
+        
+        Retval simplifyAnd(Retval r1, Retval r2) {
             if(r1.formula.toString() == "false" || r1.formula.toString() == "false") {
-                return Retval(std::make_shared<BooleanCondition>(false), new LinearPrograms());
+                return Retval(std::make_shared<BooleanCondition>(false));
             } else if (r1.formula.toString() == "true") {
                 return Retval(r2.formula, r2.lps);
             } else if (r2.formula.toString() == "true") {
                 return Retval(r1.formula, r1.lps);
             }
             
-            LinearPrograms merged = LinearPrograms::merge(r1.lps, r2.lps);
+            LinearPrograms merged = LinearPrograms::lpsMerge(r1.lps, r2.lps);
             
-            if(merged->satisfiable(context)) {
-                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), merged);
+            if(!merged->satisfiable(context)) {
+                return Retval(std::make_shared<BooleanCondition>(false));
             } else {
-                return Retval(std::make_shared<BooleanCondition>(false), new LinearPrograms()); 
+                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), merged); 
             }
         }
         
-        retval OrCondition::simplify(SimplificationContext context) const {
-            r1 = _cond1->simplify(context);
-            r2 = _cond2->simplify(context);
-            
+        Retval simplifyOr(Retval r1, Retval r2) {
             if(r1.formula.toString() == "true" || r1.formula.toString() == "true") {
-                return Retval(std::make_shared<BooleanCondition>(true), new LinearPrograms());
+                return Retval(std::make_shared<BooleanCondition>(true));
             } else if (r1.formula.toString() == "false") {
                 return Retval(r2.formula, r2.lps);
             } else if (r2.formula.toString() == "false") {
                 return Retval(r1.formula, r1.lps);
             } else {
-                return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), LinearProgram::merge(r1.lps, r2.lps));
+                return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), 
+                        LinearPrograms::lpsUnion(r1.lps, r2.lps));
             }
         }
         
-        retval CompareCondition::simplify(SimplificationContext context) const {
+        Retval AndCondition::simplify(SimplificationContext context) const {
+            Retval r1 = _cond1->simplify(context);
+            Retval r2 = _cond2->simplify(context);
             
+            return context.negated() ? simplifyOr(r1, r2) : simplifyAnd(r1, r2);
         }
         
-        retval NotCondition::simplify(SimplificationContext context) const {
+        Retval OrCondition::simplify(SimplificationContext context) const {
+            Retval r1 = _cond1->simplify(context);
+            Retval r2 = _cond2->simplify(context);
             
+            return context.negated() ? simplifyAnd(r1, r2) : simplifyOr(r1, r2);
+        }
+ 
+        Retval EqualCondition::simplify(SimplificationContext context) const {
+            Member m1 = constraint(_expr1);
+            Member m2 = constraint(_expr2);
+            
+            LinearPrograms lps;
+            
+            if (m1.isConstant() && m2.isConstant()) {
+                return Retval(std::make_shared<BooleanCondition>(
+                        context.negated() ? (m1.constant != m2.constant) : (m1.constant == m2.constant)));
+            } else if (m1.canAnalyze && m2.canAnalyze) {
+                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "!=" : "=="))));
+            } else {
+                lps.add(LinearProgram());
+            }
+            
+            if (!lps->satisfiable(context)) {
+                return Retval(std::make_shared<BooleanCondition>(false));
+            } else {
+                if (context.negated()) {
+                    return Retval(std::make_shared<NotEqualCondition>(_expr1, _expr2), lps);
+                } else {
+                    return Retval(std::make_shared<EqualCondition>(_expr1, _expr2), lps);
+                }                         
+            }
         }
         
-        retval BooleanCondition::simplify(SimplificationContext context) const {
+        Retval NotEqualCondition::simplify(SimplificationContext context) const {
+            Member m1 = constraint(_expr1);
+            Member m2 = constraint(_expr2);
             
+            LinearPrograms lps;
+            
+            if (m1.isConstant() && m2.isConstant()) {
+                return Retval(std::make_shared<BooleanCondition>(
+                        context.negated() ? (m1.constant == m2.constant) : (m1.constant != m2.constant)));
+            } else if (m1.canAnalyze && m2.canAnalyze) {
+                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "==" : "!="))));
+            } else {
+                lps.add(LinearProgram());
+            }
+            
+            if (!lps->satisfiable(context)) {
+                return Retval(std::make_shared<BooleanCondition>(false));
+            } else {
+                if (context.negated()) {
+                    return Retval(std::make_shared<EqualCondition>(_expr1, _expr2), lps);
+                } else {
+                    return Retval(std::make_shared<NotEqualCondition>(_expr1, _expr2), lps);
+                }                         
+            }
         }
         
-        retval DeadlockCondition::simplify(SimplificationContext context) const {
+        Retval LessThanCondition::simplify(SimplificationContext context) const {
+            Member m1 = constraint(_expr1);
+            Member m2 = constraint(_expr2);
             
+            LinearPrograms lps;
+            
+            if (m1.isConstant() && m2.isConstant()) {
+                return Retval(std::make_shared<BooleanCondition>(
+                        context.negated() ? (m1.constant >= m2.constant) : (m1.constant < m2.constant)));
+            } else if (m1.canAnalyze && m2.canAnalyze) {
+                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? ">=" : "<"))));
+            } else {
+                lps.add(LinearProgram());
+            }
+            
+            if (!lps->satisfiable(context)) {
+                return Retval(std::make_shared<BooleanCondition>(false));
+            } else {
+                if (context.negated()) {
+                    return Retval(std::make_shared<GreaterThanOrEqual>(_expr1, _expr2), lps);
+                } else {
+                    return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), lps);
+                }                         
+            }
+        }
+        
+        Retval LessThanOrEqualCondition::simplify(SimplificationContext context) const {
+            Member m1 = constraint(_expr1);
+            Member m2 = constraint(_expr2);
+            
+            LinearPrograms lps;
+            
+            if (m1.isConstant() && m2.isConstant()) {
+                return Retval(std::make_shared<BooleanCondition>(
+                        context.negated() ? (m1.constant > m2.constant) : (m1.constant <= m2.constant)));
+            } else if (m1.canAnalyze && m2.canAnalyze) {
+                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? ">" : "<="))));
+            } else {
+                lps.add(LinearProgram());
+            }
+                                    
+            if (!lps->satisfiable(context)) {
+                return Retval(std::make_shared<BooleanCondition>(false));
+            } else {
+                if (context.negated()) {
+                    return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), lps);
+                } else {
+                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), lps);
+                }                         
+            }
+        }
+        
+        Retval GreaterThanCondition::simplify(SimplificationContext context) const {
+            Member m1 = constraint(_expr1);
+            Member m2 = constraint(_expr2);
+            
+            LinearPrograms lps;
+            
+            if (m1.isConstant() && m2.isConstant()) {
+                return Retval(std::make_shared<BooleanCondition>(
+                        context.negated() ? (m1.constant <= m2.constant) : (m1.constant > m2.constant)));
+            } else if (m1.canAnalyze && m2.canAnalyze) {
+                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "<=" : ">"))));
+            } else {
+                lps.add(LinearProgram());
+            }
+            
+            if(!lps->satisfiable(context)) {
+                return Retval(std::make_shared<BooleanCondition>(false));
+            } else {
+                if (context.negated()) {
+                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), lps);
+                } else {
+                    return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), lps);
+                }                         
+            }
+        }
+        
+        Retval GreaterThanOrEqualCondition::simplify(SimplificationContext context) const {  
+            Member m1 = constraint(_expr1);
+            Member m2 = constraint(_expr2);
+            
+            LinearPrograms lps;
+            
+            if (m1.isConstant() && m2.isConstant()) {
+                return Retval(std::make_shared<BooleanCondition>(
+                        context.negated() ? (m1.constant < m2.constant) : (m1.constant >= m2.constant)));
+            } if (m1.canAnalyze && m2.canAnalyze) {
+                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "<" : ">="))));
+            } else {
+                lps.add(LinearProgram());
+            }
+            
+            if (!lps->satisfiable(context)) {
+                return Retval(std::make_shared<BooleanCondition>(false));
+            } else {
+                if (context.negated()) {
+                    return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), lps);
+                } else {
+                    return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), lps);
+                }                         
+            }
+        }
+        
+        Retval NotCondition::simplify(SimplificationContext context) const {
+            context.negate();
+            return _cond->simplify(context);
+            context.negate();
+        }
+        
+        Retval BooleanCondition::simplify(SimplificationContext context) const {
+            if (context.negated()) {
+                return Retval(std::make_shared<BooleanCondition>(!_value));
+            } else {
+                return Retval(std::make_shared<BooleanCondition>(_value));
+            }
+        }
+        
+        Retval DeadlockCondition::simplify(SimplificationContext context) const {
+            if (context.negated()) {
+                return Retval(std::make_shared<NotCondition>(std::make_shared<BooleanCondition>()));
+            } else {
+                return Retval(std::make_shared<DeadlockCondition>());
+            }
         }
         
         /******************** Just-In-Time Compilation ********************/

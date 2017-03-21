@@ -62,6 +62,7 @@ namespace PetriEngine {
 
             using BinaryExpr::BinaryExpr;
             Expr::Types type() const;
+            Member constraint(SimplificationContext context) const;
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -74,6 +75,7 @@ namespace PetriEngine {
 
             using BinaryExpr::BinaryExpr;
             Expr::Types type() const;
+            Member constraint(SimplificationContext context) const;
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -86,6 +88,7 @@ namespace PetriEngine {
 
             using BinaryExpr::BinaryExpr;
             Expr::Types type() const;
+            Member constraint(SimplificationContext context) const;
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -105,6 +108,7 @@ namespace PetriEngine {
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             Expr::Types type() const;
+            Member constraint(SimplificationContext context) const;
         private:
             Expr_ptr _expr;
         };
@@ -125,6 +129,7 @@ namespace PetriEngine {
             int value() const {
                 return _value;
             };
+            Member constraint(SimplificationContext context) const;
         private:
             int _value;
         };
@@ -147,6 +152,7 @@ namespace PetriEngine {
             int offset() const {
                 return _offsetInMarking;
             }
+            Member constraint(SimplificationContext context) const;
         private:
             /** Offset in marking, -1 if undefined, should be resolved during analysis */
             int _offsetInMarking;
@@ -188,6 +194,7 @@ namespace PetriEngine {
         public:
 
             using LogicalCondition::LogicalCondition;
+            Retval simplify(SimplificationContext context) const;
 
         private:
             bool apply(bool b1, bool b2) const;
@@ -202,6 +209,7 @@ namespace PetriEngine {
         public:
 
             using LogicalCondition::LogicalCondition;
+            Retval simplify(SimplificationContext context) const;
             
         private:
             bool apply(bool b1, bool b2) const;
@@ -247,6 +255,7 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
+            Retval simplify(SimplificationContext context) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -264,6 +273,7 @@ namespace PetriEngine {
 
             using CompareCondition::CompareCondition;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            Retval simplify(SimplificationContext context) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -280,6 +290,7 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
+            Retval simplify(SimplificationContext context) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -296,6 +307,7 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
+            Retval simplify(SimplificationContext context) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -312,6 +324,7 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
+            Retval simplify(SimplificationContext context) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -327,6 +340,7 @@ namespace PetriEngine {
         class GreaterThanOrEqualCondition : public CompareCondition {
         public:
             using CompareCondition::CompareCondition;
+            Retval simplify(SimplificationContext context) const;
 
         private:
             bool apply(int v1, int v2) const;
@@ -353,6 +367,7 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            Retval simplify(SimplificationContext context) const;
         private:
             Condition_ptr _cond;
         };
@@ -371,6 +386,7 @@ namespace PetriEngine {
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             static Condition_ptr TRUE;
             static Condition_ptr FALSE;
+            Retval simplify(SimplificationContext context) const;
         private:
             const bool _value;
         };
@@ -387,6 +403,7 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            Retval simplify(SimplificationContext context) const;
         };
 
     }

@@ -27,6 +27,7 @@
 
 #include "../PetriNet.h"
 #include "../Structures/State.h"
+#include "../Structures/LinearProgram.h"
 
 namespace llvm {
     class Value;
@@ -42,6 +43,7 @@ namespace PetriEngine {
         class DistanceContext;
         class ConstraintAnalysisContext;
         class TAPAALConditionExportContext;
+        class SimplificationContext;
 
         /** Representation of a PQL error */
         class ExprError {
@@ -109,6 +111,8 @@ namespace PetriEngine {
             virtual std::string toString() const = 0;
             /** Expression type */
             virtual Types type() const = 0;
+            /** Construct left/right side of equations used in query simplification */
+            virtual Member constraint(SimplificationContext context) const = 0;
         };
 
         /** Base condition */
@@ -136,6 +140,8 @@ namespace PetriEngine {
             virtual std::string toTAPAALQuery(TAPAALConditionExportContext& context) const = 0;
             /** Get distance to query */
             virtual uint32_t distance(DistanceContext& context) const = 0;
+            /** Query Simplification */
+            virtual Retval simplify(SimplificationContext context) const = 0;
             
             void setInvariant(bool isInvariant)
             {

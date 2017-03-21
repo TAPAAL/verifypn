@@ -2,6 +2,16 @@
 #define LINEARPROGRAMS_H
 #include "LinearProgram.h"
 #include "../PetriNet.h"
+#include "../PQL/PQL.h"
+        
+struct Retval {
+    Condition_ptr formula;
+    LinearPrograms lps;       
+    Retval (Condition_ptr formula, LinearPrograms lps) : formula(formula), lps(lps) {           
+    }
+    Retval (Condition_ptr formula) : Retval(formula, LinearPrograms(LinearProgram())) {
+    }
+};
 
 class LinearPrograms {
 public:

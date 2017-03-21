@@ -185,6 +185,38 @@ namespace PetriEngine {
             llvm::BasicBlock* _label;
             llvm::LLVMContext& _context;
         };
+        
+        class SimplificationContext {
+        public:
+
+            SimplificationContext(const MarkVal* marking,
+                    const PetriNet* net) {
+                _negated = false;
+                _marking = marking;
+                _net = net;
+            }
+
+            const MarkVal* marking() const {
+                return _marking;
+            }
+
+            const PetriNet* net() const {
+                return _net;
+            }
+
+            void negate() {
+                _negated = !_negated;
+            }
+
+            bool negated() const {
+                return _negated;
+            }
+
+        private:
+            bool _negated;
+            const MarkVal* _marking;
+            const PetriNet* _net;
+        };
 
     } // PQL
 } // PetriEngine
