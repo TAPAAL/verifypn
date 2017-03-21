@@ -753,7 +753,7 @@ namespace PetriEngine {
         }
         
         Retval simplifyAnd(SimplificationContext context, Retval r1, Retval r2) {
-            if(r1.formula->toString() == "false" || r1.formula->toString() == "false") {
+            if(r1.formula->toString() == "false" || r2.formula->toString() == "false") {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else if (r1.formula->toString() == "true") {
                 return Retval(r2.formula, r2.lps);
@@ -771,7 +771,7 @@ namespace PetriEngine {
         }
         
         Retval simplifyOr(Retval r1, Retval r2) {
-            if(r1.formula->toString() == "true" || r1.formula->toString() == "true") {
+            if(r1.formula->toString() == "true" || r2.formula->toString() == "true") {
                 return Retval(std::make_shared<BooleanCondition>(true));
             } else if (r1.formula->toString() == "false") {
                 return Retval(r2.formula, r2.lps);
