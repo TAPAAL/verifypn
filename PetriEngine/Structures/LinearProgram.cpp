@@ -1,59 +1,96 @@
 #include "LinearProgram.h"
 #include <assert.h>
+#include "../../lpsolve/lp_lib.h"
 #define OVER_APPROX_TIMEOUT    30
 
-LinearProgram::LinearProgram() {
-}
-
-LinearProgram::~LinearProgram() {
-}
-
-bool LinearProgram::isimpossible(const PetriEngine::PetriNet& net, const PetriEngine::MarkVal* m0){
-    if(equations.size()==0){
-        return false;
-    }
-    
-    int nCol = net.numberOfTransitions();
-    lprec* lp;
-    lp = make_lp(0, nCol);
-    assert(lp);
-    if (!lp) return false;
-    set_verbose(lp, IMPORTANT);
-    
-    std::vector<int> colno;
-    for(int t = 0; t<nCol; t++){
-        colno.push_back(t);
-    }
-       
-    set_add_rowmode(lp, TRUE);
-    std::vector<REAL> row = std::vector<REAL>(nCol + 1);
-    
-    // restrict all places to contain 0+ tokens
-    for (size_t p = 0; p < net.numberOfPlaces(); p++) {
-        memset(row.data(), 0, sizeof (REAL) * nCol + 1);
-        for (size_t t = 0; t < nCol; t++) {
-            int d = net.outArc(t, p) - net.inArc(p, t);
-            row[1 + t] = d;
+namespace PetriEngine {
+    namespace Structures {
+        LinearProgram::LinearProgram() {
         }
-        add_constraint(lp, row.data(), GE, (0 - (int)m0[p]));
+
+        LinearProgram::~LinearProgram() {
+        }
+        
+        LinearProgram::LinearProgram(Equation eq){
+            addEquation(eq);
+        }
+        
+        void LinearProgram::addEquation(Equation eq){
+            if(eq.op == "<"){
+                eq.constant += 1; 
+                eq.op = "<="; 
+            } else if(eq.op == ">"){
+                eq.constant -= 1; 
+                eq.op = ">="; 
+            } else if(eq.op == "!="){
+                Equation eq2(eq);
+                eq2.op = "<";
+                eq.op = ">"; 
+                addEquation(eq);
+                addEquation(eq2);
+                return;
+            }
+
+            equations.push_back(eq);
+        }
+
+        void LinearProgram::addEquations(std::vector<Equation> eqs){
+            for(Equation& eq : eqs){
+                equations.push_back(eq);
+            }
+        }
+
+
+        int LinearProgram::op(std::string op){
+            if(op == "<="){ return 1; }
+            if(op == ">="){ return 2; }
+            if(op == "=="){ return 3; }
+            return -1;
+        }
+
+        bool LinearProgram::isimpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0){
+            if(equations.size()==0){
+                return false;
+            }
+
+            uint32_t nCol = net->numberOfTransitions();
+            lprec* lp;
+            lp = make_lp(0, nCol);
+            assert(lp);
+            if (!lp) return false;
+            set_verbose(lp, IMPORTANT);
+
+            set_add_rowmode(lp, TRUE);
+            std::vector<REAL> row = std::vector<REAL>(nCol + 1);
+
+            // restrict all places to contain 0+ tokens
+            for (size_t p = 0; p < net->numberOfPlaces(); p++) {
+                memset(row.data(), 0, sizeof (REAL) * nCol + 1);
+                for (size_t t = 0; t < nCol; t++) {
+                    int d = net->outArc(t, p) - net->inArc(p, t);
+                    row[1 + t] = d;
+                }
+                add_constraint(lp, row.data(), GE, (0 - (int)m0[p]));
+            }
+
+            for(Equation& eq : equations){
+                add_constraint(lp, row.data(), op(eq.op), eq.constant);
+            }
+            set_add_rowmode(lp, FALSE);
+
+            for (size_t i = 0; i < nCol; i++){
+                set_int(lp, 1 + i, TRUE);
+            }
+
+            set_timeout(lp, OVER_APPROX_TIMEOUT);
+            set_presolve(lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(lp));
+        //    write_LP(lp, stdout);
+            int result = solve(lp);
+            delete_lp(lp);
+
+            // Return true, if it was infeasible
+            return result == INFEASIBLE;   
+        }
     }
-    
-    for(Equation& eq : equations){
-        add_constraint(lp, row.data(), op(eq.op), eq.constant);
-    }
-    set_add_rowmode(lp, FALSE);
-    
-    for (size_t i = 0; i < nCol; i++){
-        set_int(lp, 1 + i, TRUE);
-    }
-    
-    set_timeout(lp, OVER_APPROX_TIMEOUT);
-    set_presolve(lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(lp));
-//    write_LP(lp, stdout);
-    int result = solve(lp);
-    delete_lp(lp);
-    
-    // Return true, if it was infeasible
-    return result == INFEASIBLE;   
 }
 

@@ -23,6 +23,8 @@
 #include "PQL.h"
 #include "Contexts.h"
 
+using namespace PetriEngine::Structures;
+
 namespace PetriEngine {
 
     namespace Structures {
@@ -52,6 +54,7 @@ namespace PetriEngine {
             /** LLVM binary operator (llvm::Instruction::BinaryOps) */
             //virtual int binaryOp() const = 0;
             virtual std::string op() const = 0;
+        protected:
             Expr_ptr _expr1;
             Expr_ptr _expr2;
         };
@@ -246,6 +249,7 @@ namespace PetriEngine {
             virtual std::string sopTAPAAL() const = 0;
             virtual void addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& id, int value) const = 0;
             virtual void addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const = 0;
+        protected:
             Expr_ptr _expr1;
             Expr_ptr _expr2;
         };

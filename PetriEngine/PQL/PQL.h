@@ -27,7 +27,7 @@
 
 #include "../PetriNet.h"
 #include "../Structures/State.h"
-#include "../Structures/LinearProgram.h"
+#include "../Structures/LinearPrograms.h"
 
 namespace llvm {
     class Value;
@@ -112,7 +112,7 @@ namespace PetriEngine {
             /** Expression type */
             virtual Types type() const = 0;
             /** Construct left/right side of equations used in query simplification */
-            virtual Member constraint(SimplificationContext context) const = 0;
+            virtual Structures::Member constraint(SimplificationContext context) const = 0;
         };
 
         /** Base condition */
@@ -141,7 +141,7 @@ namespace PetriEngine {
             /** Get distance to query */
             virtual uint32_t distance(DistanceContext& context) const = 0;
             /** Query Simplification */
-            virtual Retval simplify(SimplificationContext context) const = 0;
+            virtual Structures::Retval simplify(SimplificationContext context) const = 0;
             
             void setInvariant(bool isInvariant)
             {

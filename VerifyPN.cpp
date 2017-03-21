@@ -405,12 +405,12 @@ int main(int argc, char* argv[]) {
 
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            PQL::Condition *query = queries[i].get()->simplify(context).formula;
+            std::shared_ptr<PQL::Condition> query = queries[i].get()->simplify(context).formula;
             queries[i] = query;
             if(query->toString() == "true"){
-                results[i] = p2.printResult(i, query, ResultPrinter::Satisfied);
+                results[i] = p2.printResult(i, query.get(), ResultPrinter::Satisfied);
             } else if (query->toString() == "false") {
-                results[i] = p2.printResult(i, query, ResultPrinter::NotSatisfied);
+                results[i] = p2.printResult(i, query.get(), ResultPrinter::NotSatisfied);
             } else {
                 alldone = false;
             }
