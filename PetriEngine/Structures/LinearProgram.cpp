@@ -67,14 +67,13 @@ namespace PetriEngine {
             for (size_t p = 0; p < net->numberOfPlaces(); p++) {
                 memset(row.data(), 0, sizeof (REAL) * nCol + 1);
                 for (size_t t = 0; t < nCol; t++) {
-                    int d = net->outArc(t, p) - net->inArc(p, t);
-                    row[1 + t] = d;
+                    row[1 + t] = net->outArc(t, p) - net->inArc(p, t);
                 }
                 add_constraint(lp, row.data(), GE, (0 - (int)m0[p]));
             }
 
             for(Equation& eq : equations){
-                add_constraint(lp, row.data(), op(eq.op), eq.constant);
+                add_constraint(lp, eq.row.data(), op(eq.op), eq.constant);
             }
             set_add_rowmode(lp, FALSE);
 

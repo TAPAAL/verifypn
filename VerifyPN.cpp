@@ -405,8 +405,10 @@ int main(int argc, char* argv[]) {
 
         for(size_t i = 0; i < queries.size(); ++i)
         {
+            std::cout<<"Query before: "<<std::endl<<queries[i].get()->toString()<<std::endl;;
             std::shared_ptr<PQL::Condition> query = queries[i].get()->simplify(context).formula;
             query->setInvariant(queries[i].get()->isInvariant());
+            std::cout<<"Query after: "<<std::endl<<query->toString()<<std::endl;;
             queries[i] = query;
             if(query->toString() == "true"){
                 results[i] = p2.printResult(i, query.get(), ResultPrinter::Satisfied);
