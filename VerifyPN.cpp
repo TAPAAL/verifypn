@@ -421,6 +421,7 @@ int main(int argc, char* argv[]) {
         delete net;
         delete[] m0; 
     }
+    std::exit(0);
     
     if(alldone) return SuccessCode;
     
