@@ -30,7 +30,7 @@ namespace PetriEngine {
             }
             Member operator-(const Member& m) { 
                 Member res;
-                res.constant = constant + m.constant;
+                res.constant = constant - m.constant;
                 res.variables = subtractVariables(*this, m);
                 res.canAnalyze = canAnalyze&&m.canAnalyze;
                 return res;
