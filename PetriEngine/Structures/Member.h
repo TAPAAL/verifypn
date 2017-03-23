@@ -55,7 +55,7 @@ namespace PetriEngine {
 
             bool isConstant() const {
                 for(const double& v : variables){
-                    if(v>0) return false;
+                    if(v != 0) return false;
                 }
                 return true;
             }
