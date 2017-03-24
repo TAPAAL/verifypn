@@ -76,6 +76,17 @@ namespace PetriEngine {
                 add_constraint(lp, eq.row.data(), op(eq.op), eq.constant);
             }
             set_add_rowmode(lp, FALSE);
+            
+            // Create objective
+            memset(row.data(), 0, sizeof (REAL) * net->numberOfTransitions() + 1);
+            for (size_t t = 0; t < net->numberOfTransitions(); t++)
+                row[1 + t] = 1; // The sum the components in the firing vector
+
+            // Set objective
+            set_obj_fn(lp, row.data());
+
+            // Minimize the objective
+            set_minim(lp);
 
             for (size_t i = 0; i < nCol; i++){
                 set_int(lp, 1 + i, TRUE);
