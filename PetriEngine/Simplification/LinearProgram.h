@@ -6,7 +6,7 @@
 #include <algorithm>
     
 namespace PetriEngine {
-    namespace Structures {
+    namespace Simplification {
         
         class LinearProgram {
         public:
@@ -16,7 +16,7 @@ namespace PetriEngine {
             
             void addEquation(Equation eq);
             void addEquations(std::vector<Equation> eqs);
-            bool isimpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0);
+            bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout);
             int op(std::string op);            
             
             static LinearProgram lpUnion(LinearProgram& lp1, LinearProgram& lp2){

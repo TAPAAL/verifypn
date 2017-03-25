@@ -27,7 +27,8 @@
 
 #include "../PetriNet.h"
 #include "../Structures/State.h"
-#include "../Structures/LinearPrograms.h"
+#include "../Simplification/Member.h"
+#include "../Simplification/LinearPrograms.h"
 
 namespace llvm {
     class Value;
@@ -41,7 +42,6 @@ namespace PetriEngine {
         class AnalysisContext;
         class EvaluationContext;
         class DistanceContext;
-        class ConstraintAnalysisContext;
         class TAPAALConditionExportContext;
         class SimplificationContext;
 
@@ -112,7 +112,7 @@ namespace PetriEngine {
             /** Expression type */
             virtual Types type() const = 0;
             /** Construct left/right side of equations used in query simplification */
-            virtual Structures::Member constraint(SimplificationContext context) const = 0;
+            virtual Simplification::Member constraint(SimplificationContext context) const = 0;
         };
 
         /** Base condition */
@@ -130,8 +130,6 @@ namespace PetriEngine {
             virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate condition */
             virtual bool evaluate(const EvaluationContext& context) const = 0;
-            /** Analyze constraints for over-approximation */
-            virtual void findConstraints(ConstraintAnalysisContext& context) const = 0;
             /** Generate LLVM intermediate code for this condition  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert condition to string */
@@ -141,7 +139,7 @@ namespace PetriEngine {
             /** Get distance to query */
             virtual uint32_t distance(DistanceContext& context) const = 0;
             /** Query Simplification */
-            virtual Structures::Retval simplify(SimplificationContext context) const = 0;
+            virtual Simplification::Retval simplify(SimplificationContext context) const = 0;
             
             void setInvariant(bool isInvariant)
             {

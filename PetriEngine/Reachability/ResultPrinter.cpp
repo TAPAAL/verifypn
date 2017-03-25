@@ -116,7 +116,7 @@ namespace PetriEngine {
             {
                 if(stateset == NULL)
                 {
-                    std::cout << "No trace could be generated, try disabeling the overapproximaton" << std::endl;
+                    std::cout << "No trace could be generated" << std::endl;
                 }
                 else
                 {

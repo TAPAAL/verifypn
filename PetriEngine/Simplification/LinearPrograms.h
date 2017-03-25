@@ -5,7 +5,7 @@
 #include "../PQL/PQL.h"
         
 namespace PetriEngine {
-    namespace Structures {
+    namespace Simplification {
 
         class LinearPrograms {
         public:
@@ -18,9 +18,9 @@ namespace PetriEngine {
             }
             std::vector<LinearProgram> lps;
 
-            bool satisfiable(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0) {
+            bool satisfiable(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout) {
                for(LinearProgram &lp : lps){
-                   if(!lp.isimpossible(net, m0)){
+                   if(!lp.isImpossible(net, m0, timeout)){
                         return true;
                    }
                }

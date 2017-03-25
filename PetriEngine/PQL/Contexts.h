@@ -25,11 +25,10 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <chrono>
 
 #include "../PetriNet.h"
 #include "PQL.h"
-#include "../Structures/StateConstraints.h"
-
 
 namespace PetriEngine {
     namespace PQL {
@@ -126,27 +125,7 @@ namespace PetriEngine {
         private:
             bool _negated;
         };
-
-        /** Constraint Analysis Context used for over-approximation */
-        class ConstraintAnalysisContext {
-        public:
-            typedef std::vector<Structures::StateConstraints*> ConstraintSet;
-
-            ConstraintAnalysisContext(const PetriNet& net) : _net(net) {
-                canAnalyze = true;
-                negated = false;
-            }
-
-            const PetriNet& net() const {
-                return _net;
-            }
-            bool canAnalyze;
-            bool negated;
-            ConstraintSet retval;
-        private:
-            const PetriNet& _net;
-        };
-
+        
         /** Context for condition to TAPAAL export */
         class TAPAALConditionExportContext {
         public:
@@ -190,10 +169,12 @@ namespace PetriEngine {
         public:
 
             SimplificationContext(const MarkVal* marking,
-                    const PetriNet* net) {
+                    const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout)
+                    : _queryTimeout(queryTimeout), _lpTimeout(lpTimeout) {
                 _negated = false;
                 _marking = marking;
                 _net = net;
+                _start = std::chrono::high_resolution_clock::now();
             }
 
             const MarkVal* marking() const {
@@ -211,11 +192,28 @@ namespace PetriEngine {
             bool negated() const {
                 return _negated;
             }
+            
+            bool timeout() {
+                auto end = std::chrono::high_resolution_clock::now();
+                auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _start);
+                
+                if (diff.count() > _queryTimeout) {
+                    std::cout<<"note: Query reduction timeout"<<std::endl;
+                    return true;
+                }
+                return false;
+            }
+            
+            uint32_t getLpTimeout() {
+                return _lpTimeout;
+            }
 
         private:
             bool _negated;
             const MarkVal* _marking;
             const PetriNet* _net;
+            uint32_t _queryTimeout, _lpTimeout;
+            std::chrono::high_resolution_clock::time_point _start;
         };
 
     } // PQL

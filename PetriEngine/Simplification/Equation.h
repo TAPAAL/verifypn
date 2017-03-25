@@ -3,7 +3,7 @@
 #include "Member.h"
 
 namespace PetriEngine {
-    namespace Structures {
+    namespace Simplification {
         class Equation {
         public:
             Equation(Member lh, Member rh, std::string op) : op(op){

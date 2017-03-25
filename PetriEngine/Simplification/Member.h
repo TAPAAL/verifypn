@@ -3,7 +3,7 @@
 #include <algorithm>
 
 namespace PetriEngine {
-    namespace Structures {
+    namespace Simplification {
         
         class Member {
         public:

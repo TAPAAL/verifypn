@@ -19,8 +19,6 @@
  */
 #include "Contexts.h"
 #include "Expressions.h"
-#include "../Structures/LinearProgram.h"
-#include "../Structures/LinearPrograms.h"
 
 #include <sstream>
 #include <assert.h>
@@ -30,7 +28,7 @@
 #include <set>
 #include <cmath>
 
-using namespace PetriEngine::Structures;
+using namespace PetriEngine::Simplification;
 
 namespace PetriEngine {
     namespace PQL {
@@ -410,219 +408,6 @@ namespace PetriEngine {
             return Expr::IdentifierExpr;
         }
 
-        /******************** Constraint Analysis ********************/
-
-        void LogicalCondition::findConstraints(ConstraintAnalysisContext& context) const {
-            if (!context.canAnalyze)
-                return;
-            _cond1->findConstraints(context);
-            ConstraintAnalysisContext::ConstraintSet left = context.retval;
-            context.retval.clear();
-            _cond2->findConstraints(context);
-            mergeConstraints(context.retval, left, context.negated);
-        }
-
-        void AndCondition::mergeConstraints(ConstraintAnalysisContext::ConstraintSet& result,
-                ConstraintAnalysisContext::ConstraintSet& other,
-                bool negated) const {
-            if (!negated)
-                result = Structures::StateConstraints::mergeAnd(result, other);
-            else
-                result = Structures::StateConstraints::mergeOr(result, other);
-        }
-
-        void OrCondition::mergeConstraints(ConstraintAnalysisContext::ConstraintSet& result,
-                ConstraintAnalysisContext::ConstraintSet& other,
-                bool negated) const {
-            if (!negated)
-                result = Structures::StateConstraints::mergeOr(result, other);
-            else
-                result = Structures::StateConstraints::mergeAnd(result, other);
-        }
-
-        void CompareCondition::findConstraints(ConstraintAnalysisContext& context) const {
-            if (!context.canAnalyze)
-                return;
-            context.retval.clear();
-            if (_expr1->type() == Expr::LiteralExpr && _expr2->type() == Expr::IdentifierExpr) {
-                LiteralExpr* literal = (LiteralExpr*) _expr1.get();
-                addConstraints(context, literal->value(), _expr2);
-            } else if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
-                LiteralExpr* literal = (LiteralExpr*) _expr2.get();
-                addConstraints(context, _expr1, literal->value());
-            } else
-                context.canAnalyze = false;
-        }
-
-        void NotCondition::findConstraints(ConstraintAnalysisContext& context) const {
-            if (context.canAnalyze) {
-                context.negated = !context.negated;
-                this->_cond->findConstraints(context);
-                context.negated = !context.negated;
-            }
-        }
-
-        void BooleanCondition::findConstraints(ConstraintAnalysisContext& context) const {
-            if (context.canAnalyze) {
-                context.retval.clear();
-                if (context.negated != _value) {
-                    Structures::StateConstraints* s = new Structures::StateConstraints(context.net());
-                    context.retval.push_back(s);
-                }
-            }
-        }
-
-        void DeadlockCondition::findConstraints(ConstraintAnalysisContext& context) const {
-            //TODO: Come up with an over-approximation
-            context.canAnalyze = false;
-            context.retval.clear();
-        }
-
-        /******************** CompareCondition::addConstraints ********************/
-
-
-        void EqualCondition::addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& _id, int value) const {
-            auto id = static_cast<IdentifierExpr*>(_id.get());
-            if (!context.negated) {
-                Structures::StateConstraints* s = new Structures::StateConstraints(context.net());
-                s->setPlaceMin(id->offset(), value);
-                s->setPlaceMax(id->offset(), value);
-                assert(s);
-                context.retval.push_back(s);
-            } else {
-                Structures::StateConstraints* s1 = new Structures::StateConstraints(context.net());
-                Structures::StateConstraints* s2 = NULL;
-                if (value != 0)
-                    s2 = new Structures::StateConstraints(context.net());
-                s1->setPlaceMin(id->offset(), value + 1);
-                if (value != 0)
-                    s2->setPlaceMax(id->offset(), value - 1);
-                assert((s2 || value == 0) && s1);
-                context.retval.push_back(s1);
-                if (value != 0)
-                    context.retval.push_back(s2);
-            }
-        }
-
-        void EqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const {
-            addConstraints(context, id, value);
-        }
-
-        void NotEqualCondition::addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& _id, int value) const {
-            auto id = static_cast<IdentifierExpr*>(_id.get());
-            if (context.negated) {
-                Structures::StateConstraints* s = new Structures::StateConstraints(context.net());
-                s->setPlaceMin(id->offset(), value);
-                s->setPlaceMax(id->offset(), value);
-                assert(s);
-                context.retval.push_back(s);
-            } else {
-                Structures::StateConstraints* s1 = new Structures::StateConstraints(context.net());
-                Structures::StateConstraints* s2 = NULL;
-                if (value != 0)
-                    s2 = new Structures::StateConstraints(context.net());
-                s1->setPlaceMin(id->offset(), value + 1);
-                if (value != 0)
-                    s2->setPlaceMax(id->offset(), value - 1);
-                assert((s2 || value == 0) && s1);
-                context.retval.push_back(s1);
-                if (value != 0)
-                    context.retval.push_back(s2);
-            }
-        }
-
-        void NotEqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const {
-            addConstraints(context, id, value);
-        }
-
-        void LessThanCondition::addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& _id, int value) const {
-            Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
-            auto id = static_cast<IdentifierExpr*>(_id.get());
-            if (!context.negated) {
-                nc->setPlaceMax(id->offset(), value - 1);
-            } else {
-                nc->setPlaceMin(id->offset(), value);
-            }
-            context.retval.push_back(nc);
-        }
-
-        void LessThanCondition::addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& _id) const {
-            Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
-            auto id = static_cast<IdentifierExpr*>(_id.get());
-            if (!context.negated) {
-                nc->setPlaceMin(id->offset(), value + 1);
-            } else {
-                nc->setPlaceMax(id->offset(), value);
-            }
-            context.retval.push_back(nc);
-        }
-
-        void LessThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& _id, int value) const {
-            Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
-            auto id = static_cast<IdentifierExpr*>(_id.get());
-            if (!context.negated) {
-                nc->setPlaceMax(id->offset(), value);
-            } else {
-                nc->setPlaceMin(id->offset(), value + 1);
-            }
-            context.retval.push_back(nc);
-        }
-
-        void LessThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& _id) const {
-            Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
-            auto id = static_cast<IdentifierExpr*>(_id.get());
-            if (!context.negated) {
-                nc->setPlaceMin(id->offset(), value);
-            } else {
-                nc->setPlaceMax(id->offset(), value - 1);
-            }
-            context.retval.push_back(nc);
-        }
-
-        void GreaterThanCondition::addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& _id, int value) const {
-            Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
-            auto id = static_cast<IdentifierExpr*>(_id.get());
-            if (!context.negated) {
-                nc->setPlaceMin(id->offset(), value + 1);
-            } else {
-                nc->setPlaceMax(id->offset(), value);
-            }
-            context.retval.push_back(nc);
-        }
-
-        void GreaterThanCondition::addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& _id) const {
-            Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
-            auto id = static_cast<IdentifierExpr*>(_id.get());
-            if (!context.negated) {
-                nc->setPlaceMax(id->offset(), value - 1);
-            } else {
-                nc->setPlaceMin(id->offset(), value);
-            }
-            context.retval.push_back(nc);
-        }
-
-        void GreaterThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& _id, int value) const {
-            Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
-            auto id = static_cast<IdentifierExpr*>(_id.get());
-            if (!context.negated) {
-                nc->setPlaceMin(id->offset(), value);
-            } else {
-                nc->setPlaceMax(id->offset(), value - 1);
-            }
-            context.retval.push_back(nc);
-        }
-
-        void GreaterThanOrEqualCondition::addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& _id) const {
-            Structures::StateConstraints* nc = new Structures::StateConstraints(context.net());
-            auto id = static_cast<IdentifierExpr*>(_id.get());
-            if (!context.negated) {                
-                    nc->setPlaceMax(id->offset(), value);
-            } else {
-                    nc->setPlaceMin(id->offset(), value + 1);
-            }
-            context.retval.push_back(nc);
-        }
-
         /******************** Distance Condition ********************/
 
 #define MAX(v1, v2)  (v1 > v2 ? v1 : v2)
@@ -719,14 +504,13 @@ namespace PetriEngine {
                 return v1 < v2 ? 0 : v1 - v2 + 1;
         }
 
-
         /******************** Query Simplification ********************/       
         
-        Structures::Member LiteralExpr::constraint(SimplificationContext context) const {
+        Member LiteralExpr::constraint(SimplificationContext context) const {
             return Member(_value);
         }
         
-        Structures::Member IdentifierExpr::constraint(SimplificationContext context) const {
+        Member IdentifierExpr::constraint(SimplificationContext context) const {
             // Reserve index 0 to LPsolve
             std::vector<double> row(context.net()->numberOfTransitions() + 1);
             uint32_t p = offset();
@@ -736,19 +520,19 @@ namespace PetriEngine {
             return Member(row, context.marking()[p]);
         }
         
-        Structures::Member PlusExpr::constraint(SimplificationContext context) const {
+        Member PlusExpr::constraint(SimplificationContext context) const {
             return _expr1->constraint(context) + _expr2->constraint(context);
         }
         
-        Structures::Member SubtractExpr::constraint(SimplificationContext context) const {
+        Member SubtractExpr::constraint(SimplificationContext context) const {
             return _expr1->constraint(context) - _expr2->constraint(context);
         }
         
-        Structures::Member MultiplyExpr::constraint(SimplificationContext context) const {
+        Member MultiplyExpr::constraint(SimplificationContext context) const {
             return _expr1->constraint(context) * _expr2->constraint(context);
         }
         
-        Structures::Member MinusExpr::constraint(SimplificationContext context) const {
+        Member MinusExpr::constraint(SimplificationContext context) const {
             return -_expr->constraint(context);
         }
         
@@ -761,9 +545,9 @@ namespace PetriEngine {
                 return Retval(r1.formula, r1.lps);
             }
             
-            Structures::LinearPrograms merged = Structures::LinearPrograms::lpsMerge(r1.lps, r2.lps);
+            LinearPrograms merged = LinearPrograms::lpsMerge(r1.lps, r2.lps);
             
-            if(!merged.satisfiable(context.net(), context.marking())) {
+            if(!context.timeout() && !merged.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), merged); 
@@ -779,7 +563,7 @@ namespace PetriEngine {
                 return Retval(r1.formula, r1.lps);
             } else {
                 return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), 
-                        Structures::LinearPrograms::lpsUnion(r1.lps, r2.lps));
+                        LinearPrograms::lpsUnion(r1.lps, r2.lps));
             }
         }
         
@@ -798,21 +582,21 @@ namespace PetriEngine {
         }
  
         Retval EqualCondition::simplify(SimplificationContext context) const {
-            Structures::Member m1 = _expr1->constraint(context);
-            Structures::Member m2 = _expr2->constraint(context);
+            Member m1 = _expr1->constraint(context);
+            Member m2 = _expr2->constraint(context);
             
-            Structures::LinearPrograms lps;
+            LinearPrograms lps;
             
             if (m1.isConstant() && m2.isConstant()) {
                 return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant != m2.constant) : (m1.constant == m2.constant)));
             } else if (m1.canAnalyze && m2.canAnalyze) {
-                lps.add(Structures::LinearProgram(Structures::Equation(m1, m2, (context.negated() ? "!=" : "=="))));
+                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "!=" : "=="))));
             } else {
-                lps.add(Structures::LinearProgram());
+                lps.add(LinearProgram());
             }
             
-            if (!lps.satisfiable(context.net(), context.marking())) {
+            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 if (context.negated()) {
@@ -824,21 +608,21 @@ namespace PetriEngine {
         }
         
         Retval NotEqualCondition::simplify(SimplificationContext context) const {
-            Structures::Member m1 = _expr1->constraint(context);
-            Structures::Member m2 = _expr2->constraint(context);
+            Member m1 = _expr1->constraint(context);
+            Member m2 = _expr2->constraint(context);
             
-            Structures::LinearPrograms lps;
+            LinearPrograms lps;
             
             if (m1.isConstant() && m2.isConstant()) {
                 return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant == m2.constant) : (m1.constant != m2.constant)));
             } else if (m1.canAnalyze && m2.canAnalyze) {
-                lps.add(Structures::LinearProgram(Structures::Equation(m1, m2, (context.negated() ? "==" : "!="))));
+                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "==" : "!="))));
             } else {
-                lps.add(Structures::LinearProgram());
+                lps.add(LinearProgram());
             }
             
-            if (!lps.satisfiable(context.net(), context.marking())) {
+            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 if (context.negated()) {
@@ -850,21 +634,21 @@ namespace PetriEngine {
         }
         
         Retval LessThanCondition::simplify(SimplificationContext context) const {
-            Structures::Member m1 = _expr1->constraint(context);
-            Structures::Member m2 = _expr2->constraint(context);
+            Member m1 = _expr1->constraint(context);
+            Member m2 = _expr2->constraint(context);
             
-            Structures::LinearPrograms lps;
+            LinearPrograms lps;
             
             if (m1.isConstant() && m2.isConstant()) {
                 return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant >= m2.constant) : (m1.constant < m2.constant)));
             } else if (m1.canAnalyze && m2.canAnalyze) {
-                lps.add(Structures::LinearProgram(Structures::Equation(m1, m2, (context.negated() ? ">=" : "<"))));
+                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? ">=" : "<"))));
             } else {
-                lps.add(Structures::LinearProgram());
+                lps.add(LinearProgram());
             }
             
-            if (!lps.satisfiable(context.net(), context.marking())) {
+            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 if (context.negated()) {
@@ -876,12 +660,12 @@ namespace PetriEngine {
         }
         
         Retval LessThanOrEqualCondition::simplify(SimplificationContext context) const {
-            Structures::Member m1 = _expr1->constraint(context);
-            Structures::Member m2 = _expr2->constraint(context);
+            Member m1 = _expr1->constraint(context);
+            Member m2 = _expr2->constraint(context);
             
-            Structures::LinearPrograms lps;
+            LinearPrograms lps;
             
-            if (m1.isConstant() && m2.isConstant()) {
+            if (!context.timeout() && m1.isConstant() && m2.isConstant()) {
                 return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant > m2.constant) : (m1.constant <= m2.constant)));
             } else if (m1.canAnalyze && m2.canAnalyze) {
@@ -890,7 +674,7 @@ namespace PetriEngine {
                 lps.add(LinearProgram());
             }
                                     
-            if (!lps.satisfiable(context.net(), context.marking())) {
+            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 if (context.negated()) {
@@ -902,8 +686,8 @@ namespace PetriEngine {
         }
         
         Retval GreaterThanCondition::simplify(SimplificationContext context) const {
-            Structures::Member m1 = _expr1->constraint(context);
-            Structures::Member m2 = _expr2->constraint(context);
+            Member m1 = _expr1->constraint(context);
+            Member m2 = _expr2->constraint(context);
             
             LinearPrograms lps;
             
@@ -916,7 +700,7 @@ namespace PetriEngine {
                 lps.add(LinearProgram());
             }
             
-            if(!lps.satisfiable(context.net(), context.marking())) {
+            if(!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 if (context.negated()) {
@@ -928,8 +712,8 @@ namespace PetriEngine {
         }
         
         Retval GreaterThanOrEqualCondition::simplify(SimplificationContext context) const {  
-            Structures::Member m1 = _expr1->constraint(context);
-            Structures::Member m2 = _expr2->constraint(context);
+            Member m1 = _expr1->constraint(context);
+            Member m2 = _expr2->constraint(context);
             
             LinearPrograms lps;
             
@@ -942,7 +726,7 @@ namespace PetriEngine {
                 lps.add(LinearProgram());
             }
             
-            if (!lps.satisfiable(context.net(), context.marking())) {
+            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 if (context.negated()) {

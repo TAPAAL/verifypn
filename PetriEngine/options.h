@@ -13,7 +13,6 @@ struct options_t {
     int kbound = 0;
     char* modelfile = NULL;
     char* queryfile = NULL;
-    bool disableoverapprox = false;
     int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
     bool statespaceexploration = false;
     bool printstatistics = true;
@@ -22,6 +21,7 @@ struct options_t {
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
     bool mccoutput = false;
     bool trace = false;
+    int queryReductionTimeout = 30, lpsolveTimeout = 10;
 };
 
 #endif

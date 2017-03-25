@@ -23,14 +23,9 @@
 #include "PQL.h"
 #include "Contexts.h"
 
-using namespace PetriEngine::Structures;
+using namespace PetriEngine::Simplification;
 
 namespace PetriEngine {
-
-    namespace Structures {
-        class StateConstraints;
-    }
-
     namespace PQL {
 
 
@@ -175,7 +170,6 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
-            void findConstraints(ConstraintAnalysisContext& context) const;
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
@@ -186,7 +180,6 @@ namespace PetriEngine {
             //virtual int logicalOp() const = 0;
             virtual uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const = 0;
             virtual std::string op() const = 0;
-            virtual void mergeConstraints(ConstraintAnalysisContext::ConstraintSet& result, ConstraintAnalysisContext::ConstraintSet& other, bool negated) const = 0;
         protected:
             Condition_ptr _cond1;
             Condition_ptr _cond2;
@@ -203,7 +196,6 @@ namespace PetriEngine {
             bool apply(bool b1, bool b2) const;
             //int logicalOp() const;
             uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const;
-            void mergeConstraints(ConstraintAnalysisContext::ConstraintSet& result, ConstraintAnalysisContext::ConstraintSet& other, bool negated) const;
             std::string op() const;
         };
 
@@ -218,7 +210,6 @@ namespace PetriEngine {
             bool apply(bool b1, bool b2) const;
             //int logicalOp() const;
             uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const;
-            void mergeConstraints(ConstraintAnalysisContext::ConstraintSet& result, ConstraintAnalysisContext::ConstraintSet& other, bool negated) const;
             std::string op() const;
         };
 
@@ -232,7 +223,6 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
-            void findConstraints(ConstraintAnalysisContext& context) const;
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
@@ -247,8 +237,6 @@ namespace PetriEngine {
             virtual std::string opTAPAAL() const = 0;
             /** Swapped operator when exported to TAPAAL, e.g. operator when operands are swapped */
             virtual std::string sopTAPAAL() const = 0;
-            virtual void addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& id, int value) const = 0;
-            virtual void addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const = 0;
         protected:
             Expr_ptr _expr1;
             Expr_ptr _expr2;
@@ -264,8 +252,6 @@ namespace PetriEngine {
             bool apply(int v1, int v2) const;
             //int compareOp() const;
             uint32_t delta(int v1, int v2, bool negated) const;
-            void addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& id, int value) const;
-            void addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const;
             std::string op() const;
             std::string opTAPAAL() const;
             std::string sopTAPAAL() const;
@@ -282,8 +268,6 @@ namespace PetriEngine {
             bool apply(int v1, int v2) const;
             //int compareOp() const;
             uint32_t delta(int v1, int v2, bool negated) const;
-            void addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& id, int value) const;
-            void addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const;
             std::string op() const;
             std::string opTAPAAL() const;
             std::string sopTAPAAL() const;
@@ -299,8 +283,6 @@ namespace PetriEngine {
             bool apply(int v1, int v2) const;
             //int compareOp() const;
             uint32_t delta(int v1, int v2, bool negated) const;
-            void addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& id, int value) const;
-            void addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const;
             std::string op() const;
             std::string opTAPAAL() const;
             std::string sopTAPAAL() const;
@@ -316,8 +298,6 @@ namespace PetriEngine {
             bool apply(int v1, int v2) const;
             //int compareOp() const;
             uint32_t delta(int v1, int v2, bool negated) const;
-            void addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& id, int value) const;
-            void addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const;
             std::string op() const;
             std::string opTAPAAL() const;
             std::string sopTAPAAL() const;
@@ -333,8 +313,6 @@ namespace PetriEngine {
             bool apply(int v1, int v2) const;
             //int compareOp() const;
             uint32_t delta(int v1, int v2, bool negated) const;
-            void addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& id, int value) const;
-            void addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const;
             std::string op() const;
             std::string opTAPAAL() const;
             std::string sopTAPAAL() const;
@@ -350,8 +328,6 @@ namespace PetriEngine {
             bool apply(int v1, int v2) const;
             //int compareOp() const;
             uint32_t delta(int v1, int v2, bool negated) const;
-            void addConstraints(ConstraintAnalysisContext& context, const Expr_ptr& id, int value) const;
-            void addConstraints(ConstraintAnalysisContext& context, int value, const Expr_ptr& id) const;
             std::string op() const;
             std::string opTAPAAL() const;
             std::string sopTAPAAL() const;
@@ -366,7 +342,6 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
-            void findConstraints(ConstraintAnalysisContext& context) const;
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
@@ -384,7 +359,6 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
-            void findConstraints(ConstraintAnalysisContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
@@ -403,7 +377,6 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
-            void findConstraints(ConstraintAnalysisContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;

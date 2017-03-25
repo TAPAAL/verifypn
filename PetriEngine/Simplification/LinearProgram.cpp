@@ -1,10 +1,9 @@
 #include "LinearProgram.h"
 #include <assert.h>
 #include "../../lpsolve/lp_lib.h"
-#define OVER_APPROX_TIMEOUT    30
 
 namespace PetriEngine {
-    namespace Structures {
+    namespace Simplification {
         LinearProgram::LinearProgram() {
         }
 
@@ -48,8 +47,8 @@ namespace PetriEngine {
             return -1;
         }
 
-        bool LinearProgram::isimpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0){
-            if(equations.size()==0){
+        bool LinearProgram::isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout){
+            if(equations.size() == 0){
                 return false;
             }
 
@@ -92,12 +91,13 @@ namespace PetriEngine {
                 set_int(lp, 1 + i, TRUE);
             }
 
-            set_timeout(lp, OVER_APPROX_TIMEOUT);
+            set_timeout(lp, timeout);
             set_presolve(lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(lp));
         //    write_LP(lp, stdout);
             int result = solve(lp);
             delete_lp(lp);
 
+            if (result == TIMEOUT) std::cout<<"note: lpsolve timeout"<<std::endl;
             // Return true, if it was infeasible
             return result == INFEASIBLE;   
         }

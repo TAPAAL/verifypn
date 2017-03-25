@@ -30,7 +30,6 @@
 
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Contexts.h"
-#include "PetriEngine/Reachability/LinearOverApprox.h"
 #include "PetriEngine/Reachability/ReachabilitySearch.h"
 #include "PetriEngine/Reducer.h"
 #include "PetriParse/QueryXMLParser.h"
@@ -104,8 +103,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 				options.strategy = BFS;
 			else if(strcmp(s, "DFS") == 0)
 				options.strategy = DFS;
-			else if(strcmp(s, "OverApprox") == 0)
-				options.strategy = APPROX;
                         else if(strcmp(s, "RDFS") == 0)
                                 options.strategy = RDFS;
 			else{
@@ -121,8 +118,24 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 				fprintf(stderr, "Argument Error: Invalid memory limit \"%s\"\n", argv[i]);
 				return ErrorCode;
 			}
-        } else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--disable-overapprox") == 0) {
-            options.disableoverapprox = true;
+        } else if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--query-reduction") == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%d", &options.queryReductionTimeout) != 1 || options.queryReductionTimeout < 0) {
+                fprintf(stderr, "Argument Error: Invalid query reduction timeout argument \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
+        } else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--lpsolve-timeout") == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%d", &options.lpsolveTimeout) != 1 || options.lpsolveTimeout < 0) {
+                fprintf(stderr, "Argument Error: Invalid LPSolve timeout argument \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
         } else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--state-space-exploration") == 0) {
             options.statespaceexploration = true;
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--no-statistics") == 0) {
@@ -171,14 +184,14 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - BFS          Breadth first search\n"
                     "                                     - DFS          Depth first search\n"
                     "                                     - RDFS         Random depth first search\n"
-                    "                                     - OverApprox   Linear Over Approx\n"
                     "  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
                     "  -x, --xml-query <query index>      Parse XML query file and verify query of a given index\n"
-                    "  -d, --disable-over-approximation   Disable linear over approximation\n"
                     "  -r, --reduction                    Enable structural net reduction:\n"
                     "                                     - 0  disabled (default)\n"
                     "                                     - 1  aggressive reduction\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
+                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds, default 30\n"
+                    "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
@@ -216,9 +229,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
     options.memorylimit *= 1024*1024;
     if (options.statespaceexploration) {
         // for state-space exploration some options are mandatory
-        options.disableoverapprox = true;
         options.enablereduction = 0;
         options.kbound = 0;
+        options.queryReductionTimeout = 0;
+        options.lpsolveTimeout = 0;
 //        outputtrace = false;
     }
 
@@ -392,24 +406,21 @@ int main(int argc, char* argv[]) {
     
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
-    //bool alldone = !options.disableoverapprox;
-    bool alldone = true; // TODO add query simplification option (as above)
     
-    if (true) { // TODO add query simplification option
+    bool alldone = options.queryReductionTimeout > 0;
+    if (options.queryReductionTimeout > 0) {
         PetriNetBuilder b2(builder);
         PetriNet* net = b2.makePetriNet(false);
         MarkVal* m0 = net->makeInitialMarking();
         ResultPrinter p2(&b2, &options, querynames);
-        SimplificationContext context(m0, net);
-
 
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            std::cout<<"Query before: "<<std::endl<<queries[i].get()->toString()<<std::endl;;
-            std::shared_ptr<PQL::Condition> query = queries[i].get()->simplify(context).formula;
+            std::shared_ptr<PQL::Condition> query = queries[i].get()->simplify(
+                    SimplificationContext(m0, net, options.queryReductionTimeout, options.lpsolveTimeout)).formula;
             query->setInvariant(queries[i].get()->isInvariant());
-            std::cout<<"Query after: "<<std::endl<<query->toString()<<std::endl;;
             queries[i] = query;
+
             if(query->toString() == "true"){
                 results[i] = p2.printResult(i, query.get(), ResultPrinter::Satisfied);
             } else if (query->toString() == "false") {
@@ -418,18 +429,12 @@ int main(int argc, char* argv[]) {
                 alldone = false;
             }
         }
+
         delete net;
         delete[] m0; 
     }
-    std::exit(0);
     
     if(alldone) return SuccessCode;
-    
-    if(!alldone && options.strategy == PetriEngine::Reachability::APPROX)
-    {
-        std::cout << "Could not solve all queries with over approximation" << std::endl;
-        return ContinueCode;
-    }
     
     //--------------------- Apply Net Reduction ---------------//
         

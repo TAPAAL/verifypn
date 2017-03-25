@@ -38,7 +38,6 @@ namespace PetriEngine {
             BFS,
             DFS,
             HEUR,
-            APPROX,
             RDFS
         };
         
