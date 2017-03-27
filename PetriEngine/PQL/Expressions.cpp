@@ -581,17 +581,22 @@ namespace PetriEngine {
             return context.negated() ? simplifyAnd(context, r1, r2) : simplifyOr(r1, r2);
         }
  
+        bool selfComparison(Member m1, Member m2){
+            return (m1-m2).isConstant();
+        }
+        
         Retval EqualCondition::simplify(SimplificationContext context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
             LinearPrograms lps;
-            
-            if (m1.isConstant() && m2.isConstant()) {
-                return Retval(std::make_shared<BooleanCondition>(
+            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+                if ((m1.isConstant() && m2.isConstant()) || selfComparison(m1,m2)) {
+                    return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant != m2.constant) : (m1.constant == m2.constant)));
-            } else if (m1.canAnalyze && m2.canAnalyze) {
-                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "!=" : "=="))));
+                } else {
+                    lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "!=" : "=="))));
+                }
             } else {
                 lps.add(LinearProgram());
             }
@@ -613,14 +618,17 @@ namespace PetriEngine {
             
             LinearPrograms lps;
             
-            if (m1.isConstant() && m2.isConstant()) {
-                return Retval(std::make_shared<BooleanCondition>(
+            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+                if ((m1.isConstant() && m2.isConstant()) || selfComparison(m1,m2)) {
+                    return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant == m2.constant) : (m1.constant != m2.constant)));
-            } else if (m1.canAnalyze && m2.canAnalyze) {
-                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "==" : "!="))));
+                } else{ 
+                    lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "==" : "!="))));
+                }
             } else {
                 lps.add(LinearProgram());
             }
+            
             
             if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                 return Retval(std::make_shared<BooleanCondition>(false));
@@ -633,16 +641,64 @@ namespace PetriEngine {
             }
         }
         
+        bool trivialLessThan(Member m1, Member m2, MemberType type1, MemberType type2, 
+                std::function<bool (int, int)> op, Retval& ret){
+                        
+            // constant < constant/input/output
+            if(type1 == MemberType::Constant){
+                if(type2 == MemberType::Constant){
+                    ret = Retval(std::make_shared<BooleanCondition>(m1.constant <= m2.constant));
+                    return true;
+                }
+                else if(type2 == MemberType::Input && !op(m1.constant, m2.constant)){
+                    ret = Retval(std::make_shared<BooleanCondition>(false));
+                    return true;
+                } 
+                else if(type2 == MemberType::Output && op(m1.constant, m2.constant)){
+                    ret = Retval(std::make_shared<BooleanCondition>(true));
+                    return true;
+                } 
+            } 
+            // input < output/constant
+            else if(type1 == MemberType::Input 
+                    && (type2 == MemberType::Constant || type2 == MemberType::Output) 
+                    && op(m1.constant, m2.constant)) {
+                ret = Retval(std::make_shared<BooleanCondition>(true));
+                return true;
+            } 
+            // output < input/constant
+            else if(type1 == MemberType::Output 
+                    && (type2 == MemberType::Constant || type2 == MemberType::Input) 
+                    && !op(m1.constant, m2.constant)) {
+                ret = Retval(std::make_shared<BooleanCondition>(false));
+                return true;
+            } 
+            return false;
+        }
+        
         Retval LessThanCondition::simplify(SimplificationContext context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
+            MemberType type1 = m1.getType();
+            MemberType type2 = m2.getType();
             
             LinearPrograms lps;
-            
-            if (m1.isConstant() && m2.isConstant()) {
-                return Retval(std::make_shared<BooleanCondition>(
+            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+                // self comparison
+                if(selfComparison(m1,m2)){ 
+                    return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant >= m2.constant) : (m1.constant < m2.constant)));
-            } else if (m1.canAnalyze && m2.canAnalyze) {
+                } 
+                // test for interface places, orphans and constants
+                else if(type1 != MemberType::Regular && type2 != MemberType::Regular) {
+                    Retval ret;
+                    if(context.negated()){
+                        if(trivialLessThan(m2, m1, type2, type1, std::less_equal<int>(), ret)){ return ret; }
+                    } else {
+                        if(trivialLessThan(m1, m2, type1, type2, std::less<int>(), ret)){ return ret; }
+                    }
+                } 
+                // if no trivial case
                 lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? ">=" : "<"))));
             } else {
                 lps.add(LinearProgram());
@@ -657,18 +713,31 @@ namespace PetriEngine {
                     return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), lps);
                 }                         
             }
-        }
+        }        
         
         Retval LessThanOrEqualCondition::simplify(SimplificationContext context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
+            MemberType type1 = m1.getType();
+            MemberType type2 = m2.getType();
             
             LinearPrograms lps;
-            
-            if (!context.timeout() && m1.isConstant() && m2.isConstant()) {
-                return Retval(std::make_shared<BooleanCondition>(
+            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+                // self comparison
+                if(selfComparison(m1,m2)){ 
+                    return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant > m2.constant) : (m1.constant <= m2.constant)));
-            } else if (m1.canAnalyze && m2.canAnalyze) {
+                } 
+                // test for interface places, orphans and constants
+                else if(type1 != MemberType::Regular && type2 != MemberType::Regular) {
+                    Retval ret;
+                    if(context.negated()){
+                        if(trivialLessThan(m2, m1, type2, type1, std::less<int>(), ret)){ return ret; }
+                    } else{
+                        if(trivialLessThan(m1, m2, type1, type2, std::less_equal<int>(), ret)){ return ret; }
+                    }
+                } 
+                // if no trivial case
                 lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? ">" : "<="))));
             } else {
                 lps.add(LinearProgram());
@@ -688,14 +757,27 @@ namespace PetriEngine {
         Retval GreaterThanCondition::simplify(SimplificationContext context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
+            MemberType type1 = m1.getType();
+            MemberType type2 = m2.getType();
             
             LinearPrograms lps;
-            
-            if (m1.isConstant() && m2.isConstant()) {
-                return Retval(std::make_shared<BooleanCondition>(
+            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+                // self comparison
+                if(selfComparison(m1,m2)){ 
+                    return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant <= m2.constant) : (m1.constant > m2.constant)));
-            } else if (m1.canAnalyze && m2.canAnalyze) {
-                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "<=" : ">"))));
+                } 
+                // test for interface places, orphans and constants
+                else if(type1 != MemberType::Regular && type2 != MemberType::Regular) {
+                    Retval ret;
+                    if(context.negated()){
+                        if(trivialLessThan(m1, m2, type1, type2, std::less_equal<int>(), ret)){ return ret; }
+                    } else {
+                        if(trivialLessThan(m2, m1, type2, type1, std::less<int>(), ret)){ return ret; }
+                    }
+                }
+                // if no trivial case
+                lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "<=" : ">")))); 
             } else {
                 lps.add(LinearProgram());
             }
@@ -714,14 +796,28 @@ namespace PetriEngine {
         Retval GreaterThanOrEqualCondition::simplify(SimplificationContext context) const {  
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
+            MemberType type1 = m1.getType();
+            MemberType type2 = m2.getType();
             
             LinearPrograms lps;
-            
-            if (m1.isConstant() && m2.isConstant()) {
-                return Retval(std::make_shared<BooleanCondition>(
+            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+                // self comparison
+                if(selfComparison(m1,m2)){ 
+                    return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant < m2.constant) : (m1.constant >= m2.constant)));
-            } if (m1.canAnalyze && m2.canAnalyze) {
+                } 
+                // test for interface places, orphans and constants
+                else if(type1 != MemberType::Regular && type2 != MemberType::Regular) {
+                    Retval ret;
+                    if(context.negated()){
+                        if(trivialLessThan(m1, m2, type1, type2, std::less<int>(), ret)){ return ret; }
+                    } else {
+                        if(trivialLessThan(m2, m1, type2, type1, std::less_equal<int>(), ret)){ return ret; }
+                    }
+                }
+                // if no trivial case
                 lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "<" : ">="))));
+                
             } else {
                 lps.add(LinearProgram());
             }

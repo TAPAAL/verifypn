@@ -4,7 +4,7 @@
 
 namespace PetriEngine {
     namespace Simplification {
-        
+        enum MemberType { Constant, Input, Output, Regular };
         class Member {
         public:
             std::vector<double> variables;
@@ -58,6 +58,25 @@ namespace PetriEngine {
                     if(v != 0) return false;
                 }
                 return true;
+            }
+            
+            MemberType getType(){
+                bool isConstant=true;
+                bool isInput=true;
+                bool isOutput=true;
+                for(const double& v : variables){
+                    if(v < 0){
+                        isConstant=false;
+                        isOutput=false;
+                    } else if(v > 0){
+                        isConstant=false;
+                        isInput=false;
+                    }
+                }
+                if(isConstant) return MemberType::Constant;
+                else if(isInput) return MemberType::Input;
+                else if(isOutput) return MemberType::Output;
+                else return MemberType::Regular;
             }
         private:
             std::vector<double> addVariables(Member m1, Member m2){

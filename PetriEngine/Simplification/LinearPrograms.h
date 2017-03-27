@@ -60,6 +60,9 @@ namespace PetriEngine {
             }
             Retval (std::shared_ptr<PQL::Condition> formula) : Retval(formula, LinearPrograms(LinearProgram())) {
             }
+            Retval() : lps(LinearPrograms(LinearProgram())){
+                
+            }
         };
     }
 }
