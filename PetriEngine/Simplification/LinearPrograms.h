@@ -2,7 +2,6 @@
 #define LINEARPROGRAMS_H
 #include "LinearProgram.h"
 #include "../PetriNet.h"
-#include "../PQL/PQL.h"
         
 namespace PetriEngine {
     namespace Simplification {
@@ -50,18 +49,6 @@ namespace PetriEngine {
                     res.add(lp);
                 }
                 return res;
-            }
-        };
-        
-        struct Retval {
-            std::shared_ptr<PQL::Condition> formula;
-            LinearPrograms lps;       
-            Retval (std::shared_ptr<PQL::Condition> formula, LinearPrograms lps) : formula(formula), lps(lps) {           
-            }
-            Retval (std::shared_ptr<PQL::Condition> formula) : Retval(formula, LinearPrograms(LinearProgram())) {
-            }
-            Retval() : lps(LinearPrograms(LinearProgram())){
-                
             }
         };
     }

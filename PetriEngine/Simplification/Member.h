@@ -1,9 +1,11 @@
 #ifndef MEMBER_H
 #define MEMBER_H
 #include <algorithm>
+//#include "../PQL/PQL.h"
 
 namespace PetriEngine {
     namespace Simplification {
+        enum Trivial { False=0, True=1, Indeterminate=2 };
         enum MemberType { Constant, Input, Output, Regular };
         class Member {
         public:
@@ -78,6 +80,26 @@ namespace PetriEngine {
                 else if(isOutput) return MemberType::Output;
                 else return MemberType::Regular;
             }
+            
+            bool operator==(const Member& m) {
+                return (*this-m).isConstant();
+            }
+            bool operator!=(const Member& m) {
+                return !((*this-m).isConstant());
+            }
+            Trivial operator<(const Member& m) {
+                return trivialLessThan(*this, m, std::less<int>());
+            }
+            Trivial operator<=(const Member& m) {
+                return trivialLessThan(*this, m, std::less_equal<int>());
+            }
+            Trivial operator>(const Member& m) {
+                return trivialLessThan(m, *this, std::less<int>());
+            }
+            Trivial operator>=(const Member& m) {
+                return trivialLessThan(m, *this, std::less_equal<int>());
+            }
+            
         private:
             std::vector<double> addVariables(Member m1, Member m2){
                 int size = std::max(m1.variables.size(), m2.variables.size());
@@ -112,6 +134,42 @@ namespace PetriEngine {
                 }
                 return res;
             }
+            
+            Trivial trivialLessThan(Member m1, Member m2, std::function<bool (int, int)> compare){
+                MemberType type1 = m1.getType();
+                MemberType type2 = m2.getType();
+                
+                // self comparison
+                if(m1 == m2)
+                    return compare(m1.constant, m2.constant) ? Trivial::True : Trivial::False;
+                    
+                // constant < constant/input/output
+                if(type1 == MemberType::Constant){
+                    if(type2 == MemberType::Constant){
+                        return compare(m1.constant, m2.constant) ? Trivial::True : Trivial::False;
+                    }
+                    else if(type2 == MemberType::Input && !compare(m1.constant, m2.constant)){
+                        return Trivial::False;
+                    } 
+                    else if(type2 == MemberType::Output && compare(m1.constant, m2.constant)){
+                        return Trivial::True;
+                    } 
+                } 
+                // input < output/constant
+                else if(type1 == MemberType::Input 
+                        && (type2 == MemberType::Constant || type2 == MemberType::Output) 
+                        && compare(m1.constant, m2.constant)) {
+                    return Trivial::True;
+                } 
+                // output < input/constant
+                else if(type1 == MemberType::Output 
+                        && (type2 == MemberType::Constant || type2 == MemberType::Input) 
+                        && !compare(m1.constant, m2.constant)) {
+                    return Trivial::False;
+                } 
+                return Trivial::Indeterminate;
+            }
+
         };
     }
 }
