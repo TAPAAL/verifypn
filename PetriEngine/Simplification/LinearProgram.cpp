@@ -53,25 +53,32 @@ namespace PetriEngine {
 
             uint32_t nCol = net->numberOfTransitions();
             lprec* lp;
-            lp = make_lp(0, nCol);
+            int nRow = net->numberOfPlaces() + equations.size();
+            
+            lp = make_lp(nRow, nCol);
             assert(lp);
             if (!lp) return false;
             set_verbose(lp, IMPORTANT);
 
             set_add_rowmode(lp, TRUE);
             std::vector<REAL> row = std::vector<REAL>(nCol + 1);
-
+            int rowno = 1;
+            
             // restrict all places to contain 0+ tokens
             for (size_t p = 0; p < net->numberOfPlaces(); p++) {
                 memset(row.data(), 0, sizeof (REAL) * nCol + 1);
                 for (size_t t = 0; t < nCol; t++) {
                     row[1 + t] = net->outArc(t, p) - net->inArc(p, t);
                 }
-                add_constraint(lp, row.data(), GE, (0 - (int)m0[p]));
+                set_row(lp, rowno, row.data());
+                set_constr_type(lp, rowno, GE);
+                set_rh(lp, rowno++, (0 - (int)m0[p]));
             }
 
             for(Equation& eq : equations){
-                add_constraint(lp, eq.row.data(), op(eq.op), eq.constant);
+                set_row(lp, rowno, eq.row.data());
+                set_constr_type(lp, rowno, op(eq.op));
+                set_rh(lp, rowno++, eq.constant);
             }
             set_add_rowmode(lp, FALSE);
             
