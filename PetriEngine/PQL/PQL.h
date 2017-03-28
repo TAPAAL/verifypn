@@ -29,6 +29,7 @@
 #include "../Structures/State.h"
 #include "../Simplification/Member.h"
 #include "../Simplification/LinearPrograms.h"
+#include "../Simplification/Retval.h"
 
 namespace llvm {
     class Value;
