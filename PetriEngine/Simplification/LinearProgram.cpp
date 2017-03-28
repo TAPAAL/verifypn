@@ -39,7 +39,6 @@ namespace PetriEngine {
             }
         }
 
-
         int LinearProgram::op(std::string op){
             if(op == "<="){ return 1; }
             if(op == ">="){ return 2; }
