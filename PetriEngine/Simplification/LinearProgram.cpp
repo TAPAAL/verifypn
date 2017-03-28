@@ -89,8 +89,9 @@ namespace PetriEngine {
             for (size_t i = 0; i < nCol; i++){
                 set_int(lp, 1 + i, TRUE);
             }
-
+            
             set_timeout(lp, timeout);
+            set_break_at_first(lp, TRUE);
             set_presolve(lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(lp));
         //    write_LP(lp, stdout);
             int result = solve(lp);
