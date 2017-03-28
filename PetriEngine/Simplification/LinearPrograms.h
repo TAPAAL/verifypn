@@ -18,12 +18,19 @@ namespace PetriEngine {
             std::vector<LinearProgram> lps;
 
             bool satisfiable(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout) {
-               for(LinearProgram &lp : lps){
-                   if(!lp.isImpossible(net, m0, timeout)){
+                std::vector<uint32_t> impossible;
+                for(uint32_t i = 0; i < lps.size(); i++){
+                    if(!lps[i].isImpossible(net, m0, timeout)){
+                        // prune away all known impossible linear programs
+                        for(uint32_t& i : impossible){
+                            lps.erase(lps.begin() + i);
+                        }
                         return true;
-                   }
-               }
-               return false;
+                    } else {
+                        impossible.push_back(i);
+                    }
+                }
+                return false;
             }
 
             void add(LinearProgram lp){

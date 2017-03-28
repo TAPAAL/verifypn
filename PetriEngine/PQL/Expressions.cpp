@@ -497,7 +497,15 @@ namespace PetriEngine {
         uint32_t DeadlockCondition::distance(DistanceContext& context) const {
             return 0;
         }
-
+        
+        uint32_t QuantifierCondition::distance(DistanceContext& context) const {
+            // Not implemented
+        }
+        
+        uint32_t UntilCondition::distance(DistanceContext& context) const {
+            // Not implemented
+        }
+        
         uint32_t LogicalCondition::distance(DistanceContext& context) const {
             uint32_t d1 = _cond1->distance(context);
             uint32_t d2 = _cond2->distance(context);
