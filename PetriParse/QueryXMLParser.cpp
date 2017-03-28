@@ -140,7 +140,11 @@ Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
     bool addNot = false;
     rapidxml::xml_node<>*  booleanFormula = element->first_node();
     string elementName = booleanFormula->name();
-    if (elementName == "invariant") {
+    Condition_ptr cond = NULL;
+    
+    if ((cond = parseBooleanFormula(element)) != NULL) {
+        return cond;
+    } else if (elementName == "invariant") {
         negateResult = true;
         addNot = true;
     } else if (elementName == "impossibility") {
@@ -190,8 +194,6 @@ Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
             return NULL;
         }
     } else if (elementName == "place-bound") {
-        
-        Condition_ptr cond = NULL;
         std::vector<std::string> places;
         for(auto it = booleanFormula->first_node(); it ; it = it->next_sibling())
         {
@@ -235,7 +237,124 @@ Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
 
 Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element) {
     string elementName = element->name();
-    if (elementName == "deadlock") {
+    
+    if (elementName == "exists-path") {
+        auto booleanFormula = element->first_node();
+        if (getChildCount(booleanFormula) != 1) {
+            return NULL;
+        }
+        
+        if (booleanFormula && strcmp(booleanFormula->name(), "next") == 0) {
+            auto children = element->first_node();
+            if (getChildCount(element) == 1) {
+                Condition_ptr cond = parseBooleanFormula(children);
+                if(cond != NULL)
+                {
+                    return std::make_shared<EXCondition>(cond);
+                }
+                return NULL;
+            } else {
+                return NULL;
+            }
+        } else if (booleanFormula && strcmp(booleanFormula->name(), "globally") == 0) {
+            auto children = element->first_node();
+            if (getChildCount(element) == 1) {
+                Condition_ptr cond = parseBooleanFormula(children);
+                if(cond != NULL)
+                {
+                    return std::make_shared<EGCondition>(cond);
+                }
+                return NULL;
+            } else {
+                return NULL;
+            }
+        } else if (booleanFormula && strcmp(booleanFormula->name(), "finally") == 0) {
+            auto children = element->first_node();
+            if (getChildCount(element) == 1) {
+                Condition_ptr cond = parseBooleanFormula(children);
+                if(cond != NULL)
+                {
+                    return std::make_shared<EFCondition>(cond);
+                }
+                return NULL;
+            } else {
+                return NULL;
+            }
+        } else if (booleanFormula && strcmp(booleanFormula->name(), "until") == 0) {
+            auto children = booleanFormula->first_node();
+            if (getChildCount(element) != 2) {
+                return NULL;
+            }
+
+            Condition_ptr cond1 = parseBooleanFormula(children);
+            Condition_ptr cond2 = parseBooleanFormula(children->next_sibling());
+            if (cond1 == NULL || cond2 == NULL) {
+                return NULL;
+            }
+
+            return std::make_shared<EUCondition>(cond1, cond2);
+        } else {
+            return NULL;
+        }
+    } else if (elementName == "all-paths") {
+        auto booleanFormula = element->first_node();
+        if (getChildCount(booleanFormula) != 1) {
+            return NULL;
+        }
+        
+        if (booleanFormula && strcmp(booleanFormula->name(), "next") == 0) {
+            auto children = element->first_node();
+            if (getChildCount(element) == 1) {
+                Condition_ptr cond = parseBooleanFormula(children);
+                if(cond != NULL)
+                {
+                    return std::make_shared<AXCondition>(cond);
+                }
+                return NULL;
+            } else {
+                return NULL;
+            }
+        } else if (booleanFormula && strcmp(booleanFormula->name(), "globally") == 0) {
+            auto children = element->first_node();
+            if (getChildCount(element) == 1) {
+                Condition_ptr cond = parseBooleanFormula(children);
+                if(cond != NULL)
+                {
+                    return std::make_shared<AGCondition>(cond);
+                }
+                return NULL;
+            } else {
+                return NULL;
+            }
+        } else if (booleanFormula && strcmp(booleanFormula->name(), "finally") == 0) {
+            auto children = element->first_node();
+            if (getChildCount(element) == 1) {
+                Condition_ptr cond = parseBooleanFormula(children);
+                if(cond != NULL)
+                {
+                    return std::make_shared<AFCondition>(cond);
+                }
+                return NULL;
+            } else {
+                return NULL;
+            }
+        } else if (booleanFormula && strcmp(booleanFormula->name(), "until") == 0) {
+            auto children = booleanFormula->first_node();
+            if (getChildCount(element) != 2) {
+                return NULL;
+            }
+
+            Condition_ptr cond1 = parseBooleanFormula(children);
+            Condition_ptr cond2 = parseBooleanFormula(children->next_sibling());
+            if (cond1 == NULL || cond2 == NULL) {
+                return NULL;
+            }
+
+            return std::make_shared<AUCondition>(cond1, cond2);
+        } else {
+            return NULL;
+        }
+    } else if (elementName == "deadlock") {
         return std::make_shared<DeadlockCondition>();
     } else if (elementName == "true") {
         return BooleanCondition::TRUE;
