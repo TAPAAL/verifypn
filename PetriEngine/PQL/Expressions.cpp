@@ -57,6 +57,14 @@ namespace PetriEngine {
             return "-" + _expr->toString();
         }
 
+        std::string QuantifierCondition::toString() const {
+            return op() + " ("  + _cond->toString() + ")";
+        }
+        
+        std::string UntilCondition::toString() const {
+            return op() + " (" + _cond1->toString() + " U " + _cond2->toString() + ")";
+        }
+        
         std::string LogicalCondition::toString() const {
             return "(" + _cond1->toString() + " " + op() + " " + _cond2->toString() + ")";
         }
@@ -81,6 +89,14 @@ namespace PetriEngine {
 
         /******************** To TAPAAL Query ********************/
 
+        std::string QuantifierCondition::toTAPAALQuery(TAPAALConditionExportContext& context) const {
+            return op() + " ("  + _cond->toTAPAALQuery(context) + ")";
+        }
+        
+        std::string UntilCondition::toTAPAALQuery(TAPAALConditionExportContext& context) const {
+            return op() + " (" + _cond1->toTAPAALQuery(context) + " U " + _cond2->toTAPAALQuery(context) + ")";
+        }
+        
         std::string LogicalCondition::toTAPAALQuery(TAPAALConditionExportContext& context) const {
             return " ( " + _cond1->toTAPAALQuery(context) + " " + op() + " " + _cond2->toTAPAALQuery(context) + " ) ";
         }
@@ -192,6 +208,15 @@ namespace PetriEngine {
             }
         }
 
+        void QuantifierCondition::analyze(AnalysisContext& context) {
+            _cond->analyze(context);
+        }
+        
+        void UntilCondition::analyze(AnalysisContext& context) {
+            _cond1->analyze(context);
+            _cond2->analyze(context);
+        }
+        
         void LogicalCondition::analyze(AnalysisContext& context) {
             _cond1->analyze(context);
             _cond2->analyze(context);
@@ -234,8 +259,15 @@ namespace PetriEngine {
             return context.marking()[_offsetInMarking];
         }
 
+        bool QuantifierCondition::evaluate(const EvaluationContext& context) const {
+            // Not implemented
+        }
+        
+        bool UntilCondition::evaluate(const EvaluationContext& context) const {
+            // Not implemented
+        }
+        
         bool LogicalCondition::evaluate(const EvaluationContext& context) const {
-
             bool b1 = _cond1->evaluate(context);
             bool b2 = _cond2->evaluate(context);
             return apply(b1, b2);
@@ -327,7 +359,43 @@ namespace PetriEngine {
         std::string MultiplyExpr::op() const {
             return "*";
         }
+        
+        /******************** Op (QuantifierCondition subclasses) ********************/
+        
+        std::string EXCondition::op() const {
+            return "EX";
+        }
+        
+        std::string EGCondition::op() const {
+            return "EG";
+        }
+        
+        std::string EFCondition::op() const {
+            return "EF";
+        }
+        
+        std::string AXCondition::op() const {
+            return "AX";
+        }
+        
+        std::string AGCondition::op() const {
+            return "AG";
+        }
+        
+        std::string AFCondition::op() const {
+            return "AF";
+        }
+        
+        /******************** Op (UntilCondition subclasses) ********************/
 
+        std::string EUCondition::op() const {
+            return "E";
+        }
+        
+        std::string AUCondition::op() const {
+            return "A";
+        }
+        
         /******************** Op (LogicalCondition subclasses) ********************/
 
         std::string AndCondition::op() const {
@@ -429,7 +497,15 @@ namespace PetriEngine {
         uint32_t DeadlockCondition::distance(DistanceContext& context) const {
             return 0;
         }
-
+        
+        uint32_t QuantifierCondition::distance(DistanceContext& context) const {
+            // Not implemented
+        }
+        
+        uint32_t UntilCondition::distance(DistanceContext& context) const {
+            // Not implemented
+        }
+        
         uint32_t LogicalCondition::distance(DistanceContext& context) const {
             uint32_t d1 = _cond1->distance(context);
             uint32_t d2 = _cond2->distance(context);
@@ -534,6 +610,22 @@ namespace PetriEngine {
         
         Member MinusExpr::constraint(SimplificationContext context) const {
             return -_expr->constraint(context);
+        }
+        
+        Retval QuantifierCondition::simplify(SimplificationContext context) const {
+            // Not implemented
+        }
+        
+        Retval EXCondition::simplify(SimplificationContext context) const {
+            // Not implemented
+        }
+        
+        Retval AXCondition::simplify(SimplificationContext context) const {
+            // Not implemented
+        }
+        
+        Retval UntilCondition::simplify(SimplificationContext context) const {
+            // Not implemented
         }
         
         Retval simplifyAnd(SimplificationContext context, Retval r1, Retval r2) {

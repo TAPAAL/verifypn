@@ -1,6 +1,7 @@
 #ifndef MEMBER_H
 #define MEMBER_H
 #include <algorithm>
+#include <functional>
 //#include "../PQL/PQL.h"
 
 namespace PetriEngine {

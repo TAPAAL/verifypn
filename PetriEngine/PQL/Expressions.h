@@ -157,7 +157,117 @@ namespace PetriEngine {
             /** Identifier text */
             std::string _name;
         };
+        
+        /******************** TEMPORAL OPERATORS ********************/
 
+        class QuantifierCondition : public Condition {
+        public:
+            QuantifierCondition(const Condition_ptr cond) {
+                _cond = cond;
+            }
+            
+            void analyze(AnalysisContext& context);
+            bool evaluate(const EvaluationContext& context) const;
+            std::string toString() const;
+            std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            uint32_t distance(DistanceContext& context) const;
+            Retval simplify(SimplificationContext context) const;
+            
+        private:
+            virtual std::string op() const = 0;
+            
+        protected:
+            Condition_ptr _cond;
+        };
+        
+        class EXCondition : public QuantifierCondition {
+        public:
+            using QuantifierCondition::QuantifierCondition;
+            Retval simplify(SimplificationContext context) const;
+            
+        private:
+            std::string op() const;
+        };
+        
+        class EGCondition : public QuantifierCondition {
+        public:
+            using QuantifierCondition::QuantifierCondition;
+            
+        private:
+            std::string op() const;
+        };
+        
+        class EFCondition : public QuantifierCondition {
+        public:
+            using QuantifierCondition::QuantifierCondition;
+            
+        private:
+            std::string op() const;
+        };
+        
+        class AXCondition : public QuantifierCondition {
+        public:
+            using QuantifierCondition::QuantifierCondition;
+            Retval simplify(SimplificationContext context) const;
+            
+        private:
+            std::string op() const;
+        };
+        
+        class AGCondition : public QuantifierCondition {
+        public:
+            using QuantifierCondition::QuantifierCondition;
+            
+        private:
+            std::string op() const;
+        };
+        
+        class AFCondition : public QuantifierCondition {
+        public:
+            using QuantifierCondition::QuantifierCondition;
+            
+        private:
+            std::string op() const;
+        };     
+        
+        class UntilCondition : public Condition {
+        public:
+            UntilCondition(const Condition_ptr cond1, const Condition_ptr cond2) {
+                _cond1 = cond1;
+                _cond2 = cond2;
+            }
+            
+            void analyze(AnalysisContext& context);
+            bool evaluate(const EvaluationContext& context) const;
+            std::string toString() const;
+            std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            uint32_t distance(DistanceContext& context) const;
+            Retval simplify(SimplificationContext context) const;
+            
+        private:
+            virtual std::string op() const = 0;
+            
+        protected:
+            Condition_ptr _cond1;
+            Condition_ptr _cond2;
+        };
+        
+        class EUCondition : public UntilCondition {
+        public:
+            using UntilCondition::UntilCondition;           
+            
+        private:
+            std::string op() const;
+        };
+        
+        class AUCondition : public UntilCondition {
+        public:
+            using UntilCondition::UntilCondition;
+            
+        private:
+            std::string op() const;
+        };
+        
         /******************** CONDITIONS ********************/
 
         /* Logical conditon */
