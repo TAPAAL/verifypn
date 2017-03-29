@@ -210,7 +210,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -v, --version                      Display version information\n"
                     "  -o, --mcc                          Use MCC output-format\n"
                     "  -m, --memory-limit <mb-memory>     Limit for when encoding kicks in, default 2048\n"
-                    "  -ctl                               Verify CTL properties"
+                    "  -ctl                               Verify CTL properties\n"
                     "                                     - local        Liu and Smolka's on-the-fly algorithm\n"
                     "                                     - czero        local with certain zero extension (default)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
