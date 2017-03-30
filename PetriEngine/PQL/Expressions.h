@@ -171,7 +171,7 @@ namespace PetriEngine {
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             uint32_t distance(DistanceContext& context) const;
-            Retval simplify(SimplificationContext context) const;
+            Retval simplify(SimplificationContext context) const = 0;
             
         private:
             virtual std::string op() const = 0;
@@ -192,6 +192,7 @@ namespace PetriEngine {
         class EGCondition : public QuantifierCondition {
         public:
             using QuantifierCondition::QuantifierCondition;
+            Retval simplify(SimplificationContext context) const;
             
         private:
             std::string op() const;
@@ -200,6 +201,7 @@ namespace PetriEngine {
         class EFCondition : public QuantifierCondition {
         public:
             using QuantifierCondition::QuantifierCondition;
+            Retval simplify(SimplificationContext context) const;
             
         private:
             std::string op() const;
@@ -217,6 +219,7 @@ namespace PetriEngine {
         class AGCondition : public QuantifierCondition {
         public:
             using QuantifierCondition::QuantifierCondition;
+            Retval simplify(SimplificationContext context) const;
             
         private:
             std::string op() const;
@@ -225,6 +228,7 @@ namespace PetriEngine {
         class AFCondition : public QuantifierCondition {
         public:
             using QuantifierCondition::QuantifierCondition;
+            Retval simplify(SimplificationContext context) const;
             
         private:
             std::string op() const;
@@ -242,7 +246,7 @@ namespace PetriEngine {
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             uint32_t distance(DistanceContext& context) const;
-            Retval simplify(SimplificationContext context) const;
+            Retval simplify(SimplificationContext context) const = 0;
             
         private:
             virtual std::string op() const = 0;
@@ -254,7 +258,8 @@ namespace PetriEngine {
         
         class EUCondition : public UntilCondition {
         public:
-            using UntilCondition::UntilCondition;           
+            using UntilCondition::UntilCondition;  
+            Retval simplify(SimplificationContext context) const;
             
         private:
             std::string op() const;
@@ -263,6 +268,7 @@ namespace PetriEngine {
         class AUCondition : public UntilCondition {
         public:
             using UntilCondition::UntilCondition;
+            Retval simplify(SimplificationContext context) const;
             
         private:
             std::string op() const;
