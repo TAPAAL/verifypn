@@ -612,10 +612,6 @@ namespace PetriEngine {
             return -_expr->constraint(context);
         }
         
-        Retval QuantifierCondition::simplify(SimplificationContext context) const {
-            // Not implemented
-        }
-        
         Retval EXCondition::simplify(SimplificationContext context) const {
             Retval r = _cond->simplify(context);
             if(r.formula->toString() == "true"){
@@ -956,6 +952,56 @@ namespace PetriEngine {
             } else {
                 return Retval(std::make_shared<DeadlockCondition>());
             }
+        }
+        
+        /******************** Check if query is a reachability query ********************/
+        
+        bool EXCondition::isReachability(uint32_t depth) const {
+            return false;
+        }
+        
+        bool EGCondition::isReachability(uint32_t depth) const {
+            return false;
+        }
+        
+        bool EFCondition::isReachability(uint32_t depth) const {
+            return depth > 0 ? false : _cond->isReachability(depth + 1);
+        }
+        
+        bool AXCondition::isReachability(uint32_t depth) const {
+            return false;
+        }
+        
+        bool AGCondition::isReachability(uint32_t depth) const {
+            return depth > 0 ? false : _cond->isReachability(depth + 1);
+        }
+        
+        bool AFCondition::isReachability(uint32_t depth) const {
+            return false;
+        }
+        
+        bool UntilCondition::isReachability(uint32_t depth) const {
+            return false;
+        }
+        
+        bool LogicalCondition::isReachability(uint32_t depth) const {
+            return depth == 0 ? false : _cond1->isReachability(depth + 1) && _cond2->isReachability(depth + 1);
+        }
+        
+        bool CompareCondition::isReachability(uint32_t depth) const {
+            return depth > 0;
+        }
+        
+        bool NotCondition::isReachability(uint32_t depth) const {
+            return _cond->isReachability(depth);
+        }
+        
+        bool BooleanCondition::isReachability(uint32_t depth) const {
+            return depth > 0;
+        }
+        
+        bool DeadlockCondition::isReachability(uint32_t depth) const {
+            return depth > 0;
         }
         
         /******************** Just-In-Time Compilation ********************/

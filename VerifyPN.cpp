@@ -415,6 +415,7 @@ int main(int argc, char* argv[]) {
         
         for(size_t i = 0; i < queries.size(); ++i)
         {
+            if (!queries[i]->isReachability()) continue;
             std::shared_ptr<PQL::Condition> query = queries[i].get()->simplify(
                     SimplificationContext(m0, net, options.queryReductionTimeout, options.lpsolveTimeout)).formula;
             query->setInvariant(queries[i].get()->isInvariant());
