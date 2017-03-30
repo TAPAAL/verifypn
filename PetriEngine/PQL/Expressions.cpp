@@ -58,7 +58,7 @@ namespace PetriEngine {
         }
 
         std::string QuantifierCondition::toString() const {
-            return op() + " ("  + _cond->toString() + ")";
+            return op() + " "  + _cond->toString();
         }
         
         std::string UntilCondition::toString() const {
@@ -90,7 +90,7 @@ namespace PetriEngine {
         /******************** To TAPAAL Query ********************/
 
         std::string QuantifierCondition::toTAPAALQuery(TAPAALConditionExportContext& context) const {
-            return op() + " ("  + _cond->toTAPAALQuery(context) + ")";
+            return op() + " "  + _cond->toTAPAALQuery(context);
         }
         
         std::string UntilCondition::toTAPAALQuery(TAPAALConditionExportContext& context) const {

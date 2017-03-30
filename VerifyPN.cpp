@@ -401,7 +401,6 @@ int main(int argc, char* argv[]) {
     //----------------------- Parse Query -----------------------//
     auto queries = readQueries(transitionEnabledness, options, querynames);
     
-    
     if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
     
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
@@ -413,7 +412,7 @@ int main(int argc, char* argv[]) {
         PetriNet* net = b2.makePetriNet(false);
         MarkVal* m0 = net->makeInitialMarking();
         ResultPrinter p2(&b2, &options, querynames);
-
+        
         for(size_t i = 0; i < queries.size(); ++i)
         {
             std::shared_ptr<PQL::Condition> query = queries[i].get()->simplify(
