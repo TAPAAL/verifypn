@@ -1004,6 +1004,59 @@ namespace PetriEngine {
             return depth > 0;
         }
         
+        /******************** Prepare Reachability Queries ********************/
+        
+        Condition_ptr EXCondition::prepareForReachability(bool negated) const {
+            return NULL;
+        }
+        
+        Condition_ptr EGCondition::prepareForReachability(bool negated) const {
+            return NULL;
+        }
+        
+        Condition_ptr EFCondition::prepareForReachability(bool negated) const {
+            _cond->setInvariant(negated);
+            return _cond;
+        }
+        
+        Condition_ptr AXCondition::prepareForReachability(bool negated) const {
+            return NULL;
+        }
+        
+        Condition_ptr AGCondition::prepareForReachability(bool negated) const {
+            Condition_ptr cond = std::make_shared<NotCondition>(_cond);
+            cond->setInvariant(!negated);
+            return cond;
+        }
+        
+        Condition_ptr AFCondition::prepareForReachability(bool negated) const {
+            return NULL;
+        }
+        
+        Condition_ptr UntilCondition::prepareForReachability(bool negated) const {
+            return NULL;
+        }
+        
+        Condition_ptr LogicalCondition::prepareForReachability(bool negated) const {
+            return NULL;
+        }
+        
+        Condition_ptr CompareCondition::prepareForReachability(bool negated) const {
+            return NULL;
+        }
+        
+        Condition_ptr NotCondition::prepareForReachability(bool negated) const {
+            return _cond->prepareForReachability(!negated);
+        }
+        
+        Condition_ptr BooleanCondition::prepareForReachability(bool negated) const {
+            return NULL;
+        }
+        
+        Condition_ptr DeadlockCondition::prepareForReachability(bool negated) const {
+            return NULL;
+        }
+        
         /******************** Just-In-Time Compilation ********************/
     } // PQL
 } // PetriEngine

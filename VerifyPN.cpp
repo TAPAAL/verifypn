@@ -414,18 +414,17 @@ int main(int argc, char* argv[]) {
         ResultPrinter p2(&b2, &options, querynames);
         
         for(size_t i = 0; i < queries.size(); ++i)
-        {
-            if (!queries[i]->isReachability()) continue;
-            std::shared_ptr<PQL::Condition> query = queries[i].get()->simplify(
-                    SimplificationContext(m0, net, options.queryReductionTimeout, options.lpsolveTimeout)).formula;
-            query->setInvariant(queries[i].get()->isInvariant());
-            queries[i] = query;
-
-            if(query->toString() == "true"){
-                results[i] = p2.printResult(i, query.get(), ResultPrinter::Satisfied);
-            } else if (query->toString() == "false") {
-                results[i] = p2.printResult(i, query.get(), ResultPrinter::NotSatisfied);
-            } else {
+        {   
+            queries[i] = (queries[i]->simplify(SimplificationContext(m0, net, options.queryReductionTimeout, options.lpsolveTimeout))).formula;
+            
+            if(queries[i]->toString() == "true"){
+                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
+            } else if (queries[i]->toString() == "false") {
+                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
+            } else if (!queries[i]->isReachability()) {
+                // TODO output CTL queries to XML file
+            } else {                
+                queries[i] = queries[i]->prepareForReachability();
                 alldone = false;
             }
         }

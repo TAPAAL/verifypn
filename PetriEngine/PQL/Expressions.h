@@ -173,6 +173,7 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const;
             virtual Retval simplify(SimplificationContext context) const = 0;
             virtual bool isReachability(uint32_t depth) const = 0;
+            Condition_ptr prepareForReachability(bool negated) const = 0;
             
         private:
             virtual std::string op() const = 0;
@@ -186,6 +187,7 @@ namespace PetriEngine {
             using QuantifierCondition::QuantifierCondition;
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
+            Condition_ptr prepareForReachability(bool negated) const;
             
         private:
             std::string op() const;
@@ -196,6 +198,7 @@ namespace PetriEngine {
             using QuantifierCondition::QuantifierCondition;
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
+            Condition_ptr prepareForReachability(bool negated) const;
             
         private:
             std::string op() const;
@@ -206,6 +209,7 @@ namespace PetriEngine {
             using QuantifierCondition::QuantifierCondition;
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
+            Condition_ptr prepareForReachability(bool negated) const;
             
         private:
             std::string op() const;
@@ -216,6 +220,7 @@ namespace PetriEngine {
             using QuantifierCondition::QuantifierCondition;
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
+            Condition_ptr prepareForReachability(bool negated) const;
             
         private:
             std::string op() const;
@@ -226,6 +231,7 @@ namespace PetriEngine {
             using QuantifierCondition::QuantifierCondition;
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
+            Condition_ptr prepareForReachability(bool negated) const;
             
         private:
             std::string op() const;
@@ -236,6 +242,7 @@ namespace PetriEngine {
             using QuantifierCondition::QuantifierCondition;
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
+            Condition_ptr prepareForReachability(bool negated) const;
             
         private:
             std::string op() const;
@@ -255,6 +262,7 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const;
             virtual Retval simplify(SimplificationContext context) const = 0;
             bool isReachability(uint32_t depth) const;
+            Condition_ptr prepareForReachability(bool negated) const;
             
         private:
             virtual std::string op() const = 0;
@@ -299,6 +307,7 @@ namespace PetriEngine {
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             bool isReachability(uint32_t depth) const;
+            Condition_ptr prepareForReachability(bool negated) const;
             
         private:
             virtual bool apply(bool b1, bool b2) const = 0;
@@ -354,6 +363,7 @@ namespace PetriEngine {
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             bool isReachability(uint32_t depth) const;
+            Condition_ptr prepareForReachability(bool negated) const;
             
         private:
             virtual bool apply(int v1, int v2) const = 0;
@@ -476,6 +486,7 @@ namespace PetriEngine {
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
+            Condition_ptr prepareForReachability(bool negated) const;
             
         private:
             Condition_ptr _cond;
@@ -496,6 +507,7 @@ namespace PetriEngine {
             static Condition_ptr FALSE;
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
+            Condition_ptr prepareForReachability(bool negated) const;
             
         private:
             const bool _value;
@@ -514,6 +526,7 @@ namespace PetriEngine {
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
+            Condition_ptr prepareForReachability(bool negated) const;
         };
 
     }
