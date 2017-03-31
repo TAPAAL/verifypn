@@ -384,6 +384,42 @@ void printStats(PetriNetBuilder& builder, options_t& options)
     }
 }
 
+void outputCTL(vector<std::shared_ptr<Condition>> queries, vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
+    bool cont = false;
+    
+    for(int i = 0; i < results.size(); i++) {
+        if (results[i] == ResultPrinter::EXPORT) {
+            cont = true;
+            break;
+        }
+    }
+    
+    if (!cont) {
+        return;
+    }
+    
+    ofstream file;
+    file.open("simplified.xml");
+            
+    string outputstring = "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
+    
+    for(int i = 0; i < queries.size(); i++) {
+        if (results[i] == ResultPrinter::EXPORT) {
+            outputstring += "\t<property>\n\t\t<id>" + querynames[i] + "</id>\n\t\t<description>Simplified</description>\n\t\t<formula>\n";
+            outputstring += queries[i]->toXML(3);
+            outputstring += "\t\t</formula>\n\t</property>\n";   
+        }
+    }
+            
+    outputstring += "</property-set>";
+            
+    file << outputstring;
+            
+    file.close();
+    
+    return;
+}
+
 int main(int argc, char* argv[]) {
     options_t options;
     
@@ -431,6 +467,7 @@ int main(int argc, char* argv[]) {
         }
         
         // Export queries here
+        outputCTL(queries, querynames, results);
 
         delete net;
         delete[] m0; 

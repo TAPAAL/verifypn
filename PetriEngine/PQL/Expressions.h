@@ -29,46 +29,17 @@ using namespace PetriEngine::Simplification;
 
 namespace PetriEngine {
     namespace PQL {
-        
-        ReturnValue outputCTL(vector<std::shared_ptr<Condition>> queries, vector<std::string> querynames) {
-            ofstream file;
-            file.open("simplified.xml");
-            
-            if (!file.is_open()) {
-                fprintf(stderr, "Error: Output file could not be opened\n");
-                fprintf(stdout, "CANNOT_COMPUTE\n");
-                return ErrorCode;
-            }
-            
-            string outputstring = "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
-            
-            int i = 0;
-            
-            for(auto& q : queries) {
-                outputstring += "\t<property>\n\t\t<id>" + querynames[i] + "</id>\n\t\t<description>Simplified</description>\n\t\t<formula>\n";
-                outputstring += q->toXML(3);
-                outputstring += "\t\t</formula>\n\t</property>\n";
-                i++;
-            }
-            
-            outputstring += "</property-set>";
-            
-            file << outputstring;
-            
-            file.close();
-"
-            return ContinueCode;
-        }
-        
+        /**
         std::string generateTabs(uint32_t tabs) {
             std::string res;
-            
-            for(int i = 0; i < tabs; i++) {
+
+            for(uint32_t i = 0; i < tabs; i++) {
                 res += "\t";
             }
-            
+
             return res;
         }
+        */
 
         /******************** EXPRESSIONS ********************/
 
@@ -152,6 +123,7 @@ namespace PetriEngine {
             std::string toString() const;
             Expr::Types type() const;
             Member constraint(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
         private:
             Expr_ptr _expr;
         };

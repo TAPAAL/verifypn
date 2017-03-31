@@ -583,7 +583,7 @@ namespace PetriEngine {
         /******************** CTL Output ********************/ 
         
         std::string LiteralExpr::toXML(uint32_t tabs) const {
-            return "<integer-constant>" + _value + "</integer-constant>\n";
+            return "<integer-constant>" + std::to_string(_value) + "</integer-constant>\n";
         }
         
         std::string IdentifierExpr::toXML(uint32_t tabs) const {
@@ -609,6 +609,12 @@ namespace PetriEngine {
             std::string st2 = _expr2->toXML(tabs);
             
             return "<integer-product>\n" + st1 + st2 + "</integer-product>\n"; 
+        }
+        
+        std::string MinusExpr::toXML(uint32_t tabs) const {
+            std::string st = _expr->toXML(tabs);
+            
+            return "<integer-product>\n" + st + "<integer-difference>\n<integer-constant>0</integer-constant>\n<integer-constant>1</integer-constant>\n</integer-difference>\n</integer-product>\n";
         }
         
         std::string EXCondition::toXML(uint32_t tabs) const {
@@ -654,7 +660,7 @@ namespace PetriEngine {
             return "<exist-path>\n<until>\n<before>\n" + st1 + "</before>\n<reach>\n" + st2 + "</reach>\n</until>\n</exist-path>\n";
         }
         
-        std::string EUCondition::toXML(uint32_t tabs) const {
+        std::string AUCondition::toXML(uint32_t tabs) const {
             std::string st1 = _cond1->toXML(tabs);
             std::string st2 = _cond2->toXML(tabs);
             
@@ -673,6 +679,64 @@ namespace PetriEngine {
             std::string st2 = _cond2->toXML(tabs);
             
             return "<disjunction>\n" + st1 + st2 + "</disjunction>\n";  
+        }
+        
+        std::string EqualCondition::toXML(uint32_t tabs) const {
+            std::string st1 = _expr1->toXML(tabs);
+            std::string st2 = _expr2->toXML(tabs);
+            
+            return "<integer-eq>\n" + st1 + st2 + "</integer-eq>\n";  
+        }
+        
+        std::string NotEqualCondition::toXML(uint32_t tabs) const {
+            std::string st1 = _expr1->toXML(tabs);
+            std::string st2 = _expr2->toXML(tabs);
+            
+            return "<integer-ne>\n" + st1 + st2 + "</integer-ne>\n";  
+        }
+        
+        std::string LessThanCondition::toXML(uint32_t tabs) const {
+            std::string st1 = _expr1->toXML(tabs);
+            std::string st2 = _expr2->toXML(tabs);
+            
+            return "<integer-lt>\n" + st1 + st2 + "</integer-lt>\n";  
+        }
+        
+        std::string LessThanOrEqualCondition::toXML(uint32_t tabs) const {
+            std::string st1 = _expr1->toXML(tabs);
+            std::string st2 = _expr2->toXML(tabs);
+            
+            return "<integer-le>\n" + st1 + st2 + "</integer-le>\n";  
+        }
+        
+        std::string GreaterThanCondition::toXML(uint32_t tabs) const {
+            std::string st1 = _expr1->toXML(tabs);
+            std::string st2 = _expr2->toXML(tabs);
+            
+            return "<integer-gt>\n" + st1 + st2 + "</integer-gt>\n";  
+        }
+        
+        std::string GreaterThanOrEqualCondition::toXML(uint32_t tabs) const {
+            std::string st1 = _expr1->toXML(tabs);
+            std::string st2 = _expr2->toXML(tabs);
+            
+            return "<integer-ge>\n" + st1 + st2 + "</integer-ge>\n";  
+        }
+        
+        std::string NotCondition::toXML(uint32_t tabs) const {
+            std::string st = _cond->toXML(tabs);
+            
+            return "<negation>\n" + st + "</negation>\n";  
+        }
+        
+        std::string BooleanCondition::toXML(uint32_t tabs) const {
+            std::string value = _value ? "true" : "false";
+            
+            return "<" + value + "/>\n"; 
+        }
+        
+        std::string DeadlockCondition::toXML(uint32_t tabs) const {
+            return "<deadlock/>\n"; 
         }
         
         /******************** Query Simplification ********************/       
