@@ -114,6 +114,8 @@ namespace PetriEngine {
             virtual Types type() const = 0;
             /** Construct left/right side of equations used in query simplification */
             virtual Simplification::Member constraint(SimplificationContext context) const = 0;
+            /** Output the expression as it currently is to a file in XML */
+            virtual std::string toXML(uint32_t tabs) const = 0;
         };
 
         /** Base condition */
@@ -145,6 +147,8 @@ namespace PetriEngine {
             virtual bool isReachability(uint32_t depth = 0) const = 0;
             /** Prepare reachability queries */
             virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
+            /** Output the condition as it currently is to a file in XML */
+            virtual std::string toXML(uint32_t tabs) const = 0;
             
             void setInvariant(bool isInvariant)
             {

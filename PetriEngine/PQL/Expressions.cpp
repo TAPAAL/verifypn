@@ -579,7 +579,102 @@ namespace PetriEngine {
             else
                 return v1 < v2 ? 0 : v1 - v2 + 1;
         }
+        
+        /******************** CTL Output ********************/ 
+        
+        std::string LiteralExpr::toXML(uint32_t tabs) const {
+            return "<integer-constant>" + _value + "</integer-constant>\n";
+        }
+        
+        std::string IdentifierExpr::toXML(uint32_t tabs) const {
+            return "<place>" + _name + "</place>\n";
+        }
+        
+        std::string PlusExpr::toXML(uint32_t tabs) const {
+            std::string st1 = _expr1->toXML(tabs);
+            std::string st2 = _expr2->toXML(tabs);
+            
+            return "<integer-sum>\n" + st1 + st2 + "</integer-sum>\n"; 
+        }
+        
+        std::string SubtractExpr::toXML(uint32_t tabs) const {
+            std::string st1 = _expr1->toXML(tabs);
+            std::string st2 = _expr2->toXML(tabs);
+            
+            return "<integer-difference>\n" + st1 + st2 + "</integer-difference>\n"; 
+        }
+        
+        std::string MultiplyExpr::toXML(uint32_t tabs) const {
+            std::string st1 = _expr1->toXML(tabs);
+            std::string st2 = _expr2->toXML(tabs);
+            
+            return "<integer-product>\n" + st1 + st2 + "</integer-product>\n"; 
+        }
+        
+        std::string EXCondition::toXML(uint32_t tabs) const {
+            std::string st = _cond->toXML(tabs);
+            
+            return "<exists-path>\n<next>\n" + st + "</exists-path>\n</next>\n";
+        }
 
+        std::string AXCondition::toXML(uint32_t tabs) const {
+            std::string st = _cond->toXML(tabs);
+            
+            return "<all-paths>\n<next>\n" + st + "</all-paths>\n</next>\n";
+        }
+        
+        std::string EFCondition::toXML(uint32_t tabs) const {
+            std::string st = _cond->toXML(tabs);
+            
+            return "<exist-path>\n<finally>\n" + st + "</exist-path>\n</finally>\n";
+        }
+        
+        std::string AFCondition::toXML(uint32_t tabs) const {
+            std::string st = _cond->toXML(tabs);
+            
+            return "<all-paths>\n<finally>\n" + st + "</all-paths>\n</finally>\n";
+        }
+        
+        std::string EGCondition::toXML(uint32_t tabs) const {
+            std::string st = _cond->toXML(tabs);
+            
+            return "<exist-path>\n<globally>\n" + st + "</exist-path>\n</globally>\n";
+        }
+        
+        std::string AGCondition::toXML(uint32_t tabs) const {
+            std::string st = _cond->toXML(tabs);
+            
+            return "<all-paths>\n<globally>\n" + st + "</all-paths>\n</globally>\n";
+        }
+        
+        std::string EUCondition::toXML(uint32_t tabs) const {
+            std::string st1 = _cond1->toXML(tabs);
+            std::string st2 = _cond2->toXML(tabs);
+            
+            return "<exist-path>\n<until>\n<before>\n" + st1 + "</before>\n<reach>\n" + st2 + "</reach>\n</until>\n</exist-path>\n";
+        }
+        
+        std::string EUCondition::toXML(uint32_t tabs) const {
+            std::string st1 = _cond1->toXML(tabs);
+            std::string st2 = _cond2->toXML(tabs);
+            
+            return "<all-paths>\n<until>\n<before>\n" + st1 + "</before>\n<reach>\n" + st2 + "</reach>\n</until>\n</all-paths>\n";
+        }
+        
+        std::string AndCondition::toXML(uint32_t tabs) const {
+            std::string st1 = _cond1->toXML(tabs);
+            std::string st2 = _cond2->toXML(tabs);
+            
+            return "<conjunction>\n" + st1 + st2 + "</conjunction>\n";
+        }
+        
+        std::string OrCondition::toXML(uint32_t tabs) const {
+            std::string st1 = _cond1->toXML(tabs);
+            std::string st2 = _cond2->toXML(tabs);
+            
+            return "<disjunction>\n" + st1 + st2 + "</disjunction>\n";  
+        }
+        
         /******************** Query Simplification ********************/       
         
         Member LiteralExpr::constraint(SimplificationContext context) const {

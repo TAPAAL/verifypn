@@ -22,12 +22,53 @@
 
 #include "PQL.h"
 #include "Contexts.h"
+#include <iostream>
+#include <fstream>
 
 using namespace PetriEngine::Simplification;
 
 namespace PetriEngine {
     namespace PQL {
-
+        
+        ReturnValue outputCTL(vector<std::shared_ptr<Condition>> queries, vector<std::string> querynames) {
+            ofstream file;
+            file.open("simplified.xml");
+            
+            if (!file.is_open()) {
+                fprintf(stderr, "Error: Output file could not be opened\n");
+                fprintf(stdout, "CANNOT_COMPUTE\n");
+                return ErrorCode;
+            }
+            
+            string outputstring = "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
+            
+            int i = 0;
+            
+            for(auto& q : queries) {
+                outputstring += "\t<property>\n\t\t<id>" + querynames[i] + "</id>\n\t\t<description>Simplified</description>\n\t\t<formula>\n";
+                outputstring += q->toXML(3);
+                outputstring += "\t\t</formula>\n\t</property>\n";
+                i++;
+            }
+            
+            outputstring += "</property-set>";
+            
+            file << outputstring;
+            
+            file.close();
+"
+            return ContinueCode;
+        }
+        
+        std::string generateTabs(uint32_t tabs) {
+            std::string res;
+            
+            for(int i = 0; i < tabs; i++) {
+                res += "\t";
+            }
+            
+            return res;
+        }
 
         /******************** EXPRESSIONS ********************/
 
@@ -44,6 +85,7 @@ namespace PetriEngine {
             int evaluate(const EvaluationContext& context) const;
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
+            virtual std::string toXML(uint32_t tabs) const = 0;
         private:
             virtual int apply(int v1, int v2) const = 0;
             /** LLVM binary operator (llvm::Instruction::BinaryOps) */
@@ -61,6 +103,7 @@ namespace PetriEngine {
             using BinaryExpr::BinaryExpr;
             Expr::Types type() const;
             Member constraint(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -74,6 +117,7 @@ namespace PetriEngine {
             using BinaryExpr::BinaryExpr;
             Expr::Types type() const;
             Member constraint(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -87,6 +131,7 @@ namespace PetriEngine {
             using BinaryExpr::BinaryExpr;
             Expr::Types type() const;
             Member constraint(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -123,6 +168,7 @@ namespace PetriEngine {
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             Expr::Types type() const;
+            std::string toXML(uint32_t tabs) const;
 
             int value() const {
                 return _value;
@@ -145,6 +191,7 @@ namespace PetriEngine {
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             Expr::Types type() const;
+            std::string toXML(uint32_t tabs) const;
 
             /** Offset in marking or valuation */
             int offset() const {
@@ -174,6 +221,7 @@ namespace PetriEngine {
             virtual Retval simplify(SimplificationContext context) const = 0;
             virtual bool isReachability(uint32_t depth) const = 0;
             Condition_ptr prepareForReachability(bool negated) const = 0;
+            virtual std::string toXML(uint32_t tabs) const = 0;
             
         private:
             virtual std::string op() const = 0;
@@ -188,6 +236,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
+            std::string toXML(uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -199,6 +248,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
+            std::string toXML(uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -210,6 +260,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
+            std::string toXML(uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -221,6 +272,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
+            std::string toXML(uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -232,6 +284,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
+            std::string toXML(uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -243,6 +296,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
+            std::string toXML(uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -263,6 +317,7 @@ namespace PetriEngine {
             virtual Retval simplify(SimplificationContext context) const = 0;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
+            virtual std::string toXML(uint32_t tabs) const = 0;
             
         private:
             virtual std::string op() const = 0;
@@ -276,6 +331,7 @@ namespace PetriEngine {
         public:
             using UntilCondition::UntilCondition;  
             Retval simplify(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -285,6 +341,7 @@ namespace PetriEngine {
         public:
             using UntilCondition::UntilCondition;
             Retval simplify(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -308,6 +365,7 @@ namespace PetriEngine {
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
+            virtual std::string toXML(uint32_t tabs) const = 0;
             
         private:
             virtual bool apply(bool b1, bool b2) const = 0;
@@ -326,6 +384,7 @@ namespace PetriEngine {
 
             using LogicalCondition::LogicalCondition;
             Retval simplify(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
 
         private:
             bool apply(bool b1, bool b2) const;
@@ -340,6 +399,7 @@ namespace PetriEngine {
 
             using LogicalCondition::LogicalCondition;
             Retval simplify(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
             
         private:
             bool apply(bool b1, bool b2) const;
@@ -364,6 +424,7 @@ namespace PetriEngine {
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
+            virtual std::string toXML(uint32_t tabs) const = 0;
             
         private:
             virtual bool apply(int v1, int v2) const = 0;
@@ -386,6 +447,7 @@ namespace PetriEngine {
 
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -402,6 +464,7 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             Retval simplify(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -417,6 +480,7 @@ namespace PetriEngine {
 
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -432,6 +496,7 @@ namespace PetriEngine {
 
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -447,6 +512,7 @@ namespace PetriEngine {
 
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
         private:
             bool apply(int v1, int v2) const;
             //int compareOp() const;
@@ -461,6 +527,7 @@ namespace PetriEngine {
         public:
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext context) const;
+            std::string toXML(uint32_t tabs) const;
 
         private:
             bool apply(int v1, int v2) const;
@@ -487,6 +554,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
+            std::string toXML(uint32_t tabs) const;
             
         private:
             Condition_ptr _cond;
@@ -508,6 +576,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
+            std::string toXML(uint32_t tabs) const;
             
         private:
             const bool _value;
@@ -527,6 +596,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
+            std::string toXML(uint32_t tabs) const;
         };
 
     }
