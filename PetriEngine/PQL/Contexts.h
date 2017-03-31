@@ -193,6 +193,10 @@ namespace PetriEngine {
                 return _negated;
             }
             
+            void setNegate(bool b){
+                _negated = b;
+            }
+            
             bool timeout() {
                 auto end = std::chrono::high_resolution_clock::now();
                 auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _start);
