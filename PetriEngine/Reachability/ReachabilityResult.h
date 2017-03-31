@@ -47,7 +47,9 @@ namespace PetriEngine {
                 /** The query cannot be satisfied */
                 NotSatisfied,
                 /** We're unable to say if the query can be satisfied */
-                Unknown
+                Unknown,
+                /** The query should be exported to */
+                EXPORT
             };
             
             ResultPrinter(PetriNetBuilder* b, options_t* o, std::vector<std::string>& querynames) 
