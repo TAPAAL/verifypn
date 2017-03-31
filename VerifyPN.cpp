@@ -406,6 +406,7 @@ int main(int argc, char* argv[]) {
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
     
+    //----------------------- Query Simplification and CTL Query Export -----------------------//
     bool alldone = options.queryReductionTimeout > 0;
     if (options.queryReductionTimeout > 0) {
         PetriNetBuilder b2(builder);
@@ -414,7 +415,7 @@ int main(int argc, char* argv[]) {
         ResultPrinter p2(&b2, &options, querynames);
         
         for(size_t i = 0; i < queries.size(); ++i)
-        {   
+        {
             queries[i] = (queries[i]->simplify(SimplificationContext(m0, net, options.queryReductionTimeout, options.lpsolveTimeout))).formula;
             
             if(queries[i]->toString() == "true"){
@@ -422,17 +423,19 @@ int main(int argc, char* argv[]) {
             } else if (queries[i]->toString() == "false") {
                 results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
             } else if (!queries[i]->isReachability()) {
-                // TODO output CTL queries to XML file
-            } else {                
+                results[i] = ResultPrinter::EXPORT;
+            } else {              
                 queries[i] = queries[i]->prepareForReachability();
                 alldone = false;
             }
         }
+        
+        // Export queries here
 
         delete net;
         delete[] m0; 
     }
-    
+ 
     if(alldone) return SuccessCode;
     
     //--------------------- Apply Net Reduction ---------------//
