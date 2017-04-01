@@ -29,17 +29,8 @@ using namespace PetriEngine::Simplification;
 
 namespace PetriEngine {
     namespace PQL {
-        /**
-        std::string generateTabs(uint32_t tabs) {
-            std::string res;
-
-            for(uint32_t i = 0; i < tabs; i++) {
-                res += "\t";
-            }
-
-            return res;
-        }
-        */
+        
+        std::string generateTabs(uint32_t tabs);
 
         /******************** EXPRESSIONS ********************/
 

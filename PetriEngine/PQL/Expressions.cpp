@@ -32,6 +32,17 @@ using namespace PetriEngine::Simplification;
 
 namespace PetriEngine {
     namespace PQL {
+        
+        std::string generateTabs(uint32_t tabs) {
+            std::string res;
+
+            for(uint32_t i = 0; i < tabs; i++) {
+                res += "\t";
+            }
+
+            return res;
+        }
+        
         // CONSTANTS
         Condition_ptr BooleanCondition::FALSE = std::make_shared<BooleanCondition>(false);
         Condition_ptr BooleanCondition::TRUE = std::make_shared<BooleanCondition>(true);
@@ -583,160 +594,160 @@ namespace PetriEngine {
         /******************** CTL Output ********************/ 
         
         std::string LiteralExpr::toXML(uint32_t tabs) const {
-            return "<integer-constant>" + std::to_string(_value) + "</integer-constant>\n";
+            return generateTabs(tabs) + "<integer-constant>" + std::to_string(_value) + "</integer-constant>\n";
         }
         
         std::string IdentifierExpr::toXML(uint32_t tabs) const {
-            return "<place>" + _name + "</place>\n";
+            return generateTabs(tabs) + "<place>" + _name + "</place>\n";
         }
         
         std::string PlusExpr::toXML(uint32_t tabs) const {
-            std::string st1 = _expr1->toXML(tabs);
-            std::string st2 = _expr2->toXML(tabs);
+            std::string st1 = _expr1->toXML(tabs+1);
+            std::string st2 = _expr2->toXML(tabs+1);
             
-            return "<integer-sum>\n" + st1 + st2 + "</integer-sum>\n"; 
+            return generateTabs(tabs) + "<integer-sum>\n" + st1 + st2 + generateTabs(tabs) + "</integer-sum>\n"; 
         }
         
         std::string SubtractExpr::toXML(uint32_t tabs) const {
-            std::string st1 = _expr1->toXML(tabs);
-            std::string st2 = _expr2->toXML(tabs);
+            std::string st1 = _expr1->toXML(tabs+1);
+            std::string st2 = _expr2->toXML(tabs+1);
             
-            return "<integer-difference>\n" + st1 + st2 + "</integer-difference>\n"; 
+            return generateTabs(tabs) + "<integer-difference>\n" + st1 + st2 + generateTabs(tabs) + "</integer-difference>\n"; 
         }
         
         std::string MultiplyExpr::toXML(uint32_t tabs) const {
-            std::string st1 = _expr1->toXML(tabs);
-            std::string st2 = _expr2->toXML(tabs);
+            std::string st1 = _expr1->toXML(tabs+1);
+            std::string st2 = _expr2->toXML(tabs+1);
             
-            return "<integer-product>\n" + st1 + st2 + "</integer-product>\n"; 
+            return generateTabs(tabs) + "<integer-product>\n" + st1 + st2 + generateTabs(tabs) + "</integer-product>\n"; 
         }
         
         std::string MinusExpr::toXML(uint32_t tabs) const {
-            std::string st = _expr->toXML(tabs);
+            std::string st = _expr->toXML(tabs+1);
             
-            return "<integer-product>\n" + st + "<integer-difference>\n<integer-constant>0</integer-constant>\n<integer-constant>1</integer-constant>\n</integer-difference>\n</integer-product>\n";
+            return generateTabs(tabs) + "<integer-product>\n" + st + generateTabs(tabs+1) + "<integer-difference>\n" + generateTabs(tabs+2) + "<integer-constant>0</integer-constant>\n" + generateTabs(tabs+2) + "<integer-constant>1</integer-constant>\n" + generateTabs(tabs+1) + "</integer-difference>\n" + generateTabs(tabs) + "</integer-product>\n";
         }
         
         std::string EXCondition::toXML(uint32_t tabs) const {
-            std::string st = _cond->toXML(tabs);
+            std::string st = _cond->toXML(tabs+2);
             
-            return "<exists-path>\n<next>\n" + st + "</exists-path>\n</next>\n";
+            return generateTabs(tabs) + "<exists-path>\n" + generateTabs(tabs+1) + "<next>\n" + st + generateTabs(tabs+1) + "</next>\n" + generateTabs(tabs) + "</exists-path>\n";
         }
 
         std::string AXCondition::toXML(uint32_t tabs) const {
-            std::string st = _cond->toXML(tabs);
+            std::string st = _cond->toXML(tabs+2);
             
-            return "<all-paths>\n<next>\n" + st + "</all-paths>\n</next>\n";
+            return generateTabs(tabs) + "<all-paths>\n" + generateTabs(tabs+1) + "<next>\n" + st + generateTabs(tabs+1) + "</next>\n" + generateTabs(tabs) + "</all-paths>\n";
         }
         
         std::string EFCondition::toXML(uint32_t tabs) const {
-            std::string st = _cond->toXML(tabs);
+            std::string st = _cond->toXML(tabs+2);
             
-            return "<exist-path>\n<finally>\n" + st + "</exist-path>\n</finally>\n";
+            return generateTabs(tabs) + "<exist-path>\n" + generateTabs(tabs+1) + "<finally>\n" + st + generateTabs(tabs+1) + "</finally>\n" + generateTabs(tabs) + "</exist-path>\n";
         }
         
         std::string AFCondition::toXML(uint32_t tabs) const {
-            std::string st = _cond->toXML(tabs);
+            std::string st = _cond->toXML(tabs+2);
             
-            return "<all-paths>\n<finally>\n" + st + "</all-paths>\n</finally>\n";
+            return generateTabs(tabs) + "<all-paths>\n" + generateTabs(tabs+1) +"<finally>\n" + st + generateTabs(tabs+1) + "</finally>\n" + generateTabs(tabs) + "</all-paths>\n";
         }
         
         std::string EGCondition::toXML(uint32_t tabs) const {
-            std::string st = _cond->toXML(tabs);
+            std::string st = _cond->toXML(tabs+2);
             
-            return "<exist-path>\n<globally>\n" + st + "</exist-path>\n</globally>\n";
+            return generateTabs(tabs) + "<exist-path>\n" + generateTabs(tabs+1) + "<globally>\n" + st + generateTabs(tabs+1) +  "</globally>\n" + generateTabs(tabs) + "</exist-path>\n";
         }
         
         std::string AGCondition::toXML(uint32_t tabs) const {
-            std::string st = _cond->toXML(tabs);
+            std::string st = _cond->toXML(tabs+2);
             
-            return "<all-paths>\n<globally>\n" + st + "</all-paths>\n</globally>\n";
+            return  generateTabs(tabs) + "<all-paths>\n" + generateTabs(tabs+1) + "<globally>\n" + st + generateTabs(tabs+1) + "</globally>\n" + generateTabs(tabs) + "</all-paths>\n";
         }
         
         std::string EUCondition::toXML(uint32_t tabs) const {
-            std::string st1 = _cond1->toXML(tabs);
-            std::string st2 = _cond2->toXML(tabs);
+            std::string st1 = _cond1->toXML(tabs+3);
+            std::string st2 = _cond2->toXML(tabs+3);
             
-            return "<exist-path>\n<until>\n<before>\n" + st1 + "</before>\n<reach>\n" + st2 + "</reach>\n</until>\n</exist-path>\n";
+            return generateTabs(tabs) + "<exist-path>\n" + generateTabs(tabs+1) + "<until>\n" + generateTabs(tabs+2) + "<before>\n" + st1 + generateTabs(tabs+2) + "</before>\n" + generateTabs(tabs+2) + "<reach>\n" + st2 + generateTabs(tabs+2) + "</reach>\n" + generateTabs(tabs+1) + "</until>\n" + generateTabs(tabs) + "</exist-path>\n";
         }
         
         std::string AUCondition::toXML(uint32_t tabs) const {
-            std::string st1 = _cond1->toXML(tabs);
-            std::string st2 = _cond2->toXML(tabs);
+            std::string st1 = _cond1->toXML(tabs+3);
+            std::string st2 = _cond2->toXML(tabs+3);
             
-            return "<all-paths>\n<until>\n<before>\n" + st1 + "</before>\n<reach>\n" + st2 + "</reach>\n</until>\n</all-paths>\n";
+            return generateTabs(tabs) + "<all-paths>\n" + generateTabs(tabs+1) + "<until>\n" + generateTabs(tabs+2) + "<before>\n" + st1 + generateTabs(tabs+2) + "</before>\n" + generateTabs(tabs+2) + "<reach>\n" + st2 + generateTabs(tabs+2) + "</reach>\n" + generateTabs(tabs+1) + "</until>\n" + generateTabs(tabs) + "</all-paths>\n";
         }
         
         std::string AndCondition::toXML(uint32_t tabs) const {
-            std::string st1 = _cond1->toXML(tabs);
-            std::string st2 = _cond2->toXML(tabs);
+            std::string st1 = _cond1->toXML(tabs+1);
+            std::string st2 = _cond2->toXML(tabs+1);
             
-            return "<conjunction>\n" + st1 + st2 + "</conjunction>\n";
+            return generateTabs(tabs) + "<conjunction>\n" + st1 + st2 + generateTabs(tabs) + "</conjunction>\n";
         }
         
         std::string OrCondition::toXML(uint32_t tabs) const {
-            std::string st1 = _cond1->toXML(tabs);
-            std::string st2 = _cond2->toXML(tabs);
+            std::string st1 = _cond1->toXML(tabs+1);
+            std::string st2 = _cond2->toXML(tabs+1);
             
-            return "<disjunction>\n" + st1 + st2 + "</disjunction>\n";  
+            return generateTabs(tabs) + "<disjunction>\n" + st1 + st2 + generateTabs(tabs) + "</disjunction>\n";  
         }
         
         std::string EqualCondition::toXML(uint32_t tabs) const {
-            std::string st1 = _expr1->toXML(tabs);
-            std::string st2 = _expr2->toXML(tabs);
+            std::string st1 = _expr1->toXML(tabs+1);
+            std::string st2 = _expr2->toXML(tabs+1);
             
-            return "<integer-eq>\n" + st1 + st2 + "</integer-eq>\n";  
+            return generateTabs(tabs) + "<integer-eq>\n" + st1 + st2 + generateTabs(tabs) + "</integer-eq>\n";  
         }
         
         std::string NotEqualCondition::toXML(uint32_t tabs) const {
-            std::string st1 = _expr1->toXML(tabs);
-            std::string st2 = _expr2->toXML(tabs);
+            std::string st1 = _expr1->toXML(tabs+1);
+            std::string st2 = _expr2->toXML(tabs+1);
             
-            return "<integer-ne>\n" + st1 + st2 + "</integer-ne>\n";  
+            return generateTabs(tabs) + "<integer-ne>\n" + st1 + st2 + generateTabs(tabs) + "</integer-ne>\n";  
         }
         
         std::string LessThanCondition::toXML(uint32_t tabs) const {
-            std::string st1 = _expr1->toXML(tabs);
-            std::string st2 = _expr2->toXML(tabs);
+            std::string st1 = _expr1->toXML(tabs+1);
+            std::string st2 = _expr2->toXML(tabs+1);
             
-            return "<integer-lt>\n" + st1 + st2 + "</integer-lt>\n";  
+            return generateTabs(tabs) + "<integer-lt>\n" + st1 + st2 + generateTabs(tabs) + "</integer-lt>\n";  
         }
         
         std::string LessThanOrEqualCondition::toXML(uint32_t tabs) const {
-            std::string st1 = _expr1->toXML(tabs);
-            std::string st2 = _expr2->toXML(tabs);
+            std::string st1 = _expr1->toXML(tabs+1);
+            std::string st2 = _expr2->toXML(tabs+1);
             
-            return "<integer-le>\n" + st1 + st2 + "</integer-le>\n";  
+            return generateTabs(tabs) + "<integer-le>\n" + st1 + st2 + generateTabs(tabs) + "</integer-le>\n";  
         }
         
         std::string GreaterThanCondition::toXML(uint32_t tabs) const {
-            std::string st1 = _expr1->toXML(tabs);
-            std::string st2 = _expr2->toXML(tabs);
+            std::string st1 = _expr1->toXML(tabs+1);
+            std::string st2 = _expr2->toXML(tabs+1);
             
-            return "<integer-gt>\n" + st1 + st2 + "</integer-gt>\n";  
+            return generateTabs(tabs) + "<integer-gt>\n" + st1 + st2 + generateTabs(tabs) + "</integer-gt>\n";  
         }
         
         std::string GreaterThanOrEqualCondition::toXML(uint32_t tabs) const {
-            std::string st1 = _expr1->toXML(tabs);
-            std::string st2 = _expr2->toXML(tabs);
+            std::string st1 = _expr1->toXML(tabs+1);
+            std::string st2 = _expr2->toXML(tabs+1);
             
-            return "<integer-ge>\n" + st1 + st2 + "</integer-ge>\n";  
+            return generateTabs(tabs) + "<integer-ge>\n" + st1 + st2 + generateTabs(tabs) + "</integer-ge>\n";  
         }
         
         std::string NotCondition::toXML(uint32_t tabs) const {
-            std::string st = _cond->toXML(tabs);
+            std::string st = _cond->toXML(tabs+1);
             
-            return "<negation>\n" + st + "</negation>\n";  
+            return generateTabs(tabs) + "<negation>\n" + st + generateTabs(tabs) + "</negation>\n";  
         }
         
         std::string BooleanCondition::toXML(uint32_t tabs) const {
             std::string value = _value ? "true" : "false";
             
-            return "<" + value + "/>\n"; 
+            return generateTabs(tabs) +"<" + value + "/>\n"; 
         }
         
         std::string DeadlockCondition::toXML(uint32_t tabs) const {
-            return "<deadlock/>\n"; 
+            return generateTabs(tabs) + "<deadlock/>\n"; 
         }
         
         /******************** Query Simplification ********************/       
