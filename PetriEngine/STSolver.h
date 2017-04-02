@@ -2,6 +2,7 @@
 #define STSOLVER_H
 #include "Structures/State.h"
 #include "../lpsolve/lp_lib.h"
+#include "Reachability/ReachabilityResult.h"
 #include <memory>
 
 namespace PetriEngine {
@@ -21,11 +22,12 @@ namespace PetriEngine {
     };
         
     public:
-        STSolver(const PetriNet& net);
+        STSolver(Reachability::ResultPrinter& printer, const PetriNet& net, PQL::Condition * query);
         virtual ~STSolver();
         int CreateFormula();
-        int Solve();
-        void PrintResult();
+        int Solve(int timeout);
+        void PrintStatus();
+        Reachability::ResultPrinter::Result PrintResult();
         int getResult(){
             return _ret;
         }
@@ -39,6 +41,8 @@ namespace PetriEngine {
         void constructPrePost();
         void SanityCheckVariables();
         
+        Reachability::ResultPrinter& printer;
+        PQL::Condition * _query;
         std::unique_ptr<place_t[]> _places;
         std::unique_ptr<uint32_t> _transitions;
         const PetriNet& _net;

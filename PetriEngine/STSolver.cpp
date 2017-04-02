@@ -3,7 +3,6 @@
 #include <assert.h>
 
 namespace PetriEngine {     
-    #define SIPHON_TRAP_TIMEOUT 60
     #define VarPlace(p,i) (((_net._nplaces * (i)) + (p)) + 1)
     #define VarPostT(t,i) ((_nPlaceVariables + (_net._ntransitions * (i)) + (t)) + 1)
     
@@ -20,7 +19,7 @@ namespace PetriEngine {
         delete[] col;
     }
     
-    STSolver::STSolver(const PetriNet& net) : _net(net){
+    STSolver::STSolver(Reachability::ResultPrinter& printer, const PetriNet& net, PQL::Condition * query) : printer(printer), _query(query), _net(net){
         _siphonDepth = _net._nplaces;
         _m0 = _net._initialMarking;
         _nPlaceVariables = (_net._nplaces * (_siphonDepth + 2));
@@ -38,8 +37,8 @@ namespace PetriEngine {
     /* 
      * (SUM(p in P) p^0) GE 1
      * 
-     * AND(t in T)    
-     *     AND(p in post(t))
+     * for all (t in T)    
+     *     for all (p in post(t))
      *         (-p^0 + SUM(p' in pre(t)) p'^0) LE 0
      */ 
     void STSolver::CreateSiphonConstraints(){       
@@ -50,7 +49,7 @@ namespace PetriEngine {
         }  
         MakeConstraint(variables, GE, 1);
         
-        // AND(t in T) AND(p in post(t)) (-p^0 + SUM(p' in pre(t)) p'^0) GE 0
+        // for all (t in T) for all (p in post(t)) (-p^0 + SUM(p' in pre(t)) p'^0) GE 0
         for(uint32_t t=0; t<_net._ntransitions; t++){
             uint32_t finv = _net._transitions[t].outputs;
             uint32_t linv = _net._transitions[t+1].inputs; 
@@ -69,22 +68,22 @@ namespace PetriEngine {
     }
     
     /* 
-     * AND(p in P)
+     * for all (p in P)
      *     -p^i+1 + p^i + SUM(t in post(p) post_t^i LE card(post(p))
      * 
      *     -p^i+1 + p^i GE 0
      *
-     *     AND(t in post(p)) 
+     *     for all (t in post(p)) 
      *         -p^i+1 + post_t^i GE 0
      */
     void STSolver::CreateStepConstraints(uint32_t i){  
-        // AND(p in P) -p^i+1 + p^i + SUM(t in post(p) post_t^i LE card(post(p))         
+        // for all (p in P) -p^i+1 + p^i + SUM(t in post(p) post_t^i LE card(post(p))         
         for(uint32_t p=0; p<_net._nplaces; p++){
             std::vector<STVariable> variables1;
             variables1.push_back(STVariable(VarPlace(p,(i+1)), -1)); // -p^i+1
             variables1.push_back(STVariable(VarPlace(p,i), 1)); // p^i
             
-            // AND(p in P) AND(t in post(p)) -p^i+1 + post_t^i GE 0
+            // for all (p in P) for all (t in post(p)) -p^i+1 + post_t^i GE 0
             for (uint32_t t = _places.get()[p].post; t < _places.get()[p + 1].pre; t++){ // for all t in post(p)
                 variables1.push_back(STVariable(VarPostT(_transitions.get()[t],i), 1)); // post_t^i
                 std::vector<STVariable> variables3;
@@ -93,7 +92,7 @@ namespace PetriEngine {
                 MakeConstraint(variables3, GE, 0);
             }
             MakeConstraint(variables1, LE, (_places.get()[p + 1].pre - _places.get()[p].post));        
-            // AND(p in P) -p^i+1 + p^i GE 0
+            // for all (p in P) -p^i+1 + p^i GE 0
             std::vector<STVariable> variables2;
             variables2.push_back(STVariable(VarPlace(p,(i+1)), -1)); // -p^i+1
             variables2.push_back(STVariable(VarPlace(p,i), 1)); // p^i
@@ -104,10 +103,10 @@ namespace PetriEngine {
     /*
      * post_t <=> OR(p in post(t))
      * ---
-     * AND(t in T)
+     * for all (t in T)
      *     -post_t^i + SUM(p in post(t)) p^i GE 0
      *      
-     *     AND(p in post(t))
+     *     for all (p in post(t))
      *         -post_t + p^i LE 0
      */
     void STSolver::CreatePostVarDefinitions(uint32_t i){ 
@@ -123,7 +122,7 @@ namespace PetriEngine {
             }
             MakeConstraint(variables, GE, 0);
 
-            // AND(p in post(t)) -post_t + p^i LE 0
+            // for all (p in post(t)) -post_t + p^i LE 0
             finv = _net._transitions[t].outputs;
             linv = _net._transitions[t+1].inputs;
             for (; finv < linv; finv++) {  // for all p in post(t)
@@ -146,20 +145,17 @@ namespace PetriEngine {
         }        
         if(_ret == 0){
             _lp = make_lp(0, _nCol);
-            if(_lp == NULL) { std::cout<<"STSolver: Could not construct new model ..."<<std::endl; _ret=2; }
+            if(_lp == NULL) { std::cout<<"lp_solve: Could not construct new model ..."<<std::endl; _ret=2; }
         }
         if(_ret == 0){           
-    #ifdef DEBUG
+            
+#ifdef DEBUG
         // Set variable names (not strictly necessary)
         for(uint32_t c=0; c<_nCol; c++){ 
             set_col_name(_lp, c+1, const_cast<char *> (VarName(c).c_str())); 
             std::cout<<"name of col "<<c+1<<" is "<<VarName(c).c_str()<<std::endl;
         }       
-    #endif
-
-            std::cout<<"STSolver: Number of places:      "<<_net._nplaces<<std::endl;
-            std::cout<<"STSolver: Number of transitions: "<<_net._ntransitions<<std::endl;
-                  
+#endif                  
             for (size_t i = 1; i <= _nCol; i++){ set_binary(_lp, i, TRUE); }
             // Create constraints
             set_add_rowmode(_lp, TRUE);  
@@ -170,7 +166,6 @@ namespace PetriEngine {
             }
 
             set_add_rowmode(_lp, FALSE);      
-            std::cout<<"STSolver: "<<get_Ncolumns(_lp)<<" variables and "<<get_Nrows(_lp)<<" constraints."<<std::endl;
             
             // Bounds
             // Ensures the no-trap constraints
@@ -184,7 +179,7 @@ namespace PetriEngine {
         return _ret;
     }
     
-    int STSolver::Solve(){
+    int STSolver::Solve(int timeout){
         CreateFormula();
         
         if(_ret == 0){
@@ -195,72 +190,49 @@ namespace PetriEngine {
             write_LP(_lp, stdout);
     #endif       
             set_verbose(_lp, IMPORTANT);
-            set_timeout(_lp, SIPHON_TRAP_TIMEOUT);
+            set_timeout(_lp, timeout);
             _ret = solve(_lp);
+            
+    #ifdef DEBUG
+            PrintStatus();
+    #endif     
         }
+        
         return _ret;
     }
     
-    void STSolver::PrintResult(){
-        if(_ret == OPTIMAL) {
-            _ret = 0;
-        } else if(_ret == PRESOLVED){
-            std::cout<<"STSolver: The model could be solved by presolve."<<std::endl;
-            _ret = 0;
-        } else if(_ret == INFEASIBLE){
-            std::cout<<"STSolver: The model is infeasible."<<std::endl;
-            _ret = 1; 
-        } else if(_ret == NOMEMORY){
-            std::cout<<"STSolver: Out of memory."<<std::endl;
-            _ret = 2;
-        } else if(_ret == UNBOUNDED){
-            std::cout<<"STSolver: The model is unbounded."<<std::endl;
-            _ret = 2;
-        } else if(_ret == DEGENERATE){
-            std::cout<<"STSolver: The model is degenerative."<<std::endl;
-            _ret = 2;
-        } else if(_ret == NUMFAILURE){
-            std::cout<<"STSolver: Numerical failure encountered."<<std::endl;
-            _ret = 2;
-        } else if(_ret == USERABORT){
-            std::cout<<"STSolver: The abort routine returned TRUE."<<std::endl;
-            _ret = 2;
-        } else if(_ret == TIMEOUT){
-            std::cout<<"STSolver: A timeout occurred."<<std::endl;
-            _ret = 2;
-        } else if(_ret == NUMFAILURE){
-            std::cout<<"STSolver: Accuracy error encountered."<<std::endl;
-            _ret = 2;
-        } else if(_ret == -6) {
-            std::cout<<"STSolver: The net has weighed arcs."<<std::endl;
-            _ret = 2;
+    Reachability::ResultPrinter::Result STSolver::PrintResult(){
+        if(_ret == INFEASIBLE){
+            return printer.printResult(0, _query, Reachability::ResultPrinter::NotSatisfied);
+        } else {
+            return printer.printResult(0, _query, Reachability::ResultPrinter::Unknown);
         }
-        else {
-            _ret = 2;
-        }        
-            
-        if(_ret == 0){
-            std::cout<<"STSolver: Solution found."<<std::endl;
-            std::cout<<"STSolver: The siphon/trap property does not hold."<<std::endl;
-            std::cout<<"STSolver: "<<get_Ncolumns(_lp)<<" variables and "<<get_Nrows(_lp)<<" constraints after simplification."<<std::endl;
-            
-#ifdef DEBUG
-            // print solution
-            REAL* _row = new REAL[_nCol+1];
-            memset(_row, 0, sizeof(REAL) * (_nCol+1));
-            get_variables(_lp, _row);
-            for(uint32_t j = 0; j < _nCol; j++){
-              printf("%s: %f\n", get_origcol_name(_lp, j + 1), _row[j]);
-            }
-            std::cout<<std::endl;
-#endif
-        } else if(_ret == 1){
-            std::cout<<"STSolver: Formula is unsatisfiable."<<std::endl;
-            std::cout<<"STSolver: The siphon/trap property holds."<<std::endl;
-            std::cout<<"STSolver: "<<get_Ncolumns(_lp)<<" variables and "<<get_Nrows(_lp)<<" constraints after simplification."<<std::endl;
-            std::cout<<std::endl<<"Query is NOT satisfied"<<std::endl;
-        } else if(_ret == 2){
-            std::cout<<"STSolver: Analysis terminated prior to completion."<<std::endl;
+        
+    }
+    
+    void STSolver::PrintStatus(){
+        if(_ret == OPTIMAL) {
+            std::cout<<"lp_solve: An optimal solution was obtained."<<std::endl;
+        } else if(_ret == PRESOLVED){
+            std::cout<<"lp_solve: The model could be solved by presolve."<<std::endl;
+        } else if(_ret == INFEASIBLE){
+            std::cout<<"lp_solve: The model is infeasible."<<std::endl;
+        } else if(_ret == NOMEMORY){
+            std::cout<<"lp_solve: Out of memory."<<std::endl;
+        } else if(_ret == UNBOUNDED){
+            std::cout<<"lp_solve: The model is unbounded."<<std::endl;
+        } else if(_ret == DEGENERATE){
+            std::cout<<"lp_solve: The model is degenerative."<<std::endl;
+        } else if(_ret == NUMFAILURE){
+            std::cout<<"lp_solve: Numerical failure encountered."<<std::endl;
+        } else if(_ret == USERABORT){
+            std::cout<<"lp_solve: The abort routine returned TRUE."<<std::endl;
+        } else if(_ret == TIMEOUT){
+            std::cout<<"lp_solve: A timeout occurred."<<std::endl;
+        } else if(_ret == NUMFAILURE){
+            std::cout<<"lp_solve: Accuracy error encountered."<<std::endl;
+        } else if(_ret == -6) {
+            std::cout<<"lp_solve: The net has weighed arcs."<<std::endl;
         }
     }
     

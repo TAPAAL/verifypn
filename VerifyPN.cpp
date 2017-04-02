@@ -162,7 +162,14 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         } else if(strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--partial-order-reduction") == 0) {
             options.stubbornreduction = true;
         } else if(strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--siphon-trap") == 0) {
-            options.siphontrap = true;
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%d", &options.siphontrapTimeout) != 1 || options.siphontrapTimeout < 0) {
+                fprintf(stderr, "Argument Error: Invalid siphon-trap timeout \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }            
         } else if(strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--query-simplification") == 0) {
             options.querysimplification = true;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
@@ -187,7 +194,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 1  aggressive reduction\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
                     "  -p, --partial-order-reduction      Enable partial order reduction (stubborn sets)\n"
-                    "  -a, --siphon-trap                  Analyse for deadlock freedom using Siphon-Trap property\n"
+                    "  -a, --siphon-trap <timeout>        Enable Siphon-Trap analysis, default timeout 60\n"
                     "  -i, --query-simplification         Enable query simplification\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
@@ -242,7 +249,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
     }
 
     //Check for query file
-    if (!options.modelfile && !options.statespaceexploration) {
+    if (!options.modelfile && !options.statespaceexploration && !(options.siphontrapTimeout > 0)) {
         fprintf(stderr, "Argument Error: No query-file provided\n");
         return ErrorCode;
     }
@@ -254,7 +261,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
 {
 
     std::vector<std::shared_ptr<Condition > > conditions;
-    if (!options.statespaceexploration) {
+    if (!options.statespaceexploration && !(options.siphontrapTimeout > 0)) {
         //Open query file
         ifstream qfile(options.queryfile, ifstream::in);
         if (!qfile) {
@@ -332,13 +339,17 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
         }
         qfile.close();
         return conditions;
+    } else if(options.siphontrapTimeout > 0 && !options.statespaceexploration) {
+        std::string querystring = "deadlock";
+        std::vector<std::string> empty;
+        conditions.push_back(ParseQuery(querystring, false, empty));
+        return conditions;
     } else { // state-space exploration
         std::string querystring = "false";
         std::vector<std::string> empty;
         conditions.push_back(ParseQuery(querystring, false, empty));
         return conditions;
-    }
-
+    } 
  }
 
 std::vector<std::shared_ptr<Condition > > simplifyQueries(PetriNetBuilder builder, std::vector<std::shared_ptr<Condition > >& queries)
@@ -426,11 +437,8 @@ int main(int argc, char* argv[]) {
     if(options.querysimplification) {
         queries = simplifyQueries(builder, queries);
     }
-    
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
-       
     ResultPrinter printer(&builder, &options, querynames);
-    
     bool alldone = !options.disableoverapprox;
     if (!options.disableoverapprox){
         PetriNetBuilder b2(builder);
@@ -461,7 +469,7 @@ int main(int argc, char* argv[]) {
         delete net;
         delete[] m0;        
     }
-    
+  
     if(alldone) return SuccessCode;
     
     if(!alldone && options.strategy == PetriEngine::Reachability::APPROX)
@@ -487,12 +495,11 @@ int main(int argc, char* argv[]) {
     }
     
     //----------------------- Siphon Trap ------------------------//
-    if(options.siphontrap){
-        STSolver stSolver(*net);
-        stSolver.Solve();
-        stSolver.PrintResult();
+    if(options.siphontrapTimeout > 0){
+        STSolver stSolver(printer, *net, queries[0].get());
+        stSolver.Solve(options.siphontrapTimeout);
         
-        if(stSolver.getResult() == 1 ){
+        if(stSolver.PrintResult() == ResultPrinter::NotSatisfied){
             return SuccessCode;
         }
         else{
@@ -507,12 +514,12 @@ int main(int argc, char* argv[]) {
 
     // analyse context again to reindex query
     contextAnalysis(builder, queries);
-    
+
     //Reachability search
     strategy.reachable(queries, results, 
             options.strategy,
             options.stubbornreduction,
-            options.statespaceexploration, 
+            options.statespaceexploration,
             options.printstatistics, 
             options.trace);
 
