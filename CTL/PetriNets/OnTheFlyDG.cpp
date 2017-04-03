@@ -15,6 +15,7 @@ OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net){
     n_places = t_net->numberOfPlaces();
     n_transitions = t_net->numberOfTransitions();
     initial_marking->setMarking(t_net->makeInitialMarking());
+    _markingCount += 1;
     cached_successors.resize(t_net->numberOfTransitions());
 
     markings = MarkingContainer(100,                            //Nr. of buckets (bigger maybe?)
