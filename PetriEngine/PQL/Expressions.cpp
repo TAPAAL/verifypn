@@ -1002,11 +1002,17 @@ namespace PetriEngine {
             
             LinearPrograms lps;
             if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
-                if ((m1.isConstant() && m2.isConstant()) || m1 == m2) {
+                if ((m1.isConstant() && m2.isConstant()) || (m1-m2).isConstant()) {
                     return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant != m2.constant) : (m1.constant == m2.constant)));
                 } else {
-                    lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "!=" : "=="))));
+                    if (context.negated()) {
+                        lps.add(LinearProgram(Equation(m1, m2, ">")));
+                        lps.add(LinearProgram(Equation(m1, m2, "<")));
+                    }
+                    else {
+                        lps.add(LinearProgram(Equation(m1, m2, "==")));
+                    }
                 }
             } else {
                 lps.add(LinearProgram());
@@ -1029,11 +1035,17 @@ namespace PetriEngine {
             
             LinearPrograms lps;
             if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
-                if ((m1.isConstant() && m2.isConstant()) || m1 != m2) {
+                if ((m1.isConstant() && m2.isConstant()) || (m1-m2).isConstant()) {
                     return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant == m2.constant) : (m1.constant != m2.constant)));
                 } else{ 
-                    lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "==" : "!="))));
+                    if (context.negated()) {
+                        lps.add(LinearProgram(Equation(m1, m2, "==")));
+                    }
+                    else {
+                        lps.add(LinearProgram(Equation(m1, m2, ">")));
+                        lps.add(LinearProgram(Equation(m1, m2, "<")));
+                    }
                 }
             } else {
                 lps.add(LinearProgram());
@@ -1049,7 +1061,7 @@ namespace PetriEngine {
                 }                         
             }
         }
-        
+            
         Retval LessThanCondition::simplify(SimplificationContext context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
