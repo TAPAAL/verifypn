@@ -38,6 +38,13 @@ namespace PetriEngine {
             }
 
             static LinearPrograms lpsMerge(LinearPrograms& lps1, LinearPrograms& lps2){
+                if (lps1.lps.size() == 0) {
+                    return lps2;
+                }
+                else if (lps2.lps.size() == 0) {
+                    return lps1;
+                }
+                
                 LinearPrograms res;
                 for(LinearProgram& lp1 : lps1.lps){        
                     for(LinearProgram& lp2 : lps2.lps){

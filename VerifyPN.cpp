@@ -403,7 +403,7 @@ void outputCTL(vector<std::shared_ptr<Condition>> queries, vector<std::string> q
             
     string outputstring = "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
     
-    for(int i = 0; i < queries.size(); i++) {
+    for(uint32_t i = 0; i < queries.size(); i++) {
         if (!(results[i] == ResultPrinter::EXPORT)) {
             continue;
         }
