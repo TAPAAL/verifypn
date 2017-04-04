@@ -174,6 +174,18 @@ namespace PetriEngine {
                     set_bounds(_lp,VarPlace(p,_siphonDepth+1), 0, 0);
                 }
             }    
+            
+            // Create objective
+            std::vector<REAL> row = std::vector<REAL>(_nCol + 1);
+            memset(row.data(), 0, sizeof (REAL) * _nCol + 1);
+            for (size_t p = 0; p < _nCol; p++)
+                row[1 + p] = 1;
+
+            // Set objective
+            set_obj_fn(_lp, row.data());
+
+            // Minimize the objective
+            set_minim(_lp);
         }
         
         return _ret;
@@ -183,6 +195,7 @@ namespace PetriEngine {
         CreateFormula();
         
         if(_ret == 0){
+            set_break_at_first(_lp, TRUE);
             set_presolve(_lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(_lp));
             set_pivoting(_lp, PRICER_DEVEX|PRICE_LOOPALTERNATE|PRICE_AUTOPARTIAL); 
             
@@ -207,7 +220,6 @@ namespace PetriEngine {
         } else {
             return printer.printResult(0, _query, Reachability::ResultPrinter::Unknown);
         }
-        
     }
     
     void STSolver::PrintStatus(){
