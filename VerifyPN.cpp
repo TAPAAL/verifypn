@@ -194,7 +194,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 1  aggressive reduction\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
                     "  -p, --partial-order-reduction      Enable partial order reduction (stubborn sets)\n"
-                    "  -a, --siphon-trap <timeout>        Enable Siphon-Trap analysis, default timeout 60\n"
+                    "  -a, --siphon-trap <timeout>        Enable Siphon-Trap analysis, default 0\n"
                     "  -i, --query-simplification         Enable query simplification\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
@@ -514,7 +514,7 @@ int main(int argc, char* argv[]) {
 
     // analyse context again to reindex query
     contextAnalysis(builder, queries);
-
+    
     //Reachability search
     strategy.reachable(queries, results, 
             options.strategy,
