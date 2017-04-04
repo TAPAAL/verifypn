@@ -445,34 +445,35 @@ int main(int argc, char* argv[]) {
     
     //----------------------- Query Simplification and CTL Query Export -----------------------//
     bool alldone = options.queryReductionTimeout > 0;
-    if (options.queryReductionTimeout > 0) {
-        PetriNetBuilder b2(builder);
-        PetriNet* net = b2.makePetriNet(false);
-        MarkVal* m0 = net->makeInitialMarking();
-        ResultPrinter p2(&b2, &options, querynames);
-        
+    PetriNetBuilder b2(builder);
+    PetriNet* net = b2.makePetriNet(false);
+    MarkVal* m0 = net->makeInitialMarking();
+    ResultPrinter p2(&b2, &options, querynames);
+    if (options.queryReductionTimeout > 0) {    
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            queries[i] = (queries[i]->simplify(SimplificationContext(m0, net, options.queryReductionTimeout, options.lpsolveTimeout))).formula;
-            
-            if(queries[i]->toString() == "true"){
-                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
-            } else if (queries[i]->toString() == "false") {
-                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
-            } else if (!queries[i]->isReachability()) {
-                results[i] = ResultPrinter::EXPORT;
-            } else {              
-                queries[i] = queries[i]->prepareForReachability();
-                alldone = false;
-            }
+            queries[i] = (queries[i]->simplify(SimplificationContext(m0, net, options.queryReductionTimeout, options.lpsolveTimeout))).formula;   
         }
-        
-        // Export queries here
-        outputCTL(queries, querynames, results);
-
-        delete net;
-        delete[] m0; 
     }
+    delete net;
+    delete[] m0; 
+    
+    for(size_t i = 0; i < queries.size(); ++i)
+    {           
+        if(queries[i]->toString() == "true"){
+            results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
+        } else if (queries[i]->toString() == "false") {
+            results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
+        } else if (!queries[i]->isReachability()) {
+            results[i] = ResultPrinter::EXPORT;
+        } else {              
+            queries[i] = queries[i]->prepareForReachability();
+            alldone = false;
+        }
+    }
+    
+    // Export queries here
+    outputCTL(queries, querynames, results);
  
     if(alldone) return SuccessCode;
     
@@ -486,7 +487,7 @@ int main(int argc, char* argv[]) {
 
     //----------------------- Reachability -----------------------//
 
-    PetriNet* net = builder.makePetriNet();
+    net = builder.makePetriNet();
     
     for(auto& q : queries)
     {
