@@ -125,7 +125,7 @@ namespace PetriEngine {
         private:
             bool _negated;
         };
-        
+
         /** Context for condition to TAPAAL export */
         class TAPAALConditionExportContext {
         public:

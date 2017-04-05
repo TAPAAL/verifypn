@@ -38,6 +38,7 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
+#include "PetriEngine/STSolver.h"
 
 using namespace std;
 using namespace PetriEngine;
@@ -171,6 +172,19 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid reduction argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        } else if(strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--partial-order-reduction") == 0) {
+            options.stubbornreduction = true;
+        } else if(strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--siphon-trap") == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%d", &options.siphontrapTimeout) != 1 || options.siphontrapTimeout < 0) {
+                fprintf(stderr, "Argument Error: Invalid siphon-trap timeout \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }            
+        } else if(strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--query-simplification") == 0) {
+            options.querysimplification = true;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
                     "A tool for answering reachability of place cardinality queries (including deadlock)\n"
@@ -192,6 +206,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 2  reduction preserving k-boundedness\n"
                     "  -q, --query-reduction <timeout>    Query reduction timeout in seconds, default 30\n"
                     "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
+                    "  -p, --partial-order-reduction      Enable partial order reduction (stubborn sets)\n"
+                    "  -a, --siphon-trap <timeout>        Enable Siphon-Trap analysis, default 0\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
@@ -341,8 +357,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
         std::vector<std::string> empty;
         conditions.push_back(ParseQuery(querystring, false, empty));
         return conditions;
-    }
-
+    } 
  }
 
 ReturnValue parseModel( PNMLParser::TransitionEnablednessMap& transitionEnabledness,
@@ -496,6 +511,21 @@ int main(int argc, char* argv[]) {
         q->indexPlaces(builder.getPlaceNames());
     }
     
+    //----------------------- Siphon Trap ------------------------//
+    if(options.siphontrapTimeout > 0){
+        STSolver stSolver(printer, *net, queries[0].get());
+        stSolver.Solve(options.siphontrapTimeout);
+        
+        if(stSolver.PrintResult() == ResultPrinter::NotSatisfied){
+            return SuccessCode;
+        }
+        else{
+            return ErrorCode;
+        }   
+    }
+    
+    //----------------------- Reachability -----------------------//
+    
     //Create reachability search strategy
     ReachabilitySearch strategy(printer, *net, options.kbound);
 
@@ -504,8 +534,9 @@ int main(int argc, char* argv[]) {
     
     //Reachability search
     strategy.reachable(queries, results, 
-            options.strategy, 
-            options.statespaceexploration, 
+            options.strategy,
+            options.stubbornreduction,
+            options.statespaceexploration,
             options.printstatistics, 
             options.trace);
 

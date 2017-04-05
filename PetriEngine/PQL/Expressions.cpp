@@ -306,7 +306,76 @@ namespace PetriEngine {
             }
             return true;
         }
+        
+        /******************** Evaluation - save result ********************/
+        bool QuantifierCondition::evalAndSet(const EvaluationContext& context) {
+            // Not implemented
+        }
+        
+        bool UntilCondition::evalAndSet(const EvaluationContext& context) {
+            // Not implemented
+        }        
 
+        int BinaryExpr::evalAndSet(const EvaluationContext& context) {
+            int v1 = _expr1->evalAndSet(context);
+            int v2 = _expr2->evalAndSet(context);
+            int res = apply(v1, v2);
+            setEval(res);
+            return res;
+        }
+
+        int MinusExpr::evalAndSet(const EvaluationContext& context) {
+            int res = -(_expr->evalAndSet(context));
+            setEval(res);
+            return res;
+        }
+
+        int LiteralExpr::evalAndSet(const EvaluationContext&) {
+            setEval(_value);
+            return _value;
+        }
+
+        int IdentifierExpr::evalAndSet(const EvaluationContext& context) {
+            assert(_offsetInMarking != -1);
+            int res = context.marking()[_offsetInMarking];
+            setEval(res);
+            return res;
+        }
+
+        bool LogicalCondition::evalAndSet(const EvaluationContext& context) {
+            bool b1 = _cond1->evalAndSet(context);
+            bool b2 = _cond2->evalAndSet(context);
+            bool res = apply(b1, b2);
+            setSatisfied(res);
+            return res;
+        }
+
+        bool CompareCondition::evalAndSet(const EvaluationContext& context) {
+            int v1 = _expr1->evalAndSet(context);
+            int v2 = _expr2->evalAndSet(context);
+            bool res = apply(v1, v2);
+            setSatisfied(res);
+            return res;
+        }
+
+        bool NotCondition::evalAndSet(const EvaluationContext& context) {
+            bool res = !(_cond->evalAndSet(context));
+            setSatisfied(res);
+            return res;
+        }
+
+        bool BooleanCondition::evalAndSet(const EvaluationContext&) {
+            setSatisfied(_value);
+            return _value;
+        }
+
+        bool DeadlockCondition::evalAndSet(const EvaluationContext& context) {
+            if (!context.net())
+                return false;
+            setSatisfied(context.net()->deadlocked(context.marking()));
+            return isSatisfied();
+        }
+        
         /******************** Apply (BinaryExpr subclasses) ********************/
 
         int PlusExpr::apply(int v1, int v2) const {
@@ -320,7 +389,7 @@ namespace PetriEngine {
         int MultiplyExpr::apply(int v1, int v2) const {
             return v1 * v2;
         }
-
+        
         /******************** Apply (LogicalCondition subclasses) ********************/
 
         bool AndCondition::apply(bool b1, bool b2) const {
@@ -1323,6 +1392,188 @@ namespace PetriEngine {
         
         Condition_ptr DeadlockCondition::prepareForReachability(bool negated) const {
             return NULL;
+        }
+        
+        /******************** Stubborn reduction interesting transitions ********************/
+        
+        void PlusExpr::incr(ReducingSuccessorGenerator& generator) const { 
+            _expr1->incr(generator);
+            _expr2->incr(generator);
+        }
+        
+        void PlusExpr::decr(ReducingSuccessorGenerator& generator) const {
+            _expr1->decr(generator);
+            _expr2->decr(generator);
+        }
+        
+        void SubtractExpr::incr(ReducingSuccessorGenerator& generator) const {
+            _expr1->incr(generator);
+            _expr2->decr(generator);
+        }
+        
+        void SubtractExpr::decr(ReducingSuccessorGenerator& generator) const {
+            _expr1->decr(generator);
+            _expr2->incr(generator);
+        }
+        
+        void MultiplyExpr::incr(ReducingSuccessorGenerator& generator) const {
+            _expr1->incr(generator);
+            _expr1->decr(generator);
+            _expr2->incr(generator);
+            _expr2->decr(generator);
+        }
+        
+        void MultiplyExpr::decr(ReducingSuccessorGenerator& generator) const {
+            _expr1->incr(generator);
+            _expr1->decr(generator);
+            _expr2->incr(generator);
+            _expr2->decr(generator);
+        }
+        
+        void MinusExpr::incr(ReducingSuccessorGenerator& generator) const {
+            // TODO not implemented
+        }
+        
+        void MinusExpr::decr(ReducingSuccessorGenerator& generator) const {
+            // TODO not implemented
+        }
+
+        void LiteralExpr::incr(ReducingSuccessorGenerator& generator) const {
+            // Add nothing
+        }
+        
+        void LiteralExpr::decr(ReducingSuccessorGenerator& generator) const {
+            // Add nothing
+        }
+
+        void IdentifierExpr::incr(ReducingSuccessorGenerator& generator) const {
+            generator.presetOf(_offsetInMarking);
+        }
+        
+        void IdentifierExpr::decr(ReducingSuccessorGenerator& generator) const {
+             generator.postsetOf(_offsetInMarking);
+        }
+        
+        void QuantifierCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
+            // Not implemented
+        }
+        
+        void UntilCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
+            // Not implemented
+        }
+        
+        void AndCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // and
+                if(!_cond2->isSatisfied()) { // TODO If both conditions are false, maybe use a heuristic to pick condition?
+                    _cond2->findInteresting(generator, negated);
+                } else {
+                    _cond1->findInteresting(generator, negated);
+                }
+            } else {                    // or
+                _cond1->findInteresting(generator, negated);
+                _cond2->findInteresting(generator, negated);
+            }
+        }
+        
+        void OrCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // or
+                _cond1->findInteresting(generator, negated);
+                _cond2->findInteresting(generator, negated);
+            } else {                    // and
+                if(_cond2->isSatisfied()) {       
+                    _cond2->findInteresting(generator, negated);
+                } else {
+                    _cond1->findInteresting(generator, negated);
+                }
+            }
+        }
+        
+        void EqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // equal
+                if(_expr1->getEval() > _expr2->getEval()){
+                    _expr1->decr(generator);
+                    _expr2->incr(generator);
+                } else {
+                    _expr1->incr(generator);
+                    _expr2->decr(generator);
+                }   
+            } else {                    // not equal
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            }
+        }
+        
+        void NotEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // not equal
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            } else {                    // equal
+                if(_expr1->getEval() > _expr2->getEval()){
+                    _expr1->decr(generator);
+                    _expr2->incr(generator);
+                } else {
+                    _expr1->incr(generator);
+                    _expr2->decr(generator);
+                }   
+            }
+        }
+        
+        void LessThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // less than
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+            } else {                    // greater than or equal
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            }
+        }
+        
+        void LessThanOrEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // less than or equal
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+            } else {                    // greater than
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            }
+        }
+        
+        void GreaterThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // greater than
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            } else {                    // less than or equal
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+            }
+        }
+        
+        void GreaterThanOrEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!negated){               // greater than or equal
+                _expr1->incr(generator);
+                _expr2->decr(generator); 
+            } else {                    // less than
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+            }
+        }
+        
+        void NotCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            _cond->findInteresting(generator, !negated);
+        }
+        
+        void BooleanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            // Add nothing
+        }
+        
+        void DeadlockCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            if(!isSatisfied()){
+                generator.postPresetOf(generator.leastDependentEnabled());
+            } // else add nothing
         }
         
         /******************** Just-In-Time Compilation ********************/
