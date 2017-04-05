@@ -249,7 +249,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
     }
 
     //Check for query file
-    if (!options.modelfile && !options.statespaceexploration && !(options.siphontrapTimeout > 0)) {
+    if (!options.modelfile && !options.statespaceexploration) {
         fprintf(stderr, "Argument Error: No query-file provided\n");
         return ErrorCode;
     }
@@ -261,7 +261,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
 {
 
     std::vector<std::shared_ptr<Condition > > conditions;
-    if (!options.statespaceexploration && !(options.siphontrapTimeout > 0)) {
+    if (!options.statespaceexploration) {
         //Open query file
         ifstream qfile(options.queryfile, ifstream::in);
         if (!qfile) {
@@ -338,11 +338,6 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
             }
         }
         qfile.close();
-        return conditions;
-    } else if(options.siphontrapTimeout > 0 && !options.statespaceexploration) {
-        std::string querystring = "deadlock";
-        std::vector<std::string> empty;
-        conditions.push_back(ParseQuery(querystring, false, empty));
         return conditions;
     } else { // state-space exploration
         std::string querystring = "false";
