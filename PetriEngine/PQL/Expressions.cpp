@@ -37,7 +37,7 @@ namespace PetriEngine {
             std::string res;
 
             for(uint32_t i = 0; i < tabs; i++) {
-                res += "\t";
+                res += "  ";
             }
 
             return res;
@@ -593,36 +593,54 @@ namespace PetriEngine {
         
         /******************** CTL Output ********************/ 
         
-        std::string LiteralExpr::toXML(uint32_t tabs) const {
+        std::string LiteralExpr::toXML(uint32_t tabs, bool tokencount) const {
             return generateTabs(tabs) + "<integer-constant>" + std::to_string(_value) + "</integer-constant>\n";
         }
         
-        std::string IdentifierExpr::toXML(uint32_t tabs) const {
-            return generateTabs(tabs) + "<place>" + _name + "</place>\n";
+        std::string IdentifierExpr::toXML(uint32_t tabs, bool tokencount) const {
+            if (tokencount) {
+                return generateTabs(tabs) + "<place>" + _name + "</place>\n";
+            }
+            
+            return generateTabs(tabs) + "<tokens-count>\n" + generateTabs(tabs+1) + "<place>" + _name + "</place>\n" + generateTabs(tabs) + "</tokens-count>\n";
         }
         
-        std::string PlusExpr::toXML(uint32_t tabs) const {
-            std::string st1 = _expr1->toXML(tabs+1);
-            std::string st2 = _expr2->toXML(tabs+1);
+        std::string PlusExpr::toXML(uint32_t tabs, bool tokencount) const {
+            if (tokencount) {
+                std::string st1 = _expr1->toXML(tabs, tokencount);
+                std::string st2 = _expr2->toXML(tabs, tokencount);
+                
+                return st1 + st2;
+            }
+            
+            if(tk) {
+                std::string st1 = _expr1->toXML(tabs+1, true);
+                std::string st2 = _expr2->toXML(tabs+1, true);
+                
+                return generateTabs(tabs) + "<tokens-count>\n" + st1 + st2 + generateTabs(tabs) + "</tokens-count>\n";
+            }
+            
+            std::string st1 = _expr1->toXML(tabs+1, tokencount);
+            std::string st2 = _expr2->toXML(tabs+1, tokencount);
             
             return generateTabs(tabs) + "<integer-sum>\n" + st1 + st2 + generateTabs(tabs) + "</integer-sum>\n"; 
         }
         
-        std::string SubtractExpr::toXML(uint32_t tabs) const {
+        std::string SubtractExpr::toXML(uint32_t tabs, bool tokencount) const {
             std::string st1 = _expr1->toXML(tabs+1);
             std::string st2 = _expr2->toXML(tabs+1);
             
             return generateTabs(tabs) + "<integer-difference>\n" + st1 + st2 + generateTabs(tabs) + "</integer-difference>\n"; 
         }
         
-        std::string MultiplyExpr::toXML(uint32_t tabs) const {
+        std::string MultiplyExpr::toXML(uint32_t tabs, bool tokencount) const {
             std::string st1 = _expr1->toXML(tabs+1);
             std::string st2 = _expr2->toXML(tabs+1);
             
             return generateTabs(tabs) + "<integer-product>\n" + st1 + st2 + generateTabs(tabs) + "</integer-product>\n"; 
         }
         
-        std::string MinusExpr::toXML(uint32_t tabs) const {
+        std::string MinusExpr::toXML(uint32_t tabs, bool tokencount) const {
             std::string st = _expr->toXML(tabs+1);
             
             return generateTabs(tabs) + "<integer-product>\n" + st + generateTabs(tabs+1) + "<integer-difference>\n" + generateTabs(tabs+2) + "<integer-constant>0</integer-constant>\n" + generateTabs(tabs+2) + "<integer-constant>1</integer-constant>\n" + generateTabs(tabs+1) + "</integer-difference>\n" + generateTabs(tabs) + "</integer-product>\n";

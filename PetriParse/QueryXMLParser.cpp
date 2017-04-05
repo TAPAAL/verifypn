@@ -366,7 +366,9 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
             if (strcmp(it->name(), "place") != 0) return NULL;
             string placeName = parsePlace(it);
             if (placeName == "") return NULL; // invalid place name
-            sum = std::make_shared<PlusExpr>(sum, std::make_shared<IdentifierExpr>(placeName));
+            std::shared_ptr<PlusExpr> sum2 = std::make_shared<PlusExpr>(sum, std::make_shared<IdentifierExpr>(placeName));
+            sum2.get()->tk = true;
+            sum = sum2;
         }
         return sum;
     } else if (elementName == "integer-sum" || elementName == "integer-product") {

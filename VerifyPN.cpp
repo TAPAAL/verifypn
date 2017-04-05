@@ -386,10 +386,12 @@ void printStats(PetriNetBuilder& builder, options_t& options)
 
 void outputCTL(vector<std::shared_ptr<Condition>> queries, vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
     bool cont = false;
+    uint32_t k;
     
-    for(int i = 0; i < results.size(); i++) {
+    for(uint32_t i = 0; i < results.size(); i++) {
         if (results[i] == ResultPrinter::EXPORT) {
             cont = true;
+            k = i;
             break;
         }
     }
@@ -399,7 +401,7 @@ void outputCTL(vector<std::shared_ptr<Condition>> queries, vector<std::string> q
     }
     
     ofstream file;
-    file.open("simplified.xml");
+    file.open(querynames[k] + ".xml");
             
     string outputstring = "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
     
@@ -407,9 +409,9 @@ void outputCTL(vector<std::shared_ptr<Condition>> queries, vector<std::string> q
         if (!(results[i] == ResultPrinter::EXPORT)) {
             continue;
         }
-        outputstring += "\t<property>\n\t\t<id>" + querynames[i] + "</id>\n\t\t<description>Simplified</description>\n\t\t<formula>\n";
+        outputstring += "  <property>\n    <id>" + querynames[i] + "</id>\n    <description>Simplified</description>\n    <formula>\n";
         outputstring += queries[i]->toXML(3);
-        outputstring += "\t\t</formula>\n\t</property>\n";
+        outputstring += "    </formula>\n  </property>\n";
     }
             
     outputstring += "</property-set>\n";

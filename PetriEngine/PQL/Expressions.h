@@ -47,7 +47,7 @@ namespace PetriEngine {
             int evaluate(const EvaluationContext& context) const;
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
-            virtual std::string toXML(uint32_t tabs) const = 0;
+            virtual std::string toXML(uint32_t tabs, bool tokencount = false) const = 0;
         private:
             virtual int apply(int v1, int v2) const = 0;
             /** LLVM binary operator (llvm::Instruction::BinaryOps) */
@@ -65,7 +65,8 @@ namespace PetriEngine {
             using BinaryExpr::BinaryExpr;
             Expr::Types type() const;
             Member constraint(SimplificationContext context) const;
-            std::string toXML(uint32_t tabs) const;
+            std::string toXML(uint32_t tabs, bool tokencount = false) const;
+            bool tk = false;
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -79,7 +80,7 @@ namespace PetriEngine {
             using BinaryExpr::BinaryExpr;
             Expr::Types type() const;
             Member constraint(SimplificationContext context) const;
-            std::string toXML(uint32_t tabs) const;
+            std::string toXML(uint32_t tabs, bool tokencount = false) const;
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -93,7 +94,7 @@ namespace PetriEngine {
             using BinaryExpr::BinaryExpr;
             Expr::Types type() const;
             Member constraint(SimplificationContext context) const;
-            std::string toXML(uint32_t tabs) const;
+            std::string toXML(uint32_t tabs, bool tokencount = false) const;
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -114,7 +115,7 @@ namespace PetriEngine {
             std::string toString() const;
             Expr::Types type() const;
             Member constraint(SimplificationContext context) const;
-            std::string toXML(uint32_t tabs) const;
+            std::string toXML(uint32_t tabs, bool tokencount = false) const;
         private:
             Expr_ptr _expr;
         };
@@ -131,7 +132,7 @@ namespace PetriEngine {
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             Expr::Types type() const;
-            std::string toXML(uint32_t tabs) const;
+            std::string toXML(uint32_t tabs, bool tokencount = false) const;
 
             int value() const {
                 return _value;
@@ -154,7 +155,7 @@ namespace PetriEngine {
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             Expr::Types type() const;
-            std::string toXML(uint32_t tabs) const;
+            std::string toXML(uint32_t tabs, bool tokencount = false) const;
 
             /** Offset in marking or valuation */
             int offset() const {

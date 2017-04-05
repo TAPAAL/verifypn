@@ -115,7 +115,7 @@ namespace PetriEngine {
             /** Construct left/right side of equations used in query simplification */
             virtual Simplification::Member constraint(SimplificationContext context) const = 0;
             /** Output the expression as it currently is to a file in XML */
-            virtual std::string toXML(uint32_t tabs) const = 0;
+            virtual std::string toXML(uint32_t tabs, bool tokencount = false) const = 0;
         };
 
         /** Base condition */
