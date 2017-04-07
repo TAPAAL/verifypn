@@ -2,8 +2,16 @@
  * Copyright (C) 2011-2017  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                          Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                          Lars Kærlund Østergaard <larsko@gmail.com>,
- *			    Jiri Srba <srba.jiri@gmail.com>,
+ *                          Jiri Srba <srba.jiri@gmail.com>,
  *                          Peter Gjøl Jensen <root@petergjoel.dk>
+ * CTL Extension
+ *                          Peter Fogh <pfogh12@student.aau.dk>
+ *                          Isabella Kaufmann <ikaufm12@student.aau.dk>
+ *                          Tobias Skovgaard Jepsen <tjeps12@student.aau.dk>
+ *                          Lasse Steen Jensen <lasjen12@student.aau.dk>
+ *                          Søren Moss Nielsen <smni12@student.aau.dk>
+ *                          Samuel Pastva <daemontus@gmail.com>
+ *                          Jiri Srba <srba.jiri@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,12 +48,14 @@
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
 
+#include "CTL/CTLEngine.h"
+
 using namespace std;
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
-#define VERSION  "2.1.0"
+#define VERSION  "3.0.0"
 
 ReturnValue contextAnalysis(PetriNetBuilder& builder, std::vector<std::shared_ptr<Condition> >& queries)
 {
@@ -94,20 +104,20 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
         } else if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--search-strategy") == 0){
 			if (i==argc-1) {
-                                fprintf(stderr, "Missing search strategy after \"%s\"\n\n", argv[i]);
+                fprintf(stderr, "Missing search strategy after \"%s\"\n\n", argv[i]);
 				return ErrorCode;                           
-                        }
-                        char* s = argv[++i];
-			if(strcmp(s, "BestFS") == 0)
+            }
+            char* s = argv[++i];
+            if(strcmp(s, "BestFS") == 0)
 				options.strategy = HEUR;
 			else if(strcmp(s, "BFS") == 0)
 				options.strategy = BFS;
 			else if(strcmp(s, "DFS") == 0)
 				options.strategy = DFS;
-			else if(strcmp(s, "OverApprox") == 0)
+            else if(strcmp(s, "OverApprox") == 0)
 				options.strategy = APPROX;
-                        else if(strcmp(s, "RDFS") == 0)
-                                options.strategy = RDFS;
+            else if(strcmp(s, "RDFS") == 0)
+                options.strategy = RDFS;
 			else{
 				fprintf(stderr, "Argument Error: Unrecognized search strategy \"%s\"\n", s);
 				return ErrorCode;
@@ -158,10 +168,27 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid reduction argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        //Enable CTL engine
+        } else if (strcmp(argv[i], "-ctl") == 0){
+            options.isctl = true;
+            if(argc > i + 1){
+                if(strcmp(argv[i + 1], "local") == 0){
+                    i++;
+                    options.ctlalgorithm = CTL::Local;
+                }
+                else if(strcmp(argv[i + 1], "czero") == 0){
+                    i++;
+                    options.ctlalgorithm = CTL::CZero;
+                }
+            }
+        //Enable game mode
+        } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
+            options.gamemode = true;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
-                    "A tool for answering reachability of place cardinality queries (including deadlock)\n"
-                    "for weighted P/T Petri nets extended with inhibitor arcs.\n"
+                    "A tool for answering CTL and reachability queries of place cardinality\n" 
+                    "deadlock and transition fireability for weighted P/T Petri nets\n" 
+                    "extended with inhibitor arcs.\n"
                     "\n"
                     "Options:\n"
                     "  -k, --k-bound <number of tokens>   Token bound, 0 to ignore (default)\n"
@@ -169,7 +196,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -s, --search-strategy <strategy>   Search strategy:\n"
                     "                                     - BestFS       Heuristic search (default)\n"
                     "                                     - BFS          Breadth first search\n"
-                    "                                     - DFS          Depth first search\n"
+                    "                                     - DFS          Depth first search (CTL default)\n"
                     "                                     - RDFS         Random depth first search\n"
                     "                                     - OverApprox   Linear Over Approx\n"
                     "  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
@@ -184,6 +211,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -v, --version                      Display version information\n"
                     "  -o, --mcc                          Use MCC output-format\n"
                     "  -m, --memory-limit <mb-memory>     Limit for when encoding kicks in, default 2048\n"
+                    "  -ctl                               Verify CTL properties\n"
+                    "                                     - local        Liu and Smolka's on-the-fly algorithm\n"
+                    "                                     - czero        local with certain zero extension (default)\n"
+                    //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -191,8 +222,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  2   Unknown, algorithm was unable to answer the question\n"
                     "  3   Error, see stderr for error message\n"
                     "\n"
-                    "VerifyPN is a compilation of PeTe as untimed backend for TAPAAL.\n"
-                    "PeTe project page: <https://github.com/jopsen/PeTe>\n"
+                    "VerifyPN is an untimed CTL verification engine for TAPAAL.\n"
                     "TAPAAL project page: <http://www.tapaal.net>\n");
             return SuccessCode;
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
@@ -202,6 +232,12 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>,\n");
             printf("                        Jiri Srba <srba.jiri@gmail.com>,\n");
             printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
+            printf("                        Peter Fogh <pfogh12@student.aau.dk>\n");
+            printf("                        Isabella Kaufmann <ikaufm12@student.aau.dk>\n");
+            printf("                        Tobias Skovgaard Jepsen <tjeps12@student.aau.dk>\n");
+            printf("                        Lasse Steen Jensen <lasjen12@student.aau.dk>\n");
+            printf("                        Søren Moss Nielsen <smni12@student.aau.dk>\n");
+            printf("                        Samuel Pastva <daemontus@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
         } else if (options.modelfile == NULL) {
@@ -236,6 +272,19 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         fprintf(stderr, "Argument Error: No query-file provided\n");
         return ErrorCode;
     }
+
+    // Check strategy when is CTL (CTLEngine does not support all of them)
+    if(options.isctl){
+        //Default to DFS (No heuristic strategy)
+        if(options.strategy == PetriEngine::Reachability::HEUR){
+            options.strategy = PetriEngine::Reachability::DFS;
+        }
+        else if(options.strategy != PetriEngine::Reachability::DFS && options.strategy != PetriEngine::Reachability::BFS){
+            std::cerr << "Argument Error: Invalid CTL search strategy. Valid ones are DFS (default) and BFS." << std::endl;
+            return ErrorCode;
+        }
+    }
+
     return ContinueCode;
 }
 
@@ -382,7 +431,20 @@ int main(int argc, char* argv[]) {
     
     if(parseModel(transitionEnabledness, builder, options) != ContinueCode) return ErrorCode;
 
-    
+    //----------------------- CTL Engine ------------------------//
+    if(options.isctl){
+        auto* net = builder.makePetriNet();
+        v = CTLMain(net,
+                    options.queryfile,
+                    options.ctlalgorithm,
+                    options.strategy,
+                    options.querynumbers,
+                    options.gamemode,
+                    options.printstatistics,
+                    options.mccoutput);
+        return v;
+    }
+
     std::vector<std::string> querynames;
     //----------------------- Parse Query -----------------------//
     auto queries = readQueries(transitionEnabledness, options, querynames);
