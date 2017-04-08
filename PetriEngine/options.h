@@ -1,4 +1,5 @@
 #ifndef OPTIONS_H
+#define OPTIONS_H
 
 #include <ctype.h>
 #include <stddef.h>
@@ -6,7 +7,7 @@
 #include <set>
 
 #include "Reachability/ReachabilitySearch.h"
-
+#include "../CTL/Algorithm/AlgorithmTypes.h"
 
 struct options_t {
 //    bool outputtrace = false;
@@ -15,7 +16,6 @@ struct options_t {
     char* queryfile = NULL;
     int enablereduction = 0; // 0 ... disabled (default),  1 ... aggresive, 2 ... k-boundedness preserving
     bool stubbornreduction = false;
-    bool querysimplification = false;
     bool statespaceexploration = false;
     bool printstatistics = true;
     size_t memorylimit = 2048;
@@ -24,7 +24,12 @@ struct options_t {
     bool mccoutput = false;
     bool trace = false;
     int queryReductionTimeout = 30, lpsolveTimeout = 10;
-    int siphontrapTimeout = 0;
+    int siphontrapTimeout = 30;
+
+    //CTL Specific options
+    bool gamemode = false;
+    bool isctl = false;
+    CTL::CTLAlgorithmType ctlalgorithm = CTL::CZero;
 };
 
 #endif

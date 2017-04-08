@@ -1,0 +1,6 @@
+*.config
+*.creator
+*.files
+*.includes
+verifypn-experimental-linux64
+*.user

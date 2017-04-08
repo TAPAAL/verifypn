@@ -63,6 +63,7 @@ namespace PetriEngine {
         MarkVal* makeInitialMarking();
         /** Fire transition if possible and store result in result */
         bool deadlocked(const MarkVal* marking) const;
+        bool fireable(const MarkVal* marking, int transitionIndex);
         
         uint32_t numberOfTransitions() const {
             return _ntransitions;
@@ -108,10 +109,10 @@ namespace PetriEngine {
         std::vector<Invariant> _invariants;
         std::vector<uint32_t> _placeToPtrs;
         MarkVal* _initialMarking;
-        
+
         std::vector<std::string> _transitionnames;
         std::vector<std::string> _placenames;
-        
+
         friend class PetriNetBuilder;
         friend class Reducer;
         friend class SuccessorGenerator;
