@@ -147,7 +147,9 @@ namespace PetriEngine {
         _parent = state;
         constructEnabled();
         _queries.front()->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
-        _queries.front()->findInteresting(*this, false);
+        for (auto &q : _queries) {
+            q->findInteresting(*this, false);
+        }
         
         while (!_unprocessed.empty()) {
             uint32_t tr = _unprocessed.front();
