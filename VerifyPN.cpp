@@ -83,7 +83,7 @@ std::vector<std::string> explode(std::string const & s)
 ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 {
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-k") == 0 || strcmp(argv[i], "--k-bound") == 0) {
+        if (strcmp(argv[i], "-k") == 0 || strcmp(argv[i], "--k-bound") == 0) {  
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n", argv[i]);
                 return ErrorCode;
@@ -120,6 +120,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 				return ErrorCode;
 			}
         } else if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--query-reduction") == 0) {
+            options.querysimplification = true;
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
                 return ErrorCode;
@@ -173,7 +174,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 return ErrorCode;
             }
         } else if(strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--partial-order-reduction") == 0) {
-            options.stubbornreduction = true;
+            options.stubbornreduction = false;
         } else if(strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--siphon-trap") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -182,9 +183,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             if (sscanf(argv[++i], "%d", &options.siphontrapTimeout) != 1 || options.siphontrapTimeout < 0) {
                 fprintf(stderr, "Argument Error: Invalid siphon-trap timeout \"%s\"\n", argv[i]);
                 return ErrorCode;
-            }            
-        } else if(strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--query-simplification") == 0) {
-            options.querysimplification = true;
+            }
+            options.siphontrapenabled = true;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
                     "A tool for answering reachability of place cardinality queries (including deadlock)\n"
@@ -200,13 +200,13 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - RDFS         Random depth first search\n"
                     "  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
                     "  -x, --xml-query <query index>      Parse XML query file and verify query of a given index\n"
-                    "  -r, --reduction                    Enable structural net reduction:\n"
-                    "                                     - 0  disabled (default)\n"
-                    "                                     - 1  aggressive reduction\n"
+                    "  -r, --reduction                    Change structural net reduction:\n"
+                    "                                     - 0  disabled\n"
+                    "                                     - 1  aggressive reduction (default)\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
                     "  -q, --query-reduction <timeout>    Query reduction timeout in seconds, default 30\n"
                     "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
-                    "  -p, --partial-order-reduction      Enable partial order reduction (stubborn sets)\n"
+                    "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
                     "  -a, --siphon-trap <timeout>        Enable Siphon-Trap analysis, default 0\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
@@ -444,6 +444,7 @@ int main(int argc, char* argv[]) {
     ReturnValue v = parseOptions(argc, argv, options);
     if(v != ContinueCode) return v;
     
+    options.print();
   
     PetriNetBuilder builder;
     PNMLParser::TransitionEnablednessMap transitionEnabledness;
@@ -532,6 +533,7 @@ int main(int argc, char* argv[]) {
     // analyse context again to reindex query
     contextAnalysis(builder, queries);
     
+    
     //Reachability search
     strategy.reachable(queries, results, 
             options.strategy,
@@ -539,7 +541,7 @@ int main(int argc, char* argv[]) {
             options.statespaceexploration,
             options.printstatistics, 
             options.trace);
-
+    
     printStats(builder, options);
     
     delete net;
