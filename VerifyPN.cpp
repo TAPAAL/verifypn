@@ -287,6 +287,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         options.kbound = 0;
         options.queryReductionTimeout = 0;
         options.lpsolveTimeout = 0;
+        options.siphontrapTimeout = 0;
+        options.stubbornreduction = false;
 //        outputtrace = false;
     }
 

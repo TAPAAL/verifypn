@@ -147,7 +147,7 @@ Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
             places.push_back(place);
         }
         cond->setPlaceNameForBounds(places);
-        return cond;
+        return std::make_shared<EFCondition>(cond);
     } else if ((cond = parseBooleanFormula(child)) != NULL) {
         return cond;
     } else {

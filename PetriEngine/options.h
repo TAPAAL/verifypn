@@ -94,6 +94,19 @@ struct options_t {
         }
         
         optionsOut += ", LPSolve_Timeout=" + std::to_string(lpsolveTimeout);
+        
+        if (gamemode) {
+            optionsOut += ", Game_Mode=ENABLED";
+        } else {
+            optionsOut += ", Game_Mode=DISABLED";
+        }
+        if (isctl) {
+            if (ctlalgorithm == CTL::CZero) {
+                optionsOut += ", CTLAlgorithm=CZERO";
+            } else {
+                optionsOut += ", CTLAlgorithm=LOCAL";
+            }
+        }
         optionsOut += "\n";
         
         std::cout << optionsOut;
