@@ -55,7 +55,7 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
-#define VERSION  "3.0.0"
+#define VERSION  "2.1.0"
 
 ReturnValue contextAnalysis(PetriNetBuilder& builder, std::vector<std::shared_ptr<Condition> >& queries)
 {
@@ -93,7 +93,7 @@ std::vector<std::string> explode(std::string const & s)
 ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 {
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-k") == 0 || strcmp(argv[i], "--k-bound") == 0) {
+        if (strcmp(argv[i], "-k") == 0 || strcmp(argv[i], "--k-bound") == 0) {  
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n", argv[i]);
                 return ErrorCode;
@@ -130,6 +130,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                         return ErrorCode;
                 }
         } else if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--query-reduction") == 0) {
+            options.querysimplification = true;
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
                 return ErrorCode;
@@ -137,6 +138,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             if (sscanf(argv[++i], "%d", &options.queryReductionTimeout) != 1 || options.queryReductionTimeout < 0) {
                 fprintf(stderr, "Argument Error: Invalid query reduction timeout argument \"%s\"\n", argv[i]);
                 return ErrorCode;
+            }
+            if (options.queryReductionTimeout == 0) {
+                options.querysimplification = false;
             }
         } else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--lpsolve-timeout") == 0) {
             if (i == argc - 1) {
@@ -183,7 +187,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 return ErrorCode;
             }
         } else if(strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--partial-order-reduction") == 0) {
-            options.stubbornreduction = true;
+            options.stubbornreduction = false;
         } else if(strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--siphon-trap") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -192,7 +196,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             if (sscanf(argv[++i], "%d", &options.siphontrapTimeout) != 1 || options.siphontrapTimeout < 0) {
                 fprintf(stderr, "Argument Error: Invalid siphon-trap timeout \"%s\"\n", argv[i]);
                 return ErrorCode;
-            }            
+            }
+            options.siphontrapenabled = true;
         } else if (strcmp(argv[i], "-ctl") == 0){
             options.isctl = true;
             if(argc > i + 1){
@@ -204,6 +209,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     i++;
                     options.ctlalgorithm = CTL::CZero;
                 }
+
             }
         } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
             options.gamemode = true;
@@ -223,14 +229,14 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - RDFS         Random depth first search\n"
                     "  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
                     "  -x, --xml-query <query index>      Parse XML query file and verify query of a given index\n"
-                    "  -r, --reduction                    Enable structural net reduction:\n"
-                    "                                     - 0  disabled (default)\n"
-                    "                                     - 1  aggressive reduction\n"
+                    "  -r, --reduction                    Change structural net reduction:\n"
+                    "                                     - 0  disabled\n"
+                    "                                     - 1  aggressive reduction (default)\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
-                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds, default 30\n"
+                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds, default 30, write -q 0 to disable query reduction\n"
                     "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
-                    "  -p, --partial-order-reduction      Enable partial order reduction (stubborn sets)\n"
-                    "  -a, --siphon-trap <timeout>        Enable Siphon-Trap analysis, default 30\n"
+                    "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
+                    "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds, default 0\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
@@ -479,6 +485,7 @@ int main(int argc, char* argv[]) {
     ReturnValue v = parseOptions(argc, argv, options);
     if(v != ContinueCode) return v;
     
+    options.print();
   
     PetriNetBuilder builder;
     PNMLParser::TransitionEnablednessMap transitionEnabledness;
@@ -587,7 +594,7 @@ int main(int argc, char* argv[]) {
     {
         q->indexPlaces(builder.getPlaceNames());
     }
-    
+     
     //----------------------- Siphon Trap ------------------------//
     
     if(options.siphontrapTimeout > 0){   
@@ -619,6 +626,7 @@ int main(int argc, char* argv[]) {
     //Analyse context again to reindex query
     contextAnalysis(builder, queries);
     
+    
     //Reachability search
     strategy.reachable(queries, results, 
             options.strategy,
@@ -626,7 +634,7 @@ int main(int argc, char* argv[]) {
             options.statespaceexploration,
             options.printstatistics, 
             options.trace);
-
+    
     printStats(builder, options);
     
     delete net;
