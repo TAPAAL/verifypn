@@ -1341,6 +1341,45 @@ namespace PetriEngine {
             return depth > 0;
         }
         
+        /******************** Check if query is an upper bound query ********************/
+        
+        bool QuantifierCondition::isUpperBound() {
+            return _cond->isUpperBound();
+        }
+        
+        bool UntilCondition::isUpperBound() {
+            return false;
+        }
+        
+        bool LogicalCondition::isUpperBound() {
+            if (placeNameForBound().size() != 0) {
+                return true;
+            } else {
+                return _cond1->isUpperBound() && _cond2->isUpperBound();
+            }
+        }
+        
+        bool CompareCondition::isUpperBound() {
+            if (placeNameForBound().size() != 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        
+        bool NotCondition::isUpperBound() {
+            return false;
+        }
+        
+        bool BooleanCondition::isUpperBound() {
+            return false;
+        }
+        
+        bool DeadlockCondition::isUpperBound() {
+            return false;
+        }
+        
+        
         /******************** Prepare Reachability Queries ********************/
         
         Condition_ptr EXCondition::prepareForReachability(bool negated) const {

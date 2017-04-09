@@ -200,6 +200,7 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const;
             virtual Retval simplify(SimplificationContext context) const = 0;
             virtual bool isReachability(uint32_t depth) const = 0;
+            bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const = 0;
             virtual std::string toXML(uint32_t tabs) const = 0;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
@@ -297,6 +298,7 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const;
             virtual Retval simplify(SimplificationContext context) const = 0;
             bool isReachability(uint32_t depth) const;
+            bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
             virtual std::string toXML(uint32_t tabs) const = 0;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
@@ -348,6 +350,7 @@ namespace PetriEngine {
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             bool isReachability(uint32_t depth) const;
+            bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
             virtual std::string toXML(uint32_t tabs) const = 0;
             
@@ -410,6 +413,7 @@ namespace PetriEngine {
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             bool isReachability(uint32_t depth) const;
+            bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
             virtual std::string toXML(uint32_t tabs) const = 0;
             
@@ -547,6 +551,7 @@ namespace PetriEngine {
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
+            bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
             std::string toXML(uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
@@ -570,6 +575,7 @@ namespace PetriEngine {
             static Condition_ptr FALSE;
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
+            bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
             std::string toXML(uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
@@ -591,6 +597,7 @@ namespace PetriEngine {
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             Retval simplify(SimplificationContext context) const;
             bool isReachability(uint32_t depth) const;
+            bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
             std::string toXML(uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;

@@ -130,7 +130,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                         return ErrorCode;
                 }
         } else if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--query-reduction") == 0) {
-            options.querysimplification = true;
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
                 return ErrorCode;
@@ -138,9 +137,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             if (sscanf(argv[++i], "%d", &options.queryReductionTimeout) != 1 || options.queryReductionTimeout < 0) {
                 fprintf(stderr, "Argument Error: Invalid query reduction timeout argument \"%s\"\n", argv[i]);
                 return ErrorCode;
-            }
-            if (options.queryReductionTimeout == 0) {
-                options.querysimplification = false;
             }
         } else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--lpsolve-timeout") == 0) {
             if (i == argc - 1) {
@@ -288,6 +284,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         options.queryReductionTimeout = 0;
         options.lpsolveTimeout = 0;
         options.siphontrapTimeout = 0;
+        options.siphontrapenabled = false;
         options.stubbornreduction = false;
 //        outputtrace = false;
     }
@@ -491,13 +488,12 @@ int main(int argc, char* argv[]) {
   
     PetriNetBuilder builder;
     PNMLParser::TransitionEnablednessMap transitionEnabledness;
-    PetriNet* net;
     
     if(parseModel(transitionEnabledness, builder, options) != ContinueCode) return ErrorCode;
     
     //----------------------- CTL Engine - for testing ------------------------//
     if(options.isctl){
-        net = builder.makePetriNet();
+        PetriNet* net = builder.makePetriNet();
         ReturnValue rv = CTLMain(net,
                     options.queryfile,
                     options.ctlalgorithm,
@@ -522,44 +518,47 @@ int main(int argc, char* argv[]) {
     //----------------------- Query Simplification -----------------------//
     bool alldone = options.queryReductionTimeout > 0;
     PetriNetBuilder b2(builder);
-    net = b2.makePetriNet(false);
-    MarkVal* m0 = net->makeInitialMarking();
+    PetriNet* qnet = b2.makePetriNet(false);
+    MarkVal* m0 = qnet->makeInitialMarking();
     ResultPrinter p2(&b2, &options, querynames);
     
     if (options.queryReductionTimeout > 0) {
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            queries[i] = (queries[i]->simplify(SimplificationContext(m0, net, 
+            if (queries[i]->isUpperBound()) continue;
+            queries[i] = (queries[i]->simplify(SimplificationContext(m0, qnet, 
                     options.queryReductionTimeout, options.lpsolveTimeout))).formula;   
         }
     }
     
-    delete net;
+    delete qnet;
     delete[] m0;
     
-    for(size_t i = 0; i < queries.size(); ++i)
-    {
-        if(queries[i]->toString() == "true"){
-            results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
-        } else if (queries[i]->toString() == "false") {
-            results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
-        } else if (!queries[i]->isReachability()) {
-            results[i] = ResultPrinter::CTL;
-            alldone = false;
-        } else {
-            queries[i] = queries[i]->prepareForReachability();
-            alldone = false;
+    if (!options.statespaceexploration){
+        for(size_t i = 0; i < queries.size(); ++i)
+        {
+            if(queries[i]->toString() == "true"){
+                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
+            } else if (queries[i]->toString() == "false") {
+                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
+            } else if (!queries[i]->isReachability()) {
+                results[i] = ResultPrinter::CTL;
+                alldone = false;
+            } else {
+                queries[i] = queries[i]->prepareForReachability();
+                alldone = false;
+            }
         }
+        
+        if(alldone) return SuccessCode;
     }
- 
-    if(alldone) return SuccessCode;
-    
+
     //----------------------- Verify CTL queries -----------------------//
     
     std::string CTLQueries = getXMLQueries(queries, querynames, results);
     
     if (CTLQueries.size() > 0) {
-        net = builder.makePetriNet();
+        PetriNet* ctlnet = builder.makePetriNet();
         // Update query indexes
         int ctlQueryCount = std::count(results.begin(), results.end(), ResultPrinter::CTL);
         options.querynumbers.clear();
@@ -568,7 +567,7 @@ int main(int argc, char* argv[]) {
             options.querynumbers.insert(x);
         }
         
-        v = CTLMain(net,
+        v = CTLMain(ctlnet,
             options.queryfile,
             options.ctlalgorithm,
             options.strategy,
@@ -578,7 +577,7 @@ int main(int argc, char* argv[]) {
             options.mccoutput,
             CTLQueries);
         
-        delete net;
+        delete ctlnet;
         
         if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
             return v;
@@ -592,28 +591,25 @@ int main(int argc, char* argv[]) {
         builder.reduce(queries, results, options.enablereduction, options.trace);
         printer.setReducer(builder.getReducer());        
     }
-
-    //----------------------- Index Places -----------------------//
-
-    for(auto& q : queries)
-    {
-        q->indexPlaces(builder.getPlaceNames());
-    }
-     
+    
     //----------------------- Siphon Trap ------------------------//
     
-    if(options.siphontrapTimeout > 0){   
+    if(options.siphontrapTimeout > 0){
         
         for (uint32_t i = 0; i < results.size(); i ++) {
             
             bool isDeadlockQuery = queries[i]->toString() == "deadlock";
  
-            if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {
+            if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {    
                 PetriNetBuilder b3(builder);
-                net = b3.makePetriNet(false);
+                PetriNet* snet = b3.makePetriNet(false);
                 ResultPrinter p3(&b3, &options, querynames);
                 
-                STSolver stSolver(p3, *net, queries[i].get());
+                for(auto& q : queries) {
+                    q->indexPlaces(builder.getPlaceNames());
+                }
+                
+                STSolver stSolver(p3, *snet, queries[i].get());
                 stSolver.Solve(options.siphontrapTimeout);
                 
                 results[i] = stSolver.PrintResult();
@@ -626,8 +622,14 @@ int main(int argc, char* argv[]) {
     }
     
     //----------------------- Reachability -----------------------//
+
+    PetriNet* net = builder.makePetriNet();
     
-    net = builder.makePetriNet();
+    for(auto& q : queries)
+    {
+        q->indexPlaces(builder.getPlaceNames());
+    }
+    
     //Create reachability search strategy
     ReachabilitySearch strategy(printer, *net, options.kbound);
 

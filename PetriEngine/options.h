@@ -17,7 +17,6 @@ struct options_t {
     char* queryfile = NULL;
     int enablereduction = 1; // 0 ... disabled,  1 ... aggresive (default), 2 ... k-boundedness preserving
     bool stubbornreduction = true;
-    bool querysimplification = true;
     bool siphontrapenabled = false;   
     bool statespaceexploration = false;
     bool printstatistics = true;
@@ -81,7 +80,7 @@ struct options_t {
             optionsOut += ", Stubborn_Reduction=DISABLED";
         }
         
-        if (querysimplification) {
+        if (queryReductionTimeout > 0) {
             optionsOut += ", Query_Simplication=ENABLED, SQTimeout=" + std::to_string(queryReductionTimeout);
         } else {
             optionsOut += ", Query_Simplication=DISABLED";

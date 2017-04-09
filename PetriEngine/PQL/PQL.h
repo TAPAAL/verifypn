@@ -162,6 +162,8 @@ namespace PetriEngine {
             virtual Simplification::Retval simplify(SimplificationContext context) const = 0;
             /** Check if query is a reachability query */
             virtual bool isReachability(uint32_t depth = 0) const = 0;
+            /** Check if query is an upper bound query */
+            virtual bool isUpperBound() = 0;
             /** Prepare reachability queries */
             virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
             /** Output the condition as it currently is to a file in XML */
