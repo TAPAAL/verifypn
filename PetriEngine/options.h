@@ -16,7 +16,7 @@ struct options_t {
     char* queryfile = NULL;
     int enablereduction = 1; // 0 ... disabled,  1 ... aggresive (default), 2 ... k-boundedness preserving
     bool stubbornreduction = true;
-    bool querysimplification = false;
+    bool querysimplification = true;
     bool siphontrapenabled = false;
     bool statespaceexploration = false;
     bool printstatistics = true;

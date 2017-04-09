@@ -129,6 +129,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid query reduction timeout argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+            if (options.queryReductionTimeout == 0) {
+                options.querysimplification = false;
+            }
         } else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--lpsolve-timeout") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -204,10 +207,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 0  disabled\n"
                     "                                     - 1  aggressive reduction (default)\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
-                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds, default 30\n"
+                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds, default 30, write -q 0 to disable query reduction\n"
                     "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
-                    "  -a, --siphon-trap <timeout>        Enable Siphon-Trap analysis, default 0\n"
+                    "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds, default 0\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
@@ -511,7 +514,7 @@ int main(int argc, char* argv[]) {
     {
         q->indexPlaces(builder.getPlaceNames());
     }
-    
+     
     //----------------------- Siphon Trap ------------------------//
     if(options.siphontrapTimeout > 0){
         STSolver stSolver(printer, *net, queries[0].get());
