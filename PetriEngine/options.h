@@ -52,7 +52,7 @@ struct options_t {
         }
         
         if (kbound > 0) {
-            optionsOut += ", Token_Bound=" + kbound;
+            optionsOut += ", Token_Bound=" + std::to_string(kbound);
         }
         
         if (statespaceexploration) {
