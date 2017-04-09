@@ -49,6 +49,26 @@ ReturnValue parseQueries(const char *filename,
     return ContinueCode;
 }
 
+ReturnValue parseReducedQueries(std::string reducedQueries,
+                        PetriEngine::PetriNet* net,
+                        vector<CTLQuery*> &queries,
+                        QueryMeta &meta){
+
+    vector<char> buffer(reducedQueries.begin(), reducedQueries.end());
+    buffer.push_back('\0');
+
+    CTLParser qparser = CTLParser();
+    meta = *qparser.GetQueryMetaData(buffer);
+
+    for(int i = 0; i < meta.numberof_queries; ++i){
+        auto q = qparser.ParseXMLQuery(buffer, i + 1);
+        q = qparser.FormatQuery(q, net);
+        queries.push_back(q);
+    }
+
+    return ContinueCode;
+}
+
 ReturnValue makeCTLResults(vector<CTLResult>& results,
                            const vector<CTLQuery*>& queries,
                            const QueryMeta& meta,
@@ -147,7 +167,8 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
                     std::set<size_t> querynumbers,
                     bool gamemode,
                     bool printstatistics,
-                    bool mccoutput)
+                    bool mccoutput,
+                    std::string reducedQueries)
 {
     vector<CTLQuery*> queries;
     vector<CTLResult> results;
@@ -156,7 +177,12 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
     SearchStrategy::iSequantialSearchStrategy* strategy = nullptr;
     Algorithm::FixedPointAlgorithm* alg = nullptr;
 
-    if(parseQueries(queryfile, net, queries, meta) == ErrorCode) return ErrorCode;
+    if(reducedQueries.size() > 0) {
+        if(parseReducedQueries(reducedQueries, net, queries, meta) == ErrorCode) return ErrorCode;
+    } else {
+        if(parseQueries(queryfile, net, queries, meta) == ErrorCode) return ErrorCode;
+    }
+    
     //exit(EXIT_FAILURE);
     if(makeCTLResults(results, queries, meta, querynumbers, printstatistics, mccoutput) == ErrorCode) return ErrorCode;
 

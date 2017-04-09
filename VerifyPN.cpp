@@ -114,21 +114,21 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 				options.strategy = BFS;
 			else if(strcmp(s, "DFS") == 0)
 				options.strategy = DFS;
-            else if(strcmp(s, "RDFS") == 0)
-                options.strategy = RDFS;
+                        else if(strcmp(s, "RDFS") == 0)
+                            options.strategy = RDFS;
 			else{
 				fprintf(stderr, "Argument Error: Unrecognized search strategy \"%s\"\n", s);
 				return ErrorCode;
 			}
-		} else if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--memory-limit") == 0) {
-			if (i == argc - 1) {
-				fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
-				return ErrorCode;
-			}
-			if (sscanf(argv[++i], "%zu", &options.memorylimit) != 1) {
-				fprintf(stderr, "Argument Error: Invalid memory limit \"%s\"\n", argv[i]);
-				return ErrorCode;
-			}
+        } else if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--memory-limit") == 0) {
+                if (i == argc - 1) {
+                        fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                        return ErrorCode;
+                }
+                if (sscanf(argv[++i], "%zu", &options.memorylimit) != 1) {
+                        fprintf(stderr, "Argument Error: Invalid memory limit \"%s\"\n", argv[i]);
+                        return ErrorCode;
+                }
         } else if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--query-reduction") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -444,29 +444,23 @@ void printStats(PetriNetBuilder& builder, options_t& options)
     }
 }
 
-void outputCTL(vector<std::shared_ptr<Condition>> queries, vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
-    bool cont = false;
-    uint32_t k;
-    
+std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
+    bool cont = false;    
     for(uint32_t i = 0; i < results.size(); i++) {
-        if (results[i] == ResultPrinter::EXPORT) {
+        if (results[i] == ResultPrinter::CTL) {
             cont = true;
-            k = i;
             break;
         }
     }
     
     if (!cont) {
-        return;
+        return "";
     }
-    
-    ofstream file;
-    file.open(querynames[k] + ".xml");
             
     string outputstring = "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
     
     for(uint32_t i = 0; i < queries.size(); i++) {
-        if (!(results[i] == ResultPrinter::EXPORT)) {
+        if (!(results[i] == ResultPrinter::CTL)) {
             continue;
         }
         outputstring += "  <property>\n    <id>" + querynames[i] + "</id>\n    <description>Simplified</description>\n    <formula>\n";
@@ -475,12 +469,8 @@ void outputCTL(vector<std::shared_ptr<Condition>> queries, vector<std::string> q
     }
             
     outputstring += "</property-set>\n";
-            
-    file << outputstring;
-            
-    file.close();
     
-    return;
+    return outputstring;
 }
 
 int main(int argc, char* argv[]) {
@@ -494,11 +484,11 @@ int main(int argc, char* argv[]) {
     PNMLParser::TransitionEnablednessMap transitionEnabledness;
     
     if(parseModel(transitionEnabledness, builder, options) != ContinueCode) return ErrorCode;
-
-    //----------------------- CTL Engine ------------------------//
+    
+    //----------------------- CTL Engine - for testing ------------------------//
     if(options.isctl){
-        auto* net = builder.makePetriNet();
-        v = CTLMain(net,
+        PetriNet* net = builder.makePetriNet();
+        return CTLMain(net,
                     options.queryfile,
                     options.ctlalgorithm,
                     options.strategy,
@@ -506,11 +496,10 @@ int main(int argc, char* argv[]) {
                     options.gamemode,
                     options.printstatistics,
                     options.mccoutput);
-        return v;
     }
-
-    std::vector<std::string> querynames;
+    
     //----------------------- Parse Query -----------------------//
+    std::vector<std::string> querynames;
     auto queries = readQueries(transitionEnabledness, options, querynames);
     
     if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
@@ -518,40 +507,72 @@ int main(int argc, char* argv[]) {
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
     
-    //----------------------- Query Simplification and CTL Query Export -----------------------//
+    //----------------------- Query Simplification -----------------------//
     bool alldone = options.queryReductionTimeout > 0;
     PetriNetBuilder b2(builder);
     PetriNet* net = b2.makePetriNet(false);
     MarkVal* m0 = net->makeInitialMarking();
     ResultPrinter p2(&b2, &options, querynames);
-    if (options.queryReductionTimeout > 0) {    
+    
+    if (options.queryReductionTimeout > 0) {  
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            queries[i] = (queries[i]->simplify(SimplificationContext(m0, net, options.queryReductionTimeout, options.lpsolveTimeout))).formula;   
+            queries[i] = (queries[i]->simplify(SimplificationContext(m0, net, 
+                    options.queryReductionTimeout, options.lpsolveTimeout))).formula;   
         }
     }
+    
     delete net;
-    delete[] m0; 
+    delete[] m0;
     
     for(size_t i = 0; i < queries.size(); ++i)
-    {           
+    {
         if(queries[i]->toString() == "true"){
             results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
         } else if (queries[i]->toString() == "false") {
             results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
         } else if (!queries[i]->isReachability()) {
-            results[i] = ResultPrinter::EXPORT;
-        } else {              
+            results[i] = ResultPrinter::CTL;
+            alldone = false;
+        } else {
             queries[i] = queries[i]->prepareForReachability();
             alldone = false;
         }
     }
-    
-    // Export queries here
-    outputCTL(queries, querynames, results);
  
     if(alldone) return SuccessCode;
     
+    //----------------------- Verify CTL queries -----------------------//
+    
+    std::string CTLQueries = getXMLQueries(queries, querynames, results);
+    
+    if (CTLQueries.size() > 0) {
+        // Update query indexes
+        int ctlQueryCount = std::count(results.begin(), results.end(), ResultPrinter::CTL);
+        options.querynumbers.clear();
+        
+        for (int x = 0; x < ctlQueryCount; x++) {
+            options.querynumbers.insert(x);
+        }
+        
+        net = builder.makePetriNet();
+        v = CTLMain(net,
+            options.queryfile,
+            options.ctlalgorithm,
+            options.strategy,
+            options.querynumbers,
+            options.gamemode,
+            options.printstatistics,
+            options.mccoutput,
+            CTLQueries);
+        
+        delete net;
+        
+        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+            return v;
+        }
+    }
+
     //--------------------- Apply Net Reduction ---------------//
         
     if (options.enablereduction == 1 || options.enablereduction == 2) {
@@ -560,9 +581,7 @@ int main(int argc, char* argv[]) {
         printer.setReducer(builder.getReducer());        
     }
 
-    //----------------------- Reachability -----------------------//
-
-    net = builder.makePetriNet();
+    //----------------------- Index Places -----------------------//
     
     for(auto& q : queries)
     {
@@ -570,24 +589,34 @@ int main(int argc, char* argv[]) {
     }
     
     //----------------------- Siphon Trap ------------------------//
-    if(options.siphontrapTimeout > 0){
-        STSolver stSolver(printer, *net, queries[0].get());
-        stSolver.Solve(options.siphontrapTimeout);
+    
+    if(options.siphontrapTimeout > 0){   
         
-        if(stSolver.PrintResult() == ResultPrinter::NotSatisfied){
-            return SuccessCode;
+        for (uint32_t i = 0; i < results.size(); i ++) {
+            net = builder.makePetriNet();
+            bool isDeadlockQuery = queries[i]->toString() == "deadlock";
+ 
+            if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {
+                STSolver stSolver(printer, *net, queries[i].get());
+                stSolver.Solve(options.siphontrapTimeout);
+                
+                results[i] = stSolver.PrintResult();
+            }
         }
-        else{
-            return ErrorCode;
-        }   
+                
+        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+            return 0;
+        }
     }
     
     //----------------------- Reachability -----------------------//
     
+    net = builder.makePetriNet();
+    
     //Create reachability search strategy
     ReachabilitySearch strategy(printer, *net, options.kbound);
 
-    // analyse context again to reindex query
+    //Analyse context again to reindex query
     contextAnalysis(builder, queries);
     
     //Reachability search

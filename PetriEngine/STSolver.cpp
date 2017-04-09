@@ -220,7 +220,7 @@ namespace PetriEngine {
         if(_ret == INFEASIBLE){
             return printer.printResult(0, _query, Reachability::ResultPrinter::NotSatisfied);
         } else {
-            return printer.printResult(0, _query, Reachability::ResultPrinter::Unknown);
+            return Reachability::ResultPrinter::Unknown;
         }
     }
     

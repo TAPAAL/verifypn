@@ -48,8 +48,8 @@ namespace PetriEngine {
                 NotSatisfied,
                 /** We're unable to say if the query can be satisfied */
                 Unknown,
-                /** The query should be exported to */
-                EXPORT
+                /** The query should be verified using the CTL engine */
+                CTL
             };
             
             ResultPrinter(PetriNetBuilder* b, options_t* o, std::vector<std::string>& querynames) 

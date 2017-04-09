@@ -16,6 +16,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
                     std::set<size_t> querynumbers,
                     bool gamemode,
                     bool printstatistics,
-                    bool mccoutput);
+                    bool mccoutput,
+                    std::string reducedQueries = "");
 
 #endif // CTLENGINE_H
