@@ -262,31 +262,29 @@ void OnTheFlyDG::successors(Configuration *c)
                     }   // else: right condition is not satisfied, no need to add an edge
                 }
 
+
                 Configuration *left = NULL;
                 bool valid = false;
-                nextStates(query_marking,
-                            [&](){
-                                if (v->query->GetFirstChild()->IsTemporal) {
-                                    left = createConfiguration(v->marking, *(v->query->GetFirstChild()));
-                                } else {
-                                    valid = fastEval(*(v->query->GetFirstChild()), v->marking, NULL);
-                                }                        
-                            },
-                            [&](size_t m, Marking&)
-                            {
-                                if(!(left != NULL || valid)) return false;
-                                Edge* e = new Edge(*v);
-                                Configuration* c1 = createConfiguration(m, *(v->query));
-                                e->targets.push_back(c1);
-                                if (left != NULL) {
-                                    e->targets.push_back(left);
-                                }
-                                v->successors.push_back(e);
-                                return true;
-                            },
-                            [](){}
-                        );
-                        
+                nextStates(query_marking, 
+                    [&](){
+                        if (v->query->GetFirstChild()->IsTemporal) {
+                            left = createConfiguration(v->marking, *(v->query->GetFirstChild()));
+                        } else {
+                            valid = fastEval(*(v->query->GetFirstChild()), v->marking, &query_marking);
+                        }                        
+                    },
+                    [&](size_t m, Marking&){
+                        if(left == NULL && !valid) return false;
+                        Edge* e = new Edge(*v);
+                        Configuration* c1 = createConfiguration(m, *(v->query));
+                        e->targets.push_back(c1);
+                        if (left != NULL) {
+                            e->targets.push_back(left);
+                        }
+                        v->successors.push_back(e);
+                        return true;
+                }, [](){});
+
                 if (right != NULL) {
                     v->successors.push_back(right);
                 }
@@ -322,24 +320,19 @@ void OnTheFlyDG::successors(Configuration *c)
                 }
             }
             else if(v->query->GetPath() == X){
-
+                auto targets = nextStates(query_marking);
                 CTLQuery* query = v->query->GetFirstChild();
-                if (query->IsTemporal) {    //have to check, no way to skip that
-                    nextStates(query_marking, 
-                            [](){},
-                            [&](size_t m, Marking&){
-                                Edge* e = new Edge(*v);
-                                Configuration* c = createConfiguration(m, *query);
-                                e->targets.push_back(c);
-                                v->successors.push_back(e);
-                                return true;
-                            },
-                            [](){}
-                        );
-                } else {
-                    auto targets = nextStates(query_marking);
-                    if(!targets.empty())
-                    {
+
+                if(!targets.empty())
+                {
+                    if (query->IsTemporal) {    //have to check, no way to skip that
+                        for(auto m : targets){
+                            Edge* e = new Edge(*v);
+                            Configuration* c = createConfiguration(m, *query);
+                            e->targets.push_back(c);
+                            v->successors.push_back(e);
+                        }
+                    } else {
                         for(auto m : targets) {
                             bool valid = fastEval(*query, m, NULL);
                             if (valid) {
