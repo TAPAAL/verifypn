@@ -53,12 +53,11 @@ protected:
     //used after query is set
     CTLQuery *query = nullptr;
 
-    bool evaluateQuery(CTLQuery &query, size_t marking);
-    bool fastEval(CTLQuery &query, size_t marking);
-    std::vector<size_t> nextStates(size_t marking);
-    void nextStates(size_t t_marking, 
+    bool evaluateQuery(CTLQuery &query, size_t marking, Marking* unfolded);
+    bool fastEval(CTLQuery &query, size_t marking, Marking* unfolded);
+    void nextStates(Marking& t_marking, 
     std::function<void ()> pre, 
-    std::function<bool (size_t)> foreach, 
+    std::function<bool (size_t, Marking&)> foreach, 
     std::function<void ()> post);
     bool EvalCardianlity(int a, LoperatorType lop, int b);
     int GetParamValue(CardinalityParameter *param, Marking& marking);
