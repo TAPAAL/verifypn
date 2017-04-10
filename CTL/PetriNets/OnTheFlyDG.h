@@ -40,7 +40,7 @@ protected:
     //initialized from constructor
     AlignedEncoder encoder;
     PetriEngine::PetriNet *net = nullptr;
-    size_t initial_marking;
+    PetriConfig* initial_config;
     Marking working_marking;
     Marking query_marking;
     uint32_t n_transitions = 0;
@@ -56,7 +56,7 @@ protected:
     std::vector<size_t> nextStates(size_t marking);
     bool EvalCardianlity(int a, LoperatorType lop, int b);
     int GetParamValue(CardinalityParameter *param, Marking& marking);
-    DependencyGraph::Configuration *createConfiguration(size_t marking, CTLQuery &query);
+    PetriConfig *createConfiguration(size_t marking, CTLQuery &query);
     size_t createMarking(Marking &marking);
     void markingStats(const uint32_t* marking, size_t& sum, bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last);
 

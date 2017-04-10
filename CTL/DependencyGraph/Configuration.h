@@ -42,11 +42,6 @@ public:
     Assignment assignment = UNKNOWN;
     container_type successors = container_type(0);
     std::vector<Edge*> dependency_set;
-    //first is an ID of a worker, second is latest message id (negative if halt)
-    std::vector<std::pair<int, long>> interested;
-
-    void updateInterest(int worker, long id);
-    bool hasActiveDependencies();
 };
 
 

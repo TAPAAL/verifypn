@@ -17,8 +17,6 @@ OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net) : encoder(t_net->numberOfPl
 
     working_marking.setMarking(t_net->makeInitialMarking());
     query_marking.setMarking(t_net->makeInitialMarking());
-    
-    initial_marking = createMarking(working_marking);
 }
 
 
@@ -407,9 +405,7 @@ bool OnTheFlyDG::EvalCardianlity(int a, LoperatorType lop, int b) {
 
 Configuration* OnTheFlyDG::initialConfiguration()
 {
-    //initial marking is inserted into the set in the constructor
-    Configuration *v = createConfiguration(initial_marking, *query);
-    return v;
+    return initial_config;
 }
 
 std::vector<size_t> OnTheFlyDG::nextStates(size_t t_marking){
@@ -437,6 +433,7 @@ void OnTheFlyDG::setQuery(CTLQuery *query)
 {
     cleanUp();
     this->query = query;
+    initial_config = createConfiguration(createMarking(working_marking), *query);
 }
 
 int OnTheFlyDG::configurationCount() const
@@ -449,7 +446,7 @@ int OnTheFlyDG::markingCount() const
     return _markingCount;
 }
 
-Configuration *OnTheFlyDG::createConfiguration(size_t t_marking, CTLQuery &t_query)
+PetriConfig *OnTheFlyDG::createConfiguration(size_t t_marking, CTLQuery &t_query)
 {
     auto& configs = trie.getData(t_marking);
     for(PetriConfig* c : configs){
