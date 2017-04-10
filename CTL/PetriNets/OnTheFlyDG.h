@@ -10,9 +10,6 @@
 #include "PetriEngine/Structures/ptrie_map.h"
 #include "PetriEngine/Structures/AlignedEncoder.h"
 
-#include <unordered_set>
-#include <list>
-
 namespace PetriNets {
 
 class OnTheFlyDG : public DependencyGraph::BasicDependencyGraph
