@@ -230,14 +230,14 @@ namespace PetriEngine {
                        
             virtual void setHistory(size_t id, size_t transition) override 
             {
-                traceable_t& t = _trie.getData(id);
+                traceable_t& t = _trie.get_data(id);
                 t.parent = _parent;
                 t.transition = transition;
             }
             
             virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
             {
-                traceable_t& t = _trie.getData(markingid);
+                traceable_t& t = _trie.get_data(markingid);
                 return std::pair<size_t, size_t>(t.parent, t.transition);
             }
             

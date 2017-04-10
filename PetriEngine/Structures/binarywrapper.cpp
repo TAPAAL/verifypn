@@ -137,24 +137,35 @@ namespace ptrie
     {
         if(size > 0)
         {
-            assert(false);
             _blob = allocate(size);
+            _nbytes = size;
             memcpy(raw(), data, size);
             assert(data[0] == raw()[0]);
+        }
+        else
+        {
+            _nbytes = 0;
+            release();
         }
     }
         
     // accessors
     
-    void binarywrapper_t::print(size_t length) const
+    void binarywrapper_t::print(std::ostream& stream, size_t length) const
     {
         std::stringstream ss;
-        for (size_t i = 0; i < _nbytes * 8 && i < length; i++)
-        {
-            if(i % 8 == 0 && i != 0) ss << "-";
+        ss << _nbytes << " bytes : ";
+        for (size_t i = 0; i < _nbytes * 8 && i < length; i++) {
+            if (i % 8 == 0 && i != 0) ss << "-";
             ss << this->at(i);
         }
-        ss << std::endl;
-        std::cerr << ss.str();
+        stream << ss.str();
+    }
+}
+
+namespace std {
+    std::ostream &operator<<(std::ostream &os, const ptrie::binarywrapper_t &b) {
+        b.print(os);
+        return os;
     }
 }

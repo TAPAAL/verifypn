@@ -474,7 +474,7 @@ int OnTheFlyDG::markingCount() const
 
 PetriConfig *OnTheFlyDG::createConfiguration(size_t t_marking, CTLQuery &t_query)
 {
-    auto& configs = trie.getData(t_marking);
+    auto& configs = trie.get_data(t_marking);
     for(PetriConfig* c : configs){
         if(c->query == &t_query)
             return c;
