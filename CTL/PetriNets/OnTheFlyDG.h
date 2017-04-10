@@ -55,6 +55,7 @@ protected:
 
     bool evaluateQuery(CTLQuery &query, size_t marking, Marking* unfolded);
     bool fastEval(CTLQuery &query, size_t marking, Marking* unfolded);
+    std::vector<size_t> nextStates(Marking& t_marking);
     void nextStates(Marking& t_marking, 
     std::function<void ()> pre, 
     std::function<bool (size_t, Marking&)> foreach, 

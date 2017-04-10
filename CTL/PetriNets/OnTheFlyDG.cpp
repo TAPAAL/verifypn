@@ -157,22 +157,20 @@ void OnTheFlyDG::successors(Configuration *c)
                 }
                 if (valid || left != NULL) {
                     //if left side is guaranteed to be not satisfied, skip successor generation
-                    Edge* leftEdge = NULL;
-                    nextStates(query_marking,
-                            [&](){leftEdge = new Edge(*v);},
-                            [&](size_t m, Marking&)
-                            {
-                                Configuration* c = createConfiguration(m, *(v->query));
-                                leftEdge->targets.push_back(c); 
-                                return true;
-                            },
-                            [&](){
-                                if (left != NULL) {
-                                    leftEdge->targets.push_back(left);
-                                }
-                                v->successors.push_back(leftEdge);                                
-                            }
-                        );
+                    auto targets = nextStates (query_marking);
+
+                    if(!targets.empty()){
+                        Edge* leftEdge = new Edge(*v);
+
+                        for(auto m : targets){
+                            Configuration* c = createConfiguration(m, *(v->query));
+                            leftEdge->targets.push_back(c);
+                        }
+                        if (left != NULL) {
+                            leftEdge->targets.push_back(left);
+                        }
+                        v->successors.push_back(leftEdge);
+                    }
                 } //else: Left side is not temporal and it's false, no way to succeed there...
 
                 if (right != NULL) {
@@ -193,53 +191,44 @@ void OnTheFlyDG::successors(Configuration *c)
                     subquery->targets.push_back(c);
                 }
 
-                Edge* e1 = NULL;
-                nextStates  (query_marking,
-                                [&](){e1 = new Edge(*v);},
-                                [&](size_t m, Marking&)
-                                {
-                                    Configuration* c = createConfiguration(m, *(v->query));
-                                    e1->targets.push_back(c);   
-                                    return true;
-                                },
-                                [&]()
-                                {
-                                    v->successors.push_back(e1);
-                                }
-                            );
+                auto targets = nextStates(query_marking);
+
+                if(!targets.empty()){
+                    Edge* e1 = new Edge(*v);
+
+                    for(auto m : targets){
+                        Configuration* c = createConfiguration(m, *(v->query));
+                        e1->targets.push_back(c);
+                    }
+                    v->successors.push_back(e1);
+                }
+
                 if (subquery != NULL) {
                     v->successors.push_back(subquery);
                 }
             }
             else if(v->query->GetPath() == X){
+                auto targets = nextStates(query_marking);
                 if (v->query->GetFirstChild()->IsTemporal) {   //regular check
-                    Edge* e = NULL;
-                    nextStates(query_marking, 
-                                [&](){ e = new Edge(*v); },
-                                [&](size_t m, Marking&){
-                                    Configuration* c = createConfiguration(m, *(v->query->GetFirstChild()));
-                                    e->targets.push_back(c);
-                                    return true;
-                                },
-                                [&](){v->successors.push_back(e);}
-                            );
+                    Edge* e = new Edge(*v);
+                    for (auto m : targets){
+                        Configuration* c = createConfiguration(m, *(v->query->GetFirstChild()));
+                        e->targets.push_back(c);
+                    }
+                    v->successors.push_back(e);
                 } else {
                     bool allValid = true;
-
-                    nextStates(query_marking, 
-                                [&](){},
-                                [&](size_t m, Marking& marking){
-                                    allValid = allValid || fastEval(*(v->query->GetFirstChild()), m, &marking);
-                                    if(!allValid) return false;
-                                    return true;
-                                },
-                                [&](){
-                                    if(allValid)
-                                    {
-                                        v->successors.push_back(new Edge(*v));
-                                    }
-                                }
-                            );
+                    for (auto m : targets) {
+                        bool valid = fastEval(*(v->query->GetFirstChild()), m, NULL);
+                        if (!valid) {
+                            allValid = false;
+                            break;
+                        }
+                    }
+                    if (allValid) {
+                        v->successors.push_back(new Edge(*v));
+                        return;
+                    }
                 }
             }
             else if(v->query->GetPath() == G ){
@@ -262,34 +251,29 @@ void OnTheFlyDG::successors(Configuration *c)
                         return;
                     }   // else: right condition is not satisfied, no need to add an edge
                 }
-                
-                Configuration *left = NULL;
-                bool valid = false;
-                nextStates(query_marking,
-                                [&]()
-                                {
-                                    if (v->query->GetFirstChild()->IsTemporal) {
-                                        left = createConfiguration(v->marking, *(v->query->GetFirstChild()));
-                                    } else {
-                                        valid = fastEval(*(v->query->GetFirstChild()), v->marking, &query_marking);
-                                    }                                
-                                },
-                                [&](size_t m, Marking&)
-                                {
-                                    if(left != NULL || valid)
-                                    {
-                                        Edge* e = new Edge(*v);
-                                        Configuration* c1 = createConfiguration(m, *(v->query));
-                                        e->targets.push_back(c1);
-                                        if (left != NULL) {
-                                            e->targets.push_back(left);
-                                        }
-                                        v->successors.push_back(e);
-                                    }
-                                    return true;
-                                },
-                                [](){}
-                            );
+
+                auto targets = nextStates(query_marking);
+
+                if(!targets.empty()){
+                    Configuration *left = NULL;
+                    bool valid = false;
+                    if (v->query->GetFirstChild()->IsTemporal) {
+                        left = createConfiguration(v->marking, *(v->query->GetFirstChild()));
+                    } else {
+                        valid = fastEval(*(v->query->GetFirstChild()), v->marking, NULL);
+                    }
+                    if (left != NULL || valid) {
+                        for(auto m : targets) {
+                            Edge* e = new Edge(*v);
+                            Configuration* c1 = createConfiguration(m, *(v->query));
+                            e->targets.push_back(c1);
+                            if (left != NULL) {
+                                e->targets.push_back(left);
+                            }
+                            v->successors.push_back(e);
+                        }
+                    }
+                }
 
                 if (right != NULL) {
                     v->successors.push_back(right);
@@ -309,50 +293,43 @@ void OnTheFlyDG::successors(Configuration *c)
                     subquery->targets.push_back(c);
                 }
 
-                nextStates(query_marking,
-                        [](){},
-                        [&](size_t m, Marking&){
-                            Edge* e = new Edge(*v);
-                            Configuration* c = createConfiguration(m, *(v->query));
-                            e->targets.push_back(c);
-                            v->successors.push_back(e);            
-                            return true;
-                        },
-                        [](){});
+                auto targets = nextStates(query_marking);
+
+                if(!targets.empty()){
+                    for(auto m : targets){
+                        Edge* e = new Edge(*v);
+                        Configuration* c = createConfiguration(m, *(v->query));
+                        e->targets.push_back(c);
+                        v->successors.push_back(e);
+                    }
+                }
 
                 if (subquery != NULL) {
                     v->successors.push_back(subquery);
                 }
             }
             else if(v->query->GetPath() == X){
+                auto targets = nextStates(query_marking);
                 CTLQuery* query = v->query->GetFirstChild();
 
-                if (query->IsTemporal) {    //have to check, no way to skip that
-                    nextStates(query_marking,
-                        [](){},
-                        [&](size_t m, Marking&){
+                if(!targets.empty())
+                {
+                    if (query->IsTemporal) {    //have to check, no way to skip that
+                        for(auto m : targets){
                             Edge* e = new Edge(*v);
                             Configuration* c = createConfiguration(m, *query);
                             e->targets.push_back(c);
                             v->successors.push_back(e);
-                            return true;
-                        },
-                        [](){});
-
-                } else {
-                    nextStates(query_marking,
-                        [](){},
-                        [&](size_t m, Marking& marking){
-                            if (fastEval(*query, m, &marking)) {
+                        }
+                    } else {
+                        for(auto m : targets) {
+                            bool valid = fastEval(*query, m, NULL);
+                            if (valid) {
                                 v->successors.push_back(new Edge(*v));
-                                return false;
-                            }   
-                            else
-                            {
-                                return true;
-                            }
-                        },
-                        [](){});
+                                return;
+                            }   //else: It can't hold there, no need to create an edge
+                        }
+                    }
                 }
             }
             else if(v->query->GetPath() == G ){
@@ -369,10 +346,9 @@ bool OnTheFlyDG::evaluateQuery(CTLQuery &query, size_t marking, Marking* unfolde
     if(unfolded == NULL)
     {
         trie.unpack(marking, encoder.scratchpad().raw());
-        encoder.decode(query_marking.marking(), encoder.scratchpad().raw());
-        unfolded = &query_marking;
+        encoder.decode(working_marking.marking(), encoder.scratchpad().raw());
+        unfolded = &working_marking;
     }
-    
     
     assert(query.GetQueryType() == EVAL);
     EvaluateableProposition *proposition = query.GetProposition();
@@ -437,9 +413,19 @@ Configuration* OnTheFlyDG::initialConfiguration()
     return initial_config;
 }
 
+
+std::vector<size_t> OnTheFlyDG::nextStates(Marking& t_marking)
+{
+    std::vector<size_t> succs;
+    nextStates(t_marking, 
+            [](){},
+            [&](size_t n, Marking& m){succs.push_back(n); return true;},
+            [](){});
+    return succs;
+}
 void OnTheFlyDG::nextStates(Marking& t_marking, 
     std::function<void ()> pre, 
-    std::function<bool (size_t, Marking& m)> foreach, 
+    std::function<bool (size_t, Marking&)> foreach, 
     std::function<void ()> post)
 {
 
