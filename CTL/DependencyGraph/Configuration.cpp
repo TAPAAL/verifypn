@@ -7,8 +7,6 @@
 DependencyGraph::Configuration::~Configuration() {
     for(Edge *e : successors)
         delete e;
-    for(Edge *e : deleted_successors)
-        delete e;
 }
 
 void DependencyGraph::Configuration::removeSuccessor(DependencyGraph::Edge *t_successor){
@@ -17,10 +15,8 @@ void DependencyGraph::Configuration::removeSuccessor(DependencyGraph::Edge *t_su
 
     while(iter != end){
         if(*iter == t_successor){
-            deleted_successors.insert(deleted_successors.end(), *iter);
             successors.erase(iter);
             successors.shrink_to_fit();
-            deleted_successors.shrink_to_fit();
             break;
         }
         else

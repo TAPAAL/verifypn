@@ -90,7 +90,7 @@ protected:
     bool EvalCardianlity(int a, LoperatorType lop, int b);
     int GetParamValue(CardinalityParameter *param, Marking& marking);
     DependencyGraph::Configuration *createConfiguration(Marking &marking, CTLQuery &query);
-    Marking *createMarking(const Marking &marking);
+    Marking *createMarking(Marking &marking);
 
     MarkingContainer markings;
 };

@@ -471,19 +471,16 @@ Configuration *OnTheFlyDG::createConfiguration(Marking &t_marking, CTLQuery &t_q
 
 
 
-Marking *OnTheFlyDG::createMarking(const Marking& t_marking){
-    Marking* new_marking = new Marking();
+Marking *OnTheFlyDG::createMarking(Marking& t_marking){
 
-    new_marking->copyMarking(t_marking, n_places);
-
-    auto result = markings.find(new_marking);
-
+    auto result = markings.find(&t_marking);
+    // alternatively, allocate first, then try insert, and then
+    // check if existed or not. (avoid dual lookup, but always allocates)
     if(result == markings.end()){
         _markingCount++;
+        Marking* new_marking = new Marking();
+        new_marking->copyMarking(t_marking, n_places);
         return *(markings.insert(new_marking).first);
-    }
-    else{
-        delete new_marking;
     }
 
     return *result;
