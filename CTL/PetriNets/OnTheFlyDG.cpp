@@ -10,18 +10,18 @@ using namespace DependencyGraph;
 
 namespace PetriNets {
 
-OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net){
+OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net) : encoder(t_net->numberOfPlaces(), 0){
     net = t_net;
     n_places = t_net->numberOfPlaces();
     n_transitions = t_net->numberOfTransitions();
-    initial_marking->setMarking(t_net->makeInitialMarking());
+
     working_marking.setMarking(t_net->makeInitialMarking());
-    _markingCount += 1;
+    query_marking.setMarking(t_net->makeInitialMarking());
 
     markings = MarkingContainer(100,                            //Nr. of buckets (bigger maybe?)
                                 MarkingEqualityHasher(t_net),     //hasher
                                 MarkingEqualityHasher(t_net));    //key_equal
-    markings.insert(initial_marking);
+    initial_marking = createMarking(working_marking);
 }
 
 
@@ -344,9 +344,12 @@ void OnTheFlyDG::successors(Configuration *c)
     }
 }
 
-bool OnTheFlyDG::evaluateQuery(CTLQuery &query, size_t imarking)
+bool OnTheFlyDG::evaluateQuery(CTLQuery &query, size_t marking)
 {
-    Marking* marking = (Marking*)imarking;
+    trie.unpack(((Marking*)marking)->pid, encoder.scratchpad().raw());
+    encoder.decode(query_marking.marking(), encoder.scratchpad().raw());
+    
+    
     assert(query.GetQueryType() == EVAL);
     EvaluateableProposition *proposition = query.GetProposition();
 
@@ -355,19 +358,19 @@ bool OnTheFlyDG::evaluateQuery(CTLQuery &query, size_t imarking)
             // We might be able to optimize this out
             // by keeping track of the fired transitions
             // during successor generation
-            if(net->fireable(marking->marking(), f)){
+            if(net->fireable(query_marking.marking(), f)){
                 return true;
             }
         }
         return false;
     }
     else if (proposition->GetPropositionType() == CARDINALITY) {
-        int first_param = GetParamValue(proposition->GetFirstParameter(), *marking);
-        int second_param = GetParamValue(proposition->GetSecondParameter(), *marking);
+        int first_param = GetParamValue(proposition->GetFirstParameter(), query_marking);
+        int second_param = GetParamValue(proposition->GetSecondParameter(), query_marking);
         return EvalCardianlity(first_param, proposition->GetLoperator(), second_param);
     }
     else if (proposition->GetPropositionType() == DEADLOCK) {
-        return net->deadlocked(marking->marking());
+        return net->deadlocked(query_marking.marking());
     }
     else
         assert(false && "Incorrect query proposition type was attempted evaluated");
@@ -408,16 +411,18 @@ bool OnTheFlyDG::EvalCardianlity(int a, LoperatorType lop, int b) {
 Configuration* OnTheFlyDG::initialConfiguration()
 {
     //initial marking is inserted into the set in the constructor
-    Configuration *v = createConfiguration((size_t)initial_marking, *query);
+    Configuration *v = createConfiguration(initial_marking, *query);
     return v;
 }
 
 std::vector<size_t> OnTheFlyDG::nextStates(size_t t_marking){
+    trie.unpack(((Marking*)t_marking)->pid, encoder.scratchpad().raw());
+    encoder.decode(query_marking.marking(), encoder.scratchpad().raw());
 
     std::vector<size_t> nextStates;
     PetriEngine::SuccessorGenerator PNGen(*net);
-    PNGen.prepare((Marking*)t_marking);
-    working_marking.copyMarking(*((Marking*)t_marking), net->numberOfPlaces());
+    PNGen.prepare(&query_marking);
+    working_marking.copyMarking(query_marking, net->numberOfPlaces());
 
     while(PNGen.next(working_marking)){
          nextStates.push_back(createMarking(working_marking));
@@ -449,7 +454,7 @@ int OnTheFlyDG::markingCount() const
 
 Configuration *OnTheFlyDG::createConfiguration(size_t t_marking, CTLQuery &t_query)
 {
-    auto& configs = ((Marking*)t_marking)->configurations;
+    auto& configs = trie.getData(((Marking*)t_marking)->pid);
     for(PetriConfig* c : configs){
         if(c->query == &t_query)
             return c;
@@ -464,18 +469,53 @@ Configuration *OnTheFlyDG::createConfiguration(size_t t_marking, CTLQuery &t_que
 
 
 size_t OnTheFlyDG::createMarking(Marking& t_marking){
+    size_t sum = 0;
+    bool allsame = true;
+    uint32_t val = 0;
+    uint32_t active = 0;
+    uint32_t last = 0;
+    markingStats(t_marking.marking(), sum, allsame, val, active, last);
+    unsigned char type = encoder.getType(sum, active, allsame, val);
+    size_t length = encoder.encode(t_marking.marking(), type);
+    binarywrapper_t w = binarywrapper_t(encoder.scratchpad().raw(), length*8);
+    auto tit = trie.insert(w);
+
 
     auto result = markings.find(&t_marking);
     // alternatively, allocate first, then try insert, and then
     // check if existed or not. (avoid dual lookup, but always allocates)
     if(result == markings.end()){
+	assert(tit.first);
         _markingCount++;
         Marking* new_marking = new Marking();
         new_marking->copyMarking(t_marking, n_places);
+	new_marking->pid = tit.second;
         return (size_t)*(markings.insert(new_marking).first);
     }
-
+    assert(!tit.first);
+    assert(tit.second == (*result)->pid);
     return (size_t)*result;
 }
+
+void OnTheFlyDG::markingStats(const uint32_t* marking, size_t& sum, 
+        bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last)
+{
+    uint32_t cnt = 0;
+
+    for (uint32_t i = 0; i < n_places; i++)
+    {
+        uint32_t old = val;
+        if(marking[i] != 0)
+        {
+            ++cnt;
+            last = std::max(last, i);
+            val = std::max(marking[i], val);
+            if(old != 0 && marking[i] != old) allsame = false;
+            ++active;
+            sum += marking[i];
+        }
+    }
+}
+
 
 }//PetriNet

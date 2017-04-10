@@ -8,6 +8,8 @@
 #include "PetriConfig.h"
 #include "Marking.h"
 #include "../../PetriParse/PNMLParser.h"
+#include "PetriEngine/Structures/ptrie_map.h"
+#include "PetriEngine/Structures/AlignedEncoder.h"
 
 #include <unordered_set>
 #include <list>
@@ -70,9 +72,11 @@ public:
 protected:
 
     //initialized from constructor
+    AlignedEncoder encoder;
     PetriEngine::PetriNet *net = nullptr;
-    Marking *initial_marking = new Marking();
+    size_t initial_marking;
     Marking working_marking;
+    Marking query_marking;
     uint32_t n_transitions = 0;
     uint32_t n_places = 0;
     size_t _markingCount = 0;
@@ -91,6 +95,7 @@ protected:
     void markingStats(const uint32_t* marking, size_t& sum, bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last);
 
     MarkingContainer markings;
+    ptrie::map<std::vector<PetriConfig*> > trie;
 };
 }
 #endif // ONTHEFLYDG_H

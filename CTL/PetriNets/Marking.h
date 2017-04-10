@@ -53,6 +53,7 @@ class Marking : public PetriEngine::Structures::State
     //inline size_t length() const { return m_length; }
 
     config_container_type configurations;
+    size_t pid = 0;
 private:
     //PetriEngine::MarkVal* m_marking;
     //size_t m_length;
