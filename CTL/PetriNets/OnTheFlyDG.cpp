@@ -15,8 +15,8 @@ OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net){
     n_places = t_net->numberOfPlaces();
     n_transitions = t_net->numberOfTransitions();
     initial_marking->setMarking(t_net->makeInitialMarking());
+    working_marking.setMarking(t_net->makeInitialMarking());
     _markingCount += 1;
-    cached_successors.resize(t_net->numberOfTransitions());
 
     markings = MarkingContainer(100,                            //Nr. of buckets (bigger maybe?)
                                 MarkingEqualityHasher(t_net),     //hasher
@@ -419,11 +419,10 @@ std::vector<Marking*> OnTheFlyDG::nextStates(Marking& t_marking){
     std::vector<Marking*> nextStates;
     PetriEngine::SuccessorGenerator PNGen(*net);
     PNGen.prepare(&t_marking);
-    Marking working;
-    working.copyMarking(t_marking, net->numberOfPlaces());
+    working_marking.copyMarking(t_marking, net->numberOfPlaces());
 
-    while(PNGen.next(working)){
-         nextStates.push_back(createMarking(working));
+    while(PNGen.next(working_marking)){
+         nextStates.push_back(createMarking(working_marking));
     }
 
     return nextStates;

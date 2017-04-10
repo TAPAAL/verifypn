@@ -62,7 +62,6 @@ public:
 //    virtual SearchStrategy::Message deserialize(int* message, int messageSize) override;
 
     void setQuery(CTLQuery* query);
-    Marking * initialMarking() {return initial_marking;}
 
     //stats
     int configurationCount() const;
@@ -73,15 +72,13 @@ protected:
     //initialized from constructor
     PetriEngine::PetriNet *net = nullptr;
     Marking *initial_marking = new Marking();
+    Marking working_marking;
     uint32_t n_transitions = 0;
     uint32_t n_places = 0;
     size_t _markingCount = 0;
     size_t _configurationCount = 0;
 
     //used after query is set
-    DependencyGraph::Configuration *initial = nullptr;
-    std::vector<Marking*> cached_successors;
-    Marking *cached_marking = nullptr;
     CTLQuery *query = nullptr;
 
     bool evaluateQuery(CTLQuery &query, Marking &marking);
