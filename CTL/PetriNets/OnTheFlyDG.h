@@ -1,6 +1,8 @@
 #ifndef ONTHEFLYDG_H
 #define ONTHEFLYDG_H
 
+#include <functional>
+
 #include "../DependencyGraph/BasicDependencyGraph.h"
 #include "../DependencyGraph/Configuration.h"
 #include "../DependencyGraph/Edge.h"
@@ -54,6 +56,10 @@ protected:
     bool evaluateQuery(CTLQuery &query, size_t marking);
     bool fastEval(CTLQuery &query, size_t marking);
     std::vector<size_t> nextStates(size_t marking);
+    void nextStates(size_t t_marking, 
+    std::function<void ()> pre, 
+    std::function<bool (size_t)> foreach, 
+    std::function<void ()> post);
     bool EvalCardianlity(int a, LoperatorType lop, int b);
     int GetParamValue(CardinalityParameter *param, Marking& marking);
     PetriConfig *createConfiguration(size_t marking, CTLQuery &query);
