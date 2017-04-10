@@ -11,7 +11,10 @@ namespace PetriNets {
 class PetriConfig : public DependencyGraph::Configuration {
 
 public:
-
+    PetriConfig() : 
+        DependencyGraph::Configuration(), marking(0), query(NULL) 
+    {}
+    
     PetriConfig(size_t t_marking, CTLQuery *t_query) :
         DependencyGraph::Configuration(), marking(t_marking), query(t_query) {
     }

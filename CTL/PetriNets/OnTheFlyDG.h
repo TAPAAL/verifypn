@@ -11,6 +11,7 @@
 #include "../../PetriParse/PNMLParser.h"
 #include "PetriEngine/Structures/ptrie_map.h"
 #include "PetriEngine/Structures/AlignedEncoder.h"
+#include "PetriEngine/Structures/linked_bucket.h"
 
 namespace PetriNets {
 
@@ -64,8 +65,13 @@ protected:
     PetriConfig *createConfiguration(size_t marking, CTLQuery &query);
     size_t createMarking(Marking &marking);
     void markingStats(const uint32_t* marking, size_t& sum, bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last);
+    
+    DependencyGraph::Edge* newEdge(DependencyGraph::Configuration &t_source);
 
     ptrie::map<std::vector<PetriConfig*> > trie;
+    linked_bucket_t<PetriConfig,1024*10> config_alloc;
+    linked_bucket_t<DependencyGraph::Edge,1024*10> edge_alloc;
+    
 };
 }
 #endif // ONTHEFLYDG_H
