@@ -16,8 +16,7 @@ struct options_t {
     char* modelfile = NULL;
     char* queryfile = NULL;
     int enablereduction = 1; // 0 ... disabled,  1 ... aggresive (default), 2 ... k-boundedness preserving
-    bool stubbornreduction = true;
-    bool siphontrapenabled = false;   
+    bool stubbornreduction = true; 
     bool statespaceexploration = false;
     bool printstatistics = true;
     size_t memorylimit = 2048;
@@ -86,7 +85,7 @@ struct options_t {
             optionsOut += ", Query_Simplication=DISABLED";
         }
         
-        if (siphontrapenabled) {
+        if (siphontrapTimeout > 0) {
             optionsOut += ", Siphon_Trap=ENABLED, SPTimeout=" + std::to_string(siphontrapTimeout);
         } else {
             optionsOut += ", Siphon_Trap=DISABLED";
@@ -94,11 +93,6 @@ struct options_t {
         
         optionsOut += ", LPSolve_Timeout=" + std::to_string(lpsolveTimeout);
         
-        if (gamemode) {
-            optionsOut += ", Game_Mode=ENABLED";
-        } else {
-            optionsOut += ", Game_Mode=DISABLED";
-        }
         if (isctl) {
             if (ctlalgorithm == CTL::CZero) {
                 optionsOut += ", CTLAlgorithm=CZERO";

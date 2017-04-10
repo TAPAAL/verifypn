@@ -193,7 +193,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid siphon-trap timeout \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
-            options.siphontrapenabled = true;
         } else if (strcmp(argv[i], "-ctl") == 0){
             options.isctl = true;
             if(argc > i + 1){
@@ -284,7 +283,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         options.queryReductionTimeout = 0;
         options.lpsolveTimeout = 0;
         options.siphontrapTimeout = 0;
-        options.siphontrapenabled = false;
         options.stubbornreduction = false;
 //        outputtrace = false;
     }
@@ -635,7 +633,6 @@ int main(int argc, char* argv[]) {
 
     //Analyse context again to reindex query
     contextAnalysis(builder, queries);
-    
     
     //Reachability search
     strategy.reachable(queries, results, 

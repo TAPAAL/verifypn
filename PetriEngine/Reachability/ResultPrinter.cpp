@@ -58,31 +58,24 @@ namespace PetriEngine {
                 else if (retval == Satisfied) {
                     if(!options->statespaceexploration)
                     {
-                        std::cout << "TRUE TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT ";
-    /*                    if(options->enablereduction > 0)
-                        {*/
-                            std::cout << "STRUCTURAL_REDUCTION STATE_COMPRESSION";
-    //                    }
-                        std::cout << std::endl;
+                        std::cout << "TRUE TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT";
+                        
+                        std::cout << printTechniques();
                     }
                 } else if (retval == NotSatisfied) {
                     if (!query->placeNameForBound().empty()) {
                         // find index of the place for reporting place bound
 
-                        std::cout << query->getBound() <<  " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT ";
+                        std::cout << query->getBound() <<  " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT";
+                        
+                        std::cout << printTechniques();
 
-    //                    if(options->enablereduction > 0)
-    //                    {
-                            std::cout << "STRUCTURAL_REDUCTION STATE_COMPRESSION";
-    //                    }
                     } else {
                         if(!options->statespaceexploration)
                         {
-                            std::cout << "FALSE TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT ";
-    //                        if(options->enablereduction > 0)
-    //                        {
-                                std::cout << "STRUCTURAL_REDUCTION STATE_COMPRESSION";
-    //                        }
+                            std::cout << "FALSE TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT";
+                            
+                            std::cout << printTechniques();
                         }
                     }
                 }
@@ -126,6 +119,33 @@ namespace PetriEngine {
             
             std::cout << std::endl;
             return retval;
+        }
+        
+        std::string ResultPrinter::printTechniques() {
+            std::string out;
+            
+            if (options->enablereduction > 0) {
+                out += " STRUCTURAL_REDUCTION STATE_COMPRESSION";
+            }
+            if (options->stubbornreduction) {
+                out += " STUBBORN_REDUCTION";
+            }
+            if (options->queryReductionTimeout > 0) {
+                out += " QUERY_REDUCTION TIMEOUT " + std::to_string(options->queryReductionTimeout);
+            }
+            if (options->siphontrapTimeout > 0) {
+                out += " SIPHON_TRAP_ANALYSIS TIMEOUT " + std::to_string(options->siphontrapTimeout);
+            }
+            if (options->isctl) {
+                if (options->ctlalgorithm == CTL::CZero) {
+                    out += " CTL CZERO";
+                }
+                else {
+                    out += " CTL LOCAL";
+                }
+            }
+            out += "\n";
+            return out;
         }
         
         void ResultPrinter::printTrace(Structures::StateSetInterface* ss, size_t lastmarking)

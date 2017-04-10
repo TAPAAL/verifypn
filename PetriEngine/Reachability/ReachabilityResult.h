@@ -70,6 +70,8 @@ namespace PetriEngine {
                 const std::vector<uint32_t> maxPlaceBound = std::vector<uint32_t>(),
                 Structures::StateSetInterface* stateset = NULL, size_t lastmarking = 0 );
             
+            std::string printTechniques();
+            
             void printTrace(Structures::StateSetInterface*, size_t lastmarking);
             
         };
