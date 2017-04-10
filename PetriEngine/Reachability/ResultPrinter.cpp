@@ -131,10 +131,10 @@ namespace PetriEngine {
                 out += " STUBBORN_REDUCTION";
             }
             if (options->queryReductionTimeout > 0) {
-                out += " QUERY_REDUCTION TIMEOUT " + std::to_string(options->queryReductionTimeout);
+                out += " QUERY_REDUCTION";
             }
             if (options->siphontrapTimeout > 0) {
-                out += " SIPHON_TRAP_ANALYSIS TIMEOUT " + std::to_string(options->siphontrapTimeout);
+                out += " SIPHON_TRAP_ANALYSIS";
             }
             if (options->isctl) {
                 if (options->ctlalgorithm == CTL::CZero) {
