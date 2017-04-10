@@ -17,10 +17,7 @@ OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net) : encoder(t_net->numberOfPl
 
     working_marking.setMarking(t_net->makeInitialMarking());
     query_marking.setMarking(t_net->makeInitialMarking());
-
-    markings = MarkingContainer(100,                            //Nr. of buckets (bigger maybe?)
-                                MarkingEqualityHasher(t_net),     //hasher
-                                MarkingEqualityHasher(t_net));    //key_equal
+    
     initial_marking = createMarking(working_marking);
 }
 
@@ -346,7 +343,7 @@ void OnTheFlyDG::successors(Configuration *c)
 
 bool OnTheFlyDG::evaluateQuery(CTLQuery &query, size_t marking)
 {
-    trie.unpack(((Marking*)marking)->pid, encoder.scratchpad().raw());
+    trie.unpack(marking, encoder.scratchpad().raw());
     encoder.decode(query_marking.marking(), encoder.scratchpad().raw());
     
     
@@ -416,13 +413,13 @@ Configuration* OnTheFlyDG::initialConfiguration()
 }
 
 std::vector<size_t> OnTheFlyDG::nextStates(size_t t_marking){
-    trie.unpack(((Marking*)t_marking)->pid, encoder.scratchpad().raw());
+    trie.unpack(t_marking, encoder.scratchpad().raw());
     encoder.decode(query_marking.marking(), encoder.scratchpad().raw());
 
     std::vector<size_t> nextStates;
     PetriEngine::SuccessorGenerator PNGen(*net);
     PNGen.prepare(&query_marking);
-    working_marking.copyMarking(query_marking, net->numberOfPlaces());
+    memcpy(working_marking.marking(), query_marking.marking(), n_places*sizeof(PetriEngine::MarkVal));
 
     while(PNGen.next(working_marking)){
          nextStates.push_back(createMarking(working_marking));
@@ -454,7 +451,7 @@ int OnTheFlyDG::markingCount() const
 
 Configuration *OnTheFlyDG::createConfiguration(size_t t_marking, CTLQuery &t_query)
 {
-    auto& configs = trie.getData(((Marking*)t_marking)->pid);
+    auto& configs = trie.getData(t_marking);
     for(PetriConfig* c : configs){
         if(c->query == &t_query)
             return c;
@@ -479,22 +476,10 @@ size_t OnTheFlyDG::createMarking(Marking& t_marking){
     size_t length = encoder.encode(t_marking.marking(), type);
     binarywrapper_t w = binarywrapper_t(encoder.scratchpad().raw(), length*8);
     auto tit = trie.insert(w);
-
-
-    auto result = markings.find(&t_marking);
-    // alternatively, allocate first, then try insert, and then
-    // check if existed or not. (avoid dual lookup, but always allocates)
-    if(result == markings.end()){
-	assert(tit.first);
+    if(tit.first){
         _markingCount++;
-        Marking* new_marking = new Marking();
-        new_marking->copyMarking(t_marking, n_places);
-	new_marking->pid = tit.second;
-        return (size_t)*(markings.insert(new_marking).first);
     }
-    assert(!tit.first);
-    assert(tit.second == (*result)->pid);
-    return (size_t)*result;
+	return tit.second;
 }
 
 void OnTheFlyDG::markingStats(const uint32_t* marking, size_t& sum, 
