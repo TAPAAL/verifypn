@@ -59,6 +59,11 @@ namespace ptrie {
     } __attribute__((packed));
     typedef std::pair<bool, size_t> returntype_t;
 
+    struct base_t {
+        uchar _path;
+        uchar _type;
+    } __attribute__((packed));
+
 
 #define PTRIETPL uint16_t HEAPBOUND, uint16_t SPLITBOUND, size_t ALLOCSIZE, typename T, typename I
 #define PTRIEDEF HEAPBOUND, SPLITBOUND, ALLOCSIZE, T, I
@@ -89,9 +94,6 @@ namespace ptrie {
                 "HEAPBOUND MUST BE LARGER THAN sizeof(size_t)");
     protected:
 
-        struct node_t;
-        struct fwdnode_t;
-
         typedef ptrie_el_t<T, I> entry_t;
 
         struct bucket_t {
@@ -120,11 +122,6 @@ namespace ptrie {
                 return ((uint16_t*) &_data)[index];
             }
 
-        } __attribute__((packed));
-
-        struct base_t {
-            uchar _path;
-            uchar _type;
         } __attribute__((packed));
 
         // nodes in the tree
@@ -255,7 +252,7 @@ namespace ptrie {
     }
 
     template<PTRIETPL>
-    typename set<PTRIEDEF>::base_t*
+    base_t*
     set<PTRIEDEF>::fast_forward(const binarywrapper_t& encoding, fwdnode_t** tree_pos, uint& byte) {
         fwdnode_t* t_pos = *tree_pos;
 
