@@ -14,9 +14,6 @@ OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net) : encoder(t_net->numberOfPl
     net = t_net;
     n_places = t_net->numberOfPlaces();
     n_transitions = t_net->numberOfTransitions();
-
-    working_marking.setMarking(t_net->makeInitialMarking());
-    query_marking.setMarking(t_net->makeInitialMarking());
 }
 
 
@@ -459,6 +456,10 @@ void OnTheFlyDG::setQuery(CTLQuery *query)
 {
     cleanUp();
     this->query = query;
+    delete[] working_marking.marking();
+    delete[] query_marking.marking();
+    working_marking.setMarking  (net->makeInitialMarking());
+    query_marking.setMarking    (net->makeInitialMarking());
     initial_config = createConfiguration(createMarking(working_marking), *query);
 }
 
