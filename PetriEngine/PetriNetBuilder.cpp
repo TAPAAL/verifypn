@@ -116,18 +116,20 @@ namespace PetriEngine {
         _places[p].producers.push_back(t);
     }
 
-    uint32_t PetriNetBuilder::nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids, bool reorder)
+    uint32_t PetriNetBuilder::nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& pcounts, std::vector<uint32_t>& ids, bool reorder)
     {
         uint32_t cand = std::numeric_limits<uint32_t>::max();
         uint32_t cnt =  std::numeric_limits<uint32_t>::max();
         for(uint32_t i = 0; i < _places.size(); ++i)
         {
+            uint32_t nnum = (pcounts[i] == 0 ? 0 : (counts[0] == 0 ? 0 : std::max(counts[i], pcounts[i])));
             if( ids[i] == std::numeric_limits<uint32_t>::max() &&
-                counts[i] < cnt &&
+                nnum < cnt &&
                 !_places[i].skip)
             {
                 if(!reorder) return i;
                 cand = i;
+                cnt = nnum;
             }
         }        
         return cand;
@@ -159,6 +161,7 @@ namespace PetriEngine {
         uint32_t ntrans = _transitions.size() - reducer.RemovedTransitions();
         
         std::vector<uint32_t> place_cons_count = std::vector<uint32_t>(_places.size());
+        std::vector<uint32_t> place_prod_count = std::vector<uint32_t>(_places.size());
         std::vector<uint32_t> place_idmap = std::vector<uint32_t>(_places.size());
         std::vector<uint32_t> trans_idmap = std::vector<uint32_t>(_transitions.size());
         
@@ -170,6 +173,7 @@ namespace PetriEngine {
             if(!_places[i].skip)
             {
                 place_cons_count[i] = _places[i].consumers.size();
+                place_prod_count[i] = _places[i].producers.size();
                 invariants += _places[i].consumers.size() + _places[i].producers.size();
             }
         }
@@ -181,7 +185,7 @@ namespace PetriEngine {
         
         PetriNet* net = new PetriNet(ntrans, invariants, nplaces);
         
-        uint32_t next = nextPlaceId(place_cons_count, place_idmap, reorder);
+        uint32_t next = nextPlaceId(place_cons_count, place_prod_count, place_idmap, reorder);
         uint32_t free = 0;
         uint32_t freeinv = 0;
         uint32_t freetrans = 0;
@@ -300,6 +304,7 @@ namespace PetriEngine {
                     assert(freeinv < net->_ninvariants);
                     net->_invariants[freeinv].place = post.place;
                     net->_invariants[freeinv].tokens = post.weight;                    
+                    --place_prod_count[post.place];
                     ++freeinv;
                 }
                 
@@ -309,7 +314,7 @@ namespace PetriEngine {
                 assert(freeinv <= invariants);
             }
             ++free;
-            next = nextPlaceId(place_cons_count, place_idmap, reorder);
+            next = nextPlaceId(place_cons_count, place_prod_count, place_idmap, reorder);
         }
         
         // Reindex for great justice!

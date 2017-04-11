@@ -128,7 +128,7 @@ namespace PetriEngine {
         }
 
     private:
-        uint32_t nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids, bool reorder);
+        uint32_t nextPlaceId(std::vector<uint32_t>& counts,  std::vector<uint32_t>& pcounts, std::vector<uint32_t>& ids, bool reorder);
 
     protected:
         std::map<std::string, uint32_t> _placenames;

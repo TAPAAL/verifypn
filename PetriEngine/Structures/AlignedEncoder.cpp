@@ -132,6 +132,22 @@ uint32_t AlignedEncoder::writeTokenCounts(size_t offset, const uint32_t* data)
 }
 
 template<typename T>
+size_t AlignedEncoder::bitTokenCountsSize(const unsigned char* source, uint32_t offset)
+{
+    scratchpad_t b = scratchpad_t((unsigned char*)&source[offset], _places);
+
+    size_t cnt = 0;
+    for(uint32_t i = 0; i < _places; ++i)
+    {
+        if(b.at(i))
+        {
+            cnt += sizeof(T);
+        }
+    }
+    return offset + b.size() + cnt;
+}
+
+template<typename T>
 uint32_t AlignedEncoder::readBitTokenCounts(uint32_t* destination, const unsigned char* source, uint32_t offset)
 {
     const unsigned char* ts = &source[offset + scratchpad_t::bytes(_places)];
@@ -147,6 +163,29 @@ uint32_t AlignedEncoder::readBitTokenCounts(uint32_t* destination, const unsigne
         }
     }
     return 0;
+}
+
+template<typename T>
+size_t AlignedEncoder::placeTokenCountsSize(const unsigned char* source, uint32_t offset)
+{
+    size_t size;
+    switch(_psize)
+    {
+        case 1:
+            size = source[offset];
+            break;
+        case 2:
+            size = *(uint16_t*)(&source[offset]);
+            break;                           
+        case 4:
+            size = *(uint32_t*)(&source[offset]);
+            break;   
+        default:
+            size = std::numeric_limits<size_t>::max(); // should provoke an error
+            assert(false);
+    }
+    offset += _psize;
+    return offset + (_psize * size) + (size*sizeof(T));
 }
 
 template<typename T>
@@ -374,6 +413,67 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
     }
     assert(false);
     return 0;
+}
+
+size_t AlignedEncoder::size(const uchar* s)
+{
+    unsigned char type = s[0];
+    if(type <= SAMEBOUND)
+    {
+        if((_places % 8) == 0) return 1 + (_places / 8);
+        else return 2 + (_places / 8);
+    }
+    
+    if(type <= DBOUND)
+    {
+        size_t size;
+        switch(_psize)
+        {
+            case 1:
+                size = 1 + s[1];
+                break;
+            case 2:
+                size = 1 + *(uint16_t*)(&s[1]);
+                size *= sizeof(uint16_t);
+                break;                           
+            case 4:
+                size = 1 + *(uint32_t*)(&s[1]);
+                size *= sizeof(uint32_t);
+                break;   
+            default:
+                size = std::numeric_limits<size_t>::max(); // should provoke an error
+                assert(false);
+        }
+        return size + 1;
+    }
+    
+    switch(type)
+    {
+        case DBOUND+1:
+            if((_places % 4) == 0) return 1 + (_places / 4);
+            else return 2 + (_places / 4);
+        case DBOUND+2:
+            return 1 + (sizeof(unsigned char)*_places);
+        case DBOUND+3:
+            return 1 + (sizeof(uint16_t)*_places);
+        case DBOUND+4:
+            return 1 + (sizeof(uint32_t)*_places);
+        case DBOUND+5:
+            return placeTokenCountsSize<unsigned char>((unsigned char*)s, 1); 
+        case DBOUND+6:
+            return placeTokenCountsSize<uint16_t>((unsigned char*)s, 1); 
+        case DBOUND+7:
+            return placeTokenCountsSize<uint32_t>((unsigned char*)s, 1); 
+        case DBOUND+8:
+            return bitTokenCountsSize<unsigned char>((unsigned char*)s, 1);
+        case DBOUND+9:
+            return bitTokenCountsSize<uint16_t>((unsigned char*)s, 1);
+        case DBOUND+10:
+            return bitTokenCountsSize<uint32_t>((unsigned char*)s, 1);
+        default:
+            assert(false);
+            return std::numeric_limits<size_t>::infinity();
+    }
 }
 
 size_t AlignedEncoder::encode(const uint32_t* d, unsigned char type)

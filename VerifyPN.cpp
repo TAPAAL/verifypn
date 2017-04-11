@@ -120,15 +120,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 				fprintf(stderr, "Argument Error: Unrecognized search strategy \"%s\"\n", s);
 				return ErrorCode;
 			}
-        } else if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--memory-limit") == 0) {
-                if (i == argc - 1) {
-                        fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
-                        return ErrorCode;
-                }
-                if (sscanf(argv[++i], "%zu", &options.memorylimit) != 1) {
-                        fprintf(stderr, "Argument Error: Invalid memory limit \"%s\"\n", argv[i]);
-                        return ErrorCode;
-                }
         } else if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--query-reduction") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -236,7 +227,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
                     "  -o, --mcc                          Use MCC output-format\n"
-                    "  -m, --memory-limit <mb-memory>     Limit for when encoding kicks in, default 2048\n"
                     "  -ctl                               Verify CTL properties\n"
                     "                                     - local        Liu and Smolka's on-the-fly algorithm\n"
                     "                                     - czero        local with certain zero extension (default)\n"
@@ -275,7 +265,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 			return ErrorCode;
         }
     }
-    options.memorylimit *= 1024*1024;
     if (options.statespaceexploration) {
         // for state-space exploration some options are mandatory
         options.enablereduction = 0;

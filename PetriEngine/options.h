@@ -19,7 +19,6 @@ struct options_t {
     bool stubbornreduction = true; 
     bool statespaceexploration = false;
     bool printstatistics = true;
-    size_t memorylimit = 2048;
     std::set<size_t> querynumbers = std::set<size_t>();
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
     bool mccoutput = false;
