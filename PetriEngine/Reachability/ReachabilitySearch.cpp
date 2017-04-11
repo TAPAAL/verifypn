@@ -47,7 +47,9 @@ namespace PetriEngine {
                 {
                     if(queries[i]->evaluate(state, &_net))
                     {
-                        results[i] = printQuery(queries[i], i, ResultPrinter::Satisfied, ss, states);                    
+                        results[i] = printQuery(queries[i], i, ResultPrinter::Satisfied, ss, states);
+//                        std::cout << queries[i]->toString() << std::endl;
+//                        state.print(_net);
                     }
                     else
                     {
