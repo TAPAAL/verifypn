@@ -977,14 +977,10 @@ namespace PetriEngine {
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<EFCondition>(r2.formula)));
                 } else if(r1.formula->toString() == "false"){
-                    return Retval(r2.formula, r2.lps);
+                    return Retval(std::make_shared<NotCondition>(r2.formula));
                 } else {
-                    if(context.negated()){
-                        return Retval(std::make_shared<NotCondition>(
-                                std::make_shared<EUCondition>(r1.formula, r2.formula)));
-                    } else {
-                        return Retval(std::make_shared<EUCondition>(r1.formula, r2.formula));
-                    }
+                    return Retval(std::make_shared<NotCondition>(
+                            std::make_shared<EUCondition>(r1.formula, r2.formula)));
                 }
             } else {
                 if(r2.formula->toString() == "true"){
@@ -994,7 +990,7 @@ namespace PetriEngine {
                 } else if(r1.formula->toString() == "true"){
                     return Retval(std::make_shared<EFCondition>(r2.formula));
                 } else if(r1.formula->toString() == "false"){
-                    return Retval(std::make_shared<NotCondition>(r2.formula));
+                    return r2;
                 } else {
                     return Retval(std::make_shared<EUCondition>(r1.formula, r2.formula));
                 }
@@ -1031,7 +1027,7 @@ namespace PetriEngine {
                 } else if(r1.formula->toString() == "true"){
                     return Retval(std::make_shared<AFCondition>(r2.formula));
                 } else if(r1.formula->toString() == "false"){
-                    return Retval(r2.formula, r2.lps);
+                    return r2;
                 } else {
                     return Retval(std::make_shared<AUCondition>(r1.formula, r2.formula));
                 }
