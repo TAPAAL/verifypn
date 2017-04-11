@@ -142,8 +142,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.statespaceexploration = true;
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--no-statistics") == 0) {
             options.printstatistics = false;
-        } else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--mcc") == 0) {
-            options.mccoutput = true;
         } else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--trace") == 0) {
             options.trace = true;
         } else if (strcmp(argv[i], "-x") == 0 || strcmp(argv[i], "--xml-queries") == 0) {
@@ -226,7 +224,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
-                    "  -o, --mcc                          Use MCC output-format\n"
                     "  -ctl                               Verify CTL properties\n"
                     "                                     - local        Liu and Smolka's on-the-fly algorithm\n"
                     "                                     - czero        local with certain zero extension (default)\n"
@@ -488,7 +485,7 @@ int main(int argc, char* argv[]) {
                     options.querynumbers,
                     options.gamemode,
                     options.printstatistics,
-                    options.mccoutput);
+                    true);
         delete net;
         return rv;
     }
@@ -561,7 +558,7 @@ int main(int argc, char* argv[]) {
             options.querynumbers,
             options.gamemode,
             options.printstatistics,
-            options.mccoutput,
+            true,
             CTLQueries);
         
         delete ctlnet;

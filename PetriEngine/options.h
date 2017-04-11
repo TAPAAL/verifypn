@@ -21,7 +21,6 @@ struct options_t {
     bool printstatistics = true;
     std::set<size_t> querynumbers = std::set<size_t>();
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
-    bool mccoutput = false;
     bool trace = false;
     int queryReductionTimeout = 30, lpsolveTimeout = 10;
     int siphontrapTimeout = 0;
@@ -32,7 +31,7 @@ struct options_t {
     CTL::CTLAlgorithmType ctlalgorithm = CTL::CZero;
     
     void print() {
-        if (!printstatistics || mccoutput) {
+        if (!printstatistics) {
             return;
         }
         
