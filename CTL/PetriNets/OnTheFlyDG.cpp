@@ -10,7 +10,7 @@ using namespace DependencyGraph;
 
 namespace PetriNets {
 
-OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net) : encoder(t_net->numberOfPlaces(), 0), config_alloc(1), edge_alloc(1) {
+OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net) : encoder(t_net->numberOfPlaces(), 0), edge_alloc(1) {
     net = t_net;
     n_places = t_net->numberOfPlaces();
     n_transitions = t_net->numberOfTransitions();
@@ -482,7 +482,7 @@ PetriConfig *OnTheFlyDG::createConfiguration(size_t t_marking, CTLQuery &t_query
     }
 
     _configurationCount++;
-    PetriConfig* newConfig = &config_alloc[config_alloc.next(0)];
+    PetriConfig* newConfig = new PetriConfig();
     newConfig->marking = t_marking;
     newConfig->query = &t_query;
     configs.push_back(newConfig);

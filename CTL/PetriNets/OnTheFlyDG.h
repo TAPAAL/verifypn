@@ -69,7 +69,6 @@ protected:
     DependencyGraph::Edge* newEdge(DependencyGraph::Configuration &t_source);
 
     ptrie::map<std::vector<PetriConfig*> > trie;
-    linked_bucket_t<PetriConfig,1024*10> config_alloc;
     linked_bucket_t<DependencyGraph::Edge,1024*10> edge_alloc;
     
 };
