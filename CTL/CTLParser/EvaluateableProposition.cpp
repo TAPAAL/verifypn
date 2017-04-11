@@ -15,6 +15,7 @@
 #include <stdexcept> 
 #include <sstream>
 #include <cstdint>
+#include <algorithm>
 
 #include "EvaluateableProposition.h"
 #include "CTLParser.h"
@@ -123,6 +124,7 @@ void EvaluateableProposition::SetFireset(std::string fireset_str, std::vector<st
     while(restof_firestring.length() > 0){
         size_t position = restof_firestring.find(',');
         std::string current_t = restof_firestring.substr(0, position);
+        current_t.erase(std::remove_if(current_t.begin(), current_t.end(), isspace), current_t.end());
         for(uint i = 0; i < numberof_t; i++){
             if (current_t.compare(t_names[i]) == 0){
                 _fireset.push_back(i);

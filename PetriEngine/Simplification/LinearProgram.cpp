@@ -22,12 +22,9 @@ namespace PetriEngine {
                 eq.constant -= 1; 
                 eq.op = ">="; 
             } else if(eq.op == "!="){
-                // TODO: this is always impossible. < and > should be in disjunction
-                Equation eq2(eq);
-                eq2.op = "<";
-                eq.op = ">"; 
-                addEquation(eq);
-                addEquation(eq2);
+                // We ignore this operator for now by not adding any equation, 
+                // the resulting LP should be trivially true.
+                // This is untested, however.
                 return;
             }
 

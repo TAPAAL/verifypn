@@ -26,6 +26,9 @@
 #include <string.h>
 #include <assert.h>
 #include <limits>
+#include <stdlib.h>
+#include <malloc.h>
+#include <stdint.h>
 
 #ifndef BINARYWRAPPER_H
 #define	BINARYWRAPPER_H
@@ -50,7 +53,7 @@ namespace ptrie
          * Empty constructor, no data is allocated
          */
         
-        binarywrapper_t()
+        binarywrapper_t() : _blob(NULL), _nbytes(0)
         {            
         }
         
@@ -113,27 +116,27 @@ namespace ptrie
          */
         
         //binarywrapper_t clone() const;
-        
+
         /**
          * Copy over data and meta-data from other, but insert only into target
          * after offset bits.
          * Notice that this can cause memory-corruption if there is not enough
          * room in target, or to many bits are skipped.
          * @param other: wrapper to copy from
-         * @param offset: bits to skip 
+         * @param offset: bits to skip
          */
-        
+
         void copy(const binarywrapper_t& other, uint offset);
-        
+
         /**
          * Copy over size bytes form raw data. Assumes that current wrapper has
          * enough room.
          * @param raw: source data
          * @param size: number of bytes to copy
          */
-        
+
         void copy(const uchar* raw, uint size);
-        
+
         // accessors
         /**
          * Get value of the place'th bit
@@ -188,7 +191,7 @@ namespace ptrie
          * pretty print of content
          */
         
-        void print(size_t length = std::numeric_limits<size_t>::max()) const;
+        void print(std::ostream& strean, size_t length = std::numeric_limits<size_t>::max()) const;
         
         /**
          * finds the overhead (unused number of bits) when allocating for size
@@ -241,6 +244,7 @@ namespace ptrie
             if(_nbytes > __BW_BSIZE__)
                 dealloc(_blob);
             _blob = NULL;
+            _nbytes = 0;
         }
                 
         /**
@@ -248,7 +252,7 @@ namespace ptrie
          * @param i: index to access
          * @return 
          */
-        
+
         inline uchar operator[](int i) const
         {
             if (i >= _nbytes) {
@@ -337,7 +341,8 @@ namespace ptrie
         // masks for single-bit access
      } __attribute__((packed));
 }
-
-
+namespace std {
+    std::ostream &operator<<(std::ostream &os, const ptrie::binarywrapper_t &b);
+}
 #endif	/* BINARYWRAPPER_H */
 
