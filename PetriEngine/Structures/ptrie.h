@@ -30,6 +30,7 @@
 #include <limits>
 #include <stack>
 #include <string.h>
+#include <functional>
 
 #include "binarywrapper.h"
 #include "linked_bucket.h"
@@ -168,7 +169,7 @@ namespace ptrie {
 
         void erase(fwdnode_t* parent, node_t* node, size_t bucketid, int byte);
         bool merge_down(fwdnode_t* parent, node_t* node, int byte);
-        void inject_byte(node_t* node, uchar topush, size_t totsize, auto sizes);
+        void inject_byte(node_t* node, uchar topush, size_t totsize, std::function<uint16_t(size_t)> sizes);
 
 
     public:
@@ -1070,7 +1071,7 @@ namespace ptrie {
     
         template<PTRIETPL>
     void
-    set<PTRIEDEF>::inject_byte(node_t* node, uchar topush, size_t totsize, auto _sizes)
+    set<PTRIEDEF>::inject_byte(node_t* node, uchar topush, size_t totsize, std::function<uint16_t(size_t)> _sizes)
     {
         const bool hasent = _entries != NULL;
         bucket_t *nbucket = node->_data;
