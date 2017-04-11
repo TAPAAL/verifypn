@@ -131,7 +131,7 @@ ReturnValue getAlgorithm(Algorithm::FixedPointAlgorithm*& algorithm,
 }
 
 void printResult(CTLResult& result, bool statisticslevel, bool mccouput){
-    const static string techniques = "TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT";
+    const static string techniques = "TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS";
 
     cout << endl;
     if(mccouput){
