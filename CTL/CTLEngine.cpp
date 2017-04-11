@@ -134,16 +134,14 @@ void printResult(CTLResult& result, bool statisticslevel, bool mccouput){
     const static string techniques = "TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS";
 
     cout << endl;
-    if(mccouput){
-        cout << "FORMULA "
-             << result.modelName
-             << " " << (result.result ? "TRUE" : "FALSE") << " "
-             << techniques
-             << endl;
-    }
-    else {
-        cout << "Query is" << (result.result ? "" : " NOT") << " satisfied." << endl;
-    }
+    cout << "FORMULA "
+         << result.modelName
+         << " " << (result.result ? "TRUE" : "FALSE") << " "
+         << techniques
+         << endl << endl;
+
+    cout << "Query is" << (result.result ? "" : " NOT") << " satisfied." << endl;
+
     cout << endl;
 
     if(statisticslevel){

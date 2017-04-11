@@ -299,6 +299,11 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             return ErrorCode;
         }
     }
+    
+    // Check if the choosen options are incompatible with upper bound queries
+    if(options.stubbornreduction || options.queryReductionTimeout > 0 || options.enablereduction == 1) {
+        options.upperboundcheck = true;
+    }
 
     return ContinueCode;
 }
@@ -493,6 +498,17 @@ int main(int argc, char* argv[]) {
     //----------------------- Parse Query -----------------------//
     std::vector<std::string> querynames;
     auto queries = readQueries(transitionEnabledness, options, querynames);
+    
+    if (options.upperboundcheck) {
+        for (uint32_t i = 0; i < queries.size(); i++) {
+            if (queries[i]->isUpperBound()) {
+                fprintf(stderr, "Error: Invalid options choosen for upper bound query. ");
+                fprintf(stderr, "Cannot use stubborn reduction, query simplification, or aggressive structural reduction.\n");
+                fprintf(stdout, "CANNOT_COMPUTE\n");
+                return ErrorCode;
+            }
+        }
+    }
     
     if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
     

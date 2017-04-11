@@ -24,6 +24,7 @@ struct options_t {
     bool trace = false;
     int queryReductionTimeout = 30, lpsolveTimeout = 10;
     int siphontrapTimeout = 0;
+    bool upperboundcheck = false;
 
     //CTL Specific options
     bool gamemode = false;
