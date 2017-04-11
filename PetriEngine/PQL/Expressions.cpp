@@ -272,10 +272,14 @@ namespace PetriEngine {
 
         bool QuantifierCondition::evaluate(const EvaluationContext& context) const {
             // Not implemented
+	    assert(false);
+	    return false;
         }
         
         bool UntilCondition::evaluate(const EvaluationContext& context) const {
             // Not implemented
+            assert(false);
+            return false;
         }
         
         bool LogicalCondition::evaluate(const EvaluationContext& context) const {
@@ -310,10 +314,14 @@ namespace PetriEngine {
         /******************** Evaluation - save result ********************/
         bool QuantifierCondition::evalAndSet(const EvaluationContext& context) {
             // Not implemented
+            assert(false);
+	    return false;
         }
         
         bool UntilCondition::evalAndSet(const EvaluationContext& context) {
             // Not implemented
+	    assert(false);
+            return false;
         }        
 
         int BinaryExpr::evalAndSet(const EvaluationContext& context) {
@@ -580,10 +588,14 @@ namespace PetriEngine {
         
         uint32_t QuantifierCondition::distance(DistanceContext& context) const {
             // Not implemented
+	    assert(false);
+	    return 0;
         }
         
         uint32_t UntilCondition::distance(DistanceContext& context) const {
             // Not implemented
+            assert(false);
+	    return 0;
         }
         
         uint32_t LogicalCondition::distance(DistanceContext& context) const {

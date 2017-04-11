@@ -1469,7 +1469,6 @@ namespace ptrie {
                        &(node->_data->first(node->_count, bindex + 1)),
                        (nbucketcount - bindex) * sizeof(uint16_t));
 
-            size_t entry = 0;
             if (hasent) {
                 // copy over entries
                 memcpy(nbucket->entries(nbucketcount, true),
@@ -1522,7 +1521,6 @@ namespace ptrie {
 
         b_index = 0;
         bool res = this->best_match(encoding, &fwd, &base, byte, b_index);
-        returntype_t ret = returntype_t(res, std::numeric_limits<size_t>::max());
         if(!res || (size_t)fwd == (size_t)base)
         {
             assert(!this->exists(encoding).first);
