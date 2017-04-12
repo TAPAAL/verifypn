@@ -17,6 +17,6 @@ SOURCES			= $(shell find * -name "*.cpp" | grep -v ".\\(parser\\|lexer\\).cpp")	
 				  $(BISON_SOURCES:.y=.parser.cpp)											\
 				  $(FLEX_SOURCES:.l=.lexer.cpp)
 OBJECTS			= $(SOURCES:.cpp=.o)
-TARGET			= verifypn-experimental-linux64
+TARGET			= verifypn-linux64
 
 include rules.mk
