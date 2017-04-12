@@ -174,9 +174,9 @@ namespace ptrie {
         ~set();
 
         returntype_t insert(binarywrapper_t wrapper);
-        returntype_t insert(const uchar* data, uint16_t length);
+        returntype_t insert(const uchar* data, size_t length);
         returntype_t exists(binarywrapper_t wrapper);
-        returntype_t exists(const uchar* data, uint16_t length);
+        returntype_t exists(const uchar* data, size_t length);
         bool         erase (binarywrapper_t wrapper);
         bool         erase (const uchar* data, size_t length);
 
@@ -827,7 +827,8 @@ namespace ptrie {
 
     template<PTRIETPL>
     std::pair<bool, size_t>
-    set<PTRIEDEF>::exists(const uchar* data, uint16_t length) {
+    set<PTRIEDEF>::exists(const uchar* data, size_t length) {
+        assert(length <= 65536);
         binarywrapper_t encoding((uchar*) data, length * 8);
         //        memcpy(encoding.raw()+2, data, length);
         //        length += 2;
@@ -853,7 +854,8 @@ namespace ptrie {
 
     template<PTRIETPL>
     returntype_t
-    set<PTRIEDEF>::insert(const uchar* data, uint16_t length) {
+    set<PTRIEDEF>::insert(const uchar* data, size_t length) {
+        assert(length <= 65536);
         binarywrapper_t e2((uchar*) data, length * 8);
         const bool hasent = _entries != NULL;
         //        binarywrapper_t encoding(length*8+16);
@@ -1513,6 +1515,7 @@ namespace ptrie {
     bool
     set<PTRIEDEF>::erase(binarywrapper_t encoding)
     {
+        assert(encoding.size() <= 65536);
         uint b_index = 0;
 
         fwdnode_t* fwd = this->_root;
