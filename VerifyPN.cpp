@@ -262,6 +262,16 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 			return ErrorCode;
         }
     }
+    
+    //Print parameters
+    if (options.printstatistics) {
+        std::cout << std::endl << "Parameters: ";
+        for (int i = 1; i < argc; i++) {
+            std::cout << argv[i] << " ";
+        }
+        std::cout << std::endl;
+    }
+    
     if (options.statespaceexploration) {
         // for state-space exploration some options are mandatory
         options.enablereduction = 0;
