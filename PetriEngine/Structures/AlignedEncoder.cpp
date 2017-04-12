@@ -18,7 +18,7 @@ AlignedEncoder::AlignedEncoder(uint32_t places, uint32_t k)
 
     size_t bytes = 2*sizeof(uint32_t) + (places*sizeof(uint32_t));
     _scratchpad = scratchpad_t(bytes*8);
-
+    assert(_scratchpad.size() == (2*sizeof(uint32_t) + (_places*sizeof(uint32_t))));
     if(_places < 256) _psize = 1;
     else if(_places < 65536) _psize = 2;
     else _psize = 4;
@@ -31,7 +31,7 @@ AlignedEncoder::~AlignedEncoder()
     _scratchpad.release();
 }
 
-uint32_t AlignedEncoder::tokenBytes(uint32_t ntokens)
+uint32_t AlignedEncoder::tokenBytes(uint32_t ntokens) const
 {
     uint32_t size = 0;
     if(ntokens < 256) size = 1;
@@ -132,7 +132,7 @@ uint32_t AlignedEncoder::writeTokenCounts(size_t offset, const uint32_t* data)
 }
 
 template<typename T>
-size_t AlignedEncoder::bitTokenCountsSize(const unsigned char* source, uint32_t offset)
+size_t AlignedEncoder::bitTokenCountsSize(const unsigned char* source, uint32_t offset) const
 {
     scratchpad_t b = scratchpad_t((unsigned char*)&source[offset], _places);
 
@@ -148,7 +148,7 @@ size_t AlignedEncoder::bitTokenCountsSize(const unsigned char* source, uint32_t 
 }
 
 template<typename T>
-uint32_t AlignedEncoder::readBitTokenCounts(uint32_t* destination, const unsigned char* source, uint32_t offset)
+uint32_t AlignedEncoder::readBitTokenCounts(uint32_t* destination, const unsigned char* source, uint32_t offset) const
 {
     const unsigned char* ts = &source[offset + scratchpad_t::bytes(_places)];
     scratchpad_t b = scratchpad_t((unsigned char*)&source[offset], _places);
@@ -166,7 +166,7 @@ uint32_t AlignedEncoder::readBitTokenCounts(uint32_t* destination, const unsigne
 }
 
 template<typename T>
-size_t AlignedEncoder::placeTokenCountsSize(const unsigned char* source, uint32_t offset)
+size_t AlignedEncoder::placeTokenCountsSize(const unsigned char* source, uint32_t offset) const
 {
     size_t size;
     switch(_psize)
@@ -189,7 +189,7 @@ size_t AlignedEncoder::placeTokenCountsSize(const unsigned char* source, uint32_
 }
 
 template<typename T>
-uint32_t AlignedEncoder::readPlaceTokenCounts(uint32_t* destination, const unsigned char* source, uint32_t offset)
+uint32_t AlignedEncoder::readPlaceTokenCounts(uint32_t* destination, const unsigned char* source, uint32_t offset) const
 {
     size_t size;
     switch(_psize)
@@ -339,7 +339,7 @@ uint32_t AlignedEncoder::readBitVector(uint32_t* destination, const unsigned cha
     return offset + b.size();
 }
 
-unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uint32_t val)
+unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uint32_t val) const
 {
     if(pwt == 0) return 0;
     if(same && val <= SAMEBOUND)
@@ -415,7 +415,7 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
     return 0;
 }
 
-size_t AlignedEncoder::size(const uchar* s)
+size_t AlignedEncoder::size(const uchar* s) const
 {
     unsigned char type = s[0];
     if(type <= SAMEBOUND)

@@ -39,7 +39,7 @@ namespace ptrie
         static_cast <uchar>(0x01)
     };
             
-    size_t binarywrapper_t::overhead(uint size)
+    size_t binarywrapper_t::overhead(size_t size)
     {
         size = size % 8;
         if (size == 0)
@@ -49,15 +49,17 @@ namespace ptrie
     }
     
     
-    size_t binarywrapper_t::bytes(uint size)
+    size_t binarywrapper_t::bytes(size_t size)
     {
         return (size + overhead(size))/8;
     }
     
     
-    binarywrapper_t::binarywrapper_t(uint size)
+    binarywrapper_t::binarywrapper_t(size_t size)
     {
-        _nbytes = (size + overhead(size)) / 8;
+        _nbytes = (size + overhead(size));
+        _nbytes /= 8;
+        assert(_nbytes >= (size/8));
         _blob = zallocate(_nbytes);
     }
     

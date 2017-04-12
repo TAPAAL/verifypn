@@ -49,54 +49,54 @@ struct options_t {
         }
         
         if (trace) {
-            optionsOut += ", Trace=ENABLED";
+            optionsOut += ",Trace=ENABLED";
         } else {
-            optionsOut += ", Trace=DISABLED";
+            optionsOut += ",Trace=DISABLED";
         }
         
         if (kbound > 0) {
-            optionsOut += ", Token_Bound=" + std::to_string(kbound);
+            optionsOut += ",Token_Bound=" + std::to_string(kbound);
         }
         
         if (statespaceexploration) {
-            optionsOut += ", State_Space_Exploration=ENABLED";
+            optionsOut += ",State_Space_Exploration=ENABLED";
         } else {
-            optionsOut += ", State_Space_Exploration=DISABLED";
+            optionsOut += ",State_Space_Exploration=DISABLED";
         }
         
         if (enablereduction == 0) {
-            optionsOut += ", Structural_Reduction=DISABLED";
+            optionsOut += ",Structural_Reduction=DISABLED";
         } else if (enablereduction == 1) {
-            optionsOut += ", Structural_Reduction=AGGRESSIVE";
+            optionsOut += ",Structural_Reduction=AGGRESSIVE";
         } else {
-            optionsOut += ", Structural_Reduction=KBOUND_PRESERVING";
+            optionsOut += ",Structural_Reduction=KBOUND_PRESERVING";
         }
         
         if (stubbornreduction) {
-            optionsOut += ", Stubborn_Reduction=ENABLED";
+            optionsOut += ",Stubborn_Reduction=ENABLED";
         } else {
-            optionsOut += ", Stubborn_Reduction=DISABLED";
+            optionsOut += ",Stubborn_Reduction=DISABLED";
         }
         
         if (queryReductionTimeout > 0) {
-            optionsOut += ", Query_Simplication=ENABLED, SQTimeout=" + std::to_string(queryReductionTimeout);
+            optionsOut += ",Query_Simplication=ENABLED,SQTimeout=" + std::to_string(queryReductionTimeout);
         } else {
-            optionsOut += ", Query_Simplication=DISABLED";
+            optionsOut += ",Query_Simplication=DISABLED";
         }
         
         if (siphontrapTimeout > 0) {
-            optionsOut += ", Siphon_Trap=ENABLED, SPTimeout=" + std::to_string(siphontrapTimeout);
+            optionsOut += ",Siphon_Trap=ENABLED,SPTimeout=" + std::to_string(siphontrapTimeout);
         } else {
-            optionsOut += ", Siphon_Trap=DISABLED";
+            optionsOut += ",Siphon_Trap=DISABLED";
         }
         
-        optionsOut += ", LPSolve_Timeout=" + std::to_string(lpsolveTimeout);
+        optionsOut += ",LPSolve_Timeout=" + std::to_string(lpsolveTimeout);
         
         if (isctl) {
             if (ctlalgorithm == CTL::CZero) {
-                optionsOut += ", CTLAlgorithm=CZERO";
+                optionsOut += ",CTLAlgorithm=CZERO";
             } else {
-                optionsOut += ", CTLAlgorithm=LOCAL";
+                optionsOut += ",CTLAlgorithm=LOCAL";
             }
         }
         optionsOut += "\n";

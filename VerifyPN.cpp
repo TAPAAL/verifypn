@@ -301,7 +301,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
     }
     
     // Check if the choosen options are incompatible with upper bound queries
-    if(options.stubbornreduction || options.queryReductionTimeout > 0 || options.enablereduction == 1) {
+    if(options.stubbornreduction || options.queryReductionTimeout > 0) {
         options.upperboundcheck = true;
     }
 
@@ -539,8 +539,14 @@ int main(int argc, char* argv[]) {
         {
             if(queries[i]->toString() == "true"){
                 results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
+                if (options.printstatistics) {
+                    std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
+                }
             } else if (queries[i]->toString() == "false") {
                 results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
+                if (options.printstatistics) {
+                    std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
+                }
             } else if (!queries[i]->isReachability()) {
                 results[i] = ResultPrinter::CTL;
                 alldone = false;
@@ -610,6 +616,10 @@ int main(int argc, char* argv[]) {
                 STSolver stSolver(printer, *net, queries[i].get());
                 stSolver.Solve(options.siphontrapTimeout);
                 results[i] = stSolver.PrintResult();
+                
+                if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics) {
+                    std::cout << "Query solved by Siphon-Trap Analysis." << std::endl << std::endl;
+                }
             }
         }
         

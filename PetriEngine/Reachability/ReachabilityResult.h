@@ -52,6 +52,8 @@ namespace PetriEngine {
                 CTL
             };
             
+            const string techniques = "TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS";
+            
             ResultPrinter(PetriNetBuilder* b, options_t* o, std::vector<std::string>& querynames) 
             : builder(b), options(o), querynames(querynames), reducer(NULL)
             {};
