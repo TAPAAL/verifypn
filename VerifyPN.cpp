@@ -519,20 +519,20 @@ int main(int argc, char* argv[]) {
     bool alldone = options.queryReductionTimeout > 0;
     PetriNetBuilder b2(builder);
     PetriNet* qnet = b2.makePetriNet(false);
-    MarkVal* m0 = qnet->makeInitialMarking();
+    MarkVal* qm0 = qnet->makeInitialMarking();
     ResultPrinter p2(&b2, &options, querynames);
     
     if (options.queryReductionTimeout > 0) {
         for(size_t i = 0; i < queries.size(); ++i)
         {
             if (queries[i]->isUpperBound()) continue;
-            queries[i] = (queries[i]->simplify(SimplificationContext(m0, qnet, 
+            queries[i] = (queries[i]->simplify(SimplificationContext(qm0, qnet, 
                     options.queryReductionTimeout, options.lpsolveTimeout))).formula;   
         }
     }
     
     delete qnet;
-    delete[] m0;
+    delete[] qm0;
     
     if (!options.statespaceexploration){
         for(size_t i = 0; i < queries.size(); ++i)
@@ -592,43 +592,33 @@ int main(int argc, char* argv[]) {
         printer.setReducer(builder.getReducer());        
     }
     
-    //----------------------- Siphon Trap ------------------------//
-    
-    if(options.siphontrapTimeout > 0){
-        
-        for (uint32_t i = 0; i < results.size(); i ++) {
-            
-            bool isDeadlockQuery = queries[i]->toString() == "deadlock";
- 
-            if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {    
-                PetriNetBuilder b3(builder);
-                PetriNet* snet = b3.makePetriNet(false);
-                ResultPrinter p3(&b3, &options, querynames);
-                
-                for(auto& q : queries) {
-                    q->indexPlaces(builder.getPlaceNames());
-                }
-                
-                STSolver stSolver(p3, *snet, queries[i].get());
-                stSolver.Solve(options.siphontrapTimeout);
-                
-                results[i] = stSolver.PrintResult();
-            }
-        }
-                
-        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-            return 0;
-        }
-    }
-    
-    //----------------------- Reachability -----------------------//
-
     PetriNet* net = builder.makePetriNet();
     
     for(auto& q : queries)
     {
         q->indexPlaces(builder.getPlaceNames());
     }
+    
+    //----------------------- Siphon Trap ------------------------//
+    
+    if(options.siphontrapTimeout > 0){
+        for (uint32_t i = 0; i < results.size(); i ++) {
+            
+            bool isDeadlockQuery = queries[i]->toString() == "deadlock";
+ 
+            if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {    
+                STSolver stSolver(printer, *net, queries[i].get());
+                stSolver.Solve(options.siphontrapTimeout);
+                results[i] = stSolver.PrintResult();
+            }
+        }
+        
+        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+            return 0;
+        }
+    }
+    
+    //----------------------- Reachability -----------------------//
     
     //Create reachability search strategy
     ReachabilitySearch strategy(printer, *net, options.kbound);

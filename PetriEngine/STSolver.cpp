@@ -33,7 +33,6 @@ namespace PetriEngine {
 
     STSolver::~STSolver() {
         if(_lp != NULL) delete_lp(_lp);
-        if(_m0 != NULL) delete[] _m0;
     }
 
     /* 
