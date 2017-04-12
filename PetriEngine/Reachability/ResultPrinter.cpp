@@ -34,11 +34,11 @@ namespace PetriEngine {
                     placeBound = std::max<uint32_t>(placeBound, maxPlaceBound[p]);
                 }
                 // fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
-                std::cout   << "STATE_SPACE STATES "<< exploredStates           << " TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS\n" 
+                std::cout   << "STATE_SPACE STATES "<< exploredStates           << techniques 
 //                            << "STATE_SPACE TRANSITIONS "<< discoveredStates <<" TECHNIQUES EXPLICIT\n" 
-                            << "STATE_SPACE TRANSITIONS "<< -1                  << " TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS\n" 
-                            << "STATE_SPACE MAX_TOKEN_PER_MARKING "<< maxTokens << " TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS\n" 
-                            << "STATE_SPACE MAX_TOKEN_IN_PLACE "<< placeBound   << " TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS\n"
+                            << "STATE_SPACE TRANSITIONS "<< -1                  << techniques 
+                            << "STATE_SPACE MAX_TOKEN_PER_MARKING "<< maxTokens << techniques 
+                            << "STATE_SPACE MAX_TOKEN_IN_PLACE "<< placeBound   << techniques
                             << std::endl;
                 return retval;
             }
@@ -56,18 +56,18 @@ namespace PetriEngine {
             else if (retval == Satisfied) {
                 if(!options->statespaceexploration)
                 {
-                    std::cout << "TRUE TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS" << std::endl;
+                    std::cout << "TRUE " << techniques << std::endl;
                 }
             } else if (retval == NotSatisfied) {
                 if (!query->placeNameForBound().empty()) {
                     // find index of the place for reporting place bound
 
-                    std::cout << query->getBound() <<  " TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS" << std::endl;
+                    std::cout << query->getBound() << " " << techniques << std::endl;
 
                 } else {
                     if(!options->statespaceexploration)
                     {
-                        std::cout << "FALSE TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS" << std::endl;
+                        std::cout << "FALSE " << techniques << std::endl;
                     }
                 }
             }
