@@ -19,18 +19,16 @@ TIMEOUT=gtimeout
 MEM="14500000"
 ulimit -v $MEM
 
-# Default verification options
-OPTIONS="-n -o"
+# Verification options
+OPTIONS="-n"
 
-# Default stategies
+# Stategies
 STRATEGY_SEQ="-s DFS"
-STRATEGIES_PAR=()
 
-# Default timeouts
-TIMEOUT_TOTAL=60
-TIMEOUT_SEQ=30
-TIMEOUTS_PAR=()
-DEFAULT_TIMEOUT_PAR=1
+# Timeouts (in seconds)
+TIMEOUT_TOTAL=3600 # competition 1 hour
+TIMEOUT_SEQ_MIN=480 # competition 8 min
+DEFAULT_TIMEOUT_PAR=60 # competition 1 min
 
 function verifyparallel {
     # Keep track of time passed (in seconds)
@@ -38,12 +36,13 @@ function verifyparallel {
     local NUMBER=`cat $MODEL_PATH/$CATEGORY | grep "<property>" | wc -l`
     QUERIES=( $(seq 1 $NUMBER) )
 
+    #################################
     # Step 1: Parallel
-    echo
     echo "--- Step 1: Parallel processing"  
     for Q in ${QUERIES[@]}; do
         # Calculate remaining time
         REMAINING_TIME=$(echo "$TIMEOUT_TOTAL - $SECONDS"|bc)
+
         # Execute verifypn on all parallel strategies
         # All processes are killed if one process provides an answer 
         step1="$($PAR --halt now,success=1 --xapply\
@@ -52,44 +51,57 @@ function verifyparallel {
             2>/dev/null)"
 
         # Output the answer, if any
-        ANS=$(echo "$step1" | grep -m 1 FORMULA)
-        if [[ -n "$ANS" ]]; then
-            echo "$ANS"
+        if [[ $? == 0 ]]; then
+            echo "$step1" | grep -m 1 FORMULA 
             unset QUERIES[$Q-1]
         fi
     done
 
-    echo
-    echo "--- Step 2: Sequential processing" 
-    
     # Exit if all queries are answered
-    if [[ ${#QUERIES[@]} == 0 ]]; then echo "All queries solved in Step 1"; exit; fi
+    if [[ ${#QUERIES[@]} == 0 ]]; then echo "All queries are solved" ; exit; fi
+    
+    #################################
+    # Step 2: Sequential
+    echo "--- Step 2: Sequential processing" 
 
-    # Step 2: Sequential    
+    # Count the number of remaining queries to try solving sequentially
+    REMAINING_SEQ=${#QUERIES[@]}
+
     for Q in ${QUERIES[@]}; do
         # Calculate remaining time
         REMAINING_TIME=$(echo "$TIMEOUT_TOTAL - $SECONDS" | bc)
-        TIMEOUT_SEQ=$(echo "$REMAINING_TIME / ${#QUERIES[@]}" | bc)
-        if [[ $TIMEOUT_SEQ == 0 ]]; then exit; fi
+        TIMEOUT_SEQ=$(echo "$REMAINING_TIME / $REMAINING_SEQ" | bc)
+        if [[ "$TIMEOUT_SEQ_MIN" -gt "$TIMEOUT_SEQ" ]]; then TIMEOUT_SEQ=$TIMEOUT_SEQ_MIN; fi
         
         # Execute verifypn on sequential strategy
-        echo "Running query $Q for $TIMEOUT_SEQ seconds. Remaining time/queries: $REMAINING_TIME/${#QUERIES[@]}" 
+        echo "Running query $Q for $TIMEOUT_SEQ seconds. Remaining: $REMAINING_SEQ queries and $REMAINING_TIME seconds"
         step2=$($TIMEOUT $TIMEOUT_SEQ $VERIFYPN $OPTIONS $STRATEGY_SEQ $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $Q)
 
         # Output the answer, if any
-        ANS=$(echo "$step2" | grep -m 1 FORMULA)
-        if [[ -n "$ANS" ]]; then
-            echo "$ANS"
+        if [[ $? == 0 ]]; then
+            echo "$step2" | grep -m 1 FORMULA 
+            unset QUERIES[$Q-1]
         fi
-        
-        # Remove query regardless of it being solved or not
-        unset QUERIES[$Q-1]
+        REMAINING_SEQ=$((REMAINING_SEQ - 1))
     done
+    
+    # Exit if all queries are answered
+    if [[ ${#QUERIES[@]} == 0 ]]; then echo "All queries are solved" ; exit; fi
 
+    #################################
+    # Step 3: Multiquery
     REMAINING_TIME=$(echo "$TIMEOUT_TOTAL - $SECONDS"|bc)
-    echo "End of script. Remaining time: $REMAINING_TIME seconds"
+    echo "--- Step 3: Multiquery processing" 
+    echo "Remaining: ${#QUERIES[@]} queries and $REMAINING_TIME seconds" 
+    
+    # Join remaining query indexes in comma separated string
+    MULTIQUERY_INPUT=$(sed -e "s/ /,/g" <<< ${QUERIES[@]})
+    
+    echo "Running multiquery on -x $MULTIQUERY_INPUT" 
+    $TIMEOUT $TIMEOUT_TOTAL $VERIFYPN $STRATEGY_SEQ $OPTIONS -p $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $MULTIQUERY_INPUT 
+    
+    echo "End of script."
 }
-
 
 case "$BK_EXAMINATION" in
 
@@ -98,17 +110,16 @@ case "$BK_EXAMINATION" in
        echo "*****************************************"
        echo "*  TAPAAL performing StateSpace search  *"
        echo "*****************************************"
-        $TIMEOUT $TIMEOUT_TOTAL $VERIFYPN -o -n -p -q 0 -e $MODEL_PATH/model.pnml 
+        $TIMEOUT $TIMEOUT_TOTAL $VERIFYPN -n -p -q 0 -e $MODEL_PATH/model.pnml 
         ;;
 
-        UpperBounds)    
-       echo     
+        UpperBounds)	
+       echo		
        echo "*****************************************"
        echo "*  TAPAAL CLASSIC verifying UpperBounds *"
        echo "*****************************************" 
         CATEGORY="UpperBounds.xml"
-        STRATEGY_SEQ="-s BFS"
-        OPTIONS="-n -o -r 2 -p -q 0"
+        STRATEGY_SEQ="-s BFS -r 2 -p -q 0"
         NUMBER=`cat $MODEL_PATH/$CATEGORY | grep "<property>" | wc -l`
         $TIMEOUT $TIMEOUT_TOTAL $VERIFYPN $STRATEGY_SEQ $OPTIONS $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x "$(seq -s , 1 $NUMBER)" 
         ;;
@@ -118,18 +129,17 @@ case "$BK_EXAMINATION" in
        echo "**********************************************"
        echo "*  TAPAAL checking for ReachabilityDeadlock  *"
        echo "**********************************************"
-        STRATEGIES_PAR[0]="-s DFS --siphon-trap $DEFAULT_TIMEOUT_PAR -q 0"
+        STRATEGIES_PAR[0]="-s DFS --siphon-trap 30 -q 0"
         STRATEGIES_PAR[1]="-s BFS -q 0"
         STRATEGIES_PAR[2]="-s DFS -q 0"
         STRATEGIES_PAR[3]="-s RDFS -q 0"
 
-        TIMEOUTS_PAR[0]=$DEFAULT_TIMEOUT_PAR
+        TIMEOUTS_PAR[0]=30
         TIMEOUTS_PAR[1]=$DEFAULT_TIMEOUT_PAR
         TIMEOUTS_PAR[2]=$DEFAULT_TIMEOUT_PAR
         TIMEOUTS_PAR[3]=$DEFAULT_TIMEOUT_PAR
 
-        STRATEGY_SEQ="-s DFS"
-        
+        STRATEGY_SEQ="-s DFS -q 0"
         CATEGORY="ReachabilityDeadlock.xml"
         verifyparallel 
         ;;
@@ -150,7 +160,6 @@ case "$BK_EXAMINATION" in
         TIMEOUTS_PAR[3]=$DEFAULT_TIMEOUT_PAR
 
         STRATEGY_SEQ="-s DFS"
-
         CATEGORY="ReachabilityCardinality.xml"
         verifyparallel 
         ;;
@@ -171,7 +180,6 @@ case "$BK_EXAMINATION" in
         TIMEOUTS_PAR[3]=$DEFAULT_TIMEOUT_PAR
       
         STRATEGY_SEQ="-s DFS"
-
         CATEGORY="ReachabilityFireability.xml"
         verifyparallel 
         ;;
@@ -184,11 +192,9 @@ case "$BK_EXAMINATION" in
 
         STRATEGIES_PAR[0]="-s DFS"
         STRATEGIES_PAR[1]="-s DFS -q 0"
-        STRATEGIES_PAR[2]="-s BFS -q 0"
 
         TIMEOUTS_PAR[0]=$DEFAULT_TIMEOUT_PAR
         TIMEOUTS_PAR[1]=$DEFAULT_TIMEOUT_PAR
-        TIMEOUTS_PAR[2]=$DEFAULT_TIMEOUT_PAR
 
         STRATEGY_SEQ="-s DFS"
         CATEGORY="CTLCardinality.xml"
@@ -203,11 +209,9 @@ case "$BK_EXAMINATION" in
         
         STRATEGIES_PAR[0]="-s DFS"
         STRATEGIES_PAR[1]="-s DFS -q 0"
-        STRATEGIES_PAR[2]="-s BFS -q 0"
 
         TIMEOUTS_PAR[0]=$DEFAULT_TIMEOUT_PAR
         TIMEOUTS_PAR[1]=$DEFAULT_TIMEOUT_PAR
-        TIMEOUTS_PAR[2]=$DEFAULT_TIMEOUT_PAR
 
         STRATEGY_SEQ="-s DFS"
         CATEGORY="CTLFireability.xml"
@@ -215,7 +219,10 @@ case "$BK_EXAMINATION" in
         ;;
 
     *)
-        echo "DO_NOT_COMPETE"   
+        echo "DO_NOT_COMPETE"  
         exit 0
         ;;
 esac
+
+
+
