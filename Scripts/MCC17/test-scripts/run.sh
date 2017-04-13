@@ -1,6 +1,6 @@
-PREFIX=/Users/dyhr/Datalogi/speciale/tools/flagship/Scripts/MCC17/test-scripts
+PREFIX=$HOME/Datalogi/speciale/tools/flagship/Scripts/MCC17/test-scripts
 TOOL=BenchKit_head.sh
-INPUTSPATH=/Users/dyhr/Datalogi/speciale/models/small
+INPUTSPATH=$HOME/Datalogi/speciale/models/small
 
 for D in $(find $INPUTSPATH -mindepth 1 -maxdepth 1 -type d) ; do 
     echo;
@@ -10,6 +10,8 @@ for D in $(find $INPUTSPATH -mindepth 1 -maxdepth 1 -type d) ; do
     for EXAMINATION in \
       ReachabilityCardinality\
       CTLCardinality\
+      StateSpace\
+      UpperBounds\
       ; do
 
       export BK_EXAMINATION=$EXAMINATION ;    

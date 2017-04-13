@@ -6,7 +6,7 @@
 MODEL_PATH=.
 
 # Path to script directory
-PREFIX=$HOME/Datalogi/speciale/tools/flagship/Scripts/MCC17/test-scripts
+PREFIX=$HOME/Datalogi/speciale/tools/flagship/Scripts/MCC17/competition-scripts
 
 # Verifypn
 VERIFYPN=$HOME/Datalogi/speciale/tools/flagship/verifypn-osx64

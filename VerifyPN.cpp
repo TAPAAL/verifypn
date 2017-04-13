@@ -536,8 +536,21 @@ int main(int argc, char* argv[]) {
         for(size_t i = 0; i < queries.size(); ++i)
         {
             if (queries[i]->isUpperBound()) continue;
-            queries[i] = (queries[i]->simplify(SimplificationContext(qm0, qnet, 
-                    options.queryReductionTimeout, options.lpsolveTimeout))).formula;   
+            
+            SimplificationContext simplificationContext(qm0, qnet, 
+                    options.queryReductionTimeout, options.lpsolveTimeout);
+            
+            if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
+            queries[i] = (queries[i]->simplify(SimplificationContext(simplificationContext))).formula;   
+            if(options.printstatistics){fprintf(stdout, "Query after reduction:  %s\n", queries[i]->toString().c_str());}
+            if(options.printstatistics){
+                if(simplificationContext.timeout()){
+                    fprintf(stdout, "Query reduction reached timeout.\n");
+                } else {
+                    fprintf(stdout, "Query reduction finished after %f seconds.\n", simplificationContext.getReductionTime());
+                }
+            }
+            
         }
     }
     
