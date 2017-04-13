@@ -23,100 +23,83 @@ namespace PetriEngine {
             
             bool showTrace = (result == Satisfied);
             
-            if(options->mccoutput)
+            if(!options->statespaceexploration && retval != Unknown)
             {
-                if(!options->statespaceexploration && retval != Unknown)
-                {
-                    std::cout << "FORMULA " << querynames[index] << " ";
+                std::cout << "FORMULA " << querynames[index] << " ";
+            }
+            else {
+                retval = Satisfied;
+                uint32_t placeBound = 0;
+                for (size_t p = 0; p < maxPlaceBound.size(); p++) {
+                    placeBound = std::max<uint32_t>(placeBound, maxPlaceBound[p]);
                 }
-                else {
-                    retval = Satisfied;
-                    uint32_t placeBound = 0;
-                    for (size_t p = 0; p < maxPlaceBound.size(); p++) {
-                        placeBound = std::max<uint32_t>(placeBound, maxPlaceBound[p]);
-                    }
-                    // fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
-                    std::cout   << "STATE_SPACE STATES "<< exploredStates           << " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION\n" 
-    //                            << "STATE_SPACE TRANSITIONS "<< discoveredStates <<" TECHNIQUES EXPLICIT\n" 
-                                << "STATE_SPACE TRANSITIONS "<< -1                  << " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION\n" 
-                                << "STATE_SPACE MAX_TOKEN_PER_MARKING "<< maxTokens << " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION\n" 
-                                << "STATE_SPACE MAX_TOKEN_IN_PLACE "<< placeBound   << " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION\n"
-                                << std::endl;
-                    return retval;
-                }
+                // fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
+                std::cout   << "STATE_SPACE STATES "<< exploredStates           << techniques 
+//                            << "STATE_SPACE TRANSITIONS "<< discoveredStates <<" TECHNIQUES EXPLICIT\n" 
+                            << "STATE_SPACE TRANSITIONS "<< -1                  << techniques 
+                            << "STATE_SPACE MAX_TOKEN_PER_MARKING "<< maxTokens << techniques 
+                            << "STATE_SPACE MAX_TOKEN_IN_PLACE "<< placeBound   << techniques
+                            << std::endl;
+                return retval;
+            }
 
-                if (result == Satisfied)
-                    retval = query->isInvariant() ? NotSatisfied : Satisfied;
-                else if (result == NotSatisfied)
-                    retval = query->isInvariant() ? Satisfied : NotSatisfied;
+            if (result == Satisfied)
+                retval = query->isInvariant() ? NotSatisfied : Satisfied;
+            else if (result == NotSatisfied)
+                retval = query->isInvariant() ? Satisfied : NotSatisfied;
 
-                //Print result
-                if (retval == Unknown)
+            //Print result
+            if (retval == Unknown)
+            {
+                std::cout << "\nUnable to decide if " << querynames[index] << " is satisfied.";
+            }
+            else if (retval == Satisfied) {
+                if(!options->statespaceexploration)
                 {
-                    std::cout << "\nUnable to decide if " << querynames[index] << " is satisfied.";
+                    std::cout << "TRUE " << techniques << std::endl;
                 }
-                else if (retval == Satisfied) {
+            } else if (retval == NotSatisfied) {
+                if (!query->placeNameForBound().empty()) {
+                    // find index of the place for reporting place bound
+
+                    std::cout << query->getBound() << " " << techniques << std::endl;
+
+                } else {
                     if(!options->statespaceexploration)
                     {
-                        std::cout << "TRUE TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT ";
-    /*                    if(options->enablereduction > 0)
-                        {*/
-                            std::cout << "STRUCTURAL_REDUCTION STATE_COMPRESSION";
-    //                    }
-                        std::cout << std::endl;
-                    }
-                } else if (retval == NotSatisfied) {
-                    if (!query->placeNameForBound().empty()) {
-                        // find index of the place for reporting place bound
-
-                        std::cout << query->getBound() <<  " TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT ";
-
-    //                    if(options->enablereduction > 0)
-    //                    {
-                            std::cout << "STRUCTURAL_REDUCTION STATE_COMPRESSION";
-    //                    }
-                    } else {
-                        if(!options->statespaceexploration)
-                        {
-                            std::cout << "FALSE TECHNIQUES SEQUENTIAL_PROCESSING EXPLICIT ";
-    //                        if(options->enablereduction > 0)
-    //                        {
-                                std::cout << "STRUCTURAL_REDUCTION STATE_COMPRESSION";
-    //                        }
-                        }
+                        std::cout << "FALSE " << techniques << std::endl;
                     }
                 }
             }
-            else
+            
+            std::cout << std::endl;
+
+            std::cout << "Query is ";
+            if(options->statespaceexploration)
             {
-                std::cout << "Query is ";
-                if(options->statespaceexploration)
-                {
-                    retval = Satisfied;
-                }
-
-                if (result == Satisfied)
-                    retval = query->isInvariant() ? NotSatisfied : Satisfied;
-                else if (result == NotSatisfied)
-                    retval = query->isInvariant() ? Satisfied : NotSatisfied;
-
-                //Print result
-                if (retval == Unknown)
-                {
-                    std::cout << "MAYBE ";
-                }
-                else if (retval == NotSatisfied) {
-                    std::cout << "NOT ";
-                }
-                std::cout << "satisfied." << std::endl;
-                
+                retval = Satisfied;
             }
+
+            if (result == Satisfied)
+                retval = query->isInvariant() ? NotSatisfied : Satisfied;
+            else if (result == NotSatisfied)
+                retval = query->isInvariant() ? Satisfied : NotSatisfied;
+
+            //Print result
+            if (retval == Unknown)
+            {
+                std::cout << "MAYBE ";
+            }
+            else if (retval == NotSatisfied) {
+                std::cout << "NOT ";
+            }
+            std::cout << "satisfied." << std::endl;
             
             if(showTrace && options->trace)
             {
                 if(stateset == NULL)
                 {
-                    std::cout << "No trace could be generated, try disabeling the overapproximaton" << std::endl;
+                    std::cout << "No trace could be generated" << std::endl;
                 }
                 else
                 {
@@ -126,6 +109,33 @@ namespace PetriEngine {
             
             std::cout << std::endl;
             return retval;
+        }
+        
+        std::string ResultPrinter::printTechniques() {
+            std::string out;
+            
+            if (options->enablereduction > 0) {
+                out += " STRUCTURAL_REDUCTION STATE_COMPRESSION";
+            }
+            if (options->stubbornreduction) {
+                out += " STUBBORN_REDUCTION";
+            }
+            if (options->queryReductionTimeout > 0) {
+                out += " QUERY_REDUCTION";
+            }
+            if (options->siphontrapTimeout > 0) {
+                out += " SIPHON_TRAP_ANALYSIS";
+            }
+            if (options->isctl) {
+                if (options->ctlalgorithm == CTL::CZero) {
+                    out += " CTL CZERO";
+                }
+                else {
+                    out += " CTL LOCAL";
+                }
+            }
+            out += "\n";
+            return out;
         }
         
         void ResultPrinter::printTrace(Structures::StateSetInterface* ss, size_t lastmarking)

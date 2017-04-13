@@ -32,9 +32,11 @@ class AlignedEncoder
             return _scratchpad;
         }
         
-        unsigned char getType(uint32_t sum, uint32_t pwt, bool same, uint32_t val);
+        unsigned char getType(uint32_t sum, uint32_t pwt, bool same, uint32_t val) const;
+        
+        size_t size(const uchar* data) const;
 private:
-        uint32_t tokenBytes(uint32_t ntokens);
+        uint32_t tokenBytes(uint32_t ntokens) const;
     
         uint32_t writeBitVector(size_t offset, const uint32_t* data);
         
@@ -53,15 +55,21 @@ private:
         uint32_t readTwoBitVector(uint32_t* destination, const unsigned char* source, uint32_t offset);
         
         uint32_t readPlaces(uint32_t* destination, const unsigned char* source, uint32_t offset, uint32_t value);
-        
+                
         template<typename T>
         uint32_t readTokens(uint32_t* destination, const unsigned char* source, uint32_t offset);
         
         template<typename T>
-        uint32_t readPlaceTokenCounts(uint32_t* destination, const unsigned char* source, uint32_t offset);
+        uint32_t readPlaceTokenCounts(uint32_t* destination, const unsigned char* source, uint32_t offset) const;
+
+        template<typename T>        
+        size_t placeTokenCountsSize(const unsigned char* source, uint32_t offset) const;
         
         template<typename T>
-        uint32_t readBitTokenCounts(uint32_t* destination, const unsigned char* source, uint32_t offset);
+        uint32_t readBitTokenCounts(uint32_t* destination, const unsigned char* source, uint32_t offset) const;
+
+        template<typename T>        
+        size_t bitTokenCountsSize(const unsigned char* source, uint32_t offset) const;
         
         uint32_t _places;
         

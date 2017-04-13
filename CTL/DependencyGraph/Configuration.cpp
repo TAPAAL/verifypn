@@ -7,8 +7,6 @@
 DependencyGraph::Configuration::~Configuration() {
     for(Edge *e : successors)
         delete e;
-    for(Edge *e : deleted_successors)
-        delete e;
 }
 
 void DependencyGraph::Configuration::removeSuccessor(DependencyGraph::Edge *t_successor){
@@ -17,10 +15,8 @@ void DependencyGraph::Configuration::removeSuccessor(DependencyGraph::Edge *t_su
 
     while(iter != end){
         if(*iter == t_successor){
-            deleted_successors.insert(deleted_successors.end(), *iter);
             successors.erase(iter);
             successors.shrink_to_fit();
-            deleted_successors.shrink_to_fit();
             break;
         }
         else
@@ -61,28 +57,4 @@ std::string DependencyGraph::Configuration::assignmentToStr(DependencyGraph::Ass
         return std::string("CZERO");
 }
 
-void DependencyGraph::Configuration::updateInterest(int worker, long id)
-{
-    bool found = false;
-    for (size_t i=0; i<interested.size(); i++) {
-        if (interested[i].first == worker) {
-            found = true;
-            if (std::abs(interested[i].second) < std::abs(id)) {
-                interested[i] = std::pair<int, long>(worker, id);
-            }
-        }
-    }
-    if (!found) {
-        interested.push_back(std::pair<int, long>(worker, id));
-    }
-}
-
-bool DependencyGraph::Configuration::hasActiveDependencies()
-{
-    if (!dependency_set.empty()) return true;
-    for (std::pair<int, long> interest : interested) {
-        if (interest.second > 0) return true;
-    }
-    return false;
-}
 

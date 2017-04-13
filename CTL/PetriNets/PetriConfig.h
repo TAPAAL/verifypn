@@ -5,19 +5,21 @@
 #include "../DependencyGraph/Configuration.h"
 #include "../CTLParser/CTLQuery.h"
 #include "../CTLParser/CTLParser.h"
-#include "Marking.h"
 
 namespace PetriNets {
 
 class PetriConfig : public DependencyGraph::Configuration {
 
 public:
-
-    PetriConfig(Marking *t_marking, CTLQuery *t_query) :
+    PetriConfig() : 
+        DependencyGraph::Configuration(), marking(0), query(NULL) 
+    {}
+    
+    PetriConfig(size_t t_marking, CTLQuery *t_query) :
         DependencyGraph::Configuration(), marking(t_marking), query(t_query) {
     }
 
-    Marking *marking;
+    size_t marking;
     CTLQuery *query;
 
     virtual std::string toString() const override

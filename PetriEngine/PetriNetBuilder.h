@@ -112,9 +112,23 @@ namespace PetriEngine {
         
         Reducer* getReducer() { return &reducer; }
         
+        std::vector<std::pair<std::string, uint32_t>> orphanPlaces() {
+            std::vector<std::pair<std::string, uint32_t>> res;
+            for(uint32_t p = 0; p < _places.size(); p++) {
+                if(_places[p].consumers.size() == 0 && _places[p].producers.size() == 0) {
+                    for(auto &n : _placenames) {
+                        if(n.second == p) {
+                            res.push_back(std::make_pair(n.first, initialMarking[p]));
+                            break;
+                        }
+                    }
+                }
+            }
+            return res;
+        }
 
     private:
-        uint32_t nextPlaceId(std::vector<uint32_t>& counts, std::vector<uint32_t>& ids, bool reorder);
+        uint32_t nextPlaceId(std::vector<uint32_t>& counts,  std::vector<uint32_t>& pcounts, std::vector<uint32_t>& ids, bool reorder);
 
     protected:
         std::map<std::string, uint32_t> _placenames;

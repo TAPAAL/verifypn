@@ -21,7 +21,6 @@ public:
     container targets;
 
     bool processed = false;
-    bool is_deleted = false;
     bool is_negated = false;
 
     //std::string toString();

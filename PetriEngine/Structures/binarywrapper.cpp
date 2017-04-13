@@ -39,7 +39,7 @@ namespace ptrie
         static_cast <uchar>(0x01)
     };
             
-    size_t binarywrapper_t::overhead(uint size)
+    size_t binarywrapper_t::overhead(size_t size)
     {
         size = size % 8;
         if (size == 0)
@@ -49,15 +49,17 @@ namespace ptrie
     }
     
     
-    size_t binarywrapper_t::bytes(uint size)
+    size_t binarywrapper_t::bytes(size_t size)
     {
         return (size + overhead(size))/8;
     }
     
     
-    binarywrapper_t::binarywrapper_t(uint size)
+    binarywrapper_t::binarywrapper_t(size_t size)
     {
-        _nbytes = (size + overhead(size)) / 8;
+        _nbytes = (size + overhead(size));
+        _nbytes /= 8;
+        assert(_nbytes >= (size/8));
         _blob = zallocate(_nbytes);
     }
     
@@ -137,24 +139,35 @@ namespace ptrie
     {
         if(size > 0)
         {
-            assert(false);
             _blob = allocate(size);
+            _nbytes = size;
             memcpy(raw(), data, size);
             assert(data[0] == raw()[0]);
+        }
+        else
+        {
+            _nbytes = 0;
+            release();
         }
     }
         
     // accessors
     
-    void binarywrapper_t::print(size_t length) const
+    void binarywrapper_t::print(std::ostream& stream, size_t length) const
     {
         std::stringstream ss;
-        for (size_t i = 0; i < _nbytes * 8 && i < length; i++)
-        {
-            if(i % 8 == 0 && i != 0) ss << "-";
+        ss << _nbytes << " bytes : ";
+        for (size_t i = 0; i < _nbytes * 8 && i < length; i++) {
+            if (i % 8 == 0 && i != 0) ss << "-";
             ss << this->at(i);
         }
-        ss << std::endl;
-        std::cerr << ss.str();
+        stream << ss.str();
+    }
+}
+
+namespace std {
+    std::ostream &operator<<(std::ostream &os, const ptrie::binarywrapper_t &b) {
+        b.print(os);
+        return os;
     }
 }

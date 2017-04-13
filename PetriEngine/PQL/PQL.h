@@ -27,6 +27,11 @@
 
 #include "../PetriNet.h"
 #include "../Structures/State.h"
+#include "../Simplification/Member.h"
+#include "../Simplification/LinearPrograms.h"
+#include "../Simplification/Retval.h"
+#include "../ReducingSuccessorGenerator.h"
+
 
 namespace llvm {
     class Value;
@@ -35,13 +40,14 @@ namespace llvm {
 }
 
 namespace PetriEngine {
+    class ReducingSuccessorGenerator;
     namespace PQL {
 
         class AnalysisContext;
         class EvaluationContext;
         class DistanceContext;
-        class ConstraintAnalysisContext;
         class TAPAALConditionExportContext;
+        class SimplificationContext;
 
         /** Representation of a PQL error */
         class ExprError {
@@ -77,8 +83,8 @@ namespace PetriEngine {
 
         /** Representation of an expression */
         class Expr {
+            int _eval = 0;
         public:
-
             /** Types of expressions */
             enum Types {
                 /** Binary addition expression */
@@ -103,12 +109,28 @@ namespace PetriEngine {
             virtual bool pfree() const = 0;
             /** Evaluate the expression given marking and assignment */
             virtual int evaluate(const EvaluationContext& context) const = 0;
+            virtual int evalAndSet(const EvaluationContext& context) = 0;
             /** Generate LLVM intermediate code for this expr  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert expression to string */
             virtual std::string toString() const = 0;
             /** Expression type */
             virtual Types type() const = 0;
+            /** Construct left/right side of equations used in query simplification */
+            virtual Simplification::Member constraint(SimplificationContext context) const = 0;
+            /** Output the expression as it currently is to a file in XML */
+            virtual std::string toXML(uint32_t tabs, bool tokencount = false) const = 0;
+            /** Stubborn reduction: increasing and decreasing sets */
+            virtual void incr(ReducingSuccessorGenerator& generator) const = 0;
+            virtual void decr(ReducingSuccessorGenerator& generator) const = 0;
+            
+            void setEval(int eval) {
+                _eval = eval;
+            }
+            
+            int getEval() {
+                return _eval;
+            }
         };
 
         /** Base condition */
@@ -117,6 +139,7 @@ namespace PetriEngine {
             std::vector<std::string> _placenameforbound;
             std::vector<size_t> _placeids;
             size_t _bound = 0;
+            bool _eval = false;
         public:
             /** Virtual destructor */
             virtual ~Condition();
@@ -126,8 +149,7 @@ namespace PetriEngine {
             virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate condition */
             virtual bool evaluate(const EvaluationContext& context) const = 0;
-            /** Analyze constraints for over-approximation */
-            virtual void findConstraints(ConstraintAnalysisContext& context) const = 0;
+            virtual bool evalAndSet(const EvaluationContext& context) = 0;
             /** Generate LLVM intermediate code for this condition  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert condition to string */
@@ -136,6 +158,28 @@ namespace PetriEngine {
             virtual std::string toTAPAALQuery(TAPAALConditionExportContext& context) const = 0;
             /** Get distance to query */
             virtual uint32_t distance(DistanceContext& context) const = 0;
+            /** Query Simplification */
+            virtual Simplification::Retval simplify(SimplificationContext context) const = 0;
+            /** Check if query is a reachability query */
+            virtual bool isReachability(uint32_t depth = 0) const = 0;
+            /** Check if query is an upper bound query */
+            virtual bool isUpperBound() = 0;
+            /** Prepare reachability queries */
+            virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
+            /** Output the condition as it currently is to a file in XML */
+            virtual std::string toXML(uint32_t tabs) const = 0;
+            /** Find interesting transitions in stubborn reduction*/
+            virtual void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const = 0;
+
+            bool isSatisfied() const
+            {
+                return _eval;
+            }
+            
+            void setSatisfied(bool isSatisfied)
+            {
+                _eval = isSatisfied;
+            }
             
             void setInvariant(bool isInvariant)
             {

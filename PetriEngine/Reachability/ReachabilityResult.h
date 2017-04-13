@@ -47,8 +47,12 @@ namespace PetriEngine {
                 /** The query cannot be satisfied */
                 NotSatisfied,
                 /** We're unable to say if the query can be satisfied */
-                Unknown
+                Unknown,
+                /** The query should be verified using the CTL engine */
+                CTL
             };
+            
+            const string techniques = "TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS";
             
             ResultPrinter(PetriNetBuilder* b, options_t* o, std::vector<std::string>& querynames) 
             : builder(b), options(o), querynames(querynames), reducer(NULL)
@@ -67,6 +71,8 @@ namespace PetriEngine {
                 int maxTokens = 0,
                 const std::vector<uint32_t> maxPlaceBound = std::vector<uint32_t>(),
                 Structures::StateSetInterface* stateset = NULL, size_t lastmarking = 0 );
+            
+            std::string printTechniques();
             
             void printTrace(Structures::StateSetInterface*, size_t lastmarking);
             

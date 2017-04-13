@@ -26,6 +26,8 @@
 #include <string.h>
 #include <assert.h>
 #include <limits>
+#include <stdlib.h>
+#include <stdint.h>
 
 #ifndef BINARYWRAPPER_H
 #define	BINARYWRAPPER_H
@@ -50,7 +52,7 @@ namespace ptrie
          * Empty constructor, no data is allocated
          */
         
-        binarywrapper_t()
+        binarywrapper_t() : _blob(NULL), _nbytes(0)
         {            
         }
         
@@ -58,7 +60,7 @@ namespace ptrie
          Allocates a room for at least size bits
          */
         
-        binarywrapper_t(uint size);
+        binarywrapper_t(size_t size);
         
         /**
          * Constructor for copying over data from latest the offset'th bit.
@@ -113,27 +115,27 @@ namespace ptrie
          */
         
         //binarywrapper_t clone() const;
-        
+
         /**
          * Copy over data and meta-data from other, but insert only into target
          * after offset bits.
          * Notice that this can cause memory-corruption if there is not enough
          * room in target, or to many bits are skipped.
          * @param other: wrapper to copy from
-         * @param offset: bits to skip 
+         * @param offset: bits to skip
          */
-        
+
         void copy(const binarywrapper_t& other, uint offset);
-        
+
         /**
          * Copy over size bytes form raw data. Assumes that current wrapper has
          * enough room.
          * @param raw: source data
          * @param size: number of bytes to copy
          */
-        
+
         void copy(const uchar* raw, uint size);
-        
+
         // accessors
         /**
          * Get value of the place'th bit
@@ -188,7 +190,7 @@ namespace ptrie
          * pretty print of content
          */
         
-        void print(size_t length = std::numeric_limits<size_t>::max()) const;
+        void print(std::ostream& strean, size_t length = std::numeric_limits<size_t>::max()) const;
         
         /**
          * finds the overhead (unused number of bits) when allocating for size
@@ -197,10 +199,10 @@ namespace ptrie
          * @return 
          */
         
-        static size_t overhead(uint size);
+        static size_t overhead(size_t size);
         
         
-        static size_t bytes(uint size);
+        static size_t bytes(size_t size);
         // modifiers
         /**
          * Change value of place'th bit 
@@ -241,6 +243,7 @@ namespace ptrie
             if(_nbytes > __BW_BSIZE__)
                 dealloc(_blob);
             _blob = NULL;
+            _nbytes = 0;
         }
                 
         /**
@@ -248,8 +251,8 @@ namespace ptrie
          * @param i: index to access
          * @return 
          */
-        
-        inline uchar operator[](int i) const
+
+        inline uchar operator[](size_t i) const
         {
             if (i >= _nbytes) {
                  return 0x0;
@@ -321,7 +324,7 @@ namespace ptrie
             free(data);
         }
         
-        static inline uchar* offset(uchar* data, uint16_t size)
+        static inline uchar* offset(uchar* data, uint32_t size)
         {
 //            if((size % __BW_BSIZE__) == 0) return data;
 //            else return &data[(__BW_BSIZE__ - (size % __BW_BSIZE__))];
@@ -332,12 +335,13 @@ namespace ptrie
         uchar* _blob;
             
         // number of bytes allocated on heap
-        uint16_t _nbytes;
+        uint32_t _nbytes;
                
         // masks for single-bit access
      } __attribute__((packed));
 }
-
-
+namespace std {
+    std::ostream &operator<<(std::ostream &os, const ptrie::binarywrapper_t &b);
+}
 #endif	/* BINARYWRAPPER_H */
 
