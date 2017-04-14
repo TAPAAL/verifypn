@@ -588,6 +588,7 @@ int main(int argc, char* argv[]) {
     std::string CTLQueries = getXMLQueries(queries, querynames, results);
     
     if (CTLQueries.size() > 0) {
+        PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
         PetriNet* ctlnet = builder.makePetriNet();
         // Update query indexes
         int ctlQueryCount = std::count(results.begin(), results.end(), ResultPrinter::CTL);
@@ -595,6 +596,13 @@ int main(int argc, char* argv[]) {
         
         for (int x = 0; x < ctlQueryCount; x++) {
             options.querynumbers.insert(x);
+        }
+        
+        // Default to DFS if strategy is not BFS or DFS (No heuristic strategy)        
+        if(options.strategy != PetriEngine::Reachability::DFS && 
+                options.strategy != PetriEngine::Reachability::BFS){
+            options.strategy = PetriEngine::Reachability::DFS;
+            fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
         }
         
         v = CTLMain(ctlnet,
@@ -612,8 +620,10 @@ int main(int argc, char* argv[]) {
         if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
             return v;
         }
+        // go back to previous strategy if the program continues
+        options.strategy=reachabilityStrategy;
     }
-
+    
     //--------------------- Apply Net Reduction ---------------//
         
     if (options.enablereduction == 1 || options.enablereduction == 2) {
