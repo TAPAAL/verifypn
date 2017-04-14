@@ -34,11 +34,13 @@ namespace PetriEngine {
                     placeBound = std::max<uint32_t>(placeBound, maxPlaceBound[p]);
                 }
                 // fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
-                std::cout   << "STATE_SPACE STATES "<< exploredStates           << techniques 
-//                            << "STATE_SPACE TRANSITIONS "<< discoveredStates <<" TECHNIQUES EXPLICIT\n" 
-                            << "STATE_SPACE TRANSITIONS "<< -1                  << techniques 
-                            << "STATE_SPACE MAX_TOKEN_PER_MARKING "<< maxTokens << techniques 
-                            << "STATE_SPACE MAX_TOKEN_IN_PLACE "<< placeBound   << techniques
+                std::cout   << "STATE_SPACE STATES "<< exploredStates           << " " << techniques  
+                            << std::endl
+                            << "STATE_SPACE TRANSITIONS "<< -1                  << " " << techniques  
+                            << std::endl
+                            << "STATE_SPACE MAX_TOKEN_PER_MARKING "<< maxTokens << " " << techniques  
+                            << std::endl
+                            << "STATE_SPACE MAX_TOKEN_IN_PLACE "<< placeBound   << " " << techniques 
                             << std::endl;
                 return retval;
             }
