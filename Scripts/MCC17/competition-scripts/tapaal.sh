@@ -14,7 +14,7 @@ VERIFYPN=$HOME/Datalogi/speciale/tools/flagship/verifypn-osx64
 # Tools
 PAR_CMD=$PREFIX/../bin/parallel
 TIMEOUT_CMD=timeout
-TIME_CMD=/usr/bin/time
+TIME_CMD="/usr/bin/time -v"
 
 #Allowed memory in kB
 MEM="14500000"
