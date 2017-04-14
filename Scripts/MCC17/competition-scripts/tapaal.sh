@@ -6,13 +6,13 @@
 MODEL_PATH=.
 
 # Path to script directory
-PREFIX=$HOME/Datalogi/speciale/tools/flagship/Scripts/MCC17/competition-scripts
+PREFIX=/home/mcc/BenchKit
 
 # Verifypn
-VERIFYPN=$HOME/Datalogi/speciale/tools/flagship/verifypn-osx64
+VERIFYPN=/home/mcc/BenchKit/bin/verifypn-linux64
 
 # Tools
-PAR_CMD=$PREFIX/../bin/parallel
+PAR_CMD=$PREFIX/bin/parallel/parallel
 TIMEOUT_CMD=timeout
 TIME_CMD="/usr/bin/time -v"
 
@@ -30,6 +30,23 @@ STRATEGY_SEQ="-s DFS"
 TIMEOUT_TOTAL=3600 # competition 1 hour
 TIMEOUT_SEQ_MIN=480 # competition 8 min
 TIMEOUT_PAR=60 # competition 1 min
+
+
+if [ ! -f iscolored ]; then
+    	echo "File 'iscolored' not found!"
+else
+    if [ "TRUE" = $(cat "iscolored") ]; then
+		echo "TAPAAL does not support colored nets."
+		echo "DO_NOT_COMPETE" 
+		exit 0
+	fi
+fi
+
+if [ ! -f model.pnml ]; then
+    	echo "File 'model.pnml' not found!"
+	exit 1
+fi
+
 
 function verifyparallel {
     # Keep track of time passed (in seconds)
@@ -136,11 +153,11 @@ case "$BK_EXAMINATION" in
         $TIME_CMD $TIMEOUT_CMD $TIMEOUT_TOTAL $VERIFYPN -p -q 0 -e -s BFS $MODEL_PATH/model.pnml 
         ;;
 
-        UpperBounds)	
+    UpperBounds)	
         echo		
-        echo "*****************************************"
-        echo "*  TAPAAL CLASSIC verifying UpperBounds *"
-        echo "*****************************************" 
+        echo "**********************************"
+        echo "*  TAPAAL verifying UpperBounds  *"
+        echo "**********************************" 
         CATEGORY="UpperBounds.xml"
         STRATEGY_SEQ="-s BFS -r 1 -p -q 0"
         NUMBER=`cat $MODEL_PATH/$CATEGORY | grep "<property>" | wc -l`
