@@ -18,7 +18,7 @@
  *                          Frederik Meyer Boenneland <fbanne12@student.aau.dk>
  *                          Jakob Dyhr <jakobdyhr@gmail.com>
  *                          Peter Gjøl Jensen <root@petergjoel.dk>
- *                          Mads Johannsen <mjohan12@student.aau.dk.
+ *                          Mads Johannsen <mads_johannsen@yahoo.com>
  *                          Jiri Srba <srba.jiri@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
