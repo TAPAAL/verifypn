@@ -560,7 +560,10 @@ int main(int argc, char* argv[]) {
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
                 std::cerr << "Exception information: " << ba.what() << std::endl;
-                continue;
+                
+                delete qnet;
+                delete[] qm0;
+                std::exit(3);
             }
 
             if(options.printstatistics){fprintf(stdout, "Query after reduction:  %s\n", queries[i]->toString().c_str());}
