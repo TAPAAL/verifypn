@@ -34,11 +34,13 @@ namespace PetriEngine {
                     placeBound = std::max<uint32_t>(placeBound, maxPlaceBound[p]);
                 }
                 // fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
-                std::cout   << "STATE_SPACE STATES "<< exploredStates           << techniques 
-//                            << "STATE_SPACE TRANSITIONS "<< discoveredStates <<" TECHNIQUES EXPLICIT\n" 
-                            << "STATE_SPACE TRANSITIONS "<< -1                  << techniques 
-                            << "STATE_SPACE MAX_TOKEN_PER_MARKING "<< maxTokens << techniques 
-                            << "STATE_SPACE MAX_TOKEN_IN_PLACE "<< placeBound   << techniques
+                std::cout   << "STATE_SPACE STATES "<< exploredStates           << " " << techniquesStateSpace
+                            << std::endl
+                            << "STATE_SPACE TRANSITIONS "<< -1                  << " " << techniquesStateSpace
+                            << std::endl
+                            << "STATE_SPACE MAX_TOKEN_PER_MARKING "<< maxTokens << " " << techniquesStateSpace
+                            << std::endl
+                            << "STATE_SPACE MAX_TOKEN_IN_PLACE "<< placeBound   << " " << techniquesStateSpace 
                             << std::endl;
                 return retval;
             }
@@ -62,7 +64,7 @@ namespace PetriEngine {
                 if (!query->placeNameForBound().empty()) {
                     // find index of the place for reporting place bound
 
-                    std::cout << query->getBound() << " " << techniques << std::endl;
+                    std::cout << query->getBound() << " " << techniquesStateSpace << std::endl;
 
                 } else {
                     if(!options->statespaceexploration)

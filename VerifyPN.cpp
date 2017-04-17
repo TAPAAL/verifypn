@@ -1,16 +1,24 @@
-/* PeTe - Petri Engine exTremE
+/* TAPAAL untimed verification engine verifypn 
  * Copyright (C) 2011-2017  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                          Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                          Lars Kærlund Østergaard <larsko@gmail.com>,
  *                          Jiri Srba <srba.jiri@gmail.com>,
  *                          Peter Gjøl Jensen <root@petergjoel.dk>
+ *
  * CTL Extension
  *                          Peter Fogh <pfogh12@student.aau.dk>
- *                          Isabella Kaufmann <ikaufm12@student.aau.dk>
+ *                          Isabella Kaufmann <bellakaufmann93@gmail.com>
  *                          Tobias Skovgaard Jepsen <tjeps12@student.aau.dk>
  *                          Lasse Steen Jensen <lasjen12@student.aau.dk>
- *                          Søren Moss Nielsen <smni12@student.aau.dk>
+ *                          Søren Moss Nielsen <soren_moss@mac.com>
  *                          Samuel Pastva <daemontus@gmail.com>
+ *                          Jiri Srba <srba.jiri@gmail.com>
+ *
+ * Stubborn sets, query simplification, siphon-trap property
+ *                          Frederik Meyer Boenneland <fbanne12@student.aau.dk>
+ *                          Jakob Dyhr <jakobdyhr@gmail.com>
+ *                          Peter Gjøl Jensen <root@petergjoel.dk>
+ *                          Mads Johannsen <mjohan12@student.aau.dk.
  *                          Jiri Srba <srba.jiri@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -217,7 +225,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 0  disabled\n"
                     "                                     - 1  aggressive reduction (default)\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
-                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds, default 30, write -q 0 to disable query reduction\n"
+                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
+                    "                                     write -q 0 to disable query reduction\n"
                     "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
                     "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds, default 0\n"
@@ -225,8 +234,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
                     "  -ctl                               Verify CTL properties\n"
-                    "                                     - local        Liu and Smolka's on-the-fly algorithm\n"
-                    "                                     - czero        local with certain zero extension (default)\n"
+                    "                                     - local     Liu and Smolka's on-the-fly algorithm\n"
+                    "                                     - czero     local with certain zero extension (default)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
                     "\n"
                     "Return Values:\n"
@@ -240,17 +249,21 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             return SuccessCode;
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
             printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERSION);
-            printf("Copyright (C) 2011-2017 Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
-            printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>,\n");
-            printf("                        Lars Kærlund Østergaard <larsko@gmail.com>,\n");
-            printf("                        Jiri Srba <srba.jiri@gmail.com>,\n");
-            printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
+            printf("Copyright (C) 2011-2017\n");
+            printf("                        Frederik Meyer Boenneland <fbanne12@student.aau.dk>\n");
+            printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
             printf("                        Peter Fogh <pfogh12@student.aau.dk>\n");
-            printf("                        Isabella Kaufmann <ikaufm12@student.aau.dk>\n");
-            printf("                        Tobias Skovgaard Jepsen <tjeps12@student.aau.dk>\n");
+            printf("                        Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
             printf("                        Lasse Steen Jensen <lasjen12@student.aau.dk>\n");
-            printf("                        Søren Moss Nielsen <smni12@student.aau.dk>\n");
+            printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
+            printf("                        Tobias Skovgaard Jepsen <tjeps12@student.aau.dk>\n");
+            printf("                        Mads Johannsen <mjohan12@student.aau.dk\n");
+            printf("                        Isabella Kaufmann <bellakaufmann93@gmail.com>\n");
+            printf("                        Søren Moss Nielsen <soren_moss@mac.com>\n");
+            printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>,\n");
             printf("                        Samuel Pastva <daemontus@gmail.com>\n");
+            printf("                        Jiri Srba <srba.jiri@gmail.com>,\n");
+            printf("                        Lars Kærlund Østergaard <larsko@gmail.com>,\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
         } else if (options.modelfile == NULL) {
@@ -536,8 +549,28 @@ int main(int argc, char* argv[]) {
         for(size_t i = 0; i < queries.size(); ++i)
         {
             if (queries[i]->isUpperBound()) continue;
-            queries[i] = (queries[i]->simplify(SimplificationContext(qm0, qnet, 
-                    options.queryReductionTimeout, options.lpsolveTimeout))).formula;   
+            
+            SimplificationContext simplificationContext(qm0, qnet, 
+                    options.queryReductionTimeout, options.lpsolveTimeout);
+            
+            if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
+
+            try {
+                queries[i] = (queries[i]->simplify(SimplificationContext(simplificationContext))).formula;   
+            } catch (std::bad_alloc& ba){
+                std::cerr << "Query reduction failed." << std::endl;
+                std::cerr << "Exception information: " << ba.what() << std::endl;
+                continue;
+            }
+
+            if(options.printstatistics){fprintf(stdout, "Query after reduction:  %s\n", queries[i]->toString().c_str());}
+            if(options.printstatistics){
+                if(simplificationContext.timeout()){
+                    fprintf(stdout, "Query reduction reached timeout.\n");
+                } else {
+                    fprintf(stdout, "Query reduction finished after %f seconds.\n", simplificationContext.getReductionTime());
+                }
+            }
         }
     }
     
@@ -574,6 +607,7 @@ int main(int argc, char* argv[]) {
     std::string CTLQueries = getXMLQueries(queries, querynames, results);
     
     if (CTLQueries.size() > 0) {
+        PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
         PetriNet* ctlnet = builder.makePetriNet();
         // Update query indexes
         int ctlQueryCount = std::count(results.begin(), results.end(), ResultPrinter::CTL);
@@ -581,6 +615,13 @@ int main(int argc, char* argv[]) {
         
         for (int x = 0; x < ctlQueryCount; x++) {
             options.querynumbers.insert(x);
+        }
+        
+        // Default to DFS if strategy is not BFS or DFS (No heuristic strategy)        
+        if(options.strategy != PetriEngine::Reachability::DFS && 
+                options.strategy != PetriEngine::Reachability::BFS){
+            options.strategy = PetriEngine::Reachability::DFS;
+            fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
         }
         
         v = CTLMain(ctlnet,
@@ -598,8 +639,10 @@ int main(int argc, char* argv[]) {
         if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
             return v;
         }
+        // go back to previous strategy if the program continues
+        options.strategy=reachabilityStrategy;
     }
-
+    
     //--------------------- Apply Net Reduction ---------------//
         
     if (options.enablereduction == 1 || options.enablereduction == 2) {

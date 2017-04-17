@@ -197,15 +197,16 @@ namespace PetriEngine {
                 _negated = b;
             }
             
+            double getReductionTime(){
+                // duration in seconds
+                auto end = std::chrono::high_resolution_clock::now();
+                return (std::chrono::duration_cast<std::chrono::microseconds>(end - _start).count())*0.000001;
+            }
+            
             bool timeout() {
                 auto end = std::chrono::high_resolution_clock::now();
                 auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _start);
-                
-                if (diff.count() > _queryTimeout) {
-                    std::cout<<"note: Query reduction timeout"<<std::endl;
-                    return true;
-                }
-                return false;
+                return (diff.count() > _queryTimeout);
             }
             
             uint32_t getLpTimeout() {

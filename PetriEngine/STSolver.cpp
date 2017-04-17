@@ -40,17 +40,17 @@ namespace PetriEngine {
      * 
      * for all (t in T)    
      *     for all (p in post(t))
-     *         (-p^0 + SUM(p' in pre(t)) p'^0) LE 0
+     *         -p^0 + SUM(q in pre(t)) q^0 GE 0
      */ 
     void STSolver::CreateSiphonConstraints(){       
         // (SUM(p in P) p^0) >= 1
         std::vector<STVariable> variables;
         for(uint32_t p=0;p<_net._nplaces;p++){ 
-            variables.push_back(STVariable(VarPlace(p,0), 1)); // p^0
+            variables.push_back(STVariable(VarPlace(p,0), 1));
         }  
         MakeConstraint(variables, GE, 1);
         
-        // for all (t in T) for all (p in post(t)) (-p^0 + SUM(p' in pre(t)) p'^0) GE 0
+        // for all (t in T) for all (p in post(t)) (-p^0 + SUM(q in pre(t)) q^0) GE 0
         for(uint32_t t=0; t<_net._ntransitions; t++){
             uint32_t finv = _net._transitions[t].outputs;
             uint32_t linv = _net._transitions[t+1].inputs; 
@@ -60,8 +60,8 @@ namespace PetriEngine {
                 
                 uint32_t finv2 = _net._transitions[t].inputs;
                 uint32_t linv2 = _net._transitions[t].outputs;
-                for(; finv2 < linv2; finv2++){ // SUM(p' in pre(t))
-                    variables2.push_back(STVariable(VarPlace(_net._invariants[finv2].place,0), 1)); // p'^0
+                for(; finv2 < linv2; finv2++){ // SUM(q in pre(t))
+                    variables2.push_back(STVariable(VarPlace(_net._invariants[finv2].place,0), 1)); // q^0
                 }
                 MakeConstraint(variables2, GE, 0);
             }
@@ -70,40 +70,40 @@ namespace PetriEngine {
     
     /* 
      * for all (p in P)
-     *     -p^i+1 + p^i + SUM(t in post(p) post_t^i LE card(post(p))
+     *     -p^i+1 + p^i + SUM(t in post(p)) post_t^i LE card(post(p))
+     * 
+     *     for all (t in post(p)) 
+     *         -p^i+1 + post_t^i GE 0 
      * 
      *     -p^i+1 + p^i GE 0
-     *
-     *     for all (t in post(p)) 
-     *         -p^i+1 + post_t^i GE 0
      */
     void STSolver::CreateStepConstraints(uint32_t i){  
-        // for all (p in P) -p^i+1 + p^i + SUM(t in post(p) post_t^i LE card(post(p))         
+        // for all (p in P) 
+        // -p^i+1 + p^i + SUM(t in post(p) post_t^i LE card(post(p))         
         for(uint32_t p=0; p<_net._nplaces; p++){
             std::vector<STVariable> variables1;
             variables1.push_back(STVariable(VarPlace(p,(i+1)), -1)); // -p^i+1
-            variables1.push_back(STVariable(VarPlace(p,i), 1)); // p^i
+            variables1.push_back(STVariable(VarPlace(p,i), 1));      // p^i
             
-            // for all (p in P) for all (t in post(p)) -p^i+1 + post_t^i GE 0
+            // for all (t in post(p)) -p^i+1 + post_t^i GE 0
             for (uint32_t t = _places.get()[p].post; t < _places.get()[p + 1].pre; t++){ // for all t in post(p)
-                variables1.push_back(STVariable(VarPostT(_transitions.get()[t],i), 1)); // post_t^i
+                variables1.push_back(STVariable(VarPostT(_transitions.get()[t],i), 1));  // post_t^i
                 std::vector<STVariable> variables3;
-                variables3.push_back(STVariable(VarPlace(p,(i+1)), -1)); // -p^i+1
-                variables3.push_back(STVariable(VarPostT(_transitions.get()[t],i), 1)); // post_t^i
+                variables3.push_back(STVariable(VarPlace(p,(i+1)), -1));                 // -p^i+1
+                variables3.push_back(STVariable(VarPostT(_transitions.get()[t],i), 1));  // post_t^i
                 MakeConstraint(variables3, GE, 0);
             }
             MakeConstraint(variables1, LE, (_places.get()[p + 1].pre - _places.get()[p].post));        
-            // for all (p in P) -p^i+1 + p^i GE 0
+            
+            // -p^i+1 + p^i GE 0
             std::vector<STVariable> variables2;
             variables2.push_back(STVariable(VarPlace(p,(i+1)), -1)); // -p^i+1
-            variables2.push_back(STVariable(VarPlace(p,i), 1)); // p^i
+            variables2.push_back(STVariable(VarPlace(p,i), 1));      // p^i
             MakeConstraint(variables2, GE, 0);
         }
     }
     
     /*
-     * post_t <=> OR(p in post(t))
-     * ---
      * for all (t in T)
      *     -post_t^i + SUM(p in post(t)) p^i GE 0
      *      
