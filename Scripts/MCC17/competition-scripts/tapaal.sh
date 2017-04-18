@@ -110,10 +110,21 @@ function verifyparallel {
         # Execute verifypn on sequential strategy
         echo "Running query $Q for $TIMEOUT_SEQ seconds. Remaining: $REMAINING_SEQ queries and $REMAINING_TIME seconds"
         $TIME_CMD $TIMEOUT_CMD $TIMEOUT_SEQ $VERIFYPN $OPTIONS $STRATEGY_SEQ $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $Q
+        RETVAL=$?
 
-        if [[ $? == 0 ]]; then
+        if [[ $RETVAL == 0 ]]; then
             unset QUERIES[$Q-1]
             echo "Solution found"
+        elif [[ $RETVAL == 3 && "$STRATEGY_SEQ" != *"-q 0"* ]]; then
+            echo "Verifypn has exit with error. Re-trying without query reduction"
+            echo "Running query $Q for $TIMEOUT_SEQ seconds. Remaining: $REMAINING_SEQ queries and $REMAINING_TIME seconds"
+            $TIME_CMD $TIMEOUT_CMD $TIMEOUT_SEQ $VERIFYPN $OPTIONS $STRATEGY_SEQ -q 0 $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $Q
+            if [[ $? == 0 ]]; then
+                unset QUERIES[$Q-1]
+                echo "Solution found (without query reduction)"
+            else
+                echo "No solution found (without query reduction)"
+            fi
         else
             echo "No solution found"
         fi

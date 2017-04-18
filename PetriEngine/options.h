@@ -22,7 +22,7 @@ struct options_t {
     std::set<size_t> querynumbers = std::set<size_t>();
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
     bool trace = false;
-    int queryReductionTimeout = 30, lpsolveTimeout = 10;
+    int queryReductionTimeout = 5, lpsolveTimeout = 5;
     int siphontrapTimeout = 0;
     bool upperboundcheck = false;
 

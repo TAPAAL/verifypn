@@ -18,7 +18,7 @@
  *                          Frederik Meyer Boenneland <fbanne12@student.aau.dk>
  *                          Jakob Dyhr <jakobdyhr@gmail.com>
  *                          Peter Gjøl Jensen <root@petergjoel.dk>
- *                          Mads Johannsen <mjohan12@student.aau.dk.
+ *                          Mads Johannsen <mads_johannsen@yahoo.com>
  *                          Jiri Srba <srba.jiri@gmail.com>
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -225,9 +225,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 0  disabled\n"
                     "                                     - 1  aggressive reduction (default)\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
-                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
+                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 5)\n"
                     "                                     write -q 0 to disable query reduction\n"
-                    "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
+                    "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 5\n"
                     "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
                     "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds, default 0\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
@@ -554,7 +554,18 @@ int main(int argc, char* argv[]) {
                     options.queryReductionTimeout, options.lpsolveTimeout);
             
             if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
-            queries[i] = (queries[i]->simplify(SimplificationContext(simplificationContext))).formula;   
+
+            try {
+                queries[i] = (queries[i]->simplify(SimplificationContext(simplificationContext))).formula;   
+            } catch (std::bad_alloc& ba){
+                std::cerr << "Query reduction failed." << std::endl;
+                std::cerr << "Exception information: " << ba.what() << std::endl;
+                
+                delete qnet;
+                delete[] qm0;
+                std::exit(3);
+            }
+
             if(options.printstatistics){fprintf(stdout, "Query after reduction:  %s\n", queries[i]->toString().c_str());}
             if(options.printstatistics){
                 if(simplificationContext.timeout()){
@@ -563,7 +574,6 @@ int main(int argc, char* argv[]) {
                     fprintf(stdout, "Query reduction finished after %f seconds.\n", simplificationContext.getReductionTime());
                 }
             }
-            
         }
     }
     
