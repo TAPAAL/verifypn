@@ -250,7 +250,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
             printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERSION);
             printf("Copyright (C) 2011-2017\n");
-            printf("                        Frederik Meyer Boenneland <fbanne12@student.aau.dk>\n");
+            printf("                        Frederik Meyer Boenneland <sadpantz@gmail.com>\n");
             printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
             printf("                        Peter Fogh <pfogh12@student.aau.dk>\n");
             printf("                        Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
@@ -583,12 +583,12 @@ int main(int argc, char* argv[]) {
     if (!options.statespaceexploration){
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            if(queries[i]->toString() == "true"){
+            if(queries[i]->isTriviallyTrue()){
                 results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
                 if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
-            } else if (queries[i]->toString() == "false") {
+            } else if (queries[i]->isTriviallyFalse()) {
                 results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
                 if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
