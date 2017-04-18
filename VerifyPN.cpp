@@ -6,16 +6,16 @@
  *                          Peter Gjøl Jensen <root@petergjoel.dk>
  *
  * CTL Extension
- *                          Peter Fogh <pfogh12@student.aau.dk>
+ *                          Peter Fogh <peter.f1992@gmail.com>
  *                          Isabella Kaufmann <bellakaufmann93@gmail.com>
- *                          Tobias Skovgaard Jepsen <tjeps12@student.aau.dk>
- *                          Lasse Steen Jensen <lasjen12@student.aau.dk>
+ *                          Tobias Skovgaard Jepsen <tobiasj1991@gmail.com>
+ *                          Lasse Steen Jensen <lassjen88@gmail.com>
  *                          Søren Moss Nielsen <soren_moss@mac.com>
  *                          Samuel Pastva <daemontus@gmail.com>
  *                          Jiri Srba <srba.jiri@gmail.com>
  *
  * Stubborn sets, query simplification, siphon-trap property
- *                          Frederik Meyer Boenneland <fbanne12@student.aau.dk>
+ *                          Frederik Meyer Boenneland <sadpantz@gmail.com>
  *                          Jakob Dyhr <jakobdyhr@gmail.com>
  *                          Peter Gjøl Jensen <root@petergjoel.dk>
  *                          Mads Johannsen <mads_johannsen@yahoo.com>
@@ -250,14 +250,14 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
             printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERSION);
             printf("Copyright (C) 2011-2017\n");
-            printf("                        Frederik Meyer Boenneland <fbanne12@student.aau.dk>\n");
+            printf("                        Frederik Meyer Boenneland <sadpantz@gmail.com>\n");
             printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
-            printf("                        Peter Fogh <pfogh12@student.aau.dk>\n");
+            printf("                        Peter Fogh <peter.f1992@gmail.com>\n");
             printf("                        Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
-            printf("                        Lasse Steen Jensen <lasjen12@student.aau.dk>\n");
+            printf("                        Lasse Steen Jensen <lassjen88@gmail.com>\n");
             printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
-            printf("                        Tobias Skovgaard Jepsen <tjeps12@student.aau.dk>\n");
-            printf("                        Mads Johannsen <mjohan12@student.aau.dk\n");
+            printf("                        Tobias Skovgaard Jepsen <tobiasj1991@gmail.com>\n");
+            printf("                        Mads Johannsen <mads_johannsen@yahoo.com>\n");
             printf("                        Isabella Kaufmann <bellakaufmann93@gmail.com>\n");
             printf("                        Søren Moss Nielsen <soren_moss@mac.com>\n");
             printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>,\n");
