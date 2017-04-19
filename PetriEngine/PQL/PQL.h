@@ -170,6 +170,10 @@ namespace PetriEngine {
             virtual std::string toXML(uint32_t tabs) const = 0;
             /** Find interesting transitions in stubborn reduction*/
             virtual void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const = 0;
+            /** Checks if the condition is trivially true */
+            bool isTriviallyTrue();
+            /*** Checks if the condition is trivially false */
+            bool isTriviallyFalse();
 
             bool isSatisfied() const
             {
@@ -214,6 +218,11 @@ namespace PetriEngine {
             std::vector<std::string>& placeNameForBound(){
                 return _placenameforbound;
             }
+            
+        protected:
+            //Value for checking if condition is trivially true or false.
+            //0 is undecided (default), 1 is true, 2 is false.
+            uint32_t trivial = 0;
         };
         typedef std::shared_ptr<Condition> Condition_ptr;
         typedef std::shared_ptr<Expr> Expr_ptr;

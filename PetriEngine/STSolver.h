@@ -39,7 +39,6 @@ namespace PetriEngine {
         void CreateStepConstraints(uint32_t i);
         void CreatePostVarDefinitions(uint32_t i);
         void constructPrePost();
-        void SanityCheckVariables();
         
         Reachability::ResultPrinter& printer;
         PQL::Condition * _query;

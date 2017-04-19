@@ -10,14 +10,14 @@ namespace PetriEngine {
         enum MemberType { Constant, Input, Output, Regular };
         class Member {
         public:
-            std::vector<double> variables;
-            double constant;
+            std::vector<int> variables;
+            int constant;
             bool canAnalyze;
 
-            Member(std::vector<double> vec, double constant) : variables(vec), constant(constant) {
+            Member(std::vector<int> vec, int constant) : variables(vec), constant(constant) {
                 canAnalyze = true;
             }
-            Member(double constant) : constant(constant) {
+            Member(int constant) : constant(constant) {
                 canAnalyze = true;
             }
             Member(){}
@@ -57,7 +57,7 @@ namespace PetriEngine {
             }
 
             bool isConstant() const {
-                for(const double& v : variables){
+                for(const int& v : variables){
                     if(v != 0) return false;
                 }
                 return true;
@@ -67,7 +67,7 @@ namespace PetriEngine {
                 bool isConstant=true;
                 bool isInput=true;
                 bool isOutput=true;
-                for(const double& v : variables){
+                for(const int& v : variables){
                     if(v < 0){
                         isConstant=false;
                         isOutput=false;
@@ -102,9 +102,9 @@ namespace PetriEngine {
             }
             
         private:
-            std::vector<double> addVariables(const Member& m1, const Member& m2) const {
+            std::vector<int> addVariables(const Member& m1, const Member& m2) const {
                 uint32_t size = std::max(m1.variables.size(), m2.variables.size());
-                std::vector<double> res(size);
+                std::vector<int> res(size);
                 
                 for (uint32_t i = 0; i < size; i++) {
                     if (i + 1 > m1.variables.size()) {
@@ -119,9 +119,9 @@ namespace PetriEngine {
                 return res;
             }
 
-            std::vector<double> subtractVariables(const Member& m1, const Member& m2) const {
+            std::vector<int> subtractVariables(const Member& m1, const Member& m2) const {
                 uint32_t size = std::max(m1.variables.size(), m2.variables.size());
-                std::vector<double> res(size);
+                std::vector<int> res(size);
                 
                 for (uint32_t i = 0; i < size; i++) {
                     if (i + 1 > m1.variables.size()) {
@@ -136,8 +136,8 @@ namespace PetriEngine {
                 return res;
             }
 
-            std::vector<double> multiply(const Member& m1, const Member& m2) const {
-                std::vector<double> res;
+            std::vector<int> multiply(const Member& m1, const Member& m2) const {
+                std::vector<int> res;
                 if (m1.isConstant() != m2.isConstant()){
                     if (!m1.isConstant()){
                         for(auto& v : m1.variables){

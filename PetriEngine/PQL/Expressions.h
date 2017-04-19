@@ -564,6 +564,11 @@ namespace PetriEngine {
         public:
 
             BooleanCondition(bool value) : _value(value) {
+                if (value) {
+                    trivial = 1;
+                } else {
+                    trivial = 2;
+                }
             }
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;

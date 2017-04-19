@@ -12,7 +12,7 @@ namespace PetriEngine {
                 row.resize(size);
                 lh.variables.resize(size, 0);
                 rh.variables.resize(size, 0);
-                std::transform(lh.variables.begin(),lh.variables.end(),rh.variables.begin(),row.begin(),std::minus<double>());
+                std::transform(lh.variables.begin(),lh.variables.end(),rh.variables.begin(),row.begin(),std::minus<int>());
 
                 // put constant on right hand side
                 constant = rh.constant - lh.constant; 
@@ -22,9 +22,9 @@ namespace PetriEngine {
             Equation(){
             }
 
-            std::vector<double> row;
+            std::vector<int> row;
             std::string op;
-            double constant;
+            int constant;
             virtual ~Equation(){}
         };
     }

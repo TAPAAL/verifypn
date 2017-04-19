@@ -10,24 +10,11 @@ namespace PetriEngine {
         LinearProgram::~LinearProgram() {
         }
         
-        LinearProgram::LinearProgram(Equation eq){
+        LinearProgram::LinearProgram(const Equation& eq){
             addEquation(eq);
         }
         
-        void LinearProgram::addEquation(Equation eq){
-            if(eq.op == "<"){
-                eq.constant += 1; 
-                eq.op = "<="; 
-            } else if(eq.op == ">"){
-                eq.constant -= 1; 
-                eq.op = ">="; 
-            } else if(eq.op == "!="){
-                // We ignore this operator for now by not adding any equation, 
-                // the resulting LP should be trivially true.
-                // This is untested, however.
-                return;
-            }
-
+        void LinearProgram::addEquation(const Equation& eq){
             equations.push_back(eq);
         }
 
@@ -59,7 +46,11 @@ namespace PetriEngine {
             set_verbose(lp, IMPORTANT);
 
             set_add_rowmode(lp, TRUE);
+            
             std::vector<REAL> row = std::vector<REAL>(nCol + 1);
+            REAL constant = 0;
+            int comparator = GE;
+            
             int rowno = 1;
             
             // restrict all places to contain 0+ tokens
@@ -74,9 +65,35 @@ namespace PetriEngine {
             }
 
             for(Equation& eq : equations){
-                set_row(lp, rowno, eq.row.data());
-                set_constr_type(lp, rowno, op(eq.op));
-                set_rh(lp, rowno++, eq.constant);
+                if(eq.op == "<"){
+                    constant = (REAL) (eq.constant + 1);
+                    comparator = LE;
+                } else if(eq.op == ">"){
+                    constant = (REAL) (eq.constant - 1);
+                    comparator = GE;
+                } else if(eq.op == "<="){
+                    constant = (REAL) eq.constant;
+                    comparator = LE;
+                } else if(eq.op == ">="){
+                    constant = (REAL) eq.constant;
+                    comparator = GE;
+                } else if(eq.op == "=="){
+                    constant = (REAL) eq.constant;
+                    comparator = EQ;
+                } else if(eq.op == "!="){
+                    // We ignore this operator for now by not adding any equation.
+                    // This is untested, however.
+                    continue;
+                }
+                                
+                memset(row.data(), 0, sizeof (REAL) * nCol + 1);
+                for (size_t t = 1; t < nCol+1; t++) {
+                    row[t] = (REAL)eq.row[t];
+                }
+                
+                set_row(lp, rowno, row.data());
+                set_constr_type(lp, rowno, comparator);
+                set_rh(lp, rowno++, constant);
             }
             set_add_rowmode(lp, FALSE);
             
@@ -98,7 +115,7 @@ namespace PetriEngine {
             set_timeout(lp, timeout);
             set_break_at_first(lp, TRUE);
             set_presolve(lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(lp));
-        //    write_LP(lp, stdout);
+//            write_LP(lp, stdout);
             int result = solve(lp);
             delete_lp(lp);
 

@@ -225,11 +225,11 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 0  disabled\n"
                     "                                     - 1  aggressive reduction (default)\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
-                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 5)\n"
+                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
                     "                                     write -q 0 to disable query reduction\n"
                     "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 5\n"
                     "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
-                    "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds, default 0\n"
+                    "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
@@ -250,7 +250,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
             printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERSION);
             printf("Copyright (C) 2011-2017\n");
-            printf("                        Frederik Meyer Boenneland <fbanne12@student.aau.dk>\n");
+            printf("                        Frederik Meyer Boenneland <sadpantz@gmail.com>\n");
             printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
             printf("                        Peter Fogh <pfogh12@student.aau.dk>\n");
             printf("                        Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
@@ -583,12 +583,12 @@ int main(int argc, char* argv[]) {
     if (!options.statespaceexploration){
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            if(queries[i]->toString() == "true"){
+            if(queries[i]->isTriviallyTrue()){
                 results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
                 if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
-            } else if (queries[i]->toString() == "false") {
+            } else if (queries[i]->isTriviallyFalse()) {
                 results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
                 if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
