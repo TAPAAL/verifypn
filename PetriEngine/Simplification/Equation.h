@@ -6,7 +6,7 @@ namespace PetriEngine {
     namespace Simplification {
         class Equation {
         public:
-            Equation(Member lh, Member rh, std::string op) : op(op){
+            Equation(Member& lh, Member& rh, std::string op) : op(op){
                 // put variables on left hand side
                 int size = std::max(lh.variables.size(), rh.variables.size());
                 row.resize(size);

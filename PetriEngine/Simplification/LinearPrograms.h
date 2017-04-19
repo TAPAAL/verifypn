@@ -10,7 +10,7 @@ namespace PetriEngine {
         public:
             LinearPrograms(){
             }
-            LinearPrograms(LinearProgram lp){
+            LinearPrograms(const LinearProgram& lp){
                 add(lp);
             }
             virtual ~LinearPrograms(){
@@ -26,7 +26,7 @@ namespace PetriEngine {
                 return false;
             }
 
-            void add(LinearProgram lp){
+            void add(const LinearProgram& lp){
                 lps.push_back(lp);
             }
 
