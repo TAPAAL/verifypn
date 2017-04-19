@@ -74,9 +74,13 @@ namespace PetriEngine {
             }
 
             for(Equation& eq : equations){
-                set_row(lp, rowno, eq.row.data());
+                memset(row.data(), 0, sizeof (REAL) * nCol + 1);
+                for (size_t t = 1; t < nCol+1; t++) {
+                    row[t] = (REAL)eq.row[t];
+                }
+                set_row(lp, rowno, row.data());
                 set_constr_type(lp, rowno, op(eq.op));
-                set_rh(lp, rowno++, eq.constant);
+                set_rh(lp, rowno++, (REAL)eq.constant);
             }
             set_add_rowmode(lp, FALSE);
             
@@ -98,7 +102,7 @@ namespace PetriEngine {
             set_timeout(lp, timeout);
             set_break_at_first(lp, TRUE);
             set_presolve(lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(lp));
-        //    write_LP(lp, stdout);
+//            write_LP(lp, stdout);
             int result = solve(lp);
             delete_lp(lp);
 

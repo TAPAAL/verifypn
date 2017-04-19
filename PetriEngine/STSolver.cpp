@@ -316,39 +316,4 @@ namespace PetriEngine {
         _places.get()[p].pre = offset;
         _places.get()[p].post = offset;
     }
-    
-    // for debugging purpose
-    void STSolver::SanityCheckVariables(){
-        // Testing place variables
-        for(uint32_t i = 0; i<=_siphonDepth+1; i++){
-            for(uint32_t p = 0; p<_net._nplaces; p++){
-                std::cout<<"adding place "<<get_origcol_name(_lp, VarPlace(p,i))<<std::endl;
-                std::vector<STVariable> variables;
-                variables.push_back(STVariable(VarPlace(p,i), 1));
-                MakeConstraint(variables, GE, 1);
-            }
-            for(uint32_t p = 0; p<_net._nplaces; p++){
-                std::cout<<"adding place negative "<<get_origcol_name(_lp, VarPlace(p,i))<<std::endl;
-                std::vector<STVariable> variables;
-                variables.push_back(STVariable(VarPlace(p,i), -1));
-                MakeConstraint(variables, GE, 1);
-            }
-        }
-        
-        // Testing transition variables
-        for(uint32_t i = 0; i<=_siphonDepth; i++){
-            for(uint32_t t = 0; t<_net._ntransitions; t++){
-                std::cout<<"adding transition "<<get_origcol_name(_lp, VarPostT(t,i))<<std::endl;
-                std::vector<STVariable> variables;
-                variables.push_back(STVariable(VarPostT(t,i), 1));
-                MakeConstraint(variables, GE, 1);
-            }
-            for(uint32_t t = 0; t<_net._ntransitions; t++){
-                std::cout<<"adding transition negative "<<get_origcol_name(_lp, VarPostT(t,i))<<std::endl;
-                std::vector<STVariable> variables;
-                variables.push_back(STVariable(VarPostT(t,i), -1));
-                MakeConstraint(variables, GE, 1);
-            }
-        }
-    }
 }

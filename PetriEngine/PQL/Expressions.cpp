@@ -857,7 +857,7 @@ namespace PetriEngine {
         
         Member IdentifierExpr::constraint(SimplificationContext context) const {
             // Reserve index 0 to LPsolve
-            std::vector<double> row(context.net()->numberOfTransitions() + 1);
+            std::vector<int> row(context.net()->numberOfTransitions() + 1);
             uint32_t p = offset();
             for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
                 row[1 + t] = context.net()->outArc(t, p) - context.net()->inArc(p, t);

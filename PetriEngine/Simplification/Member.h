@@ -10,14 +10,14 @@ namespace PetriEngine {
         enum MemberType { Constant, Input, Output, Regular };
         class Member {
         public:
-            std::vector<double> variables;
-            double constant;
+            std::vector<int> variables;
+            int constant;
             bool canAnalyze;
 
-            Member(std::vector<double> vec, double constant) : variables(vec), constant(constant) {
+            Member(std::vector<int> vec, int constant) : variables(vec), constant(constant) {
                 canAnalyze = true;
             }
-            Member(double constant) : constant(constant) {
+            Member(int constant) : constant(constant) {
                 canAnalyze = true;
             }
             Member(){}
@@ -57,7 +57,7 @@ namespace PetriEngine {
             }
 
             bool isConstant() const {
-                for(const double& v : variables){
+                for(const int& v : variables){
                     if(v != 0) return false;
                 }
                 return true;
@@ -67,7 +67,7 @@ namespace PetriEngine {
                 bool isConstant=true;
                 bool isInput=true;
                 bool isOutput=true;
-                for(const double& v : variables){
+                for(const int& v : variables){
                     if(v < 0){
                         isConstant=false;
                         isOutput=false;
@@ -102,26 +102,26 @@ namespace PetriEngine {
             }
             
         private:
-            std::vector<double> addVariables(Member m1, Member m2){
+            std::vector<int> addVariables(Member m1, Member m2){
                 int size = std::max(m1.variables.size(), m2.variables.size());
-                std::vector<double> res(size);
+                std::vector<int> res(size);
                 m1.variables.resize(size, 0);
                 m2.variables.resize(size, 0);
-                std::transform(m1.variables.begin(),m1.variables.end(),m2.variables.begin(),res.begin(),std::plus<double>());
+                std::transform(m1.variables.begin(),m1.variables.end(),m2.variables.begin(),res.begin(),std::plus<int>());
                 return res;
             }
 
-            std::vector<double> subtractVariables(Member m1, Member m2){
+            std::vector<int> subtractVariables(Member m1, Member m2){
                 int size = std::max(m1.variables.size(), m2.variables.size());
-                std::vector<double> res(size);
+                std::vector<int> res(size);
                 m1.variables.resize(size, 0);
                 m2.variables.resize(size, 0);
-                std::transform(m1.variables.begin(),m1.variables.end(),m2.variables.begin(),res.begin(),std::minus<double>());
+                std::transform(m1.variables.begin(),m1.variables.end(),m2.variables.begin(),res.begin(),std::minus<int>());
                 return res;
             }
 
-            std::vector<double> multiply(Member m1, Member m2){
-                std::vector<double> res;
+            std::vector<int> multiply(Member m1, Member m2){
+                std::vector<int> res;
                 if(m1.isConstant() != m2.isConstant()){
                     if(!m1.isConstant()){
                         for(auto& v : m1.variables){
