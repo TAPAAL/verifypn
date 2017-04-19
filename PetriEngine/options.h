@@ -22,7 +22,7 @@ struct options_t {
     std::set<size_t> querynumbers = std::set<size_t>();
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
     bool trace = false;
-    int queryReductionTimeout = 5, lpsolveTimeout = 5;
+    int queryReductionTimeout = 30, lpsolveTimeout = 5;
     int siphontrapTimeout = 0;
     bool upperboundcheck = false;
 
@@ -79,7 +79,7 @@ struct options_t {
         }
         
         if (queryReductionTimeout > 0) {
-            optionsOut += ",Query_Simplication=ENABLED,SQTimeout=" + std::to_string(queryReductionTimeout);
+            optionsOut += ",Query_Simplication=ENABLED,QSTimeout=" + std::to_string(queryReductionTimeout);
         } else {
             optionsOut += ",Query_Simplication=DISABLED";
         }
