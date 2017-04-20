@@ -27,6 +27,11 @@ namespace PetriEngine {
             }
 
             std::vector<Equation> equations;
+            
+            size_t sizeInBytes();
+            
+        private:
+            size_t _lpSize = 0; // Size of LP in bytes
         };
     }
 }

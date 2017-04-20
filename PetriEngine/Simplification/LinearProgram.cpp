@@ -14,14 +14,24 @@ namespace PetriEngine {
             addEquation(eq);
         }
         
+        size_t computeSize(const Equation& eq) {
+            return sizeof(std::vector<int>) + (eq.row.size() * sizeof(int)) + sizeof(eq.op) + sizeof(eq.constant);
+        }
+        
         void LinearProgram::addEquation(const Equation& eq){
+            _lpSize += computeSize(eq);
             equations.push_back(eq);
         }
 
         void LinearProgram::addEquations(std::vector<Equation> eqs){
             for(Equation& eq : eqs){
+                _lpSize += computeSize(eq);
                 equations.push_back(eq);
             }
+        }
+        
+        size_t LinearProgram::sizeInBytes() {
+            return _lpSize;
         }
 
         int LinearProgram::op(std::string op){
