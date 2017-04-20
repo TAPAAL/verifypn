@@ -28,12 +28,17 @@ namespace PetriEngine {
 
     void ReducingSuccessorGenerator::constructPrePost() {
         std::vector<std::pair<std::vector<uint32_t>, std::vector < uint32_t>>> tmp_places(_net._nplaces);
+        std::vector<std::vector<uint32_t>> inhibpost(_net._nplaces);
+        
         for (uint32_t t = 0; t < _net._ntransitions; t++) {
             const TransPtr& ptr = _net._transitions[t];
             uint32_t finv = ptr.inputs;
             uint32_t linv = ptr.outputs;
             for (; finv < linv; finv++) { // Post set of places
                 tmp_places[_net._invariants[finv].place].second.push_back(t);
+                if (_net._invariants[finv].inhibitor) {
+                    inhibpost[_net._invariants[finv].place].push_back(t);
+                }
             }
 
             finv = linv;
@@ -157,15 +162,36 @@ namespace PetriEngine {
             const TransPtr& ptr = _net._transitions[tr];
             uint32_t finv = ptr.inputs;
             uint32_t linv = ptr.outputs;
+            uint32_t next_finv = _net._transitions[tr+1].inputs;
             if (_enabled[tr]) {
                 for (; finv < linv; finv++) {
                     postsetOf(_net._invariants[finv].place);
+                }
+                for (; linv < next_finv; linv++) {
+                    const uint32_t p = _net._invariants[linv].place;
+                    
+                    for (uint32_t t = 0; t < _net._ntransitions; t++) {
+                        if (_stubborn[t]) {
+                            continue;
+                        }
+                        uint32_t finv2 = _net._transitions[t].inputs;
+                        uint32_t linv2 = _net._transitions[t].outputs;
+                        for (; finv2 < linv2; finv2++) {
+                            if (_net._invariants[finv2].inhibitor) {
+                                _stubborn[t] = true;
+                                _unprocessed.push_back(t);
+                            }
+                        }
+                    }
                 }
             } else {
                 for (; finv < linv; ++finv) {
                     const Invariant& inv = _net._invariants[finv];
                     if ((*_parent).marking()[inv.place] < inv.tokens) {
-                        presetOf(inv.place);                        
+                        presetOf(inv.place);
+                        break;
+                    } else if ((*_parent).marking()[inv.place] >= inv.tokens && inv.inhibitor) {
+                        postsetOf(inv.place);
                         break;
                     }
                 }
