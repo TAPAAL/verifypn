@@ -25,7 +25,7 @@ struct options_t {
     int queryReductionTimeout = 30, lpsolveTimeout = 10;
     int siphontrapTimeout = 0;
     bool upperboundcheck = false;
-    size_t simplifyMemorylimit = 2048;
+    size_t simplifyMemorylimit = 512;
 
     //CTL Specific options
     bool gamemode = false;
