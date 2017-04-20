@@ -1046,7 +1046,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyAnd(SimplificationContext context, Retval r1, Retval r2) {
+        Retval simplifyAnd(SimplificationContext& context, Retval& r1, Retval& r2) {
             if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else if (r1.formula->isTriviallyTrue()) {
@@ -1055,8 +1055,9 @@ namespace PetriEngine {
                 return Retval(r1.formula, *r1.lps);
             }
             
-            if((*r1.lps->sizeInBytes() * *r2.lps->size()) + (*r2.lps->sizeInBytes() * *r1.lps->size()) > context.memoryLimit()){
-                return (*r1.lps->sizeInBytes() > *r2.lps->sizeInBytes()) ? r1 : r2;
+            if((r1.lps.get()->sizeInBytes() * r2.lps.get()->lps.size()) + 
+                    (r2.lps.get()->sizeInBytes() * r1.lps.get()->lps.size()) > context.memoryLimit()){
+                return (r1.lps.get()->sizeInBytes() > r2.lps.get()->sizeInBytes()) ? r1 : r2;
             } else {
                 LinearPrograms merged = LinearPrograms::lpsMerge(*r1.lps, *r2.lps);
                 if(!context.timeout() && !merged.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
@@ -1067,7 +1068,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyOr(Retval r1, Retval r2) {
+        Retval simplifyOr(Retval& r1, Retval& r2) {
             if(r1.formula->isTriviallyTrue() || r2.formula->isTriviallyTrue()) {
                 return Retval(std::make_shared<BooleanCondition>(true));
             } else if (r1.formula->isTriviallyFalse()) {

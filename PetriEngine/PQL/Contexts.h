@@ -219,10 +219,10 @@ namespace PetriEngine {
 
         private:
             bool _negated;
-            size_t _memoryLimit;
             const MarkVal* _marking;
             const PetriNet* _net;
             uint32_t _queryTimeout, _lpTimeout;
+            size_t _memoryLimit;
             std::chrono::high_resolution_clock::time_point _start;
         };
 
