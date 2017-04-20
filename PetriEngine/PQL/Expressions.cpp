@@ -1050,9 +1050,9 @@ namespace PetriEngine {
             if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else if (r1.formula->isTriviallyTrue()) {
-                return Retval(r2.formula, *r2.lps);
+                return r2;
             } else if (r2.formula->isTriviallyTrue()) {
-                return Retval(r1.formula, *r1.lps);
+                return r1;
             }
             
             if((r1.lps.get()->sizeInBytes() * r2.lps.get()->lps.size()) + 
@@ -1072,9 +1072,9 @@ namespace PetriEngine {
             if(r1.formula->isTriviallyTrue() || r2.formula->isTriviallyTrue()) {
                 return Retval(std::make_shared<BooleanCondition>(true));
             } else if (r1.formula->isTriviallyFalse()) {
-                return Retval(r2.formula, *r2.lps);
+                return r2;
             } else if (r2.formula->isTriviallyFalse()) {
-                return Retval(r1.formula, *r1.lps);
+                return r1;
             } else {
                 return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), 
                         LinearPrograms::lpsUnion(*r1.lps, *r2.lps));
