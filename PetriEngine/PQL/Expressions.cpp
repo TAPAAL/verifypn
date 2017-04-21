@@ -1057,6 +1057,7 @@ namespace PetriEngine {
             
             if((r1.lps.get()->sizeInBytes() * r2.lps.get()->lps.size()) + 
                     (r2.lps.get()->sizeInBytes() * r1.lps.get()->lps.size()) > context.memoryLimit()){
+                std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
                 return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), 
                         ((r1.lps.get()->sizeInBytes() > r2.lps.get()->sizeInBytes()) ?
                             *r1.lps : *r2.lps));
