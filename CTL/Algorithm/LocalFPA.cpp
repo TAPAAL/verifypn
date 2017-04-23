@@ -8,7 +8,7 @@
 #define STATS false
 
 bool Algorithm::LocalFPA::search(DependencyGraph::BasicDependencyGraph &t_graph,
-                                 SearchStrategy::iSequantialSearchStrategy &t_strategy)
+                                 SearchStrategy::DFSSearch &t_strategy)
 {
     using namespace DependencyGraph;
     using TaskType = SearchStrategy::TaskType;

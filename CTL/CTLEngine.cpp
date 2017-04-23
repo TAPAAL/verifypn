@@ -154,7 +154,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
     vector<CTLResult> results;
     QueryMeta meta;
     PetriNets::OnTheFlyDG& graph = *new PetriNets::OnTheFlyDG(net);
-    SearchStrategy::iSequantialSearchStrategy* strategy = nullptr;
+    SearchStrategy::DFSSearch* strategy = nullptr;
     Algorithm::FixedPointAlgorithm* alg = nullptr;
 
     if(reducedQueries.size() > 0) {

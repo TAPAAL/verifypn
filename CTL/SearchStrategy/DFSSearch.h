@@ -1,34 +1,33 @@
 #ifndef DFSSEARCH_H
 #define DFSSEARCH_H
 
-#include "iSearchStrategy.h"
-
 #include <vector>
+#include "../DependencyGraph/Edge.h"
 
 namespace SearchStrategy {
 
 // A custom search strategy that should ensure as little overhead as possible
 // while running sequential computation.
 
-class DFSSearch : public iSequantialSearchStrategy, public iDistributedSearchStrategy
-{
+enum TaskType {
+    EMPTY = 0,
+    EDGE = 1,
+};
+
+class DFSSearch {
+
 public:
     virtual ~DFSSearch(){}
     DFSSearch() {}
 
-    virtual bool empty() const override;
-    virtual void pushEdge(DependencyGraph::Edge *edge) override;
-    virtual void pushDependency(DependencyGraph::Edge *edge) override;
-    virtual TaskType pickTask(DependencyGraph::Edge*& edge) override;
+    bool empty() const;
+    void pushEdge(DependencyGraph::Edge *edge);
+    void pushDependency(DependencyGraph::Edge *edge);
+    TaskType pickTask(DependencyGraph::Edge*& edge);
 
-    virtual unsigned int maxDistance() const override;
-    virtual bool available() const override;
-    virtual void pushMessage(Message &message) override;
-    virtual void releaseNegationEdges(int dist) override;
-
-    virtual TaskType pickTask(DependencyGraph::Edge*& edge,
-                              Message& message) override;
-
+    unsigned int maxDistance() const;
+    bool available() const;
+    void releaseNegationEdges(int dist);
 
 protected:
 
