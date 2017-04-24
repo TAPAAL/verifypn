@@ -76,10 +76,10 @@ namespace PetriEngine {
 
             for(Equation& eq : equations){
                 if(eq.op == "<"){
-                    constant = (REAL) (eq.constant + 1);
+                    constant = (REAL) (eq.constant - 1);
                     comparator = LE;
                 } else if(eq.op == ">"){
-                    constant = (REAL) (eq.constant - 1);
+                    constant = (REAL) (eq.constant + 1);
                     comparator = GE;
                 } else if(eq.op == "<="){
                     constant = (REAL) eq.constant;
