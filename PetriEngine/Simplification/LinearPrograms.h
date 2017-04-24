@@ -10,12 +10,20 @@ namespace PetriEngine {
         public:
             LinearPrograms(){
             }
-            LinearPrograms(LinearProgram lp){
+            LinearPrograms(const LinearProgram& lp){
                 add(lp);
             }
             virtual ~LinearPrograms(){
             }
             std::vector<LinearProgram> lps;
+            
+            size_t sizeInBytes() {
+                size_t content = 0;
+                for (auto &lp : lps) {
+                    content += lp.sizeInBytes();
+                }
+                return sizeof(std::vector<LinearProgram>) + content;
+            }
 
             bool satisfiable(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout) {
                 for(uint32_t i = 0; i < lps.size(); i++){
@@ -26,7 +34,7 @@ namespace PetriEngine {
                 return false;
             }
 
-            void add(LinearProgram lp){
+            void add(const LinearProgram& lp){
                 lps.push_back(lp);
             }
 

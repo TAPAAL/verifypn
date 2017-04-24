@@ -146,6 +146,15 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid LPSolve timeout argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        } else if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--reduction-memory-limit") == 0) {
+            if (i == argc - 1) {
+                    fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                    return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%zu", &options.simplifyMemorylimit) != 1) {
+                    fprintf(stderr, "Argument Error: Invalid memory limit \"%s\"\n", argv[i]);
+                    return ErrorCode;
+            }
         } else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--state-space-exploration") == 0) {
             options.statespaceexploration = true;
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--no-statistics") == 0) {
@@ -225,11 +234,12 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 0  disabled\n"
                     "                                     - 1  aggressive reduction (default)\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
-                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 5)\n"
+                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
                     "                                     write -q 0 to disable query reduction\n"
-                    "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 5\n"
+                    "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
+                    "  -m, --reduction-memory-limit <mb>  Limit for query reduction memory usage, default 2048\n"
                     "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
-                    "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds, default 0\n"
+                    "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
@@ -275,7 +285,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 			return ErrorCode;
         }
     }
-    
     //Print parameters
     if (options.printstatistics) {
         std::cout << std::endl << "Parameters: ";
@@ -285,6 +294,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         std::cout << std::endl;
     }
     
+    options.simplifyMemorylimit *= 1024*1024;
     if (options.statespaceexploration) {
         // for state-space exploration some options are mandatory
         options.enablereduction = 0;
@@ -550,13 +560,13 @@ int main(int argc, char* argv[]) {
         {
             if (queries[i]->isUpperBound()) continue;
             
-            SimplificationContext simplificationContext(qm0, qnet, 
-                    options.queryReductionTimeout, options.lpsolveTimeout);
+            SimplificationContext simplificationContext(qm0, qnet, options.queryReductionTimeout, 
+                    options.lpsolveTimeout, options.simplifyMemorylimit);
             
             if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
 
             try {
-                queries[i] = (queries[i]->simplify(SimplificationContext(simplificationContext))).formula;   
+                queries[i] = (queries[i]->simplify(simplificationContext)).formula;   
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
                 std::cerr << "Exception information: " << ba.what() << std::endl;
@@ -583,12 +593,12 @@ int main(int argc, char* argv[]) {
     if (!options.statespaceexploration){
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            if(queries[i]->toString() == "true"){
+            if(queries[i]->isTriviallyTrue()){
                 results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
                 if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
-            } else if (queries[i]->toString() == "false") {
+            } else if (queries[i]->isTriviallyFalse()) {
                 results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
                 if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;

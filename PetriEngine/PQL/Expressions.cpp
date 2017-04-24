@@ -851,13 +851,13 @@ namespace PetriEngine {
         
         /******************** Query Simplification ********************/       
         
-        Member LiteralExpr::constraint(SimplificationContext context) const {
+        Member LiteralExpr::constraint(SimplificationContext& context) const {
             return Member(_value);
         }
         
-        Member IdentifierExpr::constraint(SimplificationContext context) const {
+        Member IdentifierExpr::constraint(SimplificationContext& context) const {
             // Reserve index 0 to LPsolve
-            std::vector<double> row(context.net()->numberOfTransitions() + 1);
+            std::vector<int> row(context.net()->numberOfTransitions() + 1);
             uint32_t p = offset();
             for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
                 row[1 + t] = context.net()->outArc(t, p) - context.net()->inArc(p, t);
@@ -865,27 +865,27 @@ namespace PetriEngine {
             return Member(row, context.marking()[p]);
         }
         
-        Member PlusExpr::constraint(SimplificationContext context) const {
+        Member PlusExpr::constraint(SimplificationContext& context) const {
             return _expr1->constraint(context) + _expr2->constraint(context);
         }
         
-        Member SubtractExpr::constraint(SimplificationContext context) const {
+        Member SubtractExpr::constraint(SimplificationContext& context) const {
             return _expr1->constraint(context) - _expr2->constraint(context);
         }
         
-        Member MultiplyExpr::constraint(SimplificationContext context) const {
+        Member MultiplyExpr::constraint(SimplificationContext& context) const {
             return _expr1->constraint(context) * _expr2->constraint(context);
         }
         
-        Member MinusExpr::constraint(SimplificationContext context) const {
+        Member MinusExpr::constraint(SimplificationContext& context) const {
             return -_expr->constraint(context);
         }
         
         Retval simplifyEX(Retval r) {
-            if(r.formula->toString() == "true") {
+            if(r.formula->isTriviallyTrue()) {
                 return Retval(std::make_shared<NotCondition>(
                         std::make_shared<DeadlockCondition>()));
-            } else if(r.formula->toString() == "false") {
+            } else if(r.formula->isTriviallyFalse()) {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 return Retval(std::make_shared<EXCondition>(r.formula));
@@ -893,9 +893,9 @@ namespace PetriEngine {
         }
         
         Retval simplifyAX(Retval r) {
-            if(r.formula->toString() == "true"){
+            if(r.formula->isTriviallyTrue()){
                 return Retval(std::make_shared<BooleanCondition>(true));
-            } else if(r.formula->toString() == "false"){
+            } else if(r.formula->isTriviallyFalse()){
                 return Retval(std::make_shared<DeadlockCondition>());
             } else{
                 return Retval(std::make_shared<AXCondition>(r.formula));
@@ -903,9 +903,9 @@ namespace PetriEngine {
         }
         
         Retval simplifyEF(Retval r){
-            if(r.formula->toString() == "true"){
+            if(r.formula->isTriviallyTrue()){
                 return Retval(std::make_shared<BooleanCondition>(true));
-            } else if(r.formula->toString() == "false"){
+            } else if(r.formula->isTriviallyFalse()){
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 return Retval(std::make_shared<EFCondition>(r.formula));
@@ -913,9 +913,9 @@ namespace PetriEngine {
         }
         
         Retval simplifyAF(Retval r){
-            if(r.formula->toString() == "true"){
+            if(r.formula->isTriviallyTrue()){
                 return Retval(std::make_shared<BooleanCondition>(true));
-            } else if(r.formula->toString() == "false"){
+            } else if(r.formula->isTriviallyFalse()){
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 return Retval(std::make_shared<AFCondition>(r.formula));
@@ -923,9 +923,9 @@ namespace PetriEngine {
         }
         
         Retval simplifyEG(Retval r){
-            if(r.formula->toString() == "true"){
+            if(r.formula->isTriviallyTrue()){
                 return Retval(std::make_shared<BooleanCondition>(true));
-            } else if(r.formula->toString() == "false"){
+            } else if(r.formula->isTriviallyFalse()){
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 return Retval(std::make_shared<EGCondition>(r.formula));
@@ -933,46 +933,46 @@ namespace PetriEngine {
         }
         
         Retval simplifyAG(Retval r){
-            if(r.formula->toString() == "true"){
+            if(r.formula->isTriviallyTrue()){
                 return Retval(std::make_shared<BooleanCondition>(true));
-            } else if(r.formula->toString() == "false"){
+            } else if(r.formula->isTriviallyFalse()){
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 return Retval(std::make_shared<AGCondition>(r.formula));
             }
         }
         
-        Retval EXCondition::simplify(SimplificationContext context) const {
+        Retval EXCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
             return context.negated() ? simplifyAX(r) : simplifyEX(r);
         }
         
-        Retval AXCondition::simplify(SimplificationContext context) const {
+        Retval AXCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
             return context.negated() ? simplifyEX(r) : simplifyAX(r);
         }  
         
-        Retval EFCondition::simplify(SimplificationContext context) const {
+        Retval EFCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
             return context.negated() ? simplifyAG(r) : simplifyEF(r);  
         }
         
-        Retval AFCondition::simplify(SimplificationContext context) const {
+        Retval AFCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
             return context.negated() ? simplifyEG(r) : simplifyAF(r);  
         }
         
-        Retval EGCondition::simplify(SimplificationContext context) const {
+        Retval EGCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
             return context.negated() ? simplifyAF(r) : simplifyEG(r);  
         }
         
-        Retval AGCondition::simplify(SimplificationContext context) const {
+        Retval AGCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
             return context.negated() ? simplifyEF(r) : simplifyAG(r);  
         }
         
-        Retval EUCondition::simplify(SimplificationContext context) const {
+        Retval EUCondition::simplify(SimplificationContext& context) const {
             // cannot push negation any further
             bool neg = context.negated();
             context.setNegate(false);
@@ -981,27 +981,27 @@ namespace PetriEngine {
             context.setNegate(neg);
             
             if(context.negated()){
-                if(r2.formula->toString() == "true"){
+                if(r2.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<BooleanCondition>(false));
-                } else if(r2.formula->toString() == "false"){
+                } else if(r2.formula->isTriviallyFalse()){
                     return Retval(std::make_shared<BooleanCondition>(true));
-                } else if(r1.formula->toString() == "true"){
+                } else if(r1.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<EFCondition>(r2.formula)));
-                } else if(r1.formula->toString() == "false"){
+                } else if(r1.formula->isTriviallyFalse()){
                     return Retval(std::make_shared<NotCondition>(r2.formula));
                 } else {
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<EUCondition>(r1.formula, r2.formula)));
                 }
             } else {
-                if(r2.formula->toString() == "true"){
+                if(r2.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<BooleanCondition>(true));
-                } else if(r2.formula->toString() == "false"){
+                } else if(r2.formula->isTriviallyFalse()){
                     return Retval(std::make_shared<BooleanCondition>(false));
-                } else if(r1.formula->toString() == "true"){
+                } else if(r1.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<EFCondition>(r2.formula));
-                } else if(r1.formula->toString() == "false"){
+                } else if(r1.formula->isTriviallyFalse()){
                     return r2;
                 } else {
                     return Retval(std::make_shared<EUCondition>(r1.formula, r2.formula));
@@ -1009,7 +1009,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval AUCondition::simplify(SimplificationContext context) const {
+        Retval AUCondition::simplify(SimplificationContext& context) const {
             // cannot push negation any further
             bool neg = context.negated();
             context.setNegate(false);
@@ -1018,27 +1018,27 @@ namespace PetriEngine {
             context.setNegate(neg);
             
             if(context.negated()){
-                if(r2.formula->toString() == "true"){
+                if(r2.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<BooleanCondition>(false));
-                } else if(r2.formula->toString() == "false"){
+                } else if(r2.formula->isTriviallyFalse()){
                     return Retval(std::make_shared<BooleanCondition>(true));
-                } else if(r1.formula->toString() == "true"){
+                } else if(r1.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<AFCondition>(r2.formula)));
-                } else if(r1.formula->toString() == "false"){
+                } else if(r1.formula->isTriviallyFalse()){
                     return Retval(std::make_shared<NotCondition>(r2.formula));
                 } else {
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<AUCondition>(r1.formula, r2.formula)));
                 }
             } else {
-                if(r2.formula->toString() == "true"){
+                if(r2.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<BooleanCondition>(true));
-                } else if(r2.formula->toString() == "false"){
+                } else if(r2.formula->isTriviallyFalse()){
                     return Retval(std::make_shared<BooleanCondition>(false));
-                } else if(r1.formula->toString() == "true"){
+                } else if(r1.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<AFCondition>(r2.formula));
-                } else if(r1.formula->toString() == "false"){
+                } else if(r1.formula->isTriviallyFalse()){
                     return r2;
                 } else {
                     return Retval(std::make_shared<AUCondition>(r1.formula, r2.formula));
@@ -1046,52 +1046,59 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyAnd(SimplificationContext context, Retval r1, Retval r2) {
-            if(r1.formula->toString() == "false" || r2.formula->toString() == "false") {
+        Retval simplifyAnd(SimplificationContext& context, Retval& r1, Retval& r2) {
+            if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
                 return Retval(std::make_shared<BooleanCondition>(false));
-            } else if (r1.formula->toString() == "true") {
-                return Retval(r2.formula, r2.lps);
-            } else if (r2.formula->toString() == "true") {
-                return Retval(r1.formula, r1.lps);
+            } else if (r1.formula->isTriviallyTrue()) {
+                return r2;
+            } else if (r2.formula->isTriviallyTrue()) {
+                return r1;
             }
             
-            LinearPrograms merged = LinearPrograms::lpsMerge(r1.lps, r2.lps);
-            
-            if(!context.timeout() && !merged.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
-                return Retval(std::make_shared<BooleanCondition>(false));
+            if((r1.lps.get()->sizeInBytes() * r2.lps.get()->lps.size()) + 
+                    (r2.lps.get()->sizeInBytes() * r1.lps.get()->lps.size()) > context.memoryLimit()){
+                std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
+                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), 
+                        ((r1.lps.get()->sizeInBytes() > r2.lps.get()->sizeInBytes()) ?
+                            *r1.lps : *r2.lps));
             } else {
-                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), merged); 
+                LinearPrograms merged = LinearPrograms::lpsMerge(*r1.lps, *r2.lps);
+                if(!context.timeout() && !merged.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+                    return Retval(std::make_shared<BooleanCondition>(false));
+                } else {
+                    return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), merged); 
+                }
             }
         }
         
-        Retval simplifyOr(Retval r1, Retval r2) {
-            if(r1.formula->toString() == "true" || r2.formula->toString() == "true") {
+        Retval simplifyOr(Retval& r1, Retval& r2) {
+            if(r1.formula->isTriviallyTrue() || r2.formula->isTriviallyTrue()) {
                 return Retval(std::make_shared<BooleanCondition>(true));
-            } else if (r1.formula->toString() == "false") {
-                return Retval(r2.formula, r2.lps);
-            } else if (r2.formula->toString() == "false") {
-                return Retval(r1.formula, r1.lps);
+            } else if (r1.formula->isTriviallyFalse()) {
+                return r2;
+            } else if (r2.formula->isTriviallyFalse()) {
+                return r1;
             } else {
                 return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), 
-                        LinearPrograms::lpsUnion(r1.lps, r2.lps));
+                        LinearPrograms::lpsUnion(*r1.lps, *r2.lps));
             }
         }
         
-        Retval AndCondition::simplify(SimplificationContext context) const {
+        Retval AndCondition::simplify(SimplificationContext& context) const {
             Retval r1 = _cond1->simplify(context);
             Retval r2 = _cond2->simplify(context);
             
             return context.negated() ? simplifyOr(r1, r2) : simplifyAnd(context, r1, r2);
         }
         
-        Retval OrCondition::simplify(SimplificationContext context) const {
+        Retval OrCondition::simplify(SimplificationContext& context) const {
             Retval r1 = _cond1->simplify(context);
             Retval r2 = _cond2->simplify(context);
             
             return context.negated() ? simplifyAnd(context, r1, r2) : simplifyOr(r1, r2);
         }
         
-        Retval EqualCondition::simplify(SimplificationContext context) const {
+        Retval EqualCondition::simplify(SimplificationContext& context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
@@ -1124,7 +1131,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval NotEqualCondition::simplify(SimplificationContext context) const {
+        Retval NotEqualCondition::simplify(SimplificationContext& context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
@@ -1157,7 +1164,7 @@ namespace PetriEngine {
             }
         }
             
-        Retval LessThanCondition::simplify(SimplificationContext context) const {
+        Retval LessThanCondition::simplify(SimplificationContext& context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
@@ -1185,7 +1192,7 @@ namespace PetriEngine {
             }
         }        
         
-        Retval LessThanOrEqualCondition::simplify(SimplificationContext context) const {
+        Retval LessThanOrEqualCondition::simplify(SimplificationContext& context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
@@ -1216,7 +1223,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval GreaterThanCondition::simplify(SimplificationContext context) const {
+        Retval GreaterThanCondition::simplify(SimplificationContext& context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
@@ -1247,7 +1254,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval GreaterThanOrEqualCondition::simplify(SimplificationContext context) const {  
+        Retval GreaterThanOrEqualCondition::simplify(SimplificationContext& context) const {  
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
@@ -1276,14 +1283,14 @@ namespace PetriEngine {
             }
         }
         
-        Retval NotCondition::simplify(SimplificationContext context) const {
+        Retval NotCondition::simplify(SimplificationContext& context) const {
             context.negate();
             Retval r = _cond->simplify(context);
             context.negate();
             return r;
         }
         
-        Retval BooleanCondition::simplify(SimplificationContext context) const {
+        Retval BooleanCondition::simplify(SimplificationContext& context) const {
             if (context.negated()) {
                 return Retval(std::make_shared<BooleanCondition>(!_value));
             } else {
@@ -1291,7 +1298,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval DeadlockCondition::simplify(SimplificationContext context) const {
+        Retval DeadlockCondition::simplify(SimplificationContext& context) const {
             if (context.negated()) {
                 return Retval(std::make_shared<NotCondition>(std::make_shared<DeadlockCondition>()));
             } else {
