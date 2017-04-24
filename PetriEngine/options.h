@@ -93,7 +93,7 @@ struct options_t {
         
         optionsOut += ",LPSolve_Timeout=" + std::to_string(lpsolveTimeout);
         
-        optionsOut += ",LPSolve_MemLimit=" + std::to_string(simplifyMemorylimit);
+        optionsOut += ",LPSolve_MemLimit=" + std::to_string(simplifyMemorylimit/1024/1024);
 
         if (isctl) {
             if (ctlalgorithm == CTL::CZero) {
