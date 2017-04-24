@@ -7,19 +7,20 @@ namespace PetriEngine {
         class Retval {
         public:
             std::shared_ptr<PQL::Condition> formula;
-            LinearPrograms lps;      
+            std::shared_ptr<LinearPrograms> lps;      
             
-            Retval (std::shared_ptr<PQL::Condition> formula, LinearPrograms lps) : formula(formula), lps(lps) {           
+            Retval (std::shared_ptr<PQL::Condition> formula, const LinearPrograms& lps1) : formula(formula) { 
+                lps = std::make_shared<LinearPrograms>(lps1);
             }
             Retval (std::shared_ptr<PQL::Condition> formula) : Retval(formula, LinearPrograms(LinearProgram())) {
             }
-            Retval() : lps(LinearPrograms(LinearProgram())){
+            Retval() {
+                lps = std::make_shared<LinearPrograms>(LinearPrograms(LinearProgram()));
             }
             ~Retval(){
-                
             }
             bool isSet(){
-                return (formula.operator bool() && lps.lps.size() != 0);
+                return (formula.operator bool() && lps.get()->lps.size() != 0);
             }
         private:
 

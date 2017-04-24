@@ -169,8 +169,8 @@ namespace PetriEngine {
         public:
 
             SimplificationContext(const MarkVal* marking,
-                    const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout)
-                    : _queryTimeout(queryTimeout), _lpTimeout(lpTimeout) {
+                    const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout, size_t memoryLimit)
+                    : _queryTimeout(queryTimeout), _lpTimeout(lpTimeout), _memoryLimit(memoryLimit) {
                 _negated = false;
                 _marking = marking;
                 _net = net;
@@ -212,12 +212,17 @@ namespace PetriEngine {
             uint32_t getLpTimeout() {
                 return _lpTimeout;
             }
+            
+            size_t memoryLimit(){
+                return _memoryLimit;
+            }
 
         private:
             bool _negated;
             const MarkVal* _marking;
             const PetriNet* _net;
             uint32_t _queryTimeout, _lpTimeout;
+            size_t _memoryLimit;
             std::chrono::high_resolution_clock::time_point _start;
         };
 

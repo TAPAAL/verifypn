@@ -117,7 +117,7 @@ namespace PetriEngine {
             /** Expression type */
             virtual Types type() const = 0;
             /** Construct left/right side of equations used in query simplification */
-            virtual Simplification::Member constraint(SimplificationContext context) const = 0;
+            virtual Simplification::Member constraint(SimplificationContext& context) const = 0;
             /** Output the expression as it currently is to a file in XML */
             virtual std::string toXML(uint32_t tabs, bool tokencount = false) const = 0;
             /** Stubborn reduction: increasing and decreasing sets */
@@ -159,7 +159,7 @@ namespace PetriEngine {
             /** Get distance to query */
             virtual uint32_t distance(DistanceContext& context) const = 0;
             /** Query Simplification */
-            virtual Simplification::Retval simplify(SimplificationContext context) const = 0;
+            virtual Simplification::Retval simplify(SimplificationContext& context) const = 0;
             /** Check if query is a reachability query */
             virtual bool isReachability(uint32_t depth = 0) const = 0;
             /** Check if query is an upper bound query */
@@ -170,6 +170,10 @@ namespace PetriEngine {
             virtual std::string toXML(uint32_t tabs) const = 0;
             /** Find interesting transitions in stubborn reduction*/
             virtual void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const = 0;
+            /** Checks if the condition is trivially true */
+            bool isTriviallyTrue();
+            /*** Checks if the condition is trivially false */
+            bool isTriviallyFalse();
 
             bool isSatisfied() const
             {
@@ -214,6 +218,11 @@ namespace PetriEngine {
             std::vector<std::string>& placeNameForBound(){
                 return _placenameforbound;
             }
+            
+        protected:
+            //Value for checking if condition is trivially true or false.
+            //0 is undecided (default), 1 is true, 2 is false.
+            uint32_t trivial = 0;
         };
         typedef std::shared_ptr<Condition> Condition_ptr;
         typedef std::shared_ptr<Expr> Expr_ptr;

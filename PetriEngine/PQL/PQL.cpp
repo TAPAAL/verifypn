@@ -44,6 +44,22 @@ namespace PetriEngine {
                 return evaluate(EvaluationContext(state.marking(), net));
             }
         }
+        
+        bool Condition::isTriviallyTrue() {
+            if (trivial == 1) {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        bool Condition::isTriviallyFalse() {
+            if (trivial == 2) {
+                return true;
+            }
+            
+            return false;
+        }
 
         Condition::~Condition() {
 
