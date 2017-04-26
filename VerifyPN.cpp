@@ -631,8 +631,7 @@ int main(int argc, char* argv[]) {
         }
         
         // Default to DFS if strategy is not BFS or DFS (No heuristic strategy)        
-        if(options.strategy != PetriEngine::Reachability::DFS && 
-                options.strategy != PetriEngine::Reachability::BFS){
+        if(options.strategy != PetriEngine::Reachability::DFS){
             options.strategy = PetriEngine::Reachability::DFS;
             fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
         }

@@ -157,6 +157,11 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
     SearchStrategy::DFSSearch* strategy = nullptr;
     Algorithm::FixedPointAlgorithm* alg = nullptr;
 
+    if(strategytype != PetriEngine::Reachability::Strategy){
+        std::cerr << "Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
+        return ErrorCode;
+    }
+
     if(reducedQueries.size() > 0) {
         if(parseReducedQueries(reducedQueries, net, queries, meta) == ErrorCode) return ErrorCode;
     } else {
