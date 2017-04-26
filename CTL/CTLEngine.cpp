@@ -195,5 +195,9 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
         printResult(result, printstatistics, mccoutput);
     }
 
+    delete strategy;
+    delete graph;
+    delete alg;
+
     return SuccessCode;
 }
