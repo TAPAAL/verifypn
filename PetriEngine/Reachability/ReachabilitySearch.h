@@ -137,7 +137,6 @@ namespace PetriEngine {
 
                 // Search!
                 while (queue.pop(state)) {
-
                     generator.prepare(&state);
 
                     while(generator.next(working)){

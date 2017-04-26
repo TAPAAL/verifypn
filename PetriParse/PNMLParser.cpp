@@ -122,6 +122,19 @@ void PNMLParser::parse(ifstream& xml,
         NodeName target = id2name[inhibitor.target];
         if (source.isPlace && !target.isPlace) {
             builder->addInputArc(source.id, target.id, true, inhibitor.weight);
+            
+            auto cond = std::make_shared<LessThanCondition>(
+                            std::make_shared<IdentifierExpr>(source.id),
+                            std::make_shared<LiteralExpr>(inhibitor.weight)
+                        );
+            if(transitionEnabledness[target.id] == BooleanCondition::TRUE)
+            {
+                transitionEnabledness[target.id] = cond;
+            }
+            else
+            {
+                transitionEnabledness[target.id] = std::make_shared<AndCondition>(cond, transitionEnabledness[target.id]);
+            }      
         }
         else
         {

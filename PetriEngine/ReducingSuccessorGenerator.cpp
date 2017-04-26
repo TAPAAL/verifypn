@@ -143,10 +143,15 @@ namespace PetriEngine {
         const TransPtr& ptr = _net._transitions[t];
         uint32_t finv = ptr.inputs;
         uint32_t linv = ptr.outputs;
-        for (; finv < linv; finv++) {                // pre-set of t
-            postsetOf(_net._invariants[finv].place); // add post-set of p
+        for (; finv < linv; finv++) { // pre-set of t
+            if(_net._invariants[finv].inhibitor){ 
+                presetOf(finv);
+            } else {
+                postsetOf(_net._invariants[finv].place); 
+            }
         }        
     }
+    
 
     void ReducingSuccessorGenerator::prepare(const Structures::State* state) {
         _parent = state;
@@ -167,9 +172,7 @@ namespace PetriEngine {
                 for (; finv < linv; finv++) {
                     postsetOf(_net._invariants[finv].place);
                 }
-                for (; linv < next_finv; linv++) {
-                    const uint32_t p = _net._invariants[linv].place;
-                    
+                for (; linv < next_finv; linv++) {                    
                     for (uint32_t t = 0; t < _net._ntransitions; t++) {
                         if (_stubborn[t]) {
                             continue;
