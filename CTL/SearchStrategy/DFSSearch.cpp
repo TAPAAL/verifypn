@@ -43,18 +43,3 @@ bool SearchStrategy::DFSSearch::available() const
 {
     return !W.empty();
 }
-
-void SearchStrategy::DFSSearch::pushMessage(SearchStrategy::Message &message)
-{
-    assert(false && "DFSSearch can't be used with more than one worker");
-}
-
-void SearchStrategy::DFSSearch::releaseNegationEdges(int dist)
-{
-    //do nothing
-}
-
-SearchStrategy::TaskType SearchStrategy::DFSSearch::pickTask(DependencyGraph::Edge *&edge, SearchStrategy::Message &message)
-{
-    return pickTask(edge);
-}

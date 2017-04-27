@@ -6,9 +6,7 @@
 #include "CTLResult.h"
 #include "DependencyGraph/Edge.h"
 
-#include "SearchStrategy/WaitingList.h"
 #include "SearchStrategy/DFSSearch.h"
-#include "SearchStrategy/UniversalSearchStrategy.h"
 
 #include "Algorithm/CertainZeroFPA.h"
 #include "Algorithm/LocalFPA.h"
@@ -98,22 +96,6 @@ ReturnValue makeCTLResults(vector<CTLResult>& results,
     return ContinueCode;
 }
 
-ReturnValue getStrategy(SearchStrategy::iSequantialSearchStrategy*& strategy,
-                        PetriEngine::Reachability::Strategy strategytype)
-{
-    if(strategytype == PetriEngine::Reachability::DFS){
-        strategy = new SearchStrategy::DFSSearch();
-    }
-    else if(strategytype == PetriEngine::Reachability::BFS){
-        strategy = new SearchStrategy::UniversalSearchStrategy<SearchStrategy::WaitingList<DependencyGraph::Edge*, std::queue<DependencyGraph::Edge*>>>();
-    }
-    else {
-        cerr << "Error: Unknown strategy" << endl;
-        return ErrorCode;
-    }
-    return ContinueCode;
-}
-
 ReturnValue getAlgorithm(Algorithm::FixedPointAlgorithm*& algorithm,
                          CTL::CTLAlgorithmType algorithmtype)
 {
@@ -172,22 +154,25 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
     vector<CTLResult> results;
     QueryMeta meta;
     PetriNets::OnTheFlyDG& graph = *new PetriNets::OnTheFlyDG(net);
-    SearchStrategy::iSequantialSearchStrategy* strategy = nullptr;
+    SearchStrategy::DFSSearch* strategy = nullptr;
     Algorithm::FixedPointAlgorithm* alg = nullptr;
+
+    if(strategytype != PetriEngine::Reachability::Strategy){
+        std::cerr << "Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
+        return ErrorCode;
+    }
 
     if(reducedQueries.size() > 0) {
         if(parseReducedQueries(reducedQueries, net, queries, meta) == ErrorCode) return ErrorCode;
     } else {
         if(parseQueries(queryfile, net, queries, meta) == ErrorCode) return ErrorCode;
     }
-    
-    //exit(EXIT_FAILURE);
+
     if(makeCTLResults(results, queries, meta, querynumbers, printstatistics, mccoutput) == ErrorCode) return ErrorCode;
 
     for(CTLResult& result : results){
-
         if(strategy != nullptr) delete strategy;
-        if(getStrategy(strategy, strategytype) == ErrorCode) return ErrorCode;
+        strategy = new SearchStrategy::DFSSearch();
 
         if(alg != nullptr) delete alg;
         if(getAlgorithm(alg, algorithmtype) == ErrorCode) return ErrorCode;
@@ -209,6 +194,10 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
 
         printResult(result, printstatistics, mccoutput);
     }
+
+    delete strategy;
+    delete graph;
+    delete alg;
 
     return SuccessCode;
 }

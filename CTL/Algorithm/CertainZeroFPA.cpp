@@ -9,7 +9,7 @@
 using namespace DependencyGraph;
 
 bool Algorithm::CertainZeroFPA::search(DependencyGraph::BasicDependencyGraph &t_graph,
-        SearchStrategy::iSequantialSearchStrategy &t_strategy)
+        SearchStrategy::DFSSearch &t_strategy)
 {
     using namespace SearchStrategy;
     using TaskType = SearchStrategy::TaskType;

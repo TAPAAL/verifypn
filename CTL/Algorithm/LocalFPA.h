@@ -12,11 +12,11 @@ class LocalFPA : public FixedPointAlgorithm
     // FixedPointAlgorithm interface
 public:
     virtual ~LocalFPA (){}
-    virtual bool search(DependencyGraph::BasicDependencyGraph &graph, SearchStrategy::iSequantialSearchStrategy &strategy);
+    virtual bool search(DependencyGraph::BasicDependencyGraph &graph, SearchStrategy::DFSSearch &strategy);
 
 protected:
     DependencyGraph::BasicDependencyGraph *graph;
-    SearchStrategy::iSequantialSearchStrategy *strategy;
+    SearchStrategy::DFSSearch *strategy;
 
     void finalAssign(DependencyGraph::Configuration *c, DependencyGraph::Assignment a);
     void explore(DependencyGraph::Configuration *c);

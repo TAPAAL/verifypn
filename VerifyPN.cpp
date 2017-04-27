@@ -327,8 +327,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         if(options.strategy == PetriEngine::Reachability::HEUR){
             options.strategy = PetriEngine::Reachability::DFS;
         }
-        else if(options.strategy != PetriEngine::Reachability::DFS && options.strategy != PetriEngine::Reachability::BFS){
-            std::cerr << "Argument Error: Invalid CTL search strategy. Valid ones are DFS (default) and BFS." << std::endl;
+        else if(options.strategy != PetriEngine::Reachability::DFS){
+            std::cerr << "Argument Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
             return ErrorCode;
         }
     }
@@ -631,8 +631,7 @@ int main(int argc, char* argv[]) {
         }
         
         // Default to DFS if strategy is not BFS or DFS (No heuristic strategy)        
-        if(options.strategy != PetriEngine::Reachability::DFS && 
-                options.strategy != PetriEngine::Reachability::BFS){
+        if(options.strategy != PetriEngine::Reachability::DFS){
             options.strategy = PetriEngine::Reachability::DFS;
             fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
         }
