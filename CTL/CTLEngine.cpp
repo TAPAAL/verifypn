@@ -157,7 +157,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
     SearchStrategy::DFSSearch* strategy = nullptr;
     Algorithm::FixedPointAlgorithm* alg = nullptr;
 
-    if(strategytype != PetriEngine::Reachability::Strategy){
+    if(strategytype != PetriEngine::Reachability::DFS){
         std::cerr << "Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
         return ErrorCode;
     }
@@ -196,7 +196,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
     }
 
     delete strategy;
-    delete graph;
+    delete &graph;
     delete alg;
 
     return SuccessCode;
