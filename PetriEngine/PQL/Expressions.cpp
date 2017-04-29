@@ -862,7 +862,7 @@ namespace PetriEngine {
             for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
                 row[1 + t] = context.net()->outArc(t, p) - context.net()->inArc(p, t);
             }
-            return Member(row, context.marking()[p]);
+            return Member(std::move(row), context.marking()[p]);
         }
         
         Member PlusExpr::constraint(SimplificationContext& context) const {
