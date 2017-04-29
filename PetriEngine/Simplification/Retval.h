@@ -9,7 +9,7 @@ namespace PetriEngine {
             std::shared_ptr<PQL::Condition> formula = nullptr;
             LinearPrograms lps;      
             
-            Retval (std::shared_ptr<PQL::Condition> formula, const LinearPrograms& lps1) 
+            Retval (std::shared_ptr<PQL::Condition> formula, const LinearPrograms&& lps1) 
             : lps(lps1) {
                 this->formula.swap(formula);
             }
