@@ -25,7 +25,7 @@ namespace PetriEngine {
 
             virtual ~Member(){}
             
-            bool constant() const   { return _constant; };
+            int constant() const   { return _constant; };
             bool canAnalyze() const { return _canAnalyze; };
             size_t size() const     { return _variables.size(); }
             std::vector<int>& variables() { return _variables; }
