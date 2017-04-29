@@ -1065,11 +1065,11 @@ namespace PetriEngine {
                         ((r1.lps.get()->sizeInBytes() > r2.lps.get()->sizeInBytes()) ?
                             *r1.lps : *r2.lps));
             } else*/ {
-                LinearPrograms merged = LinearPrograms::lpsMerge(r1.lps, r2.lps);
-                if(!context.timeout() && !merged.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+                r1.lps.merge(r2.lps);
+                if(!context.timeout() && !r1.lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                     return Retval(std::make_shared<BooleanCondition>(false));
                 } else {
-                    return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), merged); 
+                    return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), r1.lps); 
                 }
             }
         }
@@ -1082,8 +1082,8 @@ namespace PetriEngine {
             } else if (r2.formula->isTriviallyFalse()) {
                 return r1;
             } else {
-                return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), 
-                        LinearPrograms::lpsUnion(r1.lps, r2.lps));
+                r1.lps.makeUnion(r2.lps);
+                return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), r1.lps);
             }
         }
         

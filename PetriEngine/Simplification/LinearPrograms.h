@@ -30,32 +30,35 @@ namespace PetriEngine {
                 lps.push_back(lp);
             }
 
-            static LinearPrograms lpsMerge(LinearPrograms& lps1, LinearPrograms& lps2){
-                if (lps1.lps.size() == 0) {
-                    return lps2;
+            void merge(LinearPrograms& lps2){
+                if (lps.size() == 0) {
+                    lps.swap(lps2.lps);
+                    return;
                 }
                 else if (lps2.lps.size() == 0) {
-                    return lps1;
+                    return;
                 }
                 
-                LinearPrograms res;
-                for(LinearProgram& lp1 : lps1.lps){        
+                std::vector<LinearProgram> merged;
+                merged.reserve(lps.size() * lps2.lps.size());
+                for(LinearProgram& lp1 : lps){        
                     for(LinearProgram& lp2 : lps2.lps){
-                        res.add(LinearProgram::lpUnion(lp1, lp2));
+                        merged.push_back(LinearProgram::lpUnion(lp1, lp2));
                     }   
                 }
-                return res;
+                lps.swap(merged);
+                lps2.clear();
             }
-
-            static LinearPrograms lpsUnion(LinearPrograms& lps1, LinearPrograms& lps2){
-                LinearPrograms res;
-                for(LinearProgram& lp : lps1.lps){        
-                    res.add(lp);
-                }
-                for(LinearProgram& lp : lps2.lps){        
-                    res.add(lp);
-                }
-                return res;
+            
+            void makeUnion(LinearPrograms& lps2)
+            {
+                lps.insert(lps.end(), lps2.lps.begin(), lps2.lps.end());
+                lps2.clear();
+            }
+            
+            void clear()
+            {
+                lps.clear();
             }
         };
     }
