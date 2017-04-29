@@ -12,10 +12,9 @@ namespace PetriEngine {
         public:
             LinearProgram();
             virtual ~LinearProgram();
-            LinearProgram(const Equation& eq);
+            LinearProgram(const Equation&& eq);
             
-            void addEquation(const Equation& eq);
-            void addEquations(std::vector<Equation> eqs);
+            void addEquations(std::vector<Equation>& eqs);
             bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout);
             int op(std::string op);            
             
@@ -30,8 +29,6 @@ namespace PetriEngine {
             
             size_t sizeInBytes();
             
-        private:
-            size_t _lpSize = 0; // Size of LP in bytes
         };
     }
 }

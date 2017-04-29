@@ -9,8 +9,11 @@ namespace PetriEngine {
             Equation(Member&& lh, int constant, std::string op) : op(op), constant(constant) {
 
             }
-            Equation(const Equation& eq) : row(eq.row), op(eq.op), constant(eq.constant) {
+            
+            Equation(const Equation& eq) 
+            : row(eq.row), op(eq.op), constant(eq.constant) {
             }      
+
             Equation(){
             }
 
