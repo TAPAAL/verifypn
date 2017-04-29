@@ -614,6 +614,7 @@ int main(int argc, char* argv[]) {
         
         if(alldone) return SuccessCode;
     }
+    
 
     //----------------------- Verify CTL queries -----------------------//
     

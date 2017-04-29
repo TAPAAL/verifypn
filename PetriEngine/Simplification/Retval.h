@@ -20,6 +20,11 @@ namespace PetriEngine {
  
             Retval(Retval&& other) : formula(formula), lps(std::move(other.lps))
             {}
+
+            Retval& operator=(Retval&& other) {
+                lps.lps.swap(other.lps.lps);
+                return *this;
+            }
             
             Retval() {
                 lps.lps.emplace_back();
@@ -29,7 +34,7 @@ namespace PetriEngine {
             }
             
             bool isSet(){
-                return (formula.operator bool() && lps.lps.size() != 0);
+                return (formula != nullptr && lps.lps.size() != 0);
             }
         private:
 

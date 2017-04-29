@@ -1049,28 +1049,31 @@ namespace PetriEngine {
         }
         
         Retval simplifyAnd(SimplificationContext& context, Retval&& r1, Retval&& r2) {
-            if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
-                return Retval(std::make_shared<BooleanCondition>(false));
-            } else if (r1.formula->isTriviallyTrue()) {
-                return std::move(r2);
-            } else if (r2.formula->isTriviallyTrue()) {
-                return std::move(r1);
-            }
-            
-            /* TODO, catch exception 
-               if((r1.lps.get()->sizeInBytes() * r2.lps.get()->lps.size()) + 
-                    (r2.lps.get()->sizeInBytes() * r1.lps.get()->lps.size()) > context.memoryLimit()){
-                std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
-                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), 
-                        ((r1.lps.get()->sizeInBytes() > r2.lps.get()->sizeInBytes()) ?
-                            *r1.lps : *r2.lps));
-            } else*/ {
+            try{
+                if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
+                    return Retval(std::make_shared<BooleanCondition>(false));
+                } else if (r1.formula->isTriviallyTrue()) {
+                    return std::move(r2);
+                } else if (r2.formula->isTriviallyTrue()) {
+                    return std::move(r1);
+                }
                 r1.lps.merge(r2.lps);
                 if(!context.timeout() && !r1.lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                     return Retval(std::make_shared<BooleanCondition>(false));
                 } else {
                     return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), std::move(r1.lps)); 
                 }
+
+            }
+            catch(std::bad_alloc& e)
+            {
+                // we are out of memory, deal with it.
+                std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
+                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), 
+                        std::move(
+                                    (r1.lps.lps.size() < r2.lps.lps.size() 
+                                        ?  r1.lps 
+                                        : r2.lps)));
             }
         }
         
@@ -1088,11 +1091,24 @@ namespace PetriEngine {
         }
         
         Retval AndCondition::simplify(SimplificationContext& context) const {
-            Retval r1 = _cond1->simplify(context);
-            Retval r2 = _cond2->simplify(context);
+            Retval r1, r2;
+            bool succ1 = false, succ2 = false;
+            try{
+                r1 = std::move(_cond1->simplify(context));
+                succ1 = true;
+            }
+            catch (std::bad_alloc& e) {};
+            try{
+                r2 = std::move(_cond2->simplify(context));
+                succ2 = true;
+            }
+            catch (std::bad_alloc& e) {};
             
-            return context.negated() ? simplifyOr(std::move(r1), std::move(r2)) 
-                                     : simplifyAnd(context, std::move(r1), std::move(r2));
+            if(!succ1 && !succ2) throw std::bad_alloc();
+            else if(succ1 && !succ2) return std::move(r1);
+            else if(succ2 && !succ1) return std::move(r2);
+            else return context.negated()   ? simplifyOr(std::move(r1), std::move(r2)) 
+                                            : simplifyAnd(context, std::move(r1), std::move(r2));
         }
         
         Retval OrCondition::simplify(SimplificationContext& context) const {
