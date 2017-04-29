@@ -14,6 +14,13 @@ namespace PetriEngine {
             : row(eq.row), op(eq.op), constant(eq.constant) {
             }      
 
+            Equation(Equation&& other)
+            :   row(std::move(other.row)), op(std::move(other.op)), 
+                constant(other.constant)
+            {
+                
+            }
+            
             Equation(){
             }
 

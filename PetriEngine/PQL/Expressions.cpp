@@ -883,7 +883,7 @@ namespace PetriEngine {
             return _expr->constraint(context) *= neg;
         }
         
-        Retval simplifyEX(Retval r) {
+        Retval simplifyEX(Retval& r) {
             if(r.formula->isTriviallyTrue()) {
                 return Retval(std::make_shared<NotCondition>(
                         std::make_shared<DeadlockCondition>()));
@@ -894,7 +894,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyAX(Retval r) {
+        Retval simplifyAX(Retval& r) {
             if(r.formula->isTriviallyTrue()){
                 return Retval(std::make_shared<BooleanCondition>(true));
             } else if(r.formula->isTriviallyFalse()){
@@ -904,7 +904,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyEF(Retval r){
+        Retval simplifyEF(Retval& r){
             if(r.formula->isTriviallyTrue()){
                 return Retval(std::make_shared<BooleanCondition>(true));
             } else if(r.formula->isTriviallyFalse()){
@@ -914,7 +914,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyAF(Retval r){
+        Retval simplifyAF(Retval& r){
             if(r.formula->isTriviallyTrue()){
                 return Retval(std::make_shared<BooleanCondition>(true));
             } else if(r.formula->isTriviallyFalse()){
@@ -924,7 +924,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyEG(Retval r){
+        Retval simplifyEG(Retval& r){
             if(r.formula->isTriviallyTrue()){
                 return Retval(std::make_shared<BooleanCondition>(true));
             } else if(r.formula->isTriviallyFalse()){
@@ -934,7 +934,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyAG(Retval r){
+        Retval simplifyAG(Retval& r){
             if(r.formula->isTriviallyTrue()){
                 return Retval(std::make_shared<BooleanCondition>(true));
             } else if(r.formula->isTriviallyFalse()){
@@ -1052,9 +1052,9 @@ namespace PetriEngine {
             if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else if (r1.formula->isTriviallyTrue()) {
-                return r2;
+                return std::move(r2);
             } else if (r2.formula->isTriviallyTrue()) {
-                return r1;
+                return std::move(r1);
             }
             
             /* TODO, catch exception 
@@ -1078,9 +1078,9 @@ namespace PetriEngine {
             if(r1.formula->isTriviallyTrue() || r2.formula->isTriviallyTrue()) {
                 return Retval(std::make_shared<BooleanCondition>(true));
             } else if (r1.formula->isTriviallyFalse()) {
-                return r2;
+                return std::move(r2);
             } else if (r2.formula->isTriviallyFalse()) {
-                return r1;
+                return std::move(r1);
             } else {
                 r1.lps.makeUnion(r2.lps);
                 return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), std::move(r1.lps));
@@ -1117,13 +1117,13 @@ namespace PetriEngine {
                         int constant = m1.constant() - m2.constant();
                         m1 -= m2;
                         m2 = m1;
-                        lps.add(LinearProgram(Equation(std::move(m1), constant, ">")));
-                        lps.add(LinearProgram(Equation(std::move(m2), constant, "<")));
+                        lps.add((Equation(std::move(m1), constant, ">")));
+                        lps.add((Equation(std::move(m2), constant, "<")));
                     }
                     else {
                         int constant = m1.constant() - m2.constant();
                         m1 -= m2;
-                        lps.add(LinearProgram(Equation(std::move(m1), constant, "==")));
+                        lps.add((Equation(std::move(m1), constant, "==")));
                     }
                 }
             } else {
@@ -1154,14 +1154,14 @@ namespace PetriEngine {
                     if (context.negated()) {
                         int constant = m1.constant() - m2.constant();
                         m1 -= m2;
-                        lps.add(LinearProgram(Equation(std::move(m1), constant, "==")));
+                        lps.add((Equation(std::move(m1), constant, "==")));
                     }
                     else {
                         int constant = m1.constant() - m2.constant();
                         m1 -= m2;
                         m2 = m1;
-                        lps.add(LinearProgram(Equation(std::move(m1), constant, ">")));
-                        lps.add(LinearProgram(Equation(std::move(m2), constant, "<")));
+                        lps.add((Equation(std::move(m1), constant, ">")));
+                        lps.add((Equation(std::move(m2), constant, "<")));
                     }
                 }
             } else {
@@ -1196,7 +1196,7 @@ namespace PetriEngine {
                 {
                     int constant = m1.constant() - m2.constant();
                     m1 -= m2;
-                    lps.add(LinearProgram(Equation(std::move(m1), constant, (context.negated() ? ">=" : "<"))));
+                    lps.add((Equation(std::move(m1), constant, (context.negated() ? ">=" : "<"))));
                 }
             } else {
                 lps.add(LinearProgram());
@@ -1227,8 +1227,8 @@ namespace PetriEngine {
                     int constant = m1.constant() - m2.constant();
                     m1 -= m2;
                     m2 = m1;
-                    lps.add(LinearProgram(Equation(std::move(m1), constant, (context.negated() ? ">" : "<="))));
-                    neglps.add(LinearProgram(Equation(std::move(m2), constant, (context.negated() ? "<=" : ">"))));
+                    lps.add((Equation(std::move(m1), constant, (context.negated() ? ">" : "<="))));
+                    neglps.add((Equation(std::move(m2), constant, (context.negated() ? "<=" : ">"))));
                 }
             } else {
                 lps.add(LinearProgram());
@@ -1261,8 +1261,8 @@ namespace PetriEngine {
                     int constant = m1.constant() - m2.constant();
                     m1 -= m2;
                     m2 = m1;
-                    lps.add(LinearProgram(Equation(std::move(m1), constant, (context.negated() ? "<=" : ">"))));
-                    neglps.add(LinearProgram(Equation(std::move(m2), constant, (context.negated() ? ">" : "<="))));
+                    lps.add((Equation(std::move(m1), constant, (context.negated() ? "<=" : ">"))));
+                    neglps.add((Equation(std::move(m2), constant, (context.negated() ? ">" : "<="))));
                 }
             } else {
                 lps.add(LinearProgram());
@@ -1298,7 +1298,7 @@ namespace PetriEngine {
                 {
                     int constant = m1.constant() - m2.constant();
                     m1 -= m2;
-                    lps.add(LinearProgram(Equation(std::move(m1), constant, (context.negated() ? "<" : ">="))));
+                    lps.add((Equation(std::move(m1), constant, (context.negated() ? "<" : ">="))));
                 }
                 
             } else {

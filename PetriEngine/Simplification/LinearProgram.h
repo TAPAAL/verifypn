@@ -12,7 +12,7 @@ namespace PetriEngine {
         public:
             LinearProgram();
             virtual ~LinearProgram();
-            LinearProgram(const Equation&& eq);
+            LinearProgram(Equation&& eq);
             
             void addEquations(std::vector<Equation>& eqs);
             bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout);

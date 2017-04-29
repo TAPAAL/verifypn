@@ -10,12 +10,17 @@ namespace PetriEngine {
         LinearProgram::~LinearProgram() {
         }
         
-        LinearProgram::LinearProgram(const Equation&& eq){
-            equations.push_back(eq);
+        LinearProgram::LinearProgram(Equation&& eq){
+            equations.emplace_back(std::move(eq));
         }
         
+        
         void LinearProgram::addEquations(std::vector<Equation>& eqs){
-            equations.insert(equations.end(), eqs.begin(), eqs.end());
+            equations.reserve(equations.size() + eqs.size());
+            for(auto& e : eqs)
+            {
+                equations.push_back(e);
+            }
         }        
 
         int LinearProgram::op(std::string op){

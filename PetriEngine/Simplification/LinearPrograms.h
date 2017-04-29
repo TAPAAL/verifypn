@@ -10,9 +10,17 @@ namespace PetriEngine {
         public:
             LinearPrograms(){
             }
+            
             LinearPrograms(const LinearProgram& lp){
                 add(lp);
             }
+            
+            LinearPrograms(LinearPrograms&& other) 
+            : lps(std::move(other.lps))
+            {
+                
+            }
+            
             virtual ~LinearPrograms(){
             }
             std::vector<LinearProgram> lps;
@@ -30,6 +38,10 @@ namespace PetriEngine {
                 lps.push_back(lp);
             }
 
+            void add(Equation&& eq){
+                lps.emplace_back(std::move(eq));
+            }
+            
             void merge(LinearPrograms& lps2){
                 if (lps.size() == 0) {
                     lps.swap(lps2.lps);
@@ -52,7 +64,15 @@ namespace PetriEngine {
             
             void makeUnion(LinearPrograms& lps2)
             {
-                lps.insert(lps.end(), lps2.lps.begin(), lps2.lps.end());
+                // move data, dont copy!
+                size_t osize = lps.size();
+                lps.resize(lps.size() + lps2.lps.size());
+                for(size_t i = 0; i < osize; ++i)
+                {
+                    lps[osize + i].equations.swap(
+                        lps2.lps[i].equations
+                    );
+                }
                 lps2.clear();
             }
             
