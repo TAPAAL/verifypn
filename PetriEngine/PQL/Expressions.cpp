@@ -1103,10 +1103,10 @@ namespace PetriEngine {
             Member m2 = _expr2->constraint(context);
             
             LinearPrograms lps;
-            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 if ((m1.isConstant() && m2.isConstant()) || (m1-m2).isConstant()) {
                     return Retval(std::make_shared<BooleanCondition>(
-                        context.negated() ? (m1.constant != m2.constant) : (m1.constant == m2.constant)));
+                        context.negated() ? (m1.constant() != m2.constant()) : (m1.constant() == m2.constant())));
                 } else {
                     if (context.negated()) {
                         lps.add(LinearProgram(Equation(m1, m2, ">")));
@@ -1136,10 +1136,10 @@ namespace PetriEngine {
             Member m2 = _expr2->constraint(context);
             
             LinearPrograms lps;
-            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 if ((m1.isConstant() && m2.isConstant()) || (m1-m2).isConstant()) {
                     return Retval(std::make_shared<BooleanCondition>(
-                        context.negated() ? (m1.constant == m2.constant) : (m1.constant != m2.constant)));
+                        context.negated() ? (m1.constant() == m2.constant()) : (m1.constant() != m2.constant())));
                 } else{ 
                     if (context.negated()) {
                         lps.add(LinearProgram(Equation(m1, m2, "==")));
@@ -1169,7 +1169,7 @@ namespace PetriEngine {
             Member m2 = _expr2->constraint(context);
             
             LinearPrograms lps;
-            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 >= m2 : m1 < m2;
                 if(eval != Trivial::Indeterminate)
@@ -1197,7 +1197,7 @@ namespace PetriEngine {
             Member m2 = _expr2->constraint(context);
             
             LinearPrograms lps, neglps;
-            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 > m2 : m1 <= m2;
                 if(eval != Trivial::Indeterminate) {
@@ -1228,7 +1228,7 @@ namespace PetriEngine {
             Member m2 = _expr2->constraint(context);
             
             LinearPrograms lps, neglps;
-            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 <= m2 : m1 > m2;
                 if(eval != Trivial::Indeterminate) {
@@ -1259,7 +1259,7 @@ namespace PetriEngine {
             Member m2 = _expr2->constraint(context);
             
             LinearPrograms lps;
-            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 < m2 : m1 >= m2;
                 if(eval != Trivial::Indeterminate)

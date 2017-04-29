@@ -9,43 +9,49 @@ namespace PetriEngine {
         enum Trivial { False=0, True=1, Indeterminate=2 };
         enum MemberType { Constant, Input, Output, Regular };
         class Member {
-        public:
-            std::vector<int> variables;
-            int constant;
-            bool canAnalyze;
+            std::vector<int> _variables;
+            int _constant;
+            bool _canAnalyze;
 
-            Member(std::vector<int> vec, int constant) : variables(vec), constant(constant) {
-                canAnalyze = true;
+        public:
+
+            Member(std::vector<int> vec, int constant) : _variables(vec), _constant(constant) {
+                _canAnalyze = true;
             }
-            Member(int constant) : constant(constant) {
-                canAnalyze = true;
+            Member(int constant) : _constant(constant) {
+                _canAnalyze = true;
             }
             Member(){}
 
             virtual ~Member(){}
-
+            
+            bool constant() const   { return _constant; };
+            bool canAnalyze() const { return _canAnalyze; };
+            size_t size() const     { return _variables.size(); }
+            std::vector<int>& variables() { return _variables; }
+            
             Member operator+(const Member& m) const { 
                 Member res;
-                res.constant = constant + m.constant;
-                res.variables = addVariables(*this, m);
-                res.canAnalyze = canAnalyze&&m.canAnalyze;
+                res._constant = _constant + m._constant;
+                res._variables = addVariables(*this, m);
+                res._canAnalyze = _canAnalyze&&m._canAnalyze;
                 return res;
             }
             Member operator-(const Member& m) const { 
                 Member res;
-                res.constant = constant - m.constant;
-                res.variables = subtractVariables(*this, m);
-                res.canAnalyze = canAnalyze&&m.canAnalyze;
+                res._constant = _constant - m._constant;
+                res._variables = subtractVariables(*this, m);
+                res._canAnalyze = _canAnalyze&&m._canAnalyze;
                 return res;
             }
             Member operator*(const Member& m) const { 
                 Member res;
                 if(!isConstant()&&!m.isConstant()){
-                    res.canAnalyze = false;
+                    res._canAnalyze = false;
                 } else{
-                    res.constant = constant * m.constant;            
-                    res.canAnalyze = canAnalyze&&m.canAnalyze;
-                    res.variables = multiply(*this, m);
+                    res._constant = _constant * m._constant;            
+                    res._canAnalyze = _canAnalyze&&m._canAnalyze;
+                    res._variables = multiply(*this, m);
                 }
                 return res;
             }
@@ -57,7 +63,7 @@ namespace PetriEngine {
             }
 
             bool isConstant() const {
-                for(const int& v : variables){
+                for(const int& v : _variables){
                     if(v != 0) return false;
                 }
                 return true;
@@ -67,7 +73,7 @@ namespace PetriEngine {
                 bool isConstant=true;
                 bool isInput=true;
                 bool isOutput=true;
-                for(const int& v : variables){
+                for(const int& v : _variables){
                     if(v < 0){
                         isConstant=false;
                         isOutput=false;
@@ -103,16 +109,16 @@ namespace PetriEngine {
             
         private:
             std::vector<int> addVariables(const Member& m1, const Member& m2) const {
-                uint32_t size = std::max(m1.variables.size(), m2.variables.size());
+                uint32_t size = std::max(m1._variables.size(), m2._variables.size());
                 std::vector<int> res(size);
                 
                 for (uint32_t i = 0; i < size; i++) {
-                    if (i + 1 > m1.variables.size()) {
-                        res[i] = m2.variables[i];
-                    } else if (i + 1 > m2.variables.size()) {
-                        res[i] = m1.variables[i];
+                    if (i + 1 > m1._variables.size()) {
+                        res[i] = m2._variables[i];
+                    } else if (i + 1 > m2._variables.size()) {
+                        res[i] = m1._variables[i];
                     } else {
-                        res[i] = m1.variables[i] + m2.variables[i];
+                        res[i] = m1._variables[i] + m2._variables[i];
                     }
                 }
                 
@@ -120,16 +126,16 @@ namespace PetriEngine {
             }
 
             std::vector<int> subtractVariables(const Member& m1, const Member& m2) const {
-                uint32_t size = std::max(m1.variables.size(), m2.variables.size());
+                uint32_t size = std::max(m1._variables.size(), m2._variables.size());
                 std::vector<int> res(size);
                 
                 for (uint32_t i = 0; i < size; i++) {
-                    if (i + 1 > m1.variables.size()) {
-                        res[i] =  0 - m2.variables[i];
-                    } else if (i + 1 > m2.variables.size()) {
-                        res[i] = m1.variables[i];
+                    if (i + 1 > m1._variables.size()) {
+                        res[i] =  0 - m2._variables[i];
+                    } else if (i + 1 > m2._variables.size()) {
+                        res[i] = m1._variables[i];
                     } else {
-                        res[i] = m1.variables[i] - m2.variables[i];
+                        res[i] = m1._variables[i] - m2._variables[i];
                     }
                 }
                 
@@ -140,12 +146,12 @@ namespace PetriEngine {
                 std::vector<int> res;
                 if (m1.isConstant() != m2.isConstant()){
                     if (!m1.isConstant()){
-                        for(auto& v : m1.variables){
-                            res.push_back(v * m2.constant);
+                        for(auto& v : m1._variables){
+                            res.push_back(v * m2._constant);
                         }
                     } else if (!m2.isConstant()){
-                        for (auto& v : m2.variables){
-                            res.push_back(v * m1.constant);
+                        for (auto& v : m2._variables){
+                            res.push_back(v * m1._constant);
                         }
                     }
                 }
@@ -158,30 +164,30 @@ namespace PetriEngine {
                 
                 // self comparison
                 if (m1 == m2)
-                    return compare(m1.constant, m2.constant) ? Trivial::True : Trivial::False;
+                    return compare(m1._constant, m2._constant) ? Trivial::True : Trivial::False;
                     
                 // constant < constant/input/output
                 if (type1 == MemberType::Constant){
                     if(type2 == MemberType::Constant){
-                        return compare(m1.constant, m2.constant) ? Trivial::True : Trivial::False;
+                        return compare(m1._constant, m2._constant) ? Trivial::True : Trivial::False;
                     }
-                    else if(type2 == MemberType::Input && !compare(m1.constant, m2.constant)){
+                    else if(type2 == MemberType::Input && !compare(m1._constant, m2._constant)){
                         return Trivial::False;
                     } 
-                    else if(type2 == MemberType::Output && compare(m1.constant, m2.constant)){
+                    else if(type2 == MemberType::Output && compare(m1._constant, m2._constant)){
                         return Trivial::True;
                     } 
                 } 
                 // input < output/constant
                 else if (type1 == MemberType::Input 
                         && (type2 == MemberType::Constant || type2 == MemberType::Output) 
-                        && compare(m1.constant, m2.constant)) {
+                        && compare(m1._constant, m2._constant)) {
                     return Trivial::True;
                 } 
                 // output < input/constant
                 else if (type1 == MemberType::Output 
                         && (type2 == MemberType::Constant || type2 == MemberType::Input) 
-                        && !compare(m1.constant, m2.constant)) {
+                        && !compare(m1._constant, m2._constant)) {
                     return Trivial::False;
                 } 
                 return Trivial::Indeterminate;
