@@ -103,9 +103,7 @@ namespace PetriEngine {
                 }
                 return true;
             }
-            bool operator!=(const Member& m) const {
-                return !(*this == m);
-            }
+
             Trivial operator<(const Member& m) const {
                 return trivialLessThan(m, std::less<int>());
             }
@@ -149,25 +147,24 @@ namespace PetriEngine {
                     } else {
                         res[i] = m1._variables[i] - m2._variables[i];
                     }
-                }
-                
+                }                
                 return res;
             }
 
             std::vector<int> multiply(const Member& m1, const Member& m2) const {
-                std::vector<int> res;
+
                 if (m1.isConstant() != m2.isConstant()){
                     if (!m1.isConstant()){
-                        for(auto& v : m1._variables){
-                            res.push_back(v * m2._constant);
-                        }
+                        std::vector<int> res = m1._variables;
+                        for(auto& v : res) v *= m2._constant;
+                        return res;
                     } else if (!m2.isConstant()){
-                        for (auto& v : m2._variables){
-                            res.push_back(v * m1._constant);
-                        }
+                        std::vector<int> res = m2._variables;
+                        for(auto& v : res) v *= m1._constant;
+                        return res;
                     }
                 }
-                return res;
+                return {};
             }
             
             Trivial trivialLessThan(const Member& m2, std::function<bool (int, int)> compare) const {
