@@ -1111,11 +1111,16 @@ namespace PetriEngine {
                         context.negated() ? (m1.constant() != m2.constant()) : (m1.constant() == m2.constant())));
                 } else {
                     if (context.negated()) {
-                        lps.add(LinearProgram(Equation(m1, m2, ">")));
-                        lps.add(LinearProgram(Equation(m1, m2, "<")));
+                        int constant = m1.constant() - m2.constant();
+                        m1 -= m2;
+                        m2 = m1;
+                        lps.add(LinearProgram(Equation(std::move(m1), constant, ">")));
+                        lps.add(LinearProgram(Equation(std::move(m2), constant, "<")));
                     }
                     else {
-                        lps.add(LinearProgram(Equation(m1, m2, "==")));
+                        int constant = m1.constant() - m2.constant();
+                        m1 -= m2;
+                        lps.add(LinearProgram(Equation(std::move(m1), constant, "==")));
                     }
                 }
             } else {
@@ -1144,11 +1149,16 @@ namespace PetriEngine {
                         context.negated() ? (m1.constant() == m2.constant()) : (m1.constant() != m2.constant())));
                 } else{ 
                     if (context.negated()) {
-                        lps.add(LinearProgram(Equation(m1, m2, "==")));
+                        int constant = m1.constant() - m2.constant();
+                        m1 -= m2;
+                        lps.add(LinearProgram(Equation(std::move(m1), constant, "==")));
                     }
                     else {
-                        lps.add(LinearProgram(Equation(m1, m2, ">")));
-                        lps.add(LinearProgram(Equation(m1, m2, "<")));
+                        int constant = m1.constant() - m2.constant();
+                        m1 -= m2;
+                        m2 = m1;
+                        lps.add(LinearProgram(Equation(std::move(m1), constant, ">")));
+                        lps.add(LinearProgram(Equation(std::move(m2), constant, "<")));
                     }
                 }
             } else {
@@ -1175,10 +1185,16 @@ namespace PetriEngine {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 >= m2 : m1 < m2;
                 if(eval != Trivial::Indeterminate)
+                {
                     return Retval(std::make_shared<BooleanCondition>(eval == Trivial::True));
-                
+                }
                 // if no trivial case
-                else lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? ">=" : "<"))));
+                else 
+                {
+                    int constant = m1.constant() - m2.constant();
+                    m1 -= m2;
+                    lps.add(LinearProgram(Equation(std::move(m1), constant, (context.negated() ? ">=" : "<"))));
+                }
             } else {
                 lps.add(LinearProgram());
             }
@@ -1205,8 +1221,11 @@ namespace PetriEngine {
                 if(eval != Trivial::Indeterminate) {
                     return Retval(std::make_shared<BooleanCondition>(eval == Trivial::True));
                 } else { // if no trivial case
-                    lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? ">" : "<="))));
-                    neglps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "<=" : ">"))));
+                    int constant = m1.constant() - m2.constant();
+                    m1 -= m2;
+                    m2 = m1;
+                    lps.add(LinearProgram(Equation(std::move(m1), constant, (context.negated() ? ">" : "<="))));
+                    neglps.add(LinearProgram(Equation(std::move(m2), constant, (context.negated() ? "<=" : ">"))));
                 }
             } else {
                 lps.add(LinearProgram());
@@ -1236,8 +1255,11 @@ namespace PetriEngine {
                 if(eval != Trivial::Indeterminate) {
                     return Retval(std::make_shared<BooleanCondition>(eval == Trivial::True));
                 } else { // if no trivial case
-                    lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "<=" : ">"))));
-                    neglps.add(LinearProgram(Equation(m1, m2, (context.negated() ? ">" : "<="))));
+                    int constant = m1.constant() - m2.constant();
+                    m1 -= m2;
+                    m2 = m1;
+                    lps.add(LinearProgram(Equation(std::move(m1), constant, (context.negated() ? "<=" : ">"))));
+                    neglps.add(LinearProgram(Equation(std::move(m2), constant, (context.negated() ? ">" : "<="))));
                 }
             } else {
                 lps.add(LinearProgram());
@@ -1265,16 +1287,23 @@ namespace PetriEngine {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 < m2 : m1 >= m2;
                 if(eval != Trivial::Indeterminate)
+                {
                     return Retval(std::make_shared<BooleanCondition>(eval == Trivial::True));
-                
+                }
                 // if no trivial case
-                else lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "<" : ">="))));
+                else 
+                {
+                    int constant = m1.constant() - m2.constant();
+                    m1 -= m2;
+                    lps.add(LinearProgram(Equation(std::move(m1), constant, (context.negated() ? "<" : ">="))));
+                }
                 
             } else {
                 lps.add(LinearProgram());
             }
             
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) 
+            {
                 return Retval(std::make_shared<BooleanCondition>(false));
             } else {
                 if (context.negated()) {
