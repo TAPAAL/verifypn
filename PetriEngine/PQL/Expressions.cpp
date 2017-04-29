@@ -858,6 +858,7 @@ namespace PetriEngine {
         Member IdentifierExpr::constraint(SimplificationContext& context) const {
             // Reserve index 0 to LPsolve
             std::vector<int> row(context.net()->numberOfTransitions() + 1);
+            row.shrink_to_fit();
             uint32_t p = offset();
             for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
                 row[1 + t] = context.net()->outArc(t, p) - context.net()->inArc(p, t);
@@ -866,19 +867,20 @@ namespace PetriEngine {
         }
         
         Member PlusExpr::constraint(SimplificationContext& context) const {
-            return _expr1->constraint(context) + _expr2->constraint(context);
+            return _expr1->constraint(context) += _expr2->constraint(context);
         }
         
         Member SubtractExpr::constraint(SimplificationContext& context) const {
-            return _expr1->constraint(context) - _expr2->constraint(context);
+            return _expr1->constraint(context) -= _expr2->constraint(context);
         }
         
         Member MultiplyExpr::constraint(SimplificationContext& context) const {
-            return _expr1->constraint(context) * _expr2->constraint(context);
+            return _expr1->constraint(context) *= _expr2->constraint(context);
         }
         
         Member MinusExpr::constraint(SimplificationContext& context) const {
-            return -_expr->constraint(context);
+            Member neg(-1);
+            return _expr->constraint(context) *= neg;
         }
         
         Retval simplifyEX(Retval r) {
@@ -1104,7 +1106,7 @@ namespace PetriEngine {
             
             LinearPrograms lps;
             if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
-                if ((m1.isConstant() && m2.isConstant()) || (m1-m2).isConstant()) {
+                if ((m1.isZero() && m2.isZero()) || m1.substrationIsZero(m2)) {
                     return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant() != m2.constant()) : (m1.constant() == m2.constant())));
                 } else {
@@ -1137,7 +1139,7 @@ namespace PetriEngine {
             
             LinearPrograms lps;
             if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
-                if ((m1.isConstant() && m2.isConstant()) || (m1-m2).isConstant()) {
+                if ((m1.isZero() && m2.isZero()) || m1.substrationIsZero(m2)) {
                     return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant() == m2.constant()) : (m1.constant() != m2.constant())));
                 } else{ 
