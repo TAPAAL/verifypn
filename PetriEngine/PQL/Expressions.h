@@ -578,6 +578,7 @@ namespace PetriEngine {
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
             static Condition_ptr TRUE;
             static Condition_ptr FALSE;
+            static Condition_ptr getShared(bool val);
             Retval simplify(SimplificationContext& context) const;
             bool isReachability(uint32_t depth) const;
             bool isUpperBound();
@@ -606,6 +607,7 @@ namespace PetriEngine {
             Condition_ptr prepareForReachability(bool negated) const;
             std::string toXML(uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            static Condition_ptr DEADLOCK;
         };
 
     }

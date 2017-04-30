@@ -132,7 +132,7 @@ namespace PetriEngine {
             int result = solve(lp);
             delete_lp(lp);
 
-            if (result == TIMEOUT) std::cout<<"note: lpsolve timeout"<<std::endl;
+            if (result == TIMEOUT) std::cout << "note: lpsolve timeout" << std::endl;
             // Return true, if it was infeasible
             if(result == INFEASIBLE)
             {
