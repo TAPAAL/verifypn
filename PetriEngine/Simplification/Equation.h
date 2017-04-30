@@ -6,13 +6,22 @@ namespace PetriEngine {
     namespace Simplification {
         class Equation {
         public:
+            enum op_t 
+            {
+                OP_EQ,
+                OP_LE,
+                OP_GE,
+                OP_LT,
+                OP_GT,
+                OP_NE
+            };
 
-            Equation(const Member& lh, int constant, const std::string& op) 
+            Equation(const Member& lh, int constant, op_t op) 
             : row(lh.variables()), op(op), constant(constant) {
 
             }
 
-            Equation(Member&& lh, int constant, const std::string& op) 
+            Equation(Member&& lh, int constant, op_t op) 
             : row(std::move(lh.variables())), op(op), constant(constant) {
 
             }
@@ -32,7 +41,7 @@ namespace PetriEngine {
             }
 
             std::vector<int> row;
-            std::string op;
+            op_t op;
             int constant;
             virtual ~Equation(){}
         };

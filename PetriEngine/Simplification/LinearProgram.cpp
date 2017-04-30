@@ -70,25 +70,33 @@ namespace PetriEngine {
             }
 
             for(Equation& eq : equations){
-                if(eq.op == "<"){
-                    constant = (REAL) (eq.constant - 1);
-                    comparator = LE;
-                } else if(eq.op == ">"){
-                    constant = (REAL) (eq.constant + 1);
-                    comparator = GE;
-                } else if(eq.op == "<="){
-                    constant = (REAL) eq.constant;
-                    comparator = LE;
-                } else if(eq.op == ">="){
-                    constant = (REAL) eq.constant;
-                    comparator = GE;
-                } else if(eq.op == "=="){
-                    constant = (REAL) eq.constant;
-                    comparator = EQ;
-                } else if(eq.op == "!="){
-                    // We ignore this operator for now by not adding any equation.
-                    // This is untested, however.
-                    continue;
+                switch(eq.op)
+                {
+                    case Equation::OP_LT:
+                        constant = (REAL) (eq.constant - 1);
+                        comparator = LE;
+                        break;
+                    case Equation::OP_GT:
+                        constant = (REAL) (eq.constant + 1);
+                        comparator = GE;
+                        break;
+                    case Equation::OP_LE:
+                        constant = (REAL) eq.constant;
+                        comparator = LE;
+                        break;
+                    case Equation::OP_GE:
+                        constant = (REAL) eq.constant;
+                        comparator = GE;
+                        break;
+                    case Equation::OP_EQ:
+                        constant = (REAL) eq.constant;
+                        comparator = EQ;
+                        break;
+                    default:
+                        // We ignore this operator for now by not adding any equation.
+                        // This is untested, however.
+                        assert(false);
+                        continue;
                 }
                 memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
                 for (size_t t = 1; t < nCol+1; t++) {

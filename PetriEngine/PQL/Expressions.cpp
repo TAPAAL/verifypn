@@ -1131,13 +1131,13 @@ namespace PetriEngine {
                         int constant = m2.constant() - m1.constant();
                         m1 -= m2;
                         m2 = m1;
-                        lps.add((Equation(std::move(m1), constant, ">")));
-                        lps.add((Equation(std::move(m2), constant, "<")));
+                        lps.add((Equation(std::move(m1), constant, Equation::OP_GT)));
+                        lps.add((Equation(std::move(m2), constant, Equation::OP_LT)));
                     }
                     else {
                         int constant = m2.constant() - m1.constant();
                         m1 -= m2;
-                        lps.add((Equation(m1, constant, "==")));
+                        lps.add((Equation(m1, constant, Equation::OP_EQ)));
                     }
                 }
             } else {
@@ -1168,14 +1168,14 @@ namespace PetriEngine {
                     if (context.negated()) {
                         int constant = m2.constant() - m1.constant();
                         m1 -= m2;
-                        lps.add((Equation(std::move(m1), constant, "==")));
+                        lps.add((Equation(std::move(m1), constant, Equation::OP_EQ)));
                     }
                     else {
                         int constant = m2.constant() - m1.constant();
                         m1 -= m2;
                         m2 = m1;
-                        lps.add((Equation(std::move(m1), constant, ">")));
-                        lps.add((Equation(std::move(m2), constant, "<")));
+                        lps.add((Equation(std::move(m1), constant, Equation::OP_GT)));
+                        lps.add((Equation(std::move(m2), constant, Equation::OP_LT)));
                     }
                 }
             } else {
@@ -1210,7 +1210,7 @@ namespace PetriEngine {
                 {
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
-                    lps.add((Equation(std::move(m1), constant, (context.negated() ? ">=" : "<"))));
+                    lps.add((Equation(std::move(m1), constant, (context.negated() ? Equation::OP_GE : Equation::OP_LT))));
                 }
             } else {
                 lps.add(LinearProgram());
@@ -1241,8 +1241,8 @@ namespace PetriEngine {
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
                     m2 = m1;
-                    lps.add((Equation(std::move(m1), constant, (context.negated() ? ">" : "<="))));
-                    neglps.add((Equation(std::move(m2), constant, (context.negated() ? "<=" : ">"))));
+                    lps.add((Equation(std::move(m1), constant, (context.negated() ? Equation::OP_GT : Equation::OP_LE))));
+                    neglps.add((Equation(std::move(m2), constant, (context.negated() ? Equation::OP_LE : Equation::OP_GT))));
                 }
             } else {
                 lps.add(LinearProgram());
@@ -1275,8 +1275,8 @@ namespace PetriEngine {
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
                     m2 = m1;
-                    lps.add((Equation(std::move(m1), constant, (context.negated() ? "<=" : ">"))));
-                    neglps.add((Equation(std::move(m2), constant, (context.negated() ? ">" : "<="))));
+                    lps.add((Equation(std::move(m1), constant, (context.negated() ? Equation::OP_LE : Equation::OP_GT))));
+                    neglps.add((Equation(std::move(m2), constant, (context.negated() ? Equation::OP_GT : Equation::OP_LE))));
                 }
             } else {
                 lps.add(LinearProgram());
@@ -1312,7 +1312,7 @@ namespace PetriEngine {
                 {
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
-                    lps.add((Equation(std::move(m1), constant, (context.negated() ? "<" : ">="))));
+                    lps.add((Equation(std::move(m1), constant, (context.negated() ? Equation::OP_LT : Equation::OP_GE))));
                 }
                 
             } else {
