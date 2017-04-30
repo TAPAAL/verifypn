@@ -14,15 +14,17 @@ namespace PetriEngine {
             }
                         
             Retval (std::shared_ptr<PQL::Condition> formula) 
-            : Retval(formula, LinearPrograms(LinearProgram())) {
+            : formula(formula) {
+                lps.add(LinearProgram());
             }
  
-            Retval(Retval&& other) : formula(other.formula), lps(std::move(other.lps))
+            Retval(Retval&& other) 
+            : formula(other.formula), lps(std::move(other.lps))
             {}
 
             Retval& operator=(Retval&& other) {
-                lps.lps.swap(other.lps.lps);
-                formula.swap(other.formula);
+                lps = std::move(other.lps);
+                formula = std::move(other.formula);
                 return *this;
             }
             

@@ -10,15 +10,16 @@ namespace PetriEngine {
         public:
             LinearPrograms(){
             }
-            
-            LinearPrograms(const LinearProgram& lp){
-                add(lp);
-            }
-            
+                        
             LinearPrograms(LinearPrograms&& other) 
             : lps(std::move(other.lps))
             {
                 
+            }
+            
+            LinearPrograms& operator = (LinearPrograms&& other)
+            {
+                lps = std::move(other.lps);
             }
             
             virtual ~LinearPrograms(){
@@ -34,8 +35,8 @@ namespace PetriEngine {
                 return false;
             }
 
-            void add(const LinearProgram& lp){
-                lps.push_back(lp);
+            void add(const LinearProgram&& lp){
+                lps.push_back(std::move(lp));
             }
 
             void add(Equation&& eq){
