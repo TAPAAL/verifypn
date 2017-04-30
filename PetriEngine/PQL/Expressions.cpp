@@ -46,7 +46,7 @@ namespace PetriEngine {
         // CONSTANTS
         Condition_ptr BooleanCondition::FALSE = std::make_shared<BooleanCondition>(false);
         Condition_ptr BooleanCondition::TRUE = std::make_shared<BooleanCondition>(true);
-        Condition_ptr DEADLOCK = std::make_shared<DeadlockCondition>();
+        Condition_ptr DeadlockCondition::DEADLOCK = std::make_shared<DeadlockCondition>();
         
         
         Condition_ptr BooleanCondition::getShared(bool val)
