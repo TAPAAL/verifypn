@@ -1,5 +1,6 @@
 #ifndef EQUATION_H
 #define EQUATION_H
+#include <memory>
 #include "Member.h"
 
 namespace PetriEngine {
@@ -45,6 +46,8 @@ namespace PetriEngine {
             int constant;
             virtual ~Equation(){}
         };
+
+        typedef std::shared_ptr<Equation> Equation_ptr;
     }
 }
 

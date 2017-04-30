@@ -12,7 +12,7 @@ namespace PetriEngine {
         private:
             enum result_t { UKNOWN, IMPOSSIBLE, POSSIBLE };
             result_t _result = result_t::UKNOWN;
-            std::vector<Equation> equations;
+            std::vector<Equation_ptr> equations;
 
         public:
             LinearProgram();

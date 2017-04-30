@@ -11,7 +11,7 @@ namespace PetriEngine {
         }
         
         LinearProgram::LinearProgram(Equation&& eq){
-            equations.emplace_back(std::move(eq));
+            equations.emplace_back(std::make_shared<Equation>(std::move(eq)));
         }
         
         int LinearProgram::op(std::string op){
@@ -59,27 +59,27 @@ namespace PetriEngine {
                 set_rh(lp, rowno++, (0 - (int)m0[p]));
             }
 
-            for(Equation& eq : equations){
-                switch(eq.op)
+            for(auto& eq : equations){
+                switch(eq->op)
                 {
                     case Equation::OP_LT:
-                        constant = (REAL) (eq.constant - 1);
+                        constant = (REAL) (eq->constant - 1);
                         comparator = LE;
                         break;
                     case Equation::OP_GT:
-                        constant = (REAL) (eq.constant + 1);
+                        constant = (REAL) (eq->constant + 1);
                         comparator = GE;
                         break;
                     case Equation::OP_LE:
-                        constant = (REAL) eq.constant;
+                        constant = (REAL) eq->constant;
                         comparator = LE;
                         break;
                     case Equation::OP_GE:
-                        constant = (REAL) eq.constant;
+                        constant = (REAL) eq->constant;
                         comparator = GE;
                         break;
                     case Equation::OP_EQ:
-                        constant = (REAL) eq.constant;
+                        constant = (REAL) eq->constant;
                         comparator = EQ;
                         break;
                     default:
@@ -90,8 +90,8 @@ namespace PetriEngine {
                 }
                 memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
                 for (size_t t = 1; t < nCol+1; t++) {
-                    assert((t - 1) < eq.row.size());
-                    row[t] = (REAL)eq.row[t - 1]; // first index is for lp-solve.
+                    assert((t - 1) < eq->row.size());
+                    row[t] = (REAL)eq->row[t - 1]; // first index is for lp-solve.
                 }
                 
                 set_row(lp, rowno, row.data());
