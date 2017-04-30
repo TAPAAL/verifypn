@@ -856,12 +856,11 @@ namespace PetriEngine {
         }
         
         Member IdentifierExpr::constraint(SimplificationContext& context) const {
-            // Reserve index 0 to LPsolve
-            std::vector<int> row(context.net()->numberOfTransitions() + 1);
+            std::vector<int> row(context.net()->numberOfTransitions(), 0);
             row.shrink_to_fit();
             uint32_t p = offset();
             for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
-                row[1 + t] = context.net()->outArc(t, p) - context.net()->inArc(p, t);
+                row[t] = context.net()->outArc(t, p) - context.net()->inArc(p, t);
             }
             return Member(std::move(row), context.marking()[p]);
         }
@@ -1072,7 +1071,7 @@ namespace PetriEngine {
                 return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), 
                         std::move(
                                     (r1.lps.lps.size() < r2.lps.lps.size() 
-                                        ?  r1.lps 
+                                        ? r1.lps 
                                         : r2.lps)));
             }
         }
@@ -1103,7 +1102,6 @@ namespace PetriEngine {
                 succ2 = true;
             }
             catch (std::bad_alloc& e) {};
-            
             if(!succ1 && !succ2) throw std::bad_alloc();
             else if(succ1 && !succ2) return std::move(r1);
             else if(succ2 && !succ1) return std::move(r2);
@@ -1130,16 +1128,16 @@ namespace PetriEngine {
                         context.negated() ? (m1.constant() != m2.constant()) : (m1.constant() == m2.constant())));
                 } else {
                     if (context.negated()) {
-                        int constant = m1.constant() - m2.constant();
+                        int constant = m2.constant() - m1.constant();
                         m1 -= m2;
                         m2 = m1;
                         lps.add((Equation(std::move(m1), constant, ">")));
                         lps.add((Equation(std::move(m2), constant, "<")));
                     }
                     else {
-                        int constant = m1.constant() - m2.constant();
+                        int constant = m2.constant() - m1.constant();
                         m1 -= m2;
-                        lps.add((Equation(std::move(m1), constant, "==")));
+                        lps.add((Equation(m1, constant, "==")));
                     }
                 }
             } else {
@@ -1168,12 +1166,12 @@ namespace PetriEngine {
                         context.negated() ? (m1.constant() == m2.constant()) : (m1.constant() != m2.constant())));
                 } else{ 
                     if (context.negated()) {
-                        int constant = m1.constant() - m2.constant();
+                        int constant = m2.constant() - m1.constant();
                         m1 -= m2;
                         lps.add((Equation(std::move(m1), constant, "==")));
                     }
                     else {
-                        int constant = m1.constant() - m2.constant();
+                        int constant = m2.constant() - m1.constant();
                         m1 -= m2;
                         m2 = m1;
                         lps.add((Equation(std::move(m1), constant, ">")));
@@ -1210,7 +1208,7 @@ namespace PetriEngine {
                 // if no trivial case
                 else 
                 {
-                    int constant = m1.constant() - m2.constant();
+                    int constant = m2.constant() - m1.constant();
                     m1 -= m2;
                     lps.add((Equation(std::move(m1), constant, (context.negated() ? ">=" : "<"))));
                 }
@@ -1240,7 +1238,7 @@ namespace PetriEngine {
                 if(eval != Trivial::Indeterminate) {
                     return Retval(std::make_shared<BooleanCondition>(eval == Trivial::True));
                 } else { // if no trivial case
-                    int constant = m1.constant() - m2.constant();
+                    int constant = m2.constant() - m1.constant();
                     m1 -= m2;
                     m2 = m1;
                     lps.add((Equation(std::move(m1), constant, (context.negated() ? ">" : "<="))));
@@ -1274,7 +1272,7 @@ namespace PetriEngine {
                 if(eval != Trivial::Indeterminate) {
                     return Retval(std::make_shared<BooleanCondition>(eval == Trivial::True));
                 } else { // if no trivial case
-                    int constant = m1.constant() - m2.constant();
+                    int constant = m2.constant() - m1.constant();
                     m1 -= m2;
                     m2 = m1;
                     lps.add((Equation(std::move(m1), constant, (context.negated() ? "<=" : ">"))));
@@ -1312,7 +1310,7 @@ namespace PetriEngine {
                 // if no trivial case
                 else 
                 {
-                    int constant = m1.constant() - m2.constant();
+                    int constant = m2.constant() - m1.constant();
                     m1 -= m2;
                     lps.add((Equation(std::move(m1), constant, (context.negated() ? "<" : ">="))));
                 }

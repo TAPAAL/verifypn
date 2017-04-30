@@ -19,7 +19,6 @@ namespace PetriEngine {
 
             Member(std::vector<int>&& vec, int constant, bool canAnalyze = true) 
                     : _variables(vec), _constant(constant), _canAnalyze(canAnalyze) {
-
             }
             Member(int constant, bool canAnalyse = true) 
                     : _constant(constant), _canAnalyze(canAnalyse) {
@@ -32,6 +31,7 @@ namespace PetriEngine {
             bool canAnalyze() const { return _canAnalyze; };
             size_t size() const     { return _variables.size(); }
             std::vector<int>& variables() { return _variables; }
+            const std::vector<int>& variables() const { return _variables; }
             
             Member& operator+=(const Member& m) { 
                 auto tc = _constant + m._constant;

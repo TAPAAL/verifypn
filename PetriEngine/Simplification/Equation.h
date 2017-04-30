@@ -6,7 +6,14 @@ namespace PetriEngine {
     namespace Simplification {
         class Equation {
         public:
-            Equation(Member&& lh, int constant, std::string op) : op(op), constant(constant) {
+
+            Equation(const Member& lh, int constant, const std::string& op) 
+            : row(lh.variables()), op(op), constant(constant) {
+
+            }
+
+            Equation(Member&& lh, int constant, const std::string& op) 
+            : row(std::move(lh.variables())), op(op), constant(constant) {
 
             }
             

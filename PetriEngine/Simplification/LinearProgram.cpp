@@ -35,7 +35,7 @@ namespace PetriEngine {
                 return false;
             }
 
-            uint32_t nCol = net->numberOfTransitions();
+            const uint32_t nCol = net->numberOfTransitions();
             lprec* lp;
             int nRow = net->numberOfPlaces() + equations.size();
             
@@ -54,7 +54,7 @@ namespace PetriEngine {
             
             // restrict all places to contain 0+ tokens
             for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-                memset(row.data(), 0, sizeof (REAL) * nCol + 1);
+                memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
                 for (size_t t = 0; t < nCol; t++) {
                     row[1 + t] = net->outArc(t, p) - net->inArc(p, t);
                 }
@@ -84,10 +84,10 @@ namespace PetriEngine {
                     // This is untested, however.
                     continue;
                 }
-                                
-                memset(row.data(), 0, sizeof (REAL) * nCol + 1);
+                memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
                 for (size_t t = 1; t < nCol+1; t++) {
-                    row[t] = (REAL)eq.row[t];
+                    assert((t - 1) < eq.row.size());
+                    row[t] = (REAL)eq.row[t - 1]; // first index is for lp-solve.
                 }
                 
                 set_row(lp, rowno, row.data());
