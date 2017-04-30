@@ -58,6 +58,11 @@ namespace PetriEngine {
                 lps.emplace_back(std::move(eq));
             }
             
+            /**
+             * Merges two linear programs, this invalidates lps2 to restrict 
+             * temporary memory-overhead. 
+             * @param lps2
+             */
             void merge(LinearPrograms& lps2){
                 if (lps.size() == 0) {
                     lps.swap(lps2.lps);
@@ -93,6 +98,12 @@ namespace PetriEngine {
                 hasEmpty = hasEmpty && lps2.hasEmpty;
             }
             
+
+            /**
+             * Unions two linear programs, this invalidates lps2 to restrict 
+             * temporary memory-overhead. 
+             * @param lps2
+             */
             void makeUnion(LinearPrograms& lps2)
             {
                 // move data, dont copy!
