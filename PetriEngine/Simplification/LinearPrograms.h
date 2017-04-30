@@ -24,6 +24,7 @@ namespace PetriEngine {
             {
                 lps = std::move(other.lps);
                 hasEmpty = other.hasEmpty;
+                return *this;
             }
             
             virtual ~LinearPrograms(){

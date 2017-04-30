@@ -13,13 +13,6 @@ namespace PetriEngine {
         LinearProgram::LinearProgram(Equation&& eq){
             equations.emplace_back(std::make_shared<Equation>(std::move(eq)));
         }
-        
-        int LinearProgram::op(std::string op){
-            if(op == "<="){ return 1; }
-            if(op == ">="){ return 2; }
-            if(op == "=="){ return 3; }
-            return -1;
-        }
 
         bool LinearProgram::isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout){
             if(equations.size() == 0){

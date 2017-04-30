@@ -24,7 +24,6 @@ namespace PetriEngine {
             }
             
             bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout);
-            int op(std::string op);    
             void swap(LinearProgram& other)
             {
                 std::swap(_result, other._result);
