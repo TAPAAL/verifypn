@@ -14,16 +14,6 @@ namespace PetriEngine {
             equations.emplace_back(std::move(eq));
         }
         
-        
-        void LinearProgram::addEquations(std::vector<Equation>& eqs){
-            _result = result_t::UKNOWN;
-            equations.reserve(equations.size() + eqs.size());
-            for(auto& e : eqs)
-            {
-                equations.push_back(e);
-            }
-        }        
-
         int LinearProgram::op(std::string op){
             if(op == "<="){ return 1; }
             if(op == ">="){ return 2; }

@@ -39,7 +39,7 @@ namespace PetriEngine {
             
             Equation(){
             }
-
+            
             std::vector<int> row;
             op_t op;
             int constant;

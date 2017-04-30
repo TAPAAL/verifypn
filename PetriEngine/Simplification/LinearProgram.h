@@ -19,7 +19,6 @@ namespace PetriEngine {
             virtual ~LinearProgram();
             LinearProgram(Equation&& eq);
             
-            void addEquations(std::vector<Equation>& eqs);
             bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout);
             int op(std::string op);    
             void swap(LinearProgram& other)
@@ -30,8 +29,17 @@ namespace PetriEngine {
             
             static LinearProgram lpUnion(LinearProgram& lp1, LinearProgram& lp2){
                 LinearProgram res;
-                res.addEquations(lp1.equations);
-                res.addEquations(lp2.equations);
+                res.equations.reserve(lp1.equations.size() + lp2.equations.size());
+                
+                for(auto eq : lp1.equations) res.equations.push_back(eq);
+                for(auto eq : lp2.equations) res.equations.push_back(eq);
+                
+                if( lp1._result == result_t::IMPOSSIBLE ||
+                    lp2._result == result_t::IMPOSSIBLE)
+                {
+                    // impossibility is compositional -- linear constraint-systems are big conjunctions.
+                    res._result = result_t::IMPOSSIBLE;
+                }
                 return res;
             }            
             
