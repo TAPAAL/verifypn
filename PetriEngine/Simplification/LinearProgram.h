@@ -18,6 +18,10 @@ namespace PetriEngine {
             LinearProgram();
             virtual ~LinearProgram();
             LinearProgram(Equation&& eq);
+            size_t size() const
+            {
+                return equations.size();
+            }
             
             bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout);
             int op(std::string op);    

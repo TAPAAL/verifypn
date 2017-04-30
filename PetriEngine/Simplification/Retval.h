@@ -4,8 +4,7 @@
 
 namespace PetriEngine {
     namespace Simplification {
-        class Retval {
-        public:
+        struct Retval {
             std::shared_ptr<PQL::Condition> formula = nullptr;
             LinearPrograms lps;      
             
@@ -29,14 +28,14 @@ namespace PetriEngine {
             }
             
             Retval() {
-                lps.lps.emplace_back();
+                lps.add(LinearProgram());
             }
             
             ~Retval(){
             }
             
             bool isSet(){
-                return (formula != nullptr && lps.lps.size() != 0);
+                return (formula != nullptr && lps.size() != 0);
             }
         private:
 

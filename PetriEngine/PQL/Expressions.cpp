@@ -1083,7 +1083,7 @@ namespace PetriEngine {
                 std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
                 return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), 
                         std::move(
-                                    (r1.lps.lps.size() < r2.lps.lps.size() 
+                                    (r1.lps.size() < r2.lps.size() 
                                         ? r1.lps 
                                         : r2.lps)));
             }
