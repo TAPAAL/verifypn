@@ -16,6 +16,7 @@ namespace PetriEngine {
         
         
         void LinearProgram::addEquations(std::vector<Equation>& eqs){
+            _result = result_t::UKNOWN;
             equations.reserve(equations.size() + eqs.size());
             for(auto& e : eqs)
             {
@@ -33,6 +34,11 @@ namespace PetriEngine {
         bool LinearProgram::isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout){
             if(equations.size() == 0){
                 return false;
+            }
+            
+            if(_result != result_t::UKNOWN) 
+            {
+                return _result == result_t::IMPOSSIBLE;
             }
 
             const uint32_t nCol = net->numberOfTransitions();
@@ -120,7 +126,15 @@ namespace PetriEngine {
 
             if (result == TIMEOUT) std::cout<<"note: lpsolve timeout"<<std::endl;
             // Return true, if it was infeasible
-            return result == INFEASIBLE;   
+            if(result == INFEASIBLE)
+            {
+                _result = result_t::IMPOSSIBLE;
+            }
+            else
+            {
+                _result = result_t::POSSIBLE;
+            }
+            return _result == result_t::IMPOSSIBLE;
         }
     }
 }

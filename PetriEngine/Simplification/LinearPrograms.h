@@ -69,9 +69,7 @@ namespace PetriEngine {
                 lps.resize(lps.size() + lps2.lps.size());
                 for(size_t i = 0; i < osize; ++i)
                 {
-                    lps[osize + i].equations.swap(
-                        lps2.lps[i].equations
-                    );
+                    lps[osize + i].swap(lps2.lps[i]);
                 }
                 lps2.clear();
             }
