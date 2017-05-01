@@ -110,7 +110,7 @@ namespace PetriEngine {
                 // move data, dont copy!
                 size_t osize = lps.size();
                 lps.resize(lps.size() + lps2.lps.size());
-                for(size_t i = 0; i < osize; ++i)
+                for(size_t i = 0; i < lps2.size(); ++i)
                 {
                     lps[osize + i].swap(lps2.lps[i]);
                 }
