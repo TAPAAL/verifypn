@@ -194,11 +194,11 @@ case "$BK_EXAMINATION" in
         echo "**********************************************"
         echo "*  TAPAAL verifying ReachabilityCardinality  *"
         echo "**********************************************"
-        STRATEGIES_PAR[0]="-s BestFS -m 3000"
+        STRATEGIES_PAR[0]="-s BestFS"
         STRATEGIES_PAR[1]="-s BestFS -q 0"
         STRATEGIES_PAR[2]="-s BFS -q 0"
         STRATEGIES_PAR[3]="-s DFS -q 0"
-        STRATEGY_SEQ="-s DFS -m 12000"
+        STRATEGY_SEQ="-s DFS"
         CATEGORY="ReachabilityCardinality.xml"
         verifyparallel 
         ;;
@@ -208,11 +208,11 @@ case "$BK_EXAMINATION" in
         echo "**********************************************"
         echo "*  TAPAAL verifying ReachabilityFireability  *"
         echo "**********************************************"
-        STRATEGIES_PAR[0]="-s BestFS -m 3000"
+        STRATEGIES_PAR[0]="-s BestFS"
         STRATEGIES_PAR[1]="-s BestFS -q 0"
         STRATEGIES_PAR[2]="-s BFS -q 0"
         STRATEGIES_PAR[3]="-s DFS -q 0"
-        STRATEGY_SEQ="-s DFS -m 12000"
+        STRATEGY_SEQ="-s DFS"
         CATEGORY="ReachabilityFireability.xml"
         verifyparallel 
         ;;
@@ -222,9 +222,9 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         echo "*  TAPAAL verifying CTLCardinality  *"
         echo "*************************************"
-        STRATEGIES_PAR[0]="-s DFS -m 3000"
+        STRATEGIES_PAR[0]="-s DFS"
         STRATEGIES_PAR[1]="-s DFS -q 0"
-        STRATEGY_SEQ="-s DFS -m 12000"
+        STRATEGY_SEQ="-s DFS"
         CATEGORY="CTLCardinality.xml"
         verifyparallel
         ;;
@@ -234,9 +234,9 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         echo "*  TAPAAL verifying CTLFireability  *"
         echo "*************************************"
-        STRATEGIES_PAR[0]="-s DFS -m 3000"
+        STRATEGIES_PAR[0]="-s DFS"
         STRATEGIES_PAR[1]="-s DFS -q 0"
-        STRATEGY_SEQ="-s DFS -m 12000"
+        STRATEGY_SEQ="-s DFS"
         CATEGORY="CTLFireability.xml"
         verifyparallel
         ;;
