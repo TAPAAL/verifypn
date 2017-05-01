@@ -11,14 +11,14 @@ namespace PetriEngine {
         }
         
         LinearProgram::LinearProgram(Equation&& eq){
-            equations.emplace_back(std::make_shared<Equation>(std::move(eq)));
+            equations.insert(std::make_shared<Equation>(std::move(eq)));
         }
 
         bool LinearProgram::isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout){
             if(equations.size() == 0){
                 return false;
             }
-            
+           
             if(_result != result_t::UKNOWN) 
             {
                 return _result == result_t::IMPOSSIBLE;
@@ -51,7 +51,6 @@ namespace PetriEngine {
                 set_constr_type(lp, rowno, GE);
                 set_rh(lp, rowno++, (0 - (int)m0[p]));
             }
-
             for(auto& eq : equations){
                 switch(eq->op)
                 {

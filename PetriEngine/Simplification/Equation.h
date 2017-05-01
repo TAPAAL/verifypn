@@ -2,6 +2,7 @@
 #define EQUATION_H
 #include <memory>
 #include "Member.h"
+#include "MurmurHash2.h"
 
 namespace PetriEngine {
     namespace Simplification {
@@ -41,6 +42,16 @@ namespace PetriEngine {
             Equation(){
             }
             
+            bool operator ==(const Equation& other) const
+            {
+                if(op != other.op || constant != other.constant || row.size() != other.row.size())
+                {
+                    return false;
+                }
+                
+                return row == other.row;
+            }
+            
             std::vector<int> row;
             op_t op;
             int constant;
@@ -48,7 +59,49 @@ namespace PetriEngine {
         };
 
         typedef std::shared_ptr<Equation> Equation_ptr;
+        
+        struct EquationWrap
+        {
+            Equation_ptr equation;
+
+            EquationWrap(Equation_ptr&& eq) : equation(std::move(eq)) {};
+
+            EquationWrap(const Equation_ptr& eq) : equation(eq) {};
+            
+            bool operator==(const EquationWrap& other) const
+            {
+                return *equation == *other.equation;
+            }
+            
+            Equation_ptr& operator->()
+            {
+                return equation;
+            }
+
+            const Equation_ptr& operator->() const
+            {
+                return equation;
+            }
+
+        };
+        
     }
+}
+
+namespace std
+{
+    using namespace PetriEngine::Simplification;
+    
+    template <>
+    struct hash<EquationWrap>
+    {
+        size_t operator()(const EquationWrap& k) const
+        {
+            return MurmurHash64A(k.equation->row.data(), 
+                    k.equation->row.size() * sizeof(int), 
+                    k.equation->constant ^ k.equation->op );
+        }
+    };
 }
 
 #endif /* EQUATION_H */

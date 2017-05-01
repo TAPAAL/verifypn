@@ -1,9 +1,11 @@
 #ifndef LINEARPROGRAM_H
 #define LINEARPROGRAM_H
+#include <algorithm>
+#include <unordered_set>
+
 #include "../PetriNet.h"
 #include "Member.h"
 #include "Equation.h"
-#include <algorithm>
     
 namespace PetriEngine {
     namespace Simplification {
@@ -12,7 +14,7 @@ namespace PetriEngine {
         private:
             enum result_t { UKNOWN, IMPOSSIBLE, POSSIBLE };
             result_t _result = result_t::UKNOWN;
-            std::vector<Equation_ptr> equations;
+            std::unordered_set<EquationWrap> equations;
 
         public:
             LinearProgram();
@@ -33,9 +35,8 @@ namespace PetriEngine {
             static LinearProgram lpUnion(LinearProgram& lp1, LinearProgram& lp2){
                 LinearProgram res;
                 res.equations.reserve(lp1.equations.size() + lp2.equations.size());
-                
-                for(auto eq : lp1.equations) res.equations.push_back(eq);
-                for(auto eq : lp2.equations) res.equations.push_back(eq);
+                res.equations.insert(lp1.equations.begin(), lp1.equations.end());
+                res.equations.insert(lp2.equations.begin(), lp2.equations.end());
                 
                 if( lp1._result == result_t::IMPOSSIBLE ||
                     lp2._result == result_t::IMPOSSIBLE)
