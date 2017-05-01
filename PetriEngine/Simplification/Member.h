@@ -139,10 +139,10 @@ namespace PetriEngine {
                 return trivialLessThan(m, std::less_equal<int>());
             }
             Trivial operator>(const Member& m) const {
-                return trivialLessThan(m, std::greater<int>());
+                return m.trivialLessThan(*this, std::less<int>());
             }
             Trivial operator>=(const Member& m) const {
-                return trivialLessThan(m, std::greater_equal<int>());
+                return m.trivialLessThan(*this, std::less_equal<int>());
             }
             
         private:
