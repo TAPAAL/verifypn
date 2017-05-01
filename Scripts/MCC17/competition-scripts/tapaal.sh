@@ -19,6 +19,7 @@ TIME_CMD="/usr/bin/time -v"
 #Allowed memory in kB
 MEM="14500000"
 ulimit -v $MEM
+QREDMEM=$(echo "$MEM/4" | bc)
 
 # Verification options
 OPTIONS=""
@@ -66,7 +67,7 @@ function verifyparallel {
         # Execute verifypn on all parallel strategies
         # All processes are killed if one process provides an answer 
         step1="$($PAR_CMD --line-buffer --halt now,success=1 --timeout $TIMEOUT_PAR --xapply\
-            eval $TIME_CMD $VERIFYPN $OPTIONS {} $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $Q \
+            let ID={#}-1; eval $TIME_CMD ${PRE[$ID]} $VERIFYPN $OPTIONS {} $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $Q \
             ::: "${STRATEGIES_PAR[@]}" 2>&1)"
 
         if [[ $? == 0 ]]; then
@@ -194,6 +195,7 @@ case "$BK_EXAMINATION" in
         echo "**********************************************"
         echo "*  TAPAAL verifying ReachabilityCardinality  *"
         echo "**********************************************"
+        PRE[0]="ulimit -v $QREDMEM;"
         STRATEGIES_PAR[0]="-s BestFS"
         STRATEGIES_PAR[1]="-s BestFS -q 0"
         STRATEGIES_PAR[2]="-s BFS -q 0"
@@ -208,6 +210,7 @@ case "$BK_EXAMINATION" in
         echo "**********************************************"
         echo "*  TAPAAL verifying ReachabilityFireability  *"
         echo "**********************************************"
+        PRE[0]="ulimit -v $QREDMEM;"
         STRATEGIES_PAR[0]="-s BestFS"
         STRATEGIES_PAR[1]="-s BestFS -q 0"
         STRATEGIES_PAR[2]="-s BFS -q 0"
@@ -222,6 +225,7 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         echo "*  TAPAAL verifying CTLCardinality  *"
         echo "*************************************"
+        PRE[0]="ulimit -v $QREDMEM;"
         STRATEGIES_PAR[0]="-s DFS"
         STRATEGIES_PAR[1]="-s DFS -q 0"
         STRATEGY_SEQ="-s DFS"
@@ -234,6 +238,7 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         echo "*  TAPAAL verifying CTLFireability  *"
         echo "*************************************"
+        PRE[0]="ulimit -v $QREDMEM;"
         STRATEGIES_PAR[0]="-s DFS"
         STRATEGIES_PAR[1]="-s DFS -q 0"
         STRATEGY_SEQ="-s DFS"
