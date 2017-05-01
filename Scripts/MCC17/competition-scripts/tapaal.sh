@@ -67,8 +67,8 @@ function verifyparallel {
         # Execute verifypn on all parallel strategies
         # All processes are killed if one process provides an answer 
         step1="$($PAR_CMD --line-buffer --halt now,success=1 --timeout $TIMEOUT_PAR --xapply\
-            let ID={#}-1; eval $TIME_CMD ${PRE[$ID]} $VERIFYPN $OPTIONS {} $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $Q \
-            ::: "${STRATEGIES_PAR[@]}" 2>&1)"
+            eval $TIME_CMD {2} $VERIFYPN $OPTIONS {1} $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $Q \
+            ::: "${STRATEGIES_PAR[@]}" :::+ \""${PRE[@]}"\" 2>&1)"
 
         if [[ $? == 0 ]]; then
             unset QUERIES[$Q-1]
@@ -181,6 +181,10 @@ case "$BK_EXAMINATION" in
         echo "**********************************************"
         echo "*  TAPAAL checking for ReachabilityDeadlock  *"
         echo "**********************************************"
+        PRE[0]="'echo \'\'';"
+        PRE[1]="'echo \'\'';"
+        PRE[2]="'echo \'\'';"
+        PRE[3]="'echo \'\'';"
         STRATEGIES_PAR[0]="-s DFS --siphon-trap 30 -q 0"
         STRATEGIES_PAR[1]="-s BFS -q 0"
         STRATEGIES_PAR[2]="-s DFS -q 0"
@@ -195,7 +199,10 @@ case "$BK_EXAMINATION" in
         echo "**********************************************"
         echo "*  TAPAAL verifying ReachabilityCardinality  *"
         echo "**********************************************"
-        PRE[0]="ulimit -v $QREDMEM;"
+        PRE[0]="'ulimit -v $QREDMEM;'"
+        PRE[1]="'echo \'\'';"
+        PRE[2]="'echo \'\'';"
+        PRE[3]="'echo \'\'';"
         STRATEGIES_PAR[0]="-s BestFS"
         STRATEGIES_PAR[1]="-s BestFS -q 0"
         STRATEGIES_PAR[2]="-s BFS -q 0"
@@ -210,7 +217,10 @@ case "$BK_EXAMINATION" in
         echo "**********************************************"
         echo "*  TAPAAL verifying ReachabilityFireability  *"
         echo "**********************************************"
-        PRE[0]="ulimit -v $QREDMEM;"
+        PRE[0]="'ulimit -v $QREDMEM;'"
+        PRE[1]="'echo \'\'';"
+        PRE[2]="'echo \'\'';"
+        PRE[3]="'echo \'\'';"
         STRATEGIES_PAR[0]="-s BestFS"
         STRATEGIES_PAR[1]="-s BestFS -q 0"
         STRATEGIES_PAR[2]="-s BFS -q 0"
@@ -225,7 +235,8 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         echo "*  TAPAAL verifying CTLCardinality  *"
         echo "*************************************"
-        PRE[0]="ulimit -v $QREDMEM;"
+        PRE[0]="'ulimit -v $QREDMEM;'"
+        PRE[1]="'echo \'\'';"
         STRATEGIES_PAR[0]="-s DFS"
         STRATEGIES_PAR[1]="-s DFS -q 0"
         STRATEGY_SEQ="-s DFS"
@@ -238,7 +249,8 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         echo "*  TAPAAL verifying CTLFireability  *"
         echo "*************************************"
-        PRE[0]="ulimit -v $QREDMEM;"
+        PRE[0]="'ulimit -v $QREDMEM;'"
+        PRE[1]="'echo \'\';'"
         STRATEGIES_PAR[0]="-s DFS"
         STRATEGIES_PAR[1]="-s DFS -q 0"
         STRATEGY_SEQ="-s DFS"
