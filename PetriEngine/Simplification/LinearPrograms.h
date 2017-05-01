@@ -77,7 +77,7 @@ namespace PetriEngine {
                 merged.reserve(lps.size() * lps2.lps.size());
                 for(LinearProgram& lp1 : lps){        
                     for(LinearProgram& lp2 : lps2.lps){
-                        merged.push_back(std::move(LinearProgram::lpUnion(lp1, lp2)));
+                        merged.push_back(LinearProgram::lpUnion(lp1, lp2));
                     }   
                 }
                 if(lps2.hasEmpty)

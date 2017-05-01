@@ -1106,18 +1106,18 @@ namespace PetriEngine {
             Retval r1, r2;
             bool succ1 = false, succ2 = false;
             try{
-                r1 = std::move(_cond1->simplify(context));
+                r1 = _cond1->simplify(context);
                 succ1 = true;
             }
             catch (std::bad_alloc& e) {};
             try{
-                r2 = std::move(_cond2->simplify(context));
+                r2 = _cond2->simplify(context);
                 succ2 = true;
             }
             catch (std::bad_alloc& e) {};
             if(!succ1 && !succ2) throw std::bad_alloc();
-            else if(succ1 && !succ2) return std::move(r1);
-            else if(succ2 && !succ1) return std::move(r2);
+            else if(succ1 && !succ2) return r1;
+            else if(succ2 && !succ1) return r2;
             else return context.negated()   ? simplifyOr(std::move(r1), std::move(r2)) 
                                             : simplifyAnd(context, std::move(r1), std::move(r2));
         }
