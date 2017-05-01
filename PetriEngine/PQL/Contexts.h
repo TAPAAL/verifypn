@@ -133,44 +133,12 @@ namespace PetriEngine {
             std::string netName;
         };
 
-        /** Just-In-Time compilation context */
-        class CodeGenerationContext {
-        public:
-
-            CodeGenerationContext(llvm::Value* marking,
-                    llvm::BasicBlock* label,
-                    llvm::LLVMContext& context)
-            : _context(context) {
-                _marking = marking;
-                _label = label;
-            }
-
-            /** Marking */
-            llvm::Value* marking() {
-                return _marking;
-            }
-
-            /** Label for the current code block */
-            llvm::BasicBlock* label() {
-                return _label;
-            }
-
-            /** LLVM Context that is currently generating */
-            llvm::LLVMContext& context() {
-                return _context;
-            }
-        private:
-            llvm::Value* _marking;
-            llvm::BasicBlock* _label;
-            llvm::LLVMContext& _context;
-        };
-        
         class SimplificationContext {
         public:
 
             SimplificationContext(const MarkVal* marking,
-                    const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout, size_t memoryLimit)
-                    : _queryTimeout(queryTimeout), _lpTimeout(lpTimeout), _memoryLimit(memoryLimit) {
+                    const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout)
+                    : _queryTimeout(queryTimeout), _lpTimeout(lpTimeout) {
                 _negated = false;
                 _marking = marking;
                 _net = net;
@@ -212,17 +180,12 @@ namespace PetriEngine {
             uint32_t getLpTimeout() {
                 return _lpTimeout;
             }
-            
-            size_t memoryLimit(){
-                return _memoryLimit;
-            }
 
         private:
             bool _negated;
             const MarkVal* _marking;
             const PetriNet* _net;
             uint32_t _queryTimeout, _lpTimeout;
-            size_t _memoryLimit;
             std::chrono::high_resolution_clock::time_point _start;
         };
 
