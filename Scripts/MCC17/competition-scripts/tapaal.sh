@@ -16,9 +16,12 @@ PAR_CMD=$PREFIX/bin/parallel/parallel
 TIMEOUT_CMD=timeout
 TIME_CMD="/usr/bin/time -v"
 
+START_SCRIPT=$PREFIX/start.sh
+
 #Allowed memory in kB
 MEM="14500000"
 ulimit -v $MEM
+QREDMEM=$(echo "$MEM/4" | bc)
 
 # Verification options
 OPTIONS=""
@@ -65,9 +68,10 @@ function verifyparallel {
         echo "------------------- QUERY ${Q} ----------------------"
         # Execute verifypn on all parallel strategies
         # All processes are killed if one process provides an answer 
+        c="$VERIFYPN $OPTIONS {1} $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $Q"
         step1="$($PAR_CMD --line-buffer --halt now,success=1 --timeout $TIMEOUT_PAR --xapply\
-            eval $TIME_CMD $VERIFYPN $OPTIONS {} $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $Q \
-            ::: "${STRATEGIES_PAR[@]}" 2>&1)"
+            $START_SCRIPT {2} $c\
+            ::: "${STRATEGIES_PAR[@]}" :::+ "${PRE[@]}" 2>&1)"
 
         if [[ $? == 0 ]]; then
             unset QUERIES[$Q-1]
@@ -164,8 +168,8 @@ case "$BK_EXAMINATION" in
         $TIME_CMD $TIMEOUT_CMD $TIMEOUT_TOTAL $VERIFYPN -p -q 0 -e -s BFS $MODEL_PATH/model.pnml 
         ;;
 
-    UpperBounds)	
-        echo		
+    UpperBounds)    
+        echo        
         echo "**********************************"
         echo "*  TAPAAL verifying UpperBounds  *"
         echo "**********************************" 
@@ -180,6 +184,10 @@ case "$BK_EXAMINATION" in
         echo "**********************************************"
         echo "*  TAPAAL checking for ReachabilityDeadlock  *"
         echo "**********************************************"
+        PRE[0]="$MEM"
+        PRE[1]="$MEM"
+        PRE[2]="$MEM"
+        PRE[3]="$MEM"
         STRATEGIES_PAR[0]="-s DFS --siphon-trap 30 -q 0"
         STRATEGIES_PAR[1]="-s BFS -q 0"
         STRATEGIES_PAR[2]="-s DFS -q 0"
@@ -194,11 +202,15 @@ case "$BK_EXAMINATION" in
         echo "**********************************************"
         echo "*  TAPAAL verifying ReachabilityCardinality  *"
         echo "**********************************************"
-        STRATEGIES_PAR[0]="-s BestFS -m 3000"
+        PRE[0]="$QREDMEM"
+        PRE[1]="$MEM"
+        PRE[2]="$MEM"
+        PRE[3]="$MEM"
+        STRATEGIES_PAR[0]="-s BestFS"
         STRATEGIES_PAR[1]="-s BestFS -q 0"
         STRATEGIES_PAR[2]="-s BFS -q 0"
         STRATEGIES_PAR[3]="-s DFS -q 0"
-        STRATEGY_SEQ="-s DFS -m 12000"
+        STRATEGY_SEQ="-s DFS"
         CATEGORY="ReachabilityCardinality.xml"
         verifyparallel 
         ;;
@@ -208,11 +220,15 @@ case "$BK_EXAMINATION" in
         echo "**********************************************"
         echo "*  TAPAAL verifying ReachabilityFireability  *"
         echo "**********************************************"
-        STRATEGIES_PAR[0]="-s BestFS -m 3000"
+        PRE[0]="$QREDMEM"
+        PRE[1]="$MEM"
+        PRE[2]="$MEM"
+        PRE[3]="$MEM"
+        STRATEGIES_PAR[0]="-s BestFS"
         STRATEGIES_PAR[1]="-s BestFS -q 0"
         STRATEGIES_PAR[2]="-s BFS -q 0"
         STRATEGIES_PAR[3]="-s DFS -q 0"
-        STRATEGY_SEQ="-s DFS -m 12000"
+        STRATEGY_SEQ="-s DFS"
         CATEGORY="ReachabilityFireability.xml"
         verifyparallel 
         ;;
@@ -222,9 +238,11 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         echo "*  TAPAAL verifying CTLCardinality  *"
         echo "*************************************"
-        STRATEGIES_PAR[0]="-s DFS -m 3000"
+        PRE[0]="$QREDMEM"
+        PRE[1]="$MEM"
+        STRATEGIES_PAR[0]="-s DFS"
         STRATEGIES_PAR[1]="-s DFS -q 0"
-        STRATEGY_SEQ="-s DFS -m 12000"
+        STRATEGY_SEQ="-s DFS"
         CATEGORY="CTLCardinality.xml"
         verifyparallel
         ;;
@@ -234,9 +252,11 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         echo "*  TAPAAL verifying CTLFireability  *"
         echo "*************************************"
-        STRATEGIES_PAR[0]="-s DFS -m 3000"
+        PRE[0]="$QREDMEM"
+        PRE[1]="$MEM"
+        STRATEGIES_PAR[0]="-s DFS"
         STRATEGIES_PAR[1]="-s DFS -q 0"
-        STRATEGY_SEQ="-s DFS -m 12000"
+        STRATEGY_SEQ="-s DFS"
         CATEGORY="CTLFireability.xml"
         verifyparallel
         ;;

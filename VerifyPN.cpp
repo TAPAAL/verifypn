@@ -146,15 +146,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid LPSolve timeout argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
-        } else if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--reduction-memory-limit") == 0) {
-            if (i == argc - 1) {
-                    fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
-                    return ErrorCode;
-            }
-            if (sscanf(argv[++i], "%zu", &options.simplifyMemorylimit) != 1) {
-                    fprintf(stderr, "Argument Error: Invalid memory limit \"%s\"\n", argv[i]);
-                    return ErrorCode;
-            }
         } else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--state-space-exploration") == 0) {
             options.statespaceexploration = true;
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--no-statistics") == 0) {
@@ -237,7 +228,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
                     "                                     write -q 0 to disable query reduction\n"
                     "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
-                    "  -m, --reduction-memory-limit <mb>  Limit for query reduction memory usage, default 2048\n"
                     "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
                     "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
@@ -294,7 +284,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         std::cout << std::endl;
     }
     
-    options.simplifyMemorylimit *= 1024*1024;
     if (options.statespaceexploration) {
         // for state-space exploration some options are mandatory
         options.enablereduction = 0;
@@ -513,7 +502,7 @@ int main(int argc, char* argv[]) {
     
     if(parseModel(transitionEnabledness, builder, options) != ContinueCode) return ErrorCode;
     
-    //----------------------- CTL Engine - for testing ------------------------//
+    //---------------- CTL Engine - forced CTL via FLAG -ctl -----------------//
     if(options.isctl){
         PetriNet* net = builder.makePetriNet();
         ReturnValue rv = CTLMain(net,
@@ -561,7 +550,7 @@ int main(int argc, char* argv[]) {
             if (queries[i]->isUpperBound()) continue;
             
             SimplificationContext simplificationContext(qm0, qnet, options.queryReductionTimeout, 
-                    options.lpsolveTimeout, options.simplifyMemorylimit);
+                    options.lpsolveTimeout);
             
             if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
 
@@ -614,9 +603,8 @@ int main(int argc, char* argv[]) {
         
         if(alldone) return SuccessCode;
     }
-
-    //----------------------- Verify CTL queries -----------------------//
     
+    //----------------------- Verify CTL queries -----------------------//
     std::string CTLQueries = getXMLQueries(queries, querynames, results);
     
     if (CTLQueries.size() > 0) {
@@ -708,9 +696,8 @@ int main(int argc, char* argv[]) {
             options.statespaceexploration,
             options.printstatistics, 
             options.trace);
-    
+   
     printStats(builder, options);
-    
     delete net;
     
     return 0;

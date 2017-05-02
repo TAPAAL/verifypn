@@ -1,33 +1,107 @@
 #ifndef EQUATION_H
 #define EQUATION_H
+#include <memory>
 #include "Member.h"
+#include "MurmurHash2.h"
 
 namespace PetriEngine {
     namespace Simplification {
         class Equation {
         public:
-            Equation(Member& lh, Member& rh, std::string op) : op(op){
-                // put variables on left hand side
-                int size = std::max(lh.variables.size(), rh.variables.size());
-                row.resize(size);
-                lh.variables.resize(size, 0);
-                rh.variables.resize(size, 0);
-                std::transform(lh.variables.begin(),lh.variables.end(),rh.variables.begin(),row.begin(),std::minus<int>());
+            enum op_t 
+            {
+                OP_EQ,
+                OP_LE,
+                OP_GE,
+                OP_LT,
+                OP_GT,
+                OP_NE
+            };
 
-                // put constant on right hand side
-                constant = rh.constant - lh.constant; 
+            Equation(const Member& lh, int constant, op_t op) 
+            : row(lh.variables()), op(op), constant(constant) {
+
             }
-            Equation(const Equation& eq) : row(eq.row), op(eq.op), constant(eq.constant) {
+
+            Equation(Member&& lh, int constant, op_t op) 
+            : row(std::move(lh.variables())), op(op), constant(constant) {
+
+            }
+            
+            Equation(const Equation& eq) 
+            : row(eq.row), op(eq.op), constant(eq.constant) {
             }      
+
+            Equation(Equation&& other)
+            :   row(std::move(other.row)), op(std::move(other.op)), 
+                constant(other.constant)
+            {
+                
+            }
+            
             Equation(){
             }
-
+            
+            bool operator ==(const Equation& other) const
+            {
+                if(op != other.op || constant != other.constant || row.size() != other.row.size())
+                {
+                    return false;
+                }
+                
+                return row == other.row;
+            }
+            
             std::vector<int> row;
-            std::string op;
+            op_t op;
             int constant;
             virtual ~Equation(){}
         };
+
+        typedef std::shared_ptr<Equation> Equation_ptr;
+        
+        struct EquationWrap
+        {
+            Equation_ptr equation;
+
+            EquationWrap(Equation_ptr&& eq) : equation(std::move(eq)) {};
+
+            EquationWrap(const Equation_ptr& eq) : equation(eq) {};
+            
+            bool operator==(const EquationWrap& other) const
+            {
+                return *equation == *other.equation;
+            }
+            
+            Equation_ptr& operator->()
+            {
+                return equation;
+            }
+
+            const Equation_ptr& operator->() const
+            {
+                return equation;
+            }
+
+        };
+        
     }
+}
+
+namespace std
+{
+    using namespace PetriEngine::Simplification;
+    
+    template <>
+    struct hash<EquationWrap>
+    {
+        size_t operator()(const EquationWrap& k) const
+        {
+            return MurmurHash64A(k.equation->row.data(), 
+                    k.equation->row.size() * sizeof(int), 
+                    k.equation->constant ^ k.equation->op );
+        }
+    };
 }
 
 #endif /* EQUATION_H */

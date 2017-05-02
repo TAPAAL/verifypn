@@ -25,7 +25,6 @@ struct options_t {
     int queryReductionTimeout = 30, lpsolveTimeout = 10;
     int siphontrapTimeout = 0;
     bool upperboundcheck = false;
-    size_t simplifyMemorylimit = 2048;
 
     //CTL Specific options
     bool gamemode = false;
@@ -93,8 +92,6 @@ struct options_t {
         
         optionsOut += ",LPSolve_Timeout=" + std::to_string(lpsolveTimeout);
         
-        optionsOut += ",LPSolve_MemLimit=" + std::to_string(simplifyMemorylimit/1024/1024);
-
         if (isctl) {
             if (ctlalgorithm == CTL::CZero) {
                 optionsOut += ",CTLAlgorithm=CZERO";

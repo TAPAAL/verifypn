@@ -10,43 +10,21 @@ namespace PetriEngine {
         LinearProgram::~LinearProgram() {
         }
         
-        LinearProgram::LinearProgram(const Equation& eq){
-            addEquation(eq);
-        }
-        
-        size_t computeSize(const Equation& eq) {
-            return sizeof(std::vector<int>) + (eq.row.size() * sizeof(int)) + sizeof(eq.op) + sizeof(eq.constant);
-        }
-        
-        void LinearProgram::addEquation(const Equation& eq){
-            _lpSize += computeSize(eq);
-            equations.push_back(eq);
-        }
-
-        void LinearProgram::addEquations(std::vector<Equation> eqs){
-            for(Equation& eq : eqs){
-                _lpSize += computeSize(eq);
-                equations.push_back(eq);
-            }
-        }
-        
-        size_t LinearProgram::sizeInBytes() {
-            return _lpSize;
-        }
-
-        int LinearProgram::op(std::string op){
-            if(op == "<="){ return 1; }
-            if(op == ">="){ return 2; }
-            if(op == "=="){ return 3; }
-            return -1;
+        LinearProgram::LinearProgram(Equation&& eq){
+            equations.insert(std::make_shared<Equation>(std::move(eq)));
         }
 
         bool LinearProgram::isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout){
             if(equations.size() == 0){
                 return false;
             }
+           
+            if(_result != result_t::UKNOWN) 
+            {
+                return _result == result_t::IMPOSSIBLE;
+            }
 
-            uint32_t nCol = net->numberOfTransitions();
+            const uint32_t nCol = net->numberOfTransitions();
             lprec* lp;
             int nRow = net->numberOfPlaces() + equations.size();
             
@@ -65,7 +43,7 @@ namespace PetriEngine {
             
             // restrict all places to contain 0+ tokens
             for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-                memset(row.data(), 0, sizeof (REAL) * nCol + 1);
+                memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
                 for (size_t t = 0; t < nCol; t++) {
                     row[1 + t] = net->outArc(t, p) - net->inArc(p, t);
                 }
@@ -73,32 +51,39 @@ namespace PetriEngine {
                 set_constr_type(lp, rowno, GE);
                 set_rh(lp, rowno++, (0 - (int)m0[p]));
             }
-
-            for(Equation& eq : equations){
-                if(eq.op == "<"){
-                    constant = (REAL) (eq.constant - 1);
-                    comparator = LE;
-                } else if(eq.op == ">"){
-                    constant = (REAL) (eq.constant + 1);
-                    comparator = GE;
-                } else if(eq.op == "<="){
-                    constant = (REAL) eq.constant;
-                    comparator = LE;
-                } else if(eq.op == ">="){
-                    constant = (REAL) eq.constant;
-                    comparator = GE;
-                } else if(eq.op == "=="){
-                    constant = (REAL) eq.constant;
-                    comparator = EQ;
-                } else if(eq.op == "!="){
-                    // We ignore this operator for now by not adding any equation.
-                    // This is untested, however.
-                    continue;
+            for(auto& eq : equations){
+                switch(eq->op)
+                {
+                    case Equation::OP_LT:
+                        constant = (REAL) (eq->constant - 1);
+                        comparator = LE;
+                        break;
+                    case Equation::OP_GT:
+                        constant = (REAL) (eq->constant + 1);
+                        comparator = GE;
+                        break;
+                    case Equation::OP_LE:
+                        constant = (REAL) eq->constant;
+                        comparator = LE;
+                        break;
+                    case Equation::OP_GE:
+                        constant = (REAL) eq->constant;
+                        comparator = GE;
+                        break;
+                    case Equation::OP_EQ:
+                        constant = (REAL) eq->constant;
+                        comparator = EQ;
+                        break;
+                    default:
+                        // We ignore this operator for now by not adding any equation.
+                        // This is untested, however.
+                        assert(false);
+                        continue;
                 }
-                                
-                memset(row.data(), 0, sizeof (REAL) * nCol + 1);
+                memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
                 for (size_t t = 1; t < nCol+1; t++) {
-                    row[t] = (REAL)eq.row[t];
+                    assert((t - 1) < eq->row.size());
+                    row[t] = (REAL)eq->row[t - 1]; // first index is for lp-solve.
                 }
                 
                 set_row(lp, rowno, row.data());
@@ -129,9 +114,17 @@ namespace PetriEngine {
             int result = solve(lp);
             delete_lp(lp);
 
-            if (result == TIMEOUT) std::cout<<"note: lpsolve timeout"<<std::endl;
+            if (result == TIMEOUT) std::cout << "note: lpsolve timeout" << std::endl;
             // Return true, if it was infeasible
-            return result == INFEASIBLE;   
+            if(result == INFEASIBLE)
+            {
+                _result = result_t::IMPOSSIBLE;
+            }
+            else
+            {
+                _result = result_t::POSSIBLE;
+            }
+            return _result == result_t::IMPOSSIBLE;
         }
     }
 }
