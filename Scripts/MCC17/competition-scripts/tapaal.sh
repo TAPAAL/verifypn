@@ -174,7 +174,7 @@ case "$BK_EXAMINATION" in
         echo "*  TAPAAL verifying UpperBounds  *"
         echo "**********************************" 
         CATEGORY="UpperBounds.xml"
-        STRATEGY_SEQ="-s BFS -r 1 -p -q 0"
+        STRATEGY_SEQ="-s BFS -r 1 -d 300 -p -q 0"
         NUMBER=`cat $MODEL_PATH/$CATEGORY | grep "<property>" | wc -l`
         $TIME_CMD $TIMEOUT_CMD $TIMEOUT_TOTAL $VERIFYPN $STRATEGY_SEQ $OPTIONS $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x "$(seq -s , 1 $NUMBER)" 
         ;;
@@ -188,11 +188,11 @@ case "$BK_EXAMINATION" in
         PRE[1]="$MEM"
         PRE[2]="$MEM"
         PRE[3]="$MEM"
-        STRATEGIES_PAR[0]="-s DFS --siphon-trap 30 -q 0"
-        STRATEGIES_PAR[1]="-s BFS -q 0"
-        STRATEGIES_PAR[2]="-s DFS -q 0"
-        STRATEGIES_PAR[3]="-s RDFS -q 0"
-        STRATEGY_SEQ="-s DFS -q 0"
+        STRATEGIES_PAR[0]="-s DFS -d 60 --siphon-trap 30 -q 0"
+        STRATEGIES_PAR[1]="-s BFS -d 10 -q 0"
+        STRATEGIES_PAR[2]="-s DFS -d 10 -q 0"
+        STRATEGIES_PAR[3]="-s RDFS -d 10 -q 0"
+        STRATEGY_SEQ="-s DFS -d 60 -q 0"
         CATEGORY="ReachabilityDeadlock.xml"
         verifyparallel 
         ;;
@@ -206,11 +206,11 @@ case "$BK_EXAMINATION" in
         PRE[1]="$MEM"
         PRE[2]="$MEM"
         PRE[3]="$MEM"
-        STRATEGIES_PAR[0]="-s BestFS"
-        STRATEGIES_PAR[1]="-s BestFS -q 0"
-        STRATEGIES_PAR[2]="-s BFS -q 0"
-        STRATEGIES_PAR[3]="-s DFS -q 0"
-        STRATEGY_SEQ="-s DFS"
+        STRATEGIES_PAR[0]="-s BestFS -d 10"
+        STRATEGIES_PAR[1]="-s BestFS -q 0 -d 10"
+        STRATEGIES_PAR[2]="-s BFS -q 0 -d 10"
+        STRATEGIES_PAR[3]="-s DFS -q 0 -d 10"
+        STRATEGY_SEQ="-s DFS -d 60"
         CATEGORY="ReachabilityCardinality.xml"
         verifyparallel 
         ;;
@@ -224,11 +224,11 @@ case "$BK_EXAMINATION" in
         PRE[1]="$MEM"
         PRE[2]="$MEM"
         PRE[3]="$MEM"
-        STRATEGIES_PAR[0]="-s BestFS"
-        STRATEGIES_PAR[1]="-s BestFS -q 0"
-        STRATEGIES_PAR[2]="-s BFS -q 0"
-        STRATEGIES_PAR[3]="-s DFS -q 0"
-        STRATEGY_SEQ="-s DFS"
+        STRATEGIES_PAR[0]="-s BestFS -d 10"
+        STRATEGIES_PAR[1]="-s BestFS -q 0 -d 10"
+        STRATEGIES_PAR[2]="-s BFS -q 0 -d 10"
+        STRATEGIES_PAR[3]="-s DFS -q 0 -d 10"
+        STRATEGY_SEQ="-s DFS -d 60"
         CATEGORY="ReachabilityFireability.xml"
         verifyparallel 
         ;;
@@ -240,9 +240,9 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         PRE[0]="$QREDMEM"
         PRE[1]="$MEM"
-        STRATEGIES_PAR[0]="-s DFS"
-        STRATEGIES_PAR[1]="-s DFS -q 0"
-        STRATEGY_SEQ="-s DFS"
+        STRATEGIES_PAR[0]="-s DFS -d 10"
+        STRATEGIES_PAR[1]="-s DFS -q 0 -d 10"
+        STRATEGY_SEQ="-s DFS -d 60"
         CATEGORY="CTLCardinality.xml"
         verifyparallel
         ;;
@@ -254,9 +254,9 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         PRE[0]="$QREDMEM"
         PRE[1]="$MEM"
-        STRATEGIES_PAR[0]="-s DFS"
-        STRATEGIES_PAR[1]="-s DFS -q 0"
-        STRATEGY_SEQ="-s DFS"
+        STRATEGIES_PAR[0]="-s DFS -d 10"
+        STRATEGIES_PAR[1]="-s DFS -q 0 -d 10"
+        STRATEGY_SEQ="-s DFS -d 60"
         CATEGORY="CTLFireability.xml"
         verifyparallel
         ;;
