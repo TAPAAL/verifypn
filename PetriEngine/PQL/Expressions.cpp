@@ -1103,9 +1103,6 @@ namespace PetriEngine {
         }
         
         Retval AndCondition::simplify(SimplificationContext& context) const {
-            if(context.timeout()) 
-                return Retval(std::make_shared<AndCondition>(_cond1, _cond2));
-            
             Retval r1, r2;
             bool succ1 = false, succ2 = false;
             try{
@@ -1125,10 +1122,7 @@ namespace PetriEngine {
                                             : simplifyAnd(context, std::move(r1), std::move(r2));
         }
         
-        Retval OrCondition::simplify(SimplificationContext& context) const {
-            if(context.timeout()) 
-                return Retval(std::make_shared<OrCondition>(_cond1, _cond2));
-            
+        Retval OrCondition::simplify(SimplificationContext& context) const {            
             Retval r1 = _cond1->simplify(context);
             Retval r2 = _cond2->simplify(context);
             
