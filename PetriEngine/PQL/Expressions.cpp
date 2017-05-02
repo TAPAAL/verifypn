@@ -1070,7 +1070,7 @@ namespace PetriEngine {
                     return std::move(r1);
                 }
                 r1.lps.merge(r2.lps);
-                if(!context.timeout() && !r1.lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+                if(!context.timeout() && !r1.lps.satisfiable(context)) {
                     return Retval(BooleanCondition::FALSE);
                 } else {
                     return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), std::move(r1.lps)); 
@@ -1103,6 +1103,9 @@ namespace PetriEngine {
         }
         
         Retval AndCondition::simplify(SimplificationContext& context) const {
+            if(context.timeout()) 
+                return Retval(std::make_shared<AndCondition>(_cond1, _cond2));
+            
             Retval r1, r2;
             bool succ1 = false, succ2 = false;
             try{
@@ -1123,6 +1126,9 @@ namespace PetriEngine {
         }
         
         Retval OrCondition::simplify(SimplificationContext& context) const {
+            if(context.timeout()) 
+                return Retval(std::make_shared<OrCondition>(_cond1, _cond2));
+            
             Retval r1 = _cond1->simplify(context);
             Retval r2 = _cond2->simplify(context);
             
@@ -1131,6 +1137,7 @@ namespace PetriEngine {
         }
         
         Retval EqualCondition::simplify(SimplificationContext& context) const {
+            
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
@@ -1157,7 +1164,7 @@ namespace PetriEngine {
                 lps.add(LinearProgram());
             }
             
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+            if (!lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
@@ -1195,7 +1202,7 @@ namespace PetriEngine {
                 lps.add(LinearProgram());
             }
             
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+            if (!lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
@@ -1229,7 +1236,7 @@ namespace PetriEngine {
                 lps.add(LinearProgram());
             }
             
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+            if (!lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
@@ -1261,9 +1268,9 @@ namespace PetriEngine {
                 lps.add(LinearProgram());
             }
 
-            if(!context.timeout() && !neglps.satisfiable(context.net(), context.marking(), context.getLpTimeout())){
+            if(!context.timeout() && !neglps.satisfiable(context)){
                 return Retval(BooleanCondition::TRUE);
-            } else if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+            } else if (!lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
@@ -1295,9 +1302,9 @@ namespace PetriEngine {
                 lps.add(LinearProgram());
             }
             
-            if(!context.timeout() && !neglps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+            if(!context.timeout() && !neglps.satisfiable(context)) {
                 return Retval(BooleanCondition::TRUE);
-            }else if(!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+            }else if(!lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
@@ -1332,7 +1339,7 @@ namespace PetriEngine {
                 lps.add(LinearProgram());
             }
             
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) 
+            if (!lps.satisfiable(context)) 
             {
                 return Retval(BooleanCondition::FALSE);
             } else {

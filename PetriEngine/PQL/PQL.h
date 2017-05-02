@@ -27,20 +27,17 @@
 
 #include "../PetriNet.h"
 #include "../Structures/State.h"
-#include "../Simplification/Member.h"
-#include "../Simplification/LinearPrograms.h"
-#include "../Simplification/Retval.h"
 #include "../ReducingSuccessorGenerator.h"
 
 
-namespace llvm {
-    class Value;
-    class BasicBlock;
-    class LLVMContext;
-}
-
 namespace PetriEngine {
     class ReducingSuccessorGenerator;
+    namespace Simplification
+    {
+        struct Member;
+        class LiniearPrograms;
+        struct Retval;
+    }
     namespace PQL {
 
         class AnalysisContext;

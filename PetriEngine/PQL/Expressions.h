@@ -20,10 +20,14 @@
 #ifndef EXPRESSIONS_H
 #define EXPRESSIONS_H
 
-#include "PQL.h"
-#include "Contexts.h"
+
 #include <iostream>
 #include <fstream>
+#include "PQL.h"
+#include "Contexts.h"
+#include "PetriEngine/Simplification/Member.h"
+#include "PetriEngine/Simplification/LinearPrograms.h"
+#include "PetriEngine/Simplification/Retval.h"
 
 using namespace PetriEngine::Simplification;
 

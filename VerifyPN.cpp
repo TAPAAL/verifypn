@@ -55,6 +55,9 @@
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
 #include "PetriEngine/STSolver.h"
+#include "PetriEngine/Simplification/Member.h"
+#include "PetriEngine/Simplification/LinearPrograms.h"
+#include "PetriEngine/Simplification/Retval.h"
 
 #include "CTL/CTLEngine.h"
 
