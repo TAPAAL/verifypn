@@ -147,7 +147,7 @@ namespace PetriEngine {
         bool hasTimedout() const {
             auto end = std::chrono::high_resolution_clock::now();
             auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _timer);
-            return (diff.count() > _timeout);
+            return (diff.count() >= _timeout);
         }
         
         std::vector<std::string> _initfire;

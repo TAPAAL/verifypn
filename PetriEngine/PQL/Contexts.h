@@ -174,7 +174,7 @@ namespace PetriEngine {
             bool timeout() const {
                 auto end = std::chrono::high_resolution_clock::now();
                 auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _start);
-                return (diff.count() > _queryTimeout);
+                return (diff.count() >= _queryTimeout);
             }
             
             uint32_t getLpTimeout() const {
