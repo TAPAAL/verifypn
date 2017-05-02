@@ -1537,7 +1537,6 @@ namespace PetriEngine {
         
         void EqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // equal
-                if(_expr1->getEval() == _expr2->getEval()) { return; }
                 if(_expr1->getEval() > _expr2->getEval()){
                     _expr1->decr(generator);
                     _expr2->incr(generator);
@@ -1546,7 +1545,6 @@ namespace PetriEngine {
                     _expr2->decr(generator);
                 }   
             } else {                    // not equal
-                if(_expr1->getEval() != _expr2->getEval()) { return; }
                 _expr1->incr(generator);
                 _expr2->decr(generator);
                 _expr1->incr(generator);
@@ -1556,13 +1554,11 @@ namespace PetriEngine {
         
         void NotEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // not equal
-                if(_expr1->getEval() != _expr2->getEval()) { return; }
                 _expr1->incr(generator);
                 _expr2->decr(generator);
                 _expr1->incr(generator);
                 _expr2->decr(generator);
             } else {                    // equal
-                if(_expr1->getEval() == _expr2->getEval()) { return; }
                 if(_expr1->getEval() > _expr2->getEval()){
                     _expr1->decr(generator);
                     _expr2->incr(generator);
@@ -1573,13 +1569,11 @@ namespace PetriEngine {
             }
         }
         
-        void LessThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {                
+        void LessThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // less than
-                if(_expr1->getEval() < _expr2->getEval()) { return; }
                 _expr1->decr(generator);
                 _expr2->incr(generator);
             } else {                    // greater than or equal
-                if(_expr1->getEval() >= _expr2->getEval()) { return; }
                 _expr1->incr(generator);
                 _expr2->decr(generator);
             }
@@ -1587,11 +1581,9 @@ namespace PetriEngine {
         
         void LessThanOrEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // less than or equal
-                if(_expr1->getEval() <= _expr2->getEval()) { return; }
                 _expr1->decr(generator);
                 _expr2->incr(generator);
             } else {                    // greater than
-                if(_expr1->getEval() > _expr2->getEval()) { return; }
                 _expr1->incr(generator);
                 _expr2->decr(generator);
             }
@@ -1599,11 +1591,9 @@ namespace PetriEngine {
         
         void GreaterThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // greater than
-                if(_expr1->getEval() > _expr2->getEval()) { return; }
                 _expr1->incr(generator);
                 _expr2->decr(generator);
             } else {                    // less than or equal
-                if(_expr1->getEval() <= _expr2->getEval()) { return; }
                 _expr1->decr(generator);
                 _expr2->incr(generator);
             }
@@ -1611,11 +1601,9 @@ namespace PetriEngine {
         
         void GreaterThanOrEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // greater than or equal
-                if(_expr1->getEval() >= _expr2->getEval()) { return; }
                 _expr1->incr(generator);
                 _expr2->decr(generator); 
             } else {                    // less than
-                if(_expr1->getEval() < _expr2->getEval()) { return; }
                 _expr1->decr(generator);
                 _expr2->incr(generator);
             }
