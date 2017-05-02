@@ -389,7 +389,7 @@ namespace PetriEngine {
     
     void PetriNetBuilder::reduce(   std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                     std::vector<Reachability::ResultPrinter::Result>& results, 
-                                    int reductiontype, bool reconstructTrace)
+                                    int reductiontype, bool reconstructTrace, int timeout)
     {
         QueryPlaceAnalysisContext placecontext(getPlaceNames());
         for(uint32_t i = 0; i < queries.size(); ++i)
@@ -399,7 +399,7 @@ namespace PetriEngine {
                 queries[i]->analyze(placecontext);        
             }
         }
-        reducer.Reduce(placecontext, reductiontype, reconstructTrace);
+        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout);
     }
 
 

@@ -78,7 +78,7 @@ namespace PetriEngine {
                 
         void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query, 
                     std::vector<Reachability::ResultPrinter::Result>& results, 
-                    int reductiontype, bool reconstructTrace);
+                    int reductiontype, bool reconstructTrace, int timeout = 60);
         
         size_t RemovedTransitions()
         {
