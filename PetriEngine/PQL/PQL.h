@@ -34,7 +34,7 @@ namespace PetriEngine {
     class ReducingSuccessorGenerator;
     namespace Simplification
     {
-        struct Member;
+        class Member;
         class LiniearPrograms;
         struct Retval;
     }
