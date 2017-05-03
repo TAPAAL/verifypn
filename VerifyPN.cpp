@@ -552,6 +552,7 @@ int main(int argc, char* argv[]) {
             SimplificationContext simplificationContext(qm0, qnet, options.queryReductionTimeout, 
                     options.lpsolveTimeout);
             
+            int preSize=queries[i]->formulaSize();
             if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
 
             try {
@@ -567,6 +568,10 @@ int main(int argc, char* argv[]) {
 
             if(options.printstatistics){fprintf(stdout, "Query after reduction:  %s\n", queries[i]->toString().c_str());}
             if(options.printstatistics){
+                int postSize=queries[i]->formulaSize();
+                double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
+                
+                fprintf(stdout, "Query size reduced from %d to %d nodes (%.2f percent reduction).\n", preSize, postSize, redPerc);
                 if(simplificationContext.timeout()){
                     fprintf(stdout, "Query reduction reached timeout.\n");
                 } else {
