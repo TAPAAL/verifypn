@@ -21,7 +21,7 @@ START_SCRIPT=$PREFIX/start.sh
 #Allowed memory in kB
 MEM="14500000"
 ulimit -v $MEM
-QREDMEM=$(echo "$MEM/4" | bc)
+QREDMEM=$(echo "$MEM/2" | bc)
 
 # Verification options
 OPTIONS=""
@@ -188,11 +188,11 @@ case "$BK_EXAMINATION" in
         PRE[1]="$MEM"
         PRE[2]="$MEM"
         PRE[3]="$MEM"
-        STRATEGIES_PAR[0]="-s DFS -d 60 --siphon-trap 30 -q 0"
-        STRATEGIES_PAR[1]="-s BFS -d 10 -q 0"
-        STRATEGIES_PAR[2]="-s DFS -d 10 -q 0"
-        STRATEGIES_PAR[3]="-s RDFS -d 10 -q 0"
-        STRATEGY_SEQ="-s DFS -d 60 -q 0"
+        STRATEGIES_PAR[0]="-s DFS -d 20 --siphon-trap 30 -q 0"
+        STRATEGIES_PAR[1]="-s BFS -d 20 -q 0"
+        STRATEGIES_PAR[2]="-s DFS -d 20 -q 0"
+        STRATEGIES_PAR[3]="-s RDFS -d 20 -q 0"
+        STRATEGY_SEQ="-s DFS -d 200 -q 0"
         CATEGORY="ReachabilityDeadlock.xml"
         verifyparallel 
         ;;
@@ -206,11 +206,11 @@ case "$BK_EXAMINATION" in
         PRE[1]="$MEM"
         PRE[2]="$MEM"
         PRE[3]="$MEM"
-        STRATEGIES_PAR[0]="-s BestFS -d 10"
-        STRATEGIES_PAR[1]="-s BestFS -q 0 -d 10"
-        STRATEGIES_PAR[2]="-s BFS -q 0 -d 10"
-        STRATEGIES_PAR[3]="-s DFS -q 0 -d 10"
-        STRATEGY_SEQ="-s DFS -d 60"
+        STRATEGIES_PAR[0]="-s BestFS -d 20"
+        STRATEGIES_PAR[1]="-s BestFS -q 0 -d 20"
+        STRATEGIES_PAR[2]="-s BFS -q 0 -d 20"
+        STRATEGIES_PAR[3]="-s DFS -q 0 -d 20"
+        STRATEGY_SEQ="-s DFS -d 200"
         CATEGORY="ReachabilityCardinality.xml"
         verifyparallel 
         ;;
@@ -224,11 +224,11 @@ case "$BK_EXAMINATION" in
         PRE[1]="$MEM"
         PRE[2]="$MEM"
         PRE[3]="$MEM"
-        STRATEGIES_PAR[0]="-s BestFS -d 10"
-        STRATEGIES_PAR[1]="-s BestFS -q 0 -d 10"
-        STRATEGIES_PAR[2]="-s BFS -q 0 -d 10"
-        STRATEGIES_PAR[3]="-s DFS -q 0 -d 10"
-        STRATEGY_SEQ="-s DFS -d 60"
+        STRATEGIES_PAR[0]="-s BestFS -d 20"
+        STRATEGIES_PAR[1]="-s BestFS -q 0 -d 20"
+        STRATEGIES_PAR[2]="-s BFS -q 0 -d 20"
+        STRATEGIES_PAR[3]="-s DFS -q 0 -d 20"
+        STRATEGY_SEQ="-s DFS -d 200"
         CATEGORY="ReachabilityFireability.xml"
         verifyparallel 
         ;;
@@ -240,9 +240,9 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         PRE[0]="$QREDMEM"
         PRE[1]="$MEM"
-        STRATEGIES_PAR[0]="-s DFS -d 10"
-        STRATEGIES_PAR[1]="-s DFS -q 0 -d 10"
-        STRATEGY_SEQ="-s DFS -d 60"
+        STRATEGIES_PAR[0]="-s DFS -d 20"
+        STRATEGIES_PAR[1]="-s DFS -q 0 -d 20"
+        STRATEGY_SEQ="-s DFS -d 200"
         CATEGORY="CTLCardinality.xml"
         verifyparallel
         ;;
@@ -254,9 +254,9 @@ case "$BK_EXAMINATION" in
         echo "*************************************"
         PRE[0]="$QREDMEM"
         PRE[1]="$MEM"
-        STRATEGIES_PAR[0]="-s DFS -d 10"
-        STRATEGIES_PAR[1]="-s DFS -q 0 -d 10"
-        STRATEGY_SEQ="-s DFS -d 60"
+        STRATEGIES_PAR[0]="-s DFS -d 20"
+        STRATEGIES_PAR[1]="-s DFS -q 0 -d 20"
+        STRATEGY_SEQ="-s DFS -d 200"
         CATEGORY="CTLFireability.xml"
         verifyparallel
         ;;
