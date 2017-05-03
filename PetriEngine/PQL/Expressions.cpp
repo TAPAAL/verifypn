@@ -1069,13 +1069,20 @@ namespace PetriEngine {
                 } else if (r2.formula->isTriviallyTrue()) {
                     return std::move(r1);
                 }
-                r1.lps.merge(r2.lps);
-                if(!context.timeout() && !r1.lps.satisfiable(context)) {
-                    return Retval(BooleanCondition::FALSE);
-                } else {
-                    return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), std::move(r1.lps)); 
+                
+                if(!context.timeout())
+                {
+                    r1.lps.merge(r2.lps);
+                    if(!context.timeout() && !r1.lps.satisfiable(context)) {
+                        return Retval(BooleanCondition::FALSE);
+                    }
                 }
-
+                else
+                {
+                    r1.lps.clear();
+                    r2.lps.clear();
+                }
+                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), std::move(r1.lps)); 
             }
             catch(std::bad_alloc& e)
             {
@@ -1089,17 +1096,24 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyOr(Retval&& r1, Retval&& r2) {
+        Retval simplifyOr(SimplificationContext& context, Retval&& r1, Retval&& r2) {
             if(r1.formula->isTriviallyTrue() || r2.formula->isTriviallyTrue()) {
                 return Retval(BooleanCondition::TRUE);
             } else if (r1.formula->isTriviallyFalse()) {
                 return std::move(r2);
             } else if (r2.formula->isTriviallyFalse()) {
                 return std::move(r1);
-            } else {
+            } 
+            if (!context.timeout()){
                 r1.lps.makeUnion(r2.lps);
-                return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), std::move(r1.lps));
             }
+            else
+            {
+                r1.lps.clear();
+                r2.lps.clear();
+            }
+            
+            return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), std::move(r1.lps));            
         }
         
         Retval AndCondition::simplify(SimplificationContext& context) const {
@@ -1136,7 +1150,7 @@ namespace PetriEngine {
             if(!succ1 && !succ2) throw std::bad_alloc();
             else if(succ1 && !succ2) return r1;
             else if(succ2 && !succ1) return r2;
-            else return context.negated()   ? simplifyOr(std::move(r1), std::move(r2)) 
+            else return context.negated()   ? simplifyOr(context, std::move(r1), std::move(r2)) 
                                             : simplifyAnd(context, std::move(r1), std::move(r2));
         }
         
@@ -1149,9 +1163,7 @@ namespace PetriEngine {
                 else                 
                     return Retval(std::make_shared<OrCondition>(_cond1, _cond2));
             }
-            
             Retval r1 = _cond1->simplify(context);
-            
             // negated becomes and -- so if r1 is trivially false,
             // or if not negated, and r1 is true -- we can short-circuit
             if(!context.negated() && r1.formula->isTriviallyTrue()) 
@@ -1162,7 +1174,7 @@ namespace PetriEngine {
             Retval r2 = _cond2->simplify(context);
             
             return context.negated() ?  simplifyAnd(context, std::move(r1), std::move(r2)) : 
-                                        simplifyOr(std::move(r1), std::move(r2));
+                                        simplifyOr(context, std::move(r1), std::move(r2));
         }
         
         Retval EqualCondition::simplify(SimplificationContext& context) const {
