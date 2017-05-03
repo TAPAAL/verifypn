@@ -1103,6 +1103,15 @@ namespace PetriEngine {
         }
         
         Retval AndCondition::simplify(SimplificationContext& context) const {
+            if(context.timeout())
+            {
+                if(context.negated()) 
+                    return Retval(std::make_shared<NotCondition>(
+                            std::make_shared<AndCondition>(_cond1, _cond2)));
+                else                  
+                    return Retval(
+                            std::make_shared<AndCondition>(_cond1, _cond2));
+            }
             Retval r1, r2;
             bool succ1 = false, succ2 = false;
             try{
@@ -1110,6 +1119,15 @@ namespace PetriEngine {
                 succ1 = true;
             }
             catch (std::bad_alloc& e) {};
+            
+            // negated becomes or -- so if r1 is trivially true,
+            // or if not negated, and r1 is false -- we can short-circuit
+            if(context.negated() && r1.formula->isTriviallyTrue())    
+                return Retval(BooleanCondition::TRUE);
+            else if(!context.negated() && r1.formula->isTriviallyFalse())    
+                return Retval(BooleanCondition::FALSE);
+            
+
             try{
                 r2 = _cond2->simplify(context);
                 succ2 = true;
@@ -1123,7 +1141,24 @@ namespace PetriEngine {
         }
         
         Retval OrCondition::simplify(SimplificationContext& context) const {            
+            if(context.timeout())
+            {
+                if(context.negated()) 
+                    return Retval(std::make_shared<NotCondition>(
+                            std::make_shared<OrCondition>(_cond1, _cond2)));
+                else                 
+                    return Retval(std::make_shared<OrCondition>(_cond1, _cond2));
+            }
+            
             Retval r1 = _cond1->simplify(context);
+            
+            // negated becomes and -- so if r1 is trivially false,
+            // or if not negated, and r1 is true -- we can short-circuit
+            if(!context.negated() && r1.formula->isTriviallyTrue()) 
+                return Retval(BooleanCondition::TRUE);
+            else if(context.negated() && r1.formula->isTriviallyFalse()) 
+                return Retval(BooleanCondition::FALSE);
+
             Retval r2 = _cond2->simplify(context);
             
             return context.negated() ?  simplifyAnd(context, std::move(r1), std::move(r2)) : 
