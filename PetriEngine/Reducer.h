@@ -83,7 +83,7 @@ namespace PetriEngine {
         Reducer(PetriNetBuilder*);
         ~Reducer();
         void Print(QueryPlaceAnalysisContext& context); // prints the net, just for debugging
-        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace);
+        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout);
         
         size_t RemovedTransitions() const {
             return _removedTransitions;
@@ -123,6 +123,8 @@ namespace PetriEngine {
         size_t _ruleA, _ruleB, _ruleC, _ruleD, _ruleE;
         PetriNetBuilder* parent;
         bool reconstructTrace = false;
+        std::chrono::high_resolution_clock::time_point _timer;
+        int _timeout = 0;
 
         // The reduction methods return true if they reduced something and reductions should continue with other rules
         bool ReducebyRuleA(uint32_t* placeInQuery);
@@ -142,6 +144,11 @@ namespace PetriEngine {
         void skipPlace(uint32_t);
         
         bool consistent();
+        bool hasTimedout() const {
+            auto end = std::chrono::high_resolution_clock::now();
+            auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _timer);
+            return (diff.count() >= _timeout);
+        }
         
         std::vector<std::string> _initfire;
         std::map<std::string, std::vector<std::string>> _postfire;
