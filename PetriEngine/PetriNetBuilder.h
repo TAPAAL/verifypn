@@ -22,6 +22,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <chrono>
 #include "AbstractPetriNetBuilder.h"
 #include "PQL/PQL.h"
 #include "PetriNet.h"
@@ -127,8 +128,19 @@ namespace PetriEngine {
             return res;
         }
 
+        double getReductionTime(){
+            // duration in seconds
+            auto end = std::chrono::high_resolution_clock::now();
+            return (std::chrono::duration_cast<std::chrono::microseconds>(end - _start).count())*0.000001;
+        }
+
+        void startTimer() {
+            _start = std::chrono::high_resolution_clock::now();
+        }
+        
     private:
         uint32_t nextPlaceId(std::vector<uint32_t>& counts,  std::vector<uint32_t>& pcounts, std::vector<uint32_t>& ids, bool reorder);
+        std::chrono::high_resolution_clock::time_point _start;
 
     protected:
         std::map<std::string, uint32_t> _placenames;
