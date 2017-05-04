@@ -120,6 +120,8 @@ namespace PetriEngine {
             /** Stubborn reduction: increasing and decreasing sets */
             virtual void incr(ReducingSuccessorGenerator& generator) const = 0;
             virtual void decr(ReducingSuccessorGenerator& generator) const = 0;
+            /** Count size of the entire formula in number of nodes */
+            virtual int formulaSize() const = 0;
             
             void setEval(int eval) {
                 _eval = eval;
@@ -171,6 +173,8 @@ namespace PetriEngine {
             bool isTriviallyTrue();
             /*** Checks if the condition is trivially false */
             bool isTriviallyFalse();
+            /** Count size of the entire formula in number of nodes */
+            virtual int formulaSize() const = 0;
 
             bool isSatisfied() const
             {
