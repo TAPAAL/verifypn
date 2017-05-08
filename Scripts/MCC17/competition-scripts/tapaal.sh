@@ -115,6 +115,7 @@ function verifyparallel {
         REMAINING_TIME=$(echo "$TIMEOUT_TOTAL - $SECONDS" | bc)
         TIMEOUT_SEQ=$(echo "$REMAINING_TIME / $REMAINING_SEQ" | bc)
         if [[ "$TIMEOUT_SEQ_MIN" -gt "$TIMEOUT_SEQ" ]]; then TIMEOUT_SEQ=$TIMEOUT_SEQ_MIN; fi
+        if [[ "$TIMEOUT_SEQ" -gt "$REMAINING_TIME" ]]; then TIMEOUT_SEQ=$REMAINING_TIME; fi
         
         # Execute verifypn on sequential strategy
         echo "Running query $Q for $TIMEOUT_SEQ seconds. Remaining: $REMAINING_SEQ queries and $REMAINING_TIME seconds"
