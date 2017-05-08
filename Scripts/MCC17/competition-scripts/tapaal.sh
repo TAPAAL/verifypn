@@ -1,6 +1,6 @@
 #!/bin/bash
 
-trap "echo 'Terminating all processes using: kill -15 -1'; kill -15 -1; sleep 1; echo 'Terminating all processes using: kill -9 -1'; kill -9 -1; echo 'Done with terminating all processes.'; exit" SIGHUP SIGINT SIGTERM
+trap "echo 'Terminating all processes using: kill -15 -1'; kill -15 -1; sleep 1; echo 'Terminating all processes using: kill -9 -1'; kill -9 -1; echo 'Done with terminating all processes.'; exit" 1 2 3 15 
 
 
 # This is the initialization script for the participation of TAPAAL
@@ -33,10 +33,12 @@ OPTIONS=""
 STRATEGY_SEQ="-s DFS"
 
 # Timeouts (in seconds)
-TIMEOUT_TOTAL=3600 # competition 1 hour
-TIMEOUT_SEQ_MIN=400 # competition 8 min
+#TIMEOUT_TOTAL=3600 # competition 1 hour 
+TIMEOUT_TOTAL=$BK_TIME_CONFINEMENT 
+TIMEOUT_SEQ_MIN=400 # competition 400 seconds 
 TIMEOUT_PAR=60 # competition 1 min
 
+echo "Total timeout: " $TIMEOUT_TOTAL
 
 if [ ! -f iscolored ]; then
     	echo "File 'iscolored' not found!"
@@ -155,8 +157,8 @@ function verifyparallel {
     # Join remaining query indexes in comma separated string
     MULTIQUERY_INPUT=$(sed -e "s/ /,/g" <<< ${QUERIES[@]})
     
-    echo "Running multiquery on -x $MULTIQUERY_INPUT for $TIMEOUT_TOTAL seconds" 
-    $TIME_CMD $TIMEOUT_CMD $TIMEOUT_TOTAL $VERIFYPN $STRATEGY_SEQ $OPTIONS -p $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $MULTIQUERY_INPUT 
+    echo "Running multiquery on -x $MULTIQUERY_INPUT for $REMAINING_TIME seconds" 
+    $TIME_CMD $TIMEOUT_CMD $REMAINING_TIME $VERIFYPN $STRATEGY_SEQ $OPTIONS -p $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $MULTIQUERY_INPUT 
     
     echo "End of script."
 }
