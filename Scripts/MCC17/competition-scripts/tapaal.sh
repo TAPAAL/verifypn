@@ -1,5 +1,8 @@
 #!/bin/bash
 
+trap "echo 'Terminating all processes using: kill -15 -1'; kill -15 -1; sleep 1; echo 'Terminating all processes using: kill -9 -1'; kill -9 -1; echo 'Done with terminating all processes.'; exit" SIGHUP SIGINT SIGTERM
+
+
 # This is the initialization script for the participation of TAPAAL
 # untimed engine verifypn in the Petri net competition 2017.
 # BK_EXAMINATION: it is a string that identifies your "examination"

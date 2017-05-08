@@ -12,7 +12,7 @@ PREFIX=/home/mcc/BenchKit
 case "$BK_TOOL" in
     *)
         echo "---> " $BK_TOOL " --- TAPAAL"
-        $PREFIX/tapaal.sh
+        exec $PREFIX/tapaal.sh
                 ;;
     other)
         echo "---> Error: Unrecognized BK_TOOL name !!!"  
