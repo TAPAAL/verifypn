@@ -42,6 +42,7 @@ namespace PetriEngine {
         _transitions[_ntransitions].outputs = _ninvariants;
         _placeToPtrs[_nplaces] = _ntransitions;
         _initialMarking = new MarkVal[_nplaces];
+        assert(_nplaces > 0);
     }
 
     PetriNet::~PetriNet() {
@@ -50,6 +51,7 @@ namespace PetriEngine {
 
     int PetriNet::inArc(uint32_t place, uint32_t transition) const
     {
+        assert(_nplaces > 0);
         assert(place < _nplaces);
         assert(transition < _ntransitions);
         
@@ -73,6 +75,7 @@ namespace PetriEngine {
     }
     int PetriNet::outArc(uint32_t transition, uint32_t place) const
     {
+        assert(_nplaces > 0);
         assert(place < _nplaces);
         assert(transition < _ntransitions);
         

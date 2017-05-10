@@ -16,13 +16,14 @@ struct options_t {
     char* modelfile = NULL;
     char* queryfile = NULL;
     int enablereduction = 1; // 0 ... disabled,  1 ... aggresive (default), 2 ... k-boundedness preserving
+    int reductionTimeout = 60;
     bool stubbornreduction = true; 
     bool statespaceexploration = false;
     bool printstatistics = true;
     std::set<size_t> querynumbers = std::set<size_t>();
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
     bool trace = false;
-    int queryReductionTimeout = 30, lpsolveTimeout = 5;
+    int queryReductionTimeout = 30, lpsolveTimeout = 10;
     int siphontrapTimeout = 0;
     bool upperboundcheck = false;
 
@@ -71,6 +72,8 @@ struct options_t {
         } else {
             optionsOut += ",Structural_Reduction=KBOUND_PRESERVING";
         }
+        
+        optionsOut += ",Struct_Red_Timout=" + std::to_string(reductionTimeout);
         
         if (stubbornreduction) {
             optionsOut += ",Stubborn_Reduction=ENABLED";

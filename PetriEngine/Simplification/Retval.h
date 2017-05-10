@@ -4,23 +4,38 @@
 
 namespace PetriEngine {
     namespace Simplification {
-        class Retval {
-        public:
-            std::shared_ptr<PQL::Condition> formula;
-            std::shared_ptr<LinearPrograms> lps;      
+        struct Retval {
+            std::shared_ptr<PQL::Condition> formula = nullptr;
+            LinearPrograms lps;      
             
-            Retval (std::shared_ptr<PQL::Condition> formula, const LinearPrograms& lps1) : formula(formula) { 
-                lps = std::make_shared<LinearPrograms>(lps1);
+            Retval (std::shared_ptr<PQL::Condition> formula, LinearPrograms&& lps1) 
+            : formula(formula), lps(std::move(lps1)) {
             }
-            Retval (std::shared_ptr<PQL::Condition> formula) : Retval(formula, LinearPrograms(LinearProgram())) {
+                        
+            Retval (std::shared_ptr<PQL::Condition> formula) 
+            : formula(formula) {
+                lps.add(LinearProgram());
             }
+ 
+            Retval(Retval&& other) 
+            : formula(other.formula), lps(std::move(other.lps))
+            {}
+
+            Retval& operator=(Retval&& other) {
+                lps = std::move(other.lps);
+                formula = std::move(other.formula);
+                return *this;
+            }
+            
             Retval() {
-                lps = std::make_shared<LinearPrograms>(LinearPrograms(LinearProgram()));
+                lps.add(LinearProgram());
             }
+            
             ~Retval(){
             }
+            
             bool isSet(){
-                return (formula.operator bool() && lps.get()->lps.size() != 0);
+                return (formula != nullptr && lps.size() != 0);
             }
         private:
 

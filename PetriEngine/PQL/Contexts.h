@@ -133,38 +133,6 @@ namespace PetriEngine {
             std::string netName;
         };
 
-        /** Just-In-Time compilation context */
-        class CodeGenerationContext {
-        public:
-
-            CodeGenerationContext(llvm::Value* marking,
-                    llvm::BasicBlock* label,
-                    llvm::LLVMContext& context)
-            : _context(context) {
-                _marking = marking;
-                _label = label;
-            }
-
-            /** Marking */
-            llvm::Value* marking() {
-                return _marking;
-            }
-
-            /** Label for the current code block */
-            llvm::BasicBlock* label() {
-                return _label;
-            }
-
-            /** LLVM Context that is currently generating */
-            llvm::LLVMContext& context() {
-                return _context;
-            }
-        private:
-            llvm::Value* _marking;
-            llvm::BasicBlock* _label;
-            llvm::LLVMContext& _context;
-        };
-        
         class SimplificationContext {
         public:
 
@@ -203,13 +171,13 @@ namespace PetriEngine {
                 return (std::chrono::duration_cast<std::chrono::microseconds>(end - _start).count())*0.000001;
             }
             
-            bool timeout() {
+            bool timeout() const {
                 auto end = std::chrono::high_resolution_clock::now();
                 auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _start);
-                return (diff.count() > _queryTimeout);
+                return (diff.count() >= _queryTimeout);
             }
             
-            uint32_t getLpTimeout() {
+            uint32_t getLpTimeout() const {
                 return _lpTimeout;
             }
 

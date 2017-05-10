@@ -6,16 +6,16 @@
  *                          Peter Gjøl Jensen <root@petergjoel.dk>
  *
  * CTL Extension
- *                          Peter Fogh <pfogh12@student.aau.dk>
+ *                          Peter Fogh <peter.f1992@gmail.com>
  *                          Isabella Kaufmann <bellakaufmann93@gmail.com>
- *                          Tobias Skovgaard Jepsen <tjeps12@student.aau.dk>
- *                          Lasse Steen Jensen <lasjen12@student.aau.dk>
+ *                          Tobias Skovgaard Jepsen <tobiasj1991@gmail.com>
+ *                          Lasse Steen Jensen <lassjen88@gmail.com>
  *                          Søren Moss Nielsen <soren_moss@mac.com>
  *                          Samuel Pastva <daemontus@gmail.com>
  *                          Jiri Srba <srba.jiri@gmail.com>
  *
  * Stubborn sets, query simplification, siphon-trap property
- *                          Frederik Meyer Boenneland <fbanne12@student.aau.dk>
+ *                          Frederik Meyer Boenneland <sadpantz@gmail.com>
  *                          Jakob Dyhr <jakobdyhr@gmail.com>
  *                          Peter Gjøl Jensen <root@petergjoel.dk>
  *                          Mads Johannsen <mads_johannsen@yahoo.com>
@@ -55,6 +55,9 @@
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
 #include "PetriEngine/STSolver.h"
+#include "PetriEngine/Simplification/Member.h"
+#include "PetriEngine/Simplification/LinearPrograms.h"
+#include "PetriEngine/Simplification/Retval.h"
 
 #include "CTL/CTLEngine.h"
 
@@ -179,6 +182,15 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid reduction argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        } else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--reduction-timeout") == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%d", &options.reductionTimeout) != 1) {
+                fprintf(stderr, "Argument Error: Invalid reduction timeout argument \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
         } else if(strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--partial-order-reduction") == 0) {
             options.stubbornreduction = false;
         } else if(strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--siphon-trap") == 0) {
@@ -225,9 +237,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 0  disabled\n"
                     "                                     - 1  aggressive reduction (default)\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
+                    "  -d, --reduction-timeout            Timeout for structural reductions in seconds (default 60)\n"
                     "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
                     "                                     write -q 0 to disable query reduction\n"
-                    "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 5\n"
+                    "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
                     "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
@@ -252,12 +265,12 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("Copyright (C) 2011-2017\n");
             printf("                        Frederik Meyer Boenneland <sadpantz@gmail.com>\n");
             printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
-            printf("                        Peter Fogh <pfogh12@student.aau.dk>\n");
+            printf("                        Peter Fogh <peter.f1992@gmail.com>\n");
             printf("                        Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
-            printf("                        Lasse Steen Jensen <lasjen12@student.aau.dk>\n");
+            printf("                        Lasse Steen Jensen <lassjen88@gmail.com>\n");
             printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
-            printf("                        Tobias Skovgaard Jepsen <tjeps12@student.aau.dk>\n");
-            printf("                        Mads Johannsen <mjohan12@student.aau.dk\n");
+            printf("                        Tobias Skovgaard Jepsen <tobiasj1991@gmail.com>\n");
+            printf("                        Mads Johannsen <mads_johannsen@yahoo.com>\n");
             printf("                        Isabella Kaufmann <bellakaufmann93@gmail.com>\n");
             printf("                        Søren Moss Nielsen <soren_moss@mac.com>\n");
             printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>,\n");
@@ -275,7 +288,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 			return ErrorCode;
         }
     }
-    
     //Print parameters
     if (options.printstatistics) {
         std::cout << std::endl << "Parameters: ";
@@ -317,8 +329,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         if(options.strategy == PetriEngine::Reachability::HEUR){
             options.strategy = PetriEngine::Reachability::DFS;
         }
-        else if(options.strategy != PetriEngine::Reachability::DFS && options.strategy != PetriEngine::Reachability::BFS){
-            std::cerr << "Argument Error: Invalid CTL search strategy. Valid ones are DFS (default) and BFS." << std::endl;
+        else if(options.strategy != PetriEngine::Reachability::DFS){
+            std::cerr << "Argument Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
             return ErrorCode;
         }
     }
@@ -449,6 +461,16 @@ void printStats(PetriNetBuilder& builder, options_t& options)
 {
     if (options.printstatistics) {
         if (options.enablereduction != 0) {
+
+            std::cout << "Size of net before structural reductions: " <<
+                    builder.numberOfPlaces() << " places, " <<
+                    builder.numberOfTransitions() << " transitions" << std::endl;             
+            std::cout << "Size of net after structural reductions: " <<
+                    builder.numberOfPlaces() - builder.RemovedPlaces() << " places, " <<
+                    builder.numberOfTransitions() - builder.RemovedTransitions() << " transitions" << std::endl;
+            std::cout << "Structural reduction finished after " << builder.getReductionTime() <<
+                    " seconds" << std::endl;
+            
             std::cout   << "\nNet reduction is enabled.\n"
                         << "Removed transitions: " << builder.RemovedTransitions() << std::endl
                         << "Removed places: " << builder.RemovedPlaces() << std::endl
@@ -503,7 +525,7 @@ int main(int argc, char* argv[]) {
     
     if(parseModel(transitionEnabledness, builder, options) != ContinueCode) return ErrorCode;
     
-    //----------------------- CTL Engine - for testing ------------------------//
+    //---------------- CTL Engine - forced CTL via FLAG -ctl -----------------//
     if(options.isctl){
         PetriNet* net = builder.makePetriNet();
         ReturnValue rv = CTLMain(net,
@@ -550,9 +572,10 @@ int main(int argc, char* argv[]) {
         {
             if (queries[i]->isUpperBound()) continue;
             
-            SimplificationContext simplificationContext(qm0, qnet, 
-                    options.queryReductionTimeout, options.lpsolveTimeout);
+            SimplificationContext simplificationContext(qm0, qnet, options.queryReductionTimeout, 
+                    options.lpsolveTimeout);
             
+            int preSize=queries[i]->formulaSize();
             if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
 
             try {
@@ -568,6 +591,10 @@ int main(int argc, char* argv[]) {
 
             if(options.printstatistics){fprintf(stdout, "Query after reduction:  %s\n", queries[i]->toString().c_str());}
             if(options.printstatistics){
+                int postSize=queries[i]->formulaSize();
+                double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
+                
+                fprintf(stdout, "Query size reduced from %d to %d nodes (%.2f percent reduction).\n", preSize, postSize, redPerc);
                 if(simplificationContext.timeout()){
                     fprintf(stdout, "Query reduction reached timeout.\n");
                 } else {
@@ -604,9 +631,8 @@ int main(int argc, char* argv[]) {
         
         if(alldone) return SuccessCode;
     }
-
-    //----------------------- Verify CTL queries -----------------------//
     
+    //----------------------- Verify CTL queries -----------------------//
     std::string CTLQueries = getXMLQueries(queries, querynames, results);
     
     if (CTLQueries.size() > 0) {
@@ -621,8 +647,7 @@ int main(int argc, char* argv[]) {
         }
         
         // Default to DFS if strategy is not BFS or DFS (No heuristic strategy)        
-        if(options.strategy != PetriEngine::Reachability::DFS && 
-                options.strategy != PetriEngine::Reachability::BFS){
+        if(options.strategy != PetriEngine::Reachability::DFS){
             options.strategy = PetriEngine::Reachability::DFS;
             fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
         }
@@ -650,9 +675,12 @@ int main(int argc, char* argv[]) {
         
     if (options.enablereduction == 1 || options.enablereduction == 2) {
         // Compute how many times each place appears in the query
-        builder.reduce(queries, results, options.enablereduction, options.trace);
+        builder.startTimer();
+        builder.reduce(queries, results, options.enablereduction, options.trace, options.reductionTimeout);
         printer.setReducer(builder.getReducer());        
     }
+    
+    printStats(builder, options);
     
     PetriNet* net = builder.makePetriNet();
     
@@ -699,9 +727,7 @@ int main(int argc, char* argv[]) {
             options.statespaceexploration,
             options.printstatistics, 
             options.trace);
-    
-    printStats(builder, options);
-    
+   
     delete net;
     
     return 0;

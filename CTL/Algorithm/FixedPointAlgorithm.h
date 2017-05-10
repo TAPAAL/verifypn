@@ -2,7 +2,7 @@
 #define FIXEDPOINTALGORITHM_H
 
 #include "../DependencyGraph/BasicDependencyGraph.h"
-#include "../SearchStrategy/iSearchStrategy.h"
+#include "../SearchStrategy/DFSSearch.h"
 //#include "../Communicator/Communicator.h"
 //#include "PartitionFunction.h"
 
@@ -11,7 +11,7 @@ namespace Algorithm {
 class FixedPointAlgorithm {
 public:
     virtual bool search(DependencyGraph::BasicDependencyGraph &graph,
-                        SearchStrategy::iSequantialSearchStrategy &strategy) =0;
+                        SearchStrategy::DFSSearch &strategy) =0;
     virtual ~FixedPointAlgorithm(){}
 
     size_t processedEdges() const { return _processedEdges; }

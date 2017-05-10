@@ -46,7 +46,20 @@ namespace PetriEngine {
         // CONSTANTS
         Condition_ptr BooleanCondition::FALSE = std::make_shared<BooleanCondition>(false);
         Condition_ptr BooleanCondition::TRUE = std::make_shared<BooleanCondition>(true);
+        Condition_ptr DeadlockCondition::DEADLOCK = std::make_shared<DeadlockCondition>();
         
+        
+        Condition_ptr BooleanCondition::getShared(bool val)
+        {
+            if(val)
+            {
+                return TRUE;
+            }
+            else
+            {
+                return FALSE;
+            }
+        }
         
         /******************** To String ********************/
 
@@ -856,45 +869,46 @@ namespace PetriEngine {
         }
         
         Member IdentifierExpr::constraint(SimplificationContext& context) const {
-            // Reserve index 0 to LPsolve
-            std::vector<int> row(context.net()->numberOfTransitions() + 1);
+            std::vector<int> row(context.net()->numberOfTransitions(), 0);
+            row.shrink_to_fit();
             uint32_t p = offset();
             for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
-                row[1 + t] = context.net()->outArc(t, p) - context.net()->inArc(p, t);
+                row[t] = context.net()->outArc(t, p) - context.net()->inArc(p, t);
             }
-            return Member(row, context.marking()[p]);
+            return Member(std::move(row), context.marking()[p]);
         }
         
         Member PlusExpr::constraint(SimplificationContext& context) const {
-            return _expr1->constraint(context) + _expr2->constraint(context);
+            return _expr1->constraint(context) += _expr2->constraint(context);
         }
         
         Member SubtractExpr::constraint(SimplificationContext& context) const {
-            return _expr1->constraint(context) - _expr2->constraint(context);
+            return _expr1->constraint(context) -= _expr2->constraint(context);
         }
         
         Member MultiplyExpr::constraint(SimplificationContext& context) const {
-            return _expr1->constraint(context) * _expr2->constraint(context);
+            return _expr1->constraint(context) *= _expr2->constraint(context);
         }
         
         Member MinusExpr::constraint(SimplificationContext& context) const {
-            return -_expr->constraint(context);
+            Member neg(-1);
+            return _expr->constraint(context) *= neg;
         }
         
-        Retval simplifyEX(Retval r) {
+        Retval simplifyEX(Retval& r) {
             if(r.formula->isTriviallyTrue()) {
                 return Retval(std::make_shared<NotCondition>(
                         std::make_shared<DeadlockCondition>()));
             } else if(r.formula->isTriviallyFalse()) {
-                return Retval(std::make_shared<BooleanCondition>(false));
+                return Retval(BooleanCondition::FALSE);
             } else {
                 return Retval(std::make_shared<EXCondition>(r.formula));
             }
         }
         
-        Retval simplifyAX(Retval r) {
+        Retval simplifyAX(Retval& r) {
             if(r.formula->isTriviallyTrue()){
-                return Retval(std::make_shared<BooleanCondition>(true));
+                return Retval(BooleanCondition::TRUE);
             } else if(r.formula->isTriviallyFalse()){
                 return Retval(std::make_shared<DeadlockCondition>());
             } else{
@@ -902,41 +916,41 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyEF(Retval r){
+        Retval simplifyEF(Retval& r){
             if(r.formula->isTriviallyTrue()){
-                return Retval(std::make_shared<BooleanCondition>(true));
+                return Retval(BooleanCondition::TRUE);
             } else if(r.formula->isTriviallyFalse()){
-                return Retval(std::make_shared<BooleanCondition>(false));
+                return Retval(BooleanCondition::FALSE);
             } else {
                 return Retval(std::make_shared<EFCondition>(r.formula));
             }
         }
         
-        Retval simplifyAF(Retval r){
+        Retval simplifyAF(Retval& r){
             if(r.formula->isTriviallyTrue()){
-                return Retval(std::make_shared<BooleanCondition>(true));
+                return Retval(BooleanCondition::TRUE);
             } else if(r.formula->isTriviallyFalse()){
-                return Retval(std::make_shared<BooleanCondition>(false));
+                return Retval(BooleanCondition::FALSE);
             } else {
                 return Retval(std::make_shared<AFCondition>(r.formula));
             }
         }
         
-        Retval simplifyEG(Retval r){
+        Retval simplifyEG(Retval& r){
             if(r.formula->isTriviallyTrue()){
-                return Retval(std::make_shared<BooleanCondition>(true));
+                return Retval(BooleanCondition::TRUE);
             } else if(r.formula->isTriviallyFalse()){
-                return Retval(std::make_shared<BooleanCondition>(false));
+                return Retval(BooleanCondition::FALSE);
             } else {
                 return Retval(std::make_shared<EGCondition>(r.formula));
             }
         }
         
-        Retval simplifyAG(Retval r){
+        Retval simplifyAG(Retval& r){
             if(r.formula->isTriviallyTrue()){
-                return Retval(std::make_shared<BooleanCondition>(true));
+                return Retval(BooleanCondition::TRUE);
             } else if(r.formula->isTriviallyFalse()){
-                return Retval(std::make_shared<BooleanCondition>(false));
+                return Retval(BooleanCondition::FALSE);
             } else {
                 return Retval(std::make_shared<AGCondition>(r.formula));
             }
@@ -982,9 +996,9 @@ namespace PetriEngine {
             
             if(context.negated()){
                 if(r2.formula->isTriviallyTrue()){
-                    return Retval(std::make_shared<BooleanCondition>(false));
+                    return Retval(BooleanCondition::FALSE);
                 } else if(r2.formula->isTriviallyFalse()){
-                    return Retval(std::make_shared<BooleanCondition>(true));
+                    return Retval(BooleanCondition::TRUE);
                 } else if(r1.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<EFCondition>(r2.formula)));
@@ -996,9 +1010,9 @@ namespace PetriEngine {
                 }
             } else {
                 if(r2.formula->isTriviallyTrue()){
-                    return Retval(std::make_shared<BooleanCondition>(true));
+                    return Retval(BooleanCondition::TRUE);
                 } else if(r2.formula->isTriviallyFalse()){
-                    return Retval(std::make_shared<BooleanCondition>(false));
+                    return Retval(BooleanCondition::FALSE);
                 } else if(r1.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<EFCondition>(r2.formula));
                 } else if(r1.formula->isTriviallyFalse()){
@@ -1019,9 +1033,9 @@ namespace PetriEngine {
             
             if(context.negated()){
                 if(r2.formula->isTriviallyTrue()){
-                    return Retval(std::make_shared<BooleanCondition>(false));
+                    return Retval(BooleanCondition::FALSE);
                 } else if(r2.formula->isTriviallyFalse()){
-                    return Retval(std::make_shared<BooleanCondition>(true));
+                    return Retval(BooleanCondition::TRUE);
                 } else if(r1.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<AFCondition>(r2.formula)));
@@ -1033,9 +1047,9 @@ namespace PetriEngine {
                 }
             } else {
                 if(r2.formula->isTriviallyTrue()){
-                    return Retval(std::make_shared<BooleanCondition>(true));
+                    return Retval(BooleanCondition::TRUE);
                 } else if(r2.formula->isTriviallyFalse()){
-                    return Retval(std::make_shared<BooleanCondition>(false));
+                    return Retval(BooleanCondition::FALSE);
                 } else if(r1.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<AFCondition>(r2.formula));
                 } else if(r1.formula->isTriviallyFalse()){
@@ -1046,80 +1060,166 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyAnd(SimplificationContext context, Retval r1, Retval r2) {
-            if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
-                return Retval(std::make_shared<BooleanCondition>(false));
-            } else if (r1.formula->isTriviallyTrue()) {
-                return Retval(r2.formula, *r2.lps);
-            } else if (r2.formula->isTriviallyTrue()) {
-                return Retval(r1.formula, *r1.lps);
+        Retval simplifyAnd(SimplificationContext& context, Retval&& r1, Retval&& r2) {
+            try{
+                if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
+                    return Retval(BooleanCondition::FALSE);
+                } else if (r1.formula->isTriviallyTrue()) {
+                    return std::move(r2);
+                } else if (r2.formula->isTriviallyTrue()) {
+                    return std::move(r1);
+                }
+                
+                if(!context.timeout())
+                {
+                    r1.lps.merge(r2.lps);
+                    if(!context.timeout() && !r1.lps.satisfiable(context)) {
+                        return Retval(BooleanCondition::FALSE);
+                    }
+                }
+                else
+                {
+                    r1.lps.clear();
+                    r2.lps.clear();
+                }
+                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), std::move(r1.lps)); 
             }
-            
-            LinearPrograms merged = LinearPrograms::lpsMerge(*r1.lps, *r2.lps);
-            
-            if(!context.timeout() && !merged.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
-                return Retval(std::make_shared<BooleanCondition>(false));
-            } else {
-                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), merged); 
+            catch(std::bad_alloc& e)
+            {
+                // we are out of memory, deal with it.
+                std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
+                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), 
+                        std::move(
+                                    (r1.lps.size() < r2.lps.size() 
+                                        ? r1.lps 
+                                        : r2.lps)));
             }
         }
         
-        Retval simplifyOr(Retval r1, Retval r2) {
+        Retval simplifyOr(SimplificationContext& context, Retval&& r1, Retval&& r2) {
             if(r1.formula->isTriviallyTrue() || r2.formula->isTriviallyTrue()) {
-                return Retval(std::make_shared<BooleanCondition>(true));
+                return Retval(BooleanCondition::TRUE);
             } else if (r1.formula->isTriviallyFalse()) {
-                return Retval(r2.formula, *r2.lps);
+                return std::move(r2);
             } else if (r2.formula->isTriviallyFalse()) {
-                return Retval(r1.formula, *r1.lps);
-            } else {
-                return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), 
-                        LinearPrograms::lpsUnion(*r1.lps, *r2.lps));
+                return std::move(r1);
+            } 
+            if (!context.timeout()){
+                r1.lps.makeUnion(r2.lps);
             }
+            else
+            {
+                r1.lps.clear();
+                r2.lps.clear();
+            }
+            
+            return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), std::move(r1.lps));            
         }
         
         Retval AndCondition::simplify(SimplificationContext& context) const {
-            Retval r1 = _cond1->simplify(context);
-            Retval r2 = _cond2->simplify(context);
+            if(context.timeout())
+            {
+                if(context.negated()) 
+                    return Retval(std::make_shared<NotCondition>(
+                            std::make_shared<AndCondition>(_cond1, _cond2)));
+                else                  
+                    return Retval(
+                            std::make_shared<AndCondition>(_cond1, _cond2));
+            }
+            Retval r1, r2;
+            bool succ1 = false, succ2 = false;
+            try{
+                r1 = _cond1->simplify(context);
+                succ1 = true;
+            }
+            catch (std::bad_alloc& e) {};
             
-            return context.negated() ? simplifyOr(r1, r2) : simplifyAnd(context, r1, r2);
+            // negated becomes or -- so if r1 is trivially true,
+            // or if not negated, and r1 is false -- we can short-circuit
+            if(context.negated() && r1.formula->isTriviallyTrue())    
+                return Retval(BooleanCondition::TRUE);
+            else if(!context.negated() && r1.formula->isTriviallyFalse())    
+                return Retval(BooleanCondition::FALSE);
+            
+
+            try{
+                r2 = _cond2->simplify(context);
+                succ2 = true;
+            }
+            catch (std::bad_alloc& e) {};
+            if(!succ1 && !succ2) throw std::bad_alloc();
+            else if(succ1 && !succ2) return r1;
+            else if(succ2 && !succ1) return r2;
+            else return context.negated()   ? simplifyOr(context, std::move(r1), std::move(r2)) 
+                                            : simplifyAnd(context, std::move(r1), std::move(r2));
         }
         
-        Retval OrCondition::simplify(SimplificationContext& context) const {
+        Retval OrCondition::simplify(SimplificationContext& context) const {            
+            if(context.timeout())
+            {
+                if(context.negated()) 
+                    return Retval(std::make_shared<NotCondition>(
+                            std::make_shared<OrCondition>(_cond1, _cond2)));
+                else                 
+                    return Retval(std::make_shared<OrCondition>(_cond1, _cond2));
+            }
             Retval r1 = _cond1->simplify(context);
+            // negated becomes and -- so if r1 is trivially false,
+            // or if not negated, and r1 is true -- we can short-circuit
+            if(!context.negated() && r1.formula->isTriviallyTrue()) 
+                return Retval(BooleanCondition::TRUE);
+            else if(context.negated() && r1.formula->isTriviallyFalse()) 
+                return Retval(BooleanCondition::FALSE);
+
             Retval r2 = _cond2->simplify(context);
             
-            return context.negated() ? simplifyAnd(context, r1, r2) : simplifyOr(r1, r2);
+            return context.negated() ?  simplifyAnd(context, std::move(r1), std::move(r2)) : 
+                                        simplifyOr(context, std::move(r1), std::move(r2));
         }
         
         Retval EqualCondition::simplify(SimplificationContext& context) const {
+            
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
-            
-            LinearPrograms lps;
-            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
-                if ((m1.isConstant() && m2.isConstant()) || (m1-m2).isConstant()) {
-                    return Retval(std::make_shared<BooleanCondition>(
-                        context.negated() ? (m1.constant != m2.constant) : (m1.constant == m2.constant)));
+
+            LinearPrograms lps, neglps;
+            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
+                if ((m1.isZero() && m2.isZero()) || m1.substrationIsZero(m2)) {
+                    return Retval(BooleanCondition::getShared(
+                        context.negated() ? (m1.constant() != m2.constant()) : (m1.constant() == m2.constant())));
                 } else {
                     if (context.negated()) {
-                        lps.add(LinearProgram(Equation(m1, m2, ">")));
-                        lps.add(LinearProgram(Equation(m1, m2, "<")));
+                        int constant = m2.constant() - m1.constant();
+                        m1 -= m2;
+                        m2 = m1;
+                        lps.add((Equation(std::move(m1), constant, Equation::OP_GT)));
+                        lps.add((Equation(std::move(m2), constant, Equation::OP_LT)));
+                        
+                        neglps.add((Equation(std::move(m1), constant, Equation::OP_EQ)));
                     }
                     else {
-                        lps.add(LinearProgram(Equation(m1, m2, "==")));
+                        int constant = m2.constant() - m1.constant();
+                        m1 -= m2;
+                        m2 = m1;
+                        lps.add((Equation(std::move(m1), constant, Equation::OP_EQ)));
+                        
+                        neglps.add((Equation(std::move(m1), constant, Equation::OP_GT)));
+                        neglps.add((Equation(std::move(m2), constant, Equation::OP_LT)));
                     }
                 }
             } else {
                 lps.add(LinearProgram());
             }
             
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
-                return Retval(std::make_shared<BooleanCondition>(false));
+            if(!neglps.satisfiable(context)){
+                return Retval(BooleanCondition::TRUE);
+            } else if (!lps.satisfiable(context)) {
+                return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<NotEqualCondition>(_expr1, _expr2), lps);
+                    return Retval(std::make_shared<NotEqualCondition>(_expr1, _expr2), std::move(lps));
                 } else {
-                    return Retval(std::make_shared<EqualCondition>(_expr1, _expr2), lps);
+                    return Retval(std::make_shared<EqualCondition>(_expr1, _expr2), std::move(lps));
                 }                         
             }
         }
@@ -1128,31 +1228,44 @@ namespace PetriEngine {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
-            LinearPrograms lps;
-            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
-                if ((m1.isConstant() && m2.isConstant()) || (m1-m2).isConstant()) {
+            LinearPrograms lps, neglps;
+            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
+                if ((m1.isZero() && m2.isZero()) || m1.substrationIsZero(m2)) {
                     return Retval(std::make_shared<BooleanCondition>(
-                        context.negated() ? (m1.constant == m2.constant) : (m1.constant != m2.constant)));
+                        context.negated() ? (m1.constant() == m2.constant()) : (m1.constant() != m2.constant())));
                 } else{ 
                     if (context.negated()) {
-                        lps.add(LinearProgram(Equation(m1, m2, "==")));
+                        int constant = m2.constant() - m1.constant();
+                        m1 -= m2;
+                        m2 = m1;
+                        lps.add((Equation(std::move(m1), constant, Equation::OP_EQ)));
+                        
+                        neglps.add((Equation(std::move(m1), constant, Equation::OP_GT)));
+                        neglps.add((Equation(std::move(m2), constant, Equation::OP_LT)));
                     }
                     else {
-                        lps.add(LinearProgram(Equation(m1, m2, ">")));
-                        lps.add(LinearProgram(Equation(m1, m2, "<")));
+                        int constant = m2.constant() - m1.constant();
+                        m1 -= m2;
+                        m2 = m1;
+                        lps.add((Equation(std::move(m1), constant, Equation::OP_GT)));
+                        lps.add((Equation(std::move(m2), constant, Equation::OP_LT)));
+                        
+                        neglps.add((Equation(std::move(m1), constant, Equation::OP_EQ)));
                     }
                 }
             } else {
                 lps.add(LinearProgram());
             }
             
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
-                return Retval(std::make_shared<BooleanCondition>(false));
+            if(!neglps.satisfiable(context)){
+                return Retval(BooleanCondition::TRUE);
+            } else if (!lps.satisfiable(context)) {
+                return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<EqualCondition>(_expr1, _expr2), lps);
+                    return Retval(std::make_shared<EqualCondition>(_expr1, _expr2), std::move(lps));
                 } else {
-                    return Retval(std::make_shared<NotEqualCondition>(_expr1, _expr2), lps);
+                    return Retval(std::make_shared<NotEqualCondition>(_expr1, _expr2), std::move(lps));
                 }                         
             }
         }
@@ -1161,26 +1274,32 @@ namespace PetriEngine {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
-            LinearPrograms lps;
-            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+            LinearPrograms lps, neglps;
+            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 >= m2 : m1 < m2;
-                if(eval != Trivial::Indeterminate)
-                    return Retval(std::make_shared<BooleanCondition>(eval == Trivial::True));
-                
-                // if no trivial case
-                else lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? ">=" : "<"))));
+                if(eval != Trivial::Indeterminate) {
+                    return Retval(BooleanCondition::getShared(eval == Trivial::True));
+                } else { // if no trivial case
+                    int constant = m2.constant() - m1.constant();
+                    m1 -= m2;
+                    m2 = m1;
+                    lps.add((Equation(std::move(m1), constant, (context.negated() ? Equation::OP_GE : Equation::OP_LT))));
+                    neglps.add((Equation(std::move(m2), constant, (context.negated() ? Equation::OP_LT : Equation::OP_GE))));
+                }
             } else {
                 lps.add(LinearProgram());
             }
             
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
-                return Retval(std::make_shared<BooleanCondition>(false));
+            if(!neglps.satisfiable(context)){
+                return Retval(BooleanCondition::TRUE);
+            } else if (!lps.satisfiable(context)) {
+                return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), lps);
+                    return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), std::move(lps));
                 } else {
-                    return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), lps);
+                    return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), std::move(lps));
                 }                         
             }
         }        
@@ -1190,28 +1309,31 @@ namespace PetriEngine {
             Member m2 = _expr2->constraint(context);
             
             LinearPrograms lps, neglps;
-            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 > m2 : m1 <= m2;
                 if(eval != Trivial::Indeterminate) {
-                    return Retval(std::make_shared<BooleanCondition>(eval == Trivial::True));
+                    return Retval(BooleanCondition::getShared(eval == Trivial::True));
                 } else { // if no trivial case
-                    lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? ">" : "<="))));
-                    neglps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "<=" : ">"))));
+                    int constant = m2.constant() - m1.constant();
+                    m1 -= m2;
+                    m2 = m1;
+                    lps.add((Equation(std::move(m1), constant, (context.negated() ? Equation::OP_GT : Equation::OP_LE))));
+                    neglps.add((Equation(std::move(m2), constant, (context.negated() ? Equation::OP_LE : Equation::OP_GT))));
                 }
             } else {
                 lps.add(LinearProgram());
             }
 
-            if(!context.timeout() && !neglps.satisfiable(context.net(), context.marking(), context.getLpTimeout())){
-                return Retval(std::make_shared<BooleanCondition>(true));
-            } else if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
-                return Retval(std::make_shared<BooleanCondition>(false));
+            if(!neglps.satisfiable(context)){
+                return Retval(BooleanCondition::TRUE);
+            } else if (!lps.satisfiable(context)) {
+                return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), lps);
+                    return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), std::move(lps));
                 } else {
-                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), lps);
+                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), std::move(lps));
                 }                         
             }
         }
@@ -1221,28 +1343,31 @@ namespace PetriEngine {
             Member m2 = _expr2->constraint(context);
             
             LinearPrograms lps, neglps;
-            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 <= m2 : m1 > m2;
                 if(eval != Trivial::Indeterminate) {
-                    return Retval(std::make_shared<BooleanCondition>(eval == Trivial::True));
+                    return Retval(BooleanCondition::getShared(eval == Trivial::True));
                 } else { // if no trivial case
-                    lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "<=" : ">"))));
-                    neglps.add(LinearProgram(Equation(m1, m2, (context.negated() ? ">" : "<="))));
+                    int constant = m2.constant() - m1.constant();
+                    m1 -= m2;
+                    m2 = m1;
+                    lps.add((Equation(std::move(m1), constant, (context.negated() ? Equation::OP_LE : Equation::OP_GT))));
+                    neglps.add((Equation(std::move(m2), constant, (context.negated() ? Equation::OP_GT : Equation::OP_LE))));
                 }
             } else {
                 lps.add(LinearProgram());
             }
             
-            if(!context.timeout() && !neglps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
-                return Retval(std::make_shared<BooleanCondition>(true));
-            }else if(!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
-                return Retval(std::make_shared<BooleanCondition>(false));
+            if(!neglps.satisfiable(context)) {
+                return Retval(BooleanCondition::TRUE);
+            }else if(!lps.satisfiable(context)) {
+                return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), lps);
+                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), std::move(lps));
                 } else {
-                    return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), lps);
+                    return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), std::move(lps));
                 }                         
             }
         }
@@ -1251,27 +1376,32 @@ namespace PetriEngine {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
-            LinearPrograms lps;
-            if (!context.timeout() && m1.canAnalyze && m2.canAnalyze) {
+            LinearPrograms lps, neglps;
+            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 < m2 : m1 >= m2;
-                if(eval != Trivial::Indeterminate)
-                    return Retval(std::make_shared<BooleanCondition>(eval == Trivial::True));
-                
-                // if no trivial case
-                else lps.add(LinearProgram(Equation(m1, m2, (context.negated() ? "<" : ">="))));
-                
+                if(eval != Trivial::Indeterminate) {
+                    return Retval(BooleanCondition::getShared(eval == Trivial::True));
+                } else { // if no trivial case
+                    int constant = m2.constant() - m1.constant();
+                    m1 -= m2;
+                    m2 = m1;
+                    lps.add((Equation(std::move(m1), constant, (context.negated() ? Equation::OP_LT : Equation::OP_GE))));
+                    neglps.add((Equation(std::move(m2), constant, (context.negated() ? Equation::OP_GE : Equation::OP_LT))));
+                }
             } else {
                 lps.add(LinearProgram());
             }
             
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
-                return Retval(std::make_shared<BooleanCondition>(false));
+            if(!neglps.satisfiable(context)) {
+                return Retval(BooleanCondition::TRUE);
+            }else if (!lps.satisfiable(context)) {
+                return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), lps);
+                    return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), std::move(lps));
                 } else {
-                    return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), lps);
+                    return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), std::move(lps));
                 }                         
             }
         }
@@ -1285,17 +1415,17 @@ namespace PetriEngine {
         
         Retval BooleanCondition::simplify(SimplificationContext& context) const {
             if (context.negated()) {
-                return Retval(std::make_shared<BooleanCondition>(!_value));
+                return Retval(getShared(!_value));
             } else {
-                return Retval(std::make_shared<BooleanCondition>(_value));
+                return Retval(getShared(_value));
             }
         }
         
         Retval DeadlockCondition::simplify(SimplificationContext& context) const {
             if (context.negated()) {
-                return Retval(std::make_shared<NotCondition>(std::make_shared<DeadlockCondition>()));
+                return Retval(std::make_shared<NotCondition>(DeadlockCondition::DEADLOCK));
             } else {
-                return Retval(std::make_shared<DeadlockCondition>());
+                return Retval(DeadlockCondition::DEADLOCK);
             }
         }
         
@@ -1537,6 +1667,7 @@ namespace PetriEngine {
         
         void EqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // equal
+                if(_expr1->getEval() == _expr2->getEval()) { return; }
                 if(_expr1->getEval() > _expr2->getEval()){
                     _expr1->decr(generator);
                     _expr2->incr(generator);
@@ -1545,6 +1676,7 @@ namespace PetriEngine {
                     _expr2->decr(generator);
                 }   
             } else {                    // not equal
+                if(_expr1->getEval() != _expr2->getEval()) { return; }
                 _expr1->incr(generator);
                 _expr2->decr(generator);
                 _expr1->incr(generator);
@@ -1554,11 +1686,13 @@ namespace PetriEngine {
         
         void NotEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // not equal
+                if(_expr1->getEval() != _expr2->getEval()) { return; }
                 _expr1->incr(generator);
                 _expr2->decr(generator);
                 _expr1->incr(generator);
                 _expr2->decr(generator);
             } else {                    // equal
+                if(_expr1->getEval() == _expr2->getEval()) { return; }
                 if(_expr1->getEval() > _expr2->getEval()){
                     _expr1->decr(generator);
                     _expr2->incr(generator);
@@ -1569,11 +1703,13 @@ namespace PetriEngine {
             }
         }
         
-        void LessThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+        void LessThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {                
             if(!negated){               // less than
+                if(_expr1->getEval() < _expr2->getEval()) { return; }
                 _expr1->decr(generator);
                 _expr2->incr(generator);
             } else {                    // greater than or equal
+                if(_expr1->getEval() >= _expr2->getEval()) { return; }
                 _expr1->incr(generator);
                 _expr2->decr(generator);
             }
@@ -1581,9 +1717,11 @@ namespace PetriEngine {
         
         void LessThanOrEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // less than or equal
+                if(_expr1->getEval() <= _expr2->getEval()) { return; }
                 _expr1->decr(generator);
                 _expr2->incr(generator);
             } else {                    // greater than
+                if(_expr1->getEval() > _expr2->getEval()) { return; }
                 _expr1->incr(generator);
                 _expr2->decr(generator);
             }
@@ -1591,9 +1729,11 @@ namespace PetriEngine {
         
         void GreaterThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // greater than
+                if(_expr1->getEval() > _expr2->getEval()) { return; }
                 _expr1->incr(generator);
                 _expr2->decr(generator);
             } else {                    // less than or equal
+                if(_expr1->getEval() <= _expr2->getEval()) { return; }
                 _expr1->decr(generator);
                 _expr2->incr(generator);
             }
@@ -1601,9 +1741,11 @@ namespace PetriEngine {
         
         void GreaterThanOrEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // greater than or equal
+                if(_expr1->getEval() >= _expr2->getEval()) { return; }
                 _expr1->incr(generator);
                 _expr2->decr(generator); 
             } else {                    // less than
+                if(_expr1->getEval() < _expr2->getEval()) { return; }
                 _expr1->decr(generator);
                 _expr2->incr(generator);
             }

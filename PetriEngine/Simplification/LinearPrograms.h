@@ -1,61 +1,128 @@
 #ifndef LINEARPROGRAMS_H
 #define LINEARPROGRAMS_H
 #include "LinearProgram.h"
+#include "PetriEngine/PQL/Contexts.h"
 #include "../PetriNet.h"
         
 namespace PetriEngine {
     namespace Simplification {
 
         class LinearPrograms {
+        private:
+            std::vector<LinearProgram> lps;
+            bool hasEmpty = false;
         public:
             LinearPrograms(){
             }
-            LinearPrograms(const LinearProgram& lp){
-                add(lp);
+                        
+            LinearPrograms(LinearPrograms&& other) 
+            : lps(std::move(other.lps)), hasEmpty(other.hasEmpty)
+            {
+                
             }
+            
+            LinearPrograms& operator = (LinearPrograms&& other)
+            {
+                lps = std::move(other.lps);
+                hasEmpty = other.hasEmpty;
+                return *this;
+            }
+            
             virtual ~LinearPrograms(){
             }
-            std::vector<LinearProgram> lps;
-
-            bool satisfiable(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout) {
+            
+            bool satisfiable(const PQL::SimplificationContext context) {
+                if(hasEmpty) return true;
                 for(uint32_t i = 0; i < lps.size(); i++){
-                    if(!lps[i].isImpossible(net, m0, timeout)){
+                    if(context.timeout()) return true;
+                    if(!lps[i].isImpossible(context.net(), context.marking(), context.getLpTimeout())){
                         return true;
                     }
                 }
                 return false;
             }
-
-            void add(const LinearProgram& lp){
-                lps.push_back(lp);
+            
+            size_t size() const {
+                return lps.size();
             }
 
-            static LinearPrograms lpsMerge(LinearPrograms& lps1, LinearPrograms& lps2){
-                if (lps1.lps.size() == 0) {
-                    return lps2;
+            void add(const LinearProgram&& lp){
+                if(lp.size() == 0)
+                {
+                    hasEmpty = true;
+                }
+                else
+                {
+                    lps.push_back(std::move(lp));
+                }
+            }
+
+            void add(Equation&& eq){
+                lps.emplace_back(std::move(eq));
+            }
+            
+            /**
+             * Merges two linear programs, this invalidates lps2 to restrict 
+             * temporary memory-overhead. 
+             * @param lps2
+             */
+            void merge(LinearPrograms& lps2){
+                if (lps.size() == 0) {
+                    lps.swap(lps2.lps);
+                    return;
                 }
                 else if (lps2.lps.size() == 0) {
-                    return lps1;
+                    return;
                 }
                 
-                LinearPrograms res;
-                for(LinearProgram& lp1 : lps1.lps){        
+                std::vector<LinearProgram> merged;
+                merged.reserve(lps.size() * lps2.lps.size());
+                for(LinearProgram& lp1 : lps){        
                     for(LinearProgram& lp2 : lps2.lps){
-                        res.add(LinearProgram::lpUnion(lp1, lp2));
+                        merged.push_back(LinearProgram::lpUnion(lp1, lp2));
                     }   
                 }
-                return res;
+                if(lps2.hasEmpty)
+                {
+                    size_t osize = merged.size();
+                    merged.resize(merged.size() + lps.size());
+                    for(size_t i = 0; i < lps.size(); ++i) 
+                        merged[osize + i].swap(lps[i]);
+                }
+                if(hasEmpty)
+                {
+                    size_t osize = merged.size();
+                    merged.resize(merged.size() + lps2.size());
+                    for(size_t i = 0; i < lps2.size(); ++i) 
+                        merged[osize + i].swap(lps2.lps[i]);
+                }
+                lps.swap(merged);
+                lps2.clear();
+                hasEmpty = hasEmpty && lps2.hasEmpty;
             }
+            
 
-            static LinearPrograms lpsUnion(LinearPrograms& lps1, LinearPrograms& lps2){
-                LinearPrograms res;
-                for(LinearProgram& lp : lps1.lps){        
-                    res.add(lp);
+            /**
+             * Unions two linear programs, this invalidates lps2 to restrict 
+             * temporary memory-overhead. 
+             * @param lps2
+             */
+            void makeUnion(LinearPrograms& lps2)
+            {
+                // move data, dont copy!
+                size_t osize = lps.size();
+                lps.resize(lps.size() + lps2.lps.size());
+                for(size_t i = 0; i < lps2.size(); ++i)
+                {
+                    lps[osize + i].swap(lps2.lps[i]);
                 }
-                for(LinearProgram& lp : lps2.lps){        
-                    res.add(lp);
-                }
-                return res;
+                lps2.clear();
+                hasEmpty = hasEmpty || lps2.hasEmpty;
+            }
+            
+            void clear()
+            {
+                lps.clear();
             }
         };
     }
