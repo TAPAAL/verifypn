@@ -20,10 +20,14 @@
 #ifndef EXPRESSIONS_H
 #define EXPRESSIONS_H
 
-#include "PQL.h"
-#include "Contexts.h"
+
 #include <iostream>
 #include <fstream>
+#include "PQL.h"
+#include "Contexts.h"
+#include "PetriEngine/Simplification/Member.h"
+#include "PetriEngine/Simplification/LinearPrograms.h"
+#include "PetriEngine/Simplification/Retval.h"
 
 using namespace PetriEngine::Simplification;
 
@@ -46,6 +50,9 @@ namespace PetriEngine {
             bool pfree() const;
             int evaluate(const EvaluationContext& context) const;
             int evalAndSet(const EvaluationContext& context);
+            int formulaSize() const{
+                return _expr1->formulaSize() + _expr2->formulaSize() + 1;
+            }
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
             virtual std::string toXML(uint32_t tabs, bool tokencount = false) const = 0;
@@ -126,6 +133,9 @@ namespace PetriEngine {
             std::string toXML(uint32_t tabs, bool tokencount = false) const;
             void incr(ReducingSuccessorGenerator& generator) const;
             void decr(ReducingSuccessorGenerator& generator) const;
+            int formulaSize() const{
+                return _expr->formulaSize() + 1;
+            }
         private:
             Expr_ptr _expr;
         };
@@ -146,7 +156,9 @@ namespace PetriEngine {
             std::string toXML(uint32_t tabs, bool tokencount = false) const;
             void incr(ReducingSuccessorGenerator& generator) const;
             void decr(ReducingSuccessorGenerator& generator) const;
-
+            int formulaSize() const{
+                return 1;
+            }
             int value() const {
                 return _value;
             };
@@ -172,7 +184,9 @@ namespace PetriEngine {
             std::string toXML(uint32_t tabs, bool tokencount = false) const;
             void incr(ReducingSuccessorGenerator& generator) const;
             void decr(ReducingSuccessorGenerator& generator) const;
-
+            int formulaSize() const{
+                return 1;
+            }
             /** Offset in marking or valuation */
             int offset() const {
                 return _offsetInMarking;
@@ -191,6 +205,9 @@ namespace PetriEngine {
         public:
             QuantifierCondition(const Condition_ptr cond) {
                 _cond = cond;
+            }
+            int formulaSize() const{
+                return _cond->formulaSize() + 1;
             }
             
             void analyze(AnalysisContext& context);
@@ -290,6 +307,9 @@ namespace PetriEngine {
                 _cond1 = cond1;
                 _cond2 = cond2;
             }
+            int formulaSize() const{
+                return _cond1->formulaSize() + _cond2->formulaSize() + 1;
+            }
             
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
@@ -340,6 +360,9 @@ namespace PetriEngine {
             LogicalCondition(const Condition_ptr cond1, const Condition_ptr cond2) {
                 _cond1 = cond1;
                 _cond2 = cond2;
+            }
+            int formulaSize() const{
+                return _cond1->formulaSize() + _cond2->formulaSize() + 1;
             }
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
@@ -404,6 +427,9 @@ namespace PetriEngine {
             CompareCondition(const Expr_ptr expr1, const Expr_ptr expr2) {
                 _expr1 = expr1;
                 _expr2 = expr2;
+            }
+            int formulaSize() const{
+                return _expr1->formulaSize() + _expr2->formulaSize() + 1;
             }
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
@@ -542,6 +568,9 @@ namespace PetriEngine {
             NotCondition(const Condition_ptr cond) {
                 _cond = cond;
             }
+            int formulaSize() const{
+                return _cond->formulaSize(); // do not count the not node
+            }
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
             bool evalAndSet(const EvaluationContext& context);
@@ -570,6 +599,9 @@ namespace PetriEngine {
                     trivial = 2;
                 }
             }
+            int formulaSize() const{
+                return 1;
+            }
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
             bool evalAndSet(const EvaluationContext& context);
@@ -594,6 +626,9 @@ namespace PetriEngine {
         public:
 
             DeadlockCondition() {
+            }
+            int formulaSize() const{
+                return 1;
             }
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;

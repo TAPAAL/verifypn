@@ -231,7 +231,7 @@ namespace PetriEngine {
         bool continueReductions = false;
         const size_t numberoftransitions = parent->numberOfTransitions();
         for (uint32_t t = 0; t < numberoftransitions; t++) {
-
+            if(hasTimedout()) return false;
             Transition& trans = getTransition(t);
                         
             // we have already removed
@@ -327,7 +327,7 @@ namespace PetriEngine {
         bool continueReductions = false;
         const size_t numberofplaces = parent->numberOfPlaces();
         for (uint32_t p = 0; p < numberofplaces; p++) {
-            
+            if(hasTimedout()) return false;            
             Place& place = parent->_places[p];
             
             if(place.skip) continue;    // already removed    
@@ -453,6 +453,7 @@ namespace PetriEngine {
         
         for(uint32_t pouter = 0; pouter < numberofplaces; ++pouter)
         {                        
+            if(hasTimedout()) return false;
             if(parent->_places[pouter].skip) continue;
             
             // C4. No inhib
@@ -604,6 +605,7 @@ namespace PetriEngine {
         bool continueReductions = false;
         const size_t ntrans = parent->numberOfTransitions();
         for (uint32_t touter = 0; touter < ntrans; ++touter) {
+            if(hasTimedout()) return false;
             Transition& tout = getTransition(touter);
             if (tout.skip) continue;
 
@@ -705,6 +707,7 @@ namespace PetriEngine {
         const size_t numberofplaces = parent->numberOfPlaces();
         for(uint32_t p = 0; p < numberofplaces; ++p)
         {
+            if(hasTimedout()) return false;
             Place& place = parent->_places[p];
             if(place.skip) continue;
             if(place.inhib) continue;
@@ -756,10 +759,12 @@ namespace PetriEngine {
     }
 
 
-    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace) {
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout) {
+        this->_timeout = timeout;
+        _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
         this->reconstructTrace = reconstructTrace;
-        if (enablereduction == 1) { // in the aggresive reduction all four rules are used as long as they remove something
+        if (enablereduction == 1) { // in the aggressive reduction all four rules are used as long as they remove something
             bool changed = false;
             do
             {
@@ -768,15 +773,17 @@ namespace PetriEngine {
                     changed |= ReducebyRuleA(context.getQueryPlaceCount());
                     changed |= ReducebyRuleB(context.getQueryPlaceCount());
                     changed |= ReducebyRuleE(context.getQueryPlaceCount());
-                } while(changed);
+                } while(changed && !hasTimedout());
                 // RuleC and RuleD are expensive, so wait with those till nothing else changes
                 changed |= ReducebyRuleD(context.getQueryPlaceCount());
                 changed |= ReducebyRuleC(context.getQueryPlaceCount());
             } while(changed);
 
         } else if (enablereduction == 2) { // for k-boundedness checking only rules A and D are applicable
-            while (ReducebyRuleA(context.getQueryPlaceCount()) ||
-                    ReducebyRuleD(context.getQueryPlaceCount())) {
+            while ( (
+                        ReducebyRuleA(context.getQueryPlaceCount()) ||
+                        ReducebyRuleD(context.getQueryPlaceCount())
+                    ) && !hasTimedout()) {
             }
         }
     }

@@ -1,6 +1,7 @@
 #ifndef LINEARPROGRAMS_H
 #define LINEARPROGRAMS_H
 #include "LinearProgram.h"
+#include "PetriEngine/PQL/Contexts.h"
 #include "../PetriNet.h"
         
 namespace PetriEngine {
@@ -30,10 +31,11 @@ namespace PetriEngine {
             virtual ~LinearPrograms(){
             }
             
-            bool satisfiable(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout) {
+            bool satisfiable(const PQL::SimplificationContext context) {
                 if(hasEmpty) return true;
                 for(uint32_t i = 0; i < lps.size(); i++){
-                    if(!lps[i].isImpossible(net, m0, timeout)){
+                    if(context.timeout()) return true;
+                    if(!lps[i].isImpossible(context.net(), context.marking(), context.getLpTimeout())){
                         return true;
                     }
                 }

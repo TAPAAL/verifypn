@@ -55,6 +55,9 @@
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
 #include "PetriEngine/STSolver.h"
+#include "PetriEngine/Simplification/Member.h"
+#include "PetriEngine/Simplification/LinearPrograms.h"
+#include "PetriEngine/Simplification/Retval.h"
 
 #include "CTL/CTLEngine.h"
 
@@ -179,6 +182,15 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid reduction argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        } else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--reduction-timeout") == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%d", &options.reductionTimeout) != 1) {
+                fprintf(stderr, "Argument Error: Invalid reduction timeout argument \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
         } else if(strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--partial-order-reduction") == 0) {
             options.stubbornreduction = false;
         } else if(strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--siphon-trap") == 0) {
@@ -225,6 +237,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 0  disabled\n"
                     "                                     - 1  aggressive reduction (default)\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
+                    "  -d, --reduction-timeout            Timeout for structural reductions in seconds (default 60)\n"
                     "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
                     "                                     write -q 0 to disable query reduction\n"
                     "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
@@ -448,6 +461,16 @@ void printStats(PetriNetBuilder& builder, options_t& options)
 {
     if (options.printstatistics) {
         if (options.enablereduction != 0) {
+
+            std::cout << "Size of net before structural reductions: " <<
+                    builder.numberOfPlaces() << " places, " <<
+                    builder.numberOfTransitions() << " transitions" << std::endl;             
+            std::cout << "Size of net after structural reductions: " <<
+                    builder.numberOfPlaces() - builder.RemovedPlaces() << " places, " <<
+                    builder.numberOfTransitions() - builder.RemovedTransitions() << " transitions" << std::endl;
+            std::cout << "Structural reduction finished after " << builder.getReductionTime() <<
+                    " seconds" << std::endl;
+            
             std::cout   << "\nNet reduction is enabled.\n"
                         << "Removed transitions: " << builder.RemovedTransitions() << std::endl
                         << "Removed places: " << builder.RemovedPlaces() << std::endl
@@ -552,6 +575,7 @@ int main(int argc, char* argv[]) {
             SimplificationContext simplificationContext(qm0, qnet, options.queryReductionTimeout, 
                     options.lpsolveTimeout);
             
+            int preSize=queries[i]->formulaSize();
             if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
 
             try {
@@ -567,6 +591,10 @@ int main(int argc, char* argv[]) {
 
             if(options.printstatistics){fprintf(stdout, "Query after reduction:  %s\n", queries[i]->toString().c_str());}
             if(options.printstatistics){
+                int postSize=queries[i]->formulaSize();
+                double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
+                
+                fprintf(stdout, "Query size reduced from %d to %d nodes (%.2f percent reduction).\n", preSize, postSize, redPerc);
                 if(simplificationContext.timeout()){
                     fprintf(stdout, "Query reduction reached timeout.\n");
                 } else {
@@ -647,9 +675,12 @@ int main(int argc, char* argv[]) {
         
     if (options.enablereduction == 1 || options.enablereduction == 2) {
         // Compute how many times each place appears in the query
-        builder.reduce(queries, results, options.enablereduction, options.trace);
+        builder.startTimer();
+        builder.reduce(queries, results, options.enablereduction, options.trace, options.reductionTimeout);
         printer.setReducer(builder.getReducer());        
     }
+    
+    printStats(builder, options);
     
     PetriNet* net = builder.makePetriNet();
     
@@ -697,7 +728,6 @@ int main(int argc, char* argv[]) {
             options.printstatistics, 
             options.trace);
    
-    printStats(builder, options);
     delete net;
     
     return 0;
