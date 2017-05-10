@@ -1133,8 +1133,8 @@ namespace PetriEngine {
         Retval EqualCondition::simplify(SimplificationContext& context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
-            
-            LinearPrograms lps;
+
+            LinearPrograms lps, neglps;
             if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 if ((m1.isZero() && m2.isZero()) || m1.substrationIsZero(m2)) {
                     return Retval(BooleanCondition::getShared(
@@ -1146,18 +1146,26 @@ namespace PetriEngine {
                         m2 = m1;
                         lps.add((Equation(std::move(m1), constant, Equation::OP_GT)));
                         lps.add((Equation(std::move(m2), constant, Equation::OP_LT)));
+                        
+                        neglps.add((Equation(std::move(m1), constant, Equation::OP_EQ)));
                     }
                     else {
                         int constant = m2.constant() - m1.constant();
                         m1 -= m2;
-                        lps.add((Equation(m1, constant, Equation::OP_EQ)));
+                        m2 = m1;
+                        lps.add((Equation(std::move(m1), constant, Equation::OP_EQ)));
+                        
+                        neglps.add((Equation(std::move(m1), constant, Equation::OP_GT)));
+                        neglps.add((Equation(std::move(m2), constant, Equation::OP_LT)));
                     }
                 }
             } else {
                 lps.add(LinearProgram());
             }
             
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+            if(!context.timeout() && !neglps.satisfiable(context.net(), context.marking(), context.getLpTimeout())){
+                return Retval(BooleanCondition::TRUE);
+            } else if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                 return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
@@ -1172,7 +1180,7 @@ namespace PetriEngine {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
-            LinearPrograms lps;
+            LinearPrograms lps, neglps;
             if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 if ((m1.isZero() && m2.isZero()) || m1.substrationIsZero(m2)) {
                     return Retval(std::make_shared<BooleanCondition>(
@@ -1181,7 +1189,11 @@ namespace PetriEngine {
                     if (context.negated()) {
                         int constant = m2.constant() - m1.constant();
                         m1 -= m2;
+                        m2 = m1;
                         lps.add((Equation(std::move(m1), constant, Equation::OP_EQ)));
+                        
+                        neglps.add((Equation(std::move(m1), constant, Equation::OP_GT)));
+                        neglps.add((Equation(std::move(m2), constant, Equation::OP_LT)));
                     }
                     else {
                         int constant = m2.constant() - m1.constant();
@@ -1189,13 +1201,17 @@ namespace PetriEngine {
                         m2 = m1;
                         lps.add((Equation(std::move(m1), constant, Equation::OP_GT)));
                         lps.add((Equation(std::move(m2), constant, Equation::OP_LT)));
+                        
+                        neglps.add((Equation(std::move(m1), constant, Equation::OP_EQ)));
                     }
                 }
             } else {
                 lps.add(LinearProgram());
             }
             
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+            if(!context.timeout() && !neglps.satisfiable(context.net(), context.marking(), context.getLpTimeout())){
+                return Retval(BooleanCondition::TRUE);
+            } else if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                 return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
@@ -1210,26 +1226,26 @@ namespace PetriEngine {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
-            LinearPrograms lps;
+            LinearPrograms lps, neglps;
             if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 >= m2 : m1 < m2;
-                if(eval != Trivial::Indeterminate)
-                {
+                if(eval != Trivial::Indeterminate) {
                     return Retval(BooleanCondition::getShared(eval == Trivial::True));
-                }
-                // if no trivial case
-                else 
-                {
+                } else { // if no trivial case
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
+                    m2 = m1;
                     lps.add((Equation(std::move(m1), constant, (context.negated() ? Equation::OP_GE : Equation::OP_LT))));
+                    neglps.add((Equation(std::move(m2), constant, (context.negated() ? Equation::OP_LT : Equation::OP_GE))));
                 }
             } else {
                 lps.add(LinearProgram());
             }
-            
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+              
+            if(!context.timeout() && !neglps.satisfiable(context.net(), context.marking(), context.getLpTimeout())){
+                return Retval(BooleanCondition::TRUE);
+            } else if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                 return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
@@ -1312,28 +1328,26 @@ namespace PetriEngine {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
-            LinearPrograms lps;
+            LinearPrograms lps, neglps;
             if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 < m2 : m1 >= m2;
-                if(eval != Trivial::Indeterminate)
-                {
+                if(eval != Trivial::Indeterminate) {
                     return Retval(BooleanCondition::getShared(eval == Trivial::True));
-                }
-                // if no trivial case
-                else 
-                {
+                } else { // if no trivial case
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
+                    m2 = m1;
                     lps.add((Equation(std::move(m1), constant, (context.negated() ? Equation::OP_LT : Equation::OP_GE))));
+                    neglps.add((Equation(std::move(m2), constant, (context.negated() ? Equation::OP_GE : Equation::OP_LT))));
                 }
-                
             } else {
                 lps.add(LinearProgram());
             }
             
-            if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) 
-            {
+            if(!context.timeout() && !neglps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
+                return Retval(BooleanCondition::TRUE);
+            }else if (!context.timeout() && !lps.satisfiable(context.net(), context.marking(), context.getLpTimeout())) {
                 return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {

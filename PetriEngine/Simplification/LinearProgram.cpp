@@ -81,9 +81,11 @@ namespace PetriEngine {
                         continue;
                 }
                 memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
-                for (size_t t = 1; t < nCol+1; t++) {
-                    assert((t - 1) < eq->row.size());
-                    row[t] = (REAL)eq->row[t - 1]; // first index is for lp-solve.
+                if(eq->row.size() > 0){
+                    for (size_t t = 1; t < nCol+1; t++) {
+                        assert((t - 1) < eq->row.size());
+                        row[t] = (REAL)eq->row[t - 1]; // first index is for lp-solve.
+                    }
                 }
                 
                 set_row(lp, rowno, row.data());
@@ -112,6 +114,7 @@ namespace PetriEngine {
             set_presolve(lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(lp));
 //            write_LP(lp, stdout);
             int result = solve(lp);
+            
             delete_lp(lp);
 
             if (result == TIMEOUT) std::cout << "note: lpsolve timeout" << std::endl;
