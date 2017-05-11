@@ -23,11 +23,15 @@ namespace PetriEngine {
         // Approximating depth to 10 for fewer but faster answers. 
         // Otherwise, this should at most be the number of places.
         _siphonDepth = 10; 
+
         _m0 = _net._initialMarking;
         _nPlaceVariables = (_net._nplaces * (_siphonDepth + 2));
         uint32_t nPostTransVariables = (_net._ntransitions * (_siphonDepth + 1));
         _nCol = _nPlaceVariables + nPostTransVariables;
-        
+        _analysisTime=0;
+        _buildTime=-1;
+        _lpBuilt=false;
+        _solved=false;
         constructPrePost(); // TODO: Refactor this out...
     }
 
@@ -146,7 +150,7 @@ namespace PetriEngine {
         }        
         if(_ret == 0){
             _lp = make_lp(0, _nCol);
-            if(_lp == NULL) { std::cout<<"lp_solve: Could not construct new model ..."<<std::endl; _ret=2; }
+            if(_lp == NULL) { std::cout<<"Could not construct new model ..."<<std::endl; return NUMFAILURE; }
         }
         if(_ret == 0){           
             
@@ -161,8 +165,11 @@ namespace PetriEngine {
             // Create constraints
             set_add_rowmode(_lp, TRUE);  
             CreateSiphonConstraints();          // ST formula step 1
+            if(timeout()){ return TIMEOUT; }
             for(uint32_t i=0; i<=_siphonDepth; i++){ 
+                if(timeout()){ return TIMEOUT; }
                 CreateStepConstraints(i);       // ST formula maximal trap
+                if(timeout()){ return TIMEOUT; }
                 CreatePostVarDefinitions(i);
             }
 
@@ -170,6 +177,7 @@ namespace PetriEngine {
             
             // Bounds
             // Ensures the no-trap constraints
+            if(timeout()){ return TIMEOUT; }
             for(uint32_t p = 0; p < _net._nplaces; p++){
                 if(_m0[p] > 0){
                     set_bounds(_lp,VarPlace(p,_siphonDepth+1), 0, 0);
@@ -181,21 +189,25 @@ namespace PetriEngine {
             memset(row.data(), 0, sizeof (REAL) * _nCol + 1);
             for (size_t p = 0; p < _nCol; p++)
                 row[1 + p] = 1;
-
+            
             // Set objective
             set_obj_fn(_lp, row.data());
 
             // Minimize the objective
             set_minim(_lp);
+            
         }
-        
         return _ret;
     }
     
-    int STSolver::Solve(int timeout){
-        CreateFormula();
+    int STSolver::Solve(uint32_t timelimit){
+        _timelimit=timelimit;
+        _start = std::chrono::high_resolution_clock::now();
+        _ret = CreateFormula();
         
         if(_ret == 0){
+            _lpBuilt=true;
+            _buildTime=duration();
             set_break_at_first(_lp, TRUE);
             set_presolve(_lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(_lp));
             set_pivoting(_lp, PRICER_DEVEX|PRICE_LOOPALTERNATE|PRICE_AUTOPARTIAL); 
@@ -203,15 +215,17 @@ namespace PetriEngine {
     #ifdef DEBUG
             write_LP(_lp, stdout);
     #endif       
-            set_verbose(_lp, IMPORTANT);
-            set_timeout(_lp, timeout);
-            _ret = solve(_lp);
-            
-    #ifdef DEBUG
-            PrintStatus();
-    #endif     
+            if(!timeout()){
+                timelimit = _timelimit-duration();
+                if(timelimit > _timelimit) { timelimit = 1; }
+                
+                set_verbose(_lp, NEUTRAL);
+                set_timeout(_lp, timelimit);
+                _ret = solve(_lp);
+                _solved=true;
+            }
         }
-        
+        _analysisTime = duration();
         return _ret;
     }
     
@@ -222,30 +236,59 @@ namespace PetriEngine {
             return Reachability::ResultPrinter::Unknown;
         }
     }
+    bool STSolver::timeout() const {
+        return (duration() >= _timelimit);
+    }
+    uint32_t STSolver::duration() const {
+        auto end = std::chrono::high_resolution_clock::now();
+        auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - _start);
+        return diff.count();
+    }
     
-    void STSolver::PrintStatus(){
+    void STSolver::PrintStatistics(){
+        std::cout<<std::endl;
+        std::cout<<"Siphon-trap analysis is enabled."<<std::endl;
+        std::cout<<"Places:      "<<_net._nplaces<<std::endl;
+        std::cout<<"Transitions: "<<_net._ntransitions<<std::endl;
+        std::cout<<"Arcs:        "<<_net._ninvariants<<std::endl;
+        
+        if(_lpBuilt){
+            std::cout<<"LP was built in (seconds):   "<<_buildTime<<std::endl;
+            std::cout<<"Variables before presolve:   "<<get_Norig_columns(_lp)<<std::endl;
+            std::cout<<"Constraints before presolve: "<<get_Norig_rows(_lp)<<std::endl;
+        }
+        if(_solved){
+            std::cout<<"Variables after presolve:    "<<get_Ncolumns(_lp)<<std::endl;
+            std::cout<<"Constraints after presolve:  "<<get_Nrows(_lp)<<std::endl;
+        }
+            
         if(_ret == OPTIMAL) {
-            std::cout<<"lp_solve: An optimal solution was obtained."<<std::endl;
+            std::cout<<"An optimal solution was obtained."<<std::endl;
         } else if(_ret == PRESOLVED){
-            std::cout<<"lp_solve: The model could be solved by presolve."<<std::endl;
+            std::cout<<"The model could be solved by presolve."<<std::endl;
         } else if(_ret == INFEASIBLE){
-            std::cout<<"lp_solve: The model is infeasible."<<std::endl;
+            std::cout<<"The model is infeasible."<<std::endl;
         } else if(_ret == NOMEMORY){
-            std::cout<<"lp_solve: Out of memory."<<std::endl;
+            std::cout<<"Out of memory."<<std::endl;
         } else if(_ret == UNBOUNDED){
-            std::cout<<"lp_solve: The model is unbounded."<<std::endl;
+            std::cout<<"The model is unbounded."<<std::endl;
         } else if(_ret == DEGENERATE){
-            std::cout<<"lp_solve: The model is degenerative."<<std::endl;
+            std::cout<<"The model is degenerative."<<std::endl;
         } else if(_ret == NUMFAILURE){
-            std::cout<<"lp_solve: Numerical failure encountered."<<std::endl;
+            std::cout<<"Numerical failure encountered."<<std::endl;
         } else if(_ret == USERABORT){
-            std::cout<<"lp_solve: The abort routine returned TRUE."<<std::endl;
+            std::cout<<"The abort routine returned TRUE."<<std::endl;
         } else if(_ret == TIMEOUT){
-            std::cout<<"lp_solve: A timeout occurred."<<std::endl;
+            std::cout<<"A timeout occurred."<<std::endl;
         } else if(_ret == NUMFAILURE){
-            std::cout<<"lp_solve: Accuracy error encountered."<<std::endl;
+            std::cout<<"Accuracy error encountered."<<std::endl;
         } else if(_ret == -6) {
-            std::cout<<"lp_solve: The net has weighed arcs."<<std::endl;
+            std::cout<<"The net has weighed arcs."<<std::endl;
+        }
+        if(_analysisTime < _timelimit){
+            fprintf(stdout, "Siphon-trap analysis finished after %u seconds.\n", _analysisTime);
+        } else {
+            fprintf(stdout, "Siphon-trap analysis reached timeout.\n");
         }
     }
     

@@ -24,7 +24,7 @@ struct options_t {
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
     bool trace = false;
     int queryReductionTimeout = 30, lpsolveTimeout = 10;
-    int siphontrapTimeout = 0;
+    uint32_t siphontrapTimeout = 0;
     bool upperboundcheck = false;
 
     //CTL Specific options

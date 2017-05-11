@@ -4,6 +4,7 @@
 #include "../lpsolve/lp_lib.h"
 #include "Reachability/ReachabilityResult.h"
 #include <memory>
+#include <chrono>
 
 namespace PetriEngine {
     class STSolver {
@@ -25,11 +26,14 @@ namespace PetriEngine {
         STSolver(Reachability::ResultPrinter& printer, const PetriNet& net, PQL::Condition * query);
         virtual ~STSolver();
         int CreateFormula();
-        int Solve(int timeout);
-        void PrintStatus();
+        int Solve(uint32_t timeout);
+        void PrintStatistics();
         Reachability::ResultPrinter::Result PrintResult();
         int getResult(){
             return _ret;
+        }
+        uint32_t getAnalysisTime(){
+            return _analysisTime;
         }
         
     private:        
@@ -39,6 +43,8 @@ namespace PetriEngine {
         void CreateStepConstraints(uint32_t i);
         void CreatePostVarDefinitions(uint32_t i);
         void constructPrePost();
+        uint32_t duration() const;
+        bool timeout() const;
         
         Reachability::ResultPrinter& printer;
         PQL::Condition * _query;
@@ -50,7 +56,13 @@ namespace PetriEngine {
         uint32_t _siphonDepth;
         uint32_t _nPlaceVariables;
         uint32_t _nCol;
-        int _ret = 0;        
+        int _ret = 0;     
+        uint32_t _timelimit;
+        uint32_t _analysisTime;
+        int _buildTime;
+        bool _lpBuilt;
+        bool _solved;
+        std::chrono::high_resolution_clock::time_point _start;
     };
 }
 #endif /* STSOLVER_H */

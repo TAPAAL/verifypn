@@ -198,7 +198,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
                 return ErrorCode;
             }
-            if (sscanf(argv[++i], "%d", &options.siphontrapTimeout) != 1 || options.siphontrapTimeout < 0) {
+            if (sscanf(argv[++i], "%d", &options.siphontrapTimeout) != 1) {
                 fprintf(stderr, "Argument Error: Invalid siphon-trap timeout \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
@@ -700,9 +700,11 @@ int main(int argc, char* argv[]) {
                 STSolver stSolver(printer, *net, queries[i].get());
                 stSolver.Solve(options.siphontrapTimeout);
                 results[i] = stSolver.PrintResult();
-                
                 if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics) {
                     std::cout << "Query solved by Siphon-Trap Analysis." << std::endl << std::endl;
+                }
+                if(options.printstatistics){
+                    stSolver.PrintStatistics();
                 }
             }
         }
