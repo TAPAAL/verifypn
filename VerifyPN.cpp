@@ -322,18 +322,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         fprintf(stderr, "Argument Error: No query-file provided\n");
         return ErrorCode;
     }
-
-    // Check strategy when is CTL (CTLEngine does not support all of them)
-    if(options.isctl){
-        //Default to DFS (No heuristic strategy)
-        if(options.strategy == PetriEngine::Reachability::HEUR){
-            options.strategy = PetriEngine::Reachability::DFS;
-        }
-        else if(options.strategy != PetriEngine::Reachability::DFS){
-            std::cerr << "Argument Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
-            return ErrorCode;
-        }
-    }
     
     // Check if the choosen options are incompatible with upper bound queries
     if(options.stubbornreduction || options.queryReductionTimeout > 0) {
@@ -524,21 +512,6 @@ int main(int argc, char* argv[]) {
     PNMLParser::TransitionEnablednessMap transitionEnabledness;
     
     if(parseModel(transitionEnabledness, builder, options) != ContinueCode) return ErrorCode;
-    
-    //---------------- CTL Engine - forced CTL via FLAG -ctl -----------------//
-    if(options.isctl){
-        PetriNet* net = builder.makePetriNet();
-        ReturnValue rv = CTLMain(net,
-                    options.queryfile,
-                    options.ctlalgorithm,
-                    options.strategy,
-                    options.querynumbers,
-                    options.gamemode,
-                    options.printstatistics,
-                    true);
-        delete net;
-        return rv;
-    }
     
     //----------------------- Parse Query -----------------------//
     std::vector<std::string> querynames;
