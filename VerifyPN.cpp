@@ -203,7 +203,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 return ErrorCode;
             }
         } else if (strcmp(argv[i], "-ctl") == 0){
-            options.isctl = true;
             if(argc > i + 1){
                 if(strcmp(argv[i + 1], "local") == 0){
                     i++;
@@ -609,6 +608,7 @@ int main(int argc, char* argv[]) {
     std::string CTLQueries = getXMLQueries(queries, querynames, results);
     
     if (CTLQueries.size() > 0) {
+        options.isctl=true;
         PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
         PetriNet* ctlnet = builder.makePetriNet();
         // Update query indexes
@@ -647,7 +647,7 @@ int main(int argc, char* argv[]) {
         // go back to previous strategy if the program continues
         options.strategy=reachabilityStrategy;
     }
-    
+    options.isctl=false;
     //--------------------- Apply Net Reduction ---------------//
         
     if (options.enablereduction == 1 || options.enablereduction == 2) {
