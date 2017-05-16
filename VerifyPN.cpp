@@ -619,12 +619,16 @@ int main(int argc, char* argv[]) {
             options.querynumbers.insert(x);
         }
         
-        // Default to DFS if strategy is not BFS or DFS (No heuristic strategy)        
-        if(options.strategy != PetriEngine::Reachability::DFS){
+        //Default to DFS (No heuristic strategy)
+        if(options.strategy == PetriEngine::Reachability::HEUR){
+            fprintf(stdout, "Default search strategy was changed to DFS as the CTL engine is called.\n");
             options.strategy = PetriEngine::Reachability::DFS;
-            fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
         }
-        
+        else if(options.strategy != PetriEngine::Reachability::DFS){
+            std::cerr << "Argument Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
+            return ErrorCode;
+        }
+   
         v = CTLMain(ctlnet,
             options.queryfile,
             options.ctlalgorithm,
