@@ -95,13 +95,13 @@ struct options_t {
         
         optionsOut += ",LPSolve_Timeout=" + std::to_string(lpsolveTimeout);
         
-        if (isctl) {
-            if (ctlalgorithm == CTL::CZero) {
-                optionsOut += ",CTLAlgorithm=CZERO";
-            } else {
-                optionsOut += ",CTLAlgorithm=LOCAL";
-            }
+
+        if (ctlalgorithm == CTL::CZero) {
+            optionsOut += ",CTLAlgorithm=CZERO";
+        } else {
+            optionsOut += ",CTLAlgorithm=LOCAL";
         }
+        
         optionsOut += "\n";
         
         std::cout << optionsOut;
