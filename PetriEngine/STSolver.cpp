@@ -286,7 +286,7 @@ namespace PetriEngine {
         if(_analysisTime < _timelimit){
             fprintf(stdout, "Siphon-trap analysis finished after %u seconds.\n", _analysisTime);
         } else {
-            fprintf(stdout, "Siphon-trap analysis reached timeout.\n");
+            fprintf(stdout, "Siphon-trap analysis reached timeout (used %u seconds).\n", _analysisTime);
         }
     }
     
