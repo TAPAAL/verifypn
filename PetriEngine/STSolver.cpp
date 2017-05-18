@@ -20,9 +20,7 @@ namespace PetriEngine {
     }
     
     STSolver::STSolver(Reachability::ResultPrinter& printer, const PetriNet& net, PQL::Condition * query) : printer(printer), _query(query), _net(net){
-        // Approximating depth to 10 for fewer but faster answers. 
-        // Otherwise, this should at most be the number of places.
-        _siphonDepth = 10; 
+        _siphonDepth = _net._nplaces; 
 
         _m0 = _net._initialMarking;
         _nPlaceVariables = (_net._nplaces * (_siphonDepth + 2));
