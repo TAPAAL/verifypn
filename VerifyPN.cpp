@@ -198,7 +198,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
                 return ErrorCode;
             }
-            if (sscanf(argv[++i], "%d", &options.siphontrapTimeout) != 1) {
+            if (sscanf(argv[++i], "%u", &options.siphontrapTimeout) != 1) {
                 fprintf(stderr, "Argument Error: Invalid siphon-trap timeout \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
