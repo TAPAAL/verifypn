@@ -1209,6 +1209,7 @@ namespace PetriEngine {
                 }
             } else {
                 lps.add(LinearProgram());
+                neglps.add(LinearProgram());
             }
             
             if(!neglps.satisfiable(context)){
@@ -1255,6 +1256,7 @@ namespace PetriEngine {
                 }
             } else {
                 lps.add(LinearProgram());
+                neglps.add(LinearProgram());
             }
             
             if(!neglps.satisfiable(context)){
@@ -1289,6 +1291,7 @@ namespace PetriEngine {
                 }
             } else {
                 lps.add(LinearProgram());
+                neglps.add(LinearProgram());
             }
             
             if(!neglps.satisfiable(context)){
@@ -1323,6 +1326,7 @@ namespace PetriEngine {
                 }
             } else {
                 lps.add(LinearProgram());
+                neglps.add(LinearProgram());
             }
 
             if(!neglps.satisfiable(context)){
@@ -1357,6 +1361,7 @@ namespace PetriEngine {
                 }
             } else {
                 lps.add(LinearProgram());
+                neglps.add(LinearProgram());
             }
             
             if(!neglps.satisfiable(context)) {
@@ -1391,6 +1396,7 @@ namespace PetriEngine {
                 }
             } else {
                 lps.add(LinearProgram());
+                neglps.add(LinearProgram());
             }
             
             if(!neglps.satisfiable(context)) {
