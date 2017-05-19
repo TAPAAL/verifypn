@@ -44,30 +44,35 @@ namespace PetriEngine {
      *     for all (p in post(t))
      *         -p^0 + SUM(q in pre(t)) q^0 GE 0
      */ 
-    void STSolver::CreateSiphonConstraints(){       
+    int STSolver::CreateSiphonConstraints(){       
         // (SUM(p in P) p^0) >= 1
         std::vector<STVariable> variables;
         for(uint32_t p=0;p<_net._nplaces;p++){ 
+            if(timeout()){ return TIMEOUT; }
             variables.push_back(STVariable(VarPlace(p,0), 1));
         }  
         MakeConstraint(variables, GE, 1);
         
         // for all (t in T) for all (p in post(t)) (-p^0 + SUM(q in pre(t)) q^0) GE 0
         for(uint32_t t=0; t<_net._ntransitions; t++){
+            if(timeout()){ return TIMEOUT; }
             uint32_t finv = _net._transitions[t].outputs;
             uint32_t linv = _net._transitions[t+1].inputs; 
             for (; finv < linv; finv++) { // for all p in post(t)
+                if(timeout()){ return TIMEOUT; }
                 std::vector<STVariable> variables2;
                 variables2.push_back(STVariable(VarPlace(_net._invariants[finv].place,0), -1)); // -p^0
                 
                 uint32_t finv2 = _net._transitions[t].inputs;
                 uint32_t linv2 = _net._transitions[t].outputs;
                 for(; finv2 < linv2; finv2++){ // SUM(q in pre(t))
+                    if(timeout()){ return TIMEOUT; }
                     variables2.push_back(STVariable(VarPlace(_net._invariants[finv2].place,0), 1)); // q^0
                 }
                 MakeConstraint(variables2, GE, 0);
             }
         }
+        return 0;
     }
     
     /* 
@@ -79,7 +84,7 @@ namespace PetriEngine {
      * 
      *     -p^i+1 + p^i GE 0
      */
-    void STSolver::CreateStepConstraints(uint32_t i){  
+    int STSolver::CreateStepConstraints(uint32_t i){  
         // for all (p in P) 
         // -p^i+1 + p^i + SUM(t in post(p) post_t^i LE card(post(p))         
         for(uint32_t p=0; p<_net._nplaces; p++){
@@ -89,6 +94,7 @@ namespace PetriEngine {
             
             // for all (t in post(p)) -p^i+1 + post_t^i GE 0
             for (uint32_t t = _places.get()[p].post; t < _places.get()[p + 1].pre; t++){ // for all t in post(p)
+                if(timeout()){ return TIMEOUT; }
                 variables1.push_back(STVariable(VarPostT(_transitions.get()[t],i), 1));  // post_t^i
                 std::vector<STVariable> variables3;
                 variables3.push_back(STVariable(VarPlace(p,(i+1)), -1));                 // -p^i+1
@@ -103,6 +109,7 @@ namespace PetriEngine {
             variables2.push_back(STVariable(VarPlace(p,i), 1));      // p^i
             MakeConstraint(variables2, GE, 0);
         }
+        return 0;
     }
     
     /*
@@ -112,8 +119,9 @@ namespace PetriEngine {
      *     for all (p in post(t))
      *         -post_t + p^i LE 0
      */
-    void STSolver::CreatePostVarDefinitions(uint32_t i){ 
+    int STSolver::CreatePostVarDefinitions(uint32_t i){ 
         for(uint32_t t=0; t<_net._ntransitions; t++){
+            if(timeout()){ return TIMEOUT; }
             // -post_t^i + SUM(p in post(t)) p^i GE 0
             std::vector<STVariable> variables;
             variables.push_back(STVariable(VarPostT(t,i), -1)); // -post_t^i
@@ -121,6 +129,7 @@ namespace PetriEngine {
             uint32_t finv = _net._transitions[t].outputs;
             uint32_t linv = _net._transitions[t+1].inputs;
             for (; finv < linv; finv++) { // for all p in post(t)
+                if(timeout()){ return TIMEOUT; }
                 variables.push_back(STVariable(VarPlace(_net._invariants[finv].place,i), 1)); // p^i
             }
             MakeConstraint(variables, GE, 0);
@@ -129,17 +138,18 @@ namespace PetriEngine {
             finv = _net._transitions[t].outputs;
             linv = _net._transitions[t+1].inputs;
             for (; finv < linv; finv++) {  // for all p in post(t)
+                if(timeout()){ return TIMEOUT; }
                 std::vector<STVariable> variables;
                 variables.push_back(STVariable(VarPostT(t,i), -1)); // -post_t^i
                 variables.push_back(STVariable(VarPlace(_net._invariants[finv].place,i), 1)); // p^i
                 MakeConstraint(variables, LE, 0);
             }   
         }
+        return 0;
     }
   
     int STSolver::CreateFormula(){
         _ret = 0;
-        
         for(auto &i : _net._invariants){
             if(i.tokens > 1){
                 _ret = -6; // the net has weighted arcs
@@ -158,19 +168,18 @@ namespace PetriEngine {
             set_col_name(_lp, c+1, const_cast<char *> (VarName(c).c_str())); 
             std::cout<<"name of col "<<c+1<<" is "<<VarName(c).c_str()<<std::endl;
         }       
-#endif                  
+#endif      
             for (size_t i = 1; i <= _nCol; i++){ set_binary(_lp, i, TRUE); }
             // Create constraints
             set_add_rowmode(_lp, TRUE);  
-            CreateSiphonConstraints();          // ST formula step 1
-            if(timeout()){ return TIMEOUT; }
+            if(CreateSiphonConstraints() == TIMEOUT)          // ST formula step 1
+                return TIMEOUT;
             for(uint32_t i=0; i<=_siphonDepth; i++){ 
-                if(timeout()){ return TIMEOUT; }
-                CreateStepConstraints(i);       // ST formula maximal trap
-                if(timeout()){ return TIMEOUT; }
-                CreatePostVarDefinitions(i);
+                if(CreateStepConstraints(i) == TIMEOUT)       // ST formula maximal trap
+                    return TIMEOUT;
+                if(CreatePostVarDefinitions(i) == TIMEOUT)
+                    return TIMEOUT;
             }
-
             set_add_rowmode(_lp, FALSE);      
             
             // Bounds
@@ -202,7 +211,6 @@ namespace PetriEngine {
         _timelimit=timelimit;
         _start = std::chrono::high_resolution_clock::now();
         _ret = CreateFormula();
-        
         if(_ret == 0){
             _lpBuilt=true;
             _buildTime=duration();

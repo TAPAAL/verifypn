@@ -39,9 +39,9 @@ namespace PetriEngine {
     private:        
         std::string VarName(uint32_t index);
         void MakeConstraint(std::vector<STVariable> constraint, int constr_type, REAL rh);
-        void CreateSiphonConstraints();
-        void CreateStepConstraints(uint32_t i);
-        void CreatePostVarDefinitions(uint32_t i);
+        int CreateSiphonConstraints();
+        int CreateStepConstraints(uint32_t i);
+        int CreatePostVarDefinitions(uint32_t i);
         void constructPrePost();
         uint32_t duration() const;
         bool timeout() const;
