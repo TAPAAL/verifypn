@@ -267,9 +267,11 @@ namespace PetriEngine {
             std::cout<<"Variables after presolve:    "<<get_Ncolumns(_lp)<<std::endl;
             std::cout<<"Constraints after presolve:  "<<get_Nrows(_lp)<<std::endl;
         }
-            
+        
         if(_ret == OPTIMAL) {
             std::cout<<"An optimal solution was obtained."<<std::endl;
+        } else if(_ret == SUBOPTIMAL) {
+            std::cout<<"The model is sub-optimal."<<std::endl;
         } else if(_ret == PRESOLVED){
             std::cout<<"The model could be solved by presolve."<<std::endl;
         } else if(_ret == INFEASIBLE){

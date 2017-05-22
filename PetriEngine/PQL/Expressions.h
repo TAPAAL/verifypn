@@ -600,7 +600,10 @@ namespace PetriEngine {
                 }
             }
             int formulaSize() const{
-                return 1;
+                if(trivial > 0)
+                    return 0;
+                else 
+                    return 1;
             }
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
