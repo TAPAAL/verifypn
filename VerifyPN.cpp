@@ -202,6 +202,15 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid siphon-trap timeout \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        } else if(strcmp(argv[i], "--siphon-depth") == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%u", &options.siphonDepth) != 1) {
+                fprintf(stderr, "Argument Error: Invalid siphon-depth count \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
         } else if (strcmp(argv[i], "-ctl") == 0){
             options.isctl = true;
             if(argc > i + 1){
@@ -243,6 +252,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
                     "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds (default 0)\n"
+                    "      --siphon-depth <place count>   Search depth of siphon (default 0, which counts all places)\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
@@ -697,7 +707,7 @@ int main(int argc, char* argv[]) {
             bool isDeadlockQuery = queries[i]->toString() == "deadlock";
  
             if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {    
-                STSolver stSolver(printer, *net, queries[i].get());
+                STSolver stSolver(printer, *net, queries[i].get(), options.siphonDepth);
                 stSolver.Solve(options.siphontrapTimeout);
                 results[i] = stSolver.PrintResult();
                 if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics) {

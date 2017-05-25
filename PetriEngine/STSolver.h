@@ -23,7 +23,7 @@ namespace PetriEngine {
     };
         
     public:
-        STSolver(Reachability::ResultPrinter& printer, const PetriNet& net, PQL::Condition * query);
+        STSolver(Reachability::ResultPrinter& printer, const PetriNet& net, PQL::Condition * query, uint32_t depth);
         virtual ~STSolver();
         int CreateFormula();
         int Solve(uint32_t timeout);
@@ -42,6 +42,7 @@ namespace PetriEngine {
         int CreateSiphonConstraints();
         int CreateStepConstraints(uint32_t i);
         int CreatePostVarDefinitions(uint32_t i);
+        int CreateNoTrapConstraints();
         void constructPrePost();
         uint32_t duration() const;
         bool timeout() const;
@@ -62,6 +63,7 @@ namespace PetriEngine {
         int _buildTime;
         bool _lpBuilt;
         bool _solved;
+        int _noTrap = 0;
         std::chrono::high_resolution_clock::time_point _start;
     };
 }

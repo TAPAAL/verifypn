@@ -19,13 +19,18 @@ namespace PetriEngine {
         delete[] col;
     }
     
-    STSolver::STSolver(Reachability::ResultPrinter& printer, const PetriNet& net, PQL::Condition * query) : printer(printer), _query(query), _net(net){
-        _siphonDepth = _net._nplaces; 
-
+    STSolver::STSolver(Reachability::ResultPrinter& printer, const PetriNet& net, PQL::Condition * query, uint32_t depth) : printer(printer), _query(query), _net(net){
+        if(depth == 0){
+            _siphonDepth = _net._nplaces;
+        } else {
+            _siphonDepth = depth;
+        }
+        
         _m0 = _net._initialMarking;
-        _nPlaceVariables = (_net._nplaces * (_siphonDepth + 2));
-        uint32_t nPostTransVariables = (_net._ntransitions * (_siphonDepth + 1));
-        _nCol = _nPlaceVariables + nPostTransVariables;
+        _nPlaceVariables = (_net._nplaces * (_siphonDepth + 1));
+        uint32_t nPostTransVariables = (_net._ntransitions * (_siphonDepth));
+        _noTrap = _nPlaceVariables + nPostTransVariables + 1; // variable index
+        _nCol = _noTrap; // number of columns
         _analysisTime=0;
         _buildTime=-1;
         _lpBuilt=false;
@@ -147,6 +152,28 @@ namespace PetriEngine {
         }
         return 0;
     }
+    
+    int STSolver::CreateNoTrapConstraints(){
+        std::vector<STVariable> variables1;
+        
+        for(uint32_t p=0; p<_net._nplaces; p++){
+            // for all p in P where M0(p) > 0: p^d - noTrap LE 0
+            if(_m0[p] > 0){
+                if(timeout()){ return TIMEOUT; }               
+                std::vector<STVariable> variables2;
+                variables2.push_back(STVariable(VarPlace(p,(_siphonDepth)), 1)); // p^d
+                variables2.push_back(STVariable(_noTrap, -1)); // -noTrap
+                MakeConstraint(variables2, LE, 0);   
+            }
+            
+            // SUM(p in P) p^d + noTrap = SUM(p in P) p^d-1 
+            variables1.push_back(STVariable(VarPlace(p,(_siphonDepth)),1)); // +p^d
+            variables1.push_back(STVariable(VarPlace(p,(_siphonDepth-1)),-1)); // -p^d-1
+        }
+        variables1.push_back(STVariable(_noTrap, 1)); // +noTrap
+        MakeConstraint(variables1, EQ, 0);
+        return 0;
+    }
   
     int STSolver::CreateFormula(){
         _ret = 0;
@@ -163,40 +190,40 @@ namespace PetriEngine {
         if(_ret == 0){           
             
 #ifdef DEBUG
-        // Set variable names (not strictly necessary)
-        for(uint32_t c=0; c<_nCol; c++){ 
-            set_col_name(_lp, c+1, const_cast<char *> (VarName(c).c_str())); 
-            std::cout<<"name of col "<<c+1<<" is "<<VarName(c).c_str()<<std::endl;
-        }       
-#endif      
-            for (size_t i = 1; i <= _nCol; i++){ set_binary(_lp, i, TRUE); }
+            // Set variable names (not strictly necessary)
+            for(uint32_t c=0; c<_nCol; c++){ 
+                set_col_name(_lp, c+1, const_cast<char *> (VarName(c).c_str())); 
+                //std::cout<<"name of col "<<c+1<<" is "<<VarName(c).c_str()<<std::endl;
+            }       
+#endif
+            for (size_t i = 1; i <= _nCol-1; i++){ set_binary(_lp, i, TRUE); }
+            set_int(_lp, _noTrap, TRUE);
+
             // Create constraints
             set_add_rowmode(_lp, TRUE);  
-            if(CreateSiphonConstraints() == TIMEOUT)          // ST formula step 1
+
+            if(CreateSiphonConstraints() == TIMEOUT)          // define initial siphon
                 return TIMEOUT;
-            for(uint32_t i=0; i<=_siphonDepth; i++){ 
-                if(CreateStepConstraints(i) == TIMEOUT)       // ST formula maximal trap
+            for(uint32_t i=0; i<=_siphonDepth-1; i++){ 
+                if(CreateStepConstraints(i) == TIMEOUT)       // maximal trap
                     return TIMEOUT;
-                if(CreatePostVarDefinitions(i) == TIMEOUT)
+                if(CreatePostVarDefinitions(i) == TIMEOUT)    // define post_t 
                     return TIMEOUT;
             }
+            if(CreateNoTrapConstraints() == TIMEOUT)          // unmarked or not a trap
+                return TIMEOUT;
+
             set_add_rowmode(_lp, FALSE);      
-            
+
             // Bounds
-            // Ensures the no-trap constraints
-            if(timeout()){ return TIMEOUT; }
-            for(uint32_t p = 0; p < _net._nplaces; p++){
-                if(_m0[p] > 0){
-                    set_bounds(_lp,VarPlace(p,_siphonDepth+1), 0, 0);
-                }
-            }    
-            
+            set_bounds(_lp, _noTrap, 0, _net._nplaces);  
+
             // Create objective
             std::vector<REAL> row = std::vector<REAL>(_nCol + 1);
             memset(row.data(), 0, sizeof (REAL) * _nCol + 1);
             for (size_t p = 0; p < _nCol; p++)
                 row[1 + p] = 1;
-            
+
             // Set objective
             set_obj_fn(_lp, row.data());
 
@@ -214,22 +241,35 @@ namespace PetriEngine {
         if(_ret == 0){
             _lpBuilt=true;
             _buildTime=duration();
-            set_break_at_first(_lp, TRUE);
+//            set_break_at_first(_lp, TRUE);
             set_presolve(_lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(_lp));
-            set_pivoting(_lp, PRICER_DEVEX|PRICE_LOOPALTERNATE|PRICE_AUTOPARTIAL); 
-            
-    #ifdef DEBUG
+#ifdef DEBUG            
             write_LP(_lp, stdout);
-    #endif       
+#endif    
             if(!timeout()){
                 timelimit = _timelimit-duration();
                 if(timelimit > _timelimit) { timelimit = 1; }
                 
-                set_verbose(_lp, NEUTRAL);
+                set_verbose(_lp, IMPORTANT);
                 set_timeout(_lp, timelimit);
                 _ret = solve(_lp);
                 _solved=true;
             }
+#ifdef DEBUG
+            if(_ret == OPTIMAL) {
+                /* a solution is calculated, print results */
+
+                /* objective value */
+                printf("Objective value: %f\n", get_objective(_lp));
+
+                /* variable values */
+                std::vector<REAL> row = std::vector<REAL>(_nCol + 1);
+                get_variables(_lp, row.data());
+                for(uint32_t j = 0; j < _nCol; j++)
+                  printf("%s: %f\n", get_col_name(_lp, j + 1), row[j]);
+
+              }
+#endif
         }
         _analysisTime = duration();
         return _ret;
@@ -288,8 +328,6 @@ namespace PetriEngine {
             std::cout<<"The abort routine returned TRUE."<<std::endl;
         } else if(_ret == TIMEOUT){
             std::cout<<"A timeout occurred."<<std::endl;
-        } else if(_ret == NUMFAILURE){
-            std::cout<<"Accuracy error encountered."<<std::endl;
         } else if(_ret == -6) {
             std::cout<<"The net has weighed arcs."<<std::endl;
         }
@@ -302,8 +340,10 @@ namespace PetriEngine {
     
     std::string STSolver::VarName(uint32_t index){
         std::string name = "";
+        if(index == _nCol-1){
+            name = "NOTRAP";
         // place/transition index ^ siphon depth step
-        if(index < _nPlaceVariables){ // place
+        }else if(index < _nPlaceVariables){ // place
             name = _net.placeNames()[(index % (_net._nplaces))] + "^" + std::to_string((uint32_t)floor(index / (_net._nplaces))); 
         } else{ // transition
             index=index-_nPlaceVariables;
@@ -311,7 +351,6 @@ namespace PetriEngine {
         }
         return name;
     }
-    
     
     // TODO: Refactor this out... Copy paste from ReducingSuccessorGenerator.cpp
     // Also, we dont need the preset here.
