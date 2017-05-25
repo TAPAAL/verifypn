@@ -5,7 +5,11 @@
 namespace PetriEngine {     
     #define VarPlace(p,i) (((_net._nplaces * (i)) + (p)) + 1)
     #define VarPostT(t,i) ((_nPlaceVariables + (_net._ntransitions * (i)) + (t)) + 1)
-    
+   
+    // return values
+    #define WEIGHTEDARCS             -6
+    #define INHIBITORARCS            -7
+
     void STSolver::MakeConstraint(std::vector<STVariable> constraint, int constr_type, REAL rh){
         int count = constraint.size();
         REAL* row = new REAL[count];
@@ -22,7 +26,7 @@ namespace PetriEngine {
     STSolver::STSolver(Reachability::ResultPrinter& printer, const PetriNet& net, PQL::Condition * query, uint32_t depth) : printer(printer), _query(query), _net(net){
         if(depth == 0){
             _siphonDepth = _net._nplaces;
-        } else {
+        } else {
             _siphonDepth = depth;
         }
         
@@ -179,10 +183,24 @@ namespace PetriEngine {
         _ret = 0;
         for(auto &i : _net._invariants){
             if(i.tokens > 1){
-                _ret = -6; // the net has weighted arcs
-                break;
+                _ret = WEIGHTEDARCS; // the net has weighted arcs
+                return _ret;
             }
         }        
+        
+        for (uint32_t t = 0; t < _net._ntransitions; t++) {
+            const TransPtr& ptr = _net._transitions[t];
+            uint32_t finv = ptr.inputs;
+            uint32_t linv = ptr.outputs;
+            for (; finv < linv; finv++) { // Post set of places
+                if (_net._invariants[finv].inhibitor) {
+                    _ret = INHIBITORARCS;
+                    return _ret;
+                }
+            }
+        }
+        
+        
         if(_ret == 0){
             _lp = make_lp(0, _nCol);
             if(_lp == NULL) { std::cout<<"Could not construct new model ..."<<std::endl; return NUMFAILURE; }
@@ -241,7 +259,7 @@ namespace PetriEngine {
         if(_ret == 0){
             _lpBuilt=true;
             _buildTime=duration();
-//            set_break_at_first(_lp, TRUE);
+            set_break_at_first(_lp, TRUE);
             set_presolve(_lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(_lp));
 #ifdef DEBUG            
             write_LP(_lp, stdout);
@@ -328,8 +346,10 @@ namespace PetriEngine {
             std::cout<<"The abort routine returned TRUE."<<std::endl;
         } else if(_ret == TIMEOUT){
             std::cout<<"A timeout occurred."<<std::endl;
-        } else if(_ret == -6) {
+        } else if(_ret == WEIGHTEDARCS) {
             std::cout<<"The net has weighed arcs."<<std::endl;
+        } else if(_ret == INHIBITORARCS) {
+            std::cout<<"The net has inhibitor arcs."<<std::endl;
         }
         if(_analysisTime < _timelimit){
             fprintf(stdout, "Siphon-trap analysis finished after %u seconds.\n", _analysisTime);
