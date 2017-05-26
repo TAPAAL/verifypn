@@ -52,6 +52,7 @@
 #include "PetriParse/PNMLParser.h"
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriEngine/PQL/PQL.h"
+#include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
 #include "PetriEngine/STSolver.h"
@@ -589,7 +590,23 @@ int main(int argc, char* argv[]) {
             if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
 
             try {
-                queries[i] = (queries[i]->simplify(simplificationContext)).formula;   
+                queries[i] = (queries[i]->simplify(simplificationContext)).formula; 
+                
+                // If query was not reduced to true/false, 
+                // then try negating it and simplify again
+                if(!(queries[i]->isTriviallyTrue() || queries[i]->isTriviallyFalse())){
+                    std::cout<<"No conclusive answer. Negating query and simplifying again."<<std::endl;
+                    Condition_ptr neg = std::make_shared<NotCondition>(queries[i]);
+                    neg = (neg->simplify(simplificationContext)).formula;   
+                    if(neg->isTriviallyTrue()){
+                        std::cout<<"Negated query is trivially true."<<std::endl;
+                        queries[i] = std::make_shared<BooleanCondition>(false);
+                    }
+                    else if(neg->isTriviallyFalse()){
+                        std::cout<<"Negated query is trivially false."<<std::endl;
+                        queries[i] = std::make_shared<BooleanCondition>(true);
+                    }
+                }
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
                 std::cerr << "Exception information: " << ba.what() << std::endl;
