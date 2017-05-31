@@ -956,42 +956,42 @@ namespace PetriEngine {
             }
         }
         
-        Retval EXCondition::simplify(SimplificationContext& context, LPCache* factory) const {
-            Retval r = _cond->simplify(context, factory);
+        Retval EXCondition::simplify(SimplificationContext& context) const {
+            Retval r = _cond->simplify(context);
             return context.negated() ? simplifyAX(r) : simplifyEX(r);
         }
         
-        Retval AXCondition::simplify(SimplificationContext& context, LPCache* factory) const {
-            Retval r = _cond->simplify(context, factory);
+        Retval AXCondition::simplify(SimplificationContext& context) const {
+            Retval r = _cond->simplify(context);
             return context.negated() ? simplifyEX(r) : simplifyAX(r);
         }  
         
-        Retval EFCondition::simplify(SimplificationContext& context, LPCache* factory) const {
-            Retval r = _cond->simplify(context, factory);
+        Retval EFCondition::simplify(SimplificationContext& context) const {
+            Retval r = _cond->simplify(context);
             return context.negated() ? simplifyAG(r) : simplifyEF(r);  
         }
         
-        Retval AFCondition::simplify(SimplificationContext& context, LPCache* factory) const {
-            Retval r = _cond->simplify(context, factory);
+        Retval AFCondition::simplify(SimplificationContext& context) const {
+            Retval r = _cond->simplify(context);
             return context.negated() ? simplifyEG(r) : simplifyAF(r);  
         }
         
-        Retval EGCondition::simplify(SimplificationContext& context, LPCache* factory) const {
-            Retval r = _cond->simplify(context, factory);
+        Retval EGCondition::simplify(SimplificationContext& context) const {
+            Retval r = _cond->simplify(context);
             return context.negated() ? simplifyAF(r) : simplifyEG(r);  
         }
         
-        Retval AGCondition::simplify(SimplificationContext& context, LPCache* factory) const {
-            Retval r = _cond->simplify(context, factory);
+        Retval AGCondition::simplify(SimplificationContext& context) const {
+            Retval r = _cond->simplify(context);
             return context.negated() ? simplifyEF(r) : simplifyAG(r);  
         }
         
-        Retval EUCondition::simplify(SimplificationContext& context, LPCache* factory) const {
+        Retval EUCondition::simplify(SimplificationContext& context) const {
             // cannot push negation any further
             bool neg = context.negated();
             context.setNegate(false);
-            Retval r1 = _cond1->simplify(context, factory);
-            Retval r2 = _cond2->simplify(context, factory);
+            Retval r1 = _cond1->simplify(context);
+            Retval r2 = _cond2->simplify(context);
             context.setNegate(neg);
             
             if(context.negated()){
@@ -1023,12 +1023,12 @@ namespace PetriEngine {
             }
         }
         
-        Retval AUCondition::simplify(SimplificationContext& context, LPCache* factory) const {
+        Retval AUCondition::simplify(SimplificationContext& context) const {
             // cannot push negation any further
             bool neg = context.negated();
             context.setNegate(false);
-            Retval r1 = _cond1->simplify(context, factory);
-            Retval r2 = _cond2->simplify(context, factory);
+            Retval r1 = _cond1->simplify(context);
+            Retval r2 = _cond2->simplify(context);
             context.setNegate(neg);
             
             if(context.negated()){
@@ -1060,7 +1060,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyAnd(SimplificationContext& context, Retval&& r1, Retval&& r2, LPCache* factory) {
+        Retval simplifyAnd(SimplificationContext& context, Retval&& r1, Retval&& r2) {
             try{
                 if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
                     return Retval(BooleanCondition::FALSE);
@@ -1072,7 +1072,7 @@ namespace PetriEngine {
                 
                 if(!context.timeout())
                 {
-                    r1.lps.merge(r2.lps, factory);
+                    r1.lps.merge(r2.lps, context.cache());
                     if(!context.timeout() && !r1.lps.satisfiable(context)) {
                         return Retval(BooleanCondition::FALSE);
                     }
@@ -1116,7 +1116,7 @@ namespace PetriEngine {
             return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), std::move(r1.lps));            
         }
         
-        Retval AndCondition::simplify(SimplificationContext& context, LPCache* factory) const {
+        Retval AndCondition::simplify(SimplificationContext& context) const {
             if(context.timeout())
             {
                 if(context.negated()) 
@@ -1129,7 +1129,7 @@ namespace PetriEngine {
             Retval r1, r2;
             bool succ1 = false, succ2 = false;
             try{
-                r1 = _cond1->simplify(context, factory);
+                r1 = _cond1->simplify(context);
                 succ1 = true;
             }
             catch (std::bad_alloc& e) {};
@@ -1143,7 +1143,7 @@ namespace PetriEngine {
             
 
             try{
-                r2 = _cond2->simplify(context, factory);
+                r2 = _cond2->simplify(context);
                 succ2 = true;
             }
             catch (std::bad_alloc& e) {};
@@ -1151,10 +1151,10 @@ namespace PetriEngine {
             else if(succ1 && !succ2) return r1;
             else if(succ2 && !succ1) return r2;
             else return context.negated()   ? simplifyOr(context, std::move(r1), std::move(r2)) 
-                                            : simplifyAnd(context, std::move(r1), std::move(r2), factory);
+                                            : simplifyAnd(context, std::move(r1), std::move(r2));
         }
         
-        Retval OrCondition::simplify(SimplificationContext& context, LPCache* factory) const {            
+        Retval OrCondition::simplify(SimplificationContext& context) const {            
             if(context.timeout())
             {
                 if(context.negated()) 
@@ -1163,7 +1163,7 @@ namespace PetriEngine {
                 else                 
                     return Retval(std::make_shared<OrCondition>(_cond1, _cond2));
             }
-            Retval r1 = _cond1->simplify(context, factory);
+            Retval r1 = _cond1->simplify(context);
             // negated becomes and -- so if r1 is trivially false,
             // or if not negated, and r1 is true -- we can short-circuit
             if(!context.negated() && r1.formula->isTriviallyTrue()) 
@@ -1171,13 +1171,13 @@ namespace PetriEngine {
             else if(context.negated() && r1.formula->isTriviallyFalse()) 
                 return Retval(BooleanCondition::FALSE);
 
-            Retval r2 = _cond2->simplify(context, factory);
+            Retval r2 = _cond2->simplify(context);
             
-            return context.negated() ?  simplifyAnd(context, std::move(r1), std::move(r2), factory) : 
+            return context.negated() ?  simplifyAnd(context, std::move(r1), std::move(r2)) : 
                                         simplifyOr(context, std::move(r1), std::move(r2));
         }
         
-        Retval EqualCondition::simplify(SimplificationContext& context, LPCache* factory) const {
+        Retval EqualCondition::simplify(SimplificationContext& context) const {
             
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
@@ -1192,13 +1192,13 @@ namespace PetriEngine {
                         int constant = m2.constant() - m1.constant();
                         m1 -= m2;
                         m2 = m1;
-                        lps.add(factory, std::move(m1), constant, Simplification::OP_GT);
-                        lps.add(factory, std::move(m2), constant, Simplification::OP_LT);
+                        lps.add(context.cache(), std::move(m1), constant, Simplification::OP_GT);
+                        lps.add(context.cache(), std::move(m2), constant, Simplification::OP_LT);
                     }
                     else {
                         int constant = m2.constant() - m1.constant();
                         m1 -= m2;
-                        lps.add(factory, m1, constant, Simplification::OP_EQ);
+                        lps.add(context.cache(), m1, constant, Simplification::OP_EQ);
                     }
                 }
             } else {
@@ -1216,7 +1216,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval NotEqualCondition::simplify(SimplificationContext& context, LPCache* factory) const {
+        Retval NotEqualCondition::simplify(SimplificationContext& context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
@@ -1229,14 +1229,14 @@ namespace PetriEngine {
                     if (context.negated()) {
                         int constant = m2.constant() - m1.constant();
                         m1 -= m2;
-                        lps.add(factory, std::move(m1), constant, Simplification::OP_EQ);
+                        lps.add(context.cache(), std::move(m1), constant, Simplification::OP_EQ);
                     }
                     else {
                         int constant = m2.constant() - m1.constant();
                         m1 -= m2;
                         m2 = m1;
-                        lps.add(factory, std::move(m1), constant, Simplification::OP_GT);
-                        lps.add(factory, std::move(m2), constant, Simplification::OP_LT);
+                        lps.add(context.cache(), std::move(m1), constant, Simplification::OP_GT);
+                        lps.add(context.cache(), std::move(m2), constant, Simplification::OP_LT);
                     }
                 }
             } else {
@@ -1254,7 +1254,7 @@ namespace PetriEngine {
             }
         }
             
-        Retval LessThanCondition::simplify(SimplificationContext& context, LPCache* factory) const {
+        Retval LessThanCondition::simplify(SimplificationContext& context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
@@ -1271,7 +1271,7 @@ namespace PetriEngine {
                 {
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
-                    lps.add(factory, std::move(m1), constant, (context.negated() ? Simplification::OP_GE : Simplification::OP_LT));
+                    lps.add(context.cache(), std::move(m1), constant, (context.negated() ? Simplification::OP_GE : Simplification::OP_LT));
                 }
             } else {
                 lps.addEmpty();
@@ -1288,7 +1288,7 @@ namespace PetriEngine {
             }
         }        
         
-        Retval LessThanOrEqualCondition::simplify(SimplificationContext& context, LPCache* factory) const {
+        Retval LessThanOrEqualCondition::simplify(SimplificationContext& context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
@@ -1302,8 +1302,8 @@ namespace PetriEngine {
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
                     m2 = m1;
-                    lps.add(factory, std::move(m1), constant, (context.negated() ? Simplification::OP_GT : Simplification::OP_LE));
-                    neglps.add(factory, std::move(m2), constant, (context.negated() ? Simplification::OP_LE : Simplification::OP_GT));
+                    lps.add(context.cache(), std::move(m1), constant, (context.negated() ? Simplification::OP_GT : Simplification::OP_LE));
+                    neglps.add(context.cache(), std::move(m2), constant, (context.negated() ? Simplification::OP_LE : Simplification::OP_GT));
                 }
             } else {
                 lps.addEmpty();
@@ -1322,7 +1322,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval GreaterThanCondition::simplify(SimplificationContext& context, LPCache* factory) const {
+        Retval GreaterThanCondition::simplify(SimplificationContext& context) const {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
@@ -1336,8 +1336,8 @@ namespace PetriEngine {
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
                     m2 = m1;
-                    lps.add(factory, std::move(m1), constant, (context.negated() ? Simplification::OP_LE : Simplification::OP_GT));
-                    neglps.add(factory, std::move(m2), constant, (context.negated() ? Simplification::OP_GT : Simplification::OP_LE));
+                    lps.add(context.cache(), std::move(m1), constant, (context.negated() ? Simplification::OP_LE : Simplification::OP_GT));
+                    neglps.add(context.cache(), std::move(m2), constant, (context.negated() ? Simplification::OP_GT : Simplification::OP_LE));
                 }
             } else {
                 lps.addEmpty();
@@ -1356,7 +1356,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval GreaterThanOrEqualCondition::simplify(SimplificationContext& context, LPCache* factory) const {  
+        Retval GreaterThanOrEqualCondition::simplify(SimplificationContext& context) const {  
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
@@ -1373,7 +1373,7 @@ namespace PetriEngine {
                 {
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
-                    lps.add(factory, std::move(m1), constant, (context.negated() ? Simplification::OP_LT : Simplification::OP_GE));
+                    lps.add(context.cache(), std::move(m1), constant, (context.negated() ? Simplification::OP_LT : Simplification::OP_GE));
                 }
                 
             } else {
@@ -1392,14 +1392,14 @@ namespace PetriEngine {
             }
         }
         
-        Retval NotCondition::simplify(SimplificationContext& context, LPCache* factory) const {
+        Retval NotCondition::simplify(SimplificationContext& context) const {
             context.negate();
-            Retval r = _cond->simplify(context, factory);
+            Retval r = _cond->simplify(context);
             context.negate();
             return r;
         }
         
-        Retval BooleanCondition::simplify(SimplificationContext& context, LPCache* factory) const {
+        Retval BooleanCondition::simplify(SimplificationContext& context) const {
             if (context.negated()) {
                 return Retval(getShared(!_value));
             } else {
@@ -1407,7 +1407,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval DeadlockCondition::simplify(SimplificationContext& context, LPCache* factory) const {
+        Retval DeadlockCondition::simplify(SimplificationContext& context) const {
             if (context.negated()) {
                 return Retval(std::make_shared<NotCondition>(DeadlockCondition::DEADLOCK));
             } else {
