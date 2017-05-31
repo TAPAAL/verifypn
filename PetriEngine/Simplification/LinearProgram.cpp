@@ -36,6 +36,7 @@ namespace PetriEngine {
                     // This is untested, however.
                     assert(false);
             }
+            c.row = vec;
             vec->inc();
             _equations.push_back(c);
         }

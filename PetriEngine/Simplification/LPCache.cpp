@@ -25,7 +25,7 @@ namespace PetriEngine {
             auto res = programs.insert(program);
             LinearProgram& p = const_cast<LinearProgram&>(*res.first);
             p.inc();            
-            assert(p.refs() == 0);
+            assert(p.refs() > 0);
             return &p;
         }
         

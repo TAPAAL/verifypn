@@ -86,10 +86,12 @@ namespace PetriEngine {
                     if(it1->row < it2->row)
                     {
                         res._equations.push_back(*it1);
+                        ++it1;
                     }
                     else if(it2->row < it1->row)
                     {
-                        res._equations.push_back(*it2);                        
+                        res._equations.push_back(*it2);
+                        ++it2;
                     }
                     else
                     {
@@ -102,7 +104,9 @@ namespace PetriEngine {
                             res._equations.clear();
                             return res;
                         }
-                    }
+                        ++it1;
+                        ++it2;
+                    }                    
                 }
                 
                 if(it1 != lp1._equations.end()) 
