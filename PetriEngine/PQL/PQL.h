@@ -28,7 +28,7 @@
 #include "../PetriNet.h"
 #include "../Structures/State.h"
 #include "../ReducingSuccessorGenerator.h"
-
+#include "../Simplification/LPCache.h"
 
 namespace PetriEngine {
     class ReducingSuccessorGenerator;
@@ -158,7 +158,7 @@ namespace PetriEngine {
             /** Get distance to query */
             virtual uint32_t distance(DistanceContext& context) const = 0;
             /** Query Simplification */
-            virtual Simplification::Retval simplify(SimplificationContext& context) const = 0;
+            virtual Simplification::Retval simplify(SimplificationContext& context, LPCache* factory) const = 0;
             /** Check if query is a reachability query */
             virtual bool isReachability(uint32_t depth = 0) const = 0;
             /** Check if query is an upper bound query */

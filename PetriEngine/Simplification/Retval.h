@@ -14,7 +14,7 @@ namespace PetriEngine {
                         
             Retval (std::shared_ptr<PQL::Condition> formula) 
             : formula(formula) {
-                lps.add(LinearProgram());
+                lps.addEmpty();
             }
  
             Retval(Retval&& other) 
@@ -28,7 +28,7 @@ namespace PetriEngine {
             }
             
             Retval() {
-                lps.add(LinearProgram());
+                lps.addEmpty();
             }
             
             ~Retval(){

@@ -1,21 +1,65 @@
-#include "LinearProgram.h"
 #include <assert.h>
 #include "../../lpsolve/lp_lib.h"
+#include "LinearProgram.h"
+#include "LPCache.h"
 
 namespace PetriEngine {
     namespace Simplification {
-        LinearProgram::LinearProgram() {
-        }
 
         LinearProgram::~LinearProgram() {
         }
         
-        LinearProgram::LinearProgram(Equation&& eq){
-            equations.insert(std::make_shared<Equation>(std::move(eq)));
+        LinearProgram::LinearProgram(Vector* vec, int constant, op_t op, LPCache* factory){
+            this->factory = factory;
+            // TODO fix memory-management here!
+            equation_t c;
+            switch(op)
+            {
+                case Simplification::OP_LT:
+                    c.upper = constant - 1;
+                    break;
+                case Simplification::OP_GT:
+                    c.lower = constant + 1;
+                    break;
+                case Simplification::OP_LE:
+                    c.upper = constant;
+                    break;
+                case Simplification::OP_GE:
+                    c.lower = constant;
+                    break;
+                case Simplification::OP_EQ:
+                    c.lower = constant;
+                    c.upper = constant;
+                    break;
+                default:
+                    // We ignore this operator for now by not adding any equation.
+                    // This is untested, however.
+                    assert(false);
+            }
+            vec->inc();
+            _equations.push_back(c);
+        }
+        
+        void LinearProgram::inc()
+        {
+            ++ref;
         }
 
+        void LinearProgram::free()
+        {
+            --ref;
+            if(ref == 0)
+            {
+                for(auto& eq : _equations)
+                {
+                    eq.row->free();
+                }
+                factory->invalidate(this);
+            }
+        }        
+
         bool LinearProgram::isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout){
-            if(equations.size() == 0){
+            if(_equations.size() == 0){
                 return false;
             }
            
@@ -26,7 +70,7 @@ namespace PetriEngine {
 
             const uint32_t nCol = net->numberOfTransitions();
             lprec* lp;
-            int nRow = net->numberOfPlaces() + equations.size();
+            int nRow = net->numberOfPlaces() + _equations.size();
             
             lp = make_lp(nRow, nCol);
             assert(lp);
@@ -51,44 +95,30 @@ namespace PetriEngine {
                 set_constr_type(lp, rowno, GE);
                 set_rh(lp, rowno++, (0 - (int)m0[p]));
             }
-            for(auto& eq : equations){
-                switch(eq->op)
-                {
-                    case Equation::OP_LT:
-                        constant = (REAL) (eq->constant - 1);
-                        comparator = LE;
-                        break;
-                    case Equation::OP_GT:
-                        constant = (REAL) (eq->constant + 1);
-                        comparator = GE;
-                        break;
-                    case Equation::OP_LE:
-                        constant = (REAL) eq->constant;
-                        comparator = LE;
-                        break;
-                    case Equation::OP_GE:
-                        constant = (REAL) eq->constant;
-                        comparator = GE;
-                        break;
-                    case Equation::OP_EQ:
-                        constant = (REAL) eq->constant;
-                        comparator = EQ;
-                        break;
-                    default:
-                        // We ignore this operator for now by not adding any equation.
-                        // This is untested, however.
-                        assert(false);
-                        continue;
-                }
+            for(auto& eq : _equations){
+
                 memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
                 for (size_t t = 1; t < nCol+1; t++) {
-                    assert((t - 1) < eq->row.size());
-                    row[t] = (REAL)eq->row[t - 1]; // first index is for lp-solve.
+                    assert((t - 1) < eq.row->size());
+                    row[t] = (REAL)eq.row->data()[t - 1]; // first index is for lp-solve.
                 }
-                
-                set_row(lp, rowno, row.data());
-                set_constr_type(lp, rowno, comparator);
-                set_rh(lp, rowno++, constant);
+
+                for(size_t mode : {0, 1})
+                {
+                    if(std::isinf(eq[mode])) continue;
+
+                    if(mode == 1 && eq.upper == eq.lower) continue;
+                    
+                    if(eq.upper == eq.lower) comparator = EQ;
+                    else if(mode == 0) comparator = GE;
+                    else /* mode == 1*/comparator = LE;
+
+                    constant = eq[mode];
+
+                    set_row(lp, rowno, row.data());
+                    set_constr_type(lp, rowno, comparator);
+                    set_rh(lp, rowno++, constant);
+                }
             }
             set_add_rowmode(lp, FALSE);
             

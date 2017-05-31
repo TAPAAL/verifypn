@@ -1,5 +1,6 @@
 #ifndef LINEARPROGRAMS_H
 #define LINEARPROGRAMS_H
+#include <unordered_set>
 #include "LinearProgram.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "../PetriNet.h"
@@ -9,7 +10,7 @@ namespace PetriEngine {
 
         class LinearPrograms {
         private:
-            std::vector<LinearProgram> lps;
+            std::unordered_set<LinearProgram*> lps;
             bool hasEmpty = false;
         public:
             LinearPrograms(){
@@ -33,9 +34,9 @@ namespace PetriEngine {
             
             bool satisfiable(const PQL::SimplificationContext context) {
                 if(hasEmpty) return true;
-                for(uint32_t i = 0; i < lps.size(); i++){
+                for(auto& itt : lps){
                     if(context.timeout()) return true;
-                    if(!lps[i].isImpossible(context.net(), context.marking(), context.getLpTimeout())){
+                    if(!itt->isImpossible(context.net(), context.marking(), context.getLpTimeout())){
                         return true;
                     }
                 }
@@ -45,20 +46,15 @@ namespace PetriEngine {
             size_t size() const {
                 return lps.size();
             }
-
-            void add(const LinearProgram&& lp){
-                if(lp.size() == 0)
-                {
-                    hasEmpty = true;
-                }
-                else
-                {
-                    lps.push_back(std::move(lp));
-                }
+            
+            void addEmpty()
+            {
+                hasEmpty = true;
             }
 
-            void add(Equation&& eq){
-                lps.emplace_back(std::move(eq));
+            void add(LPCache* factory, const Member& lh, int constant, op_t op){
+                Vector* vec = factory->createAndCache(lh.variables());
+                lps.insert(factory->cacheProgram(LinearProgram(vec, constant, op, factory)));
             }
             
             /**
@@ -66,7 +62,7 @@ namespace PetriEngine {
              * temporary memory-overhead. 
              * @param lps2
              */
-            void merge(LinearPrograms& lps2){
+            void merge(LinearPrograms& lps2, LPCache* factory){
                 if (lps.size() == 0) {
                     lps.swap(lps2.lps);
                     return;
@@ -75,26 +71,22 @@ namespace PetriEngine {
                     return;
                 }
                 
-                std::vector<LinearProgram> merged;
+                std::unordered_set<LinearProgram*> merged;
                 merged.reserve(lps.size() * lps2.lps.size());
-                for(LinearProgram& lp1 : lps){        
-                    for(LinearProgram& lp2 : lps2.lps){
-                        merged.push_back(LinearProgram::lpUnion(lp1, lp2));
+                for(LinearProgram* lp1 : lps){        
+                    for(LinearProgram* lp2 : lps2.lps){
+                        merged.insert(
+                            factory->cacheProgram(
+                                LinearProgram::lpUnion(*lp1, *lp2)));
                     }   
                 }
                 if(lps2.hasEmpty)
                 {
-                    size_t osize = merged.size();
-                    merged.resize(merged.size() + lps.size());
-                    for(size_t i = 0; i < lps.size(); ++i) 
-                        merged[osize + i].swap(lps[i]);
+                    merged.insert(lps.begin(), lps.end());
                 }
                 if(hasEmpty)
                 {
-                    size_t osize = merged.size();
-                    merged.resize(merged.size() + lps2.size());
-                    for(size_t i = 0; i < lps2.size(); ++i) 
-                        merged[osize + i].swap(lps2.lps[i]);
+                    merged.insert(lps2.lps.begin(), lps2.lps.end());
                 }
                 lps.swap(merged);
                 lps2.clear();
@@ -109,19 +101,17 @@ namespace PetriEngine {
              */
             void makeUnion(LinearPrograms& lps2)
             {
-                // move data, dont copy!
-                size_t osize = lps.size();
-                lps.resize(lps.size() + lps2.lps.size());
-                for(size_t i = 0; i < lps2.size(); ++i)
-                {
-                    lps[osize + i].swap(lps2.lps[i]);
-                }
+                lps.insert(lps2.lps.begin(), lps2.lps.end());
                 lps2.clear();
                 hasEmpty = hasEmpty || lps2.hasEmpty;
             }
             
             void clear()
             {
+                for(auto& l : lps)
+                {
+                    l->free();
+                }
                 lps.clear();
             }
         };

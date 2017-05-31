@@ -540,6 +540,7 @@ int main(int argc, char* argv[]) {
     ResultPrinter p2(&b2, &options, querynames);
     
     if (options.queryReductionTimeout > 0) {
+        LPCache factory;
         for(size_t i = 0; i < queries.size(); ++i)
         {
             if (queries[i]->isUpperBound()) continue;
@@ -551,7 +552,7 @@ int main(int argc, char* argv[]) {
             if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
 
             try {
-                queries[i] = (queries[i]->simplify(simplificationContext)).formula;   
+                queries[i] = (queries[i]->simplify(simplificationContext, &factory)).formula;   
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
                 std::cerr << "Exception information: " << ba.what() << std::endl;
