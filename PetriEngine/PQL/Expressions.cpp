@@ -993,12 +993,14 @@ namespace PetriEngine {
             Retval r2 = _cond2->simplify(context);
             if(r2.formula->isTriviallyTrue())
             {
+                context.setNegate(neg);
                 return neg ? 
                             Retval(BooleanCondition::FALSE) :
                             Retval(BooleanCondition::TRUE);
             }
             else if(r2.formula->isTriviallyFalse())
             {
+                context.setNegate(neg);
                 return neg ? 
                             Retval(BooleanCondition::TRUE) :
                             Retval(BooleanCondition::FALSE);                
@@ -1034,12 +1036,14 @@ namespace PetriEngine {
             Retval r2 = _cond2->simplify(context);
             if(r2.formula->isTriviallyTrue())
             {
+                context.setNegate(neg);
                 return neg ? 
                             Retval(BooleanCondition::FALSE) :
                             Retval(BooleanCondition::TRUE);
             }
             else if(r2.formula->isTriviallyFalse())
             {
+                context.setNegate(neg);
                 return neg ? 
                             Retval(BooleanCondition::TRUE) :
                             Retval(BooleanCondition::FALSE);                
