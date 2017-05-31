@@ -6,6 +6,7 @@
 
 namespace PetriEngine {
     namespace Simplification {
+                
         class Equation {
         public:
             enum op_t 
@@ -18,14 +19,28 @@ namespace PetriEngine {
                 OP_NE
             };
 
+            void canonize()
+            {
+                if(op == OP_LT)
+                {
+                    op = OP_LE;
+                    constant -= 1;
+                }
+                else if (op == OP_GT)
+                {
+                    op = OP_GE;
+                    constant += 1;
+                }                                
+            }
+            
             Equation(const Member& lh, int constant, op_t op) 
             : row(lh.variables()), op(op), constant(constant) {
-
+                canonize();
             }
 
             Equation(Member&& lh, int constant, op_t op) 
             : row(std::move(lh.variables())), op(op), constant(constant) {
-
+                canonize();
             }
             
             Equation(const Equation& eq) 
