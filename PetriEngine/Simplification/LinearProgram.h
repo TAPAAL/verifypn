@@ -60,7 +60,8 @@ namespace PetriEngine {
 
             size_t refs() const { return ref; }
             
-            bool knownImpossible() { return _result == result_t::IMPOSSIBLE; }
+            bool knownImpossible() const { return _result == result_t::IMPOSSIBLE; }
+            bool knownPossible() const { return _result == result_t::POSSIBLE; }
             bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout);
             void swap(LinearProgram& other)
             {

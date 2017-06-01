@@ -118,11 +118,11 @@ namespace PetriEngine {
                 merged.reserve(lps.size() * lps2.lps.size());
                 for(LinearProgram* lp1 : lps){        
                     for(LinearProgram* lp2 : lps2.lps){
-                        merged.push_back(                            
-                                LinearProgram::lpUnion(*lp1, *lp2));
-                        if(merged.back()->knownImpossible())
+                        LinearProgram* prog =                             
+                                LinearProgram::lpUnion(*lp1, *lp2);
+                        if(!prog->knownImpossible())
                         {
-                            merged.pop_back();
+                            merged.push_back(prog);
                         }
                     }   
                 }
