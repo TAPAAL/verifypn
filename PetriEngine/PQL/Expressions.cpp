@@ -1111,7 +1111,29 @@ namespace PetriEngine {
         Retval simplifyOr(SimplificationContext& context, Retval&& r1, Retval&& r2) {
             if(r1.formula->isTriviallyTrue() || r2.formula->isTriviallyTrue()) {
                 return Retval(BooleanCondition::TRUE);
-            } else if (r1.formula->isTriviallyFalse()) {
+            } 
+            
+            // Lets try to see if the r1 AND r2 can ever be false at the same time
+            // If not, then we know that r1 || r2 must be true.
+            // we check this by checking if !r1 && !r2 is unsat
+            if(!context.timeout())
+            {
+                bool neg = context.negated();
+                context.setNegate(true);
+                auto nr1 = r1.formula->simplify(context);
+                if(!context.timeout())
+                {
+                    auto nr2 = r2.formula->simplify(context);
+                    nr1.lps.merge(nr2.lps, context.cache());
+                    if(!context.timeout() && !nr1.lps.satisfiable(context)) {
+                        context.setNegate(neg);
+                        return Retval(BooleanCondition::TRUE);
+                    }
+                }
+                context.setNegate(neg);
+            }
+            
+            if (r1.formula->isTriviallyFalse()) {
                 return std::move(r2);
             } else if (r2.formula->isTriviallyFalse()) {
                 return std::move(r1);

@@ -60,15 +60,17 @@ namespace PetriEngine {
         }        
 
         bool LinearProgram::isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout){
-            if(_equations.size() == 0){
-                return false;
-            }
            
             if(_result != result_t::UKNOWN) 
             {
                 return _result == result_t::IMPOSSIBLE;
             }
 
+            if(_equations.size() == 0){
+                return false;
+            }
+
+            
             const uint32_t nCol = net->numberOfTransitions();
             lprec* lp;
             int nRow = net->numberOfPlaces() + _equations.size();
@@ -121,6 +123,7 @@ namespace PetriEngine {
                     set_rh(lp, rowno++, constant);
                 }
             }
+
             set_add_rowmode(lp, FALSE);
             
             // Create objective
