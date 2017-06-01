@@ -1088,13 +1088,16 @@ namespace PetriEngine {
                     if(!context.timeout() && !r1.lps.satisfiable(context)) {
                         return Retval(BooleanCondition::FALSE);
                     }
+                    r1.neglps.makeUnion(r2.neglps);
                 }
                 else
                 {
                     r1.lps.clear();
+                    r1.neglps.clear();
                     r2.lps.clear();
+                    r2.neglps.clear();
                 }
-                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), std::move(r1.lps)); 
+                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), std::move(r1.lps), std::move(r1.neglps)); 
             }
             catch(std::bad_alloc& e)
             {
@@ -1104,7 +1107,11 @@ namespace PetriEngine {
                         std::move(
                                     (r1.lps.size() < r2.lps.size() 
                                         ? r1.lps 
-                                        : r2.lps)));
+                                        : r2.lps)),
+                        std::move(
+                                    (r1.neglps.size() < r2.neglps.size() 
+                                        ? r1.neglps 
+                                        : r2.neglps)));
             }
         }
         
@@ -1116,26 +1123,25 @@ namespace PetriEngine {
             // Lets try to see if the r1 AND r2 can ever be false at the same time
             // If not, then we know that r1 || r2 must be true.
             // we check this by checking if !r1 && !r2 is unsat
-            if(!context.timeout())
+            LinearPrograms neglps;
+            if(r1.formula->isTriviallyFalse()) neglps.swap(r2.neglps);
+            else if(r2.formula->isTriviallyFalse()) neglps.swap(r1.neglps);
+            else 
             {
-                bool neg = context.negated();
-                context.setNegate(true);
-                auto nr1 = r1.formula->simplify(context);
-                if(!context.timeout())
-                {
-                    auto nr2 = r2.formula->simplify(context);
-                    nr1.lps.merge(nr2.lps, context.cache());
-                    if(!context.timeout() && !nr1.lps.satisfiable(context)) {
-                        context.setNegate(neg);
-                        return Retval(BooleanCondition::TRUE);
-                    }
-                }
-                context.setNegate(neg);
+                neglps.swap(r1.neglps);
+                neglps.merge(r2.neglps, context.cache());
+            }
+
+            if(!context.timeout() && !neglps.satisfiable(context))
+            {
+                return Retval(BooleanCondition::TRUE);
             }
             
             if (r1.formula->isTriviallyFalse()) {
+                r2.neglps = std::move(neglps);
                 return std::move(r2);
             } else if (r2.formula->isTriviallyFalse()) {
+                r2.neglps = std::move(neglps);
                 return std::move(r1);
             } 
             if (!context.timeout()){
@@ -1145,9 +1151,10 @@ namespace PetriEngine {
             {
                 r1.lps.clear();
                 r2.lps.clear();
+                neglps.clear();
             }
             
-            return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), std::move(r1.lps));            
+            return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), std::move(r1.lps), std::move(neglps));            
         }
         
         Retval AndCondition::simplify(SimplificationContext& context) const {
@@ -1216,37 +1223,39 @@ namespace PetriEngine {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
-            LinearPrograms lps;
+            LinearPrograms lps, neglps;
             if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 if ((m1.isZero() && m2.isZero()) || m1.substrationIsZero(m2)) {
                     return Retval(BooleanCondition::getShared(
                         context.negated() ? (m1.constant() != m2.constant()) : (m1.constant() == m2.constant())));
                 } else {
-                    if (context.negated()) {
-                        int constant = m2.constant() - m1.constant();
-                        m1 -= m2;
-                        m2 = m1;
-                        lps.add(context.cache(), std::move(m1), constant, Simplification::OP_GT);
-                        lps.add(context.cache(), std::move(m2), constant, Simplification::OP_LT);
-                    }
-                    else {
-                        int constant = m2.constant() - m1.constant();
-                        m1 -= m2;
-                        lps.add(context.cache(), m1, constant, Simplification::OP_EQ);
-                    }
+                    int constant = m2.constant() - m1.constant();
+                    m1 -= m2;
+                    m2 = m1;
+                    neglps.add(context.cache(), std::move(m1), constant, Simplification::OP_GT);
+                    Member m3 = m2;
+                    neglps.add(context.cache(), std::move(m2), constant, Simplification::OP_LT);
+                    lps.add(context.cache(), std::move(m3), constant, Simplification::OP_EQ);
+                    
+                    if(context.negated()) lps.swap(neglps);
                 }
             } else {
                 lps.addEmpty();
             }
             
-            if (!lps.satisfiable(context)) {
+            if (!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
-            } else {
+            } 
+            else if(!context.timeout() && !neglps.satisfiable(context))
+            {
+                return Retval(BooleanCondition::TRUE);            
+            } 
+            else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<NotEqualCondition>(_expr1, _expr2), std::move(lps));
+                    return Retval(std::make_shared<NotEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
-                    return Retval(std::make_shared<EqualCondition>(_expr1, _expr2), std::move(lps));
-                }                         
+                    return Retval(std::make_shared<EqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
+                }
             }
         }
         
@@ -1254,36 +1263,38 @@ namespace PetriEngine {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
-            LinearPrograms lps;
+            LinearPrograms lps, neglps;
             if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 if ((m1.isZero() && m2.isZero()) || m1.substrationIsZero(m2)) {
                     return Retval(std::make_shared<BooleanCondition>(
                         context.negated() ? (m1.constant() == m2.constant()) : (m1.constant() != m2.constant())));
                 } else{ 
-                    if (context.negated()) {
-                        int constant = m2.constant() - m1.constant();
-                        m1 -= m2;
-                        lps.add(context.cache(), std::move(m1), constant, Simplification::OP_EQ);
-                    }
-                    else {
-                        int constant = m2.constant() - m1.constant();
-                        m1 -= m2;
-                        m2 = m1;
-                        lps.add(context.cache(), std::move(m1), constant, Simplification::OP_GT);
-                        lps.add(context.cache(), std::move(m2), constant, Simplification::OP_LT);
-                    }
+                    int constant = m2.constant() - m1.constant();
+                    m1 -= m2;
+                    m2 = m1;
+                    lps.add(context.cache(), std::move(m1), constant, Simplification::OP_GT);
+                    Member m3 = m2;
+                    lps.add(context.cache(), std::move(m2), constant, Simplification::OP_LT);
+                    neglps.add(context.cache(), std::move(m3), constant, Simplification::OP_EQ);
+                    
+                    if(context.negated()) lps.swap(neglps);
                 }
             } else {
                 lps.addEmpty();
             }
             
-            if (!lps.satisfiable(context)) {
+            if (!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
-            } else {
+            } 
+            else if(!context.timeout() && !neglps.satisfiable(context))
+            {
+                return Retval(BooleanCondition::TRUE);            
+            }
+            else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<EqualCondition>(_expr1, _expr2), std::move(lps));
+                    return Retval(std::make_shared<EqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
-                    return Retval(std::make_shared<NotEqualCondition>(_expr1, _expr2), std::move(lps));
+                    return Retval(std::make_shared<NotEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 }                         
             }
         }
@@ -1292,7 +1303,7 @@ namespace PetriEngine {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
-            LinearPrograms lps;
+            LinearPrograms lps, neglps;
             if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 >= m2 : m1 < m2;
@@ -1305,19 +1316,26 @@ namespace PetriEngine {
                 {
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
+                    m2 = m1;
                     lps.add(context.cache(), std::move(m1), constant, (context.negated() ? Simplification::OP_GE : Simplification::OP_LT));
+                    neglps.add(context.cache(), std::move(m2), constant, (!context.negated() ? Simplification::OP_GE : Simplification::OP_LT));
                 }
             } else {
                 lps.addEmpty();
             }
             
-            if (!lps.satisfiable(context)) {
+            if (!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
-            } else {
+            }
+            else if(!context.timeout() && !neglps.satisfiable(context))
+            {
+                return Retval(BooleanCondition::TRUE);                
+            }
+            else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), std::move(lps));
+                    return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
-                    return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), std::move(lps));
+                    return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 }                         
             }
         }        
@@ -1345,13 +1363,13 @@ namespace PetriEngine {
 
             if(!context.timeout() && !neglps.satisfiable(context)){
                 return Retval(BooleanCondition::TRUE);
-            } else if (!lps.satisfiable(context)) {
+            } else if (!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), std::move(lps));
+                    return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
-                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), std::move(lps));
+                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 }                         
             }
         }
@@ -1379,13 +1397,13 @@ namespace PetriEngine {
             
             if(!context.timeout() && !neglps.satisfiable(context)) {
                 return Retval(BooleanCondition::TRUE);
-            }else if(!lps.satisfiable(context)) {
+            }else if(!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             } else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), std::move(lps));
+                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
-                    return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), std::move(lps));
+                    return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 }                         
             }
         }
@@ -1394,7 +1412,7 @@ namespace PetriEngine {
             Member m1 = _expr1->constraint(context);
             Member m2 = _expr2->constraint(context);
             
-            LinearPrograms lps;
+            LinearPrograms lps, neglps;
             if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
                 // test for trivial comparison
                 Trivial eval = context.negated() ? m1 < m2 : m1 >= m2;
@@ -1407,21 +1425,28 @@ namespace PetriEngine {
                 {
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
+                    m2 = m1;
                     lps.add(context.cache(), std::move(m1), constant, (context.negated() ? Simplification::OP_LT : Simplification::OP_GE));
+                    neglps.add(context.cache(), std::move(m2), constant, (context.negated() ? Simplification::OP_LT : Simplification::OP_GE));
                 }
                 
             } else {
                 lps.addEmpty();
             }
             
-            if (!lps.satisfiable(context)) 
+            if (!context.timeout() && !lps.satisfiable(context)) 
             {
                 return Retval(BooleanCondition::FALSE);
-            } else {
+            } 
+            else if(!context.timeout() && !neglps.satisfiable(context)) // EXPERIMENTAL
+            {
+                return Retval(BooleanCondition::TRUE);
+            }
+            else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), std::move(lps));
+                    return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
-                    return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), std::move(lps));
+                    return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 }                         
             }
         }

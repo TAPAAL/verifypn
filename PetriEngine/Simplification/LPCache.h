@@ -30,14 +30,15 @@ namespace PetriEngine {
                 auto res = vectors.insert(Vector(data));
                 Vector& v = const_cast<Vector&>(*res.first);
                 v.inc();
-                assert(v.refs() > 0);
+//                if(res.second) std::cout << "VECTORS : " << vectors.size() << std::endl;
+               // assert(v.refs() > 0);
                 return &v;
             }
             
             void invalidate(const Vector& vector)
             {
              //   vectors.erase(vector);
-                assert(vector.refs() == 0);
+             //   assert(vector.refs() == 0);
             }
 
             LinearProgram* cacheProgram(LinearProgram&& program);

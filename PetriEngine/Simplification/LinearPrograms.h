@@ -10,36 +10,59 @@ namespace PetriEngine {
 
         class LinearPrograms {
         private:
-            std::unordered_set<LinearProgram*> lps;
+            std::vector<LinearProgram*> lps;
             bool hasEmpty = false;
+            enum result_t { UKNOWN, IMPOSSIBLE, POSSIBLE };
+            result_t _result = result_t::UKNOWN;
         public:
             LinearPrograms(){
             }
                         
             LinearPrograms(LinearPrograms&& other) 
-            : lps(std::move(other.lps)), hasEmpty(other.hasEmpty)
+            : lps(std::move(other.lps)), hasEmpty(other.hasEmpty), _result(other._result)
             {
                 
             }
             
             LinearPrograms& operator = (LinearPrograms&& other)
             {
+                _result = other._result;
                 lps = std::move(other.lps);
                 hasEmpty = other.hasEmpty;
                 return *this;
             }
             
-            virtual ~LinearPrograms(){
+            void swap(LinearPrograms& other)
+            {
+                lps.swap(other.lps);
+                std::swap(hasEmpty, other.hasEmpty);
+                std::swap(_result, other._result);
             }
             
-            bool satisfiable(const PQL::SimplificationContext context) {
-                if(hasEmpty) return true;
-                for(auto& itt : lps){
+            virtual ~LinearPrograms(){
+                for(auto& l : lps) l->free();
+            }
+            
+            bool satisfiable(const PQL::SimplificationContext context, bool force = false) {
+                if(hasEmpty) 
+                {
+                    assert(_result == POSSIBLE);
+                    return true;
+                }
+                if(_result != UKNOWN) return _result == POSSIBLE;
+                for(int i = lps.size() - 1 ; i >= 0; --i)
+                {
                     if(context.timeout()) return true;
-                    if(!itt->isImpossible(context.net(), context.marking(), context.getLpTimeout())){
-                        return true;
+                    if(!lps[i]->isImpossible(context.net(), context.marking(), context.getLpTimeout())){
+                        _result = POSSIBLE;
+                    }
+                    else
+                    {
+                        lps.erase(lps.begin() + i);
                     }
                 }
+                if(_result == POSSIBLE) return true;
+                _result = IMPOSSIBLE;
                 return false;
             }
             
@@ -49,12 +72,19 @@ namespace PetriEngine {
             
             void addEmpty()
             {
+                _result = POSSIBLE;
                 hasEmpty = true;
             }
 
             void add(LPCache* factory, const Member& lh, int constant, op_t op){
                 Vector* vec = factory->createAndCache(lh.variables());
-                lps.insert(factory->cacheProgram(LinearProgram(vec, constant, op, factory)));
+                auto lp = factory->cacheProgram(LinearProgram(vec, constant, op, factory));
+                if(lp->knownImpossible()) return;
+                auto itt = std::lower_bound(lps.begin(), lps.end(), lp);
+                if(itt == lps.end() || *itt != lp)
+                {
+                    lps.insert(itt, lp);
+                }
             }
             
             /**
@@ -63,34 +93,64 @@ namespace PetriEngine {
              * @param lps2
              */
             void merge(LinearPrograms& lps2, LPCache* factory){
+                if(_result == IMPOSSIBLE)
+                {
+                    lps2.clear();
+                    return;
+                }
+                
+                if(lps2._result == IMPOSSIBLE)
+                {
+                    swap(lps2);
+                    lps2.clear();
+                }
+                
                 if (lps.size() == 0) {
-                    lps.swap(lps2.lps);
+                    swap(lps2);
+                    lps2.clear();
                     return;
                 }
                 else if (lps2.lps.size() == 0) {
                     return;
                 }
-                
-                std::unordered_set<LinearProgram*> merged;
+
+                std::vector<LinearProgram*> merged;
                 merged.reserve(lps.size() * lps2.lps.size());
                 for(LinearProgram* lp1 : lps){        
                     for(LinearProgram* lp2 : lps2.lps){
-                        merged.insert(
-                            factory->cacheProgram(
-                                LinearProgram::lpUnion(*lp1, *lp2)));
+                        merged.push_back(                            
+                                LinearProgram::lpUnion(*lp1, *lp2));
+                        if(merged.back()->knownImpossible())
+                        {
+                            merged.pop_back();
+                        }
                     }   
                 }
                 if(lps2.hasEmpty)
                 {
-                    merged.insert(lps.begin(), lps.end());
+                    merged.insert(merged.end(), lps.begin(), lps.end());
+                    for(auto& l : lps) l->inc();
                 }
                 if(hasEmpty)
                 {
-                    merged.insert(lps2.lps.begin(), lps2.lps.end());
+                    merged.insert(merged.end(), lps2.lps.begin(), lps2.lps.end());
+                    for(auto& l : lps2.lps) l->inc();
                 }
+
+                std::sort(merged.begin(), merged.end());
+                merged.erase( unique( merged.begin(), merged.end() ), merged.end() );
+
                 lps.swap(merged);
                 lps2.clear();
                 hasEmpty = hasEmpty && lps2.hasEmpty;
+                if(hasEmpty)
+                {
+                    _result = POSSIBLE;
+                }
+                else if(_result == IMPOSSIBLE || lps2._result == IMPOSSIBLE)
+                {
+                    _result = IMPOSSIBLE;
+                }
             }
             
 
@@ -101,9 +161,42 @@ namespace PetriEngine {
              */
             void makeUnion(LinearPrograms& lps2)
             {
-                lps.insert(lps2.lps.begin(), lps2.lps.end());
+                if(_result == IMPOSSIBLE && lps2._result == IMPOSSIBLE)
+                {
+                    lps.clear();
+                    return;
+                }
+                else if(_result == IMPOSSIBLE)
+                {
+                    swap(lps2);
+                    return;
+                }
+                else if(lps2._result == IMPOSSIBLE)
+                {
+                    return;
+                }
+                
+                lps.insert(lps.end(), lps2.lps.begin(), lps2.lps.end());
+                std::sort(lps.begin(), lps.end());
+                lps.erase( unique( lps.begin(), lps.end() ), lps.end() );
+
                 lps2.clear();
                 hasEmpty = hasEmpty || lps2.hasEmpty;
+                if(hasEmpty)
+                {
+                    _result = POSSIBLE;
+                }
+                else
+                {
+                    if(_result == IMPOSSIBLE && lps2._result == IMPOSSIBLE)
+                    {
+                        _result = IMPOSSIBLE;
+                    }
+                    else
+                    {
+                        _result = result_t::UKNOWN;
+                    }
+                }
             }
             
             void clear()

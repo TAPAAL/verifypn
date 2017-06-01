@@ -60,6 +60,7 @@ namespace PetriEngine {
 
             size_t refs() const { return ref; }
             
+            bool knownImpossible() { return _result == result_t::IMPOSSIBLE; }
             bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout);
             void swap(LinearProgram& other)
             {
@@ -67,58 +68,7 @@ namespace PetriEngine {
                 std::swap(_equations, other._equations);
             }
             
-            static LinearProgram lpUnion(LinearProgram& lp1, LinearProgram& lp2){
-                LinearProgram res(lp1.factory);
-
-                if( lp1._result == result_t::IMPOSSIBLE ||
-                    lp2._result == result_t::IMPOSSIBLE)
-                {
-                    // impossibility is compositional -- linear constraint-systems are big conjunctions.
-                    res._result = result_t::IMPOSSIBLE;
-                }
-
-                res._equations.reserve(lp1._equations.size() + lp2._equations.size());
-                auto it1 = lp1._equations.begin();
-                auto it2 = lp2._equations.begin();
-                
-                while(it1 != lp1._equations.end() && it2 != lp2._equations.end())
-                {
-                    if(it1->row < it2->row)
-                    {
-                        res._equations.push_back(*it1);
-                        ++it1;
-                    }
-                    else if(it2->row < it1->row)
-                    {
-                        res._equations.push_back(*it2);
-                        ++it2;
-                    }
-                    else
-                    {
-                        equation_t n = *it1;
-                        n.lower = std::max(n.lower, it2->lower);
-                        n.upper = std::min(n.upper, it2->upper);
-                        if(n.upper < n.lower)
-                        {
-                            res._result = result_t::IMPOSSIBLE;
-                            res._equations.clear();
-                            return res;
-                        }
-                        ++it1;
-                        ++it2;
-                    }                    
-                }
-                
-                if(it1 != lp1._equations.end()) 
-                    res._equations.insert(res._equations.end(), it1, lp1._equations.end());
-
-                if(it2 != lp2._equations.end()) 
-                    res._equations.insert(res._equations.end(), it2, lp2._equations.end());
-                
-                for(equation_t& el : res._equations) el.row->inc();
-
-                return res;
-            }            
+            static LinearProgram* lpUnion(LinearProgram& lp1, LinearProgram& lp2);        
             
         };
     }

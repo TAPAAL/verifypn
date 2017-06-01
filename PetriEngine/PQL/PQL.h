@@ -35,7 +35,6 @@ namespace PetriEngine {
     namespace Simplification
     {
         class Member;
-        class LiniearPrograms;
         struct Retval;
     }
     namespace PQL {
