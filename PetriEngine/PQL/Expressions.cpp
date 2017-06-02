@@ -1120,41 +1120,40 @@ namespace PetriEngine {
                 return Retval(BooleanCondition::TRUE);
             } 
             
-            // Lets try to see if the r1 AND r2 can ever be false at the same time
-            // If not, then we know that r1 || r2 must be true.
-            // we check this by checking if !r1 && !r2 is unsat
-            LinearPrograms neglps;
-            if(r1.formula->isTriviallyFalse()) neglps.swap(r2.neglps);
-            else if(r2.formula->isTriviallyFalse()) neglps.swap(r1.neglps);
-            else 
+            if(r1.formula->isTriviallyFalse())
             {
-                neglps.swap(r1.neglps);
-                neglps.merge(r2.neglps, context.cache());
+                if(!r2.neglps.satisfiable(context)) return Retval(BooleanCondition::TRUE);
+                else return std::move(r2);
             }
-
-            if(!context.timeout() && !neglps.satisfiable(context))
+            else if(r2.formula->isTriviallyFalse())
             {
-                return Retval(BooleanCondition::TRUE);
+                if(!r1.neglps.satisfiable(context)) return Retval(BooleanCondition::TRUE);
+                else return std::move(r1);
             }
-            
-            if (r1.formula->isTriviallyFalse()) {
-                r2.neglps = std::move(neglps);
-                return std::move(r2);
-            } else if (r2.formula->isTriviallyFalse()) {
-                r2.neglps = std::move(neglps);
-                return std::move(r1);
-            } 
-            if (!context.timeout()){
-                r1.lps.makeUnion(r2.lps);
+            else if(!context.timeout())
+            {
+                r1.neglps.merge(r2.neglps, context.cache());
             }
             else
             {
                 r1.lps.clear();
-                r2.lps.clear();
-                neglps.clear();
+                r2.lps.clear();                
+            }
+
+            // Lets try to see if the r1 AND r2 can ever be false at the same time
+            // If not, then we know that r1 || r2 must be true.
+            // we check this by checking if !r1 && !r2 is unsat
+            
+            if(!context.timeout() && !r1.neglps.satisfiable(context))
+            {
+                return Retval(BooleanCondition::TRUE);
             }
             
-            return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), std::move(r1.lps), std::move(neglps));            
+            if (!context.timeout()){
+                r1.lps.makeUnion(r2.lps);
+            }
+            
+            return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), std::move(r1.lps), std::move(r1.neglps));            
         }
         
         Retval AndCondition::simplify(SimplificationContext& context) const {

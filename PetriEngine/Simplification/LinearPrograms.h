@@ -188,14 +188,7 @@ namespace PetriEngine {
                 }
                 else
                 {
-                    if(_result == IMPOSSIBLE && lps2._result == IMPOSSIBLE)
-                    {
-                        _result = IMPOSSIBLE;
-                    }
-                    else
-                    {
-                        _result = result_t::UKNOWN;
-                    }
+                    _result = result_t::UKNOWN;
                 }
             }
             
