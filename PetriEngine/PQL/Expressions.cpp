@@ -895,61 +895,61 @@ namespace PetriEngine {
             return _expr->constraint(context) *= neg;
         }
         
-        Retval simplifyEX(Retval& r) {
-            if(r.formula->isTriviallyTrue()) {
+        Retval simplifyEX(Retval& r, SimplificationContext& context) {
+            if(r.formula->isTriviallyTrue() || !r.neglps.satisfiable(context, true)) {
                 return Retval(std::make_shared<NotCondition>(
                         std::make_shared<DeadlockCondition>()));
-            } else if(r.formula->isTriviallyFalse()) {
+            } else if(r.formula->isTriviallyFalse() || !r.lps.satisfiable(context, true)) {
                 return Retval(BooleanCondition::FALSE);
             } else {
                 return Retval(std::make_shared<EXCondition>(r.formula));
             }
         }
         
-        Retval simplifyAX(Retval& r) {
-            if(r.formula->isTriviallyTrue()){
+        Retval simplifyAX(Retval& r, SimplificationContext& context) {
+            if(r.formula->isTriviallyTrue() || !r.neglps.satisfiable(context, true)){
                 return Retval(BooleanCondition::TRUE);
-            } else if(r.formula->isTriviallyFalse()){
+            } else if(r.formula->isTriviallyFalse() || !r.lps.satisfiable(context, true)){
                 return Retval(std::make_shared<DeadlockCondition>());
             } else{
                 return Retval(std::make_shared<AXCondition>(r.formula));
             }
         }
         
-        Retval simplifyEF(Retval& r){
-            if(r.formula->isTriviallyTrue()){
+        Retval simplifyEF(Retval& r, SimplificationContext& context){
+            if(r.formula->isTriviallyTrue() || !r.neglps.satisfiable(context, true)){
                 return Retval(BooleanCondition::TRUE);
-            } else if(r.formula->isTriviallyFalse()){
+            } else if(r.formula->isTriviallyFalse() || !r.lps.satisfiable(context, true)){
                 return Retval(BooleanCondition::FALSE);
             } else {
                 return Retval(std::make_shared<EFCondition>(r.formula));
             }
         }
         
-        Retval simplifyAF(Retval& r){
-            if(r.formula->isTriviallyTrue()){
+        Retval simplifyAF(Retval& r, SimplificationContext& context){
+            if(r.formula->isTriviallyTrue() || !r.neglps.satisfiable(context, true)){
                 return Retval(BooleanCondition::TRUE);
-            } else if(r.formula->isTriviallyFalse()){
+            } else if(r.formula->isTriviallyFalse() || !r.lps.satisfiable(context, true)){
                 return Retval(BooleanCondition::FALSE);
             } else {
                 return Retval(std::make_shared<AFCondition>(r.formula));
             }
         }
         
-        Retval simplifyEG(Retval& r){
-            if(r.formula->isTriviallyTrue()){
+        Retval simplifyEG(Retval& r, SimplificationContext& context){
+            if(r.formula->isTriviallyTrue() || !r.neglps.satisfiable(context, true)){
                 return Retval(BooleanCondition::TRUE);
-            } else if(r.formula->isTriviallyFalse()){
+            } else if(r.formula->isTriviallyFalse() || !r.lps.satisfiable(context, true)){
                 return Retval(BooleanCondition::FALSE);
             } else {
                 return Retval(std::make_shared<EGCondition>(r.formula));
             }
         }
         
-        Retval simplifyAG(Retval& r){
-            if(r.formula->isTriviallyTrue()){
+        Retval simplifyAG(Retval& r, SimplificationContext& context){
+            if(r.formula->isTriviallyTrue() || !r.neglps.satisfiable(context, true)){
                 return Retval(BooleanCondition::TRUE);
-            } else if(r.formula->isTriviallyFalse()){
+            } else if(r.formula->isTriviallyFalse() || !r.lps.satisfiable(context, true)){
                 return Retval(BooleanCondition::FALSE);
             } else {
                 return Retval(std::make_shared<AGCondition>(r.formula));
@@ -958,32 +958,32 @@ namespace PetriEngine {
         
         Retval EXCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
-            return context.negated() ? simplifyAX(r) : simplifyEX(r);
+            return context.negated() ? simplifyAX(r, context) : simplifyEX(r, context);
         }
         
         Retval AXCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
-            return context.negated() ? simplifyEX(r) : simplifyAX(r);
+            return context.negated() ? simplifyEX(r, context) : simplifyAX(r, context);
         }  
         
         Retval EFCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
-            return context.negated() ? simplifyAG(r) : simplifyEF(r);  
+            return context.negated() ? simplifyAG(r, context) : simplifyEF(r, context);  
         }
         
         Retval AFCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
-            return context.negated() ? simplifyEG(r) : simplifyAF(r);  
+            return context.negated() ? simplifyEG(r, context) : simplifyAF(r, context);  
         }
         
         Retval EGCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
-            return context.negated() ? simplifyAF(r) : simplifyEG(r);  
+            return context.negated() ? simplifyAF(r, context) : simplifyEG(r, context);  
         }
         
         Retval AGCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
-            return context.negated() ? simplifyEF(r) : simplifyAG(r);  
+            return context.negated() ? simplifyEF(r, context) : simplifyAG(r, context);  
         }
         
         Retval EUCondition::simplify(SimplificationContext& context) const {
@@ -991,14 +991,14 @@ namespace PetriEngine {
             bool neg = context.negated();
             context.setNegate(false);
             Retval r2 = _cond2->simplify(context);
-            if(r2.formula->isTriviallyTrue())
+            if(r2.formula->isTriviallyTrue() || !r2.neglps.satisfiable(context, true))
             {
                 context.setNegate(neg);
                 return neg ? 
                             Retval(BooleanCondition::FALSE) :
                             Retval(BooleanCondition::TRUE);
             }
-            else if(r2.formula->isTriviallyFalse())
+            else if(r2.formula->isTriviallyFalse() || !r2.lps.satisfiable(context, true))
             {
                 context.setNegate(neg);
                 return neg ? 
@@ -1009,19 +1009,19 @@ namespace PetriEngine {
             context.setNegate(neg);
             
             if(context.negated()){
-                if(r1.formula->isTriviallyTrue()){
+                if(r1.formula->isTriviallyTrue() || !r1.neglps.satisfiable(context, true)){
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<EFCondition>(r2.formula)));
-                } else if(r1.formula->isTriviallyFalse()){
+                } else if(r1.formula->isTriviallyFalse() || !r1.lps.satisfiable(context, true)){
                     return Retval(std::make_shared<NotCondition>(r2.formula));
                 } else {
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<EUCondition>(r1.formula, r2.formula)));
                 }
             } else {
-                if(r1.formula->isTriviallyTrue()){
+                if(r1.formula->isTriviallyTrue() || !r1.neglps.satisfiable(context, true)){
                     return Retval(std::make_shared<EFCondition>(r2.formula));
-                } else if(r1.formula->isTriviallyFalse()){
+                } else if(r1.formula->isTriviallyFalse() || !r1.lps.satisfiable(context, true)){
                     return r2;
                 } else {
                     return Retval(std::make_shared<EUCondition>(r1.formula, r2.formula));
@@ -1034,14 +1034,14 @@ namespace PetriEngine {
             bool neg = context.negated();
             context.setNegate(false);
             Retval r2 = _cond2->simplify(context);
-            if(r2.formula->isTriviallyTrue())
+            if(r2.formula->isTriviallyTrue() || !r2.neglps.satisfiable(context, true))
             {
                 context.setNegate(neg);
                 return neg ? 
                             Retval(BooleanCondition::FALSE) :
                             Retval(BooleanCondition::TRUE);
             }
-            else if(r2.formula->isTriviallyFalse())
+            else if(r2.formula->isTriviallyFalse() || !r2.lps.satisfiable(context, true))
             {
                 context.setNegate(neg);
                 return neg ? 
@@ -1052,19 +1052,19 @@ namespace PetriEngine {
             context.setNegate(neg);
             
             if(context.negated()){
-                if(r1.formula->isTriviallyTrue()){
+                if(r1.formula->isTriviallyTrue() || !r1.neglps.satisfiable(context, true)){
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<AFCondition>(r2.formula)));
-                } else if(r1.formula->isTriviallyFalse()){
+                } else if(r1.formula->isTriviallyFalse() || !r1.lps.satisfiable(context, true)){
                     return Retval(std::make_shared<NotCondition>(r2.formula));
                 } else {
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<AUCondition>(r1.formula, r2.formula)));
                 }
             } else {
-                if(r1.formula->isTriviallyTrue()){
+                if(r1.formula->isTriviallyTrue() || !r1.neglps.satisfiable(context, true)){
                     return Retval(std::make_shared<AFCondition>(r2.formula));
-                } else if(r1.formula->isTriviallyFalse()){
+                } else if(r1.formula->isTriviallyFalse() || !r1.lps.satisfiable(context, true)){
                     return r2;
                 } else {
                     return Retval(std::make_shared<AUCondition>(r1.formula, r2.formula));
@@ -1077,8 +1077,14 @@ namespace PetriEngine {
                 if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
                     return Retval(BooleanCondition::FALSE);
                 } else if (r1.formula->isTriviallyTrue()) {
+                    //if(!r2.lps.satisfiable(context)) 
+                    //    return Retval(BooleanCondition::FALSE);
+                    
                     return std::move(r2);
                 } else if (r2.formula->isTriviallyTrue()) {
+                    //if(!r1.lps.satisfiable(context)) 
+                    //    return Retval(BooleanCondition::FALSE);
+                    
                     return std::move(r1);
                 }
                 
@@ -1122,13 +1128,15 @@ namespace PetriEngine {
             
             if(r1.formula->isTriviallyFalse())
             {
-                if(!r2.neglps.satisfiable(context)) return Retval(BooleanCondition::TRUE);
-                else return std::move(r2);
+                /*if(!r2.neglps.satisfiable(context)) 
+                    return Retval(BooleanCondition::TRUE);
+                else*/ return std::move(r2);
             }
             else if(r2.formula->isTriviallyFalse())
             {
-                if(!r1.neglps.satisfiable(context)) return Retval(BooleanCondition::TRUE);
-                else return std::move(r1);
+                /*if(!r1.neglps.satisfiable(context)) 
+                    return Retval(BooleanCondition::TRUE);
+                else*/ return std::move(r1);
             }
             else if(!context.timeout())
             {
@@ -1242,14 +1250,14 @@ namespace PetriEngine {
                 lps.addEmpty();
             }
             
-            if (!context.timeout() && !lps.satisfiable(context)) {
+            /*if (!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             } 
             else if(!context.timeout() && !neglps.satisfiable(context))
             {
                 return Retval(BooleanCondition::TRUE);            
             } 
-            else {
+            else */{
                 if (context.negated()) {
                     return Retval(std::make_shared<NotEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
@@ -1282,14 +1290,14 @@ namespace PetriEngine {
                 lps.addEmpty();
             }
             
-            if (!context.timeout() && !lps.satisfiable(context)) {
+            /*if (!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             } 
             else if(!context.timeout() && !neglps.satisfiable(context))
             {
                 return Retval(BooleanCondition::TRUE);            
             }
-            else {
+            else*/ {
                 if (context.negated()) {
                     return Retval(std::make_shared<EqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
@@ -1323,14 +1331,14 @@ namespace PetriEngine {
                 lps.addEmpty();
             }
             
-            if (!context.timeout() && !lps.satisfiable(context)) {
+            /*if (!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             }
             else if(!context.timeout() && !neglps.satisfiable(context))
             {
                 return Retval(BooleanCondition::TRUE);                
             }
-            else {
+            else*/ {
                 if (context.negated()) {
                     return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
@@ -1360,11 +1368,11 @@ namespace PetriEngine {
                 lps.addEmpty();
             }
 
-            if(!context.timeout() && !neglps.satisfiable(context)){
+            /*if(!context.timeout() && !neglps.satisfiable(context)){
                 return Retval(BooleanCondition::TRUE);
             } else if (!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
-            } else {
+            } else*/ {
                 if (context.negated()) {
                     return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
@@ -1394,11 +1402,11 @@ namespace PetriEngine {
                 lps.addEmpty();
             }
             
-            if(!context.timeout() && !neglps.satisfiable(context)) {
+            /*if(!context.timeout() && !neglps.satisfiable(context)) {
                 return Retval(BooleanCondition::TRUE);
             }else if(!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
-            } else {
+            } else*/ {
                 if (context.negated()) {
                     return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
@@ -1433,7 +1441,7 @@ namespace PetriEngine {
                 lps.addEmpty();
             }
             
-            if (!context.timeout() && !lps.satisfiable(context)) 
+            /*if (!context.timeout() && !lps.satisfiable(context)) 
             {
                 return Retval(BooleanCondition::FALSE);
             } 
@@ -1441,7 +1449,7 @@ namespace PetriEngine {
             {
                 return Retval(BooleanCondition::TRUE);
             }
-            else {
+            else*/ {
                 if (context.negated()) {
                     return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {

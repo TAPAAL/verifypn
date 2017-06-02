@@ -10,7 +10,6 @@ namespace PetriEngine {
         }
         
         LinearProgram::LinearProgram(Vector* vec, int constant, op_t op, LPCache* factory){
-            this->factory = factory;
             // TODO fix memory-management here!
             equation_t c;
             switch(op)
@@ -41,29 +40,12 @@ namespace PetriEngine {
             _equations.push_back(c);
         }
         
-        void LinearProgram::inc()
-        {
-            ++ref;
-        }
-
-        void LinearProgram::free()
-        {
-            --ref;
-            if(ref == 0)
-            {
-                for(auto& eq : _equations)
-                {
-                    eq.row->free();
-                }
-                factory->invalidate(this);
-            }
-        }        
-
-        bool LinearProgram::isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout){
+        bool LinearProgram::isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout, bool use_ilp) {
            
             if(_result != result_t::UKNOWN) 
             {
-                return _result == result_t::IMPOSSIBLE;
+                if(!use_ilp || _result == result_t::IMPOSSIBLE)
+                    return _result == result_t::IMPOSSIBLE;
             }
 
             if(_equations.size() == 0){
@@ -98,7 +80,7 @@ namespace PetriEngine {
                 set_constr_type(lp, rowno, GE);
                 set_rh(lp, rowno++, (0 - (int)m0[p]));
             }
-            for(auto& eq : _equations){
+            for(const auto& eq : _equations){
                 eq.row->write(row);               
 
                 for(size_t mode : {0, 1})
@@ -133,7 +115,7 @@ namespace PetriEngine {
             set_minim(lp);
 
             for (size_t i = 0; i < nCol; i++){
-                set_int(lp, 1 + i, TRUE);
+                set_int(lp, 1 + i, use_ilp ? TRUE : false);
             }
             
             set_timeout(lp, timeout);
@@ -153,64 +135,53 @@ namespace PetriEngine {
             {
                 _result = result_t::POSSIBLE;
             }
-            return _result == result_t::IMPOSSIBLE;
+           return _result == result_t::IMPOSSIBLE;
         }
         
         
-        LinearProgram* LinearProgram::lpUnion(LinearProgram& lp1, LinearProgram& lp2) {
-            LinearProgram res(lp1.factory);
-
-            if( lp1._result == result_t::IMPOSSIBLE ||
-                lp2._result == result_t::IMPOSSIBLE)
+        void LinearProgram::make_union(const LinearProgram& other)
+        {
+            if(_result == IMPOSSIBLE || other._result == IMPOSSIBLE)
             {
-                // impossibility is compositional -- linear constraint-systems are big conjunctions.
-                res._result = result_t::IMPOSSIBLE;
-                res._equations.clear();
-                return res.factory->cacheProgram(std::move(res));
+                _result = IMPOSSIBLE;
+                _equations.clear();
+                return;
             }
 
-            res._equations.reserve(lp1._equations.size() + lp2._equations.size());
-            auto it1 = lp1._equations.begin();
-            auto it2 = lp2._equations.begin();
+            auto it1 = _equations.begin();
+            auto it2 = other._equations.begin();
 
-            while(it1 != lp1._equations.end() && it2 != lp2._equations.end())
+            while(it1 != _equations.end() && it2 != other._equations.end())
             {
                 if(it1->row < it2->row)
                 {
-                    res._equations.push_back(*it1);
                     ++it1;
                 }
                 else if(it2->row < it1->row)
                 {
-                    res._equations.push_back(*it2);
+                    it1 = _equations.insert(it1, *it2);
                     ++it2;
+                    ++it1;
                 }
                 else
                 {
-                    equation_t n = *it1;
+                    equation_t& n = *it1;
                     n.lower = std::max(n.lower, it2->lower);
                     n.upper = std::min(n.upper, it2->upper);
                     if(n.upper < n.lower)
                     {
-                        res._result = result_t::IMPOSSIBLE;
-                        res._equations.clear();
-                        return res.factory->cacheProgram(std::move(res));
+                        _result = result_t::IMPOSSIBLE;
+                        _equations.clear();
+                        return;
                     }
                     ++it1;
                     ++it2;
                 }                    
             }
-            if(it1 != lp1._equations.end()) 
-                res._equations.insert(res._equations.end(), it1, lp1._equations.end());
-            if(it2 != lp2._equations.end()) 
-                res._equations.insert(res._equations.end(), it2, lp2._equations.end());
-            for(equation_t& el : res._equations)
-            {
-                el.row->inc();
-            }
 
-            return res.factory->cacheProgram(std::move(res));
-        }            
+            if(it2 != other._equations.end()) 
+                _equations.insert(_equations.end(), it2, other._equations.end());
+        }
     }
 }
 

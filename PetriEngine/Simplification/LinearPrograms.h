@@ -10,7 +10,7 @@ namespace PetriEngine {
 
         class LinearPrograms {
         private:
-            std::vector<LinearProgram*> lps;
+            std::vector<LPWrap> lps;
             bool hasEmpty = false;
             enum result_t { UKNOWN, IMPOSSIBLE, POSSIBLE };
             result_t _result = result_t::UKNOWN;
@@ -40,21 +40,27 @@ namespace PetriEngine {
             }
             
             virtual ~LinearPrograms(){
-                for(auto& l : lps) l->free();
             }
             
-            bool satisfiable(const PQL::SimplificationContext context, bool force = false) {
+            bool satisfiable(const PQL::SimplificationContext context, bool use_ilp = false) {
                 if(hasEmpty) 
                 {
                     assert(_result == POSSIBLE);
                     return true;
                 }
-                if(_result != UKNOWN) return _result == POSSIBLE;
-                for(int i = lps.size() - 1 ; i >= 0; --i)
+                if(context.timeout()) return true;
+                if(_result != UKNOWN)
+                {
+                    if(!use_ilp || _result == IMPOSSIBLE)
+                        return _result == POSSIBLE;
+                }
+                
+                for(int i = lps.size() -1; i >= 0 ; --i)
                 {
                     if(context.timeout()) return true;
-                    if(!lps[i]->isImpossible(context.net(), context.marking(), context.getLpTimeout())){
+                    if(!lps[i]->isImpossible(context.net(), context.marking(), context.getLpTimeout(), use_ilp)){
                         _result = POSSIBLE;
+                        break;
                     }
                     else
                     {
@@ -78,12 +84,12 @@ namespace PetriEngine {
 
             void add(LPCache* factory, const Member& lh, int constant, op_t op){
                 Vector* vec = factory->createAndCache(lh.variables());
-                auto lp = factory->cacheProgram(LinearProgram(vec, constant, op, factory));
+                auto lp = LPWrap(std::make_shared<LinearProgram>(vec, constant, op, factory));
                 if(lp->knownImpossible()) return;
-                auto itt = std::lower_bound(lps.begin(), lps.end(), lp);
-                if(itt == lps.end() || *itt != lp)
+                auto lb = std::lower_bound(lps.begin(), lps.end(), lp);
+                if(lb == lps.end() || !(*lb == lp))
                 {
-                    lps.insert(itt, lp);
+                    lps.insert(lb, lp);
                 }
             }
             
@@ -113,35 +119,47 @@ namespace PetriEngine {
                 else if (lps2.lps.size() == 0) {
                     return;
                 }
-
-                std::vector<LinearProgram*> merged;
-                merged.reserve(lps.size() * lps2.lps.size());
-                for(LinearProgram* lp1 : lps){        
-                    for(LinearProgram* lp2 : lps2.lps){
-                        LinearProgram* prog =                             
-                                LinearProgram::lpUnion(*lp1, *lp2);
-                        if(!prog->knownImpossible())
+                
+                auto& small = size() < lps2.size() ? lps : lps2.lps;
+                auto& large = !(size() < lps2.size()) ? lps : lps2.lps;
+                
+                std::vector<LPWrap> hadempty;
+                if(lps2.hasEmpty) hadempty = large;
+                // do everything inline
+                for(auto it = large.begin(); it != large.end(); ++it){ 
+                    for(size_t i = 0; i < small.size(); ++i){
+                        if(i == (small.size() - 1))
                         {
-                            merged.push_back(prog);
+                            (*it)->make_union(*small[i]);
+                            if((*it)->knownImpossible())
+                            {
+                                it = large.erase(it);
+                            }
                         }
-                    }   
+                        else
+                        {
+                            LPWrap lw(std::make_shared<LinearProgram>(*(*it)));
+                            lw->make_union(*small[i]);
+                            hadempty.push_back(lw);
+                        }
+                    }
                 }
-                if(lps2.hasEmpty)
-                {
-                    merged.insert(merged.end(), lps.begin(), lps.end());
-                    for(auto& l : lps) l->inc();
-                }
+                
                 if(hasEmpty)
                 {
-                    merged.insert(merged.end(), lps2.lps.begin(), lps2.lps.end());
-                    for(auto& l : lps2.lps) l->inc();
+                    large.insert(large.end(), small.begin(), small.end());
+                }
+                small.clear();
+                
+                if(hadempty.size() > 0)
+                {
+                    large.insert(large.end(), hadempty.begin(), hadempty.end());
                 }
 
-                std::sort(merged.begin(), merged.end());
-                merged.erase( unique( merged.begin(), merged.end() ), merged.end() );
+                std::sort(large.begin(), large.end());
+                large.erase( unique( large.begin(), large.end() ), large.end() );
 
-                lps.swap(merged);
-                lps2.clear();
+                if(&large != &lps) lps.swap(large);
                 hasEmpty = hasEmpty && lps2.hasEmpty;
                 if(hasEmpty)
                 {
@@ -175,12 +193,31 @@ namespace PetriEngine {
                 {
                     return;
                 }
-                
-                lps.insert(lps.end(), lps2.lps.begin(), lps2.lps.end());
-                std::sort(lps.begin(), lps.end());
-                lps.erase( unique( lps.begin(), lps.end() ), lps.end() );
 
-                lps2.clear();
+                auto& small = lps2.size() < size() ? lps2.lps : lps;
+                auto& large = !(lps2.size() < size()) ? lps2.lps : lps;
+                
+                if(std::min(lps2.lps.size(), size()) <= 5)
+                {
+                    
+                    auto lit = large.begin();
+                    for(auto& el : small)
+                    {
+                        auto lb = std::lower_bound(large.begin(), large.end(), el);
+                        lit = large.insert(lb, el);
+                    }
+                    small.clear();
+                }
+                else
+                {
+                    large.insert(large.begin(), small.begin(), small.end());
+                    small.clear();
+                    std::sort(large.begin(), large.end());
+                    lps.erase( unique( large.begin(), large.end() ), large.end() );
+                }
+                
+                if(&lps != &large) lps.swap(large);
+                
                 hasEmpty = hasEmpty || lps2.hasEmpty;
                 if(hasEmpty)
                 {
@@ -194,10 +231,6 @@ namespace PetriEngine {
             
             void clear()
             {
-                for(auto& l : lps)
-                {
-                    l->free();
-                }
                 lps.clear();
             }
             

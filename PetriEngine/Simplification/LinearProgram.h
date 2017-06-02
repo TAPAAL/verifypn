@@ -2,6 +2,7 @@
 #define LINEARPROGRAM_H
 #include <algorithm>
 #include <unordered_set>
+#include <memory>
 #include "../PetriNet.h"
 #include "Member.h"
 #include "Vector.h"
@@ -13,13 +14,13 @@ namespace PetriEngine {
         {
             double upper = std::numeric_limits<double>::infinity();
             double lower = -std::numeric_limits<double>::infinity();
-            double operator [] (size_t i)
+            double operator [] (size_t i) const
             {
                 return i > 0 ? upper : lower;
             }
             Vector* row;
             
-            bool operator <(const equation_t& other)
+            bool operator <(const equation_t& other) const
             {
                 return row < other.row;
             }
@@ -30,12 +31,16 @@ namespace PetriEngine {
             enum result_t { UKNOWN, IMPOSSIBLE, POSSIBLE };
             result_t _result = result_t::UKNOWN;
             std::vector<equation_t> _equations;
-            std::vector<int> _active;
-            size_t ref = 0;
-            LPCache* factory;
         public:
             virtual ~LinearProgram();
-            LinearProgram(LPCache* factory) : factory(factory){};
+            LinearProgram(){};
+            
+            LinearProgram(const LinearProgram& other)
+            : _result(other._result), _equations(other._equations)
+            {
+                
+            }
+            
             LinearProgram(Vector* vec, int constant, op_t op, LPCache* factory);
             size_t size() const
             {
@@ -55,23 +60,20 @@ namespace PetriEngine {
                                 _equations.size()*sizeof(equation_t)) == 0;
             }
             
-            void inc();
-            
-            void free();
-
-            size_t refs() const { return ref; }
+            bool operator < (const LinearProgram& other) const
+            {
+                if(size() != other.size()) return size() < other.size();
+                int res = memcmp(   _equations.data(), other._equations.data(), 
+                                    _equations.size()*sizeof(equation_t));
+                if(res != 0) return res < 0;
+                return false;
+            }
             
             bool knownImpossible() const { return _result == result_t::IMPOSSIBLE; }
             bool knownPossible() const { return _result == result_t::POSSIBLE; }
-            bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout);
-            void swap(LinearProgram& other)
-            {
-                std::swap(_result, other._result);
-                std::swap(_equations, other._equations);
-                std::swap(_active, other._active);
-            }
-            
-            static LinearProgram* lpUnion(LinearProgram& lp1, LinearProgram& lp2);        
+            bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout, bool use_ilp = false);
+
+            void make_union(const LinearProgram& other);
             
             std::ostream& print(std::ostream& ss, size_t indent = 0) const
             {
@@ -91,7 +93,44 @@ namespace PetriEngine {
             }
             
         };
-    }
+        
+        struct LPWrap
+        {
+            LPWrap(const std::shared_ptr<LinearProgram>& prog) : prog(prog) {};
+            std::shared_ptr<LinearProgram> prog;
+            
+            bool operator < (const LPWrap& other) const
+            {
+                return (*prog) < (*other.prog);
+            }
+            
+            bool operator ==(const LPWrap& other) const
+            {
+                return (*prog) == (*other.prog);
+            }
+            
+            LinearProgram& operator*()
+            {
+                return *prog;
+            }
+            
+            const LinearProgram& operator*() const
+            {
+                return *prog;
+            }
+            
+            LinearProgram* operator ->()
+            {
+                return &(*prog);
+            }
+
+            const LinearProgram* operator ->() const
+            {
+                return &(*prog);
+            }
+            
+        };
+    }   
 }
 
 namespace std
@@ -99,12 +138,12 @@ namespace std
     using namespace PetriEngine::Simplification;
     
     template <>
-    struct hash<LinearProgram>
+    struct hash<LPWrap>
     {
-        size_t operator()(const LinearProgram& k) const
+        size_t operator()(const LPWrap& k) const
         {
-            return MurmurHash64A(k.equations().data(), 
-                    k.size() * sizeof(int), 
+            return MurmurHash64A(k->equations().data(), 
+                    k->size() * sizeof(int), 
                     1337);
         }
     };

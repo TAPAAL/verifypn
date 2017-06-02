@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <unordered_set>
+#include <memory>
 #include "MurmurHash2.h"
 #include "Member.h"
 #include "LinearProgram.h"
@@ -41,13 +42,10 @@ namespace PetriEngine {
              //   assert(vector.refs() == 0);
             }
 
-            LinearProgram* cacheProgram(LinearProgram&& program);
-            void invalidate(LinearProgram* lp);
             
         private:
             // unordered_map does not invalidate on insert, only erase
             std::unordered_set<Vector> vectors;
-            std::unordered_set<LinearProgram> programs;
         };
 
     }
