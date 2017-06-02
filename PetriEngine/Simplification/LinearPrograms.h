@@ -200,6 +200,30 @@ namespace PetriEngine {
                 }
                 lps.clear();
             }
+            
+            std::ostream& print(std::ostream& ss) const
+            {
+                ss << "### LPS IS ";
+                switch(_result)
+                {
+                    case POSSIBLE:
+                        ss << "POSSIBLE";
+                        break;
+                    case IMPOSSIBLE:
+                        ss << "IMPOSSIBLE";
+                        break;
+                    case result_t::UKNOWN:
+                        ss << "UNKNOWN";
+                        break;
+                }
+                ss << "\n";
+                for(auto& l : lps)
+                {
+                    l->print(ss, 1) << "\n";
+                }
+                ss << "### DONE";
+                return ss;
+            }
         };
     }
 }

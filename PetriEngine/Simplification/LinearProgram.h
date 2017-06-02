@@ -71,6 +71,26 @@ namespace PetriEngine {
             
             static LinearProgram* lpUnion(LinearProgram& lp1, LinearProgram& lp2);        
             
+            std::ostream& print(std::ostream& ss, size_t indent = 0) const
+            {
+                for(size_t i = 0; i < indent ; ++i) ss << "\t";
+                ss << "### LP\n";
+                
+                for(const equation_t& eq : _equations)
+                {
+                    for(size_t i = 0; i < indent ; ++i) ss << "\t";
+                    for(size_t i = 0; i < eq.row->size(); ++i)
+                    {
+                        ss << eq.row->data()[i] << " ";
+                    }
+                    ss << " IN [" << eq.lower << ", " << eq.upper << "]\n";
+                }
+                
+                for(size_t i = 0; i < indent ; ++i) ss << "\t";                
+                ss << "### LP DONE";
+                return ss;
+            }
+            
         };
     }
 }
