@@ -8,6 +8,10 @@
 
 #include <vector>
 #include <cstdlib>
+#include <iostream>
+#include <vector>
+#include <cstring>
+#include <cassert>
 #include "MurmurHash2.h"
 
 #ifndef VECTOR_H
@@ -28,29 +32,63 @@ namespace PetriEngine {
         class Vector {
         public:
             friend LPCache;
-            
-            const int* data() const;
-            
+                        
             void free();
             
             void inc();
             
-            size_t size() const;
+            size_t data_size() const;
 
             bool operator ==(const Vector& other) const
             {
                 return  _data == other._data;
             }
             
+            
+            
+            const void* raw() const
+            {
+                return _data.data();
+            }
+            
             size_t refs() const { return ref; }
             
-        private:
-            Vector(const std::vector<int>& data) : _data(data)
+            std::ostream& print(std::ostream& ss) const
             {
+                int index = 0;
+                for(const std::pair<int,int>& el : _data)
+                {
+                    while(index < el.first) { ss << 0 << " "; ++index; }
+                    ss << el.second << " ";
+                    ++index;
+                }
+                return ss;
+            }
+            
+            void write(std::vector<double>& dest) const
+            {
+                memset(dest.data(), 0, sizeof (double) * dest.size());
                 
+                for(const std::pair<int,int>& el : _data)
+                {
+                    dest[el.first + 1] = el.second;
+                }
+            }
+            
+            
+        private:
+            Vector(const std::vector<int>& data)
+            {
+                for(size_t i = 0; i < data.size(); ++i)
+                {
+                    if(data[i] != 0)
+                    {
+                        _data.emplace_back(i, data[i]);
+                    }
+                }                
             }
 
-            std::vector<int> _data;
+            std::vector<std::pair<int,int>> _data;
             LPCache* factory = NULL;
             size_t ref = 0;
         };
@@ -66,8 +104,8 @@ namespace std
     {
         size_t operator()(const Vector& k) const
         {
-            return MurmurHash64A(k.data(), 
-                    k.size() * sizeof(int), 
+            return MurmurHash64A(k.raw(), 
+                    k.data_size(), 
                     1337);
         }
     };

@@ -99,12 +99,7 @@ namespace PetriEngine {
                 set_rh(lp, rowno++, (0 - (int)m0[p]));
             }
             for(auto& eq : _equations){
-
-                memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
-                for (size_t t = 1; t < nCol+1; t++) {
-                    assert((t - 1) < eq.row->size());
-                    row[t] = (REAL)eq.row->data()[t - 1]; // first index is for lp-solve.
-                }
+                eq.row->write(row);               
 
                 for(size_t mode : {0, 1})
                 {
@@ -209,7 +204,10 @@ namespace PetriEngine {
                 res._equations.insert(res._equations.end(), it1, lp1._equations.end());
             if(it2 != lp2._equations.end()) 
                 res._equations.insert(res._equations.end(), it2, lp2._equations.end());
-            for(equation_t& el : res._equations) el.row->inc();
+            for(equation_t& el : res._equations)
+            {
+                el.row->inc();
+            }
 
             return res.factory->cacheProgram(std::move(res));
         }            

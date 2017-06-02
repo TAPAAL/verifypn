@@ -30,6 +30,7 @@ namespace PetriEngine {
             enum result_t { UKNOWN, IMPOSSIBLE, POSSIBLE };
             result_t _result = result_t::UKNOWN;
             std::vector<equation_t> _equations;
+            std::vector<int> _active;
             size_t ref = 0;
             LPCache* factory;
         public:
@@ -67,6 +68,7 @@ namespace PetriEngine {
             {
                 std::swap(_result, other._result);
                 std::swap(_equations, other._equations);
+                std::swap(_active, other._active);
             }
             
             static LinearProgram* lpUnion(LinearProgram& lp1, LinearProgram& lp2);        
@@ -79,10 +81,7 @@ namespace PetriEngine {
                 for(const equation_t& eq : _equations)
                 {
                     for(size_t i = 0; i < indent ; ++i) ss << "\t";
-                    for(size_t i = 0; i < eq.row->size(); ++i)
-                    {
-                        ss << eq.row->data()[i] << " ";
-                    }
+                    eq.row->print(ss);
                     ss << " IN [" << eq.lower << ", " << eq.upper << "]\n";
                 }
                 

@@ -17,11 +17,6 @@
 namespace PetriEngine {
     namespace Simplification {
         
-        const int* Vector::data() const
-        {
-            return _data.data();
-        }
-
         void Vector::free()
         {
             --ref;
@@ -36,9 +31,9 @@ namespace PetriEngine {
             ++ref;
         }
 
-        size_t Vector::size() const 
+        size_t Vector::data_size() const 
         {
-            return _data.size();
+            return _data.size() * sizeof(std::pair<int,int>);
         }
         
     }
