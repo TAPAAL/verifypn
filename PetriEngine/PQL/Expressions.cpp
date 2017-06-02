@@ -1139,7 +1139,7 @@ namespace PetriEngine {
                 r1.lps.clear();
                 r2.lps.clear();                
             }
-
+            
             // Lets try to see if the r1 AND r2 can ever be false at the same time
             // If not, then we know that r1 || r2 must be true.
             // we check this by checking if !r1 && !r2 is unsat
@@ -1426,7 +1426,7 @@ namespace PetriEngine {
                     m1 -= m2;
                     m2 = m1;
                     lps.add(context.cache(), std::move(m1), constant, (context.negated() ? Simplification::OP_LT : Simplification::OP_GE));
-                    neglps.add(context.cache(), std::move(m2), constant, (context.negated() ? Simplification::OP_LT : Simplification::OP_GE));
+                    neglps.add(context.cache(), std::move(m2), constant, (!context.negated() ? Simplification::OP_LT : Simplification::OP_GE));
                 }
                 
             } else {
