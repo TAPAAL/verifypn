@@ -1077,13 +1077,13 @@ namespace PetriEngine {
                 if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
                     return Retval(BooleanCondition::FALSE);
                 } else if (r1.formula->isTriviallyTrue()) {
-                    //if(!r2.lps.satisfiable(context)) 
-                    //    return Retval(BooleanCondition::FALSE);
+                    if(!r2.lps.satisfiable(context)) 
+                        return Retval(BooleanCondition::FALSE);
                     
                     return std::move(r2);
                 } else if (r2.formula->isTriviallyTrue()) {
-                    //if(!r1.lps.satisfiable(context)) 
-                    //    return Retval(BooleanCondition::FALSE);
+                    if(!r1.lps.satisfiable(context)) 
+                        return Retval(BooleanCondition::FALSE);
                     
                     return std::move(r1);
                 }
@@ -1128,15 +1128,15 @@ namespace PetriEngine {
             
             if(r1.formula->isTriviallyFalse())
             {
-                /*if(!r2.neglps.satisfiable(context)) 
+                if(!r2.neglps.satisfiable(context)) 
                     return Retval(BooleanCondition::TRUE);
-                else*/ return std::move(r2);
+                else return std::move(r2);
             }
             else if(r2.formula->isTriviallyFalse())
             {
-                /*if(!r1.neglps.satisfiable(context)) 
+                if(!r1.neglps.satisfiable(context)) 
                     return Retval(BooleanCondition::TRUE);
-                else*/ return std::move(r1);
+                else return std::move(r1);
             }
             else if(!context.timeout())
             {

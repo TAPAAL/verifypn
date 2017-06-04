@@ -119,55 +119,71 @@ namespace PetriEngine {
                 else if (lps2.lps.size() == 0) {
                     return;
                 }
+
+                std::vector<LPWrap> hadempty;
                 
                 auto& small = size() < lps2.size() ? lps : lps2.lps;
                 auto& large = !(size() < lps2.size()) ? lps : lps2.lps;
+
+                bool large_hadempty = &large == &lps ? hasEmpty : lps2.hasEmpty;
+                bool small_hadempty = &small == &lps ? hasEmpty : lps2.hasEmpty;
                 
-                std::vector<LPWrap> hadempty;
-                if(lps2.hasEmpty) hadempty = large;
-                // do everything inline
-                for(auto it = large.begin(); it != large.end(); ++it){ 
-                    for(size_t i = 0; i < small.size(); ++i){
-                        if(i == (small.size() - 1))
-                        {
-                            (*it)->make_union(*small[i]);
-                            if((*it)->knownImpossible())
-                            {
-                                it = large.erase(it);
-                            }
-                        }
-                        else
-                        {
+                if(small_hadempty)
+                {
+                    hadempty = large;
+                    for(auto it = large.begin(); it != large.end(); ++it){ 
+                        for(size_t i = 0; i < small.size(); ++i){
                             LPWrap lw(std::make_shared<LinearProgram>(*(*it)));
                             lw->make_union(*small[i]);
-                            hadempty.push_back(lw);
+                            if(!lw->knownImpossible()) 
+                                hadempty.push_back(lw);
                         }
                     }
                 }
-                
-                if(hasEmpty)
+                else
                 {
-                    large.insert(large.end(), small.begin(), small.end());
+                    // do everything inline
+                    for(auto it = large.begin(); it != large.end(); ++it){ 
+                        for(size_t i = 0; i < small.size(); ++i){
+                            if(i == (small.size() - 1))
+                            {
+                                (*it)->make_union(*small[i]);
+                                if((*it)->knownImpossible())
+                                {
+                                    it = large.erase(it);
+                                }
+                            }
+                            else
+                            {
+                                LPWrap lw(std::make_shared<LinearProgram>(*(*it)));
+                                lw->make_union(*small[i]);
+                                if(!lw->knownImpossible()) 
+                                    hadempty.push_back(lw);
+                            }
+                        }
+                    }
                 }
-                small.clear();
+
                 
-                if(hadempty.size() > 0)
+
+                if(large_hadempty)
                 {
-                    large.insert(large.end(), hadempty.begin(), hadempty.end());
+                    hadempty.insert(hadempty.end(), small.begin(), small.end());
                 }
+                
+                if(large.size() < hadempty.size()) hadempty.swap(large);
+                
+                large.insert(large.end(), hadempty.begin(), hadempty.end());
 
                 std::sort(large.begin(), large.end());
                 large.erase( unique( large.begin(), large.end() ), large.end() );
-
+               
                 if(&large != &lps) lps.swap(large);
-                hasEmpty = hasEmpty && lps2.hasEmpty;
+
+                hasEmpty = small_hadempty && large_hadempty;
                 if(hasEmpty)
                 {
                     _result = POSSIBLE;
-                }
-                else if(_result == IMPOSSIBLE || lps2._result == IMPOSSIBLE)
-                {
-                    _result = IMPOSSIBLE;
                 }
             }
             
