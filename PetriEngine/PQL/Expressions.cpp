@@ -1250,14 +1250,14 @@ namespace PetriEngine {
                 lps.addEmpty();
             }
             
-            /*if (!context.timeout() && !lps.satisfiable(context)) {
+            if (!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             } 
             else if(!context.timeout() && !neglps.satisfiable(context))
             {
                 return Retval(BooleanCondition::TRUE);            
             } 
-            else */{
+            else {
                 if (context.negated()) {
                     return Retval(std::make_shared<NotEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
@@ -1290,14 +1290,14 @@ namespace PetriEngine {
                 lps.addEmpty();
             }
             
-            /*if (!context.timeout() && !lps.satisfiable(context)) {
+            if (!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             } 
             else if(!context.timeout() && !neglps.satisfiable(context))
             {
                 return Retval(BooleanCondition::TRUE);            
             }
-            else*/ {
+            else {
                 if (context.negated()) {
                     return Retval(std::make_shared<EqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
@@ -1331,14 +1331,14 @@ namespace PetriEngine {
                 lps.addEmpty();
             }
             
-            /*if (!context.timeout() && !lps.satisfiable(context)) {
+            if (!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
             }
             else if(!context.timeout() && !neglps.satisfiable(context))
             {
                 return Retval(BooleanCondition::TRUE);                
             }
-            else*/ {
+            else {
                 if (context.negated()) {
                     return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
@@ -1368,11 +1368,11 @@ namespace PetriEngine {
                 lps.addEmpty();
             }
 
-            /*if(!context.timeout() && !neglps.satisfiable(context)){
+            if(!context.timeout() && !neglps.satisfiable(context)){
                 return Retval(BooleanCondition::TRUE);
             } else if (!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
-            } else*/ {
+            } else {
                 if (context.negated()) {
                     return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
@@ -1402,11 +1402,11 @@ namespace PetriEngine {
                 lps.addEmpty();
             }
             
-            /*if(!context.timeout() && !neglps.satisfiable(context)) {
+            if(!context.timeout() && !neglps.satisfiable(context)) {
                 return Retval(BooleanCondition::TRUE);
             }else if(!context.timeout() && !lps.satisfiable(context)) {
                 return Retval(BooleanCondition::FALSE);
-            } else*/ {
+            } else {
                 if (context.negated()) {
                     return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
@@ -1441,7 +1441,7 @@ namespace PetriEngine {
                 lps.addEmpty();
             }
             
-            /*if (!context.timeout() && !lps.satisfiable(context)) 
+            if (!context.timeout() && !lps.satisfiable(context)) 
             {
                 return Retval(BooleanCondition::FALSE);
             } 
@@ -1449,7 +1449,7 @@ namespace PetriEngine {
             {
                 return Retval(BooleanCondition::TRUE);
             }
-            else*/ {
+            else {
                 if (context.negated()) {
                     return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {

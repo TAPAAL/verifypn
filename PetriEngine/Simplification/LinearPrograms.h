@@ -60,7 +60,6 @@ namespace PetriEngine {
                     if(context.timeout()) return true;
                     if(!lps[i]->isImpossible(context.net(), context.marking(), context.getLpTimeout(), use_ilp)){
                         _result = POSSIBLE;
-                        break;
                     }
                     else
                     {
