@@ -35,7 +35,7 @@ STRATEGY_SEQ="-s DFS"
 # Timeouts (in seconds)
 #TIMEOUT_TOTAL=3600 # competition 1 hour 
 TIMEOUT_TOTAL=$BK_TIME_CONFINEMENT 
-TIMEOUT_SEQ_MIN=400 # competition 400 seconds 
+TIMEOUT_SEQ_MIN=480 # competition 480 seconds 
 TIMEOUT_PAR=60 # competition 1 min
 
 echo "Total timeout: " $TIMEOUT_TOTAL
@@ -116,7 +116,8 @@ function verifyparallel {
         TIMEOUT_SEQ=$(echo "$REMAINING_TIME / $REMAINING_SEQ" | bc)
         if [[ "$TIMEOUT_SEQ_MIN" -gt "$TIMEOUT_SEQ" ]]; then TIMEOUT_SEQ=$TIMEOUT_SEQ_MIN; fi
         if [[ "$TIMEOUT_SEQ" -gt "$REMAINING_TIME" ]]; then TIMEOUT_SEQ=$REMAINING_TIME; fi
-        
+        TIMEOUT_SEQ=$((TIMEOUT_SEQ+2))
+ 
         # Execute verifypn on sequential strategy
         echo "Running query $Q for $TIMEOUT_SEQ seconds. Remaining: $REMAINING_SEQ queries and $REMAINING_TIME seconds"
         $TIME_CMD $TIMEOUT_CMD $TIMEOUT_SEQ $VERIFYPN $OPTIONS $STRATEGY_SEQ $MODEL_PATH/model.pnml $MODEL_PATH/$CATEGORY -x $Q
@@ -152,6 +153,8 @@ function verifyparallel {
     echo "           Step 3: Multiquery processing           "
     echo "---------------------------------------------------"
     REMAINING_TIME=$(echo "$TIMEOUT_TOTAL - $SECONDS"|bc)
+    REMAINING_TIME=$((REMAINING_TIME+2))
+
     echo "Remaining ${#QUERIES[@]} queries are solved using multiquery"
     echo "Time remaining: $REMAINING_TIME seconds of the initial $TIMEOUT_TOTAL seconds" 
     

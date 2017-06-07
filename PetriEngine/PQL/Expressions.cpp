@@ -990,16 +990,26 @@ namespace PetriEngine {
             // cannot push negation any further
             bool neg = context.negated();
             context.setNegate(false);
-            Retval r1 = _cond1->simplify(context);
             Retval r2 = _cond2->simplify(context);
+            if(r2.formula->isTriviallyTrue())
+            {
+                context.setNegate(neg);
+                return neg ? 
+                            Retval(BooleanCondition::FALSE) :
+                            Retval(BooleanCondition::TRUE);
+            }
+            else if(r2.formula->isTriviallyFalse())
+            {
+                context.setNegate(neg);
+                return neg ? 
+                            Retval(BooleanCondition::TRUE) :
+                            Retval(BooleanCondition::FALSE);                
+            }
+            Retval r1 = _cond1->simplify(context);
             context.setNegate(neg);
             
             if(context.negated()){
-                if(r2.formula->isTriviallyTrue()){
-                    return Retval(BooleanCondition::FALSE);
-                } else if(r2.formula->isTriviallyFalse()){
-                    return Retval(BooleanCondition::TRUE);
-                } else if(r1.formula->isTriviallyTrue()){
+                if(r1.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<EFCondition>(r2.formula)));
                 } else if(r1.formula->isTriviallyFalse()){
@@ -1009,11 +1019,7 @@ namespace PetriEngine {
                             std::make_shared<EUCondition>(r1.formula, r2.formula)));
                 }
             } else {
-                if(r2.formula->isTriviallyTrue()){
-                    return Retval(BooleanCondition::TRUE);
-                } else if(r2.formula->isTriviallyFalse()){
-                    return Retval(BooleanCondition::FALSE);
-                } else if(r1.formula->isTriviallyTrue()){
+                if(r1.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<EFCondition>(r2.formula));
                 } else if(r1.formula->isTriviallyFalse()){
                     return r2;
@@ -1027,16 +1033,26 @@ namespace PetriEngine {
             // cannot push negation any further
             bool neg = context.negated();
             context.setNegate(false);
-            Retval r1 = _cond1->simplify(context);
             Retval r2 = _cond2->simplify(context);
+            if(r2.formula->isTriviallyTrue())
+            {
+                context.setNegate(neg);
+                return neg ? 
+                            Retval(BooleanCondition::FALSE) :
+                            Retval(BooleanCondition::TRUE);
+            }
+            else if(r2.formula->isTriviallyFalse())
+            {
+                context.setNegate(neg);
+                return neg ? 
+                            Retval(BooleanCondition::TRUE) :
+                            Retval(BooleanCondition::FALSE);                
+            }
+            Retval r1 = _cond1->simplify(context);
             context.setNegate(neg);
             
             if(context.negated()){
-                if(r2.formula->isTriviallyTrue()){
-                    return Retval(BooleanCondition::FALSE);
-                } else if(r2.formula->isTriviallyFalse()){
-                    return Retval(BooleanCondition::TRUE);
-                } else if(r1.formula->isTriviallyTrue()){
+                if(r1.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<NotCondition>(
                             std::make_shared<AFCondition>(r2.formula)));
                 } else if(r1.formula->isTriviallyFalse()){
@@ -1046,11 +1062,7 @@ namespace PetriEngine {
                             std::make_shared<AUCondition>(r1.formula, r2.formula)));
                 }
             } else {
-                if(r2.formula->isTriviallyTrue()){
-                    return Retval(BooleanCondition::TRUE);
-                } else if(r2.formula->isTriviallyFalse()){
-                    return Retval(BooleanCondition::FALSE);
-                } else if(r1.formula->isTriviallyTrue()){
+                if(r1.formula->isTriviallyTrue()){
                     return Retval(std::make_shared<AFCondition>(r2.formula));
                 } else if(r1.formula->isTriviallyFalse()){
                     return r2;

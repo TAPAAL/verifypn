@@ -212,7 +212,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 return ErrorCode;
             }
         } else if (strcmp(argv[i], "-ctl") == 0){
-            options.isctl = true;
             if(argc > i + 1){
                 if(strcmp(argv[i + 1], "local") == 0){
                     i++;
@@ -242,11 +241,11 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - RDFS         Random depth first search\n"
                     "  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
                     "  -x, --xml-query <query index>      Parse XML query file and verify query of a given index\n"
-                    "  -r, --reduction                    Change structural net reduction:\n"
+                    "  -r, --reduction <type>             Change structural net reduction:\n"
                     "                                     - 0  disabled\n"
                     "                                     - 1  aggressive reduction (default)\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
-                    "  -d, --reduction-timeout            Timeout for structural reductions in seconds (default 60)\n"
+                    "  -d, --reduction-timeout <timeout>  Timeout for structural reductions in seconds (default 60)\n"
                     "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
                     "                                     write -q 0 to disable query reduction\n"
                     "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
@@ -256,7 +255,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
-                    "  -ctl                               Verify CTL properties\n"
+                    "  -ctl <type>                        Verify CTL properties\n"
                     "                                     - local     Liu and Smolka's on-the-fly algorithm\n"
                     "                                     - czero     local with certain zero extension (default)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
@@ -331,18 +330,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
     if (!options.modelfile && !options.statespaceexploration) {
         fprintf(stderr, "Argument Error: No query-file provided\n");
         return ErrorCode;
-    }
-
-    // Check strategy when is CTL (CTLEngine does not support all of them)
-    if(options.isctl){
-        //Default to DFS (No heuristic strategy)
-        if(options.strategy == PetriEngine::Reachability::HEUR){
-            options.strategy = PetriEngine::Reachability::DFS;
-        }
-        else if(options.strategy != PetriEngine::Reachability::DFS){
-            std::cerr << "Argument Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
-            return ErrorCode;
-        }
     }
     
     // Check if the choosen options are incompatible with upper bound queries
@@ -535,21 +522,6 @@ int main(int argc, char* argv[]) {
     
     if(parseModel(transitionEnabledness, builder, options) != ContinueCode) return ErrorCode;
     
-    //---------------- CTL Engine - forced CTL via FLAG -ctl -----------------//
-    if(options.isctl){
-        PetriNet* net = builder.makePetriNet();
-        ReturnValue rv = CTLMain(net,
-                    options.queryfile,
-                    options.ctlalgorithm,
-                    options.strategy,
-                    options.querynumbers,
-                    options.gamemode,
-                    options.printstatistics,
-                    true);
-        delete net;
-        return rv;
-    }
-    
     //----------------------- Parse Query -----------------------//
     std::vector<std::string> querynames;
     auto queries = readQueries(transitionEnabledness, options, querynames);
@@ -646,6 +618,7 @@ int main(int argc, char* argv[]) {
     std::string CTLQueries = getXMLQueries(queries, querynames, results);
     
     if (CTLQueries.size() > 0) {
+        options.isctl=true;
         PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
         PetriNet* ctlnet = builder.makePetriNet();
         // Update query indexes
@@ -656,12 +629,16 @@ int main(int argc, char* argv[]) {
             options.querynumbers.insert(x);
         }
         
-        // Default to DFS if strategy is not BFS or DFS (No heuristic strategy)        
-        if(options.strategy != PetriEngine::Reachability::DFS){
+        //Default to DFS (No heuristic strategy)
+        if(options.strategy == PetriEngine::Reachability::HEUR){
+            fprintf(stdout, "Default search strategy was changed to DFS as the CTL engine is called.\n");
             options.strategy = PetriEngine::Reachability::DFS;
-            fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
         }
-        
+        else if(options.strategy != PetriEngine::Reachability::DFS){
+            std::cerr << "Argument Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
+            return ErrorCode;
+        }
+   
         v = CTLMain(ctlnet,
             options.queryfile,
             options.ctlalgorithm,
@@ -680,7 +657,7 @@ int main(int argc, char* argv[]) {
         // go back to previous strategy if the program continues
         options.strategy=reachabilityStrategy;
     }
-    
+    options.isctl=false;
     //--------------------- Apply Net Reduction ---------------//
         
     if (options.enablereduction == 1 || options.enablereduction == 2) {
