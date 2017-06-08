@@ -6,17 +6,22 @@ namespace PetriEngine {
     namespace Simplification {
         struct Retval {
             std::shared_ptr<PQL::Condition> formula = nullptr;
-            LinearPrograms lps;
-            LinearPrograms neglps;
+            AbstractProgramCollection_ptr lps;
+            AbstractProgramCollection_ptr neglps;
             
-            Retval (std::shared_ptr<PQL::Condition> formula, LinearPrograms&& lps1, LinearPrograms&& lps2) 
-            : formula(formula), lps(std::move(lps1)), neglps(std::move(lps2)) {
+            Retval (std::shared_ptr<PQL::Condition> formula, 
+            AbstractProgramCollection_ptr&& lps1, 
+            AbstractProgramCollection_ptr&& lps2) 
+            : formula(formula) {
+                lps = std::move(lps1);
+                neglps = std::move(lps2);
+                
             }
                         
             Retval (std::shared_ptr<PQL::Condition> formula) 
             : formula(formula) {
-                lps.addEmpty();
-                neglps.addEmpty();
+                lps = std::make_shared<SingleProgram>();
+                neglps  = std::make_shared<SingleProgram>();
             }
  
             Retval(Retval&& other) 
@@ -31,16 +36,13 @@ namespace PetriEngine {
             }
             
             Retval() {
-                lps.addEmpty();
-                neglps.addEmpty();
+                lps = std::make_shared<SingleProgram>();
+                neglps  = std::make_shared<SingleProgram>();
             }
             
             ~Retval(){
             }
             
-            bool isSet(){
-                return (formula != nullptr && lps.size() != 0 && neglps.size() != 0);
-            }
         private:
 
         };
