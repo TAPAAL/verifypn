@@ -15,8 +15,8 @@ namespace PetriEngine {
         class AbstractProgramCollection
         {
             protected:
-                enum result_t { UKNOWN, IMPOSSIBLE, POSSIBLE };
-                result_t _result = result_t::UKNOWN;
+                enum result_t { UNKNOWN, IMPOSSIBLE, POSSIBLE };
+                result_t _result = result_t::UNKNOWN;
                 
                 virtual void satisfiableImpl(const PQL::SimplificationContext& context, bool use_ilp) = 0;
                 bool has_empty = false;
@@ -26,7 +26,7 @@ namespace PetriEngine {
                 virtual bool satisfiable(const PQL::SimplificationContext& context, bool use_ilp = false)
                 {
                     if(context.timeout() || has_empty) return true;
-                    if(_result != UKNOWN)
+                    if(_result != UNKNOWN)
                     {
                         if(!use_ilp || _result == IMPOSSIBLE)
                         {
@@ -35,6 +35,7 @@ namespace PetriEngine {
                     }
                     satisfiableImpl(context, use_ilp);
                     reset();
+                    assert(_result != UNKNOWN);
                     return _result == POSSIBLE;
                 }
                 
@@ -141,8 +142,8 @@ namespace PetriEngine {
                 // this is where the magic needs to happen
                 LinearProgram prog;
                 bool has_empty = false;
-                while(merge(has_empty, prog))
-                {
+                bool hasmore = merge(has_empty, prog);
+                do {
                     if(has_empty) 
                     {
                         _result = POSSIBLE;
@@ -155,8 +156,10 @@ namespace PetriEngine {
                             _result = POSSIBLE;
                             return;
                         }
-                    }                    
-                }
+                    }
+                    prog = LinearProgram();
+                    has_empty = false;
+                } while(hasmore);
                 _result = IMPOSSIBLE;
                 return;
             }
