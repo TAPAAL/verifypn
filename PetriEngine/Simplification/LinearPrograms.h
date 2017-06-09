@@ -33,7 +33,7 @@ namespace PetriEngine {
                             return _result == POSSIBLE;
                         }
                     }
-                    satisfiableImpl(context, use_ilp);
+                    satisfiableImpl(context, true);
                     reset();
                     assert(_result != UNKNOWN);
                     return _result == POSSIBLE;
@@ -174,11 +174,7 @@ namespace PetriEngine {
                 {
                     clear();
                     _result = IMPOSSIBLE;
-                }
-                else
-                {
-                    _result = POSSIBLE;
-                }
+                }                
             };
 
             virtual void reset()
@@ -245,6 +241,7 @@ namespace PetriEngine {
                 program(factory->createAndCache(lh.variables()), constant, op, factory)
             {
                 has_empty = program.size() == 0;
+                assert(!has_empty);
             }
             
             virtual ~SingleProgram(){
@@ -254,8 +251,9 @@ namespace PetriEngine {
             
             virtual bool merge(bool& has_empty, LinearProgram& program)
             {
-                program.make_union(program);
-                has_empty = program.equations().size() == 0;
+                program.make_union(this->program);
+                has_empty = this->program.equations().size() == 0;
+                assert(has_empty == this->has_empty);
                 return false;
             }            
             

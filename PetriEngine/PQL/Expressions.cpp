@@ -1191,6 +1191,7 @@ namespace PetriEngine {
                 succ2 = true;
             }
             catch (std::bad_alloc& e) {};
+
             if(!succ1 && !succ2) throw std::bad_alloc();
             else if(succ1 && !succ2) return r1;
             else if(succ2 && !succ1) return r2;
@@ -1236,7 +1237,7 @@ namespace PetriEngine {
                     m1 -= m2;
                     m2 = m1;
                     neglps = 
-                            std::make_shared<UnionCollection>(
+                            std::make_shared<MergeCollection>(
                             std::make_shared<SingleProgram>(context.cache(), std::move(m1), constant, Simplification::OP_GT),
                             std::make_shared<SingleProgram>(context.cache(), std::move(m2), constant, Simplification::OP_LT));
                     Member m3 = m2;
@@ -1279,7 +1280,7 @@ namespace PetriEngine {
                     m1 -= m2;
                     m2 = m1;
                     lps = 
-                            std::make_shared<UnionCollection>(
+                            std::make_shared<MergeCollection>(
                             std::make_shared<SingleProgram>(context.cache(), std::move(m1), constant, Simplification::OP_GT),
                             std::make_shared<SingleProgram>(context.cache(), std::move(m2), constant, Simplification::OP_LT));
                     Member m3 = m2;

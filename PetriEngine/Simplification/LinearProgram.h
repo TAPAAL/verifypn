@@ -33,7 +33,9 @@ namespace PetriEngine {
             std::vector<equation_t> _equations;
         public:
             virtual ~LinearProgram();
-            LinearProgram(){};
+            LinearProgram()
+            {
+            };
             
             LinearProgram(const LinearProgram& other)
             : _result(other._result), _equations(other._equations)
