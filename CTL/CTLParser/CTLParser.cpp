@@ -55,7 +55,9 @@ std::string CTLParser::QueryToString(CTLQuery* query){
 }
 
 CTLQuery* CTLParser::FormatQuery(CTLQuery* query, PetriEngine::PetriNet *net){
+    std::cout<<"Formatting...\n"<<std::flush;
     query = FillAtom(query,net);
+    std::cout<<"Atom full...\n"<<std::flush;
     query = ConvertAG(query);
     query = ConvertEG(query);
     IdSetting(query, 0);
@@ -149,6 +151,7 @@ CTLQuery* CTLParser::FillAtom(CTLQuery* query, PetriEngine::PetriNet *net) {
     if(query_type == EVAL){
         EvaluateableProposition *proposition = new EvaluateableProposition(query->GetAtom(), net);
         query->SetProposition(proposition);
+        std::cout<<query->GetAtom()<<"\n"<<std::flush;
         return query;
     }
     else if (query_type == LOPERATOR){
@@ -344,28 +347,43 @@ CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
     if (firstLetter == 'a') {
         //Construct all-paths
         query = new CTLQuery(A, getPathOperator(root), false, "");
-        assert(query->GetQuantifier() == A && "Failed setting quantifier");
+        if(query->GetQuantifier() != A){
+            std::cerr << "Error: Failed setting all operator." << std::endl;
+            exit(EXIT_FAILURE);
+        }
     }
     else if (firstLetter == 'e' ) {
         //Construct exists-path
         query = new CTLQuery(E, getPathOperator(root), false, "");
-        assert(query->GetQuantifier() == E && "Failed setting path operator");
+        if(query->GetQuantifier() != E){
+            std::cerr << "Error: Failed setting exists operator." << std::endl;
+            exit(EXIT_FAILURE);
+        }
     }
     else if (firstLetter == 'n' ) {
         //Construct negation
         query = new CTLQuery(NEG, pError, false, "");
-        assert(query->GetQuantifier() == NEG && "Failed setting negation operator");
+        if(query->GetQuantifier() != NEG){
+            std::cerr << "Error: Failed setting negation operator." << std::endl;
+            exit(EXIT_FAILURE);
+        }
     }
     else if (firstLetter == 'c' ) {
         //Construct conjunction
         query = new CTLQuery(AND, pError, false, "");
-        assert(query->GetQuantifier() == AND && "Failed setting and operator");
+        if(query->GetQuantifier() != AND){
+            std::cerr << "Error: Failed setting and operator." << std::endl;
+            exit(EXIT_FAILURE);
+        }
     }
     else if (firstLetter == 'd' ) {
         if( root_name[1] == 'i' ){
             //Construct disjunction
             query = new CTLQuery(OR, pError, false, "");
-            assert(query->GetQuantifier() == OR && "Failed setting or operator");
+            if(query->GetQuantifier() != OR){
+                std::cerr << "Error: Failed setting or operator." << std::endl;
+                exit(EXIT_FAILURE);
+            }
         }
         else if (root_name[1] == 'e'){
             //Deadlock query
@@ -403,7 +421,7 @@ CTLQuery* CTLParser::xmlToCTLquery(xml_node<> * root) {
             
             loperator = loperator_sym(loperator);
             
-            atom_str = first + loperator + second;
+            atom_str = first + "}" + loperator + "{" + second;
             
         }
         else {
@@ -512,8 +530,17 @@ std::string CTLParser::parsePar(xml_node<> * parameter){
         parameter_str = parameter_str + ")";
     }
     
-    else if(parameter->name()[0] == 'i'){
+    else if(parameter->name()[0] == 'i' && parameter->name()[8] == 'c'){
         parameter_str = parameter_str + choppy(parameter->value()) + ")";
+    }
+    else if(parameter->name()[0] == 'i' && parameter->name()[8] == 's'){
+        parameter_str = parameter_str + parsePar(parameter->first_node()) + " + " + parsePar(parameter->first_node()->next_sibling()) + ")";
+    }
+    else if(parameter->name()[0] == 'i' && parameter->name()[8] == 'p'){
+        parameter_str = parameter_str + parsePar(parameter->first_node()) + " * " + parsePar(parameter->first_node()->next_sibling()) + ")";
+    }
+    else if(parameter->name()[0] == 'i' && parameter->name()[8] == 'd'){
+        parameter_str = parameter_str + parsePar(parameter->first_node()) + " - " + parsePar(parameter->first_node()->next_sibling()) + ")";
     }
     else {
         std::cerr << "Error: Failed parsing query file provided. Incorrect format around the parameter: " << parameter->name() << ". Please check spelling." << std::endl;

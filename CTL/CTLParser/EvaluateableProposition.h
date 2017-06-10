@@ -18,12 +18,17 @@
 
 
 enum PropositionType {PropError = -1, CARDINALITY = 0, FIREABILITY = 1, DEADLOCK = 2};
+enum ArithmeticType {NON = -1, SUM = 0, PRODUCT = 1, DIFF = 2};
 enum LoperatorType {LopError = -1, NOT_CARDINALITY = -1, EQ = 0, LE = 1, LEQ = 2, GR = 3, GRQ = 4, NE = 5};
 
 struct CardinalityParameter{
     bool isPlace = false;
+    bool isArithmetic = false;
     int value = -1;
     std::vector<int> places_i;
+    ArithmeticType arithmetictype = NON;
+    CardinalityParameter* arithmA;
+    CardinalityParameter* arithmB;
 };
 
 class EvaluateableProposition {

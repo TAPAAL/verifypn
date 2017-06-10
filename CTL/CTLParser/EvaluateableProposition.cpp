@@ -34,6 +34,7 @@ namespace patch
 EvaluateableProposition::EvaluateableProposition(std::string a, PetriEngine::PetriNet *net) {
     if(a.substr(0,2).compare("in") == 0 || a.substr(0,2).compare("to") == 0){
         _type = CARDINALITY;
+        std::cout<<"Atom: "<<a<<"\n"<<std::flush;
         _loperator = SetLoperator(a);
         assert(_loperator != NOT_CARDINALITY);
 
@@ -90,7 +91,8 @@ EvaluateableProposition::EvaluateableProposition(std::string a, PetriEngine::Pet
         SetFireset("all", net->transitionNames(), net->numberOfTransitions());
     }
     else{
-        assert(false && "Atomic string proposed for proposition could not be parsed");
+        std::cerr << "Error: Could not identify Evaluateable Proposition type from atom string: "<<a<<"." << std::endl;
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -179,7 +181,7 @@ CardinalityParameter* EvaluateableProposition::CreateParameter(std::string param
 }
 
 LoperatorType EvaluateableProposition::SetLoperator(std::string atom_str){
-    std::string loperator_str = atom_str.substr(atom_str.find(')') + 1);
+    std::string loperator_str = atom_str.substr(atom_str.find('}') + 1);
     loperator_str = loperator_str.substr(0, 4);
     if(loperator_str.compare(" le ")== 0)
             return LEQ;
