@@ -60,8 +60,6 @@ CTLQuery* CTLParser::FormatQuery(CTLQuery* query, PetriEngine::PetriNet *net){
     query = ConvertEG(query);
     IdSetting(query, 0);
     query = TemporalSetting(query);
-    std::cout<<"Before!\n"<<std::flush;
-    std::cout<<query->ToString()<<std::flush;
     return query;
 }
 

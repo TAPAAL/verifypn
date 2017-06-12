@@ -180,7 +180,7 @@ CardinalityParameter* EvaluateableProposition::CreateParameter(std::string param
         param->isArithmetic = true;
         param->arithmetictype = typeHolder->type;
         param->arithmA = CreateParameter(parameter_str.substr(0,end_of_first), p_names, numberof_p);
-        param->arithmA = CreateParameter(parameter_str.substr(end_of_first + 2), p_names, numberof_p);
+        param->arithmB = CreateParameter(parameter_str.substr(end_of_first + 2), p_names, numberof_p);
         return param;
     }
 
