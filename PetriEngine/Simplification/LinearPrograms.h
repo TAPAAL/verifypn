@@ -41,7 +41,6 @@ namespace PetriEngine {
                 virtual void clear() = 0;
                 
                 virtual bool merge(bool& has_empty, LinearProgram& program) = 0;
-                virtual std::set<LinearProgram> old_merge() = 0;
                 virtual void reset() = 0;
         };
 
@@ -57,10 +56,10 @@ namespace PetriEngine {
             {
                 for(int i = lps.size() - 1; i >= 0; --i)
                 {
-                    if(lps[i]->satisfiable(context, use_ilp))
+                    if(lps[i]->satisfiable(context, use_ilp) || context.timeout())
                     {
                         _result = POSSIBLE;
-//                        return;
+                        return;
                     }
                     else
                     {
@@ -69,7 +68,6 @@ namespace PetriEngine {
                 }
                 if(_result != POSSIBLE)
                     _result = IMPOSSIBLE;
-                old_merge();
             }
 
         public:
@@ -113,38 +111,6 @@ namespace PetriEngine {
                 return current < lps.size();
             }
 
-            virtual std::set<LinearProgram> old_merge()
-            {
-                std::set<LinearProgram> res;
-                if(lps.size() == 0)
-                {
-                    assert(false);
-                    return res;
-                }
-                
-                for(auto& lp : lps)
-                {
-                    lp->reset();
-                    auto r2 = lp->old_merge();
-                    res.insert(r2.begin(), r2.end());
-                }
-
-                /*std::set<LinearProgram> res2;
-                bool more = false;
-                do{
-                    bool he  = false;
-                    LinearProgram p;
-                    more = merge(he, p);
-                    assert(res.count(p) > 0);
-                    res2.insert(p);
-                }
-                while(more);
-                
-                assert(res2.size() == res.size());*/
-                
-                return res;
-            }
-            
         };
         
         class MergeCollection : public AbstractProgramCollection
@@ -164,6 +130,7 @@ namespace PetriEngine {
                 
                 bool hasmore = false;
                 do {
+                    if(context.timeout()) { _result = POSSIBLE; break; }
                     LinearProgram prog;
                     bool has_empty = false;
                     hasmore = merge(has_empty, prog);
@@ -174,14 +141,14 @@ namespace PetriEngine {
                     }
                     else
                     {
-                        if(!prog.isImpossible(context.net(), context.marking(), context.getLpTimeout(), true))
+                        if( context.timeout() ||
+                            !prog.isImpossible(context.net(), context.marking(), context.getLpTimeout(), true))
                         {
                             _result = POSSIBLE;
                             break;
                         }
                     }
                 } while(hasmore);
-                //old_merge();
                 if(_result != POSSIBLE)
                     _result = IMPOSSIBLE;
                 return;
@@ -227,53 +194,13 @@ namespace PetriEngine {
 
                 bool more_left = left->merge(lempty, program);
                 if(!more_left) merge_right = true;
-//                std::cout << "M1" << std::endl;
-//                program.print(std::cout, 0);
-
-//                std::cout << "M2" << std::endl;                
-//                program.print(std::cout, 0);
-//                std::cout << std::endl;
 
                 program.make_union(tmp_prog);
-//                program.print(std::cout, 0);
-//                std::cout << std::endl;
 
                 has_empty = lempty && rempty;
                 return more_left || more_right;
             }
             
-            virtual std::set<LinearProgram> old_merge()
-            {
-                reset();
-                auto l = left->old_merge();
-                auto r = right->old_merge();
-                std::set<LinearProgram> res;
-                for(auto& a : l)
-                {
-                    for(auto& b : r)
-                    {   
-                        LinearProgram p = a;
-                        p.make_union(b);
-                        res.insert(p);
-                    }
-                }
-                
-                auto r2 = res;
-                bool more = false;
-                reset();
-                do{
-                    bool he  = false;
-                    LinearProgram p;
-                    more = merge(he, p);
-                    assert(res.count(p) > 0);
-                    r2.erase(p);
-                }
-                while(more);
-                
-                assert(r2.size() == 0);
-                
-                return res;
-            }
         };
         
         class SingleProgram : public AbstractProgramCollection {
@@ -323,171 +250,6 @@ namespace PetriEngine {
                 assert(!has_empty);
                 return false;
             }            
-            
-            virtual std::set<LinearProgram> old_merge()
-            {
-                std::set<LinearProgram> res;
-                res.insert(program);
-                return res;
-            }
-
-            /**
-             * Merges two linear programs, this invalidates lps2 to restrict 
-             * temporary memory-overhead. 
-             * @param lps2
-             */
-            
-            /*void merge(SingleProgram& lps2, LPCache* factory){
-                if(_result == IMPOSSIBLE)
-                {
-                    lps2.clear();
-                    return;
-                }
-                
-                if(lps2._result == IMPOSSIBLE)
-                {
-                    swap(lps2);
-                    lps2.clear();
-                }
-                
-                if (lps_union.size() == 0) {
-                    swap(lps2);
-                    lps2.clear();
-                    return;
-                }
-                else if (lps2.lps_union.size() == 0) {
-                    return;
-                }
-
-                std::vector<LPWrap> hadempty;
-                
-                auto& small = size() < lps2.size() ? lps_union : lps2.lps_union;
-                auto& large = !(size() < lps2.size()) ? lps_union : lps2.lps_union;
-
-                bool large_hadempty = &large == &lps_union ? hasEmpty : lps2.hasEmpty;
-                bool small_hadempty = &small == &lps_union ? hasEmpty : lps2.hasEmpty;
-                
-                if(small_hadempty)
-                {
-                    hadempty = large;
-                    for(auto it = large.begin(); it != large.end(); ++it){ 
-                        for(size_t i = 0; i < small.size(); ++i){
-                            LPWrap lw(std::make_shared<LinearProgram>(*(*it)));
-                            lw->make_union(*small[i]);
-                            if(!lw->knownImpossible()) 
-                                hadempty.push_back(lw);
-                        }
-                    }
-                }
-                else
-                {
-                    // do everything inline
-                    for(auto it = large.begin(); it != large.end(); ++it){ 
-                        for(size_t i = 0; i < small.size(); ++i){
-                            if(i == (small.size() - 1))
-                            {
-                                (*it)->make_union(*small[i]);
-                                if((*it)->knownImpossible())
-                                {
-                                    it = large.erase(it);
-                                }
-                            }
-                            else
-                            {
-                                LPWrap lw(std::make_shared<LinearProgram>(*(*it)));
-                                lw->make_union(*small[i]);
-                                if(!lw->knownImpossible()) 
-                                    hadempty.push_back(lw);
-                            }
-                        }
-                    }
-                }
-
-                
-
-                if(large_hadempty)
-                {
-                    hadempty.insert(hadempty.end(), small.begin(), small.end());
-                }
-                
-                if(large.size() < hadempty.size()) hadempty.swap(large);
-                
-                large.insert(large.end(), hadempty.begin(), hadempty.end());
-
-                std::sort(large.begin(), large.end());
-                large.erase( unique( large.begin(), large.end() ), large.end() );
-               
-                if(&large != &lps_union) lps_union.swap(large);
-
-                hasEmpty = small_hadempty && large_hadempty;
-                if(hasEmpty)
-                {
-                    _result = POSSIBLE;
-                }
-            }
-            */
-
-
-            /**
-             * Unions two linear programs, this invalidates lps2 to restrict 
-             * temporary memory-overhead. 
-             * @param lps2
-             */
-/*            void makeUnion(LinearPrograms_ptr& other)
-            {
-                if(_result == IMPOSSIBLE && other->_result == IMPOSSIBLE)
-                {
-                    clear();
-                    return;
-                }
-                else if(_result == IMPOSSIBLE)
-                {
-                    swap(*other);
-                    other->clear();
-                    return;
-                }
-                else if(other->_result == IMPOSSIBLE)
-                {
-                    other->clear();
-                    return;
-                }
-                
-                if(lps_merge.size() == 0) swap(*other);
-                
-                if(other->lps_merge.size() == 0)
-                {
-                    lps_union.insert(lps_union.end(), 
-                            other->lps_union.begin(), 
-                            other->lps_union.end());
-                    
-                    other->lps_union.clear();
-                    std::sort(lps_union.begin(), lps_union.end());
-                    lps_union.erase( unique( lps_union.begin(), lps_union.end() ), lps_union.end() );
-
-                    lps.insert(lps.end(), 
-                            other->lps.begin(), 
-                            other->lps.end());
-                    
-                    other->lps.clear();
-                    std::sort(lps.begin(), lps.end());
-                    lps.erase( unique( lps.begin(), lps.end() ), lps.end() );                    
-                }
-                else
-                {
-                    lps_union.insert(other);
-                }
-                
-                
-                hasEmpty = hasEmpty || other->hasEmpty;
-                if(hasEmpty)
-                {
-                    _result = POSSIBLE;
-                }
-                else
-                {
-                    _result = result_t::UKNOWN;
-                }
-            }*/
             
             void clear()
             {
