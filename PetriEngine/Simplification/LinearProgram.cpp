@@ -55,7 +55,7 @@ namespace PetriEngine {
             
             const uint32_t nCol = net->numberOfTransitions();
             lprec* lp;
-            int nRow = net->numberOfPlaces() + _equations.size();
+            int nRow = net->numberOfPlaces() + _equations.size() + 1;
             
             lp = make_lp(nRow, nCol);
             assert(lp);
@@ -145,6 +145,7 @@ namespace PetriEngine {
             {
                 _result = IMPOSSIBLE;
                 _equations.clear();
+                assert(false);
                 return;
             }
 
@@ -168,12 +169,12 @@ namespace PetriEngine {
                     equation_t& n = *it1;
                     n.lower = std::max(n.lower, it2->lower);
                     n.upper = std::min(n.upper, it2->upper);
-                    if(n.upper < n.lower)
+                    /*if(n.upper < n.lower)
                     {
                         _result = result_t::IMPOSSIBLE;
                         _equations.clear();
                         return;
-                    }
+                    }*/
                     ++it1;
                     ++it2;
                 }                    

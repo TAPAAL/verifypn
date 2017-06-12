@@ -58,7 +58,7 @@ namespace PetriEngine {
                 int index = 0;
                 for(const std::pair<int,int>& el : _data)
                 {
-                    while(index < el.first) { ss << 0 << " "; ++index; }
+                    while(index < el.first) { ss << "0 "; ++index; }
                     ss << el.second << " ";
                     ++index;
                 }

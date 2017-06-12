@@ -1077,14 +1077,8 @@ namespace PetriEngine {
                 if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
                     return Retval(BooleanCondition::FALSE);
                 } else if (r1.formula->isTriviallyTrue()) {
-                    if(!r2.lps->satisfiable(context)) 
-                        return Retval(BooleanCondition::FALSE);
-                    
                     return std::move(r2);
                 } else if (r2.formula->isTriviallyTrue()) {
-                    if(!r1.lps->satisfiable(context)) 
-                        return Retval(BooleanCondition::FALSE);
-                    
                     return std::move(r1);
                 }
                 
@@ -1122,15 +1116,11 @@ namespace PetriEngine {
             
             if(r1.formula->isTriviallyFalse())
             {
-                if(!r2.neglps->satisfiable(context)) 
-                    return Retval(BooleanCondition::TRUE);
-                else return std::move(r2);
+                return std::move(r2);
             }
             else if(r2.formula->isTriviallyFalse())
             {
-                if(!r1.neglps->satisfiable(context)) 
-                    return Retval(BooleanCondition::TRUE);
-                else return std::move(r1);
+                return std::move(r1);
             }
             else if(!context.timeout())
             {
@@ -1191,7 +1181,6 @@ namespace PetriEngine {
                 succ2 = true;
             }
             catch (std::bad_alloc& e) {};
-
             if(!succ1 && !succ2) throw std::bad_alloc();
             else if(succ1 && !succ2) return r1;
             else if(succ2 && !succ1) return r2;
