@@ -50,7 +50,7 @@ namespace PetriEngine {
         {
         protected:
             std::vector<AbstractProgramCollection_ptr> lps;
-            int current = 0;
+            size_t current = 0;
             
             virtual void satisfiableImpl(const PQL::SimplificationContext& context, bool use_ilp = false)
             {

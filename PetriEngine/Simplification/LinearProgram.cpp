@@ -55,7 +55,7 @@ namespace PetriEngine {
             
             const uint32_t nCol = net->numberOfTransitions();
             lprec* lp;
-            int nRow = net->numberOfPlaces() + _equations.size() + 1;
+            int nRow = net->numberOfPlaces() + (_equations.size() * 2);
             
             lp = make_lp(nRow, nCol);
             assert(lp);
