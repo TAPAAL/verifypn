@@ -34,18 +34,17 @@ namespace patch
 EvaluateableProposition::EvaluateableProposition(std::string a, PetriEngine::PetriNet *net) {
     if(a.substr(0,2).compare("in") == 0 || a.substr(0,2).compare("to") == 0){
         _type = CARDINALITY;
-        std::cout<<"Atom: "<<a<<"\n"<<std::flush;
         _loperator = SetLoperator(a);
         assert(_loperator != NOT_CARDINALITY);
 
-        size_t begin = a.find('(') + 1;
-        size_t end = a.find(')') - begin;
-        std::string first_parameter_str = a.substr(begin, end);
-        a = a.substr(a.find(')') + 1);
+        //size_t begin = a.find('(') + 1;
+        size_t end = a.find('}');
+        std::string first_parameter_str = a.substr(0, end);
+        a = a.substr(a.find('}') + 1);
 
-        begin = a.find('(') + 1;
-        end = a.find(')') - begin;
-        std::string second_parameter_str = a.substr(begin, end);
+        size_t begin = a.find('{') + 1;
+        //end = a.find(')') - begin;
+        std::string second_parameter_str = a.substr(begin);
         _firstParameter = CreateParameter(first_parameter_str, net->placeNames(), net->numberOfPlaces());
         _secondParameter = CreateParameter(second_parameter_str, net->placeNames(), net->numberOfPlaces());
     }
@@ -141,7 +140,51 @@ void EvaluateableProposition::SetFireset(std::string fireset_str, std::vector<st
 }
 
 CardinalityParameter* EvaluateableProposition::CreateParameter(std::string parameter_str, std::vector<std::string> p_names, unsigned int numberof_p){
-    CardinalityParameter *param = new CardinalityParameter();   
+    CardinalityParameter *param = new CardinalityParameter();
+    while(parameter_str.substr(0,1).compare(" ")==0){
+        parameter_str = parameter_str.substr(1);
+    }
+    //std::cout<<"ParamString: "<<parameter_str<<"\n"<<std::flush;
+
+    ParameterHolder* typeHolder = new ParameterHolder();
+    if(parameter_str.substr(0,11).compare("integer-sum")==0){
+        typeHolder->type = SUM;
+        typeHolder->body = parameter_str.substr(11);
+    }
+    else if(parameter_str.substr(0,15).compare("integer-product")==0){
+        typeHolder->type = PRODUCT;
+        typeHolder->body = parameter_str.substr(15);
+    }
+    else if(parameter_str.substr(0,18).compare("integer-difference")==0){
+        typeHolder->type = DIFF;
+        typeHolder->body = parameter_str.substr(18);
+    }
+    else if(parameter_str.substr(0,16).compare("integer-constant")==0){
+        typeHolder->type = CONST;
+        typeHolder->body = parameter_str.substr(16);
+    }
+    else if(parameter_str.substr(0,12).compare("tokens-count")==0){
+        typeHolder->type = PLACE;
+        typeHolder->body = parameter_str.substr(12);
+    }
+    else{
+        std::cerr << "Error: Internal parse error - \"" << parameter_str <<"\" has unrecognized beginning." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    std::size_t found = typeHolder->body.find_last_of(")");
+    parameter_str = typeHolder->body.substr(1,found-1);
+
+    if(typeHolder->type != CONST && typeHolder->type != PLACE){
+        std::size_t end_of_first = GetEndingParamIndex(parameter_str) + 1;
+        param->isArithmetic = true;
+        param->arithmetictype = typeHolder->type;
+        param->arithmA = CreateParameter(parameter_str.substr(0,end_of_first), p_names, numberof_p);
+        param->arithmA = CreateParameter(parameter_str.substr(end_of_first + 2), p_names, numberof_p);
+        return param;
+    }
+
+
     char c;
     if(sscanf(parameter_str.c_str(), "%d%c", &param->value, &c) == 1) {
         //If string is identifier starting with a number, you will read two items.
@@ -180,6 +223,28 @@ CardinalityParameter* EvaluateableProposition::CreateParameter(std::string param
     return param;
 }
 
+std::size_t EvaluateableProposition::GetEndingParamIndex(std::string param_str){
+    size_t pos = param_str.find('(');
+    size_t start_count =1;
+    size_t end_count =0;
+    std::string temp = param_str.substr(pos+1);
+    while(start_count != end_count){
+        size_t new_pos = 0;
+        if(temp.find('(') < temp.find(')')){
+            start_count++;
+            new_pos = temp.find('(') + 1;
+        }
+        else{
+            end_count++;
+            new_pos = temp.find(')') + 1;
+        }
+        pos = pos + new_pos;
+        temp = temp.substr(new_pos);
+    }
+
+    return pos;
+}
+
 LoperatorType EvaluateableProposition::SetLoperator(std::string atom_str){
     std::string loperator_str = atom_str.substr(atom_str.find('}') + 1);
     loperator_str = loperator_str.substr(0, 4);
@@ -208,22 +273,50 @@ std::string EvaluateableProposition::ToString() {
         return fire_str + ")";
     }
     else if (_type == CARDINALITY){
-        std::string cardi_str = "(";
-        if(_firstParameter->isPlace)
-            cardi_str = cardi_str + "place(" + patch::to_string(_firstParameter->value) + ")";
-        else
-            cardi_str = cardi_str = patch::to_string(_firstParameter->value);
-        
-        cardi_str = cardi_str + " loperator ";
-        
-        if(_secondParameter->isPlace)
-            cardi_str = cardi_str + "place(" + patch::to_string(_secondParameter->value) + ")";
-        else
-            cardi_str = cardi_str = patch::to_string(_secondParameter->value);
-        return cardi_str + ")";
+        return Parameter_tostring(_firstParameter) + Loperator_tostring() + Parameter_tostring(_secondParameter);
+    }
+    std::cerr << "Error: An unknown error occured while converting a proposition to string. " << std::endl;
+    exit(EXIT_FAILURE);
+}
+
+
+std::string EvaluateableProposition::Parameter_tostring(CardinalityParameter* param){
+    std::string cardi_str = "";
+    if(param->isPlace)
+        cardi_str = cardi_str + "place(" + patch::to_string(param->value) + ")";
+    else if(param->isArithmetic){
+        std::string arthm_ope = "";
+        if(param->arithmetictype == SUM)
+            arthm_ope = " + ";
+        else if (param->arithmetictype == PRODUCT)
+            arthm_ope = " * ";
+        else if (param->arithmetictype == DIFF)
+            arthm_ope = " - ";
+        else {
+            std::cerr << "Error: An unknown error occured while converting a proposition to string. " << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        cardi_str = cardi_str + Parameter_tostring(param->arithmA) + arthm_ope + Parameter_tostring(param->arithmB);
     }
     else
-        std::cerr << "Error: An unknown error occured while converting a proposition to string. " << std::endl;
+        cardi_str = cardi_str = patch::to_string(param->value);
+    return cardi_str;
+}
+
+std::string EvaluateableProposition::Loperator_tostring(){
+    if(_loperator == LEQ)
+            return " <= ";
+    else if (_loperator == GRQ)
+        return " >= ";
+    else if (_loperator == EQ)
+        return " == ";
+    else if (_loperator == GR)
+        return " > ";
+    else if (_loperator == LE)
+        return " < ";
+    else if (_loperator == NE)
+        return " != ";
+    else std::cerr << "Error: Could not convert loperator to string" << std::endl;
     exit(EXIT_FAILURE);
 }
 

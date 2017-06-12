@@ -55,13 +55,13 @@ std::string CTLParser::QueryToString(CTLQuery* query){
 }
 
 CTLQuery* CTLParser::FormatQuery(CTLQuery* query, PetriEngine::PetriNet *net){
-    std::cout<<"Formatting...\n"<<std::flush;
     query = FillAtom(query,net);
-    std::cout<<"Atom full...\n"<<std::flush;
     query = ConvertAG(query);
     query = ConvertEG(query);
     IdSetting(query, 0);
     query = TemporalSetting(query);
+    std::cout<<"Before!\n"<<std::flush;
+    std::cout<<query->ToString()<<std::flush;
     return query;
 }
 
@@ -151,7 +151,6 @@ CTLQuery* CTLParser::FillAtom(CTLQuery* query, PetriEngine::PetriNet *net) {
     if(query_type == EVAL){
         EvaluateableProposition *proposition = new EvaluateableProposition(query->GetAtom(), net);
         query->SetProposition(proposition);
-        std::cout<<query->GetAtom()<<"\n"<<std::flush;
         return query;
     }
     else if (query_type == LOPERATOR){

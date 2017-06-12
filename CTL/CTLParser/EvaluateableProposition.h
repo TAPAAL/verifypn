@@ -18,8 +18,13 @@
 
 
 enum PropositionType {PropError = -1, CARDINALITY = 0, FIREABILITY = 1, DEADLOCK = 2};
-enum ArithmeticType {NON = -1, SUM = 0, PRODUCT = 1, DIFF = 2};
+enum ArithmeticType {NON = -1, SUM = 0, PRODUCT = 1, DIFF = 2, CONST = 3, PLACE = 4};
 enum LoperatorType {LopError = -1, NOT_CARDINALITY = -1, EQ = 0, LE = 1, LEQ = 2, GR = 3, GRQ = 4, NE = 5};
+
+struct ParameterHolder{
+    ArithmeticType type = NON;
+    std::string body = "";
+};
 
 struct CardinalityParameter{
     bool isPlace = false;
@@ -44,6 +49,7 @@ public:
 private:
     void SetFireset(std::string fireset_str, std::vector<std::string> t_names, unsigned int numberof_t);
     CardinalityParameter* CreateParameter(std::string parameter_str, std::vector<std::string> p_names, unsigned int numberof_p);
+    std::size_t GetEndingParamIndex(std::string parameter_str);
     LoperatorType SetLoperator(std::string atom_str);
     
     PropositionType _type = PropError;
@@ -51,6 +57,8 @@ private:
     std::vector<int> _fireset;
     CardinalityParameter* _firstParameter = nullptr;
     CardinalityParameter* _secondParameter = nullptr;
+    std::string Parameter_tostring(CardinalityParameter *param);
+    std::string Loperator_tostring();
     
 };
 

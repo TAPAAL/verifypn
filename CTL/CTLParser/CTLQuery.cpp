@@ -134,7 +134,8 @@ void CTLQuery::SetProposition(EvaluateableProposition *p){
 
 std::string CTLQuery::ToString(){
     if(_hasAtom){
-        return _a;
+        std::cout<<"Trying to convert prop to string...\n"<<std::flush;
+        return _proposition->ToString();
     }
     else if(_q == AND){
         return "(" + _firstchild->ToString() + " & " +  _secondchild->ToString() + ")";
