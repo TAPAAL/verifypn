@@ -282,8 +282,18 @@ std::string EvaluateableProposition::ToString() {
 
 std::string EvaluateableProposition::Parameter_tostring(CardinalityParameter* param){
     std::string cardi_str = "";
-    if(param->isPlace)
-        cardi_str = cardi_str + "place(" + patch::to_string(param->value) + ")";
+    if(param->isPlace){
+        cardi_str = cardi_str + "place(";
+        int i = 0;
+        while(i != param->places_i.size()){
+            cardi_str = cardi_str + patch::to_string(param->places_i[i]);
+
+            if(++i < param->places_i.size()){
+                cardi_str = cardi_str + ", ";
+            }
+        }
+        cardi_str = cardi_str + ")";
+    }
     else if(param->isArithmetic){
         std::string arthm_ope = "";
         if(param->arithmetictype == SUM)
