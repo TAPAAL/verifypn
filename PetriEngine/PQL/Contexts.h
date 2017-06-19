@@ -28,6 +28,7 @@
 #include <chrono>
 
 #include "../PetriNet.h"
+#include "PetriEngine/Simplification/LPCache.h"
 #include "PQL.h"
 
 namespace PetriEngine {
@@ -137,12 +138,14 @@ namespace PetriEngine {
         public:
 
             SimplificationContext(const MarkVal* marking,
-                    const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout)
+                    const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout,
+                    LPCache* cache)
                     : _queryTimeout(queryTimeout), _lpTimeout(lpTimeout) {
                 _negated = false;
                 _marking = marking;
                 _net = net;
                 _start = std::chrono::high_resolution_clock::now();
+                _cache = cache;
             }
 
             const MarkVal* marking() const {
@@ -180,6 +183,11 @@ namespace PetriEngine {
             uint32_t getLpTimeout() const {
                 return _lpTimeout;
             }
+            
+            LPCache* cache() const
+            {
+                return _cache;
+            }
 
         private:
             bool _negated;
@@ -187,6 +195,7 @@ namespace PetriEngine {
             const PetriNet* _net;
             uint32_t _queryTimeout, _lpTimeout;
             std::chrono::high_resolution_clock::time_point _start;
+            LPCache* _cache;
         };
 
     } // PQL

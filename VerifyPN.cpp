@@ -550,12 +550,13 @@ int main(int argc, char* argv[]) {
     ResultPrinter p2(&b2, &options, querynames);
     
     if (options.queryReductionTimeout > 0) {
+        LPCache cache;
         for(size_t i = 0; i < queries.size(); ++i)
         {
             if (queries[i]->isUpperBound()) continue;
             
             SimplificationContext simplificationContext(qm0, qnet, options.queryReductionTimeout, 
-                    options.lpsolveTimeout);
+                    options.lpsolveTimeout, &cache);
             
             int preSize=queries[i]->formulaSize();
             if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}

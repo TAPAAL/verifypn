@@ -2,54 +2,156 @@
 #define LINEARPROGRAM_H
 #include <algorithm>
 #include <unordered_set>
-
+#include <memory>
 #include "../PetriNet.h"
 #include "Member.h"
-#include "Equation.h"
+#include "Vector.h"
     
 namespace PetriEngine {
     namespace Simplification {
+        
+        struct equation_t
+        {
+            double upper = std::numeric_limits<double>::infinity();
+            double lower = -std::numeric_limits<double>::infinity();
+            double operator [] (size_t i) const
+            {
+                return i > 0 ? upper : lower;
+            }
+            Vector* row;
+            
+            bool operator <(const equation_t& other) const
+            {
+                return row < other.row;
+            }
+        };
         
         class LinearProgram {
         private:
             enum result_t { UKNOWN, IMPOSSIBLE, POSSIBLE };
             result_t _result = result_t::UKNOWN;
-            std::unordered_set<EquationWrap> equations;
-
+            std::vector<equation_t> _equations;
         public:
-            LinearProgram();
             virtual ~LinearProgram();
-            LinearProgram(Equation&& eq);
+            LinearProgram()
+            {
+            };
+            
+            LinearProgram(const LinearProgram& other)
+            : _result(other._result), _equations(other._equations)
+            {
+                
+            }
+            
+            LinearProgram(Vector* vec, int constant, op_t op, LPCache* factory);
             size_t size() const
             {
-                return equations.size();
+                return _equations.size();
             }
             
-            bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout);
-            void swap(LinearProgram& other)
+            const std::vector<equation_t>& equations() const
             {
-                std::swap(_result, other._result);
-                std::swap(equations, other.equations);
+                return _equations;
             }
             
-            static LinearProgram lpUnion(LinearProgram& lp1, LinearProgram& lp2){
-                LinearProgram res;
-                res.equations.reserve(lp1.equations.size() + lp2.equations.size());
-                res.equations.insert(lp1.equations.begin(), lp1.equations.end());
-                res.equations.insert(lp2.equations.begin(), lp2.equations.end());
+            bool operator ==(const LinearProgram& other) const
+            {
+                if(size() != other.size()) return false;
+                return memcmp(        _equations.data(), 
+                                other._equations.data(), 
+                                _equations.size()*sizeof(equation_t)) == 0;
+            }
+            
+            bool operator < (const LinearProgram& other) const
+            {
+                if(size() != other.size()) return size() < other.size();
+                int res = memcmp(   _equations.data(), other._equations.data(), 
+                                    _equations.size()*sizeof(equation_t));
+                if(res != 0) return res < 0;
+                return false;
+            }
+            
+            bool knownImpossible() const { return _result == result_t::IMPOSSIBLE; }
+            bool knownPossible() const { return _result == result_t::POSSIBLE; }
+            bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout, bool use_ilp = false);
+
+            void make_union(const LinearProgram& other);
+            
+            std::ostream& print(std::ostream& ss, size_t indent = 0) const
+            {
+                for(size_t i = 0; i < indent ; ++i) ss << "\t";
+                ss << "### LP\n";
                 
-                if( lp1._result == result_t::IMPOSSIBLE ||
-                    lp2._result == result_t::IMPOSSIBLE)
+                for(const equation_t& eq : _equations)
                 {
-                    // impossibility is compositional -- linear constraint-systems are big conjunctions.
-                    res._result = result_t::IMPOSSIBLE;
+                    for(size_t i = 0; i < indent ; ++i) ss << "\t";
+                    eq.row->print(ss);
+                    ss << " IN [" << eq.lower << ", " << eq.upper << "]\n";
                 }
-                return res;
-            }            
+                
+                for(size_t i = 0; i < indent ; ++i) ss << "\t";                
+                ss << "### LP DONE";
+                return ss;
+            }
             
         };
-    }
+        
+        struct LPWrap
+        {
+            LPWrap(const std::shared_ptr<LinearProgram>& prog) : prog(prog) {};
+            std::shared_ptr<LinearProgram> prog;
+            
+            bool operator < (const LPWrap& other) const
+            {
+                return (*prog) < (*other.prog);
+            }
+            
+            bool operator ==(const LPWrap& other) const
+            {
+                return (*prog) == (*other.prog);
+            }
+            
+            LinearProgram& operator*()
+            {
+                return *prog;
+            }
+            
+            const LinearProgram& operator*() const
+            {
+                return *prog;
+            }
+            
+            LinearProgram* operator ->()
+            {
+                return &(*prog);
+            }
+
+            const LinearProgram* operator ->() const
+            {
+                return &(*prog);
+            }
+            
+        };
+    }   
 }
+
+namespace std
+{
+    using namespace PetriEngine::Simplification;
+    
+    template <>
+    struct hash<LPWrap>
+    {
+        size_t operator()(const LPWrap& k) const
+        {
+            return MurmurHash64A(k->equations().data(), 
+                    k->size() * sizeof(int), 
+                    1337);
+        }
+    };
+}
+
+
 
 #endif /* LINEARPROGRAM_H */
 
