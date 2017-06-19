@@ -79,9 +79,6 @@ namespace PetriEngine {
                         << "\texpanded states:   " << ss.expandedStates << std::endl
                         << "\tmax tokens:        " << states->maxTokens() << std::endl;
             
-            // TODO: The following lines should be "uncommmented" before merge with trunk.
-            // They have been commented out to make the experiments output more readable.
-            /*
             std::cout << "\nTRANSITION STATISTICS\n";
             for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
                 std::cout << "<" << _net.transitionNames()[i] << ":" 
@@ -105,7 +102,7 @@ namespace PetriEngine {
             {
                 std::cout << "<" << _net.placeNames()[i] << ";?>";                
             }
-            */
+            
             std::cout << std::endl << std::endl;
         }
         
