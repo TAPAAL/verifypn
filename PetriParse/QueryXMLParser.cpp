@@ -44,7 +44,7 @@ QueryXMLParser::QueryXMLParser(const PNMLParser::TransitionEnablednessMap &trans
 
 QueryXMLParser::~QueryXMLParser() { }
 
-bool QueryXMLParser::parse(std::ifstream& xml) {
+bool QueryXMLParser::parse(std::ifstream& xml, const std::set<size_t>& parse_only) {
     //Parse the xml
     rapidxml::xml_document<> doc;
     vector<char> buffer((istreambuf_iterator<char>(xml)), istreambuf_iterator<char>());
@@ -53,7 +53,7 @@ bool QueryXMLParser::parse(std::ifstream& xml) {
     rapidxml::xml_node<>*  root = doc.first_node();
     bool parsingOK;
     if (root) {
-        parsingOK = parsePropertySet(root);
+        parsingOK = parsePropertySet(root, parse_only);
     } else {
         parsingOK = false;
     }
@@ -62,16 +62,28 @@ bool QueryXMLParser::parse(std::ifstream& xml) {
     return parsingOK;
 }
 
-bool QueryXMLParser::parsePropertySet(rapidxml::xml_node<>*  element) {
+bool QueryXMLParser::parsePropertySet(rapidxml::xml_node<>*  element, const std::set<size_t>& parse_only) {
     if (strcmp(element->name(), "property-set") != 0) {
         fprintf(stderr, "ERROR missing property-set\n");
         return false; // missing property-set element
     }
     
+    size_t i = 0;
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
-        if (!parseProperty(it)) {
-            return false;
-        };
+        if(parse_only.size() == 0 || parse_only.count(i) > 0)
+        {
+            if (!parseProperty(it)) {
+                return false;
+            };
+        }
+        else
+        {
+            QueryItem queryItem;
+            queryItem.query = nullptr;
+            queryItem.parsingResult = QueryItem::PARSING_OK;
+            queries.push_back(queryItem);
+        }
+        ++i;
     }
     return true;
 }
@@ -107,7 +119,6 @@ bool QueryXMLParser::parseProperty(rapidxml::xml_node<>*  element) {
         assert(queryItem.query);
         queryItem.parsingResult = QueryItem::PARSING_OK;
     } else {
-        assert(false);
         queryItem.query = nullptr;
         queryItem.parsingResult = QueryItem::UNSUPPORTED_QUERY;
     }

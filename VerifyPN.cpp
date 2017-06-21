@@ -375,7 +375,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
         else
         {
             QueryXMLParser XMLparser(tmap);
-            if (!XMLparser.parse(qfile)) {
+            if (!XMLparser.parse(qfile, options.querynumbers)) {
                 fprintf(stderr, "Error: Failed parsing XML query file\n");
                 fprintf(stdout, "DO_NOT_COMPETE\n");
                 conditions.clear();
