@@ -109,13 +109,13 @@ namespace PetriEngine {
             /** Generate LLVM intermediate code for this expr  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert expression to string */
-            virtual std::string toString() const = 0;
+            virtual void toString(std::ostream&) const = 0;
             /** Expression type */
             virtual Types type() const = 0;
             /** Construct left/right side of equations used in query simplification */
             virtual Simplification::Member constraint(SimplificationContext& context) const = 0;
             /** Output the expression as it currently is to a file in XML */
-            virtual std::string toXML(uint32_t tabs, bool tokencount = false) const = 0;
+            virtual void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const = 0;
             /** Stubborn reduction: increasing and decreasing sets */
             virtual void incr(ReducingSuccessorGenerator& generator) const = 0;
             virtual void decr(ReducingSuccessorGenerator& generator) const = 0;
@@ -151,9 +151,9 @@ namespace PetriEngine {
             /** Generate LLVM intermediate code for this condition  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert condition to string */
-            virtual std::string toString() const = 0;
+            virtual void toString(std::ostream&) const = 0;
             /** Export condition to TAPAAL query (add EF manually!) */
-            virtual std::string toTAPAALQuery(TAPAALConditionExportContext& context) const = 0;
+            virtual void toTAPAALQuery(std::ostream&, TAPAALConditionExportContext& context) const = 0;
             /** Get distance to query */
             virtual uint32_t distance(DistanceContext& context) const = 0;
             /** Query Simplification */
@@ -165,7 +165,7 @@ namespace PetriEngine {
             /** Prepare reachability queries */
             virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
             /** Output the condition as it currently is to a file in XML */
-            virtual std::string toXML(uint32_t tabs) const = 0;
+            virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
             /** Find interesting transitions in stubborn reduction*/
             virtual void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const = 0;
             /** Checks if the condition is trivially true */

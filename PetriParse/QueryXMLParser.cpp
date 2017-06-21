@@ -238,9 +238,9 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
     } else if (elementName == "deadlock") {
         return std::make_shared<DeadlockCondition>();
     } else if (elementName == "true") {
-        return BooleanCondition::TRUE;
+        return BooleanCondition::TRUE_CONDITION;
     } else if (elementName == "false") {
-        return BooleanCondition::FALSE;
+        return BooleanCondition::FALSE_CONDITION;
     } else if (elementName == "negation") {
         if (getChildCount(element) != 1) return nullptr;
         auto child = element->first_node();
@@ -353,9 +353,8 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
         return std::make_shared<LiteralExpr>(i);
     } else if (elementName == "tokens-count") {
         auto children = element->first_node();
-        auto it = children;
         std::vector<Expr_ptr> ids;        
-        for (it; it; it = it->next_sibling()) {
+        for (auto it = children; it; it = it->next_sibling()) {
             if (strcmp(it->name(), "place") != 0)
             {
                 assert(false);
@@ -426,7 +425,9 @@ void QueryXMLParser::printQueries(size_t i) {
     if (it.parsingResult == QueryItem::UNSUPPORTED_QUERY) {
         cout << "\t---------- unsupported query ----------" << endl;
     } else {
-        cout << "\t" << it.query->toString() << std::endl;
+        cout << "\t";
+        it.query->toString(cout);
+        cout << std::endl;
     }
 }
 

@@ -60,6 +60,7 @@
 #include "PetriEngine/Simplification/Retval.h"
 
 #include "CTL/CTLEngine.h"
+#include "PetriEngine/PQL/Expressions.h"
 
 using namespace std;
 using namespace PetriEngine;
@@ -481,21 +482,22 @@ std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std
     if (!cont) {
         return "";
     }
-            
-    string outputstring = "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
+       
+    std::stringstream ss;
+    ss << "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
     
     for(uint32_t i = 0; i < queries.size(); i++) {
         if (!(results[i] == ResultPrinter::CTL)) {
             continue;
         }
-        outputstring += "  <property>\n    <id>" + querynames[i] + "</id>\n    <description>Simplified</description>\n    <formula>\n";
-        outputstring += queries[i]->toXML(3);
-        outputstring += "    </formula>\n  </property>\n";
+        ss << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
+        queries[i]->toXML(ss, 3);
+        ss << "    </formula>\n  </property>\n";
     }
             
-    outputstring += "</property-set>\n";
+    ss << "</property-set>\n";
     
-    return outputstring;
+    return ss.str();
 }
 
 int main(int argc, char* argv[]) {
@@ -548,7 +550,12 @@ int main(int argc, char* argv[]) {
                     options.lpsolveTimeout, &cache);
             
             int preSize=queries[i]->formulaSize();
-            if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
+            if(options.printstatistics)
+            {
+                std::cout << "\nQuery before reduction: ";
+                queries[i]->toString(std::cout);
+                std::cout << std::endl;
+            }
 
             try {
                 queries[i] = (queries[i]->simplify(simplificationContext)).formula;   
@@ -561,7 +568,12 @@ int main(int argc, char* argv[]) {
                 std::exit(3);
             }
 
-            if(options.printstatistics){fprintf(stdout, "Query after reduction:  %s\n", queries[i]->toString().c_str());}
+            if(options.printstatistics)
+            {
+                std::cout << "\nQuery after reduction: ";
+                queries[i]->toString(std::cout);
+                std::cout << std::endl;
+            }
             if(options.printstatistics){
                 int postSize=queries[i]->formulaSize();
                 double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
@@ -671,8 +683,7 @@ int main(int argc, char* argv[]) {
     
     if(options.siphontrapTimeout > 0){
         for (uint32_t i = 0; i < results.size(); i ++) {
-            
-            bool isDeadlockQuery = queries[i]->toString() == "deadlock";
+            bool isDeadlockQuery = std::dynamic_pointer_cast<DeadlockCondition>(queries[i]) != nullptr;
  
             if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {    
                 STSolver stSolver(printer, *net, queries[i].get());

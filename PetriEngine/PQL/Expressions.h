@@ -53,13 +53,10 @@ namespace PetriEngine {
                 for(auto& e : _exprs) sum += e->formulaSize();
                 return sum;
             }
-            //llvm::Value* codegen(CodeGenerationContext& context) const;
-            std::string toString() const;
-            virtual std::string toXML(uint32_t tabs, bool tokencount = false) const = 0;
+            void toString(std::ostream&) const;
+            virtual void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const = 0;
         private:
             virtual int apply(int v1, int v2) const = 0;
-            /** LLVM binary operator (llvm::Instruction::BinaryOps) */
-            //virtual int binaryOp() const = 0;
             virtual std::string op() const = 0;
         protected:
             std::vector<Expr_ptr> _exprs;
@@ -76,7 +73,7 @@ namespace PetriEngine {
             
             Expr::Types type() const;
             Member constraint(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs, bool tokencount = false) const;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
             bool tk = false;
             void incr(ReducingSuccessorGenerator& generator) const;
             void decr(ReducingSuccessorGenerator& generator) const;
@@ -101,7 +98,7 @@ namespace PetriEngine {
             }
             Expr::Types type() const;
             Member constraint(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs, bool tokencount = false) const;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
             void incr(ReducingSuccessorGenerator& generator) const;
             void decr(ReducingSuccessorGenerator& generator) const;
         private:
@@ -117,7 +114,7 @@ namespace PetriEngine {
             using NaryExpr::NaryExpr;
             Expr::Types type() const;
             Member constraint(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs, bool tokencount = false) const;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
             void incr(ReducingSuccessorGenerator& generator) const;
             void decr(ReducingSuccessorGenerator& generator) const;
         private:
@@ -137,11 +134,10 @@ namespace PetriEngine {
             bool pfree() const;
             int evaluate(const EvaluationContext& context) const;
             int evalAndSet(const EvaluationContext& context);
-            //llvm::Value* codegen(CodeGenerationContext& context) const;
-            std::string toString() const;
+            void toString(std::ostream&) const;
             Expr::Types type() const;
             Member constraint(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs, bool tokencount = false) const;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
             void incr(ReducingSuccessorGenerator& generator) const;
             void decr(ReducingSuccessorGenerator& generator) const;
             int formulaSize() const{
@@ -161,10 +157,9 @@ namespace PetriEngine {
             bool pfree() const;
             int evaluate(const EvaluationContext& context) const;
             int evalAndSet(const EvaluationContext& context);
-            //llvm::Value* codegen(CodeGenerationContext& context) const;
-            std::string toString() const;
+            void toString(std::ostream&) const;
             Expr::Types type() const;
-            std::string toXML(uint32_t tabs, bool tokencount = false) const;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
             void incr(ReducingSuccessorGenerator& generator) const;
             void decr(ReducingSuccessorGenerator& generator) const;
             int formulaSize() const{
@@ -189,10 +184,9 @@ namespace PetriEngine {
             bool pfree() const;
             int evaluate(const EvaluationContext& context) const;
             int evalAndSet(const EvaluationContext& context);
-            //llvm::Value* codegen(CodeGenerationContext& context) const;
-            std::string toString() const;
+            void toString(std::ostream&) const;
             Expr::Types type() const;
-            std::string toXML(uint32_t tabs, bool tokencount = false) const;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
             void incr(ReducingSuccessorGenerator& generator) const;
             void decr(ReducingSuccessorGenerator& generator) const;
             int formulaSize() const{
@@ -223,14 +217,14 @@ namespace PetriEngine {
             
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
-            std::string toString() const;
-            std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            void toString(std::ostream&) const;
+            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             virtual Retval simplify(SimplificationContext& context) const = 0;
             virtual bool isReachability(uint32_t depth) const = 0;
             bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const = 0;
-            virtual std::string toXML(uint32_t tabs) const = 0;
+            virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
             bool evalAndSet(const EvaluationContext& context);
         private:
@@ -246,7 +240,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -258,7 +252,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -270,7 +264,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -282,7 +276,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -294,7 +288,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -306,7 +300,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const;
             bool isReachability(uint32_t depth) const;
             Condition_ptr prepareForReachability(bool negated) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -324,14 +318,14 @@ namespace PetriEngine {
             
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
-            std::string toString() const;
-            std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            void toString(std::ostream&) const;
+            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const;
             uint32_t distance(DistanceContext& context) const;
             virtual Retval simplify(SimplificationContext& context) const = 0;
             bool isReachability(uint32_t depth) const;
             bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
-            virtual std::string toXML(uint32_t tabs) const = 0;
+            virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
             bool evalAndSet(const EvaluationContext& context);
         private:
@@ -346,7 +340,7 @@ namespace PetriEngine {
         public:
             using UntilCondition::UntilCondition;  
             Retval simplify(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -356,7 +350,7 @@ namespace PetriEngine {
         public:
             using UntilCondition::UntilCondition;
             Retval simplify(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             
         private:
             std::string op() const;
@@ -379,19 +373,16 @@ namespace PetriEngine {
             bool evaluate(const EvaluationContext& context) const;
             bool evalAndSet(const EvaluationContext& context);
             
-            //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
-            std::string toString() const;
-            std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            void toString(std::ostream&) const;
+            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const;
             bool isReachability(uint32_t depth) const;
             bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
-            virtual std::string toXML(uint32_t tabs) const = 0;
+            virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
             
         private:
             virtual bool apply(bool b1, bool b2) const = 0;
-            /** LLVM binary operator (llvm::Instruction::BinaryOps) */
-            //virtual int logicalOp() const = 0;
             virtual uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const = 0;
             virtual std::string op() const = 0;
             
@@ -407,7 +398,7 @@ namespace PetriEngine {
             using LogicalCondition::LogicalCondition;
 
             Retval simplify(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(bool b1, bool b2) const;
@@ -422,7 +413,7 @@ namespace PetriEngine {
 
             using LogicalCondition::LogicalCondition;
             Retval simplify(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;   
         private:
             bool apply(bool b1, bool b2) const;
@@ -445,18 +436,16 @@ namespace PetriEngine {
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
             bool evalAndSet(const EvaluationContext& context);
-            //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
-            std::string toString() const;
-            std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            void toString(std::ostream&) const;
+            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const;
             bool isReachability(uint32_t depth) const;
             bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
-            virtual std::string toXML(uint32_t tabs) const = 0;
+            virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
             
         private:
             virtual bool apply(int v1, int v2) const = 0;
-            /** LLVM Comparison predicate (llvm::ICmpInst::Predicate) */
             //virtual int compareOp() const = 0;
             virtual uint32_t delta(int v1, int v2, bool negated) const = 0;
             virtual std::string op() const = 0;
@@ -476,7 +465,7 @@ namespace PetriEngine {
 
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(int v1, int v2) const;
@@ -492,9 +481,9 @@ namespace PetriEngine {
         public:
 
             using CompareCondition::CompareCondition;
-            std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const;
             Retval simplify(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(int v1, int v2) const;
@@ -511,7 +500,7 @@ namespace PetriEngine {
 
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(int v1, int v2) const;
@@ -528,7 +517,7 @@ namespace PetriEngine {
 
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(int v1, int v2) const;
@@ -545,7 +534,7 @@ namespace PetriEngine {
 
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(int v1, int v2) const;
@@ -561,7 +550,7 @@ namespace PetriEngine {
         public:
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             bool apply(int v1, int v2) const;
@@ -585,15 +574,14 @@ namespace PetriEngine {
             void analyze(AnalysisContext& context);
             bool evaluate(const EvaluationContext& context) const;
             bool evalAndSet(const EvaluationContext& context);
-            //llvm::Value* codegen(CodeGenerationContext& context) const;
             uint32_t distance(DistanceContext& context) const;
-            std::string toString() const;
-            std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            void toString(std::ostream&) const;
+            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const;
             Retval simplify(SimplificationContext& context) const;
             bool isReachability(uint32_t depth) const;
             bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             Condition_ptr _cond;
@@ -617,16 +605,16 @@ namespace PetriEngine {
             bool evaluate(const EvaluationContext& context) const;
             bool evalAndSet(const EvaluationContext& context);
             uint32_t distance(DistanceContext& context) const;
-            std::string toString() const;
-            std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
-            static Condition_ptr TRUE;
-            static Condition_ptr FALSE;
+            void toString(std::ostream&) const;
+            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const;
+            static Condition_ptr TRUE_CONDITION;
+            static Condition_ptr FALSE_CONDITION;
             static Condition_ptr getShared(bool val);
             Retval simplify(SimplificationContext& context) const;
             bool isReachability(uint32_t depth) const;
             bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
             const bool _value;
@@ -645,13 +633,13 @@ namespace PetriEngine {
             bool evaluate(const EvaluationContext& context) const;
             bool evalAndSet(const EvaluationContext& context);
             uint32_t distance(DistanceContext& context) const;
-            std::string toString() const;
-            std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
+            void toString(std::ostream&) const;
+            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const;
             Retval simplify(SimplificationContext& context) const;
             bool isReachability(uint32_t depth) const;
             bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
-            std::string toXML(uint32_t tabs) const;
+            void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
             static Condition_ptr DEADLOCK;
         };

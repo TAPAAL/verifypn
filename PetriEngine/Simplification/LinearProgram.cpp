@@ -115,7 +115,7 @@ namespace PetriEngine {
             set_minim(lp);
 
             for (size_t i = 0; i < nCol; i++){
-                set_int(lp, 1 + i, use_ilp ? TRUE : false);
+                set_int(lp, 1 + i, use_ilp ? TRUE : FALSE);
             }
             
             set_timeout(lp, timeout);
