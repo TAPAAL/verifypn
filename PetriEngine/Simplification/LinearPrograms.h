@@ -243,11 +243,9 @@ namespace PetriEngine {
             
             virtual bool merge(bool& has_empty, LinearProgram& program)
             {
-                assert(this->program.size() == 1);
                 program.make_union(this->program);
                 has_empty = this->program.equations().size() == 0;
                 assert(has_empty == this->has_empty);
-                assert(!has_empty);
                 return false;
             }            
             

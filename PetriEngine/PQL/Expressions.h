@@ -39,19 +39,19 @@ namespace PetriEngine {
         /******************** EXPRESSIONS ********************/
 
         /** Base class for all binary expressions */
-        class BinaryExpr : public Expr {
+        class NaryExpr : public Expr {
         public:
 
-            BinaryExpr(const Expr_ptr expr1, const Expr_ptr expr2) {
-                _expr1 = expr1;
-                _expr2 = expr2;
+            NaryExpr(std::vector<Expr_ptr>&& exprs) : _exprs(std::move(exprs)) {
             }
             void analyze(AnalysisContext& context);
             bool pfree() const;
             int evaluate(const EvaluationContext& context) const;
             int evalAndSet(const EvaluationContext& context);
             int formulaSize() const{
-                return _expr1->formulaSize() + _expr2->formulaSize() + 1;
+                size_t sum = 0;
+                for(auto& e : _exprs) sum += e->formulaSize();
+                return sum;
             }
             //llvm::Value* codegen(CodeGenerationContext& context) const;
             std::string toString() const;
@@ -62,21 +62,25 @@ namespace PetriEngine {
             //virtual int binaryOp() const = 0;
             virtual std::string op() const = 0;
         protected:
-            Expr_ptr _expr1;
-            Expr_ptr _expr2;
+            std::vector<Expr_ptr> _exprs;
         };
 
         /** Binary plus expression */
-        class PlusExpr : public BinaryExpr {
+        class PlusExpr : public NaryExpr {
         public:
 
-            using BinaryExpr::BinaryExpr;
+            PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk = false) :
+            NaryExpr(std::move(exprs)), tk(tk)
+            {
+            }
+            
             Expr::Types type() const;
             Member constraint(SimplificationContext& context) const;
             std::string toXML(uint32_t tabs, bool tokencount = false) const;
             bool tk = false;
             void incr(ReducingSuccessorGenerator& generator) const;
             void decr(ReducingSuccessorGenerator& generator) const;
+            
         private:
             int apply(int v1, int v2) const;
             //int binaryOp() const;
@@ -84,10 +88,17 @@ namespace PetriEngine {
         };
 
         /** Binary minus expression */
-        class SubtractExpr : public BinaryExpr {
+        class SubtractExpr : public NaryExpr {
         public:
 
-            using BinaryExpr::BinaryExpr;
+            SubtractExpr(std::vector<Expr_ptr>&& exprs) : NaryExpr(std::move(exprs))
+            {
+                if(_exprs.size() != 2)
+                {
+                    std::cout << "SubstractExpr requieres exactly two sub-expressions" << std::endl;
+                    exit(-1);
+                }
+            }
             Expr::Types type() const;
             Member constraint(SimplificationContext& context) const;
             std::string toXML(uint32_t tabs, bool tokencount = false) const;
@@ -100,10 +111,10 @@ namespace PetriEngine {
         };
 
         /** Binary multiplication expression **/
-        class MultiplyExpr : public BinaryExpr {
+        class MultiplyExpr : public NaryExpr {
         public:
 
-            using BinaryExpr::BinaryExpr;
+            using NaryExpr::NaryExpr;
             Expr::Types type() const;
             Member constraint(SimplificationContext& context) const;
             std::string toXML(uint32_t tabs, bool tokencount = false) const;

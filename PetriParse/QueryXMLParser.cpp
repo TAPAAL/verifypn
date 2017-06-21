@@ -104,9 +104,11 @@ bool QueryXMLParser::parseProperty(rapidxml::xml_node<>*  element) {
     if(tagsOK)
     {
         queryItem.query = parseFormula(formulaPtr);
+        assert(queryItem.query);
         queryItem.parsingResult = QueryItem::PARSING_OK;
     } else {
-        queryItem.query = NULL;
+        assert(false);
+        queryItem.query = nullptr;
         queryItem.parsingResult = QueryItem::UNSUPPORTED_QUERY;
     }
     queries.push_back(queryItem);
@@ -124,22 +126,22 @@ bool QueryXMLParser::parseTags(rapidxml::xml_node<>*  element) {
 }
 
 Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
-    if (getChildCount(element) != 1) return NULL;    
+    if (getChildCount(element) != 1) return nullptr;    
     auto child = element->first_node();
     string childName = child->name();
-    Condition_ptr cond = NULL;
+    Condition_ptr cond = nullptr;
     
     // Formula is either a place-bound or CTL/reachability formula
     if (childName == "place-bound") {
         std::vector<std::string> places;
         for (auto it = child->first_node(); it ; it = it->next_sibling()) {
-            if (strcmp(it->name(), "place") != 0) return NULL;
+            if (strcmp(it->name(), "place") != 0) return nullptr;
             auto place = parsePlace(it);
-            if (place == "") return NULL; // invalid place name
+            if (place == "") return nullptr; // invalid place name
             auto tmp = std::make_shared<LessThanCondition>(
                             std::make_shared<IdentifierExpr>(place),
                             std::make_shared<LiteralExpr>(0));
-            if (cond == NULL) {
+            if (cond == nullptr) {
                 cond = tmp;
             } else {
                 cond = std::make_shared<AndCondition>(cond, tmp);
@@ -148,12 +150,13 @@ Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
         }
         cond->setPlaceNameForBounds(places);
         return std::make_shared<EFCondition>(cond);
-    } else if ((cond = parseBooleanFormula(child)) != NULL) {
+    } else if ((cond = parseBooleanFormula(child)) != nullptr) {
         return cond;
     } else {
-        return NULL;
+        return nullptr;
     }
 }
+
 
 Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element) {
     /*
@@ -167,67 +170,67 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
      */
     
     string elementName = element->name();
-    Condition_ptr cond = NULL, cond2 = NULL;
+    Condition_ptr cond = nullptr, cond2 = nullptr;
     
     if (elementName == "invariant") {
-        if ((cond = parseBooleanFormula(element->first_node())) != NULL)
+        if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
             return std::make_shared<NotCondition>(std::make_shared<EFCondition>(std::make_shared<NotCondition>(cond)));
     } else if (elementName == "impossibility") {
-        if ((cond = parseBooleanFormula(element->first_node())) != NULL)
+        if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
             return std::make_shared<NotCondition>(std::make_shared<EFCondition>(cond));
     } else if (elementName == "possibility") {
-        if ((cond = parseBooleanFormula(element->first_node())) != NULL)
+        if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
             return std::make_shared<EFCondition>(cond);
     } else if (elementName == "exists-path") {
-        if (getChildCount(element) != 1) return NULL;
+        if (getChildCount(element) != 1) return nullptr;
         auto child = element->first_node();
         if (strcmp(child->name(), "next") == 0) {
-            if (getChildCount(child) != 1) return NULL;
-            if ((cond = parseBooleanFormula(child->first_node())) != NULL)
+            if (getChildCount(child) != 1) return nullptr;
+            if ((cond = parseBooleanFormula(child->first_node())) != nullptr)
                 return std::make_shared<EXCondition>(cond);
         } else if (strcmp(child->name(), "globally") == 0) {
-            if (getChildCount(child) != 1) return NULL;
-            if ((cond = parseBooleanFormula(child->first_node())) != NULL)
+            if (getChildCount(child) != 1) return nullptr;
+            if ((cond = parseBooleanFormula(child->first_node())) != nullptr)
                 return std::make_shared<EGCondition>(cond);
         } else if (strcmp(child->name(), "finally") == 0) {
-            if (getChildCount(child) != 1) return NULL;
-            if ((cond = parseBooleanFormula(child->first_node())) != NULL)
+            if (getChildCount(child) != 1) return nullptr;
+            if ((cond = parseBooleanFormula(child->first_node())) != nullptr)
                 return std::make_shared<EFCondition>(cond);
         } else if (strcmp(child->name(), "until") == 0) {
-            if (getChildCount(child) != 2) return NULL;           
+            if (getChildCount(child) != 2) return nullptr;           
             auto before = child->first_node();
             auto reach = before->next_sibling();
             if (getChildCount(before) != 1 || getChildCount(reach) != 1 ||
-                    strcmp(before->name(), "before") != 0 || strcmp(reach->name(), "reach") != 0) return NULL;
-            if ((cond = parseBooleanFormula(before->first_node())) != NULL) {
-                if ((cond2 = parseBooleanFormula(reach->first_node())) != NULL) {
+                    strcmp(before->name(), "before") != 0 || strcmp(reach->name(), "reach") != 0) return nullptr;
+            if ((cond = parseBooleanFormula(before->first_node())) != nullptr) {
+                if ((cond2 = parseBooleanFormula(reach->first_node())) != nullptr) {
                     return std::make_shared<EUCondition>(cond, cond2);
                 }
             }
         }
     } else if (elementName == "all-paths") {
-        if (getChildCount(element) != 1) return NULL;
+        if (getChildCount(element) != 1) return nullptr;
         auto child = element->first_node();
         if (strcmp(child->name(), "next") == 0) {
-            if (getChildCount(child) != 1) return NULL;
-            if ((cond = parseBooleanFormula(child->first_node())) != NULL)
+            if (getChildCount(child) != 1) return nullptr;
+            if ((cond = parseBooleanFormula(child->first_node())) != nullptr)
                 return std::make_shared<AXCondition>(cond);
         } else if (strcmp(child->name(), "globally") == 0) {
-            if (getChildCount(child) != 1) return NULL;
-            if ((cond = parseBooleanFormula(child->first_node())) != NULL)
+            if (getChildCount(child) != 1) return nullptr;
+            if ((cond = parseBooleanFormula(child->first_node())) != nullptr)
                 return std::make_shared<AGCondition>(cond);
         } else if (strcmp(child->name(), "finally") == 0) {
-            if (getChildCount(child) != 1) return NULL;
-            if ((cond = parseBooleanFormula(child->first_node())) != NULL)
+            if (getChildCount(child) != 1) return nullptr;
+            if ((cond = parseBooleanFormula(child->first_node())) != nullptr)
                 return std::make_shared<AFCondition>(cond);
         } else if (strcmp(child->name(), "until") == 0) {
-            if (getChildCount(child) != 2) return NULL;           
+            if (getChildCount(child) != 2) return nullptr;           
             auto before = child->first_node();
             auto reach = before->next_sibling();
             if (getChildCount(before) != 1 || getChildCount(reach) != 1 ||
-                    strcmp(before->name(), "before") != 0 || strcmp(reach->name(), "reach") != 0) return NULL;
-            if ((cond = parseBooleanFormula(before->first_node())) != NULL){
-                if ((cond2 = parseBooleanFormula(reach->first_node())) != NULL) {
+                    strcmp(before->name(), "before") != 0 || strcmp(reach->name(), "reach") != 0) return nullptr;
+            if ((cond = parseBooleanFormula(before->first_node())) != nullptr){
+                if ((cond2 = parseBooleanFormula(reach->first_node())) != nullptr) {
                     return std::make_shared<AUCondition>(cond, cond2);
                 }
             }
@@ -239,71 +242,71 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
     } else if (elementName == "false") {
         return BooleanCondition::FALSE;
     } else if (elementName == "negation") {
-        if (getChildCount(element) != 1) return NULL;
+        if (getChildCount(element) != 1) return nullptr;
         auto child = element->first_node();
         if (strcmp(child->name(), "invariant") == 0) {
-            if ((cond = parseBooleanFormula(child->first_node())) != NULL) {
+            if ((cond = parseBooleanFormula(child->first_node())) != nullptr) {
                 return std::make_shared<EFCondition>(std::make_shared<NotCondition>(cond));
             }
         } else if (strcmp(child->name(), "impossibility") == 0) {
-            if ((cond = parseBooleanFormula(child->first_node())) != NULL) {
+            if ((cond = parseBooleanFormula(child->first_node())) != nullptr) {
                 return std::make_shared<EFCondition>(cond);
             }
         } else if (strcmp(child->name(), "possibility") == 0) {
-            if ((cond = parseBooleanFormula(child->first_node())) != NULL) {
+            if ((cond = parseBooleanFormula(child->first_node())) != nullptr) {
                 return std::make_shared<NotCondition>(std::make_shared<EFCondition>(cond));
             }
         } else {
-            if ((cond = parseBooleanFormula(child)) != NULL) {
+            if ((cond = parseBooleanFormula(child)) != nullptr) {
                 return std::make_shared<NotCondition>(cond);
             }
         }
     } else if (elementName == "conjunction") {
         auto children = element->first_node();
-        if (getChildCount(element) < 2) return NULL;
+        if (getChildCount(element) < 2) return nullptr;
         auto it = children;
         cond = parseBooleanFormula(it);
         // skip a sibling
         for (it = it->next_sibling(); it; it = it->next_sibling()) {
             Condition_ptr child = parseBooleanFormula(it);
-            if(child == NULL || cond == NULL) return NULL;
+            if(child == nullptr || cond == nullptr) return nullptr;
             cond = std::make_shared<AndCondition>(cond, child);
         }
         return cond;
     } else if (elementName == "disjunction") {
         auto children = element->first_node();
-        if (getChildCount(element) < 2) return NULL;
+        if (getChildCount(element) < 2) return nullptr;
         auto it = children;
         cond = parseBooleanFormula(it);
         // skip a sibling
         for (it = it->next_sibling(); it; it = it->next_sibling()) {
             Condition_ptr child = parseBooleanFormula(it);
-            if(child == NULL || cond == NULL) return NULL;
+            if(child == nullptr || cond == nullptr) return nullptr;
             cond = std::make_shared<OrCondition>(cond, child);
         }
         return cond;
     } else if (elementName == "exclusive-disjunction") {
         auto children = element->first_node();
-        if (getChildCount(element) != 2) return NULL; // we support only two subformulae here
+        if (getChildCount(element) != 2) return nullptr; // we support only two subformulae here
         cond = parseBooleanFormula(children);
         cond2 = parseBooleanFormula(children->next_sibling());
-        if (cond == NULL || cond2 == NULL) return NULL;       
+        if (cond == nullptr || cond2 == nullptr) return nullptr;       
         return std::make_shared<OrCondition>(
                 std::make_shared<AndCondition>(cond, std::make_shared<NotCondition>(cond2)),
                 std::make_shared<AndCondition>(std::make_shared<NotCondition>(cond), cond2));
     } else if (elementName == "implication") {
         auto children = element->first_node();
-        if (getChildCount(element) != 2) return NULL; // implication has only two subformulae
+        if (getChildCount(element) != 2) return nullptr; // implication has only two subformulae
         cond = parseBooleanFormula(children);
         cond2 = parseBooleanFormula(children->next_sibling());
-        if (cond == NULL || cond2 == NULL) return NULL;       
+        if (cond == nullptr || cond2 == nullptr) return nullptr;       
         return std::make_shared<OrCondition>(std::make_shared<NotCondition>(cond), cond2);
     } else if (elementName == "equivalence") {
         auto children = element->first_node();
-        if (getChildCount(element) != 2) return NULL; // we support only two subformulae here
+        if (getChildCount(element) != 2) return nullptr; // we support only two subformulae here
         cond = parseBooleanFormula(children);
         cond2 = parseBooleanFormula(children->next_sibling());
-        if (cond == NULL || cond2 == NULL) return NULL;
+        if (cond == nullptr || cond2 == nullptr) return nullptr;
         return std::make_shared<OrCondition>(std::make_shared<AndCondition>(cond, cond2),
                 std::make_shared<AndCondition>(std::make_shared<NotCondition>(cond), 
                 std::make_shared<NotCondition>(cond2)));
@@ -311,10 +314,10 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
             elementName == "integer-lt" || elementName == "integer-le" ||
             elementName == "integer-gt" || elementName == "integer-ge") {
         auto children = element->first_node();
-        if (getChildCount(element) != 2) return NULL; // exactly two integer subformulae are required       
+        if (getChildCount(element) != 2) return nullptr; // exactly two integer subformulae are required       
         Expr_ptr expr1 = parseIntegerExpression(children);
         Expr_ptr expr2 = parseIntegerExpression(children->next_sibling());
-        if(expr1 == NULL || expr2 == NULL) return NULL;
+        if(expr1 == nullptr || expr2 == nullptr) return nullptr;
         if (elementName == "integer-eq") return std::make_shared<EqualCondition>(expr1, expr2);
         else if (elementName == "integer-ne") return std::make_shared<NotEqualCondition>(expr1, expr2);
         else if (elementName == "integer-lt") return std::make_shared<LessThanCondition>(expr1, expr2);
@@ -323,15 +326,15 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
         else if (elementName == "integer-ge") return std::make_shared<GreaterThanOrEqualCondition>(expr1, expr2);        
     } else if (elementName == "is-fireable") {
         size_t nrOfChildren = getChildCount(element);
-        if (nrOfChildren == 0) return NULL;
+        if (nrOfChildren == 0) return nullptr;
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
-            if (strcmp(it->name(), "transition") != 0) return NULL;            
+            if (strcmp(it->name(), "transition") != 0) return nullptr;            
             string transitionName = it->value();
             if (_transitionEnabledness.find(transitionName) == _transitionEnabledness.end()) {
                 fprintf(stderr, "XML Query Parsing error: Transition id=\"%s\" was not found!\n", transitionName.c_str());
-                return NULL;
+                return nullptr;
             }
-            if (cond == NULL) {
+            if (cond == nullptr) {
                 cond = _transitionEnabledness[transitionName];
             } else {
                 cond = std::make_shared<OrCondition>(_transitionEnabledness[transitionName], cond); 
@@ -339,67 +342,70 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
         }
         return cond;
     }
-    return NULL;
+    return nullptr;
 }
 
 Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) {
     string elementName = element->name();
     if (elementName == "integer-constant") {
         int i;
-        if (sscanf(element->value(), "%d", &i) == EOF) return NULL; // expected integer at this place
+        if (sscanf(element->value(), "%d", &i) == EOF) return nullptr; // expected integer at this place
         return std::make_shared<LiteralExpr>(i);
     } else if (elementName == "tokens-count") {
         auto children = element->first_node();
-        size_t nrOfChildren = getChildCount(element);
-        if (nrOfChildren == 0) return NULL;
         auto it = children;
-        Expr_ptr sum = NULL;
-        
-        {
-            if (strcmp(it->name(), "place") != 0) return NULL;
+        std::vector<Expr_ptr> ids;        
+        for (it; it; it = it->next_sibling()) {
+            if (strcmp(it->name(), "place") != 0)
+            {
+                assert(false);
+                return nullptr;
+            }
             string placeName = parsePlace(it);
-            if (placeName == "") return NULL; // invalid place name
-            sum = std::make_shared<IdentifierExpr>(placeName);
+            if (placeName == "")
+            {
+                assert(false);
+                return nullptr; // invalid place name
+            }
+            auto id = std::make_shared<IdentifierExpr>(placeName);
+            ids.emplace_back(id);
         }
         
-        for (it = it->next_sibling(); it; it = it->next_sibling()) {
-            if (strcmp(it->name(), "place") != 0) return NULL;
-            string placeName = parsePlace(it);
-            if (placeName == "") return NULL; // invalid place name
-            std::shared_ptr<PlusExpr> sum2 = std::make_shared<PlusExpr>(sum, std::make_shared<IdentifierExpr>(placeName));
-            sum2.get()->tk = true;
-            sum = sum2;
-        }
-        return sum;
+        if (ids.size() == 0) return nullptr;
+
+        return std::make_shared<PlusExpr>(std::move(ids), true);
     } else if (elementName == "integer-sum" || elementName == "integer-product") {
         auto children = element->first_node();
-        size_t nrOfChildren = getChildCount(element);
-        if (nrOfChildren < 2)  return NULL; // at least two integer subexpression are required
         bool isMult = false;
         if (elementName == "integer-sum") isMult = false;
         else if (elementName == "integer-product") isMult = true;
 
+        std::vector<Expr_ptr> els;
         auto it = children;
-        Expr_ptr expr = parseIntegerExpression(it);
-        
-        for (it = children->next_sibling(); it; it = it->next_sibling()) {
-            Expr_ptr child = parseIntegerExpression(it);
-            if(child == NULL)  return NULL;
-            expr = isMult ? 
-                (Expr_ptr)std::make_shared<PlusExpr>(expr, child) :
-                (Expr_ptr)std::make_shared<MultiplyExpr>(expr, child);
+       
+        for (; it; it = it->next_sibling()) {
+            els.emplace_back(parseIntegerExpression(it));
+            if(!els.back())  return nullptr;
         }
-        return expr;
+
+        if (els.size() < 2)  return nullptr; // at least two integer subexpression are required
+
+        return  isMult ? 
+                std::dynamic_pointer_cast<Expr>(std::make_shared<PlusExpr>(std::move(els))) :
+                std::dynamic_pointer_cast<Expr>(std::make_shared<MultiplyExpr>(std::move(els)));
+;
     } else if (elementName == "integer-difference") {
         auto children = element->first_node();
-        size_t nrOfChildren = getChildCount(element);
-        if (nrOfChildren != 2) return NULL; // at least two integer subexpression are required
-        Expr_ptr expr1 = parseIntegerExpression(children);
-        Expr_ptr expr2 = parseIntegerExpression(children->next_sibling());       
-        if(expr1 == NULL || expr2 == NULL) return NULL;
-        return std::make_shared<SubtractExpr>(expr1, expr2);
+        std::vector<Expr_ptr> els;
+        for (auto it = children; it; it = it->next_sibling()) {
+            els.emplace_back(parseIntegerExpression(it));
+        }
+        if(els.size() != 2) return nullptr;
+        if(els[0] == nullptr || els[1] == nullptr) return nullptr;
+
+        return std::make_shared<SubtractExpr>(std::move(els));
     }
-    return NULL;
+    return nullptr;
 }
 
 string QueryXMLParser::parsePlace(rapidxml::xml_node<>*  element) {

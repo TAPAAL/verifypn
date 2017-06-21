@@ -334,7 +334,7 @@ auto
 readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std::vector<std::string>& qstrings)
 {
 
-    std::vector<std::shared_ptr<Condition > > conditions;
+    std::vector<Condition_ptr > conditions;
     if (!options.statespaceexploration) {
         //Open query file
         ifstream qfile(options.queryfile, ifstream::in);
@@ -369,7 +369,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
             if (isInvariant)
                     querystring = "not ( " + querystring + " )";
             std::vector<std::string> tmp;
-            conditions.push_back(ParseQuery(querystring, isInvariant, tmp));
+            conditions.emplace_back(ParseQuery(querystring, isInvariant, tmp));
         }
         else
         {
@@ -382,7 +382,6 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
             }
 
             size_t i = 0;
-
             for(auto& q : XMLparser.queries)
             {
                 if(!options.querynumbers.empty()
@@ -401,7 +400,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
                 // fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
 
                 conditions.push_back(q.query);
-                if (conditions.back() == NULL) {
+                if (conditions.back() == nullptr) {
                     fprintf(stderr, "Error: Failed to parse query \"%s\"\n", q.id.c_str()); //querystr.substr(2).c_str());
                     fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
                     conditions.pop_back();
@@ -604,6 +603,7 @@ int main(int argc, char* argv[]) {
         
         if(alldone) return SuccessCode;
     }
+        
     
     //----------------------- Verify CTL queries -----------------------//
     std::string CTLQueries = getXMLQueries(queries, querynames, results);

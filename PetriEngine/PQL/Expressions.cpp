@@ -73,8 +73,16 @@ namespace PetriEngine {
             return _name;
         }
 
-        std::string BinaryExpr::toString() const {
-            return "(" + _expr1->toString() + " " + op() + " " + _expr2->toString() + ")";
+        std::string NaryExpr::toString() const {
+            std::stringstream ss;
+            ss << "(";
+            ss << _exprs[0]->toString();
+            for(size_t i = 1; i < _exprs.size(); ++i)
+            {
+                ss << " " << op() << _exprs[i]->toString();
+            }
+            ss << ")";
+            return ss.str();
         }
 
         std::string MinusExpr::toString() const {
@@ -208,9 +216,8 @@ namespace PetriEngine {
 
         /******************** Context Analysis ********************/
 
-        void BinaryExpr::analyze(AnalysisContext& context) {
-            _expr1->analyze(context);
-            _expr2->analyze(context);
+        void NaryExpr::analyze(AnalysisContext& context) {
+            for(auto& e : _exprs) e->analyze(context);
         }
 
         void MinusExpr::analyze(AnalysisContext& context) {
@@ -264,10 +271,13 @@ namespace PetriEngine {
 
         /******************** Evaluation ********************/
 
-        int BinaryExpr::evaluate(const EvaluationContext& context) const {
-            int v1 = _expr1->evaluate(context);
-            int v2 = _expr2->evaluate(context);
-            return apply(v1, v2);
+        int NaryExpr::evaluate(const EvaluationContext& context) const {
+            int r = _exprs[0]->evaluate(context);
+            for(size_t i = 1; i < _exprs.size(); ++i)
+            {
+                r = apply(r, _exprs[i]->evaluate(context));
+            }
+            return r;
         }
 
         int MinusExpr::evaluate(const EvaluationContext& context) const {
@@ -337,12 +347,14 @@ namespace PetriEngine {
             return false;
         }        
 
-        int BinaryExpr::evalAndSet(const EvaluationContext& context) {
-            int v1 = _expr1->evalAndSet(context);
-            int v2 = _expr2->evalAndSet(context);
-            int res = apply(v1, v2);
-            setEval(res);
-            return res;
+        int NaryExpr::evalAndSet(const EvaluationContext& context) {
+            int r = _exprs[0]->evalAndSet(context);
+            for(size_t i = 1; i < _exprs.size(); ++i)
+            {
+                r = apply(r, _exprs[i]->evalAndSet(context));
+            }
+            setEval(r);
+            return r;
         }
 
         int MinusExpr::evalAndSet(const EvaluationContext& context) {
@@ -535,8 +547,12 @@ namespace PetriEngine {
 
         /******************** p-free Expression ********************/
 
-        bool BinaryExpr::pfree() const {
-            return _expr1->pfree() && _expr2->pfree();
+        bool NaryExpr::pfree() const {
+            for(auto& e : _exprs)
+            {
+                if(!e->pfree()) return false;
+            }
+            return true;
         }
 
         bool MinusExpr::pfree() const {
@@ -700,38 +716,39 @@ namespace PetriEngine {
         }
         
         std::string PlusExpr::toXML(uint32_t tabs, bool tokencount) const {
+            std::stringstream ss;
             if (tokencount) {
-                std::string st1 = _expr1->toXML(tabs, tokencount);
-                std::string st2 = _expr2->toXML(tabs, tokencount);
-                
-                return st1 + st2;
+                for(auto& e : _exprs) ss << e->toXML(tabs, tokencount);
+                return ss.str();
             }
             
             if(tk) {
-                std::string st1 = _expr1->toXML(tabs+1, true);
-                std::string st2 = _expr2->toXML(tabs+1, true);
-                
-                return generateTabs(tabs) + "<tokens-count>\n" + st1 + st2 + generateTabs(tabs) + "</tokens-count>\n";
+                ss << generateTabs(tabs) << "<tokens-count>\n";
+                for(auto& e : _exprs) ss << e->toXML(tabs+1, true);
+                ss << generateTabs(tabs) << "</tokens-count>\n";
+                return ss.str();
             }
+            ss << generateTabs(tabs) << "<integer-sum>\n";
+            for(auto& e : _exprs) ss << e->toXML(tabs+1, tokencount);
+            ss << generateTabs(tabs) << "</integer-sum>\n";
             
-            std::string st1 = _expr1->toXML(tabs+1, tokencount);
-            std::string st2 = _expr2->toXML(tabs+1, tokencount);
-            
-            return generateTabs(tabs) + "<integer-sum>\n" + st1 + st2 + generateTabs(tabs) + "</integer-sum>\n"; 
+            return  ss.str(); 
         }
         
         std::string SubtractExpr::toXML(uint32_t tabs, bool tokencount) const {
-            std::string st1 = _expr1->toXML(tabs+1);
-            std::string st2 = _expr2->toXML(tabs+1);
-            
-            return generateTabs(tabs) + "<integer-difference>\n" + st1 + st2 + generateTabs(tabs) + "</integer-difference>\n"; 
+            std::stringstream ss;
+            ss << generateTabs(tabs) << "<integer-difference>\n";
+            for(auto& e : _exprs) ss << e->toXML(tabs+1);
+            ss << generateTabs(tabs) << "</integer-difference>\n";
+            return ss.str(); 
         }
         
         std::string MultiplyExpr::toXML(uint32_t tabs, bool tokencount) const {
-            std::string st1 = _expr1->toXML(tabs+1);
-            std::string st2 = _expr2->toXML(tabs+1);
-            
-            return generateTabs(tabs) + "<integer-product>\n" + st1 + st2 + generateTabs(tabs) + "</integer-product>\n"; 
+            std::stringstream ss;
+            ss << generateTabs(tabs) << "<integer-product>\n";
+            for(auto& e : _exprs) ss << e->toXML(tabs+1);
+            ss << generateTabs(tabs) << "</integer-product>\n";
+            return ss.str();
         }
         
         std::string MinusExpr::toXML(uint32_t tabs, bool tokencount) const {
@@ -879,15 +896,21 @@ namespace PetriEngine {
         }
         
         Member PlusExpr::constraint(SimplificationContext& context) const {
-            return _expr1->constraint(context) += _expr2->constraint(context);
+            Member res;
+            for(auto& e : _exprs) res += e->constraint(context);
+            return res;
         }
         
         Member SubtractExpr::constraint(SimplificationContext& context) const {
-            return _expr1->constraint(context) -= _expr2->constraint(context);
+            Member res = _exprs[0]->constraint(context);
+            for(size_t i = 1; i < _exprs.size(); ++i) res -= _exprs[i]->constraint(context);
+            return res;
         }
         
         Member MultiplyExpr::constraint(SimplificationContext& context) const {
-            return _expr1->constraint(context) *= _expr2->constraint(context);
+            Member res = _exprs[0]->constraint(context);
+            for(size_t i = 1; i < _exprs.size(); ++i) res *= _exprs[i]->constraint(context);
+            return res;
         }
         
         Member MinusExpr::constraint(SimplificationContext& context) const {
@@ -1622,37 +1645,33 @@ namespace PetriEngine {
         /******************** Stubborn reduction interesting transitions ********************/
         
         void PlusExpr::incr(ReducingSuccessorGenerator& generator) const { 
-            _expr1->incr(generator);
-            _expr2->incr(generator);
+            for(auto& e : _exprs) e->incr(generator);                
         }
         
         void PlusExpr::decr(ReducingSuccessorGenerator& generator) const {
-            _expr1->decr(generator);
-            _expr2->decr(generator);
+            for(auto& e : _exprs) e->decr(generator);                
         }
         
         void SubtractExpr::incr(ReducingSuccessorGenerator& generator) const {
-            _expr1->incr(generator);
-            _expr2->decr(generator);
+            _exprs[0]->incr(generator);
+            _exprs[1]->decr(generator);
         }
         
         void SubtractExpr::decr(ReducingSuccessorGenerator& generator) const {
-            _expr1->decr(generator);
-            _expr2->incr(generator);
+            _exprs[0]->decr(generator);
+            _exprs[1]->incr(generator);
         }
         
         void MultiplyExpr::incr(ReducingSuccessorGenerator& generator) const {
-            _expr1->incr(generator);
-            _expr1->decr(generator);
-            _expr2->incr(generator);
-            _expr2->decr(generator);
+            for(auto& e : _exprs)
+            {
+                e->incr(generator);
+                e->decr(generator);
+            }
         }
         
         void MultiplyExpr::decr(ReducingSuccessorGenerator& generator) const {
-            _expr1->incr(generator);
-            _expr1->decr(generator);
-            _expr2->incr(generator);
-            _expr2->decr(generator);
+            incr(generator);
         }
         
         void MinusExpr::incr(ReducingSuccessorGenerator& generator) const {

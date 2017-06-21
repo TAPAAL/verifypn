@@ -39,7 +39,7 @@ public:
 
     struct QueryItem {
         string id; // query name
-        std::shared_ptr<Condition> query;
+        Condition_ptr query;
         std::vector<std::string> boundNames;
 
         enum {

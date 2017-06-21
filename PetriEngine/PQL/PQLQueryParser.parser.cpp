@@ -1368,13 +1368,13 @@ yyreduce:
 
   case 18:
 #line 70 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.expr) = new PlusExpr(Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))); }
+    { (yyval.expr) = new PlusExpr(std::vector<Expr_ptr>({Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))})); }
 #line 1373 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
   case 19:
 #line 71 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.expr) = new SubtractExpr(Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))); }
+    { (yyval.expr) = new SubtractExpr(std::vector<Expr_ptr>({Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))})); }
 #line 1379 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 
@@ -1392,7 +1392,7 @@ yyreduce:
 
   case 22:
 #line 76 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.expr) = new MultiplyExpr(Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))); }
+    { (yyval.expr) = new MultiplyExpr(std::vector<Expr_ptr>({Expr_ptr((yyvsp[-2].expr)), Expr_ptr((yyvsp[0].expr))})); }
 #line 1397 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 

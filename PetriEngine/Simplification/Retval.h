@@ -9,7 +9,7 @@ namespace PetriEngine {
             AbstractProgramCollection_ptr lps;
             AbstractProgramCollection_ptr neglps;
             
-            Retval (std::shared_ptr<PQL::Condition> formula, 
+            Retval (const std::shared_ptr<PQL::Condition> formula, 
             AbstractProgramCollection_ptr&& lps1, 
             AbstractProgramCollection_ptr&& lps2) 
             : formula(formula) {
@@ -18,7 +18,7 @@ namespace PetriEngine {
                 
             }
                         
-            Retval (std::shared_ptr<PQL::Condition> formula) 
+            Retval (const std::shared_ptr<PQL::Condition> formula) 
             : formula(formula) {
                 lps = std::make_shared<SingleProgram>();
                 neglps  = std::make_shared<SingleProgram>();
