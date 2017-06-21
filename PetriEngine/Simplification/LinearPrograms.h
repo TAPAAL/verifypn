@@ -71,6 +71,10 @@ namespace PetriEngine {
             }
 
         public:
+            UnionCollection(std::vector<AbstractProgramCollection_ptr>&& programs) :
+            AbstractProgramCollection(), lps(std::move(programs)) 
+            {}
+            
             UnionCollection(const AbstractProgramCollection_ptr& A, const AbstractProgramCollection_ptr& B) :
             AbstractProgramCollection(), lps({A,B}) 
             {
@@ -158,6 +162,8 @@ namespace PetriEngine {
             MergeCollection(const AbstractProgramCollection_ptr& A, const AbstractProgramCollection_ptr& B) :
             AbstractProgramCollection(), left(A), right(B)
             {
+                assert(A);
+                assert(B);
                 has_empty = left->empty() && right->empty();
             };
 

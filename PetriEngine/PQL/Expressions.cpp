@@ -100,9 +100,12 @@ namespace PetriEngine {
         
         void LogicalCondition::toString(std::ostream& out) const {
             out << "(";
-            _cond1->toString(out);
-            out << " " << op() << " ";
-            _cond2->toString(out);
+            _conds[0]->toString(out);
+            for(size_t i = 1; i < _conds.size(); ++i)
+            {
+                out << " " << op() << " ";
+                _conds[i]->toString(out);
+            }
             out << ")";
         }
 
@@ -147,11 +150,14 @@ namespace PetriEngine {
         }
         
         void LogicalCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
-            out << " ( ";
-            _cond1->toTAPAALQuery(out, context);
-            out << " " << op() << " ";
-            _cond2->toTAPAALQuery(out,context);
-            out << " ) ";
+            out << "(";
+            _conds[0]->toTAPAALQuery(out, context);
+            for(size_t i = 1; i < _conds.size(); ++i)
+            {
+                out << " " << op() << " ";
+                _conds[i]->toTAPAALQuery(out, context);
+            }
+            out << ")";
         }
 
         void CompareCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
@@ -283,8 +289,7 @@ namespace PetriEngine {
         }
         
         void LogicalCondition::analyze(AnalysisContext& context) {
-            _cond1->analyze(context);
-            _cond2->analyze(context);
+            for(auto& c : _conds) c->analyze(context);
         }
 
         void CompareCondition::analyze(AnalysisContext& context) {
@@ -339,12 +344,16 @@ namespace PetriEngine {
             return false;
         }
         
-        bool LogicalCondition::evaluate(const EvaluationContext& context) const {
-            bool b1 = _cond1->evaluate(context);
-            bool b2 = _cond2->evaluate(context);
-            return apply(b1, b2);
+        bool AndCondition::evaluate(const EvaluationContext& context) const {
+            for(auto& c : _conds) if(!c->evaluate(context)) return false;
+            return true;
         }
 
+        bool OrCondition::evaluate(const EvaluationContext& context) const {
+            for(auto& c : _conds) if(c->evaluate(context)) return true;
+            return false;
+        }
+        
         bool CompareCondition::evaluate(const EvaluationContext& context) const {
             int v1 = _expr1->evaluate(context);
             int v2 = _expr2->evaluate(context);
@@ -409,14 +418,35 @@ namespace PetriEngine {
             return res;
         }
 
-        bool LogicalCondition::evalAndSet(const EvaluationContext& context) {
-            bool b1 = _cond1->evalAndSet(context);
-            bool b2 = _cond2->evalAndSet(context);
-            bool res = apply(b1, b2);
+        bool AndCondition::evalAndSet(const EvaluationContext& context) {
+            bool res = true;
+            for(auto& c : _conds)
+            {
+                if(!c->evalAndSet(context))
+                {
+                    res = false;
+                    break;
+                }
+            }
             setSatisfied(res);
             return res;
         }
 
+        bool OrCondition::evalAndSet(const EvaluationContext& context) {
+            bool res = false;
+            for(auto& c : _conds)
+            {
+                if(c->evalAndSet(context))
+                {
+                    res = true;
+                    break;
+                }
+            }
+            setSatisfied(res);
+            return res;
+        }
+
+        
         bool CompareCondition::evalAndSet(const EvaluationContext& context) {
             int v1 = _expr1->evalAndSet(context);
             int v2 = _expr2->evalAndSet(context);
@@ -457,16 +487,6 @@ namespace PetriEngine {
             return v1 * v2;
         }
         
-        /******************** Apply (LogicalCondition subclasses) ********************/
-
-        bool AndCondition::apply(bool b1, bool b2) const {
-            return b1 && b2;
-        }
-
-        bool OrCondition::apply(bool b1, bool b2) const {
-            return b1 || b2;
-        }
-
         /******************** Apply (CompareCondition subclasses) ********************/
 
         bool EqualCondition::apply(int v1, int v2) const {
@@ -662,9 +682,9 @@ namespace PetriEngine {
         }
         
         uint32_t LogicalCondition::distance(DistanceContext& context) const {
-            uint32_t d1 = _cond1->distance(context);
-            uint32_t d2 = _cond2->distance(context);
-            return delta(d1, d2, context);
+            uint32_t d = _conds[0]->distance(context);
+            for(size_t i = 1; i < _conds.size(); ++i) d = delta(d, _conds[i]->distance(context), context);
+            return d;
         }
 
         uint32_t AndCondition::delta(uint32_t d1,
@@ -846,16 +866,46 @@ namespace PetriEngine {
         
         void AndCondition::toXML(std::ostream& out,uint32_t tabs) const {
             generateTabs(out,tabs) << "<conjunction>\n";
-            _cond1->toXML(out,tabs+1);
-            _cond2->toXML(out,tabs+1);
+            _conds[0]->toXML(out, tabs + 1);
+            for(size_t i = 1; i < _conds.size(); ++i)
+            {
+                if(i + 1 == _conds.size())
+                {
+                    _conds[i]->toXML(out, tabs + i + 1);
+                }
+                else
+                {
+                    generateTabs(out,tabs + i) << "<conjunction>\n";
+                    _conds[i]->toXML(out, tabs + i + 1);
+                }
+            }
+            for(size_t i = _conds.size() - 1; i >= 1; --i)
+            {
+                generateTabs(out,tabs + i) << "<conjunction>\n";                
+            }
             generateTabs(out,tabs) << "</conjunction>\n";              
         }
         
         void OrCondition::toXML(std::ostream& out,uint32_t tabs) const {
             generateTabs(out,tabs) << "<disjunction>\n";
-            _cond1->toXML(out,tabs+1);
-            _cond2->toXML(out,tabs+1);
-            generateTabs(out,tabs) << "</disjunction>\n";              
+            _conds[0]->toXML(out, tabs + 1);
+            for(size_t i = 1; i < _conds.size(); ++i)
+            {
+                if(i + 1 == _conds.size())
+                {
+                    _conds[i]->toXML(out, tabs + i + 1);
+                }
+                else
+                {
+                    generateTabs(out,tabs + i) << "<disjunction>\n";
+                    _conds[i]->toXML(out, tabs + i + 1);
+                }
+            }
+            for(size_t i = _conds.size() - 1; i >= 1; --i)
+            {
+                generateTabs(out,tabs + i) << "<disjunction>\n";                
+            }
+            generateTabs(out,tabs) << "</disjunction>\n";               
         }
         
         void EqualCondition::toXML(std::ostream& out,uint32_t tabs) const {
@@ -935,8 +985,8 @@ namespace PetriEngine {
         }
         
         Member PlusExpr::constraint(SimplificationContext& context) const {
-            Member res;
-            for(auto& e : _exprs) res += e->constraint(context);
+            Member res = _exprs[0]->constraint(context);
+            for(size_t i = 1; i < _exprs.size(); ++i) res += _exprs[i]->constraint(context);
             return res;
         }
         
@@ -1134,82 +1184,129 @@ namespace PetriEngine {
             }
         }
         
-        Retval simplifyAnd(SimplificationContext& context, Retval&& r1, Retval&& r2) {
-            try{
-                if(r1.formula->isTriviallyFalse() || r2.formula->isTriviallyFalse()) {
+        Retval LogicalCondition::simplifyAnd(SimplificationContext& context) const {
+            std::vector<Retval> results;
+            for(auto& c : _conds)
+            {
+                results.emplace_back(c->simplify(context));
+                assert(results.back().neglps);
+                assert(results.back().lps);
+                if(results.back().formula->isTriviallyFalse()) return Retval(BooleanCondition::FALSE_CONDITION);
+                else if(results.back().formula->isTriviallyTrue())
+                {
+                    results.pop_back();
+                }
+            }
+            
+            if(results.size() == 1)
+            {
+                return Retval(results[0].formula, results[0].lps, results[0].neglps);
+            }
+            else if(results.size() == 0)
+            {
+                return Retval(BooleanCondition::TRUE_CONDITION);
+            }
+
+            std::vector<Condition_ptr> conditions({results[0].formula, results[1].formula});
+            std::vector<AbstractProgramCollection_ptr> neglps({results[0].neglps, results[1].neglps});
+            AbstractProgramCollection_ptr lps = std::make_shared<MergeCollection>(results[0].lps, results[1].lps);
+            
+            for(size_t i = 2; i < results.size(); ++i)
+            {
+                conditions.emplace_back(results[i].formula);
+                neglps.emplace_back(results[i].neglps);
+                lps = std::make_shared<MergeCollection>(lps, results[i].lps);
+            }
+
+            // Lets try to see if the r1 AND r2 can ever be false at the same time
+            // If not, then we know that r1 || r2 must be true.
+            // we check this by checking if !r1 && !r2 is unsat
+            try {
+                if(!context.timeout() && !lps->satisfiable(context))
+                {
                     return Retval(BooleanCondition::FALSE_CONDITION);
-                } else if (r1.formula->isTriviallyTrue()) {
-                    return std::move(r2);
-                } else if (r2.formula->isTriviallyTrue()) {
-                    return std::move(r1);
-                }
-                
-                if(!context.timeout())
-                {
-                    r1.lps = std::make_shared<MergeCollection>(r1.lps, r2.lps);
-                    if(!context.timeout() && !r1.lps->satisfiable(context)) {
-                        return Retval(BooleanCondition::FALSE_CONDITION);
-                    }
-                    r1.neglps = std::make_shared<UnionCollection>(r1.neglps, r2.neglps);
-                }
-                else
-                {
-                    r1.lps->clear();
-                    r1.neglps->clear();
-                    r2.lps->clear();
-                    r2.neglps->clear();
-                }
-                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), std::move(r1.lps), std::move(r1.neglps)); 
+                }           
             }
             catch(std::bad_alloc& e)
             {
                 // we are out of memory, deal with it.
                 std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
-                return Retval(std::make_shared<AndCondition>(r1.formula, r2.formula), 
-                        std::move(r1.lps),
-                        std::move(r1.neglps));
+                lps = std::make_shared<SingleProgram>();
             }
+            
+            assert(lps);
+            
+            return Retval(
+                    std::make_shared<AndCondition>(std::move(conditions)), 
+                    std::move(lps),
+                    std::make_shared<UnionCollection>(std::move(neglps)));
         }
         
-        Retval simplifyOr(SimplificationContext& context, Retval&& r1, Retval&& r2) {
-            if(r1.formula->isTriviallyTrue() || r2.formula->isTriviallyTrue()) {
-                return Retval(BooleanCondition::TRUE_CONDITION);
-            } 
+        Retval LogicalCondition::simplifyOr(SimplificationContext& context) const {
             
-            if(r1.formula->isTriviallyFalse())
+            std::vector<Retval> results;
+            for(auto& c : _conds)
             {
-                return std::move(r2);
-            }
-            else if(r2.formula->isTriviallyFalse())
-            {
-                return std::move(r1);
-            }
-            else if(!context.timeout())
-            {
-                r1.neglps = std::make_shared<MergeCollection>(r1.neglps, r2.neglps);
-            }
-            else
-            {
-                r1.lps->clear();
-                r1.neglps->clear();
-                r2.lps->clear();                
-                r2.neglps->clear();
+                auto r = c->simplify(context);
+                assert(r.neglps);
+                assert(r.lps);
+
+                if(r.formula->isTriviallyTrue()) return Retval(BooleanCondition::TRUE_CONDITION);
+                else if(r.formula->isTriviallyFalse())
+                {
+                    continue;
+                }
+                results.emplace_back(std::move(r));
+                if(results.size() != 0 && !results.back().neglps)
+                {
+                    c->toString(std::cout);
+                    results.back().formula->toString(std::cout);
+                    std::cout << std::endl;
+                    assert(false);
+                }
             }
             
+            if(results.size() == 1)
+            {
+                assert(results[0].neglps);
+                return Retval(results[0].formula, results[0].lps, results[0].neglps);
+            }
+            else if(results.size() == 0)
+            {
+                return Retval(BooleanCondition::FALSE_CONDITION);
+            }
+
+            std::vector<Condition_ptr> conditions({results[0].formula, results[1].formula});
+            std::vector<AbstractProgramCollection_ptr> lps({results[0].lps, results[1].lps});
+            AbstractProgramCollection_ptr neglps = std::make_shared<MergeCollection>(results[0].neglps, results[1].neglps);
+            
+            for(size_t i = 2; i < results.size(); ++i)
+            {
+                conditions.emplace_back(results[i].formula);
+                lps.emplace_back(results[i].lps);
+                neglps = std::make_shared<MergeCollection>(neglps, results[i].neglps);
+            }
+
             // Lets try to see if the r1 AND r2 can ever be false at the same time
             // If not, then we know that r1 || r2 must be true.
             // we check this by checking if !r1 && !r2 is unsat
-            
-            if(!context.timeout() && !r1.neglps->satisfiable(context))
+            try {
+                if(!context.timeout() && !neglps->satisfiable(context))
+                {
+                    return Retval(BooleanCondition::TRUE_CONDITION);
+                }           
+            }
+            catch(std::bad_alloc& e)
             {
-                return Retval(BooleanCondition::TRUE_CONDITION);
+                // we are out of memory, deal with it.
+                std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
+                neglps = std::make_shared<SingleProgram>();
             }
-            
-            if (!context.timeout()){
-                r1.lps = std::make_shared<UnionCollection>(r1.lps, r2.lps);
-            }
-            
-            return Retval(std::make_shared<OrCondition>(r1.formula, r2.formula), std::move(r1.lps), std::move(r1.neglps));            
+            assert(neglps);
+            return Retval(
+                    std::make_shared<OrCondition>(std::move(conditions)), 
+                    std::make_shared<UnionCollection>(std::move(lps)), 
+                    std::move(neglps));            
         }
         
         Retval AndCondition::simplify(SimplificationContext& context) const {
@@ -1217,37 +1314,17 @@ namespace PetriEngine {
             {
                 if(context.negated()) 
                     return Retval(std::make_shared<NotCondition>(
-                            std::make_shared<AndCondition>(_cond1, _cond2)));
+                            std::make_shared<AndCondition>(_conds)));
                 else                  
                     return Retval(
-                            std::make_shared<AndCondition>(_cond1, _cond2));
+                            std::make_shared<AndCondition>(_conds));
             }
-            Retval r1, r2;
-            bool succ1 = false, succ2 = false;
-            try{
-                r1 = _cond1->simplify(context);
-                succ1 = true;
-            }
-            catch (std::bad_alloc& e) {};
-            
-            // negated becomes or -- so if r1 is trivially true,
-            // or if not negated, and r1 is false -- we can short-circuit
-            if(context.negated() && r1.formula->isTriviallyTrue())    
-                return Retval(BooleanCondition::TRUE_CONDITION);
-            else if(!context.negated() && r1.formula->isTriviallyFalse())    
-                return Retval(BooleanCondition::FALSE_CONDITION);
-            
 
-            try{
-                r2 = _cond2->simplify(context);
-                succ2 = true;
-            }
-            catch (std::bad_alloc& e) {};
-            if(!succ1 && !succ2) throw std::bad_alloc();
-            else if(succ1 && !succ2) return r1;
-            else if(succ2 && !succ1) return r2;
-            else return context.negated()   ? simplifyOr(context, std::move(r1), std::move(r2)) 
-                                            : simplifyAnd(context, std::move(r1), std::move(r2));
+            if(context.negated())
+                return simplifyOr(context);
+            else
+                return simplifyAnd(context);
+            
         }
         
         Retval OrCondition::simplify(SimplificationContext& context) const {            
@@ -1255,22 +1332,14 @@ namespace PetriEngine {
             {
                 if(context.negated()) 
                     return Retval(std::make_shared<NotCondition>(
-                            std::make_shared<OrCondition>(_cond1, _cond2)));
+                            std::make_shared<OrCondition>(_conds)));
                 else                 
-                    return Retval(std::make_shared<OrCondition>(_cond1, _cond2));
+                    return Retval(std::make_shared<OrCondition>(_conds));
             }
-            Retval r1 = _cond1->simplify(context);
-            // negated becomes and -- so if r1 is trivially false,
-            // or if not negated, and r1 is true -- we can short-circuit
-            if(!context.negated() && r1.formula->isTriviallyTrue()) 
-                return Retval(BooleanCondition::TRUE_CONDITION);
-            else if(context.negated() && r1.formula->isTriviallyFalse()) 
-                return Retval(BooleanCondition::FALSE_CONDITION);
-
-            Retval r2 = _cond2->simplify(context);
-            
-            return context.negated() ?  simplifyAnd(context, std::move(r1), std::move(r2)) : 
-                                        simplifyOr(context, std::move(r1), std::move(r2));
+            if(context.negated())
+                return simplifyAnd(context);
+            else
+                return simplifyOr(context);
         }
         
         Retval EqualCondition::simplify(SimplificationContext& context) const {
@@ -1423,6 +1492,9 @@ namespace PetriEngine {
                 lps = std::make_shared<SingleProgram>();
                 neglps = std::make_shared<SingleProgram>();
             }
+            
+            assert(lps);
+            assert(neglps);
 
             if(!context.timeout() && !neglps->satisfiable(context)){
                 return Retval(BooleanCondition::TRUE_CONDITION);
@@ -1432,7 +1504,8 @@ namespace PetriEngine {
                 if (context.negated()) {
                     return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 } else {
-                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
+                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), 
+                            std::move(lps), std::move(neglps));
                 }                         
             }
         }
@@ -1570,7 +1643,14 @@ namespace PetriEngine {
         }
         
         bool LogicalCondition::isReachability(uint32_t depth) const {
-            return depth == 0 ? false : _cond1->isReachability(depth + 1) && _cond2->isReachability(depth + 1);
+            if(depth == 0) return false;
+            bool reachability = true;
+            for(auto& c : _conds)
+            {
+                reachability = reachability && c->isReachability(depth + 1);
+                if(!reachability) break;
+            }
+            return reachability;
         }
         
         bool CompareCondition::isReachability(uint32_t depth) const {
@@ -1603,7 +1683,13 @@ namespace PetriEngine {
             if (placeNameForBound().size() != 0) {
                 return true;
             } else {
-                return _cond1->isUpperBound() && _cond2->isUpperBound();
+                bool upper_bound = true;
+                for(auto& c : _conds)
+                {
+                    upper_bound = upper_bound && c->isUpperBound();
+                    if(!upper_bound) break;
+                }
+                return upper_bound;
             }
         }
         
@@ -1747,26 +1833,30 @@ namespace PetriEngine {
         
         void AndCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // and
-                if(!_cond2->isSatisfied()) { // TODO If both conditions are false, maybe use a heuristic to pick condition?
-                    _cond2->findInteresting(generator, negated);
-                } else {
-                    _cond1->findInteresting(generator, negated);
+                for(auto& c : _conds)
+                {
+                    if(!c->isSatisfied())
+                    {
+                        c->findInteresting(generator, negated);
+                        break;
+                    }
                 }
             } else {                    // or
-                _cond1->findInteresting(generator, negated);
-                _cond2->findInteresting(generator, negated);
+                for(auto& c : _conds) c->findInteresting(generator, negated);
             }
         }
         
         void OrCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // or
-                _cond1->findInteresting(generator, negated);
-                _cond2->findInteresting(generator, negated);
+                for(auto& c : _conds) c->findInteresting(generator, negated);
             } else {                    // and
-                if(_cond2->isSatisfied()) {       
-                    _cond2->findInteresting(generator, negated);
-                } else {
-                    _cond1->findInteresting(generator, negated);
+                for(auto& c : _conds)
+                {
+                    if(c->isSatisfied())
+                    {
+                        c->findInteresting(generator, negated);
+                        break;
+                    }
                 }
             }
         }

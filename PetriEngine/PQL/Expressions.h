@@ -361,17 +361,13 @@ namespace PetriEngine {
         /* Logical conditon */
         class LogicalCondition : public Condition {
         public:
-
-            LogicalCondition(const Condition_ptr cond1, const Condition_ptr cond2) {
-                _cond1 = cond1;
-                _cond2 = cond2;
-            }
+            
             int formulaSize() const{
-                return _cond1->formulaSize() + _cond2->formulaSize() + 1;
+                size_t i = 1;
+                for(auto& c : _conds) i += c->formulaSize();
+                return i;
             }
             void analyze(AnalysisContext& context);
-            bool evaluate(const EvaluationContext& context) const;
-            bool evalAndSet(const EvaluationContext& context);
             
             uint32_t distance(DistanceContext& context) const;
             void toString(std::ostream&) const;
@@ -380,28 +376,56 @@ namespace PetriEngine {
             bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
             virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
-            
+        protected:
+            LogicalCondition() {};
+            Retval simplifyOr(SimplificationContext& context) const;
+            Retval simplifyAnd(SimplificationContext& context) const;      
+            template<typename T>
+            void tryMerge(const Condition_ptr& ptr)
+            {
+                if(auto lor = std::dynamic_pointer_cast<T>(ptr))
+                {
+                    _conds.insert(_conds.begin(), lor->_conds.begin(), lor->_conds.end());
+                }
+                else
+                {
+                    _conds.emplace_back(ptr);
+                }
+            }
         private:
-            virtual bool apply(bool b1, bool b2) const = 0;
             virtual uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const = 0;
             virtual std::string op() const = 0;
             
         protected:
-            Condition_ptr _cond1;
-            Condition_ptr _cond2;
+            std::vector<Condition_ptr> _conds;
         };
 
         /* Conjunctive and condition */
         class AndCondition : public LogicalCondition {
         public:
 
-            using LogicalCondition::LogicalCondition;
+            AndCondition(std::vector<Condition_ptr>&& conds) {
+                for(auto& c : conds) tryMerge<AndCondition>(c);
+            }
 
+            AndCondition(const std::vector<Condition_ptr>& conds)
+            {
+                for(auto& c : conds) tryMerge<AndCondition>(c);
+            }
+            
+            AndCondition(Condition_ptr left, Condition_ptr right)
+            {
+                this->tryMerge<AndCondition>(left);
+                this->tryMerge<AndCondition>(right);
+            }
+            
             Retval simplify(SimplificationContext& context) const;
+            bool evaluate(const EvaluationContext& context) const;
+            bool evalAndSet(const EvaluationContext& context);
+
             void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
         private:
-            bool apply(bool b1, bool b2) const;
             //int logicalOp() const;
             uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const;
             std::string op() const;
@@ -411,12 +435,29 @@ namespace PetriEngine {
         class OrCondition : public LogicalCondition {
         public:
 
-            using LogicalCondition::LogicalCondition;
+            OrCondition(std::vector<Condition_ptr>&& conds) {
+                for(auto& c : conds) tryMerge<OrCondition>(c);
+            }
+
+            OrCondition(const std::vector<Condition_ptr>& conds)
+            {
+                for(auto& c : conds) tryMerge<OrCondition>(c);
+            }
+
+            OrCondition(Condition_ptr left, Condition_ptr right)
+            {
+                this->tryMerge<OrCondition>(left);
+                this->tryMerge<OrCondition>(right);
+            };
+            
             Retval simplify(SimplificationContext& context) const;
+            bool evaluate(const EvaluationContext& context) const;
+            bool evalAndSet(const EvaluationContext& context);
+
             void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;   
+
         private:
-            bool apply(bool b1, bool b2) const;
             //int logicalOp() const;
             uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const;
             std::string op() const;
