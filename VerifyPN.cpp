@@ -641,7 +641,7 @@ int main(int argc, char* argv[]) {
             std::cerr << "Argument Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
             return ErrorCode;
         }
-   
+
         v = CTLMain(ctlnet,
             options.queryfile,
             options.ctlalgorithm,

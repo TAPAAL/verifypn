@@ -879,9 +879,9 @@ namespace PetriEngine {
                     _conds[i]->toXML(out, tabs + i + 1);
                 }
             }
-            for(size_t i = _conds.size() - 1; i >= 1; --i)
+            for(size_t i = _conds.size() - 1; i > 1; --i)
             {
-                generateTabs(out,tabs + i) << "<conjunction>\n";                
+                generateTabs(out,tabs + i) << "</conjunction>\n";                
             }
             generateTabs(out,tabs) << "</conjunction>\n";              
         }
@@ -901,9 +901,9 @@ namespace PetriEngine {
                     _conds[i]->toXML(out, tabs + i + 1);
                 }
             }
-            for(size_t i = _conds.size() - 1; i >= 1; --i)
+            for(size_t i = _conds.size() - 1; i > 1; --i)
             {
-                generateTabs(out,tabs + i) << "<disjunction>\n";                
+                generateTabs(out,tabs + i) << "</disjunction>\n";                
             }
             generateTabs(out,tabs) << "</disjunction>\n";               
         }
