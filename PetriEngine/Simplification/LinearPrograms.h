@@ -40,7 +40,7 @@ namespace PetriEngine {
                 
                 virtual void clear() = 0;
                 
-                virtual bool merge(bool& has_empty, LinearProgram& program) = 0;
+                virtual bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false) = 0;
                 virtual void reset() = 0;
         };
 
@@ -99,7 +99,7 @@ namespace PetriEngine {
                 current = 0;
             }
 
-            virtual bool merge(bool& has_empty, LinearProgram& program)
+            virtual bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false)
             {
                 
                 if(current >= lps.size()) 
@@ -107,7 +107,7 @@ namespace PetriEngine {
                     current = 0;
                 }
                 
-                if(!lps[current]->merge(has_empty, program))
+                if(!lps[current]->merge(has_empty, program, dry_run))
                 {
                     ++current;
                 }
@@ -127,11 +127,12 @@ namespace PetriEngine {
             bool merge_right = true;
             bool more_right  = true;
             bool rempty = false;
+            size_t nsat = 0;
+            size_t curr = 0;
 
             virtual void satisfiableImpl(const PQL::SimplificationContext& context, bool use_ilp = false)
             {
                 // this is where the magic needs to happen
-                
                 bool hasmore = false;
                 do {
                     if(context.timeout()) { _result = POSSIBLE; break; }
@@ -152,6 +153,7 @@ namespace PetriEngine {
                             break;
                         }
                     }
+                    ++nsat;
                 } while(hasmore);
                 if(_result != POSSIBLE)
                     _result = IMPOSSIBLE;
@@ -177,6 +179,7 @@ namespace PetriEngine {
                 rempty = false;
                 
                 tmp_prog = LinearProgram();
+                curr = 0;
             }
             
             void clear()
@@ -185,23 +188,45 @@ namespace PetriEngine {
                 right = nullptr;
             };
 
-            virtual bool merge(bool& has_empty, LinearProgram& program)
+            virtual bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false)
             {               
                 bool lempty = false;
-                
-                if(merge_right)
+                bool more_left;
+                while(true)
                 {
-                    assert(more_right);
-                    tmp_prog = LinearProgram();
-                    more_right = right->merge(rempty, tmp_prog);
-                    left->reset();
-                    merge_right = false;
+                    lempty = false;
+                    LinearProgram prog = program;
+                    if(merge_right)
+                    {
+                        assert(more_right);
+                        rempty = false;
+                        tmp_prog = LinearProgram();
+                        more_right = right->merge(rempty, tmp_prog, false);
+                        left->reset();
+                        merge_right = false;
+                    }
+
+                    more_left = left->merge(lempty, prog, dry_run || curr < nsat);
+                    if(!more_left) merge_right = true;
+                    if(curr >= nsat || !(more_left || more_right))
+                    {
+                        ++curr;
+                        if((!dry_run && prog.knownImpossible()) && (more_left || more_right))
+                        {
+                            ++nsat;
+                            continue;
+                        }
+
+                        if(!dry_run) program.swap(prog);
+                        break;
+                    }
+                    else
+                    {
+                        ++curr;
+                    }
                 }
 
-                bool more_left = left->merge(lempty, program);
-                if(!more_left) merge_right = true;
-
-                program.make_union(tmp_prog);
+                if(!dry_run) program.make_union(tmp_prog);
 
                 has_empty = lempty && rempty;
                 return more_left || more_right;
@@ -247,8 +272,9 @@ namespace PetriEngine {
             
             virtual void reset() {}
             
-            virtual bool merge(bool& has_empty, LinearProgram& program)
+            virtual bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false)
             {
+                if(dry_run) return false;
                 program.make_union(this->program);
                 has_empty = this->program.equations().size() == 0;
                 assert(has_empty == this->has_empty);

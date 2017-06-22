@@ -32,6 +32,11 @@ namespace PetriEngine {
             result_t _result = result_t::UKNOWN;
             std::vector<equation_t> _equations;
         public:
+            void swap(LinearProgram& other)
+            {
+                std::swap(_result, other._result);
+                std::swap(_equations, other._equations);
+            }
             virtual ~LinearProgram();
             LinearProgram()
             {
