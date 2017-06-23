@@ -41,14 +41,14 @@ namespace PetriEngine {
             _equations.push_back(c);
         }
         
-        bool LinearProgram::isImpossible(bool use_ilp, const PQL::SimplificationContext& context) {
-           
+        bool LinearProgram::isImpossible(const PQL::SimplificationContext& context) {
+            bool use_ilp = true;
             auto net = context.net();
             auto m0 = context.marking();
             auto timeout = context.getLpTimeout();
             if(_result != result_t::UKNOWN) 
             {
-                if(!use_ilp || _result == result_t::IMPOSSIBLE)
+                if(_result == result_t::IMPOSSIBLE)
                     return _result == result_t::IMPOSSIBLE;
             }
 
