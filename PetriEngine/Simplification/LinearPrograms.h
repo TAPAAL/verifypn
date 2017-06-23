@@ -42,6 +42,7 @@ namespace PetriEngine {
                 
                 virtual bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false) = 0;
                 virtual void reset() = 0;
+                virtual size_t size() const = 0;
         };
 
         typedef std::shared_ptr<AbstractProgramCollection> AbstractProgramCollection_ptr;
@@ -51,6 +52,7 @@ namespace PetriEngine {
         protected:
             std::vector<AbstractProgramCollection_ptr> lps;
             size_t current = 0;
+            size_t _size = 0;
             
             virtual void satisfiableImpl(const PQL::SimplificationContext& context, bool use_ilp = false)
             {
@@ -73,7 +75,9 @@ namespace PetriEngine {
         public:
             UnionCollection(std::vector<AbstractProgramCollection_ptr>&& programs) :
             AbstractProgramCollection(), lps(std::move(programs)) 
-            {}
+            {
+                for(auto& p : lps) _size += p->size();
+            }
             
             UnionCollection(const AbstractProgramCollection_ptr& A, const AbstractProgramCollection_ptr& B) :
             AbstractProgramCollection(), lps({A,B}) 
@@ -85,6 +89,7 @@ namespace PetriEngine {
                     if(lp->known_sat() || has_empty) _result = POSSIBLE;
                     if(_result == POSSIBLE) break;
                 }
+                for(auto& p : lps) _size += p->size();
             };
 
             void clear()
@@ -95,7 +100,7 @@ namespace PetriEngine {
             
             virtual void reset()
             {
-                for(auto& lp : lps) lp->reset();
+                lps[0]->reset();
                 current = 0;
             }
 
@@ -110,9 +115,14 @@ namespace PetriEngine {
                 if(!lps[current]->merge(has_empty, program, dry_run))
                 {
                     ++current;
+                    if(current < lps.size()) lps[current]->reset();
                 }
                 
                 return current < lps.size();
+            }
+            virtual size_t size() const
+            {
+                return _size;
             }
 
         };
@@ -129,6 +139,7 @@ namespace PetriEngine {
             bool rempty = false;
             size_t nsat = 0;
             size_t curr = 0;
+            size_t _size = 0;
 
             virtual void satisfiableImpl(const PQL::SimplificationContext& context, bool use_ilp = false)
             {
@@ -167,11 +178,11 @@ namespace PetriEngine {
                 assert(A);
                 assert(B);
                 has_empty = left->empty() && right->empty();
+                _size = left->size() + right->size();
             };
 
             virtual void reset()
             {
-                if(left)  left->reset();
                 if(right)  right->reset();
                 
                 merge_right = true;
@@ -192,8 +203,8 @@ namespace PetriEngine {
             {               
                 bool lempty = false;
                 bool more_left;
-                while(true)
-                {
+/*                while(true)
+                {*/
                     lempty = false;
                     LinearProgram prog = program;
                     if(merge_right)
@@ -205,10 +216,11 @@ namespace PetriEngine {
                         left->reset();
                         merge_right = false;
                     }
+                    ++curr;
 
-                    more_left = left->merge(lempty, prog, dry_run || curr < nsat);
+                    more_left = left->merge(lempty, prog/*, dry_run || curr < nsat*/);
                     if(!more_left) merge_right = true;
-                    if(curr >= nsat || !(more_left || more_right))
+/*                    if(curr >= nsat || !(more_left || more_right))
                     {
                         ++curr;
                         if((!dry_run && prog.knownImpossible()) && (more_left || more_right))
@@ -225,12 +237,18 @@ namespace PetriEngine {
                         ++curr;
                     }
                 }
-
+*/
+                program.swap(prog);
                 if(!dry_run) program.make_union(tmp_prog);
-
                 has_empty = lempty && rempty;
                 return more_left || more_right;
             }
+
+            virtual size_t size() const
+            {
+                return _size - nsat;
+            }
+
             
         };
         
@@ -283,6 +301,11 @@ namespace PetriEngine {
             
             void clear()
             {
+            }
+            
+            virtual size_t size() const
+            {
+                return 1;
             }
             
         };

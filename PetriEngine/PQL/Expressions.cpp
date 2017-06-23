@@ -1185,66 +1185,73 @@ namespace PetriEngine {
         }
         
         Retval LogicalCondition::simplifyAnd(SimplificationContext& context) const {
-            std::vector<Retval> results;
+
+            std::vector<Condition_ptr> conditions;
+            std::vector<AbstractProgramCollection_ptr> lps;
+            std::vector<AbstractProgramCollection_ptr>  neglps;
             for(auto& c : _conds)
             {
-                results.emplace_back(c->simplify(context));
-                assert(results.back().neglps);
-                assert(results.back().lps);
-                if(results.back().formula->isTriviallyFalse()) return Retval(BooleanCondition::FALSE_CONDITION);
-                else if(results.back().formula->isTriviallyTrue())
+                auto r = c->simplify(context);
+                if(r.formula->isTriviallyFalse()) return Retval(BooleanCondition::FALSE_CONDITION);
+                else if(r.formula->isTriviallyTrue())
                 {
-                    results.pop_back();
+                    continue;
                 }
+                
+                conditions.push_back(r.formula);
+                lps.push_back(r.lps);
+                neglps.push_back(r.neglps);
             }
             
-            if(results.size() == 1)
-            {
-                return Retval(results[0].formula, results[0].lps, results[0].neglps);
-            }
-            else if(results.size() == 0)
+            if(conditions.size() == 0)
             {
                 return Retval(BooleanCondition::TRUE_CONDITION);
             }
 
-            std::vector<Condition_ptr> conditions({results[0].formula, results[1].formula});
-            std::vector<AbstractProgramCollection_ptr> neglps({results[0].neglps, results[1].neglps});
-            AbstractProgramCollection_ptr lps = std::make_shared<MergeCollection>(results[0].lps, results[1].lps);
-            
-            for(size_t i = 2; i < results.size(); ++i)
-            {
-                conditions.emplace_back(results[i].formula);
-                neglps.emplace_back(results[i].neglps);
-                lps = std::make_shared<MergeCollection>(lps, results[i].lps);
-            }
+            std::sort(lps.begin(), lps.end(), 
+                [](const auto& a, const auto & b) -> bool
+                { 
+                    return a->size() < b->size(); 
+                });
 
+            while(lps.size() > 1)
+            {
+                size_t s = lps.size();
+                for(size_t i = 0; i < (s/2); ++i)
+                {
+                    lps[i] = std::make_shared<MergeCollection>(lps[i], lps[(s-1)-i]);
+                    try {
+                       if(!context.timeout() && !lps[i]->satisfiable(context))
+                       {
+                           return Retval(BooleanCondition::FALSE_CONDITION);
+                       }           
+                    }
+                    catch(std::bad_alloc& e)
+                    {
+                       // we are out of memory, deal with it.
+                       std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
+                       lps.erase(lps.begin() + 1, lps.end());
+                       break;
+                    }
+                    lps.pop_back();
+                }                
+            }
+               
             // Lets try to see if the r1 AND r2 can ever be false at the same time
             // If not, then we know that r1 || r2 must be true.
             // we check this by checking if !r1 && !r2 is unsat
-            try {
-                if(!context.timeout() && !lps->satisfiable(context))
-                {
-                    return Retval(BooleanCondition::FALSE_CONDITION);
-                }           
-            }
-            catch(std::bad_alloc& e)
-            {
-                // we are out of memory, deal with it.
-                std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
-                lps = std::make_shared<SingleProgram>();
-            }
-            
-            assert(lps);
             
             return Retval(
                     std::make_shared<AndCondition>(std::move(conditions)), 
-                    std::move(lps),
+                    lps.back(),
                     std::make_shared<UnionCollection>(std::move(neglps)));
         }
         
         Retval LogicalCondition::simplifyOr(SimplificationContext& context) const {
-            
-            std::vector<Retval> results;
+
+            std::vector<Condition_ptr> conditions;
+            std::vector<AbstractProgramCollection_ptr> lps;
+            std::vector<AbstractProgramCollection_ptr>  neglps;
             for(auto& c : _conds)
             {
                 auto r = c->simplify(context);
@@ -1256,57 +1263,54 @@ namespace PetriEngine {
                 {
                     continue;
                 }
-                results.emplace_back(std::move(r));
-                if(results.size() != 0 && !results.back().neglps)
-                {
-                    c->toString(std::cout);
-                    results.back().formula->toString(std::cout);
-                    std::cout << std::endl;
-                    assert(false);
-                }
+                conditions.push_back(r.formula);
+                lps.push_back(r.lps);
+                neglps.push_back(r.neglps);
             }
             
-            if(results.size() == 1)
-            {
-                assert(results[0].neglps);
-                return Retval(results[0].formula, results[0].lps, results[0].neglps);
-            }
-            else if(results.size() == 0)
+            if(conditions.size() == 0)
             {
                 return Retval(BooleanCondition::FALSE_CONDITION);
             }
 
-            std::vector<Condition_ptr> conditions({results[0].formula, results[1].formula});
-            std::vector<AbstractProgramCollection_ptr> lps({results[0].lps, results[1].lps});
-            AbstractProgramCollection_ptr neglps = std::make_shared<MergeCollection>(results[0].neglps, results[1].neglps);
-            
-            for(size_t i = 2; i < results.size(); ++i)
+            std::sort(neglps.begin(), neglps.end(), 
+                [](const auto& a, const auto & b) -> bool
+                { 
+                    return a->size() < b->size(); 
+                });
+
+            while(neglps.size() > 1)
             {
-                conditions.emplace_back(results[i].formula);
-                lps.emplace_back(results[i].lps);
-                neglps = std::make_shared<MergeCollection>(neglps, results[i].neglps);
+                size_t s = neglps.size();
+                for(size_t i = 0; i < (s/2); ++i)
+                {
+                    neglps[i] = std::make_shared<MergeCollection>(neglps[i], neglps[(s-1)-i]);
+                    try {
+                       if(!context.timeout() && !neglps[i]->satisfiable(context))
+                       {
+                           return Retval(BooleanCondition::TRUE_CONDITION);
+                       }           
+                    }
+                    catch(std::bad_alloc& e)
+                    {
+                       // we are out of memory, deal with it.
+                       std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
+                       neglps.erase(neglps.begin() + 1, neglps.end());
+                       break;
+                    }
+                    
+                    neglps.pop_back();
+                }                
             }
 
             // Lets try to see if the r1 AND r2 can ever be false at the same time
             // If not, then we know that r1 || r2 must be true.
             // we check this by checking if !r1 && !r2 is unsat
-            try {
-                if(!context.timeout() && !neglps->satisfiable(context))
-                {
-                    return Retval(BooleanCondition::TRUE_CONDITION);
-                }           
-            }
-            catch(std::bad_alloc& e)
-            {
-                // we are out of memory, deal with it.
-                std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
-                neglps = std::make_shared<SingleProgram>();
-            }
-            assert(neglps);
+          
             return Retval(
                     std::make_shared<OrCondition>(std::move(conditions)), 
                     std::make_shared<UnionCollection>(std::move(lps)), 
-                    std::move(neglps));            
+                    neglps.back());            
         }
         
         Retval AndCondition::simplify(SimplificationContext& context) const {
