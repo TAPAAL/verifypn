@@ -386,8 +386,8 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
             Expr_ptr child = parseIntegerExpression(it);
             if(child == NULL)  return NULL;
             expr = isMult ? 
-                (Expr_ptr)std::make_shared<PlusExpr>(expr, child) :
-                (Expr_ptr)std::make_shared<MultiplyExpr>(expr, child);
+                (Expr_ptr)std::make_shared<MultiplyExpr>(expr, child):
+                (Expr_ptr)std::make_shared<PlusExpr>(expr, child);
         }
         return expr;
     } else if (elementName == "integer-difference") {

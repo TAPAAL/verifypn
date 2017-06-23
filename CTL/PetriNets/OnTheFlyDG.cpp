@@ -395,9 +395,22 @@ int OnTheFlyDG::GetParamValue(CardinalityParameter *param, Marking& marking) {
         }
         return res;
     }
-    else{
-        return param->value;
+    else if(param->isArithmetic){
+        if(param->arithmetictype == NON){
+            std::cerr << "Error: Arithmetic param is not assigned a type"<< std::endl;
+            exit(EXIT_FAILURE);
+        }
+        else if(param->arithmetictype == SUM){
+            return GetParamValue(param->arithmA, marking) + GetParamValue(param->arithmB, marking);
+        }
+        else if(param->arithmetictype == PRODUCT){
+            return GetParamValue(param->arithmA, marking) * GetParamValue(param->arithmB, marking);
+        }
+        else if(param->arithmetictype == DIFF){
+            return GetParamValue(param->arithmA, marking) - GetParamValue(param->arithmB, marking);
+        }
     }
+    return param->value;
 }
 
 bool OnTheFlyDG::EvalCardianlity(int a, LoperatorType lop, int b) {

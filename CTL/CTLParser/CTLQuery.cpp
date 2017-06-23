@@ -134,7 +134,7 @@ void CTLQuery::SetProposition(EvaluateableProposition *p){
 
 std::string CTLQuery::ToString(){
     if(_hasAtom){
-        return _a;
+        return _proposition->ToString();
     }
     else if(_q == AND){
         return "(" + _firstchild->ToString() + " & " +  _secondchild->ToString() + ")";
@@ -152,13 +152,13 @@ std::string CTLQuery::ToString(){
         }
         else quanti = "E";
         if(_path == F){
-            return quanti + "F" + _firstchild->ToString();
+            return quanti + "F " + _firstchild->ToString();
         }
         else if(_path == G){
-            return quanti + "G" + _firstchild->ToString();
+            return quanti + "G " + _firstchild->ToString();
         }
         else if(_path == X){
-            return quanti + "X" + _firstchild->ToString();
+            return quanti + "X " + _firstchild->ToString();
         }
         else if(_path == U){
             return quanti + "("  + _firstchild->ToString() + ") U (" + _secondchild->ToString() + ")";
