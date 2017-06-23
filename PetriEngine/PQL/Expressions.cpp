@@ -1213,28 +1213,24 @@ namespace PetriEngine {
                 { 
                     return a->size() > b->size(); 
                 });
-
             while(lps.size() > 1)
             {
                 size_t s = lps.size();
-                for(size_t i = 0; i < (s/2); ++i)
+                lps[s-2] = std::make_shared<MergeCollection>(lps[s-1], lps[s-2]);                
+                lps.pop_back();
+                try {
+                   if(!context.timeout() && !lps.back()->satisfiable(context))
+                   {
+                       return Retval(BooleanCondition::FALSE_CONDITION);
+                   }           
+                }
+                catch(std::bad_alloc& e)
                 {
-                    lps[i] = std::make_shared<MergeCollection>(lps[i], lps[(s-1)-i]);
-                    try {
-                       if(!context.timeout() && !lps[i]->satisfiable(context))
-                       {
-                           return Retval(BooleanCondition::FALSE_CONDITION);
-                       }           
-                    }
-                    catch(std::bad_alloc& e)
-                    {
-                       // we are out of memory, deal with it.
-                       std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
-                       lps.erase(lps.begin() + 1, lps.end());
-                       break;
-                    }
-                    lps.pop_back();
-                }                
+                   // we are out of memory, deal with it.
+                   std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
+                   lps.erase(lps.begin() + 1, lps.end());
+                   break;
+                }
             }
                
             // Lets try to see if the r1 AND r2 can ever be false at the same time
@@ -1273,6 +1269,7 @@ namespace PetriEngine {
                 return Retval(BooleanCondition::FALSE_CONDITION);
             }
 
+            
             std::sort(neglps.begin(), neglps.end(), 
                 [](const auto& a, const auto & b) -> bool
                 { 
@@ -1282,25 +1279,21 @@ namespace PetriEngine {
             while(neglps.size() > 1)
             {
                 size_t s = neglps.size();
-                for(size_t i = 0; i < (s/2); ++i)
+                neglps[s-2] = std::make_shared<MergeCollection>(neglps[s-1], neglps[s-2]);                
+                neglps.pop_back();
+                try {
+                   if(!context.timeout() && !neglps.back()->satisfiable(context))
+                   {
+                       return Retval(BooleanCondition::TRUE_CONDITION);
+                   }           
+                }
+                catch(std::bad_alloc& e)
                 {
-                    neglps[i] = std::make_shared<MergeCollection>(neglps[i], neglps[(s-1)-i]);
-                    try {
-                       if(!context.timeout() && !neglps[i]->satisfiable(context))
-                       {
-                           return Retval(BooleanCondition::TRUE_CONDITION);
-                       }           
-                    }
-                    catch(std::bad_alloc& e)
-                    {
-                       // we are out of memory, deal with it.
-                       std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
-                       neglps.erase(neglps.begin() + 1, neglps.end());
-                       break;
-                    }
-                    
-                    neglps.pop_back();
-                }                
+                   // we are out of memory, deal with it.
+                   std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
+                   neglps.erase(lps.begin() + 1, lps.end());
+                   break;
+                }
             }
 
             // Lets try to see if the r1 AND r2 can ever be false at the same time
