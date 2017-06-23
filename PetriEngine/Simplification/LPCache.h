@@ -13,7 +13,6 @@
 #include <memory>
 #include "MurmurHash2.h"
 #include "Member.h"
-#include "LinearProgram.h"
 #include "Vector.h"
 
 

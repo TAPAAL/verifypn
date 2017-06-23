@@ -6,6 +6,7 @@
 #include "../PetriNet.h"
 #include "Member.h"
 #include "Vector.h"
+#include "PetriEngine/PQL/Contexts.h"
     
 namespace PetriEngine {
     namespace Simplification {
@@ -78,7 +79,7 @@ namespace PetriEngine {
             
             bool knownImpossible() const { return _result == result_t::IMPOSSIBLE; }
             bool knownPossible() const { return _result == result_t::POSSIBLE; }
-            bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout, bool use_ilp = false);
+            bool isImpossible(bool use_ilp, const PQL::SimplificationContext& context);
 
             void make_union(const LinearProgram& other);
             

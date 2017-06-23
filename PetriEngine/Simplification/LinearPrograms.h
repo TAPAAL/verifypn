@@ -158,7 +158,7 @@ namespace PetriEngine {
                     else
                     {
                         if( context.timeout() ||
-                            !prog.isImpossible(context.net(), context.marking(), context.getLpTimeout(), true))
+                            !prog.isImpossible(use_ilp, context))
                         {
                             _result = POSSIBLE;
                             break;
@@ -178,7 +178,7 @@ namespace PetriEngine {
                 assert(A);
                 assert(B);
                 has_empty = left->empty() && right->empty();
-                _size = left->size() + right->size();
+                _size = left->size() * right->size();
             };
 
             virtual void reset()
@@ -201,10 +201,11 @@ namespace PetriEngine {
 
             virtual bool merge(bool& has_empty, LinearProgram& program, bool dry_run = false)
             {               
+                if(program.knownImpossible()) return false;
                 bool lempty = false;
                 bool more_left;
-/*                while(true)
-                {*/
+                while(true)
+                {
                     lempty = false;
                     LinearProgram prog = program;
                     if(merge_right)
@@ -217,28 +218,19 @@ namespace PetriEngine {
                         merge_right = false;
                     }
                     ++curr;
-
+                    assert(curr <= _size);
                     more_left = left->merge(lempty, prog/*, dry_run || curr < nsat*/);
                     if(!more_left) merge_right = true;
-/*                    if(curr >= nsat || !(more_left || more_right))
+                    if(curr >= nsat || !(more_left || more_right))
                     {
-                        ++curr;
                         if((!dry_run && prog.knownImpossible()) && (more_left || more_right))
                         {
-                            ++nsat;
                             continue;
                         }
-
                         if(!dry_run) program.swap(prog);
                         break;
                     }
-                    else
-                    {
-                        ++curr;
-                    }
                 }
-*/
-                program.swap(prog);
                 if(!dry_run) program.make_union(tmp_prog);
                 has_empty = lempty && rempty;
                 return more_left || more_right;
@@ -259,7 +251,7 @@ namespace PetriEngine {
             virtual void satisfiableImpl(const PQL::SimplificationContext& context, bool use_ilp = false)
             {
                 // this is where the magic needs to happen
-                if(!program.isImpossible(context.net(), context.marking(), context.getLpTimeout(), use_ilp))
+                if(!program.isImpossible(use_ilp, context ))
                 {
                     _result = POSSIBLE;
                 }

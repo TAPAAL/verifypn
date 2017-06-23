@@ -1211,7 +1211,7 @@ namespace PetriEngine {
             std::sort(lps.begin(), lps.end(), 
                 [](const auto& a, const auto & b) -> bool
                 { 
-                    return a->size() < b->size(); 
+                    return a->size() > b->size(); 
                 });
 
             while(lps.size() > 1)
@@ -1276,7 +1276,7 @@ namespace PetriEngine {
             std::sort(neglps.begin(), neglps.end(), 
                 [](const auto& a, const auto & b) -> bool
                 { 
-                    return a->size() < b->size(); 
+                    return a->size() > b->size(); 
                 });
 
             while(neglps.size() > 1)
