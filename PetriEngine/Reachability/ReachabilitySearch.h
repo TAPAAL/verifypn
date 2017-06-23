@@ -39,7 +39,8 @@ namespace PetriEngine {
             BFS,
             DFS,
             HEUR,
-            RDFS
+            RDFS,
+            OverApprox
         };
         
         /** Implements reachability check in a BFS manner using a hash table */

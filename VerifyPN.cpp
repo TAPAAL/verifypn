@@ -125,8 +125,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 				options.strategy = BFS;
 			else if(strcmp(s, "DFS") == 0)
 				options.strategy = DFS;
-                        else if(strcmp(s, "RDFS") == 0)
-                            options.strategy = RDFS;
+			else if(strcmp(s, "RDFS") == 0)
+				options.strategy = RDFS;
+			else if(strcmp(s, "OverApprox") == 0)
+				options.strategy = OverApprox;
 			else{
 				fprintf(stderr, "Argument Error: Unrecognized search strategy \"%s\"\n", s);
 				return ErrorCode;
@@ -239,6 +241,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - BFS          Breadth first search\n"
                     "                                     - DFS          Depth first search (CTL default)\n"
                     "                                     - RDFS         Random depth first search\n"
+                    "                                     - OverApprox   Linear Over Approx\n"
                     "  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
                     "  -x, --xml-query <query index>      Parse XML query file and verify query of a given index\n"
                     "  -r, --reduction <type>             Change structural net reduction:\n"
@@ -589,7 +592,7 @@ int main(int argc, char* argv[]) {
     
     delete qnet;
     delete[] qm0;
-    
+
     if (!options.statespaceexploration){
         for(size_t i = 0; i < queries.size(); ++i)
         {
@@ -603,6 +606,11 @@ int main(int argc, char* argv[]) {
                 if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
+            } else if (options.strategy == PetriEngine::Reachability::OverApprox){
+                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Unknown);
+                if (options.printstatistics) {
+                    std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
+                }
             } else if (!queries[i]->isReachability()) {
                 results[i] = ResultPrinter::CTL;
                 alldone = false;
@@ -611,7 +619,7 @@ int main(int argc, char* argv[]) {
                 alldone = false;
             }
         }
-        
+
         if(alldone) return SuccessCode;
     }
     

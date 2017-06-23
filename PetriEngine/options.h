@@ -46,8 +46,10 @@ struct options_t {
             optionsOut = "\nSearch=DFS";
         } else if (strategy == PetriEngine::Reachability::Strategy::HEUR) {
             optionsOut = "\nSearch=HEUR";
-        } else {
+        } else if (strategy == PetriEngine::Reachability::Strategy::RDFS){
             optionsOut = "\nSearch=RDFS";
+        } else {
+            optionsOut = "\nSearch=OverApprox";
         }
         
         if (trace) {
