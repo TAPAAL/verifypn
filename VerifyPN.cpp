@@ -588,6 +588,8 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
+    } else if (options.strategy == PetriEngine::Reachability::OverApprox){ // Conflicting flags "-s OverApprox" and "-q 0"
+        return 0;
     }
     
     delete qnet;
