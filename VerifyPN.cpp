@@ -560,12 +560,14 @@ int main(int argc, char* argv[]) {
             
             SimplificationContext simplificationContext(qm0, qnet, options.queryReductionTimeout, 
                     options.lpsolveTimeout, &cache);
+            bool isInvariant = queries[i].get()->isInvariant();
             
             int preSize=queries[i]->formulaSize();
             if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
 
             try {
-                queries[i] = (queries[i]->simplify(simplificationContext)).formula;   
+                queries[i] = (queries[i]->simplify(simplificationContext)).formula;
+                queries[i].get()->setInvariant(isInvariant);
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
                 std::cerr << "Exception information: " << ba.what() << std::endl;
