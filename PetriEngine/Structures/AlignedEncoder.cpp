@@ -114,7 +114,7 @@ uint32_t AlignedEncoder::readTokens(uint32_t* destination, const unsigned char* 
 {
     if(sizeof(T) == sizeof(uint32_t))
     {
-        memcmp(destination, &(source[offset]), _places*sizeof(T));
+        memcpy(destination, &(source[offset]), _places*sizeof(T));
     }
     else
     {
