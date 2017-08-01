@@ -611,8 +611,8 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const;
             std::string toString() const;
             std::string toTAPAALQuery(TAPAALConditionExportContext& context) const;
-            static Condition_ptr TRUE;
-            static Condition_ptr FALSE;
+            static Condition_ptr TRUE_CONSTANT;
+            static Condition_ptr FALSE_CONSTANT;
             static Condition_ptr getShared(bool val);
             Retval simplify(SimplificationContext& context) const;
             bool isReachability(uint32_t depth) const;

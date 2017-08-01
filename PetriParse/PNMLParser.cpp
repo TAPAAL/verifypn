@@ -63,7 +63,7 @@ void PNMLParser::parse(ifstream& xml,
 
     // initialize transitionEnabledness
     for (TransitionIter it = transitions.begin(); it != transitions.end(); it++) {
-        transitionEnabledness[it->id] = BooleanCondition::TRUE;
+        transitionEnabledness[it->id] = BooleanCondition::TRUE_CONSTANT;
     }
 
     //Add all the transition
@@ -98,7 +98,7 @@ void PNMLParser::parse(ifstream& xml,
                             std::make_shared<IdentifierExpr>(source.id),
                             std::make_shared<LiteralExpr>(it->weight)
                         );
-            if(transitionEnabledness[target.id] == BooleanCondition::TRUE)
+            if(transitionEnabledness[target.id] == BooleanCondition::TRUE_CONSTANT)
             {
                 transitionEnabledness[target.id] = cond;
             }
@@ -127,7 +127,7 @@ void PNMLParser::parse(ifstream& xml,
                             std::make_shared<IdentifierExpr>(source.id),
                             std::make_shared<LiteralExpr>(inhibitor.weight)
                         );
-            if(transitionEnabledness[target.id] == BooleanCondition::TRUE)
+            if(transitionEnabledness[target.id] == BooleanCondition::TRUE_CONSTANT)
             {
                 transitionEnabledness[target.id] = cond;
             }

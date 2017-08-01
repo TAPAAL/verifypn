@@ -60,6 +60,7 @@
 #include "PetriEngine/Simplification/Retval.h"
 
 #include "CTL/CTLEngine.h"
+#include "PetriEngine/PQL/Expressions.h"
 
 using namespace std;
 using namespace PetriEngine;
@@ -379,10 +380,12 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
 
             //Wrap in not if isInvariant
             querystring = querystr.substr(2);
-            if (isInvariant)
-                    querystring = "not ( " + querystring + " )";
             std::vector<std::string> tmp;
-            conditions.push_back(ParseQuery(querystring, isInvariant, tmp));
+            auto q = ParseQuery(querystring, tmp);
+            if(isInvariant)
+                conditions.push_back(std::make_shared<AGCondition>(q));
+            else
+                conditions.push_back(std::make_shared<EFCondition>(q));
         }
         else
         {
@@ -429,7 +432,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
     } else { // state-space exploration
         std::string querystring = "false";
         std::vector<std::string> empty;
-        conditions.push_back(ParseQuery(querystring, false, empty));
+        conditions.push_back(std::make_shared<EFCondition>(ParseQuery(querystring, empty)));
         return conditions;
     } 
  }
@@ -513,6 +516,7 @@ std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std
 }
 
 int main(int argc, char* argv[]) {
+    srand (time(NULL));
     options_t options;
     
     ReturnValue v = parseOptions(argc, argv, options);
