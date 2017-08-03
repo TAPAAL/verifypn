@@ -118,7 +118,8 @@ namespace PetriEngine {
         {
             PQL::DistanceContext context(&_states->net(), state.marking());
             // invert result, highest numbers are on top!
-            uint32_t dist = std::numeric_limits<uint32_t>::max() - query->distance(context);
+            uint32_t dist = query->distance(context);
+            std::cout << "PUSHED WITH DISTANCE " << dist << std::endl;
             _queue.emplace(dist, (uint32_t)id);
         }
 

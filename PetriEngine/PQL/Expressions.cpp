@@ -645,14 +645,14 @@ namespace PetriEngine {
 
         uint32_t EqualCondition::delta(int v1, int v2, bool negated) const {
             if (!negated)
-                return v1 - v2;
+                return std::abs(v1 - v2);
             else
                 return v1 == v2 ? 1 : 0;
         }
 
         uint32_t NotEqualCondition::delta(int v1, int v2, bool negated) const {
             if (negated)
-                return v1 - v2;
+                return std::abs(v1 - v2);
             else
                 return v1 == v2 ? 1 : 0;
         }
