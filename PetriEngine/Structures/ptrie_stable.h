@@ -38,7 +38,7 @@ namespace ptrie {
     typename I = size_t
     >
     class set_stable : public set<HEAPBOUND, SPLITBOUND, ALLOCSIZE, T, I> {
-        using pt = set<PTRIEDEF>;
+        using pt = set<HEAPBOUND, SPLITBOUND, ALLOCSIZE, T, I>;
     public:
         set_stable() : pt()
         {
@@ -54,7 +54,7 @@ namespace ptrie {
 
     template<PTRIETPL>
     size_t
-    set_stable<PTRIEDEF>::unpack(I index, uchar* destination) {
+    set_stable<HEAPBOUND, SPLITBOUND, ALLOCSIZE, T, I>::unpack(I index, uchar* destination) {
         typename pt::node_t* node = NULL;
         typename pt::fwdnode_t* par = NULL;
         // we can find size without bothering anyone (to much)        
