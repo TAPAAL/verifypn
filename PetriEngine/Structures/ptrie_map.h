@@ -59,6 +59,6 @@ namespace ptrie {
         return ent.data;
     }
 }
-
+#undef pt
 #endif /* PTRIE_STABLE_H */
 

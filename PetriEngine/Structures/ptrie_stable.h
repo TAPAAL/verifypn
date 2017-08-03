@@ -163,5 +163,5 @@ namespace ptrie {
     }
 }
 
-
+#undef pt
 #endif /* PTRIE_MAP_H */
