@@ -3,13 +3,13 @@ SHELL    		= /bin/bash
 
 # Programs for processing
 LEX				= false
-YACC			= false
-CC				= gcc
+YACC                            = false
+CC				= llvm-gcc
 CUT				= cut
 
 # Compiler and linker flags
-CFLAGS			= -mmacosx-version-min=10.6 -m32 -O3 -I.
-LDFLAGS			= -mmacosx-version-min=10.6 -m32 -O3 lpsolve/liblpsolve55-osx32.a -lstdc++
+CFLAGS			= -mmacosx-version-min=10.6 -std=c++14 -m32 -I. -stdlib=libc++
+LDFLAGS			= -dynamic -mmacosx-version-min=10.6 -std=c++14 -m32 lpsolve/liblpsolve55-osx32.a -stdlib=libc++ -lc++  
 
 # Input files
 FLEX_SOURCES	= $(shell find * -name "*.l")
