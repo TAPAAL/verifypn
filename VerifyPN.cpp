@@ -166,8 +166,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             std::vector<std::string> q = explode(argv[++i]);
             for(auto& qn : q)
             {
-                size_t n;
-                if(sscanf(qn.c_str(), "%zu", &n) != 1)
+                int32_t n;
+                if(sscanf(qn.c_str(), "%d", &n) != 1 || n <= 0)
                 {
                     std::cerr << "Error in query numbers : " << qn << std::endl;
                 }

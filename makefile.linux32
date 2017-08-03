@@ -5,9 +5,10 @@ CC				= g++
 CUT				= cut
 
 # Compiler and linker flags
-CFLAGS			= -m32 -O3 -I.
-LDFLAGS			= -static -m32 -O3 lpsolve/liblpsolve55-linux32.a -ldl \
-              -static-libgcc -static-libstdc++
+CFLAGS			= -fPIC -flto -march=i686 -std=c++14  -m32 -I.
+LDFLAGS			= -flto=4 -march=i686 -std=c++14  -m32 lpsolve/liblpsolve55-linux32.a -static \
+              -static-libgcc -static-libstdc++ 
+# -Wl,-Bstatic -ldl -lm -lc -Wl,-Bdynamic -lpthread 
 
 # Input files
 FLEX_SOURCES	= $(shell find * -name "*.l")
@@ -19,4 +20,3 @@ OBJECTS			= $(SOURCES:.cpp=.o)
 TARGET			= verifypn-linux32
 
 include rules.mk
-
