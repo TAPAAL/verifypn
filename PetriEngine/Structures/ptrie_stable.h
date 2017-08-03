@@ -38,7 +38,11 @@ namespace ptrie {
     typename I = size_t
     >
     class set_stable : public set<HEAPBOUND, SPLITBOUND, ALLOCSIZE, T, I> {
+#ifdef __APPLE__
+#define pt set<HEAPBOUND, SPLITBOUND, ALLOCSIZE, T, I>
+#else
         using pt = set<HEAPBOUND, SPLITBOUND, ALLOCSIZE, T, I>;
+#endif
     public:
         set_stable() : pt()
         {
