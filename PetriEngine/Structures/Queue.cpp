@@ -70,7 +70,12 @@ namespace PetriEngine {
         
         RDFSQueue::RDFSQueue(StateSetInterface* states) : Queue(states) {}
         RDFSQueue::~RDFSQueue(){}
-                
+        
+	size_t genrand(size_t i)
+	{
+		return std::rand() % i;
+	}
+        
         bool RDFSQueue::pop(Structures::State& state)
         {
             if(_cache.empty())
@@ -83,8 +88,8 @@ namespace PetriEngine {
             }
             else
             {
-                std::random_shuffle ( _cache.begin(), _cache.end() );
-                uint32_t n = _cache.back();
+                std::random_shuffle ( _cache.begin(), _cache.end(), genrand );
+		uint32_t n = _cache.back();
                 _states->decode(state, n);
                 for(size_t i = 0; i < (_cache.size() - 1); ++i)
                 {
