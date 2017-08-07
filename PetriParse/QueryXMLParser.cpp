@@ -235,9 +235,9 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
     } else if (elementName == "deadlock") {
         return std::make_shared<DeadlockCondition>();
     } else if (elementName == "true") {
-        return BooleanCondition::TRUE;
+        return BooleanCondition::TRUE_CONSTANT;
     } else if (elementName == "false") {
-        return BooleanCondition::FALSE;
+        return BooleanCondition::FALSE_CONSTANT;
     } else if (elementName == "negation") {
         if (getChildCount(element) != 1) return NULL;
         auto child = element->first_node();

@@ -89,7 +89,6 @@ namespace PetriEngine {
     }
     
     bool PetriNet::deadlocked(const MarkVal* m) const {
-        
         //Check that we can take from the marking
         for (size_t i = 0; i < _nplaces; i++) {
             if(i == 0 || m[i] > 0) // orphans are currently under "place 0" as a special case
@@ -104,18 +103,13 @@ namespace PetriEngine {
                     bool allgood = true;
                     for(;finv != linv; ++finv)
                     {
-                        allgood &= m[_invariants[finv].place] >= _invariants[finv].tokens; // match tokens
-                        if(_invariants[finv].inhibitor)
-                        {
-                            if(allgood)
-                            {
-                                allgood = false;
-                                break;
-                            }
-                            else
-                            {
-                                allgood = true;
-                            }
+                        if(!_invariants[finv].inhibitor){
+                            allgood &= m[_invariants[finv].place] >= _invariants[finv].tokens;
+                        } else {
+                            allgood &= m[_invariants[finv].place] < _invariants[finv].tokens;
+                        }
+                        if(!allgood){
+                            break;
                         }
                     }
                     
@@ -126,7 +120,6 @@ namespace PetriEngine {
                 }
             }
         }
-
         return true;
     }
 

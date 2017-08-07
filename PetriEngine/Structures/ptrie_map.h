@@ -36,7 +36,11 @@ namespace ptrie {
     typename I = size_t>
     class map :
     public set_stable<HEAPBOUND, SPLITBOUND, ALLOCSIZE, T, I> {
-#define pt set_stable<PTRIEDEF>
+#ifdef __APPLE__
+#define pt set_stable<HEAPBOUND, SPLITBOUND, ALLOCSIZE, T, I>        
+#else
+        using pt = set_stable<HEAPBOUND, SPLITBOUND, ALLOCSIZE, T, I>;
+#endif
     public:
         using pt::set_stable;
         T& get_data(I index);
@@ -55,6 +59,6 @@ namespace ptrie {
         return ent.data;
     }
 }
-
+#undef pt
 #endif /* PTRIE_STABLE_H */
 

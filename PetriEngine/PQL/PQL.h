@@ -28,14 +28,13 @@
 #include "../PetriNet.h"
 #include "../Structures/State.h"
 #include "../ReducingSuccessorGenerator.h"
-
+#include "../Simplification/LPCache.h"
 
 namespace PetriEngine {
     class ReducingSuccessorGenerator;
     namespace Simplification
     {
         class Member;
-        class LiniearPrograms;
         struct Retval;
     }
     namespace PQL {

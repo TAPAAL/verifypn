@@ -86,7 +86,7 @@ namespace PetriEngine {
                 bool operator <(const weighted_t& y) const {
                     if(weight == y.weight) return item < y.item;// do dfs if they match
 //                    if(weight == y.weight) return item > y.item;// do bfs if they match
-                    return weight < y.weight;
+                    return weight > y.weight;
                 }
             };
 

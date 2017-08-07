@@ -1946,7 +1946,7 @@ void pqlqfree (void * ptr )
 
 
 namespace PetriEngine{ namespace PQL {
-std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool isInvariant, std::vector<std::string>& placenameforbound) {
+std::shared_ptr<Condition> ParseQuery(const std::string& queryString, std::vector<std::string>& placenameforbound) {
 	//Load up input buffer in Flex
 	YY_BUFFER_STATE buf = pqlq_scan_string(queryString.c_str());
 
@@ -1955,7 +1955,6 @@ std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool isInv
 
 	//Delete the buffer
 	pqlq_delete_buffer(buf);
-        query->setInvariant(isInvariant);
         query->setPlaceNameForBounds(placenameforbound);
 	return query;
 } 

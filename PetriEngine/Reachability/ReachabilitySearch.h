@@ -39,7 +39,8 @@ namespace PetriEngine {
             BFS,
             DFS,
             HEUR,
-            RDFS
+            RDFS,
+            OverApprox
         };
         
         /** Implements reachability check in a BFS manner using a hash table */
@@ -137,7 +138,6 @@ namespace PetriEngine {
 
                 // Search!
                 while (queue.pop(state)) {
-
                     generator.prepare(&state);
 
                     while(generator.next(working)){

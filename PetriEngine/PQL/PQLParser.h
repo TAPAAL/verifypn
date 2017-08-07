@@ -28,7 +28,7 @@ namespace PetriEngine {
 
         class Condition;
 
-        std::shared_ptr<Condition> ParseQuery(const std::string& queryString, bool isinvariant, std::vector<std::string>& placenameforbound);
+        std::shared_ptr<Condition> ParseQuery(const std::string& queryString, std::vector<std::string>& placenameforbound);
     }
 }
 #endif // PQLPARSER_H

@@ -116,7 +116,7 @@ void EvaluateableProposition::SetFireset(std::string fireset_str, std::vector<st
     std::string restof_firestring = fireset_str;
     
     if(fireset_str.compare("all") == 0){
-        for(uint i = 0; i < numberof_t; i++){
+        for(size_t i = 0; i < numberof_t; i++){
             _fireset.push_back(i);
         }
         return;
@@ -126,7 +126,7 @@ void EvaluateableProposition::SetFireset(std::string fireset_str, std::vector<st
         size_t position = restof_firestring.find(',');
         std::string current_t = restof_firestring.substr(0, position);
         current_t.erase(std::remove_if(current_t.begin(), current_t.end(), isspace), current_t.end());
-        for(uint i = 0; i < numberof_t; i++){
+        for(size_t i = 0; i < numberof_t; i++){
             if (current_t.compare(t_names[i]) == 0){
                 _fireset.push_back(i);
             }
@@ -206,8 +206,8 @@ CardinalityParameter* EvaluateableProposition::CreateParameter(std::string param
         
         places_str.push_back(parameter_str);
         
-        uint found_count = 0;
-        for(uint i = 0; i < numberof_p; i++){
+        size_t found_count = 0;
+        for(size_t i = 0; i < numberof_p; i++){
             for(std::string place : places_str){
                 if(p_names[i].compare(place) == 0){
                     param->places_i.push_back(i);
