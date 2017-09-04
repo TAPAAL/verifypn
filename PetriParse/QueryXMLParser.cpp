@@ -391,13 +391,27 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
         }
         return expr;
     } else if (elementName == "integer-difference") {
-        auto children = element->first_node();
+        auto it = element->first_node();
         size_t nrOfChildren = getChildCount(element);
-        if (nrOfChildren != 2) return NULL; // at least two integer subexpression are required
-        Expr_ptr expr1 = parseIntegerExpression(children);
-        Expr_ptr expr2 = parseIntegerExpression(children->next_sibling());       
-        if(expr1 == NULL || expr2 == NULL) return NULL;
-        return std::make_shared<SubtractExpr>(expr1, expr2);
+        
+        if(nrOfChildren == 1)
+        {
+            auto expr1 = std::make_shared<LiteralExpr>(0);
+            auto expr2 = parseIntegerExpression(it);
+            if(expr1 == nullptr || expr2 == nullptr) return nullptr;
+            return std::make_shared<SubtractExpr>(expr1, expr2);            
+        }
+        else
+        {
+            Expr_ptr expr = parseIntegerExpression(it);
+            if(expr == nullptr) return nullptr;
+            for (it = it->next_sibling(); it; it = it->next_sibling()) {
+                Expr_ptr child = parseIntegerExpression(it);
+                if(child == nullptr) return nullptr;
+                expr = std::make_shared<SubtractExpr>(expr, child);
+            }            
+            return expr;
+        }        
     }
     return NULL;
 }
