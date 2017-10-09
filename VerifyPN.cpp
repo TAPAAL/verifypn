@@ -381,11 +381,9 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
             //Wrap in not if isInvariant
             querystring = querystr.substr(2);
             std::vector<std::string> tmp;
-            auto q = ParseQuery(querystring, tmp);
-            if(isInvariant)
-                conditions.push_back(std::make_shared<AGCondition>(q));
-            else
-                conditions.push_back(std::make_shared<EFCondition>(q));
+            conditions.emplace_back(ParseQuery(querystring, tmp));
+            if(isInvariant) conditions.back() = std::make_shared<AGCondition>(conditions.back());
+            else            conditions.back() = std::make_shared<EFCondition>(conditions.back());
         }
         else
         {
@@ -421,8 +419,11 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
                     fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
                     conditions.pop_back();
                 }
-
-
+                else
+                {
+                    conditions.back() = conditions.back()->pushNegation();
+                }
+                
                 qstrings.push_back(q.id);
             }
         }
@@ -521,7 +522,6 @@ int main(int argc, char* argv[]) {
     
     ReturnValue v = parseOptions(argc, argv, options);
     if(v != ContinueCode) return v;
-    
     options.print();
   
     PetriNetBuilder builder;

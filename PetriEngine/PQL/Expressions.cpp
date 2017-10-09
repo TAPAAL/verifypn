@@ -85,7 +85,7 @@ namespace PetriEngine {
             _expr->toString(out);
         }
 
-        void QuantifierCondition::toString(std::ostream& out) const {
+        void SimpleQuantifierCondition::toString(std::ostream& out) const {
             out << op() << " ";
             _cond->toString(out);
         }
@@ -136,7 +136,7 @@ namespace PetriEngine {
 
         /******************** To TAPAAL Query ********************/
 
-        void QuantifierCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
+        void SimpleQuantifierCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
             out << op() << " ";
             _cond->toTAPAALQuery(out,context);
         }
@@ -279,7 +279,7 @@ namespace PetriEngine {
             }
         }
 
-        void QuantifierCondition::analyze(AnalysisContext& context) {
+        void SimpleQuantifierCondition::analyze(AnalysisContext& context) {
             _cond->analyze(context);
         }
         
@@ -332,7 +332,7 @@ namespace PetriEngine {
             return context.marking()[_offsetInMarking];
         }
 
-        bool QuantifierCondition::evaluate(const EvaluationContext& context) const {
+        bool SimpleQuantifierCondition::evaluate(const EvaluationContext& context) const {
             // Not implemented
 	    assert(false);
 	    return false;
@@ -378,7 +378,7 @@ namespace PetriEngine {
         }
         
         /******************** Evaluation - save result ********************/
-        bool QuantifierCondition::evalAndSet(const EvaluationContext& context) {
+        bool SimpleQuantifierCondition::evalAndSet(const EvaluationContext& context) {
             // Not implemented
             assert(false);
 	    return false;
@@ -669,7 +669,7 @@ namespace PetriEngine {
             return 0;
         }
         
-        uint32_t QuantifierCondition::distance(DistanceContext& context) const {
+        uint32_t SimpleQuantifierCondition::distance(DistanceContext& context) const {
             // Not implemented
 	    assert(false);
 	    return 0;
@@ -1629,7 +1629,7 @@ namespace PetriEngine {
         
         /******************** Check if query is an upper bound query ********************/
         
-        bool QuantifierCondition::isUpperBound() {
+        bool SimpleQuantifierCondition::isUpperBound() {
             return _cond->isUpperBound();
         }
         
@@ -1724,6 +1724,196 @@ namespace PetriEngine {
         Condition_ptr DeadlockCondition::prepareForReachability(bool negated) const {
             return NULL;
         }
+
+/******************** Prepare CTL Queries ********************/
+        
+        Condition_ptr EXCondition::pushNegation(bool negated) const {
+            auto a = _cond->pushNegation(negated);
+            if(negated)
+                return std::make_shared<AXCondition>(a);
+            else
+                return std::make_shared<EXCondition>(a);
+        }
+        
+        Condition_ptr EGCondition::pushNegation(bool negated) const {
+            if(auto child = dynamic_cast<AGCondition*>(_cond.get()))
+            {
+                return child->pushNegation(negated);
+            }
+            auto a = _cond->pushNegation(true);
+            if(negated) return AFCondition(a).pushNegation(false);
+            return AFCondition(a).pushNegation(true);
+        }
+        
+        Condition_ptr EFCondition::pushNegation(bool negated) const {
+            auto a = _cond->pushNegation();
+
+            if(auto cond = dynamic_cast<EFCondition*>(a.get()))
+            {
+                return cond->pushNegation(negated);
+            }
+            else if(auto cond = dynamic_cast<EXCondition*>(a.get()))
+            {
+                return EXCondition(std::make_shared<EFCondition>((*cond)[0])).pushNegation(negated);
+            }
+            else if(auto cond = dynamic_cast<EUCondition*>(a.get()))
+            {
+                return EFCondition((*cond)[1]).pushNegation(negated);
+            }
+            
+            auto b = std::make_shared<EFCondition>(a);
+            if(negated) return std::make_shared<NotCondition>(b);
+            return b;
+        }
+
+        Condition_ptr EUCondition::pushNegation(bool negated) const {
+            auto b = _cond2->pushNegation();
+            if(auto cond = dynamic_cast<EFCondition*>(b.get()))
+            {
+                return cond->pushNegation(negated);
+            }
+            auto a = _cond1->pushNegation();
+            auto c = std::make_shared<EUCondition>(a, b);
+            if(negated) return std::make_shared<NotCondition>(c);
+            return c;
+        }
+        
+        Condition_ptr AXCondition::pushNegation(bool negated) const {
+            auto a = _cond->pushNegation(negated);
+            if(negated)
+                return std::make_shared<EXCondition>(a);
+            else
+                return std::make_shared<AXCondition>(a);
+        }
+        
+        Condition_ptr AGCondition::pushNegation(bool negated) const {
+            if(auto cond = dynamic_cast<AUCondition*>(_cond.get()))
+            {
+                auto red = std::make_shared<AndCondition>(
+                std::make_shared<AGCondition>(std::make_shared<AFCondition>((*cond)[1])),
+                std::make_shared<AGCondition>(std::make_shared<OrCondition>((*cond)[0],(*cond)[1])));
+                return red->pushNegation(negated);
+            }
+            else if(auto cond = dynamic_cast<AGCondition*>(_cond.get()))
+            {
+                return cond->pushNegation(negated);
+            }
+            else if(auto cond = dynamic_cast<AXCondition*>(_cond.get()))
+            {
+                return AXCondition(std::make_shared<AGCondition>((*cond)[0])).pushNegation(negated);
+            }
+            auto a = _cond->pushNegation(true);
+            if(negated) return EFCondition(a).pushNegation(false);
+            return EFCondition(a).pushNegation(true);
+        }
+        
+        Condition_ptr AFCondition::pushNegation(bool negated) const {
+            auto a = _cond->pushNegation();
+            if(auto cond = dynamic_cast<AFCondition*>(a.get()))
+            {
+                return cond->pushNegation(negated);
+            }
+            else if(auto cond = dynamic_cast<AXCondition*>(a.get()))
+            {
+                return AXCondition(std::make_shared<AFCondition>((*cond)[0])).pushNegation(negated);                
+            }
+            else if(auto cond = dynamic_cast<AUCondition*>(a.get()))
+            {
+                return AFCondition((*cond)[1]).pushNegation(negated);
+            }
+            auto b = std::make_shared<AFCondition>(a);
+            if(negated) return std::make_shared<NotCondition>(b);
+            return b;
+        }
+        
+        Condition_ptr AUCondition::pushNegation(bool negated) const {
+            auto b = _cond2->pushNegation();
+            if(auto cond = dynamic_cast<AFCondition*>(b.get()))
+            {
+                return cond->pushNegation(negated);
+            }
+            else if(auto cond = dynamic_cast<EFCondition*>(b.get()))
+            {
+                return cond->pushNegation(negated);
+            }
+
+            auto a = _cond1->pushNegation();            
+            auto c = std::make_shared<AUCondition>(a, b);
+            if(negated) return std::make_shared<NotCondition>(c);
+            return c;
+        }
+        
+        Condition_ptr OrCondition::pushNegation(bool negated) const {
+            std::vector<Condition_ptr> v2;
+            for(auto& c : _conds)
+            {
+                auto n = c->pushNegation(false);
+                if(n->isTriviallyTrue()) return n;
+                if(n->isTriviallyFalse()) continue;
+                v2.emplace_back(std::move(n));
+            }
+            if(v2.empty()) return BooleanCondition::FALSE_CONSTANT;
+            return std::make_shared<OrCondition>(v2);
+        }
+        
+        Condition_ptr AndCondition::pushNegation(bool negated) const {
+            std::vector<Condition_ptr> v2;
+            for(auto& c : _conds)
+            {
+                auto n = c->pushNegation(false);
+                if(n->isTriviallyTrue()) continue;
+                if(n->isTriviallyFalse()) return n;
+                v2.emplace_back(std::move(n));
+            }
+            if(v2.empty()) return BooleanCondition::TRUE_CONSTANT;
+            return std::make_shared<AndCondition>(v2);
+        }
+
+        Condition_ptr LessThanCondition::pushNegation(bool negated) const {
+            if(negated) return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
+            else        return std::make_shared<LessThanCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr GreaterThanOrEqualCondition::pushNegation(bool negated) const {
+            if(negated) return std::make_shared<LessThanCondition>(_expr1, _expr2);
+            else        return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr LessThanOrEqualCondition::pushNegation(bool negated) const {
+            if(negated) return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
+            else        return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr GreaterThanCondition::pushNegation(bool negated) const {
+            if(negated) return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
+            else        return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr NotEqualCondition::pushNegation(bool negated) const {
+            if(negated) return std::make_shared<EqualCondition>(_expr1, _expr2);
+            else        return std::make_shared<NotEqualCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr EqualCondition::pushNegation(bool negated) const {
+            if(negated) return std::make_shared<NotEqualCondition>(_expr1, _expr2);
+            else        return std::make_shared<EqualCondition>(_expr1, _expr2);
+        }
+        
+        Condition_ptr NotCondition::pushNegation(bool negated) const {
+            return std::make_shared<NotCondition>(_cond->pushNegation(false));
+//            return _cond->pushNegation(!negated);
+        }
+        
+        Condition_ptr BooleanCondition::pushNegation(bool negated) const {
+            if(negated) return getShared(!_value);
+            else        return getShared( _value);
+        }
+        
+        Condition_ptr DeadlockCondition::pushNegation(bool negated) const {
+            if(negated) return std::make_shared<NotCondition>(DEADLOCK);
+            else        return DEADLOCK;
+        }
+
         
         /******************** Stubborn reduction interesting transitions ********************/
         
@@ -1781,7 +1971,7 @@ namespace PetriEngine {
              generator.postsetOf(_offsetInMarking);
         }
         
-        void QuantifierCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
+        void SimpleQuantifierCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
             // Not implemented
         }
         
