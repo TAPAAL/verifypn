@@ -23,6 +23,7 @@ public:
     void presetOf(uint32_t place);
     void postsetOf(uint32_t place);
     void postPresetOf(uint32_t t);
+    void inhibitorPostsetOf(uint32_t place);
     uint32_t leastDependentEnabled();
     uint32_t fired()
     {
@@ -35,11 +36,15 @@ private:
     light_deque<uint32_t> _unprocessed, _ordering;
     uint32_t *_dependency;
     uint32_t _current;
+    bool _netContainsInhibitorArcs;
+    std::vector<std::vector<uint32_t>> _inhibpost;
+    
     std::vector<std::shared_ptr<PQL::Condition> > _queries;
     void reset();
     void constructEnabled();
     void constructPrePost();
     void constructDependency();
+    void checkForInhibitor();
 };
 }
 

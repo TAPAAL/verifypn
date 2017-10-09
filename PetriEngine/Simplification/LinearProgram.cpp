@@ -127,6 +127,7 @@ namespace PetriEngine {
             set_presolve(lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(lp));
 //            write_LP(lp, stdout);
             int result = solve(lp);
+            
             delete_lp(lp);
 
             if (result == TIMEOUT) std::cout << "note: lpsolve timeout" << std::endl;

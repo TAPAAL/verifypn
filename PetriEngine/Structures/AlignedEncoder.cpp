@@ -105,7 +105,6 @@ uint32_t AlignedEncoder::writeTokens(size_t offset, const uint32_t* data)
 template<typename T>
 uint32_t AlignedEncoder::readTokens(uint32_t* destination, const unsigned char* source, uint32_t offset)
 {
-    
     for(size_t i = 0; i < _places; ++i)
     {
         T* src = (T*)(&source[offset + (i*sizeof(T))]);
@@ -498,10 +497,6 @@ size_t AlignedEncoder::encode(const uint32_t* d, unsigned char type)
         case DBOUND+3:
             return writeTokens<uint16_t>(1, d);
         case DBOUND+4:
-            {
-                uint32_t* raw = (uint32_t*)_scratchpad.raw();
-                memcpy(raw, d, _places*sizeof(uint32_t));
-            }
             return writeTokens<uint32_t>(1, d); 
         case DBOUND+5:
             {
@@ -567,7 +562,7 @@ void AlignedEncoder::decode(uint32_t* d, const unsigned char* s)
             readTokens<uint16_t>(d,s,1);
             return;
         case DBOUND+4:
-            memcpy(d, s, _places*sizeof(uint32_t));
+            readTokens<uint32_t>(d,s,1);
             return;
         case DBOUND+5:
             readPlaceTokenCounts<unsigned char>(d, s, 1); 

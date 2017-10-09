@@ -249,9 +249,9 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
     } else if (elementName == "deadlock") {
         return std::make_shared<DeadlockCondition>();
     } else if (elementName == "true") {
-        return BooleanCondition::TRUE_CONDITION;
+        return BooleanCondition::TRUE_CONSTANT;
     } else if (elementName == "false") {
-        return BooleanCondition::FALSE_CONDITION;
+        return BooleanCondition::FALSE_CONSTANT;
     } else if (elementName == "negation") {
         if (getChildCount(element) != 1) return nullptr;
         auto child = element->first_node();
@@ -410,7 +410,6 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
         for (auto it = children; it; it = it->next_sibling()) {
             els.emplace_back(parseIntegerExpression(it));
         }
-        if(els.size() != 2) return nullptr;
         if(els[0] == nullptr || els[1] == nullptr) return nullptr;
 
         return std::make_shared<SubtractExpr>(std::move(els));

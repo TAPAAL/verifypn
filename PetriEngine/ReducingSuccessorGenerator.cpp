@@ -5,7 +5,7 @@
 
 namespace PetriEngine {
 
-    ReducingSuccessorGenerator::ReducingSuccessorGenerator(const PetriNet& net) : SuccessorGenerator(net) {
+    ReducingSuccessorGenerator::ReducingSuccessorGenerator(const PetriNet& net) : SuccessorGenerator(net), _inhibpost(net._nplaces){
         _current = 0;
         _enabled = new bool[net._ntransitions];
         _stubborn = new bool[net._ntransitions];
@@ -14,6 +14,7 @@ namespace PetriEngine {
         reset();
         constructPrePost();
         constructDependency();
+        checkForInhibitor();      
     }
 
     ReducingSuccessorGenerator::ReducingSuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries) : ReducingSuccessorGenerator(net) {
@@ -25,15 +26,36 @@ namespace PetriEngine {
         delete [] _stubborn;
         delete [] _dependency;
     }
-
-    void ReducingSuccessorGenerator::constructPrePost() {
-        std::vector<std::pair<std::vector<uint32_t>, std::vector < uint32_t>>> tmp_places(_net._nplaces);
+    
+    void ReducingSuccessorGenerator::checkForInhibitor(){
+        _netContainsInhibitorArcs=false;
         for (uint32_t t = 0; t < _net._ntransitions; t++) {
             const TransPtr& ptr = _net._transitions[t];
             uint32_t finv = ptr.inputs;
             uint32_t linv = ptr.outputs;
             for (; finv < linv; finv++) { // Post set of places
-                tmp_places[_net._invariants[finv].place].second.push_back(t);
+                if (_net._invariants[finv].inhibitor) {
+                    _netContainsInhibitorArcs=true;
+                    return;
+                }
+            }
+        }
+    }
+
+    void ReducingSuccessorGenerator::constructPrePost() {
+        std::vector<std::pair<std::vector<uint32_t>, std::vector < uint32_t>>> tmp_places(_net._nplaces);
+                
+        for (uint32_t t = 0; t < _net._ntransitions; t++) {
+            const TransPtr& ptr = _net._transitions[t];
+            uint32_t finv = ptr.inputs;
+            uint32_t linv = ptr.outputs;
+            for (; finv < linv; finv++) { // Post set of places
+                if (_net._invariants[finv].inhibitor) {
+                    _inhibpost[_net._invariants[finv].place].push_back(t);
+                    _netContainsInhibitorArcs=true;
+                } else {
+                    tmp_places[_net._invariants[finv].place].second.push_back(t);
+                }
             }
 
             finv = linv;
@@ -134,14 +156,28 @@ namespace PetriEngine {
         }
     }
     
+    void ReducingSuccessorGenerator::inhibitorPostsetOf(uint32_t place){
+        for(uint32_t& newstub : _inhibpost[place]){
+            if(!_stubborn[newstub]){
+                _stubborn[newstub] = true;
+                _unprocessed.push_back(newstub);
+            }
+        }
+    }
+    
     void ReducingSuccessorGenerator::postPresetOf(uint32_t t) {
         const TransPtr& ptr = _net._transitions[t];
         uint32_t finv = ptr.inputs;
         uint32_t linv = ptr.outputs;
-        for (; finv < linv; finv++) {                // pre-set of t
-            postsetOf(_net._invariants[finv].place); // add post-set of p
+        for (; finv < linv; finv++) { // pre-set of t
+            if(_net._invariants[finv].inhibitor){ 
+                presetOf(_net._invariants[finv].place);
+            } else {
+                postsetOf(_net._invariants[finv].place); 
+            }
         }        
     }
+    
 
     void ReducingSuccessorGenerator::prepare(const Structures::State* state) {
         _parent = state;
@@ -157,15 +193,24 @@ namespace PetriEngine {
             const TransPtr& ptr = _net._transitions[tr];
             uint32_t finv = ptr.inputs;
             uint32_t linv = ptr.outputs;
+            uint32_t next_finv = _net._transitions[tr+1].inputs;
             if (_enabled[tr]) {
                 for (; finv < linv; finv++) {
                     postsetOf(_net._invariants[finv].place);
+                }
+                if(_netContainsInhibitorArcs){
+                    for (; linv < next_finv; linv++) {                    
+                        inhibitorPostsetOf(_net._invariants[finv].place);
+                    }
                 }
             } else {
                 for (; finv < linv; ++finv) {
                     const Invariant& inv = _net._invariants[finv];
                     if ((*_parent).marking()[inv.place] < inv.tokens) {
-                        presetOf(inv.place);                        
+                        presetOf(inv.place);
+                        break;
+                    } else if ((*_parent).marking()[inv.place] >= inv.tokens && inv.inhibitor) {
+                        postsetOf(inv.place);
                         break;
                     }
                 }

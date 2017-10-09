@@ -79,7 +79,6 @@ namespace PetriEngine {
                         << "\texpanded states:   " << ss.expandedStates << std::endl
                         << "\tmax tokens:        " << states->maxTokens() << std::endl;
             
-            
             std::cout << "\nTRANSITION STATISTICS\n";
             for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
                 std::cout << "<" << _net.transitionNames()[i] << ":" 

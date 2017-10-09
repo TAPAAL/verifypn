@@ -126,8 +126,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 				options.strategy = BFS;
 			else if(strcmp(s, "DFS") == 0)
 				options.strategy = DFS;
-                        else if(strcmp(s, "RDFS") == 0)
-                            options.strategy = RDFS;
+			else if(strcmp(s, "RDFS") == 0)
+				options.strategy = RDFS;
+			else if(strcmp(s, "OverApprox") == 0)
+				options.strategy = OverApprox;
 			else{
 				fprintf(stderr, "Argument Error: Unrecognized search strategy \"%s\"\n", s);
 				return ErrorCode;
@@ -164,8 +166,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             std::vector<std::string> q = explode(argv[++i]);
             for(auto& qn : q)
             {
-                size_t n;
-                if(sscanf(qn.c_str(), "%zu", &n) != 1)
+                int32_t n;
+                if(sscanf(qn.c_str(), "%d", &n) != 1 || n <= 0)
                 {
                     std::cerr << "Error in query numbers : " << qn << std::endl;
                 }
@@ -199,8 +201,17 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
                 return ErrorCode;
             }
-            if (sscanf(argv[++i], "%d", &options.siphontrapTimeout) != 1 || options.siphontrapTimeout < 0) {
+            if (sscanf(argv[++i], "%u", &options.siphontrapTimeout) != 1) {
                 fprintf(stderr, "Argument Error: Invalid siphon-trap timeout \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
+        } else if(strcmp(argv[i], "--siphon-depth") == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%u", &options.siphonDepth) != 1) {
+                fprintf(stderr, "Argument Error: Invalid siphon-depth count \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
         } else if (strcmp(argv[i], "-ctl") == 0){
@@ -231,6 +242,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - BFS          Breadth first search\n"
                     "                                     - DFS          Depth first search (CTL default)\n"
                     "                                     - RDFS         Random depth first search\n"
+                    "                                     - OverApprox   Linear Over Approx\n"
                     "  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
                     "  -x, --xml-query <query index>      Parse XML query file and verify query of a given index\n"
                     "  -r, --reduction <type>             Change structural net reduction:\n"
@@ -243,6 +255,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
                     "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds (default 0)\n"
+                    "      --siphon-depth <place count>   Search depth of siphon (default 0, which counts all places)\n"
                     "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
                     "  -h, --help                         Display this help message\n"
                     "  -v, --version                      Display version information\n"
@@ -367,10 +380,12 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
 
             //Wrap in not if isInvariant
             querystring = querystr.substr(2);
-            if (isInvariant)
-                    querystring = "not ( " + querystring + " )";
             std::vector<std::string> tmp;
-            conditions.emplace_back(ParseQuery(querystring, isInvariant, tmp));
+            auto q = ParseQuery(querystring, tmp);
+            if(isInvariant)
+                conditions.push_back(std::make_shared<AGCondition>(q));
+            else
+                conditions.push_back(std::make_shared<EFCondition>(q));
         }
         else
         {
@@ -416,7 +431,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
     } else { // state-space exploration
         std::string querystring = "false";
         std::vector<std::string> empty;
-        conditions.push_back(ParseQuery(querystring, false, empty));
+        conditions.push_back(std::make_shared<EFCondition>(ParseQuery(querystring, empty)));
         return conditions;
     } 
  }
@@ -501,6 +516,7 @@ std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std
 }
 
 int main(int argc, char* argv[]) {
+    srand (time(NULL));
     options_t options;
     
     ReturnValue v = parseOptions(argc, argv, options);
@@ -548,6 +564,7 @@ int main(int argc, char* argv[]) {
             
             SimplificationContext simplificationContext(qm0, qnet, options.queryReductionTimeout, 
                     options.lpsolveTimeout, &cache);
+            bool isInvariant = queries[i].get()->isInvariant();
             
             int preSize=queries[i]->formulaSize();
             if(options.printstatistics)
@@ -558,7 +575,8 @@ int main(int argc, char* argv[]) {
             }
 
             try {
-                queries[i] = (queries[i]->simplify(simplificationContext)).formula;   
+                queries[i] = (queries[i]->simplify(simplificationContext)).formula;
+                queries[i].get()->setInvariant(isInvariant);
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
                 std::cerr << "Exception information: " << ba.what() << std::endl;
@@ -586,11 +604,13 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
+    } else if (options.strategy == PetriEngine::Reachability::OverApprox){ // Conflicting flags "-s OverApprox" and "-q 0"
+        return 0;
     }
     
     delete qnet;
     delete[] qm0;
-    
+
     if (!options.statespaceexploration){
         for(size_t i = 0; i < queries.size(); ++i)
         {
@@ -604,6 +624,11 @@ int main(int argc, char* argv[]) {
                 if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
+            } else if (options.strategy == PetriEngine::Reachability::OverApprox){
+                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Unknown);
+                if (options.printstatistics) {
+                    std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
+                }
             } else if (!queries[i]->isReachability()) {
                 results[i] = ResultPrinter::CTL;
                 alldone = false;
@@ -612,7 +637,7 @@ int main(int argc, char* argv[]) {
                 alldone = false;
             }
         }
-        
+
         if(alldone) return SuccessCode;
     }
         
@@ -632,12 +657,8 @@ int main(int argc, char* argv[]) {
             options.querynumbers.insert(x);
         }
         
-        //Default to DFS (No heuristic strategy)
-        if(options.strategy == PetriEngine::Reachability::HEUR){
-            fprintf(stdout, "Default search strategy was changed to DFS as the CTL engine is called.\n");
-            options.strategy = PetriEngine::Reachability::DFS;
-        }
-        else if(options.strategy != PetriEngine::Reachability::DFS){
+        //Default to DFS
+        if(options.strategy != PetriEngine::Reachability::DFS){
             std::cerr << "Argument Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
             return ErrorCode;
         }
@@ -686,12 +707,14 @@ int main(int argc, char* argv[]) {
             bool isDeadlockQuery = std::dynamic_pointer_cast<DeadlockCondition>(queries[i]) != nullptr;
  
             if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {    
-                STSolver stSolver(printer, *net, queries[i].get());
+                STSolver stSolver(printer, *net, queries[i].get(), options.siphonDepth);
                 stSolver.Solve(options.siphontrapTimeout);
                 results[i] = stSolver.PrintResult();
-                
                 if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics) {
                     std::cout << "Query solved by Siphon-Trap Analysis." << std::endl << std::endl;
+                }
+                if(options.printstatistics){
+                    stSolver.PrintStatistics();
                 }
             }
         }

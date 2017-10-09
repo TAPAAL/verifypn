@@ -39,7 +39,9 @@ namespace PetriEngine {
         uint32_t finv = ptr.inputs;
         uint32_t linv = ptr.outputs;
         for (; finv < linv; ++finv) {
-            write.marking()[_net._invariants[finv].place] -= _net._invariants[finv].tokens;
+            if(!_net._invariants[finv].inhibitor) {
+                write.marking()[_net._invariants[finv].place] -= _net._invariants[finv].tokens;
+            }
         }
     }
 

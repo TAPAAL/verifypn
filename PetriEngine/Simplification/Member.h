@@ -71,7 +71,7 @@ namespace PetriEngine {
                 uint32_t min = std::min(_variables.size(), m2._variables.size());
                 uint32_t i = 0;
                 for(; i < min; i++) {
-                    if(_variables[i] != -m2._variables[i]) return false;
+                    if(_variables[i] != m2._variables[i]) return false;
                 }
                 
                 for(; i < _variables.size(); ++i)
