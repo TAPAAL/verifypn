@@ -657,6 +657,8 @@ int main(int argc, char* argv[]) {
             options.querynumbers.insert(x);
         }
         
+        if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
+        
         //Default to DFS
         if(options.strategy != PetriEngine::Reachability::DFS){
             std::cerr << "Argument Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
@@ -731,6 +733,9 @@ int main(int argc, char* argv[]) {
 
     //Analyse context again to reindex query
     contextAnalysis(builder, queries);
+
+    // Change default place-holder to default strategy
+    if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
     
     //Reachability search
     strategy.reachable(queries, results, 

@@ -21,7 +21,7 @@ struct options_t {
     bool statespaceexploration = false;
     bool printstatistics = true;
     std::set<size_t> querynumbers = std::set<size_t>();
-    PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::HEUR;
+    PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::DEFAULT;
     bool trace = false;
     int queryReductionTimeout = 30, lpsolveTimeout = 10;
     uint32_t siphontrapTimeout = 0;
