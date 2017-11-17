@@ -865,6 +865,16 @@ namespace PetriEngine {
         }
         
         void AndCondition::toXML(std::ostream& out,uint32_t tabs) const {
+            if(_conds.size() == 0)
+            {
+                BooleanCondition::TRUE_CONSTANT->toXML(out, tabs);
+                return;
+            }
+            if(_conds.size() == 1)
+            {
+                _conds[0]->toXML(out, tabs);
+                return;
+            }
             generateTabs(out,tabs) << "<conjunction>\n";
             _conds[0]->toXML(out, tabs + 1);
             for(size_t i = 1; i < _conds.size(); ++i)
@@ -887,6 +897,16 @@ namespace PetriEngine {
         }
         
         void OrCondition::toXML(std::ostream& out,uint32_t tabs) const {
+            if(_conds.size() == 0)
+            {
+                BooleanCondition::FALSE_CONSTANT->toXML(out, tabs);
+                return;
+            }
+            if(_conds.size() == 1)
+            {
+                _conds[0]->toXML(out, tabs);
+                return;
+            }
             generateTabs(out,tabs) << "<disjunction>\n";
             _conds[0]->toXML(out, tabs + 1);
             for(size_t i = 1; i < _conds.size(); ++i)
