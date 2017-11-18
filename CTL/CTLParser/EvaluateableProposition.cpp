@@ -275,6 +275,9 @@ std::string EvaluateableProposition::ToString() {
     else if (_type == CARDINALITY){
         return Parameter_tostring(_firstParameter) + Loperator_tostring() + Parameter_tostring(_secondParameter);
     }
+    else if (_type == DEADLOCK) {
+        return "deadlock";
+    }
     std::cerr << "Error: An unknown error occured while converting a proposition to string. " << std::endl;
     exit(EXIT_FAILURE);
 }
