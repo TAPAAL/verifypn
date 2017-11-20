@@ -24,6 +24,7 @@
 #include <vector>
 #include <memory>
 #include <sstream> 
+#include <set>
 
 #include "../PetriEngine/PQL/PQL.h"
 #include "PNMLParser.h"
@@ -39,7 +40,7 @@ public:
 
     struct QueryItem {
         string id; // query name
-        std::shared_ptr<Condition> query;
+        Condition_ptr query;
         std::vector<std::string> boundNames;
 
         enum {
@@ -50,12 +51,12 @@ public:
 
     vector<QueryItem>  queries;
 
-    bool parse(std::ifstream& xml);
+    bool parse(std::ifstream& xml, const std::set<size_t>& );
     void printQueries();
     void printQueries(size_t i);
 
 private:
-    bool parsePropertySet(rapidxml::xml_node<>* element);
+    bool parsePropertySet(rapidxml::xml_node<>* element, const std::set<size_t>&);
     bool parseProperty(rapidxml::xml_node<>*  element);
     bool parseTags(rapidxml::xml_node<>*  element);
     Condition_ptr parseFormula(rapidxml::xml_node<>*  element);

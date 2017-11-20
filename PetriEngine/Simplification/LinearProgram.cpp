@@ -2,6 +2,7 @@
 #include "../../lpsolve/lp_lib.h"
 #include "LinearProgram.h"
 #include "LPCache.h"
+#include "PetriEngine/PQL/Contexts.h"
 
 namespace PetriEngine {
     namespace Simplification {
@@ -40,11 +41,14 @@ namespace PetriEngine {
             _equations.push_back(c);
         }
         
-        bool LinearProgram::isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout, bool use_ilp) {
-           
+        bool LinearProgram::isImpossible(const PQL::SimplificationContext& context) {
+            bool use_ilp = true;
+            auto net = context.net();
+            auto m0 = context.marking();
+            auto timeout = context.getLpTimeout();
             if(_result != result_t::UKNOWN) 
             {
-                if(!use_ilp || _result == result_t::IMPOSSIBLE)
+                if(_result == result_t::IMPOSSIBLE)
                     return _result == result_t::IMPOSSIBLE;
             }
 
@@ -115,7 +119,7 @@ namespace PetriEngine {
             set_minim(lp);
 
             for (size_t i = 0; i < nCol; i++){
-                set_int(lp, 1 + i, use_ilp ? TRUE : false);
+                set_int(lp, 1 + i, use_ilp ? TRUE : FALSE);
             }
             
             set_timeout(lp, timeout);

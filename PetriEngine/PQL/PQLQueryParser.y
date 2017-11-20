@@ -67,13 +67,13 @@ compare	: expr EQUAL expr			{ $$ = new EqualCondition(Expr_ptr($1), Expr_ptr($3)
 		| expr GREATEREQUAL expr	{ $$ = new GreaterThanOrEqualCondition(Expr_ptr($1), Expr_ptr($3)); }
 		;
 
-expr	: expr PLUS term			{ $$ = new PlusExpr(Expr_ptr($1), Expr_ptr($3)); }
-		| expr MINUS term			{ $$ = new SubtractExpr(Expr_ptr($1), Expr_ptr($3)); }
+expr	: expr PLUS term			{ $$ = new PlusExpr(std::vector<Expr_ptr>({Expr_ptr($1), Expr_ptr($3)})); }
+		| expr MINUS term			{ $$ = new SubtractExpr(std::vector<Expr_ptr>({Expr_ptr($1), Expr_ptr($3)})); }
 		| MINUS expr				{ $$ = new MinusExpr(Expr_ptr($2)); }
 		| term						{ $$ = $1; }
 		;
 
-term	: term MULTIPLY factor	{ $$ = new MultiplyExpr(Expr_ptr($1), Expr_ptr($3)); }
+term	: term MULTIPLY factor	{ $$ = new MultiplyExpr(std::vector<Expr_ptr>({Expr_ptr($1), Expr_ptr($3)})); }
 		| factor				{ $$ = $1; }
 		;
 

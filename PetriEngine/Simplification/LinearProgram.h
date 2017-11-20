@@ -6,6 +6,7 @@
 #include "../PetriNet.h"
 #include "Member.h"
 #include "Vector.h"
+#include "PetriEngine/PQL/Contexts.h"
     
 namespace PetriEngine {
     namespace Simplification {
@@ -32,6 +33,11 @@ namespace PetriEngine {
             result_t _result = result_t::UKNOWN;
             std::vector<equation_t> _equations;
         public:
+            void swap(LinearProgram& other)
+            {
+                std::swap(_result, other._result);
+                std::swap(_equations, other._equations);
+            }
             virtual ~LinearProgram();
             LinearProgram()
             {
@@ -53,27 +59,10 @@ namespace PetriEngine {
             {
                 return _equations;
             }
-            
-            bool operator ==(const LinearProgram& other) const
-            {
-                if(size() != other.size()) return false;
-                return memcmp(        _equations.data(), 
-                                other._equations.data(), 
-                                _equations.size()*sizeof(equation_t)) == 0;
-            }
-            
-            bool operator < (const LinearProgram& other) const
-            {
-                if(size() != other.size()) return size() < other.size();
-                int res = memcmp(   _equations.data(), other._equations.data(), 
-                                    _equations.size()*sizeof(equation_t));
-                if(res != 0) return res < 0;
-                return false;
-            }
-            
+                       
             bool knownImpossible() const { return _result == result_t::IMPOSSIBLE; }
             bool knownPossible() const { return _result == result_t::POSSIBLE; }
-            bool isImpossible(const PetriEngine::PetriNet* net, const PetriEngine::MarkVal* m0, uint32_t timeout, bool use_ilp = false);
+            bool isImpossible(const PQL::SimplificationContext& context);
 
             void make_union(const LinearProgram& other);
             
@@ -95,63 +84,8 @@ namespace PetriEngine {
             }
             
         };
-        
-        struct LPWrap
-        {
-            LPWrap(const std::shared_ptr<LinearProgram>& prog) : prog(prog) {};
-            std::shared_ptr<LinearProgram> prog;
-            
-            bool operator < (const LPWrap& other) const
-            {
-                return (*prog) < (*other.prog);
-            }
-            
-            bool operator ==(const LPWrap& other) const
-            {
-                return (*prog) == (*other.prog);
-            }
-            
-            LinearProgram& operator*()
-            {
-                return *prog;
-            }
-            
-            const LinearProgram& operator*() const
-            {
-                return *prog;
-            }
-            
-            LinearProgram* operator ->()
-            {
-                return &(*prog);
-            }
-
-            const LinearProgram* operator ->() const
-            {
-                return &(*prog);
-            }
-            
-        };
     }   
 }
-
-namespace std
-{
-    using namespace PetriEngine::Simplification;
-    
-    template <>
-    struct hash<LPWrap>
-    {
-        size_t operator()(const LPWrap& k) const
-        {
-            return MurmurHash64A(k->equations().data(), 
-                    k->size() * sizeof(int), 
-                    1337);
-        }
-    };
-}
-
-
 
 #endif /* LINEARPROGRAM_H */
 

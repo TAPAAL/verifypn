@@ -348,7 +348,7 @@ auto
 readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std::vector<std::string>& qstrings)
 {
 
-    std::vector<std::shared_ptr<Condition > > conditions;
+    std::vector<Condition_ptr > conditions;
     if (!options.statespaceexploration) {
         //Open query file
         ifstream qfile(options.queryfile, ifstream::in);
@@ -390,7 +390,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
         else
         {
             QueryXMLParser XMLparser(tmap);
-            if (!XMLparser.parse(qfile)) {
+            if (!XMLparser.parse(qfile, options.querynumbers)) {
                 fprintf(stderr, "Error: Failed parsing XML query file\n");
                 fprintf(stdout, "DO_NOT_COMPETE\n");
                 conditions.clear();
@@ -398,7 +398,6 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
             }
 
             size_t i = 0;
-
             for(auto& q : XMLparser.queries)
             {
                 if(!options.querynumbers.empty()
@@ -417,7 +416,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
                 // fprintf(stdout, "Index of the selected query: %d\n\n", xmlquery);
 
                 conditions.push_back(q.query);
-                if (conditions.back() == NULL) {
+                if (conditions.back() == nullptr) {
                     fprintf(stderr, "Error: Failed to parse query \"%s\"\n", q.id.c_str()); //querystr.substr(2).c_str());
                     fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
                     conditions.pop_back();
@@ -498,21 +497,22 @@ std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std
     if (!cont) {
         return "";
     }
-            
-    string outputstring = "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
+       
+    std::stringstream ss;
+    ss << "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
     
     for(uint32_t i = 0; i < queries.size(); i++) {
         if (!(results[i] == ResultPrinter::CTL)) {
             continue;
         }
-        outputstring += "  <property>\n    <id>" + querynames[i] + "</id>\n    <description>Simplified</description>\n    <formula>\n";
-        outputstring += queries[i]->toXML(3);
-        outputstring += "    </formula>\n  </property>\n";
+        ss << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
+        queries[i]->toXML(ss, 3);
+        ss << "    </formula>\n  </property>\n";
     }
             
-    outputstring += "</property-set>\n";
+    ss << "</property-set>\n";
     
-    return outputstring;
+    return ss.str();
 }
 
 int main(int argc, char* argv[]) {
@@ -567,7 +567,12 @@ int main(int argc, char* argv[]) {
             bool isInvariant = queries[i].get()->isInvariant();
             
             int preSize=queries[i]->formulaSize();
-            if(options.printstatistics){fprintf(stdout, "\nQuery before reduction: %s\n", queries[i]->toString().c_str());}
+            if(options.printstatistics)
+            {
+                std::cout << "\nQuery before reduction: ";
+                queries[i]->toString(std::cout);
+                std::cout << std::endl;
+            }
 
             try {
                 queries[i] = (queries[i]->simplify(simplificationContext)).formula;
@@ -581,7 +586,12 @@ int main(int argc, char* argv[]) {
                 std::exit(3);
             }
 
-            if(options.printstatistics){fprintf(stdout, "Query after reduction:  %s\n", queries[i]->toString().c_str());}
+            if(options.printstatistics)
+            {
+                std::cout << "\nQuery after reduction: ";
+                queries[i]->toString(std::cout);
+                std::cout << std::endl;
+            }
             if(options.printstatistics){
                 int postSize=queries[i]->formulaSize();
                 double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
@@ -630,6 +640,7 @@ int main(int argc, char* argv[]) {
 
         if(alldone) return SuccessCode;
     }
+        
     
     //----------------------- Verify CTL queries -----------------------//
     std::string CTLQueries = getXMLQueries(queries, querynames, results);
@@ -646,12 +657,14 @@ int main(int argc, char* argv[]) {
             options.querynumbers.insert(x);
         }
         
+        if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
+        
         //Default to DFS
         if(options.strategy != PetriEngine::Reachability::DFS){
-            fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
-            options.strategy = PetriEngine::Reachability::DFS;
+            std::cerr << "Argument Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
+            return ErrorCode;
         }
-   
+
         v = CTLMain(ctlnet,
             options.queryfile,
             options.ctlalgorithm,
@@ -693,8 +706,7 @@ int main(int argc, char* argv[]) {
     
     if(options.siphontrapTimeout > 0){
         for (uint32_t i = 0; i < results.size(); i ++) {
-            
-            bool isDeadlockQuery = queries[i]->toString() == "deadlock";
+            bool isDeadlockQuery = std::dynamic_pointer_cast<DeadlockCondition>(queries[i]) != nullptr;
  
             if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {    
                 STSolver stSolver(printer, *net, queries[i].get(), options.siphonDepth);
@@ -721,6 +733,9 @@ int main(int argc, char* argv[]) {
 
     //Analyse context again to reindex query
     contextAnalysis(builder, queries);
+
+    // Change default place-holder to default strategy
+    if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
     
     //Reachability search
     strategy.reachable(queries, results, 
