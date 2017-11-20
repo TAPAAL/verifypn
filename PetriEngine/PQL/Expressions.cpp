@@ -1863,30 +1863,43 @@ namespace PetriEngine {
             return c;
         }
         
-        Condition_ptr OrCondition::pushNegation(bool negated) const {
+        Condition_ptr pushAnd(const std::vector<Condition_ptr>& _conds, bool negate_children)
+        {
             std::vector<Condition_ptr> v2;
             for(auto& c : _conds)
             {
-                auto n = c->pushNegation(false);
+                auto n = c->pushNegation(negate_children);
+                if(n->isTriviallyFalse()) return n;
+                if(n->isTriviallyTrue()) continue;
+                v2.emplace_back(std::move(n));
+            }            
+            if(v2.empty()) return BooleanCondition::FALSE_CONSTANT;
+            return std::make_shared<AndCondition>(v2);
+        }
+        
+        Condition_ptr pushOr(const std::vector<Condition_ptr>& _conds, bool negate_children)
+        {
+            std::vector<Condition_ptr> v2;
+            for(auto& c : _conds)
+            {
+                auto n = c->pushNegation(negate_children);
                 if(n->isTriviallyTrue()) return n;
                 if(n->isTriviallyFalse()) continue;
                 v2.emplace_back(std::move(n));
-            }
-            if(v2.empty()) return BooleanCondition::FALSE_CONSTANT;
+            }            
+            if(v2.empty()) return BooleanCondition::TRUE_CONSTANT;
             return std::make_shared<OrCondition>(v2);
+        }
+
+        Condition_ptr OrCondition::pushNegation(bool negated) const {
+            return negated ? pushAnd(_conds, true) :
+                             pushOr (_conds, false);
         }
         
         Condition_ptr AndCondition::pushNegation(bool negated) const {
-            std::vector<Condition_ptr> v2;
-            for(auto& c : _conds)
-            {
-                auto n = c->pushNegation(false);
-                if(n->isTriviallyTrue()) continue;
-                if(n->isTriviallyFalse()) return n;
-                v2.emplace_back(std::move(n));
-            }
-            if(v2.empty()) return BooleanCondition::TRUE_CONSTANT;
-            return std::make_shared<AndCondition>(v2);
+            return negated ? pushOr (_conds, true) :
+                             pushAnd(_conds, false);
+
         }
 
         Condition_ptr LessThanCondition::pushNegation(bool negated) const {
@@ -1920,8 +1933,7 @@ namespace PetriEngine {
         }
         
         Condition_ptr NotCondition::pushNegation(bool negated) const {
-            return std::make_shared<NotCondition>(_cond->pushNegation(false));
-//            return _cond->pushNegation(!negated);
+            return _cond->pushNegation(!negated);
         }
         
         Condition_ptr BooleanCondition::pushNegation(bool negated) const {

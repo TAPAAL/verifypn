@@ -575,7 +575,7 @@ int main(int argc, char* argv[]) {
             }
 
             try {
-                queries[i] = (queries[i]->simplify(simplificationContext)).formula;
+                queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation();
                 queries[i].get()->setInvariant(isInvariant);
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
