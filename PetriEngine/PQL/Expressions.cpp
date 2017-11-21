@@ -1772,10 +1772,10 @@ namespace PetriEngine {
             {
                 return cond->pushNegation(negated);
             }
-            else if(auto cond = dynamic_cast<EXCondition*>(a.get()))
+            /*else if(auto cond = dynamic_cast<EXCondition*>(a.get()))
             {
                 return EXCondition(std::make_shared<EFCondition>((*cond)[0])).pushNegation(negated);
-            }
+            }*/
             else if(auto cond = dynamic_cast<EUCondition*>(a.get()))
             {
                 return EFCondition((*cond)[1]).pushNegation(negated);
@@ -1818,10 +1818,10 @@ namespace PetriEngine {
             {
                 return cond->pushNegation(negated);
             }
-            else if(auto cond = dynamic_cast<AXCondition*>(_cond.get()))
+            /*else if(auto cond = dynamic_cast<AXCondition*>(_cond.get()))
             {
                 return AXCondition(std::make_shared<AGCondition>((*cond)[0])).pushNegation(negated);
-            }
+            }*/
             auto a = _cond->pushNegation(true);
             if(negated) return EFCondition(a).pushNegation(false);
             return EFCondition(a).pushNegation(true);
@@ -1833,10 +1833,10 @@ namespace PetriEngine {
             {
                 return cond->pushNegation(negated);
             }
-            else if(auto cond = dynamic_cast<AXCondition*>(a.get()))
+/*            else if(auto cond = dynamic_cast<AXCondition*>(a.get()))
             {
                 return AXCondition(std::make_shared<AFCondition>((*cond)[0])).pushNegation(negated);                
-            }
+            }*/
             else if(auto cond = dynamic_cast<AUCondition*>(a.get()))
             {
                 return AFCondition((*cond)[1]).pushNegation(negated);
