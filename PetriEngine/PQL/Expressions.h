@@ -394,6 +394,8 @@ namespace PetriEngine {
             bool isUpperBound();
             Condition_ptr prepareForReachability(bool negated) const;
             virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
+            auto begin() { return _conds.begin(); }
+            auto end() { return _conds.end();}
         protected:
             LogicalCondition() {};
             Retval simplifyOr(SimplificationContext& context) const;
@@ -656,6 +658,10 @@ namespace PetriEngine {
             Condition_ptr pushNegation(bool negated) const;
             void toXML(std::ostream&, uint32_t tabs) const;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            const Condition_ptr& operator[] (size_t i) const
+            {
+                return _cond;
+            }
         private:
             Condition_ptr _cond;
         };
