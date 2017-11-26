@@ -42,6 +42,8 @@ public:
     //stats
     size_t configurationCount() const;
     size_t markingCount() const;
+    
+    Condition::Result initialEval();
 
 protected:
 

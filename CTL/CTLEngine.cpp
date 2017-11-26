@@ -95,26 +95,42 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
         PetriNets::OnTheFlyDG graph(net);        
         auto q = result.query->pushNegation(); // stupid way to make a copy
         graph.setQuery(q);
-
         std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
-
-        if(getAlgorithm(alg, algorithmtype,  strategytype) == ErrorCode)
+        bool solved = false;
+        switch(graph.initialEval())
         {
-            return ErrorCode;
+            case Condition::Result::RFALSE:
+                result.result = false;
+                solved = true;
+                break;
+            case Condition::Result::RTRUE:
+                result.result = true;
+                solved = true;
+                break;
+            default:
+                break;
         }
+        
+        if(!solved)
+        {            
+            if(getAlgorithm(alg, algorithmtype,  strategytype) == ErrorCode)
+            {
+                return ErrorCode;
+            }
 
-        stopwatch timer;
-        timer.start();
-        result.result = alg->search(graph);
-        timer.stop();
+            stopwatch timer;
+            timer.start();
+            result.result = alg->search(graph);
+            timer.stop();
 
-        result.duration = timer.duration();
+            result.duration = timer.duration();
+        }
         result.numberOfConfigurations = graph.configurationCount();
         result.numberOfMarkings = graph.markingCount();
-        result.processedEdges = alg->processedEdges();
-        result.processedNegationEdges = alg->processedNegationEdges();
-        result.exploredConfigurations = alg->exploredConfigurations();
-        result.numberOfEdges = alg->numberOfEdges();
+        result.processedEdges = alg ? alg->processedEdges() : 0;
+        result.processedNegationEdges = alg ? alg->processedNegationEdges() : 0;
+        result.exploredConfigurations = alg ? alg->exploredConfigurations() : 0;
+        result.numberOfEdges = alg ? alg->numberOfEdges() : 0;
         printResult(querynames[qnum], result, printstatistics, mccoutput, false);
     }
     return SuccessCode;

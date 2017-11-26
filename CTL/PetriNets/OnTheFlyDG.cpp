@@ -42,6 +42,13 @@ OnTheFlyDG::~OnTheFlyDG()
     delete edge_alloc;
 }
 
+Condition::Result OnTheFlyDG::initialEval()
+{
+    initialConfiguration();
+    EvaluationContext e(query_marking.marking(), net);
+    return query->evaluate(e);
+}
+
 Condition::Result OnTheFlyDG::fastEval(Condition* query, Marking* unfolded)
 {
     EvaluationContext e(unfolded->marking(), net);
