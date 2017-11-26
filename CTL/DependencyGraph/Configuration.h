@@ -18,29 +18,20 @@ enum Assignment {
 
 class Configuration
 {
-    unsigned int distance = 0;
+    uint32_t distance = 0;
 public:
-    typedef std::vector<Edge*> container_type;
 
-    unsigned int getDistance() const { return distance; }
-    void setDistance(unsigned int value) { distance = value; }
+    uint32_t getDistance() const { return distance; }
+    void setDistance(uint32_t value) { distance = value; }
 
     Configuration() {}
     virtual ~Configuration();
 
-    //Removes a single instance of a successor
-    //Should not have multiple equal successors
-    void removeSuccessor(Edge *t_successor);
-
-    virtual std::string toString() const;
-    std::string attrToString() const;
-    static std::string assignmentToStr(Assignment a);
-    virtual void printConfiguration() const;
-
     bool isDone() const { return assignment == ONE || assignment == CZERO; }
 
     Assignment assignment = UNKNOWN;
-    container_type successors = container_type(0);
+    uint32_t owner = 0;
+    size_t nsuccs = 0;
     std::vector<Edge*> dependency_set;
 };
 

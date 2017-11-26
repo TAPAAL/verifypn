@@ -2,19 +2,15 @@
 #define DFSSEARCH_H
 
 #include <vector>
-#include "../DependencyGraph/Edge.h"
+#include "CTL/DependencyGraph/Edge.h"
+#include "iSearchStrategy.h"
 
 namespace SearchStrategy {
 
 // A custom search strategy that should ensure as little overhead as possible
 // while running sequential computation.
 
-enum TaskType {
-    EMPTY = 0,
-    EDGE = 1,
-};
-
-class DFSSearch {
+class DFSSearch : public SearchStrategy {
 
 public:
     virtual ~DFSSearch(){}
@@ -22,16 +18,20 @@ public:
 
     bool empty() const;
     void pushEdge(DependencyGraph::Edge *edge);
-    void pushDependency(DependencyGraph::Edge *edge);
-    TaskType pickTask(DependencyGraph::Edge*& edge);
+    void pushDependency(DependencyGraph::Edge* edge);
+    void pushNegation(DependencyGraph::Edge *edge);
+    DependencyGraph::Edge* popEdge(bool saturate = false);
+    size_t size() const { return W.size() + N.size() + D.size();}
 
-    unsigned int maxDistance() const;
+    uint32_t maxDistance() const;
     bool available() const;
-    void releaseNegationEdges(int dist);
-
+    void releaseNegationEdges(uint32_t );
+    bool trivialNegation();
 protected:
-
+    bool possibleTrivial = false;
     std::vector<DependencyGraph::Edge*> W;
+    std::vector<DependencyGraph::Edge*> N;
+    std::vector<DependencyGraph::Edge*> D;
 };
 
 }   // end SearchStrategy

@@ -134,8 +134,10 @@ namespace PetriEngine {
                     }
                 }
                 // add initial to queue
-                queue.push(r.second, state, queries[ss.heurquery]);
-
+                {
+                    PQL::DistanceContext dc(&_net, working.marking());
+                    queue.push(r.second, dc, queries[ss.heurquery]);
+                }
 
                 // Search!
                 while (queue.pop(state)) {
@@ -145,7 +147,10 @@ namespace PetriEngine {
                         ss.enabledTransitionsCount[generator.fired()]++;
                         auto res = states.add(working);
                         if (res.first) {
-                            queue.push(res.second, working, queries[ss.heurquery]);
+                            {
+                                PQL::DistanceContext dc(&_net, working.marking());
+                                queue.push(res.second, dc, queries[ss.heurquery]);
+                            }
                             states.setHistory(res.second, generator.fired());
                             _satisfyingMarking = res.second;
                             ss.exploredStates++;

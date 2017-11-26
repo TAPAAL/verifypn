@@ -6,17 +6,18 @@
 #include "../PetriEngine/Reachability/ReachabilitySearch.h"
 
 #include "Algorithm/AlgorithmTypes.h"
+#include "PetriEngine/PQL/PQL.h"
 
 #include <set>
 
 ReturnValue CTLMain(PetriEngine::PetriNet* net,
-                    char* queryfile,
                     CTL::CTLAlgorithmType algorithmtype,
                     PetriEngine::Reachability::Strategy strategytype,
-                    std::set<size_t> querynumbers,
                     bool gamemode,
                     bool printstatistics,
                     bool mccoutput,
-                    std::string reducedQueries = "");
+                    const std::vector<std::string>& querynames,
+                    const std::vector<std::shared_ptr<PetriEngine::PQL::Condition>>& reducedQueries,
+                    const std::vector<size_t>& ids);
 
 #endif // CTLENGINE_H
