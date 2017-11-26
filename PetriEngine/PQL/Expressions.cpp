@@ -1746,7 +1746,18 @@ namespace PetriEngine {
         }
 
 /******************** Prepare CTL Queries ********************/
-#define DBG
+        
+        template<typename T, bool K>
+        Condition_ptr makeLog(std::vector<Condition_ptr>& conds)
+        {
+            if(conds.size() == 0) return BooleanCondition::getShared(K);
+            if(conds.size() == 1) return conds[0];
+            return std::make_shared<T>(conds);
+        }
+        
+        Condition_ptr makeOr(std::vector<Condition_ptr>& cptr) { return makeLog<OrCondition,false>(cptr); }
+        Condition_ptr makeAnd(std::vector<Condition_ptr>& cptr) { return makeLog<AndCondition,true>(cptr); }
+        
         Condition_ptr EGCondition::pushNegation(bool negated) const {
             return AFCondition(_cond->pushNegation(true)).pushNegation(!negated);
         }
@@ -1821,7 +1832,7 @@ namespace PetriEngine {
 #endif
                 return a;
             }
-            else if(auto cond = dynamic_cast<EXCondition*>(a.get()))
+/*            else if(auto cond = dynamic_cast<EXCondition*>(a.get()))
             {
                 a = EXCondition(std::make_shared<EFCondition>((*cond)[0])).pushNegation(negated);
 #ifdef DBG
@@ -1830,7 +1841,7 @@ namespace PetriEngine {
                 std::cout << std::endl;
 #endif
                 return a;
-            }
+            }*/
             else if(auto cond = dynamic_cast<EUCondition*>(a.get()))
             {
                 a = EFCondition((*cond)[1]).pushNegation(negated);
@@ -1858,7 +1869,7 @@ namespace PetriEngine {
                 {
                     pef.push_back(std::make_shared<EFCondition>(i));
                 }
-                a = OrCondition(pef).pushNegation(negated);
+                a = makeOr(pef)->pushNegation(negated);
 #ifdef DBG
                 std::cout << "EFCondition " << this << " >> ";
                 a->toString(std::cout);
@@ -1923,8 +1934,8 @@ namespace PetriEngine {
                 }
                 if(pef.size() > 0)
                 {
-                    pef.push_back(std::make_shared<AFCondition>(std::make_shared<OrCondition>(npef)));
-                    return OrCondition(pef).pushNegation(negated);
+                    pef.push_back(std::make_shared<AFCondition>(makeOr(npef)));
+                    return makeOr(pef)->pushNegation(negated);
                 }
             }
             else if(auto cond = dynamic_cast<AUCondition*>(a.get()))
@@ -1986,11 +1997,11 @@ namespace PetriEngine {
                     }
                     else
                     {
-                        ag.push_back(std::make_shared<E>(std::make_shared<AndCondition>(nag), b));                        
+                        ag.push_back(std::make_shared<E>(makeAnd(nag), b));                        
                     }
                     return OrCondition(
                             b,
-                            std::make_shared<AndCondition>(ag)
+                            makeAnd(ag)
                             ).pushNegation(negated);
                 }
             }
@@ -2026,15 +2037,15 @@ namespace PetriEngine {
                 {
                     if(npef.size() != 0)
                     {
-                        pef.push_back(std::make_shared<AUCondition>(_cond1, std::make_shared<OrCondition>(npef)));
+                        pef.push_back(std::make_shared<AUCondition>(_cond1, makeOr(npef)));
                     }
-                    return OrCondition(pef).pushNegation(negated);
+                    return makeOr(pef)->pushNegation(negated);
                 }
             }
 
             auto a = _cond1->pushNegation();
-            auto pushag = pushAg<AFCondition, AUCondition>(a, b, negated);
-            if(pushag != nullptr) return pushag;
+            /*auto pushag = pushAg<AFCondition, AUCondition>(a, b, negated);
+            if(pushag != nullptr) return pushag;*/
             auto c = std::make_shared<AUCondition>(a, b);
             if(negated) return std::make_shared<NotCondition>(c);
             return c;
@@ -2064,14 +2075,14 @@ namespace PetriEngine {
                 {
                     if(npef.size() != 0)
                     {
-                        pef.push_back(std::make_shared<EUCondition>(_cond1, std::make_shared<OrCondition>(npef)));
+                        pef.push_back(std::make_shared<EUCondition>(_cond1, makeOr(npef)));
                     }
-                    return OrCondition(pef).pushNegation(negated);
+                    return makeOr(pef)->pushNegation(negated);
                 }
             }
             auto a = _cond1->pushNegation();
-            auto pushag = pushAg<EFCondition, EUCondition>(a, b, negated);
-            if(pushag != nullptr) return pushag;
+            /*auto pushag = pushAg<EFCondition, EUCondition>(a, b, negated);
+            if(pushag != nullptr) return pushag;*/
             auto c = std::make_shared<EUCondition>(a, b);
             if(negated) return std::make_shared<NotCondition>(c);
             return c;
@@ -2106,9 +2117,9 @@ namespace PetriEngine {
             if(nef.size() != 0) other.push_back(
                     std::make_shared<NotCondition>(
                     std::make_shared<EFCondition>(
-                    std::make_shared<OrCondition>(nef)))); 
+                    makeOr(nef)))); 
             if(other.size() == 1) return other[0];
-            auto res = std::make_shared<AndCondition>(other);
+            auto res = makeAnd(other);
 #ifdef DBG
             std::cout << "PUSH AND  >> ";
             res->toString(std::cout);
@@ -2138,9 +2149,9 @@ namespace PetriEngine {
             if(nef.size() + other.size() == 1) { return nef.size() == 0 ? other[0] : std::make_shared<EFCondition>(nef[0]);}
             if(nef.size() != 0) other.push_back(
                     std::make_shared<EFCondition>(
-                    std::make_shared<OrCondition>(nef))); 
+                    makeOr(nef))); 
             if(other.size() == 1) return other[0];
-            return std::make_shared<OrCondition>(other);
+            return makeOr(other);
         }
 
         Condition_ptr OrCondition::pushNegation(bool negated) const {
