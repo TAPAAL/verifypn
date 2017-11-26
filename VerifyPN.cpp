@@ -419,10 +419,6 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
                     fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
                     conditions.pop_back();
                 }
-                else
-                {
-                    conditions.back() = conditions.back()->pushNegation();
-                }
                 
                 qstrings.push_back(q.id);
             }
@@ -573,6 +569,7 @@ int main(int argc, char* argv[]) {
                 queries[i]->toString(std::cout);
                 std::cout << std::endl;
             }
+            queries[i] = queries[i]->pushNegation();
 
             try {
                 queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation();
