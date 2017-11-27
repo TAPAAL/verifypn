@@ -573,10 +573,11 @@ int main(int argc, char* argv[]) {
                 queries[i]->toString(std::cout);
                 std::cout << std::endl;
             }
-            queries[i] = queries[i]->pushNegation();
+            EvaluationContext context(qm0, qnet);
+            queries[i] = queries[i]->pushNegation(context, false);
 
             try {
-                queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation();
+                queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(context, false);
                 queries[i].get()->setInvariant(isInvariant);
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;

@@ -1879,203 +1879,158 @@ namespace PetriEngine {
         
         Condition_ptr makeOr(std::vector<Condition_ptr>& cptr) { return makeLog<OrCondition,false>(cptr); }
         Condition_ptr makeAnd(std::vector<Condition_ptr>& cptr) { return makeLog<AndCondition,true>(cptr); }
-        
-        Condition_ptr EGCondition::pushNegation(bool negated) const {
-            return AFCondition(_cond->pushNegation(true)).pushNegation(!negated);
-        }
-
-        Condition_ptr AGCondition::pushNegation(bool negated) const {
-            return EFCondition(_cond->pushNegation(true)).pushNegation(!negated);
-        }
-        
-        Condition_ptr EXCondition::pushNegation(bool negated) const {
-#ifdef DBG
-            std::cout << "EXCondition << ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
-            auto a = _cond->pushNegation(negated);
-            if(negated)
-                a = std::make_shared<AXCondition>(a);
-            else
-                a = std::make_shared<EXCondition>(a);
-#ifdef DBG
-            std::cout << "EXCondition >> ";
-            a->toString(std::cout);
-            std::cout << std::endl;
-#endif
-            return a;
-        }
-
-        Condition_ptr AXCondition::pushNegation(bool negated) const {
-#ifdef DBG
-            std::cout << "AXCondition << ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
-            auto a = _cond->pushNegation(negated);
-            if(negated)
-                a = std::make_shared<EXCondition>(a);
-            else
-                a = std::make_shared<AXCondition>(a);
-#ifdef DBG
-            std::cout << "AXCondition >> ";
-            a->toString(std::cout);
-            std::cout << std::endl;
-#endif
-            return a;
+        Condition_ptr initialMarkingRW(std::function<Condition_ptr ()> func, const EvaluationContext& context, bool nested, bool negated)
+        {
+            auto res = func();
+            if(!nested)
+            {
+                auto e = res->evaluate(context);
+                if(e != Condition::RUNKNOWN) return BooleanCondition::getShared((!e) == negated);
+            }
+            return res;            
         }
         
-        Condition_ptr EFCondition::pushNegation(bool negated) const {
-#ifdef DBG
-            std::cout << "EFCondition " << this << " << ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
-            auto a = _cond->pushNegation();
+        Condition_ptr EGCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr
+            { 
+                return AFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(context, nested, !negated);
+            }, context, nested, negated);
+        }
 
-            if(auto cond = dynamic_cast<EFCondition*>(a.get()))
+        Condition_ptr AGCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr
             {
-                a = cond->pushNegation(negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
+                return EFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(context, nested, !negated);
+            }, context, nested, negated);
+        }
+        
+        Condition_ptr EXCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr
+            {
+                auto a = _cond->pushNegation(context, true, negated);
+                if(negated)
+                    a = std::make_shared<AXCondition>(a);
+                else
+                    a = std::make_shared<EXCondition>(a);
                 return a;
-            }
-            else if(auto cond = dynamic_cast<AFCondition*>(a.get()))
+            }, context, nested, negated);
+        }
+
+        Condition_ptr AXCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr
             {
-                a = EFCondition((*cond)[0]).pushNegation(negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
+                auto a = _cond->pushNegation(context, true, negated);
+                if(negated)
+                    a = std::make_shared<EXCondition>(a);
+                else
+                    a = std::make_shared<AXCondition>(a);
                 return a;
-            }
-/*            else if(auto cond = dynamic_cast<EXCondition*>(a.get()))
+            }, context, nested, negated);
+        }
+        
+        Condition_ptr EFCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr
             {
-                a = EXCondition(std::make_shared<EFCondition>((*cond)[0])).pushNegation(negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
-                return a;
-            }*/
-            else if(auto cond = dynamic_cast<EUCondition*>(a.get()))
-            {
-                a = EFCondition((*cond)[1]).pushNegation(negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
-                return a;
-            }
-            else if(auto cond = dynamic_cast<AUCondition*>(a.get()))
-            {
-                a = EFCondition((*cond)[1]).pushNegation(negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
-                return a;
-            }
-            else if(auto cond = dynamic_cast<OrCondition*>(a.get()))
-            {
-                std::vector<Condition_ptr> pef, atomic;
-                for(auto& i : *cond) 
+                auto a = _cond->pushNegation(context, true);
+
+                if(auto cond = dynamic_cast<EFCondition*>(a.get()))
                 {
-                    pef.push_back(std::make_shared<EFCondition>(i));
+                    if(negated) a = a->pushNegation(context, true, true);
+                    return a;
                 }
-                a = makeOr(pef)->pushNegation(negated);
-#ifdef DBG
-                std::cout << "EFCondition " << this << " >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif      
-                return a;
-            }
-            else
-            {        
-                Condition_ptr b = std::make_shared<EFCondition>(a);
-                if(negated) b = std::make_shared<NotCondition>(b);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                b->toString(std::cout);
-                std::cout << std::endl;
-#endif
+                else if(auto cond = dynamic_cast<AFCondition*>(a.get()))
+                {
+                    a = EFCondition((*cond)[0]).pushNegation(context, true, negated);
+                    return a;
+                }
+    /*            else if(auto cond = dynamic_cast<EXCondition*>(a.get()))
+                {
+                    a = EXCondition(std::make_shared<EFCondition>((*cond)[0])).pushNegation(negated);
+    #ifdef DBG
+                    std::cout << "EFCondition >> ";
+                    a->toString(std::cout);
+                    std::cout << std::endl;
+    #endif
+                    return a;
+                }*/
+                else if(auto cond = dynamic_cast<EUCondition*>(a.get()))
+                {
+                    a = EFCondition((*cond)[1]).pushNegation(context, true, negated);
+                    return a;
+                }
+                else if(auto cond = dynamic_cast<AUCondition*>(a.get()))
+                {
+                    a = EFCondition((*cond)[1]).pushNegation(context, true, negated);
+                    return a;
+                }
+                else if(auto cond = dynamic_cast<OrCondition*>(a.get()))
+                {
+                    std::vector<Condition_ptr> pef, atomic;
+                    for(auto& i : *cond) 
+                    {
+                        pef.push_back(std::make_shared<EFCondition>(i));
+                    }
+                    a = makeOr(pef)->pushNegation(context, true, negated);
+
+                    return a;
+                }
+                else
+                {        
+                    Condition_ptr b = std::make_shared<EFCondition>(a);
+                    if(negated) b = std::make_shared<NotCondition>(b);
+                    return b;
+                }
+            }, context, nested, negated);
+        }
+
+        Condition_ptr AFCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr
+            {
+                auto a = _cond->pushNegation(context, true);
+                if(auto cond = dynamic_cast<AFCondition*>(a.get()))
+                {
+                    if(negated) a = a->pushNegation(context, true, negated);
+                    return a;
+
+                }
+                else if(auto cond = dynamic_cast<EFCondition*>(a.get()))
+                {
+                    if(negated) a = a->pushNegation(context, true, negated);
+                    return a;
+                }
+                else if(auto cond = dynamic_cast<OrCondition*>(a.get()))
+                {
+                    std::vector<Condition_ptr> pef, npef;
+                    for(auto& i : *cond)
+                    {
+                        if(dynamic_cast<EFCondition*>(i.get()))
+                        {
+                            pef.push_back(i);
+                        }
+                        else
+                        {
+                            npef.push_back(i);
+                        }
+                    }
+                    if(pef.size() > 0)
+                    {
+                        pef.push_back(std::make_shared<AFCondition>(makeOr(npef)));
+                        return makeOr(pef)->pushNegation(context, true, negated);
+                    }
+                }
+                else if(auto cond = dynamic_cast<AUCondition*>(a.get()))
+                {
+                    return AFCondition((*cond)[1]).pushNegation(context, true, negated);
+                }
+                auto b = std::make_shared<AFCondition>(a);
+                if(negated) return std::make_shared<NotCondition>(b);
+
                 return b;
-            }
-        }
-
-        Condition_ptr AFCondition::pushNegation(bool negated) const {
-#ifdef DBG
-            std::cout << "AFCondition << ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
-            auto a = _cond->pushNegation();
-            if(auto cond = dynamic_cast<AFCondition*>(a.get()))
-            {
-                a = cond->pushNegation(negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
-                return a;
-
-            }
-            else if(auto cond = dynamic_cast<EFCondition*>(a.get()))
-            {
-                a = cond->pushNegation(negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
-                return a;
-            }
-            else if(auto cond = dynamic_cast<OrCondition*>(a.get()))
-            {
-                std::vector<Condition_ptr> pef, npef;
-                for(auto& i : *cond)
-                {
-                    if(dynamic_cast<EFCondition*>(i.get()))
-                    {
-                        pef.push_back(i);
-                    }
-                    else
-                    {
-                        npef.push_back(i);
-                    }
-                }
-                if(pef.size() > 0)
-                {
-                    pef.push_back(std::make_shared<AFCondition>(makeOr(npef)));
-                    return makeOr(pef)->pushNegation(negated);
-                }
-            }
-            else if(auto cond = dynamic_cast<AUCondition*>(a.get()))
-            {
-                return AFCondition((*cond)[1]).pushNegation(negated);
-            }
-            auto b = std::make_shared<AFCondition>(a);
-            if(negated) return std::make_shared<NotCondition>(b);
-#ifdef DBG
-            std::cout << "AFCondition >> ";
-            b->toString(std::cout);
-            std::cout << std::endl;
-#endif
-            return b;
+            }, context, nested, negated);
         }
         
         template<typename T, typename E>
-        Condition_ptr pushAg(Condition_ptr& a, Condition_ptr& b, bool negated)
+        Condition_ptr pushAg(const EvaluationContext& context, bool nested, Condition_ptr& a, Condition_ptr& b, bool negated)
         {
             if(auto cond = dynamic_cast<NotCondition*>(a.get()))
             {
@@ -2087,7 +2042,7 @@ namespace PetriEngine {
                             std::make_shared<AndCondition>(
                                 a,
                                 af)
-                            ).pushNegation(negated);
+                            ).pushNegation(context, true, negated);
                 }
             }
             else if(auto cond = dynamic_cast<AndCondition*>(a.get()))
@@ -2124,98 +2079,107 @@ namespace PetriEngine {
                     return OrCondition(
                             b,
                             makeAnd(ag)
-                            ).pushNegation(negated);
+                            ).pushNegation(context, true, negated);
                 }
             }
             return nullptr;            
         }
         
         
-        Condition_ptr AUCondition::pushNegation(bool negated) const {
-            auto b = _cond2->pushNegation();
-            if(auto cond = dynamic_cast<AFCondition*>(b.get()))
+        Condition_ptr AUCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr
             {
-                return cond->pushNegation(negated);
-            }
-            else if(auto cond = dynamic_cast<EFCondition*>(b.get()))
-            {
-                return cond->pushNegation(negated);
-            }
-            else if(auto cond = dynamic_cast<OrCondition*>(b.get()))
-            {
-                std::vector<Condition_ptr> pef, npef;
-                for(auto& i : *cond)
+                auto b = _cond2->pushNegation(context, true);
+                if(auto cond = dynamic_cast<AFCondition*>(b.get()))
                 {
-                    if(dynamic_cast<EFCondition*>(i.get()))
+                    if(negated) return cond->pushNegation(context, nested, negated);
+                    else        return b;
+                }
+                else if(auto cond = dynamic_cast<EFCondition*>(b.get()))
+                {
+                    if(negated) return cond->pushNegation(context, nested, negated);
+                    else        return b;
+                }
+                else if(auto cond = dynamic_cast<OrCondition*>(b.get()))
+                {
+                    std::vector<Condition_ptr> pef, npef;
+                    for(auto& i : *cond)
                     {
-                        pef.push_back(i);
+                        if(dynamic_cast<EFCondition*>(i.get()))
+                        {
+                            pef.push_back(i);
+                        }
+                        else
+                        {
+                            npef.push_back(i);
+                        }
                     }
-                    else
+                    if(pef.size() > 0)
                     {
-                        npef.push_back(i);
+                        if(npef.size() != 0)
+                        {
+                            pef.push_back(std::make_shared<AUCondition>(_cond1, makeOr(npef)));
+                        }
+                        return makeOr(pef)->pushNegation(context, nested, negated);
                     }
                 }
-                if(pef.size() > 0)
-                {
-                    if(npef.size() != 0)
-                    {
-                        pef.push_back(std::make_shared<AUCondition>(_cond1, makeOr(npef)));
-                    }
-                    return makeOr(pef)->pushNegation(negated);
-                }
-            }
 
-            auto a = _cond1->pushNegation();
-            /*auto pushag = pushAg<AFCondition, AUCondition>(a, b, negated);
-            if(pushag != nullptr) return pushag;*/
-            auto c = std::make_shared<AUCondition>(a, b);
-            if(negated) return std::make_shared<NotCondition>(c);
-            return c;
+                auto a = _cond1->pushNegation(context, nested);
+                /*auto pushag = pushAg<AFCondition, AUCondition>(a, b, negated);
+                if(pushag != nullptr) return pushag;*/
+                auto c = std::make_shared<AUCondition>(a, b);
+                if(negated) return std::make_shared<NotCondition>(c);
+                return c;
+            }, context, nested, negated);
         }
 
-        Condition_ptr EUCondition::pushNegation(bool negated) const {
-            auto b = _cond2->pushNegation();
-            if(auto cond = dynamic_cast<EFCondition*>(b.get()))
+        Condition_ptr EUCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr
             {
-                return cond->pushNegation(negated);
-            }
-            else if(auto cond = dynamic_cast<OrCondition*>(b.get()))
-            {
-                std::vector<Condition_ptr> pef, npef;
-                for(auto& i : *cond)
+                auto b = _cond2->pushNegation(context, nested);
+                if(auto cond = dynamic_cast<EFCondition*>(b.get()))
                 {
-                    if(dynamic_cast<EFCondition*>(i.get()))
+                    if(negated) return cond->pushNegation(context, nested, true);
+                    else return b;
+                }
+                else if(auto cond = dynamic_cast<OrCondition*>(b.get()))
+                {
+                    std::vector<Condition_ptr> pef, npef;
+                    for(auto& i : *cond)
                     {
-                        pef.push_back(i);
+                        if(dynamic_cast<EFCondition*>(i.get()))
+                        {
+                            pef.push_back(i);
+                        }
+                        else
+                        {
+                            npef.push_back(i);
+                        }
                     }
-                    else
+                    if(pef.size() > 0)
                     {
-                        npef.push_back(i);
+                        if(npef.size() != 0)
+                        {
+                            pef.push_back(std::make_shared<EUCondition>(_cond1, makeOr(npef)));
+                        }
+                        return makeOr(pef)->pushNegation(context, nested, negated);
                     }
                 }
-                if(pef.size() > 0)
-                {
-                    if(npef.size() != 0)
-                    {
-                        pef.push_back(std::make_shared<EUCondition>(_cond1, makeOr(npef)));
-                    }
-                    return makeOr(pef)->pushNegation(negated);
-                }
-            }
-            auto a = _cond1->pushNegation();
-            /*auto pushag = pushAg<EFCondition, EUCondition>(a, b, negated);
-            if(pushag != nullptr) return pushag;*/
-            auto c = std::make_shared<EUCondition>(a, b);
-            if(negated) return std::make_shared<NotCondition>(c);
-            return c;
+                auto a = _cond1->pushNegation(context, nested);
+                /*auto pushag = pushAg<EFCondition, EUCondition>(a, b, negated);
+                if(pushag != nullptr) return pushag;*/
+                auto c = std::make_shared<EUCondition>(a, b);
+                if(negated) return std::make_shared<NotCondition>(c);
+                return c;
+            }, context, nested, negated);
         }
         
-        Condition_ptr pushAnd(const std::vector<Condition_ptr>& _conds, bool negate_children)
+        Condition_ptr pushAnd(const EvaluationContext& context, bool nested, const std::vector<Condition_ptr>& _conds, bool negate_children)
         {
             std::vector<Condition_ptr> nef, other;            
             for(auto& c : _conds)
             {
-                auto n = c->pushNegation(negate_children);
+                auto n = c->pushNegation(context, nested, negate_children);
                 if(n->isTriviallyFalse()) return n;
                 if(n->isTriviallyTrue()) continue;
                 if(auto neg = dynamic_cast<NotCondition*>(n.get()))
@@ -2242,20 +2206,16 @@ namespace PetriEngine {
                     makeOr(nef)))); 
             if(other.size() == 1) return other[0];
             auto res = makeAnd(other);
-#ifdef DBG
-            std::cout << "PUSH AND  >> ";
-            res->toString(std::cout);
-            std::cout << std::endl;
-#endif
+
             return res;
         }
         
-        Condition_ptr pushOr(const std::vector<Condition_ptr>& _conds, bool negate_children)
+        Condition_ptr pushOr(const EvaluationContext& context, bool nested, const std::vector<Condition_ptr>& _conds, bool negate_children)
         {
             std::vector<Condition_ptr> nef, other;            
             for(auto& c : _conds)
             {
-                auto n = c->pushNegation(negate_children);
+                auto n = c->pushNegation(context, nested, negate_children);
                 if(n->isTriviallyTrue()) return n;
                 if(n->isTriviallyFalse()) continue;
                 if(auto ef = dynamic_cast<EFCondition*>(n.get()))
@@ -2276,72 +2236,67 @@ namespace PetriEngine {
             return makeOr(other);
         }
 
-        Condition_ptr OrCondition::pushNegation(bool negated) const {
-#ifdef DBG
-            std::cout << "OrCondition >> ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
-            return negated ? pushAnd(_conds, true) :
-                             pushOr (_conds, false);
+        Condition_ptr OrCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr
+            {
+                return negated ? pushAnd(context, nested, _conds, true) :
+                                 pushOr (context, nested, _conds, false);
+            }, context, nested, negated);
         }
         
-        Condition_ptr AndCondition::pushNegation(bool negated) const {
-#ifdef DBG
-            std::cout << "AndCondition >> ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
-            return negated ? pushOr (_conds, true) :
-                             pushAnd(_conds, false);
-
+        Condition_ptr AndCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr
+            {
+                return negated ? pushOr (context, nested, _conds, true) :
+                                 pushAnd(context, nested, _conds, false);
+            }, context, nested, negated);
         }
         
-        Condition_ptr NotCondition::pushNegation(bool negated) const {
-#ifdef DBG
-            std::cout << "NotCondition >> ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
-            return _cond->pushNegation(!negated);
+        Condition_ptr NotCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
+            return _cond->pushNegation(context, nested, !negated);
         }
         
-        Condition_ptr LessThanCondition::pushNegation(bool negated) const {
+        Condition_ptr LessThanCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
             if(negated) return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<LessThanCondition>(_expr1, _expr2);
         }
         
-        Condition_ptr GreaterThanOrEqualCondition::pushNegation(bool negated) const {
+        Condition_ptr GreaterThanOrEqualCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
             if(negated) return std::make_shared<LessThanCondition>(_expr1, _expr2);
             else        return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
         }
         
-        Condition_ptr LessThanOrEqualCondition::pushNegation(bool negated) const {
+        Condition_ptr LessThanOrEqualCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
             if(negated) return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
             else        return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
         }
         
-        Condition_ptr GreaterThanCondition::pushNegation(bool negated) const {
+        Condition_ptr GreaterThanCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
             if(negated) return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
         }
         
-        Condition_ptr NotEqualCondition::pushNegation(bool negated) const {
+        Condition_ptr NotEqualCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
             if(negated) return std::make_shared<EqualCondition>(_expr1, _expr2);
             else        return std::make_shared<NotEqualCondition>(_expr1, _expr2);
         }
         
-        Condition_ptr EqualCondition::pushNegation(bool negated) const {
+        Condition_ptr EqualCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
             if(negated) return std::make_shared<NotEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<EqualCondition>(_expr1, _expr2);
         }
                 
-        Condition_ptr BooleanCondition::pushNegation(bool negated) const {
+        Condition_ptr BooleanCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
             if(negated) return getShared(!_value);
             else        return getShared( _value);
         }
         
-        Condition_ptr DeadlockCondition::pushNegation(bool negated) const {
+        Condition_ptr DeadlockCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
+            if(!nested)
+            {
+                auto res = evaluate(context);
+                if(res != RUNKNOWN) return BooleanCondition::getShared((!res) == negated);
+            }
             if(negated) return std::make_shared<NotCondition>(DEADLOCK);
             else        return DEADLOCK;
         }
