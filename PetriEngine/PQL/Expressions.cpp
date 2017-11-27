@@ -1909,9 +1909,17 @@ namespace PetriEngine {
             {
                 auto a = _cond->pushNegation(context, true, negated);
                 if(negated)
+                {
+                    if(a == BooleanCondition::FALSE_CONSTANT) return DeadlockCondition::DEADLOCK;
+                    if(a == BooleanCondition::TRUE_CONSTANT) return a;
                     a = std::make_shared<AXCondition>(a);
+                }
                 else
+                {
+                    if(a == BooleanCondition::TRUE_CONSTANT) return DeadlockCondition::DEADLOCK;
+                    if(a == BooleanCondition::FALSE_CONSTANT) return a;
                     a = std::make_shared<EXCondition>(a);
+                }
                 return a;
             }, context, nested, negated);
         }
@@ -1921,9 +1929,17 @@ namespace PetriEngine {
             {
                 auto a = _cond->pushNegation(context, true, negated);
                 if(negated)
+                {
+                    if(a == BooleanCondition::TRUE_CONSTANT)  return DeadlockCondition::DEADLOCK;
+                    if(a == BooleanCondition::FALSE_CONSTANT) return a;
                     a = std::make_shared<EXCondition>(a);
+                }
                 else
+                {
+                    if(a == BooleanCondition::FALSE_CONSTANT) return DeadlockCondition::DEADLOCK;
+                    if(a == BooleanCondition::TRUE_CONSTANT) return a;
                     a = std::make_shared<AXCondition>(a);
+                }
                 return a;
             }, context, nested, negated);
         }
