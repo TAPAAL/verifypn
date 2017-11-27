@@ -2137,7 +2137,7 @@ namespace PetriEngine {
                     }
                 }
 
-                auto a = _cond1->pushNegation(context, nested);
+                auto a = _cond1->pushNegation(context, true);
                 /*auto pushag = pushAg<AFCondition, AUCondition>(a, b, negated);
                 if(pushag != nullptr) return pushag;*/
                 auto c = std::make_shared<AUCondition>(a, b);
@@ -2149,7 +2149,7 @@ namespace PetriEngine {
         Condition_ptr EUCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr
             {
-                auto b = _cond2->pushNegation(context, nested);
+                auto b = _cond2->pushNegation(context, true);
                 if(auto cond = dynamic_cast<EFCondition*>(b.get()))
                 {
                     if(negated) return cond->pushNegation(context, nested, true);
@@ -2178,7 +2178,7 @@ namespace PetriEngine {
                         return makeOr(pef)->pushNegation(context, nested, negated);
                     }
                 }
-                auto a = _cond1->pushNegation(context, nested);
+                auto a = _cond1->pushNegation(context, true);
                 /*auto pushag = pushAg<EFCondition, EUCondition>(a, b, negated);
                 if(pushag != nullptr) return pushag;*/
                 auto c = std::make_shared<EUCondition>(a, b);
