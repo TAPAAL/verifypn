@@ -1885,23 +1885,20 @@ namespace PetriEngine {
             if(!nested)
             {
                 auto e = res->evaluate(context);
-                if(e != Condition::RUNKNOWN) return BooleanCondition::getShared((!e) == negated);
+                if(e != Condition::RUNKNOWN) 
+                {
+                    return BooleanCondition::getShared(e);
+                }
             }
             return res;            
         }
         
         Condition_ptr EGCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
-            return initialMarkingRW([&]() -> Condition_ptr
-            { 
-                return AFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(context, nested, !negated);
-            }, context, nested, negated);
+            return AFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(context, nested, !negated);
         }
 
         Condition_ptr AGCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
-            return initialMarkingRW([&]() -> Condition_ptr
-            {
-                return EFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(context, nested, !negated);
-            }, context, nested, negated);
+            return EFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(context, nested, !negated);
         }
         
         Condition_ptr EXCondition::pushNegation(const EvaluationContext& context, bool nested, bool negated) const {
