@@ -1945,6 +1945,11 @@ namespace PetriEngine {
             return initialMarkingRW([&]() -> Condition_ptr
             {
                 auto a = _cond->pushNegation(context, true);
+                if(!a->isTemporal())
+                {
+                    if(negated) return std::make_shared<NotCondition>(std::make_shared<EFCondition>(a));
+                    else        return std::make_shared<EFCondition>(a);
+                }
 
                 if(auto cond = dynamic_cast<EFCondition*>(a.get()))
                 {
