@@ -519,8 +519,7 @@ void OnTheFlyDG::setQuery(const Condition_ptr& query)
     delete[] query_marking.marking();
     working_marking.setMarking(nullptr);
     query_marking.setMarking(nullptr);
-
-    working_marking.setMarking  (net->makeInitialMarking());
+    initialConfiguration();
     negstat_t s;
     EvaluationContext context(working_marking.marking(), net);    
     this->query = query->pushNegation(s, context, false, false); // make sure that EG and AG is pushed

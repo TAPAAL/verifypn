@@ -1904,6 +1904,7 @@ namespace PetriEngine {
         }
         
         Condition_ptr EXCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
 #ifdef DBG
             std::cout << "EXCondition << ";
             toString(std::cout);
@@ -1929,9 +1930,11 @@ namespace PetriEngine {
             std::cout << std::endl;
 #endif
             return a;
+            }, stats, context, nested, negated);
         }
 
         Condition_ptr AXCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
 #ifdef DBG
             std::cout << "AXCondition << ";
             toString(std::cout);
@@ -1957,9 +1960,12 @@ namespace PetriEngine {
             std::cout << std::endl;
 #endif
             return a;
+            }, stats, context, nested, negated);
         }
+
         
         Condition_ptr EFCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
 #ifdef DBG
             std::cout << "EFCondition " << this << " << ";
             toString(std::cout);
@@ -2057,9 +2063,12 @@ namespace PetriEngine {
 #endif
                 return b;
             }
+            }, stats, context, nested, negated);
         }
 
+
         Condition_ptr AFCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
 #ifdef DBG
             std::cout << "AFCondition << ";
             toString(std::cout);
@@ -2133,7 +2142,9 @@ namespace PetriEngine {
             std::cout << std::endl;
 #endif
             return b;
+            }, stats, context, nested, negated);
         }
+
         
 /*        template<typename T, typename E>
         Condition_ptr pushAg(Condition_ptr& a, Condition_ptr& b, bool negated)
@@ -2193,6 +2204,7 @@ namespace PetriEngine {
   */      
         
         Condition_ptr AUCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
             auto b = _cond2->pushNegation(stats, context, true, false);
             auto a = _cond1->pushNegation(stats, context, true, false);
             if(auto cond = dynamic_cast<NotCondition*>(b.get()))
@@ -2262,9 +2274,12 @@ namespace PetriEngine {
             auto c = std::make_shared<AUCondition>(a, b);
             if(negated) return std::make_shared<NotCondition>(c);
             return c;
+            }, stats, context, nested, negated);
         }
 
+
         Condition_ptr EUCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
             auto b = _cond2->pushNegation(stats, context, nested, false);
             auto a = _cond1->pushNegation(stats, context, nested, false);
 
@@ -2326,7 +2341,9 @@ namespace PetriEngine {
             auto c = std::make_shared<EUCondition>(a, b);
             if(negated) return std::make_shared<NotCondition>(c);
             return c;
+            }, stats, context, nested, negated);
         }
+
         
         Condition_ptr pushAnd(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children)
         {
@@ -2396,6 +2413,7 @@ namespace PetriEngine {
         }
 
         Condition_ptr OrCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
 #ifdef DBG
             std::cout << "OrCondition >> ";
             toString(std::cout);
@@ -2403,9 +2421,12 @@ namespace PetriEngine {
 #endif
             return negated ? pushAnd(_conds, stats, context, nested, true) :
                              pushOr (_conds, stats, context, nested, false);
+            }, stats, context, nested, negated);
         }
+
         
         Condition_ptr AndCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
 #ifdef DBG
             std::cout << "AndCondition >> ";
             toString(std::cout);
@@ -2414,9 +2435,12 @@ namespace PetriEngine {
             return negated ? pushOr (_conds, stats, context, nested, true) :
                              pushAnd(_conds, stats, context, nested, false);
 
+            }, stats, context, nested, negated);
         }
+
         
         Condition_ptr NotCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
 #ifdef DBG
             std::cout << "NotCondition >> ";
             toString(std::cout);
@@ -2424,46 +2448,69 @@ namespace PetriEngine {
 #endif
             if(negated) ++stats[30];
             return _cond->pushNegation(stats, context, nested, !negated);
+            }, stats, context, nested, negated);
         }
+
         
         Condition_ptr LessThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
             if(negated) return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<LessThanCondition>(_expr1, _expr2);
+            }, stats, context, nested, negated);
         }
+
         
         Condition_ptr GreaterThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
             if(negated) return std::make_shared<LessThanCondition>(_expr1, _expr2);
             else        return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
+            }, stats, context, nested, negated);
         }
+
         
         Condition_ptr LessThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
             if(negated) return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
             else        return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
+            }, stats, context, nested, negated);
         }
+
         
         Condition_ptr GreaterThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
             if(negated) return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
+            }, stats, context, nested, negated);
         }
+
         
         Condition_ptr NotEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
             if(negated) return std::make_shared<EqualCondition>(_expr1, _expr2);
             else        return std::make_shared<NotEqualCondition>(_expr1, _expr2);
+            }, stats, context, nested, negated);
         }
+
         
         Condition_ptr EqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
             if(negated) return std::make_shared<NotEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<EqualCondition>(_expr1, _expr2);
+            }, stats, context, nested, negated);
         }
                 
         Condition_ptr BooleanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
             if(negated) return getShared(!_value);
             else        return getShared( _value);
+            }, stats, context, nested, negated);
         }
         
         Condition_ptr DeadlockCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
             if(negated) return std::make_shared<NotCondition>(DEADLOCK);
             else        return DEADLOCK;
+            }, stats, context, nested, negated);
         }
 
         
