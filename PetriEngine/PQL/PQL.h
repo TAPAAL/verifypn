@@ -133,7 +133,60 @@ namespace PetriEngine {
                 return _eval;
             }
         };
-
+/******************* NEGATION PUSH STATS  *******************/
+        
+        struct negstat_t
+        {
+            negstat_t()
+            {
+                for(size_t i = 0; i < 31; ++i) _used[i] = 0;
+            }
+            void print(std::ostream& stream)
+            {
+                for(size_t i = 0; i < 31; ++i) stream << _used[i] << ",";                
+            }
+            void printRules(std::ostream& stream)
+            {
+                for(size_t i = 0; i < 31; ++i) stream << _rulename[i] << ",";                
+            }
+            int _used[31];
+            const std::array<const char*,31> _rulename = {
+                "EG p-> !EF !p",
+                "AG p-> !AF !p",
+                "!EX p -> AX p",
+                "EX false -> false",
+                "EX true -> !deadlock",
+                "!AX p -> EX p",
+                "AX false -> deadlock",
+                "AX true -> true",             
+                "EF !deadlock -> !deadlock",
+                "EF EF p -> EF p",
+                "EF AF p -> AF p",
+                "EF E p U q -> EF q",
+                "EF A p U q -> EF q",
+                "EF .. or .. -> EF .. or EF ..",
+                "AF !deadlock -> !deadlock",
+                "AF AF p -> AF p",
+                "AF EF p -> EF p",
+                "AF .. or EF p -> EF p or AF ..",
+                "AF A p U q -> AF q",
+                "A p U !deadlock -> !deadlock",
+                "A deadlock U q -> q",
+                "A !deadlock U q -> AF q",
+                "A p U AF q -> AF q",
+                "A p U EF q -> EF q",
+                "A p U .. or EF q -> EF q or A p U ..",
+                "E p U !deadlock -> !deadlock",
+                "E deadlock U q -> q",
+                "E !deadlock U q -> EF q",
+                "E p U EF q -> EF q",
+                "E p U .. or EF q -> EF q or E p U ..",
+                "!! p -> p"
+                
+            };
+            int& operator[](size_t i) { return _used[i]; }
+        };
+        
         /** Base condition */
         class Condition {
         public:
@@ -168,7 +221,7 @@ namespace PetriEngine {
             virtual bool isUpperBound() = 0;
             /** Prepare reachability queries */
             virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
-            virtual std::shared_ptr<Condition> pushNegation(bool negated = false) const = 0;
+            virtual std::shared_ptr<Condition> pushNegation(bool negated, negstat_t&) const = 0;
             
             /** Output the condition as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
