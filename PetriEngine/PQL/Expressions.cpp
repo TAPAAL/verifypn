@@ -1840,7 +1840,8 @@ namespace PetriEngine {
                     return a->pushNegation(negated, stats);
                 }                
             }
-            else if(auto cond = dynamic_cast<EFCondition*>(a.get()))
+            
+            if(auto cond = dynamic_cast<EFCondition*>(a.get()))
             {
                 ++stats[9];
                 a = cond->pushNegation(negated, stats);
@@ -1938,7 +1939,8 @@ namespace PetriEngine {
                     return a->pushNegation(negated, stats);
                 }                
             }
-            else if(auto cond = dynamic_cast<AFCondition*>(a.get()))
+            
+            if(auto cond = dynamic_cast<AFCondition*>(a.get()))
             {
                 ++stats[15];
                 a = cond->pushNegation(negated, stats);
