@@ -1900,7 +1900,7 @@ namespace PetriEngine {
 
         Condition_ptr AGCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             ++stats[1];
-            return EFCondition(_cond->pushNegation(stats, context, true, true)).pushNegation(stats, context, false, !negated);
+            return EFCondition(_cond->pushNegation(stats, context, true, true)).pushNegation(stats, context, nested, !negated);
         }
         
         Condition_ptr EXCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
@@ -1914,7 +1914,7 @@ namespace PetriEngine {
             if(negated)
             {
                 ++stats[2];
-                return AXCondition(a).pushNegation(stats, context, true, false);
+                return AXCondition(a).pushNegation(stats, context, nested, false);
             }
             else
             {
@@ -1944,7 +1944,7 @@ namespace PetriEngine {
             if(negated)
             {
                 ++stats[5];
-                return EXCondition(a).pushNegation(stats, context, true, false);
+                return EXCondition(a).pushNegation(stats, context, nested, false);
             }
             else
             {
@@ -2280,8 +2280,8 @@ namespace PetriEngine {
 
         Condition_ptr EUCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-            auto b = _cond2->pushNegation(stats, context, nested, false);
-            auto a = _cond1->pushNegation(stats, context, nested, false);
+            auto b = _cond2->pushNegation(stats, context, true, false);
+            auto a = _cond1->pushNegation(stats, context, true, false);
 
             if(auto cond = dynamic_cast<NotCondition*>(b.get()))
             {

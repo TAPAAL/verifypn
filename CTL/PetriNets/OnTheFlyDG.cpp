@@ -523,6 +523,11 @@ void OnTheFlyDG::setQuery(const Condition_ptr& query)
     negstat_t s;
     EvaluationContext context(working_marking.marking(), net);    
     this->query = query->pushNegation(s, context, false, false); // make sure that EG and AG is pushed
+    delete[] working_marking.marking();
+    delete[] query_marking.marking();
+    working_marking.setMarking(nullptr);
+    query_marking.setMarking(nullptr);
+    assert(this->query);
 }
 
 size_t OnTheFlyDG::configurationCount() const
