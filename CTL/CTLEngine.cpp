@@ -92,7 +92,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
     
     for(auto qnum : querynumbers){
         CTLResult result(queries[qnum]);
-        PetriNets::OnTheFlyDG graph(net);        
+        PetriNets::OnTheFlyDG graph(net); 
         graph.setQuery(result.query);
         std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
         bool solved = false;

@@ -574,11 +574,21 @@ int main(int argc, char* argv[]) {
                 std::cout << std::endl;
             }
             EvaluationContext context(qm0, qnet);
-            queries[i] = queries[i]->pushNegation(context, false);
-
+            negstat_t stats;       
+            std::cout << "RWSTATS LEGEND:";
+            stats.printRules(std::cout);
+            std::cout << std::endl;
+            queries[i] = queries[i]->pushNegation(stats, context, false, false);
+            std::cout << "RWSTATS PRE:";
+            stats.print(std::cout);
+            std::cout << std::endl;
             try {
-                queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(context, false);
+                negstat_t stats;            
+                queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false);
                 queries[i].get()->setInvariant(isInvariant);
+                std::cout << "RWSTATS POST:";
+                stats.print(std::cout);
+                std::cout << std::endl;
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
                 std::cerr << "Exception information: " << ba.what() << std::endl;
