@@ -1828,11 +1828,7 @@ namespace PetriEngine {
 #endif
             auto a = _cond->pushNegation();
 
-            if(a == DeadlockCondition::DEADLOCK)
-            {
-                return a->pushNegation(negated);
-            }
-            else if(auto cond = dynamic_cast<NotCondition*>(a.get()))
+            if(auto cond = dynamic_cast<NotCondition*>(a.get()))
             {
                 if((*cond)[0] == DeadlockCondition::DEADLOCK)
                 {
@@ -1924,11 +1920,7 @@ namespace PetriEngine {
             std::cout << std::endl;
 #endif
             auto a = _cond->pushNegation();
-            if(a == DeadlockCondition::DEADLOCK)
-            {
-                return a->pushNegation(negated);
-            }
-            else if(auto cond = dynamic_cast<NotCondition*>(a.get()))
+            if(auto cond = dynamic_cast<NotCondition*>(a.get()))
             {
                 if((*cond)[0] == DeadlockCondition::DEADLOCK)
                 {
