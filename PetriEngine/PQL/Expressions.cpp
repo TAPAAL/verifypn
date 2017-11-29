@@ -1774,9 +1774,17 @@ namespace PetriEngine {
 #endif
             auto a = _cond->pushNegation(negated);
             if(negated)
+            {
+                if(a == BooleanCondition::TRUE_CONSTANT)  return a;
+                if(a == BooleanCondition::FALSE_CONSTANT) return DeadlockCondition::DEADLOCK;
                 a = std::make_shared<AXCondition>(a);
+            }
             else
+            {
+                if(a == BooleanCondition::FALSE_CONSTANT) return a;
+                if(a == BooleanCondition::TRUE_CONSTANT)  return std::make_shared<NotCondition>(DeadlockCondition::DEADLOCK);
                 a = std::make_shared<EXCondition>(a);
+            }
 #ifdef DBG
             std::cout << "EXCondition >> ";
             a->toString(std::cout);
@@ -1793,9 +1801,17 @@ namespace PetriEngine {
 #endif
             auto a = _cond->pushNegation(negated);
             if(negated)
+            {
+                if(a == BooleanCondition::TRUE_CONSTANT)  return a;
+                if(a == BooleanCondition::FALSE_CONSTANT) return DeadlockCondition::DEADLOCK;
                 a = std::make_shared<EXCondition>(a);
+            }
             else
+            {
+                if(a == BooleanCondition::FALSE_CONSTANT) return a;
+                if(a == BooleanCondition::TRUE_CONSTANT)  return std::make_shared<NotCondition>(DeadlockCondition::DEADLOCK);
                 a = std::make_shared<AXCondition>(a);
+            }
 #ifdef DBG
             std::cout << "AXCondition >> ";
             a->toString(std::cout);
@@ -1812,7 +1828,18 @@ namespace PetriEngine {
 #endif
             auto a = _cond->pushNegation();
 
-            if(auto cond = dynamic_cast<EFCondition*>(a.get()))
+            if(a == DeadlockCondition::DEADLOCK)
+            {
+                return a->pushNegation(negated);
+            }
+            else if(auto cond = dynamic_cast<NotCondition*>(a.get()))
+            {
+                if((*cond)[0] == DeadlockCondition::DEADLOCK)
+                {
+                    return a->pushNegation(negated);
+                }                
+            }
+            else if(auto cond = dynamic_cast<EFCondition*>(a.get()))
             {
                 a = cond->pushNegation(negated);
 #ifdef DBG
@@ -1897,7 +1924,18 @@ namespace PetriEngine {
             std::cout << std::endl;
 #endif
             auto a = _cond->pushNegation();
-            if(auto cond = dynamic_cast<AFCondition*>(a.get()))
+            if(a == DeadlockCondition::DEADLOCK)
+            {
+                return a->pushNegation(negated);
+            }
+            else if(auto cond = dynamic_cast<NotCondition*>(a.get()))
+            {
+                if((*cond)[0] == DeadlockCondition::DEADLOCK)
+                {
+                    return a->pushNegation(negated);
+                }                
+            }
+            else if(auto cond = dynamic_cast<AFCondition*>(a.get()))
             {
                 a = cond->pushNegation(negated);
 #ifdef DBG
@@ -2011,6 +2049,26 @@ namespace PetriEngine {
         
         Condition_ptr AUCondition::pushNegation(bool negated) const {
             auto b = _cond2->pushNegation();
+            auto a = _cond1->pushNegation();
+            if(auto cond = dynamic_cast<NotCondition*>(b.get()))
+            {
+                if((*cond)[0] == DeadlockCondition::DEADLOCK)
+                {
+                    return b->pushNegation(negated);
+                }
+            }
+            else if(a == DeadlockCondition::DEADLOCK)
+            {
+                return b->pushNegation(negated);
+            }
+            else if(auto cond = dynamic_cast<NotCondition*>(a.get()))
+            {
+                if((*cond)[0] == DeadlockCondition::DEADLOCK)
+                {
+                    return AFCondition(b).pushNegation(negated);
+                }
+            }
+            
             if(auto cond = dynamic_cast<AFCondition*>(b.get()))
             {
                 return cond->pushNegation(negated);
@@ -2042,8 +2100,7 @@ namespace PetriEngine {
                     return makeOr(pef)->pushNegation(negated);
                 }
             }
-
-            auto a = _cond1->pushNegation();
+            
             /*auto pushag = pushAg<AFCondition, AUCondition>(a, b, negated);
             if(pushag != nullptr) return pushag;*/
             auto c = std::make_shared<AUCondition>(a, b);
@@ -2053,6 +2110,27 @@ namespace PetriEngine {
 
         Condition_ptr EUCondition::pushNegation(bool negated) const {
             auto b = _cond2->pushNegation();
+            auto a = _cond1->pushNegation();
+
+            if(auto cond = dynamic_cast<NotCondition*>(b.get()))
+            {
+                if((*cond)[0] == DeadlockCondition::DEADLOCK)
+                {
+                    return b->pushNegation(negated);
+                }
+            }
+            else if(a == DeadlockCondition::DEADLOCK)
+            {
+                return b->pushNegation(negated);
+            }
+            else if(auto cond = dynamic_cast<NotCondition*>(a.get()))
+            {
+                if((*cond)[0] == DeadlockCondition::DEADLOCK)
+                {
+                    return EFCondition(b).pushNegation(negated);
+                }
+            }
+            
             if(auto cond = dynamic_cast<EFCondition*>(b.get()))
             {
                 return cond->pushNegation(negated);
@@ -2080,7 +2158,6 @@ namespace PetriEngine {
                     return makeOr(pef)->pushNegation(negated);
                 }
             }
-            auto a = _cond1->pushNegation();
             /*auto pushag = pushAg<EFCondition, EUCondition>(a, b, negated);
             if(pushag != nullptr) return pushag;*/
             auto c = std::make_shared<EUCondition>(a, b);
