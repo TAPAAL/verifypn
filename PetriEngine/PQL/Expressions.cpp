@@ -1962,11 +1962,18 @@ namespace PetriEngine {
                     return a->pushNegation(negated, stats);
                 }                
             }
+
+            if(!a->isTemporal())
+            {
+                auto res = std::make_shared<EFCondition>(a);
+                if(negated) return std::make_shared<NotCondition>(res);
+                return res;
+            }
             
             if(auto cond = dynamic_cast<EFCondition*>(a.get()))
             {
                 ++stats[9];
-                a = cond->pushNegation(negated, stats);
+                if(negated) a = std::make_shared<NotCondition>(a);
 #ifdef DBG
                 std::cout << "EFCondition >> ";
                 a->toString(std::cout);
@@ -2019,6 +2026,12 @@ namespace PetriEngine {
             }
             else if(auto cond = dynamic_cast<OrCondition*>(a.get()))
             {
+                if(!cond->isTemporal())
+                {
+                    Condition_ptr b = std::make_shared<EFCondition>(a);
+                    if(negated) b = std::make_shared<NotCondition>(b);
+                    return b;
+                }
                 ++stats[13];
                 std::vector<Condition_ptr> pef, atomic;
                 for(auto& i : *cond) 
@@ -2030,7 +2043,7 @@ namespace PetriEngine {
                 std::cout << "EFCondition " << this << " >> ";
                 a->toString(std::cout);
                 std::cout << std::endl;
-#endif      
+#endif
                 return a;
             }
             else
@@ -2065,7 +2078,7 @@ namespace PetriEngine {
             if(auto cond = dynamic_cast<AFCondition*>(a.get()))
             {
                 ++stats[15];
-                a = cond->pushNegation(negated, stats);
+                if(negated) return std::make_shared<NotCondition>(a);
 #ifdef DBG
                 std::cout << "EFCondition >> ";
                 a->toString(std::cout);
@@ -2077,7 +2090,7 @@ namespace PetriEngine {
             else if(auto cond = dynamic_cast<EFCondition*>(a.get()))
             {
                 ++stats[16];
-                a = cond->pushNegation(negated, stats);
+                if(negated) return std::make_shared<NotCondition>(a);
 #ifdef DBG
                 std::cout << "EFCondition >> ";
                 a->toString(std::cout);
@@ -2102,7 +2115,7 @@ namespace PetriEngine {
                 }
                 if(pef.size() > 0)
                 {
-                   stats[17] += pef.size();
+                    stats[17] += pef.size();
                     pef.push_back(std::make_shared<AFCondition>(makeOr(npef)));
                     return makeOr(pef)->pushNegation(negated, stats);
                 }
@@ -2212,7 +2225,8 @@ namespace PetriEngine {
             else if(auto cond = dynamic_cast<EFCondition*>(b.get()))
             {
                 ++stats[23];
-                return cond->pushNegation(negated, stats);
+                if(negated) return std::make_shared<NotCondition>(b);
+                return b;
             }
             else if(auto cond = dynamic_cast<OrCondition*>(b.get()))
             {
@@ -2280,7 +2294,8 @@ namespace PetriEngine {
             if(auto cond = dynamic_cast<EFCondition*>(b.get()))
             {
                 ++stats[28];
-                return cond->pushNegation(negated, stats);
+                if(negated) return std::make_shared<NotCondition>(b);
+                return b;
             }
             else if(auto cond = dynamic_cast<OrCondition*>(b.get()))
             {
