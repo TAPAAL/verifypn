@@ -150,7 +150,7 @@ namespace PetriEngine {
                 for(size_t i = 0; i < 31; ++i) stream << _rulename[i] << ",";                
             }
             int _used[31];
-            const std::array<const char*,31> _rulename = {
+            const std::vector<const char*> _rulename = {
                 "EG p-> !EF !p",
                 "AG p-> !AF !p",
                 "!EX p -> AX p",
