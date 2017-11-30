@@ -567,26 +567,34 @@ int main(int argc, char* argv[]) {
             bool isInvariant = queries[i].get()->isInvariant();
             
             int preSize=queries[i]->formulaSize();
+            negstat_t stats;            
             if(options.printstatistics)
             {
                 std::cout << "\nQuery before reduction: ";
                 queries[i]->toString(std::cout);
                 std::cout << std::endl;
+                std::cout << "RWSTATS LEGEND:";
+                stats.printRules(std::cout);
+                std::cout << std::endl;
             }
-            negstat_t stats;            
-            std::cout << "RWSTATS LEGEND:";
-            stats.printRules(std::cout);
-            std::cout << std::endl;
+            
             queries[i] = queries[i]->pushNegation(false, stats);
-            std::cout << "RWSTATS PRE:";
-            stats.print(std::cout);
-            std::cout << std::endl;
+
+            if(options.printstatistics)
+            {
+                std::cout << "RWSTATS PRE:";
+                stats.print(std::cout);
+                std::cout << std::endl;
+            }
             try {
                 negstat_t stats;            
                 queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(false, stats);
-                std::cout << "RWSTATS POST:";
-                stats.print(std::cout);
-                std::cout << std::endl;
+                if(options.printstatistics)
+                {
+                    std::cout << "RWSTATS POST:";
+                    stats.print(std::cout);
+                    std::cout << std::endl;
+                }
                 queries[i].get()->setInvariant(isInvariant);
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
