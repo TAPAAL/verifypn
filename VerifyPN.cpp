@@ -381,11 +381,9 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
             //Wrap in not if isInvariant
             querystring = querystr.substr(2);
             std::vector<std::string> tmp;
-            auto q = ParseQuery(querystring, tmp);
-            if(isInvariant)
-                conditions.push_back(std::make_shared<AGCondition>(q));
-            else
-                conditions.push_back(std::make_shared<EFCondition>(q));
+            conditions.emplace_back(ParseQuery(querystring, tmp));
+            if(isInvariant) conditions.back() = std::make_shared<AGCondition>(conditions.back());
+            else            conditions.back() = std::make_shared<EFCondition>(conditions.back());
         }
         else
         {
@@ -421,8 +419,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
                     fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
                     conditions.pop_back();
                 }
-
-
+                
                 qstrings.push_back(q.id);
             }
         }
@@ -521,7 +518,6 @@ int main(int argc, char* argv[]) {
     
     ReturnValue v = parseOptions(argc, argv, options);
     if(v != ContinueCode) return v;
-    
     options.print();
   
     PetriNetBuilder builder;
@@ -573,9 +569,20 @@ int main(int argc, char* argv[]) {
                 queries[i]->toString(std::cout);
                 std::cout << std::endl;
             }
-
+            negstat_t stats;            
+            std::cout << "RWSTATS LEGEND:";
+            stats.printRules(std::cout);
+            std::cout << std::endl;
+            queries[i] = queries[i]->pushNegation(false, stats);
+            std::cout << "RWSTATS PRE:";
+            stats.print(std::cout);
+            std::cout << std::endl;
             try {
-                queries[i] = (queries[i]->simplify(simplificationContext)).formula;
+                negstat_t stats;            
+                queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(false, stats);
+                std::cout << "RWSTATS POST:";
+                stats.print(std::cout);
+                std::cout << std::endl;
                 queries[i].get()->setInvariant(isInvariant);
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
