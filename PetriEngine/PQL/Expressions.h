@@ -395,6 +395,7 @@ namespace PetriEngine {
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const;
             uint32_t distance(DistanceContext& context) const;
             void toXML(std::ostream&, uint32_t tabs) const;
+            
         private:
             std::string op() const;
         };
@@ -618,6 +619,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const;
             uint32_t distance(DistanceContext& context) const;
+
         private:
             bool apply(int v1, int v2) const;
             std::string op() const;
@@ -652,6 +654,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const;
             uint32_t distance(DistanceContext& context) const;
+
         private:
             bool apply(int v1, int v2) const;
             std::string op() const;
@@ -669,6 +672,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const;
             uint32_t distance(DistanceContext& context) const;
+
         private:
             bool apply(int v1, int v2) const;
             std::string op() const;
@@ -685,6 +689,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const;
             uint32_t distance(DistanceContext& context) const;
+
         private:
             bool apply(int v1, int v2) const;
             std::string op() const;
