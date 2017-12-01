@@ -1882,12 +1882,12 @@ namespace PetriEngine {
         
         Condition_ptr EGCondition::pushNegation(bool negated, negstat_t& stats) const {
             ++stats[0];
-            return AFCondition(_cond->pushNegation(true, stats)).pushNegation(!negated, stats);
+            return AFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(!negated, stats);
         }
 
         Condition_ptr AGCondition::pushNegation(bool negated, negstat_t& stats) const {
             ++stats[1];
-            return EFCondition(_cond->pushNegation(true, stats)).pushNegation(!negated, stats);
+            return EFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(!negated, stats);
         }
         
         Condition_ptr EXCondition::pushNegation(bool negated, negstat_t& stats) const {
