@@ -52,7 +52,6 @@ namespace PetriEngine {
                 return sum;
             }
             void toString(std::ostream&) const override;
-            virtual void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const = 0;
         private:
             virtual int apply(int v1, int v2) const = 0;
             virtual std::string op() const = 0;
@@ -100,7 +99,7 @@ namespace PetriEngine {
             }
             Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
-            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
         private:
@@ -185,7 +184,7 @@ namespace PetriEngine {
             int evaluate(const EvaluationContext& context) const override;
             void toString(std::ostream&) const override;
             Expr::Types type() const override;
-            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
             int formulaSize() const override{
@@ -229,7 +228,7 @@ namespace PetriEngine {
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             bool isUpperBound() override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
-            virtual const Condition_ptr& operator[] (size_t i) const { return _cond;}
+            virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
         private:
             virtual std::string op() const = 0;
             
@@ -350,11 +349,9 @@ namespace PetriEngine {
             Result evaluate(const EvaluationContext& context) const override;
             void toString(std::ostream&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
-            virtual Retval simplify(SimplificationContext& context) const = 0;
             bool isReachability(uint32_t depth) const override;
             bool isUpperBound() override;
             Condition_ptr prepareForReachability(bool negated) const override;
-            virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             Result evalAndSet(const EvaluationContext& context) override;
             virtual const Condition_ptr& operator[] (size_t i) const override
@@ -425,7 +422,6 @@ namespace PetriEngine {
             {
                 return _temporal;
             }
-            virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
             auto begin() { return _conds.begin(); }
             auto end() { return _conds.end(); }
             auto begin() const { return _conds.begin(); }
@@ -562,7 +558,6 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
-            virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
         protected:
             uint32_t _distance(DistanceContext& c, 
                     std::function<uint32_t(uint32_t, uint32_t, bool)> d) const
