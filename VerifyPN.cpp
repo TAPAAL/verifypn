@@ -217,13 +217,17 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         } else if (strcmp(argv[i], "-ctl") == 0){
             if(argc > i + 1){
                 if(strcmp(argv[i + 1], "local") == 0){
-                    i++;
                     options.ctlalgorithm = CTL::Local;
                 }
                 else if(strcmp(argv[i + 1], "czero") == 0){
-                    i++;
                     options.ctlalgorithm = CTL::CZero;
                 }
+                else
+                {
+                    fprintf(stderr, "Argument Error: Invalid ctl-algorithm type \"%s\"\n", argv[i + 1]);
+                    return ErrorCode;
+                }
+                i++;
 
             }
         } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
@@ -563,26 +567,34 @@ int main(int argc, char* argv[]) {
             bool isInvariant = queries[i].get()->isInvariant();
             
             int preSize=queries[i]->formulaSize();
+            negstat_t stats;            
             if(options.printstatistics)
             {
                 std::cout << "\nQuery before reduction: ";
                 queries[i]->toString(std::cout);
                 std::cout << std::endl;
+                std::cout << "RWSTATS LEGEND:";
+                stats.printRules(std::cout);
+                std::cout << std::endl;
             }
-            negstat_t stats;            
-            std::cout << "RWSTATS LEGEND:";
-            stats.printRules(std::cout);
-            std::cout << std::endl;
+            
             queries[i] = queries[i]->pushNegation(false, stats);
-            std::cout << "RWSTATS PRE:";
-            stats.print(std::cout);
-            std::cout << std::endl;
+
+            if(options.printstatistics)
+            {
+                std::cout << "RWSTATS PRE:";
+                stats.print(std::cout);
+                std::cout << std::endl;
+            }
             try {
                 negstat_t stats;            
                 queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(false, stats);
-                std::cout << "RWSTATS POST:";
-                stats.print(std::cout);
-                std::cout << std::endl;
+                if(options.printstatistics)
+                {
+                    std::cout << "RWSTATS POST:";
+                    stats.print(std::cout);
+                    std::cout << std::endl;
+                }
                 queries[i].get()->setInvariant(isInvariant);
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
@@ -647,40 +659,37 @@ int main(int argc, char* argv[]) {
 
         if(alldone) return SuccessCode;
     }
-        
-    
+
     //----------------------- Verify CTL queries -----------------------//
-    std::string CTLQueries = getXMLQueries(queries, querynames, results);
+    std::vector<size_t> ctl_ids;
+    for(size_t i = 0; i < queries.size(); ++i)
+    {
+        if(results[i] == ResultPrinter::CTL)
+        {
+            ctl_ids.push_back(i);
+        }
+    }
     
-    if (CTLQueries.size() > 0) {
+    if (ctl_ids.size() > 0) {
         options.isctl=true;
         PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
         PetriNet* ctlnet = builder.makePetriNet();
-        // Update query indexes
-        int ctlQueryCount = std::count(results.begin(), results.end(), ResultPrinter::CTL);
-        options.querynumbers.clear();
-        
-        for (int x = 0; x < ctlQueryCount; x++) {
-            options.querynumbers.insert(x);
-        }
-        
+        // Assign indexes
+        if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
         if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
-        
-        //Default to DFS
         if(options.strategy != PetriEngine::Reachability::DFS){
-            std::cerr << "Argument Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
-            return ErrorCode;
+            fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
+            options.strategy = PetriEngine::Reachability::DFS;
         }
-
         v = CTLMain(ctlnet,
-            options.queryfile,
             options.ctlalgorithm,
             options.strategy,
-            options.querynumbers,
             options.gamemode,
             options.printstatistics,
             true,
-            CTLQueries);
+            querynames,
+            queries,
+            ctl_ids);
         
         delete ctlnet;
         

@@ -95,6 +95,10 @@ namespace PetriEngine {
             const MarkVal* marking() const {
                 return _marking;
             }
+            
+            void setMarking(MarkVal* marking) {
+                _marking = marking;
+            }
 
             const PetriNet* net() const {
                 return _net;

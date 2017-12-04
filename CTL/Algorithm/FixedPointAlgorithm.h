@@ -1,17 +1,15 @@
 #ifndef FIXEDPOINTALGORITHM_H
 #define FIXEDPOINTALGORITHM_H
 
-#include "../DependencyGraph/BasicDependencyGraph.h"
-#include "../SearchStrategy/DFSSearch.h"
-//#include "../Communicator/Communicator.h"
-//#include "PartitionFunction.h"
+#include "CTL/DependencyGraph/BasicDependencyGraph.h"
+#include "CTL/SearchStrategy/DFSSearch.h"
+#include "PetriEngine/Reachability/ReachabilitySearch.h"
 
 namespace Algorithm {
 
 class FixedPointAlgorithm {
 public:
-    virtual bool search(DependencyGraph::BasicDependencyGraph &graph,
-                        SearchStrategy::DFSSearch &strategy) =0;
+    virtual bool search(DependencyGraph::BasicDependencyGraph &graph) =0;
     virtual ~FixedPointAlgorithm(){}
 
     size_t processedEdges() const { return _processedEdges; }

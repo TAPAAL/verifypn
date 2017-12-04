@@ -3,40 +3,47 @@
 
 #include <functional>
 
-#include "../DependencyGraph/BasicDependencyGraph.h"
-#include "../DependencyGraph/Configuration.h"
-#include "../DependencyGraph/Edge.h"
-#include "../CTLParser/CTLQuery.h"
+#include "CTL/DependencyGraph/BasicDependencyGraph.h"
+#include "CTL/DependencyGraph/Configuration.h"
+#include "CTL/DependencyGraph/Edge.h"
 #include "PetriConfig.h"
-#include "../../PetriParse/PNMLParser.h"
+#include "PetriParse/PNMLParser.h"
+#include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/Structures/ptrie_map.h"
 #include "PetriEngine/Structures/AlignedEncoder.h"
 #include "PetriEngine/Structures/linked_bucket.h"
 
 namespace PetriNets {
-
 class OnTheFlyDG : public DependencyGraph::BasicDependencyGraph
 {
 public:
-    typedef PetriEngine::Structures::State Marking;
+    using Condition = PetriEngine::PQL::Condition;
+    using Condition_ptr = PetriEngine::PQL::Condition_ptr;
+    using Marking = PetriEngine::Structures::State;
     OnTheFlyDG(PetriEngine::PetriNet *t_net);
 
     virtual ~OnTheFlyDG();
 
     //Dependency graph interface
-    virtual void successors(DependencyGraph::Configuration *c) override;
+    virtual std::vector<DependencyGraph::Edge*> successors(DependencyGraph::Configuration *c) override;
     virtual DependencyGraph::Configuration *initialConfiguration() override;
     virtual void cleanUp() override;
+    void setQuery(const Condition_ptr& query);
 
-    //Serializer interface
-//    virtual std::pair<int, int*> serialize(SearchStrategy::Message &m) override;
-//    virtual SearchStrategy::Message deserialize(int* message, int messageSize) override;
+    virtual void release(DependencyGraph::Edge* e) override;
 
-    void setQuery(CTLQuery* query);
+    size_t owner(Marking& marking, Condition* cond);
+    size_t owner(Marking& marking, const Condition_ptr& cond)
+    {
+        return owner(marking, cond.get());
+    }
+
 
     //stats
-    int configurationCount() const;
-    int markingCount() const;
+    size_t configurationCount() const;
+    size_t markingCount() const;
+    
+    Condition::Result initialEval();
 
 protected:
 
@@ -52,25 +59,34 @@ protected:
     size_t _configurationCount = 0;
 
     //used after query is set
-    CTLQuery *query = nullptr;
+    Condition_ptr query = nullptr;
 
-    bool evaluateQuery(CTLQuery &query, size_t marking, Marking* unfolded);
-    bool fastEval(CTLQuery &query, size_t marking, Marking* unfolded);
+    Condition::Result fastEval(Condition* query, Marking* unfolded);
+    Condition::Result fastEval(const Condition_ptr& query, Marking* unfolded)
+    {
+        return fastEval(query.get(), unfolded);
+    }
     void nextStates(Marking& t_marking, 
     std::function<void ()> pre, 
-    std::function<bool (size_t, Marking&)> foreach, 
+    std::function<bool (Marking&)> foreach, 
     std::function<void ()> post);
-    bool EvalCardianlity(int a, LoperatorType lop, int b);
-    int GetParamValue(CardinalityParameter *param, Marking& marking);
-    PetriConfig *createConfiguration(size_t marking, CTLQuery &query);
+    PetriConfig *createConfiguration(size_t marking, size_t own, Condition* query);
+    PetriConfig *createConfiguration(size_t marking, size_t own, const Condition_ptr& query)
+    {
+        return createConfiguration(marking, own, query.get());
+    }
     size_t createMarking(Marking &marking);
     void markingStats(const uint32_t* marking, size_t& sum, bool& allsame, uint32_t& val, uint32_t& active, uint32_t& last);
     
-    DependencyGraph::Edge* newEdge(DependencyGraph::Configuration &t_source);
+    DependencyGraph::Edge* newEdge(DependencyGraph::Configuration &t_source, uint32_t weight);
 
+    std::stack<DependencyGraph::Edge*> recycle;
     ptrie::map<std::vector<PetriConfig*> > trie;
-    linked_bucket_t<DependencyGraph::Edge,1024*10> edge_alloc;
-    
+    linked_bucket_t<DependencyGraph::Edge,1024*10>* edge_alloc = nullptr;
+
+    // Problem  with linked bucket and complex constructor
+    linked_bucket_t<char[sizeof(PetriConfig)], 1024*1024>* conf_alloc = nullptr;
+        
 };
 }
 #endif // ONTHEFLYDG_H

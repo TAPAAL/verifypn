@@ -28,7 +28,7 @@ namespace PetriEngine {
             Queue(StateSetInterface* states);
             virtual ~Queue();
             virtual bool pop(Structures::State& state) = 0;
-            virtual void push(size_t id, Structures::State& state,
+            virtual void push(size_t id, PQL::DistanceContext&,
                 std::shared_ptr<PQL::Condition>& query) = 0;
             size_t lastPopped()
             {
@@ -45,7 +45,7 @@ namespace PetriEngine {
             virtual ~BFSQueue();
             
             virtual bool pop(Structures::State& state);
-            virtual void push(size_t id, Structures::State& state,
+            virtual void push(size_t id, PQL::DistanceContext&,
                 std::shared_ptr<PQL::Condition>& query);
         private:
             size_t _cnt;
@@ -58,7 +58,7 @@ namespace PetriEngine {
             virtual ~DFSQueue();
             
             virtual bool pop(Structures::State& state);
-            virtual void push(size_t id, Structures::State& state,
+            virtual void push(size_t id, PQL::DistanceContext&,
                 std::shared_ptr<PQL::Condition>& query);
         private:
             std::stack<uint32_t> _stack;
@@ -70,7 +70,7 @@ namespace PetriEngine {
             virtual ~RDFSQueue();
             
             virtual bool pop(Structures::State& state);
-            virtual void push(size_t id, Structures::State& state,
+            virtual void push(size_t id, PQL::DistanceContext&,
                 std::shared_ptr<PQL::Condition>& query);
         private:
             std::stack<uint32_t> _stack;
@@ -94,7 +94,7 @@ namespace PetriEngine {
             virtual ~HeuristicQueue();
             
             virtual bool pop(Structures::State& state);
-            virtual void push(size_t id, Structures::State& state,
+            virtual void push(size_t id, PQL::DistanceContext&,
                 std::shared_ptr<PQL::Condition>& query);
         private:
             std::priority_queue<weighted_t> _queue;

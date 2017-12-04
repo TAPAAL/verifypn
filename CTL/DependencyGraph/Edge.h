@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <cassert>
 
 namespace DependencyGraph {
 
@@ -15,15 +17,20 @@ public:
     Edge(){}
     Edge(Configuration &t_source) : source(&t_source) {}
 
+    void addTarget(Configuration* conf)
+    {
+        assert(conf);
+        targets.push_back(conf);
+    }
+    
     Configuration* source;
-    //Configuration* requested = nullptr;
-    //container requested;
     container targets;
-
+    uint8_t status = 0;
     bool processed = false;
     bool is_negated = false;
-
-    //std::string toString();
+    int32_t refcnt = 0;
+    bool handled = false;
+    uint32_t weight = 0;
 };
 }
 #endif // EDGE_H

@@ -256,8 +256,36 @@ namespace PetriEngine {
 
         /******************** Context Analysis ********************/
 
+        auto expr_cmp = [](const Expr_ptr& a, const Expr_ptr& b){
+                if(dynamic_cast<LiteralExpr*>(a.get()))
+                {
+                    if(dynamic_cast<LiteralExpr*>(b.get())) return false;
+                    else return true;
+                }
+                else if(auto aa = dynamic_cast<IdentifierExpr*>(a.get()))
+                {
+                    if(dynamic_cast<LiteralExpr*>(b.get())) return false; 
+                    else if(auto bb = dynamic_cast<IdentifierExpr*>(b.get()))
+                    {
+                        return aa->offset() < bb->offset();
+                    }
+                    else return true;
+                }
+                return false;
+            };
+        
         void NaryExpr::analyze(AnalysisContext& context) {
             for(auto& e : _exprs) e->analyze(context);
+        }
+
+        void MultiplyExpr::analyze(AnalysisContext& context) {
+            NaryExpr::analyze(context);
+            std::sort(std::begin(_exprs), std::end(_exprs), expr_cmp);
+        }
+
+        void PlusExpr::analyze(AnalysisContext& context) {
+            NaryExpr::analyze(context);
+            std::sort(std::begin(_exprs), std::end(_exprs), expr_cmp);
         }
 
         void MinusExpr::analyze(AnalysisContext& context) {
@@ -311,12 +339,24 @@ namespace PetriEngine {
         /******************** Evaluation ********************/
 
         int NaryExpr::evaluate(const EvaluationContext& context) const {
-            int r = _exprs[0]->evaluate(context);
+            int32_t r = preOp(context);
             for(size_t i = 1; i < _exprs.size(); ++i)
             {
                 r = apply(r, _exprs[i]->evaluate(context));
             }
             return r;
+        }
+       
+        int32_t NaryExpr::preOp(const EvaluationContext& context) const {
+            return _exprs[0]->evaluate(context);
+        }
+
+        int32_t MultiplyExpr::preOp(const EvaluationContext& context) const {
+            return NaryExpr::preOp(context);
+        }
+
+        int32_t PlusExpr::preOp(const EvaluationContext& context) const {
+            return NaryExpr::preOp(context);
         }
 
         int MinusExpr::evaluate(const EvaluationContext& context) const {
@@ -332,114 +372,172 @@ namespace PetriEngine {
             return context.marking()[_offsetInMarking];
         }
 
-        bool SimpleQuantifierCondition::evaluate(const EvaluationContext& context) const {
-            // Not implemented
-	    assert(false);
-	    return false;
-        }
-        
-        bool UntilCondition::evaluate(const EvaluationContext& context) const {
-            // Not implemented
-            assert(false);
-            return false;
-        }
-        
-        bool AndCondition::evaluate(const EvaluationContext& context) const {
-            for(auto& c : _conds) if(!c->evaluate(context)) return false;
-            return true;
+        Condition::Result SimpleQuantifierCondition::evaluate(const EvaluationContext& context) const {
+	    return RUNKNOWN;
         }
 
-        bool OrCondition::evaluate(const EvaluationContext& context) const {
-            for(auto& c : _conds) if(c->evaluate(context)) return true;
-            return false;
+        Condition::Result EGCondition::evaluate(const EvaluationContext& context) const {
+            if(_cond->evaluate(context) == RFALSE) return RFALSE;
+            return RUNKNOWN;
+        }
+
+        Condition::Result AGCondition::evaluate(const EvaluationContext& context) const 
+        {
+            if(_cond->evaluate(context) == RFALSE) return RFALSE;
+            return RUNKNOWN;
+        }
+
+        Condition::Result EFCondition::evaluate(const EvaluationContext& context) const {
+            if(_cond->evaluate(context) == RTRUE) return RTRUE;
+            return RUNKNOWN;
+        }
+
+        Condition::Result AFCondition::evaluate(const EvaluationContext& context) const {
+            if(_cond->evaluate(context) == RTRUE) return RTRUE;
+            return RUNKNOWN;
+        }
+
+        
+        Condition::Result UntilCondition::evaluate(const EvaluationContext& context) const {
+            auto r2 = _cond2->evaluate(context);
+            if(r2 != RFALSE) return r2;
+            auto r1 = _cond1->evaluate(context);
+            if(r1 == RFALSE)
+            {
+                return RFALSE;
+            }
+            return RUNKNOWN;
         }
         
-        bool CompareCondition::evaluate(const EvaluationContext& context) const {
+
+        
+        Condition::Result AndCondition::evaluate(const EvaluationContext& context) const {
+            auto res = RTRUE;            
+            for(auto& c : _conds)
+            {
+                auto r = c->evaluate(context);
+                if(r == RFALSE) return RFALSE;
+                else if(r == RUNKNOWN) res = RUNKNOWN;
+            }
+            return res;
+        }
+
+        Condition::Result OrCondition::evaluate(const EvaluationContext& context) const {
+            auto res = RFALSE;            
+            for(auto& c : _conds)
+            {
+                auto r = c->evaluate(context);
+                if(r == RTRUE) return RTRUE;
+                else if(r == RUNKNOWN) res = RUNKNOWN;
+            }
+            return res;
+        }
+        
+        Condition::Result CompareCondition::evaluate(const EvaluationContext& context) const {
             int v1 = _expr1->evaluate(context);
             int v2 = _expr2->evaluate(context);
-            return apply(v1, v2);
+            return apply(v1, v2) ? RTRUE : RFALSE;
         }
 
-        bool NotCondition::evaluate(const EvaluationContext& context) const {
-            return !(_cond->evaluate(context));
+        Condition::Result NotCondition::evaluate(const EvaluationContext& context) const {
+            auto res = _cond->evaluate(context);
+            if(res != RUNKNOWN) return res == RFALSE ? RTRUE : RFALSE;
+            return RUNKNOWN;
         }
 
-        bool BooleanCondition::evaluate(const EvaluationContext&) const {
-            return _value;
+        Condition::Result BooleanCondition::evaluate(const EvaluationContext&) const {
+            return _value ? RTRUE : RFALSE;
         }
 
-        bool DeadlockCondition::evaluate(const EvaluationContext& context) const {
+        Condition::Result DeadlockCondition::evaluate(const EvaluationContext& context) const {
             if (!context.net())
-                return false;
+                return RFALSE;
             if (!context.net()->deadlocked(context.marking())) {
-                return false;
+                return RFALSE;
             }
-            return true;
+            return RTRUE;
         }
         
         /******************** Evaluation - save result ********************/
-        bool SimpleQuantifierCondition::evalAndSet(const EvaluationContext& context) {
-            // Not implemented
-            assert(false);
-	    return false;
+        Condition::Result SimpleQuantifierCondition::evalAndSet(const EvaluationContext& context) {
+	    return RUNKNOWN;
         }
+
+        Condition::Result EGCondition::evalAndSet(const EvaluationContext& context) {
+            auto res = _cond->evalAndSet(context);
+            if(res != RFALSE) res = RUNKNOWN;
+            setSatisfied(res);
+            return res;
+        }
+
+        Condition::Result AGCondition::evalAndSet(const EvaluationContext& context) {
+            auto res = _cond->evalAndSet(context);
+            if(res != RFALSE) res = RUNKNOWN;
+            setSatisfied(res);
+            return res;
+        }
+
+        Condition::Result EFCondition::evalAndSet(const EvaluationContext& context) {
+            auto res = _cond->evalAndSet(context);
+            if(res != RTRUE) res = RUNKNOWN;
+            setSatisfied(res);
+            return res;
+        }
+
+        Condition::Result AFCondition::evalAndSet(const EvaluationContext& context) {
+            auto res = _cond->evalAndSet(context);
+            if(res != RTRUE) res = RUNKNOWN;
+            setSatisfied(res);
+            return res;
+        }
+
         
-        bool UntilCondition::evalAndSet(const EvaluationContext& context) {
-            // Not implemented
-	    assert(false);
-            return false;
+        Condition::Result UntilCondition::evalAndSet(const EvaluationContext& context) {
+            auto r2 = _cond2->evalAndSet(context);
+            if(r2 != RFALSE) return r2;
+            auto r1 = _cond1->evalAndSet(context);
+            if(r1 == RFALSE) return RFALSE;
+            return RUNKNOWN;
         }        
 
-        int NaryExpr::evalAndSet(const EvaluationContext& context) {
-            int r = _exprs[0]->evalAndSet(context);
-            for(size_t i = 1; i < _exprs.size(); ++i)
-            {
-                r = apply(r, _exprs[i]->evalAndSet(context));
-            }
+        int Expr::evalAndSet(const EvaluationContext& context) {
+            int r = evaluate(context);
             setEval(r);
             return r;
         }
 
-        int MinusExpr::evalAndSet(const EvaluationContext& context) {
-            int res = -(_expr->evalAndSet(context));
-            setEval(res);
-            return res;
-        }
-
-        int LiteralExpr::evalAndSet(const EvaluationContext&) {
-            setEval(_value);
-            return _value;
-        }
-
-        int IdentifierExpr::evalAndSet(const EvaluationContext& context) {
-            assert(_offsetInMarking != -1);
-            int res = context.marking()[_offsetInMarking];
-            setEval(res);
-            return res;
-        }
-
-        bool AndCondition::evalAndSet(const EvaluationContext& context) {
-            bool res = true;
+        Condition::Result AndCondition::evalAndSet(const EvaluationContext& context) {
+            Result res = RTRUE;
             for(auto& c : _conds)
             {
-                if(!c->evalAndSet(context))
+                auto r = c->evalAndSet(context);
+                if(r == RFALSE)
                 {
-                    res = false;
+                    res = RFALSE;
                     break;
+                }
+                else if(r == RUNKNOWN)
+                {
+                    res = RUNKNOWN;
                 }
             }
             setSatisfied(res);
             return res;
         }
 
-        bool OrCondition::evalAndSet(const EvaluationContext& context) {
-            bool res = false;
+        Condition::Result OrCondition::evalAndSet(const EvaluationContext& context) {
+            Result res = RFALSE;
             for(auto& c : _conds)
             {
-                if(c->evalAndSet(context))
+                auto r = c->evalAndSet(context);
+                if(r == RTRUE)
                 {
-                    res = true;
+                    res = RTRUE;
                     break;
+                }
+                else if(r == RUNKNOWN)
+                {
+                    res = RUNKNOWN;
                 }
             }
             setSatisfied(res);
@@ -447,30 +545,31 @@ namespace PetriEngine {
         }
 
         
-        bool CompareCondition::evalAndSet(const EvaluationContext& context) {
+        Condition::Result CompareCondition::evalAndSet(const EvaluationContext& context) {
             int v1 = _expr1->evalAndSet(context);
             int v2 = _expr2->evalAndSet(context);
             bool res = apply(v1, v2);
             setSatisfied(res);
-            return res;
+            return res ? RTRUE : RFALSE;
         }
 
-        bool NotCondition::evalAndSet(const EvaluationContext& context) {
-            bool res = !(_cond->evalAndSet(context));
+        Condition::Result NotCondition::evalAndSet(const EvaluationContext& context) {
+            auto res = _cond->evalAndSet(context);
+            if(res != RUNKNOWN) res = res == RFALSE ? RTRUE : RFALSE;
             setSatisfied(res);
             return res;
         }
 
-        bool BooleanCondition::evalAndSet(const EvaluationContext&) {
+        Condition::Result BooleanCondition::evalAndSet(const EvaluationContext&) {
             setSatisfied(_value);
-            return _value;
+            return _value ? RTRUE : RFALSE;
         }
 
-        bool DeadlockCondition::evalAndSet(const EvaluationContext& context) {
+        Condition::Result DeadlockCondition::evalAndSet(const EvaluationContext& context) {
             if (!context.net())
-                return false;
+                return RFALSE;
             setSatisfied(context.net()->deadlocked(context.marking()));
-            return isSatisfied();
+            return isSatisfied() ? RTRUE : RFALSE;
         }
         
         /******************** Apply (BinaryExpr subclasses) ********************/
@@ -599,28 +698,6 @@ namespace PetriEngine {
             return ">=";
         }
 
-        /******************** p-free Expression ********************/
-
-        bool NaryExpr::pfree() const {
-            for(auto& e : _exprs)
-            {
-                if(!e->pfree()) return false;
-            }
-            return true;
-        }
-
-        bool MinusExpr::pfree() const {
-            return _expr->pfree();
-        }
-
-        bool LiteralExpr::pfree() const {
-            return true;
-        }
-
-        bool IdentifierExpr::pfree() const {
-            return false;
-        }
-
         /******************** Expr::type() implementation ********************/
 
         Expr::Types PlusExpr::type() const {
@@ -652,6 +729,45 @@ namespace PetriEngine {
 #define MAX(v1, v2)  (v1 > v2 ? v1 : v2)
 #define MIN(v1, v2)  (v1 < v2 ? v1 : v2)
 
+        template<>
+        uint32_t delta<EqualCondition>(int v1, int v2, bool negated) {
+            if (!negated)
+                return std::abs(v1 - v2);
+            else
+                return v1 == v2 ? 1 : 0;
+        }
+
+        template<>
+        uint32_t delta<NotEqualCondition>(int v1, int v2, bool negated) {
+            return delta<EqualCondition>(v1, v2, !negated);
+        }
+
+        template<>
+        uint32_t delta<LessThanCondition>(int v1, int v2, bool negated) {
+            if (!negated)
+                return v1 < v2 ? 0 : v1 - v2 + 1;
+            else
+                return v1 >= v2 ? 0 : v2 - v1;
+        }
+
+        template<>
+        uint32_t delta<LessThanOrEqualCondition>(int v1, int v2, bool negated) {
+            if (!negated)
+                return v1 <= v2 ? 0 : v1 - v2;
+            else
+                return v1 > v2 ? 0 : v2 - v1 + 1;
+        }
+
+        template<>
+        uint32_t delta<GreaterThanCondition>(int v1, int v2, bool negated) {
+            return delta<LessThanOrEqualCondition>(v1, v2, !negated);
+        }
+
+        template<>
+        uint32_t delta<GreaterThanOrEqualCondition>(int v1, int v2, bool negated) {
+            return delta<LessThanCondition>(v1, v2, !negated);
+        }
+
         uint32_t NotCondition::distance(DistanceContext& context) const {
             context.negate();
             uint32_t retval = _cond->distance(context);
@@ -668,17 +784,50 @@ namespace PetriEngine {
         uint32_t DeadlockCondition::distance(DistanceContext& context) const {
             return 0;
         }
-        
-        uint32_t SimpleQuantifierCondition::distance(DistanceContext& context) const {
-            // Not implemented
-	    assert(false);
-	    return 0;
+
+        uint32_t EFCondition::distance(DistanceContext& context) const {
+            return _cond->distance(context);
+        }
+
+        uint32_t EGCondition::distance(DistanceContext& context) const {
+            return _cond->distance(context);
+        }
+
+        uint32_t EXCondition::distance(DistanceContext& context) const {
+            return _cond->distance(context);
+        }
+
+        uint32_t EUCondition::distance(DistanceContext& context) const {
+	    return _cond2->distance(context);
         }
         
-        uint32_t UntilCondition::distance(DistanceContext& context) const {
-            // Not implemented
-            assert(false);
-	    return 0;
+        uint32_t AFCondition::distance(DistanceContext& context) const {
+            context.negate();
+            uint32_t retval = _cond->distance(context);
+            context.negate();
+            return retval;
+        }
+        
+        uint32_t AXCondition::distance(DistanceContext& context) const {
+            context.negate();
+            uint32_t retval = _cond->distance(context);
+            context.negate();
+            return retval;
+        }
+
+        uint32_t AGCondition::distance(DistanceContext& context) const {
+            context.negate();
+            uint32_t retval = _cond->distance(context);
+            context.negate();
+            return retval;
+        }
+
+        uint32_t AUCondition::distance(DistanceContext& context) const {
+            context.negate();
+            auto r1 = _cond1->distance(context);
+            auto r2 = _cond2->distance(context);
+            context.negate();
+            return r1 + r2;
         }
         
         uint32_t LogicalCondition::distance(DistanceContext& context) const {
@@ -706,55 +855,31 @@ namespace PetriEngine {
             int d;
             unsigned int p;
         };
-
-        uint32_t CompareCondition::distance(DistanceContext& context) const {
-            int v1 = _expr1->evaluate(context);
-            int v2 = _expr2->evaluate(context);
-            return delta(v1, v2, context.negated());
-        }
-
-        uint32_t EqualCondition::delta(int v1, int v2, bool negated) const {
-            if (!negated)
-                return std::abs(v1 - v2);
-            else
-                return v1 == v2 ? 1 : 0;
-        }
-
-        uint32_t NotEqualCondition::delta(int v1, int v2, bool negated) const {
-            if (negated)
-                return std::abs(v1 - v2);
-            else
-                return v1 == v2 ? 1 : 0;
-        }
-
-        uint32_t LessThanCondition::delta(int v1, int v2, bool negated) const {
-            if (!negated)
-                return v1 < v2 ? 0 : v1 - v2 + 1;
-            else
-                return v1 >= v2 ? 0 : v2 - v1;
-        }
-
-        uint32_t LessThanOrEqualCondition::delta(int v1, int v2, bool negated) const {
-            if (!negated)
-                return v1 <= v2 ? 0 : v1 - v2;
-            else
-                return v1 > v2 ? 0 : v2 - v1 + 1;
-        }
-
-        uint32_t GreaterThanCondition::delta(int v1, int v2, bool negated) const {
-            if (!negated)
-                return v1 > v2 ? 0 : v2 - v1 + 1;
-            else
-                return v1 <= v2 ? 0 : v1 - v2;
-        }
-
-        uint32_t GreaterThanOrEqualCondition::delta(int v1, int v2, bool negated) const {
-            if (!negated)
-                return v1 >= v2 ? 0 : v2 - v1;
-            else
-                return v1 < v2 ? 0 : v1 - v2 + 1;
+       
+        uint32_t LessThanOrEqualCondition::distance(DistanceContext& context) const {
+            return _distance(context, delta<LessThanOrEqualCondition>);
         }
         
+        uint32_t GreaterThanOrEqualCondition::distance(DistanceContext& context) const {
+            return _distance(context, delta<GreaterThanOrEqualCondition>);
+        }
+       
+        uint32_t LessThanCondition::distance(DistanceContext& context) const {
+            return _distance(context, delta<LessThanCondition>);
+        }
+       
+        uint32_t GreaterThanCondition::distance(DistanceContext& context) const {
+            return _distance(context, delta<GreaterThanCondition>);
+        }
+       
+        uint32_t NotEqualCondition::distance(DistanceContext& context) const {
+            return _distance(context, delta<NotEqualCondition>);
+        }
+       
+        uint32_t EqualCondition::distance(DistanceContext& context) const {
+            return _distance(context, delta<EqualCondition>);
+        }
+
         /******************** CTL Output ********************/ 
         
         void LiteralExpr::toXML(std::ostream& out,uint32_t tabs, bool tokencount) const {
@@ -1135,7 +1260,7 @@ namespace PetriEngine {
                 context.setNegate(neg);
                 return neg ? 
                             Retval(BooleanCondition::TRUE_CONSTANT) :
-                            Retval(BooleanCondition::FALSE_CONSTANT);               
+                            Retval(BooleanCondition::FALSE_CONSTANT);                
             }
             Retval r1 = _cond1->simplify(context);
             context.setNegate(neg);
@@ -1671,12 +1796,9 @@ namespace PetriEngine {
             }
         }
         
+        
         bool CompareCondition::isUpperBound() {
-            if (placeNameForBound().size() != 0) {
-                return true;
-            } else {
-                return false;
-            }
+            return placeNameForBound().size() > 0;
         }
         
         bool NotCondition::isUpperBound() {
@@ -1760,12 +1882,12 @@ namespace PetriEngine {
         
         Condition_ptr EGCondition::pushNegation(bool negated, negstat_t& stats) const {
             ++stats[0];
-            return AFCondition(_cond->pushNegation(true, stats)).pushNegation(!negated, stats);
+            return AFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(!negated, stats);
         }
 
         Condition_ptr AGCondition::pushNegation(bool negated, negstat_t& stats) const {
             ++stats[1];
-            return EFCondition(_cond->pushNegation(true, stats)).pushNegation(!negated, stats);
+            return EFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(!negated, stats);
         }
         
         Condition_ptr EXCondition::pushNegation(bool negated, negstat_t& stats) const {
@@ -1840,11 +1962,18 @@ namespace PetriEngine {
                     return a->pushNegation(negated, stats);
                 }                
             }
+
+            if(!a->isTemporal())
+            {
+                auto res = std::make_shared<EFCondition>(a);
+                if(negated) return std::make_shared<NotCondition>(res);
+                return res;
+            }
             
-            if(auto cond = dynamic_cast<EFCondition*>(a.get()))
+            if( dynamic_cast<EFCondition*>(a.get()))
             {
                 ++stats[9];
-                a = cond->pushNegation(negated, stats);
+                if(negated) a = std::make_shared<NotCondition>(a);
 #ifdef DBG
                 std::cout << "EFCondition >> ";
                 a->toString(std::cout);
@@ -1897,6 +2026,12 @@ namespace PetriEngine {
             }
             else if(auto cond = dynamic_cast<OrCondition*>(a.get()))
             {
+                if(!cond->isTemporal())
+                {
+                    Condition_ptr b = std::make_shared<EFCondition>(a);
+                    if(negated) b = std::make_shared<NotCondition>(b);
+                    return b;
+                }
                 ++stats[13];
                 std::vector<Condition_ptr> pef, atomic;
                 for(auto& i : *cond) 
@@ -1908,7 +2043,7 @@ namespace PetriEngine {
                 std::cout << "EFCondition " << this << " >> ";
                 a->toString(std::cout);
                 std::cout << std::endl;
-#endif      
+#endif
                 return a;
             }
             else
@@ -1940,10 +2075,10 @@ namespace PetriEngine {
                 }                
             }
             
-            if(auto cond = dynamic_cast<AFCondition*>(a.get()))
+            if(dynamic_cast<AFCondition*>(a.get()))
             {
                 ++stats[15];
-                a = cond->pushNegation(negated, stats);
+                if(negated) return std::make_shared<NotCondition>(a);
 #ifdef DBG
                 std::cout << "EFCondition >> ";
                 a->toString(std::cout);
@@ -1952,10 +2087,10 @@ namespace PetriEngine {
                 return a;
 
             }
-            else if(auto cond = dynamic_cast<EFCondition*>(a.get()))
+            else if(dynamic_cast<EFCondition*>(a.get()))
             {
                 ++stats[16];
-                a = cond->pushNegation(negated, stats);
+                if(negated) return std::make_shared<NotCondition>(a);
 #ifdef DBG
                 std::cout << "EFCondition >> ";
                 a->toString(std::cout);
@@ -1980,7 +2115,7 @@ namespace PetriEngine {
                 }
                 if(pef.size() > 0)
                 {
-                   stats[17] += pef.size();
+                    stats[17] += pef.size();
                     pef.push_back(std::make_shared<AFCondition>(makeOr(npef)));
                     return makeOr(pef)->pushNegation(negated, stats);
                 }
@@ -2087,10 +2222,11 @@ namespace PetriEngine {
                 ++stats[22];
                 return cond->pushNegation(negated, stats);
             }
-            else if(auto cond = dynamic_cast<EFCondition*>(b.get()))
+            else if(dynamic_cast<EFCondition*>(b.get()))
             {
                 ++stats[23];
-                return cond->pushNegation(negated, stats);
+                if(negated) return std::make_shared<NotCondition>(b);
+                return b;
             }
             else if(auto cond = dynamic_cast<OrCondition*>(b.get()))
             {
@@ -2155,10 +2291,11 @@ namespace PetriEngine {
                 }
             }
             
-            if(auto cond = dynamic_cast<EFCondition*>(b.get()))
+            if(dynamic_cast<EFCondition*>(b.get()))
             {
                 ++stats[28];
-                return cond->pushNegation(negated, stats);
+                if(negated) return std::make_shared<NotCondition>(b);
+                return b;
             }
             else if(auto cond = dynamic_cast<OrCondition*>(b.get()))
             {

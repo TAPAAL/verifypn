@@ -38,7 +38,12 @@ namespace PetriEngine {
         struct Retval;
     }
     namespace PQL {
-
+        
+        enum CTLType {PATHQEURY = 1, LOPERATOR = 2, EVAL = 3, TYPE_ERROR = -1};
+        enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, EMPTY = -1 };
+        enum Path { G = 1, X = 2, F = 3, U = 4, pError = -1 };
+        
+        
         class AnalysisContext;
         class EvaluationContext;
         class DistanceContext;
@@ -101,11 +106,9 @@ namespace PetriEngine {
             virtual ~Expr();
             /** Perform context analysis */
             virtual void analyze(AnalysisContext& context) = 0;
-            /** True, if the expression is p-free */
-            virtual bool pfree() const = 0;
             /** Evaluate the expression given marking and assignment */
             virtual int evaluate(const EvaluationContext& context) const = 0;
-            virtual int evalAndSet(const EvaluationContext& context) = 0;
+            int evalAndSet(const EvaluationContext& context);
             /** Generate LLVM intermediate code for this expr  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert expression to string */
@@ -186,21 +189,22 @@ namespace PetriEngine {
         
         /** Base condition */
         class Condition {
+        public:
+            enum Result {RUNKNOWN=-1,RFALSE=0,RTRUE=1};
+        private:
             bool _inv = false;
             std::vector<std::string> _placenameforbound;
             std::vector<size_t> _placeids;
             size_t _bound = 0;
-            bool _eval = false;
+            Result _eval = RUNKNOWN;
         public:
             /** Virtual destructor */
             virtual ~Condition();
-            /** Evaluate condition */
-            bool evaluate(Structures::State& state, const PetriNet* net);
             /** Perform context analysis  */
             virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate condition */
-            virtual bool evaluate(const EvaluationContext& context) const = 0;
-            virtual bool evalAndSet(const EvaluationContext& context) = 0;
+            virtual Result evaluate(const EvaluationContext& context) const = 0;
+            virtual Result evalAndSet(const EvaluationContext& context) = 0;
             /** Generate LLVM intermediate code for this condition  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert condition to string */
@@ -232,10 +236,15 @@ namespace PetriEngine {
 
             bool isSatisfied() const
             {
-                return _eval;
+                return _eval == RTRUE;
             }
             
             void setSatisfied(bool isSatisfied)
+            {
+                _eval = isSatisfied ? RTRUE : RFALSE;
+            }
+            
+            void setSatisfied(Result isSatisfied)
             {
                 _eval = isSatisfied;
             }
@@ -273,6 +282,11 @@ namespace PetriEngine {
             std::vector<std::string>& placeNameForBound(){
                 return _placenameforbound;
             }
+
+            virtual bool isTemporal() const { return false;}
+            virtual CTLType getQueryType() const = 0;
+            virtual Quantifier getQuantifier() const = 0;
+            virtual Path getPath() const = 0;
             
         protected:
             //Value for checking if condition is trivially true or false.

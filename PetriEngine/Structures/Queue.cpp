@@ -43,7 +43,7 @@ namespace PetriEngine {
             }
         }
         
-        void BFSQueue::push(size_t id, Structures::State& state,
+        void BFSQueue::push(size_t id, PQL::DistanceContext&,
             std::shared_ptr<PQL::Condition>& query)
         {
             ++_nstates;
@@ -62,7 +62,7 @@ namespace PetriEngine {
             return true;
         }
         
-        void DFSQueue::push(size_t id, Structures::State& state,
+        void DFSQueue::push(size_t id, PQL::DistanceContext&,
             std::shared_ptr<PQL::Condition>& query)
         {
             _stack.push(id);
@@ -100,7 +100,7 @@ namespace PetriEngine {
             }
         }
         
-        void RDFSQueue::push(size_t id, Structures::State& state,
+        void RDFSQueue::push(size_t id, PQL::DistanceContext&,
             std::shared_ptr<PQL::Condition>& query)
         {
             _cache.push_back(id);
@@ -118,10 +118,9 @@ namespace PetriEngine {
             return true;
         }
         
-        void HeuristicQueue::push(size_t id, Structures::State& state,
+        void HeuristicQueue::push(size_t id, PQL::DistanceContext& context,
             std::shared_ptr<PQL::Condition>& query)
         {
-            PQL::DistanceContext context(&_states->net(), state.marking());
             // invert result, highest numbers are on top!
             uint32_t dist = query->distance(context);
             _queue.emplace(dist, (uint32_t)id);

@@ -410,7 +410,8 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
         for (auto it = children; it; it = it->next_sibling()) {
             els.emplace_back(parseIntegerExpression(it));
         }
-        if(els[0] == nullptr || els[1] == nullptr) return nullptr;
+        if(els.size() == 1) 
+            els.emplace(els.begin(), std::make_shared<LiteralExpr>(0));
 
         return std::make_shared<SubtractExpr>(std::move(els));
     }
