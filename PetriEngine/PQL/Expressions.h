@@ -51,7 +51,7 @@ namespace PetriEngine {
                 for(auto& e : _exprs) sum += e->formulaSize();
                 return sum;
             }
-            void toString(std::ostream&) const;
+            void toString(std::ostream&) const override;
             virtual void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const = 0;
         private:
             virtual int apply(int v1, int v2) const = 0;
@@ -70,20 +70,20 @@ namespace PetriEngine {
             {
             }
             
-            Expr::Types type() const;
+            Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
-            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             bool tk = false;
-            void incr(ReducingSuccessorGenerator& generator) const;
-            void decr(ReducingSuccessorGenerator& generator) const;
+            void incr(ReducingSuccessorGenerator& generator) const override;
+            void decr(ReducingSuccessorGenerator& generator) const override;
             void analyze(AnalysisContext& context) override;            
         protected:
             virtual int32_t preOp(const EvaluationContext& context) const override;
 
         private:
-            int apply(int v1, int v2) const;
+            int apply(int v1, int v2) const override;
             //int binaryOp() const;
-            std::string op() const;
+            std::string op() const override;
         };
 
         /** Binary minus expression */
@@ -98,15 +98,15 @@ namespace PetriEngine {
                     exit(-1);
                 }
             }
-            Expr::Types type() const;
+            Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
-            void incr(ReducingSuccessorGenerator& generator) const;
-            void decr(ReducingSuccessorGenerator& generator) const;
+            void incr(ReducingSuccessorGenerator& generator) const override;
+            void decr(ReducingSuccessorGenerator& generator) const override;
         private:
-            int apply(int v1, int v2) const;
+            int apply(int v1, int v2) const override;
             //int binaryOp() const;
-            std::string op() const;
+            std::string op() const override;
         };
 
         /** Binary multiplication expression **/
@@ -114,18 +114,18 @@ namespace PetriEngine {
         public:
 
             using NaryExpr::NaryExpr;
-            Expr::Types type() const;
+            Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
-            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
-            void incr(ReducingSuccessorGenerator& generator) const;
-            void decr(ReducingSuccessorGenerator& generator) const;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
+            void incr(ReducingSuccessorGenerator& generator) const override;
+            void decr(ReducingSuccessorGenerator& generator) const override;
             void analyze(AnalysisContext& context) override;
         protected:
             virtual int32_t preOp(const EvaluationContext& context) const override;
         private:
-            int apply(int v1, int v2) const;
+            int apply(int v1, int v2) const override;
             //int binaryOp() const;
-            std::string op() const;
+            std::string op() const override;
         };
 
         /** Unary minus expression*/
@@ -137,12 +137,12 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) const override;
-            void toString(std::ostream&) const;
-            Expr::Types type() const;
+            void toString(std::ostream&) const override;
+            Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
-            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
-            void incr(ReducingSuccessorGenerator& generator) const;
-            void decr(ReducingSuccessorGenerator& generator) const;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
+            void incr(ReducingSuccessorGenerator& generator) const override;
+            void decr(ReducingSuccessorGenerator& generator) const override;
             int formulaSize() const override{
                 return _expr->formulaSize() + 1;
             }
@@ -158,11 +158,11 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) const override;
-            void toString(std::ostream&) const;
-            Expr::Types type() const;
-            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
-            void incr(ReducingSuccessorGenerator& generator) const;
-            void decr(ReducingSuccessorGenerator& generator) const;
+            void toString(std::ostream&) const override;
+            Expr::Types type() const override;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
+            void incr(ReducingSuccessorGenerator& generator) const override;
+            void decr(ReducingSuccessorGenerator& generator) const override;
             int formulaSize() const override{
                 return 1;
             }
@@ -183,11 +183,11 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) const override;
-            void toString(std::ostream&) const;
-            Expr::Types type() const;
+            void toString(std::ostream&) const override;
+            Expr::Types type() const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const;
-            void incr(ReducingSuccessorGenerator& generator) const;
-            void decr(ReducingSuccessorGenerator& generator) const;
+            void incr(ReducingSuccessorGenerator& generator) const override;
+            void decr(ReducingSuccessorGenerator& generator) const override;
             int formulaSize() const override{
                 return 1;
             }
@@ -224,15 +224,11 @@ namespace PetriEngine {
             
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context);
-            void toString(std::ostream&) const;
+            Result evalAndSet(const EvaluationContext& context) override;
+            void toString(std::ostream&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
-            virtual Retval simplify(SimplificationContext& context) const = 0;
-            virtual bool isReachability(uint32_t depth) const = 0;
             bool isUpperBound() override;
-            Condition_ptr prepareForReachability(bool negated) const override = 0;
-            virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             virtual const Condition_ptr& operator[] (size_t i) const { return _cond;}
         private:
             virtual std::string op() const = 0;
@@ -245,7 +241,7 @@ namespace PetriEngine {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
             Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const;
+            bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
@@ -254,14 +250,14 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             
         private:
-            std::string op() const;
+            std::string op() const override;
         };
         
         class EGCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
             Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const;
+            bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
@@ -269,16 +265,16 @@ namespace PetriEngine {
             Path getPath() const override             { return Path::G; }            
             uint32_t distance(DistanceContext& context) const override;
             Result evaluate(const EvaluationContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context);
+            Result evalAndSet(const EvaluationContext& context) override;
         private:
-            std::string op() const;
+            std::string op() const override;
         };
         
         class EFCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
             Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const;
+            bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
@@ -286,16 +282,16 @@ namespace PetriEngine {
             Path getPath() const override             { return Path::F; }            
             uint32_t distance(DistanceContext& context) const override;
             Result evaluate(const EvaluationContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context);
+            Result evalAndSet(const EvaluationContext& context) override;
         private:
-            std::string op() const;
+            std::string op() const override;
         };
         
         class AXCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
             Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const;
+            bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
@@ -303,14 +299,14 @@ namespace PetriEngine {
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override;
         private:
-            std::string op() const;
+            std::string op() const override;
         };
         
         class AGCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
             Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const;
+            bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
@@ -318,16 +314,16 @@ namespace PetriEngine {
             Path getPath() const override             { return Path::G; } 
             uint32_t distance(DistanceContext& context) const override;
             Result evaluate(const EvaluationContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context);
+            Result evalAndSet(const EvaluationContext& context) override;
         private:
-            std::string op() const;
+            std::string op() const override;
         };
         
         class AFCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
             Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const;
+            bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
@@ -335,9 +331,9 @@ namespace PetriEngine {
             Path getPath() const override             { return Path::F; }            
             uint32_t distance(DistanceContext& context) const override;
             Result evaluate(const EvaluationContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context);
+            Result evalAndSet(const EvaluationContext& context) override;
         private:
-            std::string op() const;
+            std::string op() const override;
         };     
         
         class UntilCondition : public QuantifierCondition {
@@ -352,16 +348,16 @@ namespace PetriEngine {
             
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) const override;
-            void toString(std::ostream&) const;
+            void toString(std::ostream&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             virtual Retval simplify(SimplificationContext& context) const = 0;
-            bool isReachability(uint32_t depth) const;
+            bool isReachability(uint32_t depth) const override;
             bool isUpperBound() override;
             Condition_ptr prepareForReachability(bool negated) const override;
             virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
-            Result evalAndSet(const EvaluationContext& context);
-            virtual const Condition_ptr& operator[] (size_t i) const
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+            Result evalAndSet(const EvaluationContext& context) override;
+            virtual const Condition_ptr& operator[] (size_t i) const override
             { if(i == 0) return _cond1; return _cond2;}
             Path getPath() const override             
             { return Path::U; }
@@ -384,7 +380,7 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs) const override;
             
         private:
-            std::string op() const;
+            std::string op() const override;
         };
         
         class AUCondition : public UntilCondition {
@@ -397,7 +393,7 @@ namespace PetriEngine {
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
             
         private:
-            std::string op() const;
+            std::string op() const override;
         };
         
         /******************** CONDITIONS ********************/
@@ -413,9 +409,9 @@ namespace PetriEngine {
             void analyze(AnalysisContext& context) override;
             
             uint32_t distance(DistanceContext& context) const override;
-            void toString(std::ostream&) const;
+            void toString(std::ostream&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
-            bool isReachability(uint32_t depth) const;
+            bool isReachability(uint32_t depth) const override;
             bool isUpperBound() override;
             Condition_ptr prepareForReachability(bool negated) const override;
             const Condition_ptr& operator[](size_t i) const
@@ -492,17 +488,17 @@ namespace PetriEngine {
             
             Retval simplify(SimplificationContext& context) const override;
             Result evaluate(const EvaluationContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context);
+            Result evalAndSet(const EvaluationContext& context) override;
 
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::AND; }
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
 
         private:
             //int logicalOp() const;
             uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const override;
-            std::string op() const;
+            std::string op() const override;
         };
 
         /* Disjunctive or conditon */
@@ -532,16 +528,16 @@ namespace PetriEngine {
             
             Retval simplify(SimplificationContext& context) const override;
             Result evaluate(const EvaluationContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context);
+            Result evalAndSet(const EvaluationContext& context) override;
 
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;   
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;   
             Quantifier getQuantifier() const override { return Quantifier::OR; }
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
         private:
             //int logicalOp() const;
             uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const override;
-            std::string op() const;
+            std::string op() const override;
         };
 
         /* Comparison conditon */
@@ -557,10 +553,10 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context);
-            void toString(std::ostream&) const;
+            Result evalAndSet(const EvaluationContext& context) override;
+            void toString(std::ostream&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
-            bool isReachability(uint32_t depth) const;
+            bool isReachability(uint32_t depth) const override;
             bool isUpperBound() override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
@@ -597,15 +593,15 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
 
         private:
-            bool apply(int v1, int v2) const;
-            std::string op() const;
-            std::string opTAPAAL() const;
-            std::string sopTAPAAL() const;
+            bool apply(int v1, int v2) const override;
+            std::string op() const override;
+            std::string opTAPAAL() const override;
+            std::string sopTAPAAL() const override;
         };
 
         /* None equality conditon */
@@ -616,15 +612,15 @@ namespace PetriEngine {
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
 
         private:
-            bool apply(int v1, int v2) const;
-            std::string op() const;
-            std::string opTAPAAL() const;
-            std::string sopTAPAAL() const;
+            bool apply(int v1, int v2) const override;
+            std::string op() const override;
+            std::string opTAPAAL() const override;
+            std::string sopTAPAAL() const override;
         };
 
         /* Less-than conditon */
@@ -634,14 +630,14 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
         private:
-            bool apply(int v1, int v2) const;
-            std::string op() const;
-            std::string opTAPAAL() const;
-            std::string sopTAPAAL() const;
+            bool apply(int v1, int v2) const override;
+            std::string op() const override;
+            std::string opTAPAAL() const override;
+            std::string sopTAPAAL() const override;
         };
 
         /* Less-than-or-equal conditon */
@@ -651,15 +647,15 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
 
         private:
-            bool apply(int v1, int v2) const;
-            std::string op() const;
-            std::string opTAPAAL() const;
-            std::string sopTAPAAL() const;
+            bool apply(int v1, int v2) const override;
+            std::string op() const override;
+            std::string opTAPAAL() const override;
+            std::string sopTAPAAL() const override;
         };
 
         /* Greater-than conditon */
@@ -669,15 +665,15 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
 
         private:
-            bool apply(int v1, int v2) const;
-            std::string op() const;
-            std::string opTAPAAL() const;
-            std::string sopTAPAAL() const;
+            bool apply(int v1, int v2) const override;
+            std::string op() const override;
+            std::string opTAPAAL() const override;
+            std::string sopTAPAAL() const override;
         };
 
         /* Greater-than-or-equal conditon */
@@ -686,15 +682,15 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
 
         private:
-            bool apply(int v1, int v2) const;
-            std::string op() const;
-            std::string opTAPAAL() const;
-            std::string sopTAPAAL() const;
+            bool apply(int v1, int v2) const override;
+            std::string op() const override;
+            std::string opTAPAAL() const override;
+            std::string sopTAPAAL() const override;
         };
 
         /* Not condition */
@@ -710,17 +706,17 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context);
+            Result evalAndSet(const EvaluationContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
-            void toString(std::ostream&) const;
+            void toString(std::ostream&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const;
+            bool isReachability(uint32_t depth) const override;
             bool isUpperBound() override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::NEG; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
@@ -751,20 +747,20 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context);
+            Result evalAndSet(const EvaluationContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
             static Condition_ptr TRUE_CONSTANT;
             static Condition_ptr FALSE_CONSTANT;
-            void toString(std::ostream&) const;
+            void toString(std::ostream&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             static Condition_ptr getShared(bool val);
             Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const;
+            bool isReachability(uint32_t depth) const override;
             bool isUpperBound() override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
@@ -783,17 +779,17 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) const override;
-            Result evalAndSet(const EvaluationContext& context);
+            Result evalAndSet(const EvaluationContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
-            void toString(std::ostream&) const;
+            void toString(std::ostream&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const;
+            bool isReachability(uint32_t depth) const override;
             bool isUpperBound() override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             static Condition_ptr DEADLOCK;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
