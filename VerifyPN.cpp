@@ -568,6 +568,7 @@ int main(int argc, char* argv[]) {
             
             int preSize=queries[i]->formulaSize();
             negstat_t stats;            
+            EvaluationContext context(qm0, qnet);
             if(options.printstatistics)
             {
                 std::cout << "\nQuery before reduction: ";
@@ -578,7 +579,7 @@ int main(int argc, char* argv[]) {
                 std::cout << std::endl;
             }
             
-            queries[i] = queries[i]->pushNegation(false, stats);
+            queries[i] = queries[i]->pushNegation(stats, context, false, false);
 
             if(options.printstatistics)
             {
@@ -586,9 +587,10 @@ int main(int argc, char* argv[]) {
                 stats.print(std::cout);
                 std::cout << std::endl;
             }
+
             try {
                 negstat_t stats;            
-                queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(false, stats);
+                queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false);
                 if(options.printstatistics)
                 {
                     std::cout << "RWSTATS POST:";
@@ -596,6 +598,9 @@ int main(int argc, char* argv[]) {
                     std::cout << std::endl;
                 }
                 queries[i].get()->setInvariant(isInvariant);
+                std::cout << "RWSTATS POST:";
+                stats.print(std::cout);
+                std::cout << std::endl;
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
                 std::cerr << "Exception information: " << ba.what() << std::endl;

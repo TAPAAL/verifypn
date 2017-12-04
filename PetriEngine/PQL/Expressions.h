@@ -242,7 +242,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::X; }
@@ -255,10 +255,11 @@ namespace PetriEngine {
         class EGCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            Retval simplify(SimplificationContext& context) const override;
+ 
+ 	    Retval simplify(SimplificationContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::G; }            
@@ -272,10 +273,11 @@ namespace PetriEngine {
         class EFCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            Retval simplify(SimplificationContext& context) const override;
+ 
+ 	    Retval simplify(SimplificationContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::F; }            
@@ -292,7 +294,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::X; }
@@ -307,7 +309,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::G; } 
@@ -324,7 +326,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::F; }            
@@ -373,7 +375,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const override;
             Quantifier getQuantifier() const override { return Quantifier::E; }
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             
         private:
@@ -387,7 +389,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::A; }            
             uint32_t distance(DistanceContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
             
         private:
             std::string op() const override;
@@ -489,7 +491,7 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::AND; }
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
 
         private:
             //int logicalOp() const;
@@ -529,7 +531,7 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;   
             Quantifier getQuantifier() const override { return Quantifier::OR; }
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
         private:
             //int logicalOp() const;
             uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const override;
@@ -590,7 +592,7 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
 
         private:
             bool apply(int v1, int v2) const override;
@@ -609,7 +611,7 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
 
         private:
             bool apply(int v1, int v2) const override;
@@ -627,7 +629,7 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
         private:
             bool apply(int v1, int v2) const override;
             std::string op() const override;
@@ -644,7 +646,7 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
 
         private:
             bool apply(int v1, int v2) const override;
@@ -662,7 +664,7 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
 
         private:
             bool apply(int v1, int v2) const override;
@@ -679,7 +681,7 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
 
         private:
             bool apply(int v1, int v2) const override;
@@ -709,7 +711,7 @@ namespace PetriEngine {
             bool isReachability(uint32_t depth) const override;
             bool isUpperBound() override;
             Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::NEG; }
@@ -753,7 +755,7 @@ namespace PetriEngine {
             bool isReachability(uint32_t depth) const override;
             bool isUpperBound() override;
             Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
@@ -782,7 +784,7 @@ namespace PetriEngine {
             bool isReachability(uint32_t depth) const override;
             bool isUpperBound() override;
             Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(bool negated, negstat_t& stats) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             static Condition_ptr DEADLOCK;
