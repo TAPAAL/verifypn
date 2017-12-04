@@ -1989,7 +1989,7 @@ namespace PetriEngine {
                 return res;
             }
             
-            if(auto cond = dynamic_cast<EFCondition*>(a.get()))
+            if( dynamic_cast<EFCondition*>(a.get()))
             {
                 ++stats[9];
                 if(negated) a = std::make_shared<NotCondition>(a);
@@ -2097,7 +2097,7 @@ namespace PetriEngine {
                 }                
             }
             
-            if(auto cond = dynamic_cast<AFCondition*>(a.get()))
+            if(dynamic_cast<AFCondition*>(a.get()))
             {
                 ++stats[15];
                 if(negated) return std::make_shared<NotCondition>(a);
@@ -2109,7 +2109,7 @@ namespace PetriEngine {
                 return a;
 
             }
-            else if(auto cond = dynamic_cast<EFCondition*>(a.get()))
+            else if(dynamic_cast<EFCondition*>(a.get()))
             {
                 ++stats[16];
                 if(negated) return std::make_shared<NotCondition>(a);
@@ -2247,7 +2247,7 @@ namespace PetriEngine {
                 ++stats[22];
                 return cond->pushNegation(stats, context, nested, negated);
             }
-            else if(auto cond = dynamic_cast<EFCondition*>(b.get()))
+            else if(dynamic_cast<EFCondition*>(b.get()))
             {
                 ++stats[23];
                 if(negated) return std::make_shared<NotCondition>(b);
@@ -2319,7 +2319,7 @@ namespace PetriEngine {
                 }
             }
             
-            if(auto cond = dynamic_cast<EFCondition*>(b.get()))
+            if(dynamic_cast<EFCondition*>(b.get()))
             {
                 ++stats[28];
                 if(negated) return std::make_shared<NotCondition>(b);

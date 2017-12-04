@@ -88,8 +88,6 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
         return ErrorCode;
     }
 
-    size_t isfirst = true;
-    
     for(auto qnum : querynumbers){
         CTLResult result(queries[qnum]);
         PetriNets::OnTheFlyDG graph(net); 
