@@ -664,50 +664,11 @@ int main(int argc, char* argv[]) {
 
         if(alldone) return SuccessCode;
     }
-
-    //----------------------- Verify CTL queries -----------------------//
-    std::vector<size_t> ctl_ids;
-    for(size_t i = 0; i < queries.size(); ++i)
-    {
-        if(results[i] == ResultPrinter::CTL)
-        {
-            ctl_ids.push_back(i);
-        }
-    }
     
-    if (ctl_ids.size() > 0) {
-        options.isctl=true;
-        PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
-        PetriNet* ctlnet = builder.makePetriNet();
-        // Assign indexes
-        if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
-        if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
-        if(options.strategy != PetriEngine::Reachability::DFS){
-            fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
-            options.strategy = PetriEngine::Reachability::DFS;
-        }
-        v = CTLMain(ctlnet,
-            options.ctlalgorithm,
-            options.strategy,
-            options.gamemode,
-            options.printstatistics,
-            true,
-            querynames,
-            queries,
-            ctl_ids);
-        
-        delete ctlnet;
-        
-        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-            return v;
-        }
-        // go back to previous strategy if the program continues
-        options.strategy=reachabilityStrategy;
-    }
-    options.isctl=false;
     //--------------------- Apply Net Reduction ---------------//
         
-    if (options.enablereduction == 1 || options.enablereduction == 2) {
+    if ( (options.enablereduction == 1 || options.enablereduction == 2) 
+         && std::all_of(queries.begin(), queries.end(), [](auto& a){ return !a->containsNext(); })) {
         // Compute how many times each place appears in the query
         builder.startTimer();
         builder.reduce(queries, results, options.enablereduction, options.trace, options.reductionTimeout);
@@ -722,6 +683,44 @@ int main(int argc, char* argv[]) {
     {
         q->indexPlaces(builder.getPlaceNames());
     }
+    
+    //----------------------- Verify CTL queries -----------------------//
+    std::vector<size_t> ctl_ids;
+    for(size_t i = 0; i < queries.size(); ++i)
+    {
+        if(results[i] == ResultPrinter::CTL)
+        {
+            ctl_ids.push_back(i);
+        }
+    }
+    
+    if (ctl_ids.size() > 0) {
+        options.isctl=true;
+        PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
+        // Assign indexes
+        if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
+        if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
+        if(options.strategy != PetriEngine::Reachability::DFS){
+            fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
+            options.strategy = PetriEngine::Reachability::DFS;
+        }
+        v = CTLMain(net,
+            options.ctlalgorithm,
+            options.strategy,
+            options.gamemode,
+            options.printstatistics,
+            true,
+            querynames,
+            queries,
+            ctl_ids);
+
+        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+            return v;
+        }
+        // go back to previous strategy if the program continues
+        options.strategy=reachabilityStrategy;
+    }
+    options.isctl=false;
     
     //----------------------- Siphon Trap ------------------------//
     
