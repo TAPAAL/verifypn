@@ -188,6 +188,11 @@ namespace PetriEngine {
                 return _lpTimeout;
             }
             
+            void setLpTimeout(uint32_t i)
+            {
+                _lpTimeout = i;
+            }
+            
             LPCache* cache() const
             {
                 return _cache;

@@ -114,7 +114,7 @@ namespace PetriEngine {
             bool first = true;
             for(auto& c : _constraints)
             {
-                if(!first) std::cout << " and ";
+                if(!first) out << " and ";
                 if(c._lower != 0) 
                     out << "(" << c._lower << " <= " << c._name << ")";
                 if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max()) 
@@ -182,7 +182,7 @@ namespace PetriEngine {
             bool first = true;
             for(auto& c : _constraints)
             {
-                if(!first) std::cout << " and ";
+                if(!first) out << " and ";
                 if(c._lower != 0) 
                     out << "(" << c._lower << " <= " << context.netName << "." << c._name << ")";
                 if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max()) 
@@ -1308,62 +1308,92 @@ namespace PetriEngine {
         }
         
         Retval simplifyEX(Retval& r, SimplificationContext& context) {
+            auto st = context.getLpTimeout();
+            context.setLpTimeout(1);
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)) {
+                context.setLpTimeout(st);
                 return Retval(std::make_shared<NotCondition>(
                         std::make_shared<DeadlockCondition>()));
             } else if(r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)) {
+                context.setLpTimeout(st);
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } else {
+                context.setLpTimeout(st);
                 return Retval(std::make_shared<EXCondition>(r.formula));
             }
         }
         
         Retval simplifyAX(Retval& r, SimplificationContext& context) {
+            auto st = context.getLpTimeout();
+            context.setLpTimeout(1);
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)){
+                context.setLpTimeout(st);
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             } else if(r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)){
+                context.setLpTimeout(st);
                 return Retval(std::make_shared<DeadlockCondition>());
             } else{
+                context.setLpTimeout(st);
                 return Retval(std::make_shared<AXCondition>(r.formula));
             }
         }
         
         Retval simplifyEF(Retval& r, SimplificationContext& context){
+            auto st = context.getLpTimeout();
+            context.setLpTimeout(1);
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)){
+                context.setLpTimeout(st);
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             } else if(r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)){
+                context.setLpTimeout(st);
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } else {
+                context.setLpTimeout(st);
                 return Retval(std::make_shared<EFCondition>(r.formula));
             }
         }
         
         Retval simplifyAF(Retval& r, SimplificationContext& context){
+            auto st = context.getLpTimeout();
+            context.setLpTimeout(1);
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)){
+                context.setLpTimeout(st);
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             } else if(r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)){
+                context.setLpTimeout(st);
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } else {
+                context.setLpTimeout(st);
                 return Retval(std::make_shared<AFCondition>(r.formula));
             }
         }
         
         Retval simplifyEG(Retval& r, SimplificationContext& context){
+            auto st = context.getLpTimeout();
+            context.setLpTimeout(1);
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)){
+                context.setLpTimeout(st);
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             } else if(r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)){
+                context.setLpTimeout(st);
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } else {
+                context.setLpTimeout(st);
                 return Retval(std::make_shared<EGCondition>(r.formula));
             }
         }
         
         Retval simplifyAG(Retval& r, SimplificationContext& context){
+            auto st = context.getLpTimeout();
+            context.setLpTimeout(1);
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)){
+                context.setLpTimeout(st);
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             } else if(r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)){
+                context.setLpTimeout(st);
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } else {
+                context.setLpTimeout(st);
                 return Retval(std::make_shared<AGCondition>(r.formula));
             }
         }
@@ -1494,9 +1524,6 @@ namespace PetriEngine {
                 auto r = c->simplify(context);
                 if(r.formula->isTriviallyFalse())
                 {
-                    std::cout << "TRIV FALSE " << std::endl;
-                    c->toString(std::cout);
-                    std::cout << std::endl;
                     return Retval(BooleanCondition::FALSE_CONSTANT);
                 }
                 else if(r.formula->isTriviallyTrue())
@@ -1718,6 +1745,8 @@ namespace PetriEngine {
             // Lets try to see if the r1 AND r2 can ever be false at the same time
             // If not, then we know that r1 || r2 must be true.
             // we check this by checking if !r1 && !r2 is unsat
+            auto pt = context.getLpTimeout();
+            context.setLpTimeout(1);
             try {
                 // remove trivial rules from neglp
                 int ncnt = neglps.size() - 1;
@@ -1751,7 +1780,7 @@ namespace PetriEngine {
                // we are out of memory, deal with it.
                std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
             }            
-            
+            context.setLpTimeout(pt);
             if(nconstraints.size() == 0)
             {
                 return Retval(BooleanCondition::getShared(!neg));                
@@ -2229,7 +2258,10 @@ namespace PetriEngine {
         {
             if(conds.size() == 0) return BooleanCondition::getShared(K);
             if(conds.size() == 1) return conds[0];
-            return std::make_shared<T>(conds);
+            auto res = std::make_shared<T>(conds);
+            if(res->singular()) return *res->begin();
+            if(res->empty()) return BooleanCondition::getShared(K);
+            return res;
         }
         
         Condition_ptr makeOr(std::vector<Condition_ptr>& cptr) { return makeLog<OrCondition,false>(cptr); }
@@ -2717,14 +2749,12 @@ namespace PetriEngine {
         
         Condition_ptr pushAnd(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children)
         {
-            std::vector<Condition_ptr> nef, other, cmpare;            
+            std::vector<Condition_ptr> nef, other;            
             for(auto& c : _conds)
             {
                 auto n = c->pushNegation(stats, context, nested, negate_children);
                 if(n->isTriviallyFalse()) return n;
                 if(n->isTriviallyTrue()) continue;
-                auto cmp = dynamic_cast<CompareCondition*>(n.get());
-                if(dynamic_cast<NotEqualCondition*>(n.get())) cmp = NULL;
                 if(auto neg = dynamic_cast<NotCondition*>(n.get()))
                 {
                     if(auto ef = dynamic_cast<EFCondition*>((*neg)[0].get()))
@@ -2736,24 +2766,13 @@ namespace PetriEngine {
                         other.emplace_back(n);
                     }
                 }
-                else if(cmp != NULL &&
-                        ((dynamic_cast<IdentifierExpr*>((*cmp)[0].get()) && dynamic_cast<LiteralExpr*>((*cmp)[1].get())) ||
-                         (dynamic_cast<IdentifierExpr*>((*cmp)[1].get()) && dynamic_cast<LiteralExpr*>((*cmp)[0].get()))))
-                {
-                    cmpare.push_back(n);
-                }
                 else
                 {
                     other.emplace_back(n);
                 }
-            }            
-            if(cmpare.size() <= 1)
-            {
-                other.insert(other.begin(), std::begin(cmpare), std::end(cmpare));           
-                cmpare.clear();
-            }
-            if(nef.size() + other.size() + cmpare.size() == 0) return BooleanCondition::TRUE_CONSTANT;
-            if(nef.size() + other.size() + cmpare.size() == 1) 
+            }         
+            if(nef.size() + other.size() == 0) return BooleanCondition::TRUE_CONSTANT;
+            if(nef.size() + other.size() == 1) 
             { 
                 return nef.size() == 0 ? 
                     other[0] : 
@@ -2763,7 +2782,6 @@ namespace PetriEngine {
                     std::make_shared<NotCondition>(
                     std::make_shared<EFCondition>(
                     makeOr(nef)))); 
-            if(cmpare.size() != 0) other.push_back(std::make_shared<CompareConjunction>(cmpare, false));
             if(other.size() == 1) return other[0];
             auto res = makeAnd(other);
 #ifdef DBG
@@ -2776,40 +2794,26 @@ namespace PetriEngine {
         
         Condition_ptr pushOr(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children)
         {
-            std::vector<Condition_ptr> nef, other, cmpare;            
+            std::vector<Condition_ptr> nef, other;       
             for(auto& c : _conds)
             {
                 auto n = c->pushNegation(stats, context, nested, negate_children);
                 if(n->isTriviallyTrue()) return n;
                 if(n->isTriviallyFalse()) continue;
-                auto cmp = dynamic_cast<CompareCondition*>(n.get());
-                if(dynamic_cast<EqualCondition*>(n.get())) cmp = NULL;
                 if(auto ef = dynamic_cast<EFCondition*>(n.get()))
                 {
                     nef.push_back((*ef)[0]);
-                }
-                else if(cmp != NULL &&
-                        ((dynamic_cast<IdentifierExpr*>((*cmp)[0].get()) && dynamic_cast<LiteralExpr*>((*cmp)[1].get())) ||
-                         (dynamic_cast<IdentifierExpr*>((*cmp)[1].get()) && dynamic_cast<LiteralExpr*>((*cmp)[0].get()))))
-                {
-                    cmpare.push_back(n);
                 }
                 else
                 {
                     other.emplace_back(n);
                 }
             }
-            if(cmpare.size() <= 1)
-            {
-                other.insert(other.begin(), std::begin(cmpare), std::end(cmpare));           
-                cmpare.clear();
-            }
-            if(nef.size() + other.size() + cmpare.size() == 0) return BooleanCondition::FALSE_CONSTANT;
-            if(nef.size() + other.size() + cmpare.size() == 1) { return nef.size() == 0 ? other[0] : std::make_shared<EFCondition>(nef[0]);}
+            if(nef.size() + other.size() == 0) return BooleanCondition::FALSE_CONSTANT;
+            if(nef.size() + other.size() == 1) { return nef.size() == 0 ? other[0] : std::make_shared<EFCondition>(nef[0]);}
             if(nef.size() != 0) other.push_back(
                     std::make_shared<EFCondition>(
                     makeOr(nef))); 
-            if(cmpare.size() != 0) other.push_back(std::make_shared<CompareConjunction>(cmpare, true));
             if(other.size() == 1) return other[0];
             return makeOr(other);
         }
@@ -3169,12 +3173,186 @@ namespace PetriEngine {
         }
         
         
-        /********************** CONSTRUCTORS *********************************/
+/********************** CONSTRUCTORS *********************************/
+
+        template<typename T>
+        void tryMerge(std::vector<Condition_ptr>& _conds, const Condition_ptr& ptr)
+        {
+            if(auto lor = std::dynamic_pointer_cast<T>(ptr))
+            {
+                for(auto& c : *lor) tryMerge<T>(_conds, c);
+            }
+            else if (auto comp = std::dynamic_pointer_cast<CompareCondition>(ptr))
+            {                
+                if((std::is_same<T, AndCondition>::value && std::dynamic_pointer_cast<NotEqualCondition>(ptr)) ||
+                   (std::is_same<T, OrCondition>::value && std::dynamic_pointer_cast<EqualCondition>(ptr)))
+                {
+                    _conds.emplace_back(ptr);
+                }
+                else
+                {
+                    if(! ((dynamic_cast<IdentifierExpr*>((*comp)[0].get()) && dynamic_cast<LiteralExpr*>((*comp)[1].get())) ||
+                          (dynamic_cast<IdentifierExpr*>((*comp)[1].get()) && dynamic_cast<LiteralExpr*>((*comp)[0].get()))))
+                    {
+                        _conds.emplace_back(ptr);
+                        return;
+                    }
+
+                    std::vector<Condition_ptr> cnds{ptr};
+                    if(auto lc = std::dynamic_pointer_cast<CompareConjunction>(_conds.size() == 0 ? nullptr : _conds[0]))
+                    {
+                        if((std::is_same<T, OrCondition>::value  &&  lc->isNegated()) ||
+                           (std::is_same<T, AndCondition>::value && !lc->isNegated()))
+                        {
+                            lc->merge(cnds, std::is_same<T, OrCondition>::value);
+                        }
+                        else
+                        {
+                            _conds.insert(_conds.begin(), std::make_shared<CompareConjunction>(cnds, std::is_same<T, OrCondition>::value));
+                        }
+                    }
+                    else
+                    {
+                        _conds.insert(_conds.begin(), std::make_shared<CompareConjunction>(cnds, std::is_same<T, OrCondition>::value));                        
+                    }
+                }
+            }
+            else if (auto conj = std::dynamic_pointer_cast<CompareConjunction>(ptr))
+            {
+                if((std::is_same<T, OrCondition>::value  && ( conj->isNegated() || conj->singular())) ||
+                   (std::is_same<T, AndCondition>::value && (!conj->isNegated() || conj->singular())))
+                {
+                    if(auto lc = std::dynamic_pointer_cast<CompareConjunction>(_conds.size() == 0 ? nullptr : _conds[0]))
+                    {
+                        if(conj->singular() || lc->isNegated() == conj->isNegated())
+                        {
+                            lc->merge(*conj);
+                        }
+                        else
+                        {
+                            _conds.insert(_conds.begin(), conj);
+                        }
+                    }
+                    else
+                    {
+                        _conds.insert(_conds.begin(), conj);                        
+                    }
+                }
+                else
+                {
+                    _conds.emplace_back(ptr);                    
+                }
+            }
+            else
+            {
+                _conds.emplace_back(ptr);
+            }
+
+        }
+
+        template<typename T>
+        void postMerge(std::vector<Condition_ptr>& conds) {
+            std::sort(std::begin(conds), std::end(conds),
+                    [](auto& a, auto& b) {
+                        return a->isTemporal() == b->isTemporal() ?
+                                    a->formulaSize() < b->formulaSize() : 
+                                    a->isTemporal() < b->isTemporal(); 
+                    });
+        } 
+        
+        AndCondition::AndCondition(std::vector<Condition_ptr>&& conds) {
+            for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
+            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            postMerge<AndCondition>(_conds);
+        }
+        
+        AndCondition::AndCondition(const std::vector<Condition_ptr>& conds) {
+            for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
+            for (auto& c : conds) _temporal = _temporal || c->isTemporal();
+            postMerge<AndCondition>(_conds);
+        }
+       
+        AndCondition::AndCondition(Condition_ptr left, Condition_ptr right) {
+            tryMerge<AndCondition>(_conds, left);
+            tryMerge<AndCondition>(_conds, right);
+            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            postMerge<AndCondition>(_conds);
+        }
+       
+        OrCondition::OrCondition(std::vector<Condition_ptr>&& conds) {
+            for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
+            for (auto& c : conds) _temporal = _temporal || c->isTemporal();
+            postMerge<AndCondition>(_conds);
+        }
+       
+        OrCondition::OrCondition(const std::vector<Condition_ptr>& conds) {
+            for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
+            for (auto& c : conds) _temporal = _temporal || c->isTemporal();
+            postMerge<AndCondition>(_conds);
+        }
+       
+        OrCondition::OrCondition(Condition_ptr left, Condition_ptr right) {
+            tryMerge<OrCondition>(_conds, left);
+            tryMerge<OrCondition>(_conds, right);
+            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            postMerge<AndCondition>(_conds);
+        }
+        
+
         CompareConjunction::CompareConjunction(const std::vector<Condition_ptr>& conditions, bool negated)
         {
             _negated = negated;
-            if(negated) _org = std::make_shared<OrCondition>(conditions);
-            else        _org = std::make_shared<AndCondition>(conditions);
+            merge(conditions, negated);
+        }
+        
+        void CompareConjunction::merge(const CompareConjunction& other)
+        {
+            auto neg = _negated != other._negated;
+            if(neg && other._constraints.size() > 1)
+            {
+                std::cout << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
+                exit(0);
+            }
+            auto il = _constraints.begin();
+            for(auto& c : other._constraints)
+            {
+                while(il != _constraints.end() && il->_place < c._place) ++il;
+                cons_t c2;
+                if(neg)
+                {
+                    if(c._lower != 0) c2._upper = c._lower + 1;
+                    if(c._upper != std::numeric_limits<uint32_t>::max())
+                    {
+                        if(c._upper == 0)
+                        {
+                            c2._lower = 1;
+                            c2._upper = 0;
+                        }
+                        else
+                            c2._lower = c._upper - 1;
+                    }
+                    c2._place = c._place;
+                    c2._name = c._name;
+                }
+                else
+                {
+                    c2 = c;
+                }
+                if(il == _constraints.end() || il->_place > c._place)
+                {
+                    il = _constraints.insert(il, c2);
+                }
+                else
+                {
+                    assert(il->_place == c2._place);
+                    il->_lower = std::max(il->_lower, c2._lower);
+                    il->_upper = std::min(il->_upper, c2._upper);
+                }
+            }
+        }
+        
+        void CompareConjunction::merge(const std::vector<Condition_ptr>& conditions, bool negated)
+        {
 
             for(auto& c : conditions)
             {
@@ -3195,17 +3373,21 @@ namespace PetriEngine {
                 }
                 assert(lit);
                 assert(id);
-                cons_t next;
-                next._place = id->offset();
                 uint32_t val = lit->value();
-                auto lb = std::lower_bound(std::begin(_constraints), std::end(_constraints), next, [](auto& a, auto& b)
+                auto lb = std::find_if(std::begin(_constraints), std::end(_constraints), [&](auto& a)
                 {
-                    return a._place < b._place;
+                    return a._name.compare(id->name()) == 0;
                 });
-                if(lb == std::end(_constraints) || lb->_place != next._place)
+                if(lb == std::end(_constraints) || lb->_name.compare(id->name()) != 0)
                 {
-                    lb = _constraints.insert(lb, next);
-                    lb->_name = id->name();
+                    cons_t next;
+                    next._place = id->offset();
+                    next._name = id->name();
+                    lb = _constraints.insert(_constraints.end(), next);
+                }  
+                else
+                {
+                    assert(id->name().compare(lb->_name) == 0);
                 }
 
 /*                std::cout << "CHECKING " << std::endl;
@@ -3251,13 +3433,13 @@ namespace PetriEngine {
                 }
                 else if(dynamic_cast<EqualCondition*>(c.get()))
                 {
-                    assert(!_negated);
+                    assert(!negated);
                     lb->_lower = std::max(lb->_lower, val);
                     lb->_upper = std::min(lb->_upper, val);
                 }
                 else if(dynamic_cast<NotEqualCondition*>(c.get()))
                 {
-                    assert(_negated);
+                    assert(negated);
                     lb->_lower = std::max(lb->_lower, val);
                     lb->_upper = std::min(lb->_upper, val);
                 }
@@ -3279,7 +3461,6 @@ namespace PetriEngine {
   */              
             }            
         }
-
         
     } // PQL
 } // PetriEngine

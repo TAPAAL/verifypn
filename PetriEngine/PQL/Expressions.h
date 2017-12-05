@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 #include "PQL.h"
 #include "Contexts.h"
 #include "PetriEngine/Simplification/Member.h"
@@ -435,27 +436,12 @@ namespace PetriEngine {
             auto end() { return _conds.end(); }
             auto begin() const { return _conds.begin(); }
             auto end() const { return _conds.end(); }
+            bool empty() const { return _conds.size() == 0; }
+            bool singular() const { return _conds.size() == 1; }
         protected:
             LogicalCondition() {};
             Retval simplifyOr(SimplificationContext& context) const;
-            Retval simplifyAnd(SimplificationContext& context) const;      
-            template<typename T>
-            void tryMerge(const Condition_ptr& ptr)
-            {
-                if(auto lor = std::dynamic_pointer_cast<T>(ptr))
-                {
-                    _conds.insert(_conds.begin(), lor->_conds.begin(), lor->_conds.end());
-                }
-                else
-                {
-                    _conds.emplace_back(ptr);
-                }
-            }
-            void sort()
-            {
-                std::sort(std::begin(_conds), std::end(_conds), 
-                        [](auto& a, auto& b){ return a->isTemporal() < b->isTemporal(); });
-            }
+            Retval simplifyAnd(SimplificationContext& context) const;                  
 
         private:
             virtual uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const = 0;
@@ -470,26 +456,11 @@ namespace PetriEngine {
         class AndCondition : public LogicalCondition {
         public:
 
-            AndCondition(std::vector<Condition_ptr>&& conds) {
-                for(auto& c : conds) tryMerge<AndCondition>(c);
-                for(auto& c : _conds) _temporal = _temporal || c->isTemporal();
-                sort();
-            }
+            AndCondition(std::vector<Condition_ptr>&& conds);
 
-            AndCondition(const std::vector<Condition_ptr>& conds)
-            {
-                for(auto& c : conds) tryMerge<AndCondition>(c);
-                for(auto& c : conds) _temporal = _temporal || c->isTemporal();
-                sort();
-            }
+            AndCondition(const std::vector<Condition_ptr>& conds);
             
-            AndCondition(Condition_ptr left, Condition_ptr right)
-            {
-                this->tryMerge<AndCondition>(left);
-                this->tryMerge<AndCondition>(right);
-                for(auto& c : _conds) _temporal = _temporal || c->isTemporal();
-                sort();
-            }
+            AndCondition(Condition_ptr left, Condition_ptr right);
             
             Retval simplify(SimplificationContext& context) const override;
             Result evaluate(const EvaluationContext& context) const override;
@@ -510,26 +481,11 @@ namespace PetriEngine {
         class OrCondition : public LogicalCondition {
         public:
 
-            OrCondition(std::vector<Condition_ptr>&& conds) {
-                for(auto& c : conds) tryMerge<OrCondition>(c);
-                for(auto& c : conds) _temporal = _temporal || c->isTemporal();
-                sort();
-            }
+            OrCondition(std::vector<Condition_ptr>&& conds);
 
-            OrCondition(const std::vector<Condition_ptr>& conds)
-            {
-                for(auto& c : conds) tryMerge<OrCondition>(c);
-                for(auto& c : conds) _temporal = _temporal || c->isTemporal();
-                sort();
-            }
+            OrCondition(const std::vector<Condition_ptr>& conds);
 
-            OrCondition(Condition_ptr left, Condition_ptr right)
-            {
-                this->tryMerge<OrCondition>(left);
-                this->tryMerge<OrCondition>(right);
-                for(auto& c : _conds) _temporal = _temporal || c->isTemporal();
-                sort();
-            };
+            OrCondition(Condition_ptr left, Condition_ptr right);
             
             Retval simplify(SimplificationContext& context) const override;
             Result evaluate(const EvaluationContext& context) const override;
@@ -549,7 +505,7 @@ namespace PetriEngine {
         {
         private:
             struct cons_t {
-                uint32_t _place = std::numeric_limits<uint32_t>::max();
+                int32_t _place  = -1;
                 uint32_t _upper = std::numeric_limits<uint32_t>::max();
                 uint32_t _lower = 0;
                 std::string _name;
@@ -562,12 +518,21 @@ namespace PetriEngine {
                     : _constraints(cons), _negated(negated) {};
             CompareConjunction(const std::vector<Condition_ptr>&, bool negated);
             CompareConjunction(const CompareConjunction& other, bool negated = false)
-            : _constraints(other._constraints), _negated(other._negated != negated), _org(other._org)
+            : _constraints(other._constraints), _negated(other._negated != negated)
             {
             };
 
+            void merge(const CompareConjunction& other);
+            void merge(const std::vector<Condition_ptr>&, bool negated);
+            
             int formulaSize() const override{
-                return _constraints.size() * 2;
+                int sum = 0;
+                for(auto& c : _constraints)
+                {
+                    if(c._lower != 0) ++sum;
+                    if(c._upper != std::numeric_limits<uint32_t>::max()) ++sum;
+                }
+                return sum;
             }
             void analyze(AnalysisContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
@@ -585,10 +550,16 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;   
             Quantifier getQuantifier() const override { return _negated ? Quantifier::OR : Quantifier::AND; }
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
+            bool isNegated() const { return _negated; }
+            bool singular() const 
+            { 
+                return _constraints.size() == 1 && 
+                                    (_constraints[0]._lower == 0 || 
+                                     _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
+            };
         private:
             std::vector<cons_t> _constraints;
             bool _negated = false;
-            Condition_ptr _org;
         };
 
 
