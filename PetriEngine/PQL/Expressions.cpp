@@ -2636,8 +2636,8 @@ namespace PetriEngine {
             } else {                    // not equal
                 if(_expr1->getEval() != _expr2->getEval()) { return; }
                 _expr1->incr(generator);
-                _expr2->decr(generator);
-                _expr1->incr(generator);
+                _expr1->decr(generator);
+                _expr2->incr(generator);
                 _expr2->decr(generator);
             }
         }
@@ -2646,8 +2646,8 @@ namespace PetriEngine {
             if(!negated){               // not equal
                 if(_expr1->getEval() != _expr2->getEval()) { return; }
                 _expr1->incr(generator);
-                _expr2->decr(generator);
-                _expr1->incr(generator);
+                _expr1->decr(generator);
+                _expr2->incr(generator);
                 _expr2->decr(generator);
             } else {                    // equal
                 if(_expr1->getEval() == _expr2->getEval()) { return; }
