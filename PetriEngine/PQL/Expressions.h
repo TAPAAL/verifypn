@@ -176,10 +176,13 @@ namespace PetriEngine {
         /** Identifier expression */
         class IdentifierExpr : public Expr {
         public:
-
-            IdentifierExpr(const std::string& name) : _name(name) {
-                _offsetInMarking = -1;
+            IdentifierExpr(const std::string& name, int offest) 
+            : _offsetInMarking(offest), _name(name) {
             }
+            
+            IdentifierExpr(const std::string& name) : IdentifierExpr(name, -1) {
+            }
+            
             void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) const override;
             void toString(std::ostream&) const override;
@@ -193,6 +196,10 @@ namespace PetriEngine {
             /** Offset in marking or valuation */
             int offset() const {
                 return _offsetInMarking;
+            }
+            const std::string& name()
+            {
+                return _name;
             }
             Member constraint(SimplificationContext& context) const override;
         private:
@@ -538,6 +545,53 @@ namespace PetriEngine {
             std::string op() const override;
         };
 
+        class CompareConjunction : public Condition
+        {
+        private:
+            struct cons_t {
+                uint32_t _place = std::numeric_limits<uint32_t>::max();
+                uint32_t _upper = std::numeric_limits<uint32_t>::max();
+                uint32_t _lower = 0;
+                std::string _name;
+            };
+
+            CompareConjunction()
+            {};
+        public:
+            CompareConjunction(const std::vector<cons_t>&& cons, bool negated) 
+                    : _constraints(cons), _negated(negated) {};
+            CompareConjunction(const std::vector<Condition_ptr>&, bool negated);
+            CompareConjunction(const CompareConjunction& other, bool negated = false)
+            : _constraints(other._constraints), _negated(other._negated != negated), _org(other._org)
+            {
+            };
+
+            int formulaSize() const override{
+                return _constraints.size() * 2;
+            }
+            void analyze(AnalysisContext& context) override;
+            uint32_t distance(DistanceContext& context) const override;
+            void toString(std::ostream& stream) const override;
+            void toTAPAALQuery(std::ostream& stream,TAPAALConditionExportContext& context) const override;
+            bool isReachability(uint32_t depth) const override { return depth > 0; };
+            bool isUpperBound() override { return false; }
+            Condition_ptr prepareForReachability(bool negated) const override;
+            CTLType getQueryType() const override { return CTLType::LOPERATOR; }
+            Path getPath() const override         { return Path::pError; }            
+            virtual void toXML(std::ostream& stream, uint32_t tabs) const override;
+            Retval simplify(SimplificationContext& context) const override;
+            Result evaluate(const EvaluationContext& context) const override;
+            Result evalAndSet(const EvaluationContext& context) override;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;   
+            Quantifier getQuantifier() const override { return _negated ? Quantifier::OR : Quantifier::AND; }
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
+        private:
+            std::vector<cons_t> _constraints;
+            bool _negated = false;
+            Condition_ptr _org;
+        };
+
+
         /* Comparison conditon */
         class CompareCondition : public Condition {
         public:
@@ -560,6 +614,11 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
+            const Expr_ptr& operator[](uint32_t id) const
+            {
+                if(id == 0) return _expr1;
+                else return _expr2;
+            }
         protected:
             uint32_t _distance(DistanceContext& c, 
                     std::function<uint32_t(uint32_t, uint32_t, bool)> d) const

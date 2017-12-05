@@ -30,6 +30,11 @@ public:
     {
         return _suc_tcounter -1;
     }
+        
+    const MarkVal* parent() const {
+        return _parent->marking();
+    }
+
 protected:
     /**
      * Checks if the conditions are met for fireing t, if write != NULL,

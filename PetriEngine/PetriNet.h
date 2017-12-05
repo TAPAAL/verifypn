@@ -85,20 +85,20 @@ namespace PetriEngine {
         {
             return _placenames;
         }
-        
-    private:
-        
+               
         void print(MarkVal const * const val) const
         {
             for(size_t i = 0; i < _nplaces; ++i)
             {
                 if(val[i] != 0)
                 {
-                    std::cout << i << " -> " << val[i] << std::endl;
+                    std::cout << _placenames[i] << "(" << i << ")" << " -> " << val[i] << std::endl;
                 }
             }
         }
-        
+
+    private:        
+
         /** Number of x variables
          * @remarks We could also get this from the _places vector, but I don't see any
          * any complexity garentees for this type.
