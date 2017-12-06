@@ -511,8 +511,11 @@ namespace PetriEngine {
                         ai = a->_ids.erase(ai);
                         bi = b->_ids.erase(bi);
                     }
+                    else
+                    {
+                        ++bi;
+                    }
                     if(bi == b->_ids.end() || ai == a->_ids.end()) break;
-                    ++bi;
                 }
             };
             if(auto p1 = dynamic_pointer_cast<PlusExpr>(_expr1))
