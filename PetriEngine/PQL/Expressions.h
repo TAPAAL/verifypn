@@ -36,7 +36,7 @@ namespace PetriEngine {
     namespace PQL {
         
         std::string generateTabs(uint32_t tabs);
-
+        class CompareCondition;
         /******************** EXPRESSIONS ********************/
 
         /** Base class for all binary expressions */
@@ -65,6 +65,7 @@ namespace PetriEngine {
         class CommutativeExpr : public NaryExpr
         {
         public:
+            friend CompareCondition;
             CommutativeExpr(std::vector<Expr_ptr>&& exprs, int initial);            
             virtual void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) const override;
