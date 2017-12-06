@@ -618,6 +618,7 @@ namespace PetriEngine {
             {
                 return d(_expr1->evaluate(c), _expr2->evaluate(c), c.negated());
             }
+            bool isTrivial() const;
         private:
             virtual bool apply(int v1, int v2) const = 0;
             virtual std::string op() const = 0;

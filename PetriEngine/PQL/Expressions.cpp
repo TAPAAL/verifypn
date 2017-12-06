@@ -526,7 +526,7 @@ namespace PetriEngine {
                 if(auto m2 = dynamic_pointer_cast<PlusExpr>(_expr2))
                     remdup(m1, m2);                    
         }
-
+        
         void NotCondition::analyze(AnalysisContext& context) {
             _cond->analyze(context);
         }
@@ -2911,9 +2911,23 @@ namespace PetriEngine {
             if(std::is_same<Q, OrCondition>::value) return makeOr(cnd);
             return std::make_shared<Q>(cnd);            
         }
-*/        
+*/ 
+        
+        bool CompareCondition::isTrivial() const
+        {
+            if(auto p1 = dynamic_pointer_cast<PlusExpr>(_expr1))
+                if(auto p2 = dynamic_pointer_cast<PlusExpr>(_expr2))            
+                    return p1->_exprs.size() + p1->_ids.size() + p2->_exprs.size() + p2->_ids.size() == 0;
+
+            if(auto p1 = dynamic_pointer_cast<PlusExpr>(_expr1))
+                if(auto p2 = dynamic_pointer_cast<PlusExpr>(_expr2))
+                    return p1->_exprs.size() + p1->_ids.size() + p2->_exprs.size() + p2->_ids.size() == 0;
+            return false;
+        }        
+        
         Condition_ptr LessThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
 //            if(auto r = tryDistribute<0,OrCondition, LessThanCondition>(*this)) return r->pushNegation(stats, context, nested, negated);
             if(negated) return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<LessThanCondition>(_expr1, _expr2);
@@ -2923,6 +2937,7 @@ namespace PetriEngine {
         
         Condition_ptr GreaterThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
 //            if(auto r = tryDistribute<0,AndCondition, GreaterThanOrEqualCondition>(*this)) return r->pushNegation(stats, context, nested, negated);
 //            if(auto r = tryDistribute<1,AndCondition, GreaterThanOrEqualCondition>(*this)) return r->pushNegation(stats, context, nested, negated);
             if(negated) return std::make_shared<LessThanCondition>(_expr1, _expr2);
@@ -2933,6 +2948,7 @@ namespace PetriEngine {
         
         Condition_ptr LessThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
 //            if(auto r = tryDistribute<0,OrCondition, LessThanOrEqualCondition>(*this)) return r->pushNegation(stats, context, nested, negated);
 //            if(auto r = tryDistribute<1,OrCondition, LessThanOrEqualCondition>(*this)) return r->pushNegation(stats, context, nested, negated);
             if(negated) return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
@@ -2943,6 +2959,7 @@ namespace PetriEngine {
         
         Condition_ptr GreaterThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
 //            if(auto r = tryDistribute<0,AndCondition, GreaterThanCondition>(*this)) return r->pushNegation(stats, context, nested, negated);
 //            if(auto r = tryDistribute<1,AndCondition, GreaterThanCondition>(*this)) return r->pushNegation(stats, context, nested, negated);
 //            if(auto r = tryDistribute<2,AndCondition, GreaterThanCondition>(*this)) return r->pushNegation(stats, context, nested, negated);
@@ -2950,10 +2967,10 @@ namespace PetriEngine {
             else        return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);
         }
-
-        
+                
         Condition_ptr NotEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
             for(int i = 0; i < 2; ++i)
             {
                 if(auto e = dynamic_pointer_cast<LiteralExpr>(operator [](i)))
@@ -2971,6 +2988,7 @@ namespace PetriEngine {
         
         Condition_ptr EqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
             for(int i = 0; i < 2; ++i)
             {
                 if(auto e = dynamic_pointer_cast<LiteralExpr>(operator [](i)))
