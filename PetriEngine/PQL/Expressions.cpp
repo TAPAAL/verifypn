@@ -126,18 +126,18 @@ namespace PetriEngine {
             return res;
         }
         
-        Condition_ptr makeOr(const std::vector<Condition_ptr>& cptr, bool aggressive = false) 
-        { return makeLog<OrCondition,false>(cptr, aggressive); }
-        Condition_ptr makeAnd(const std::vector<Condition_ptr>& cptr, bool aggressive = false) 
-        { return makeLog<AndCondition,true>(cptr, aggressive); }
-        Condition_ptr makeOr(const Condition_ptr& a, const Condition_ptr& b, bool aggressive = false) {  
+        Condition_ptr makeOr(const std::vector<Condition_ptr>& cptr) 
+        { return makeLog<OrCondition,false>(cptr, true); }
+        Condition_ptr makeAnd(const std::vector<Condition_ptr>& cptr) 
+        { return makeLog<AndCondition,true>(cptr, true); }
+        Condition_ptr makeOr(const Condition_ptr& a, const Condition_ptr& b) {  
             std::vector<Condition_ptr> cnds{a,b};
-            return makeLog<OrCondition,false>(cnds, aggressive); 
+            return makeLog<OrCondition,false>(cnds, true); 
         }
-        Condition_ptr makeAnd(const Condition_ptr& a, const Condition_ptr& b, bool aggressive = false) 
+        Condition_ptr makeAnd(const Condition_ptr& a, const Condition_ptr& b) 
         {             
             std::vector<Condition_ptr> cnds{a,b};
-            return makeLog<AndCondition,true>(cnds, aggressive); 
+            return makeLog<AndCondition,true>(cnds, true); 
         }
         
         
@@ -473,10 +473,7 @@ namespace PetriEngine {
                     context.reportError(error);
                 }
             }
-            std::sort(std::begin(_constraints), std::end(_constraints), [](auto& a, auto& b)
-            {
-                return a._place < b._place;
-            });
+            std::sort(std::begin(_constraints), std::end(_constraints));
         }
 
         void CompareCondition::analyze(AnalysisContext& context) {
@@ -1649,7 +1646,7 @@ namespace PetriEngine {
             // we check this by checking if !r1 && !r2 is unsat
             
             return Retval(
-                    makeAnd(conditions, true), 
+                    makeAnd(conditions), 
                     std::move(lps),
                     std::make_shared<UnionCollection>(std::move(neglps)));
         }
@@ -1701,7 +1698,7 @@ namespace PetriEngine {
             // we check this by checking if !r1 && !r2 is unsat
           
             return Retval(
-                    makeOr(conditions, true), 
+                    makeOr(conditions), 
                     std::make_shared<UnionCollection>(std::move(lps)), 
                     std::move(neglps));            
         }
@@ -1711,10 +1708,10 @@ namespace PetriEngine {
             {
                 if(context.negated()) 
                     return Retval(std::make_shared<NotCondition>(
-                            makeAnd(_conds, true)));
+                            makeAnd(_conds)));
                 else                  
                     return Retval(
-                            makeAnd(_conds, true));
+                            makeAnd(_conds));
             }
 
             if(context.negated())
@@ -1729,9 +1726,9 @@ namespace PetriEngine {
             {
                 if(context.negated()) 
                     return Retval(std::make_shared<NotCondition>(
-                            makeOr(_conds, true)));
+                            makeOr(_conds)));
                 else                 
-                    return Retval(makeOr(_conds, true));
+                    return Retval(makeOr(_conds));
             }
             if(context.negated())
                 return simplifyAnd(context);
@@ -1881,8 +1878,8 @@ namespace PetriEngine {
                     {
                         if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max())
                         {
-                            if(neg) return makeOr(std::make_shared<LessThanCondition>(id, ll),std::make_shared<GreaterThanCondition>(id, lu), true);
-                            else    return makeAnd(std::make_shared<GreaterThanOrEqualCondition>(id, ll),std::make_shared<LessThanOrEqualCondition>(id, lu), true);
+                            if(neg) return makeOr(std::make_shared<LessThanCondition>(id, ll),std::make_shared<GreaterThanCondition>(id, lu));
+                            else    return makeAnd(std::make_shared<GreaterThanOrEqualCondition>(id, ll),std::make_shared<LessThanOrEqualCondition>(id, lu));
                         }
                         else if(c._lower != 0)
                         {
@@ -2539,7 +2536,7 @@ namespace PetriEngine {
                             b,
                             makeAnd(
                                 a,
-                                af, true)
+                                af)
                             , true)->pushNegation(negated, stats);
                 }
             }
@@ -2576,8 +2573,7 @@ namespace PetriEngine {
                     }
                     return makeOr(
                             b,
-                            makeAnd(ag),
-                            true)->pushNegation(negated, stats);
+                            makeAnd(ag))->pushNegation(negated, stats);
                 }
             }
             return nullptr;            
@@ -2831,8 +2827,8 @@ namespace PetriEngine {
             if(lit->value() != C) return nullptr;
             std::vector<Condition_ptr> cnd;
             for(auto& e : *plus) cnd.emplace_back(std::make_shared<CM>(lit, e));
-            if(std::is_same<Q, AndCondition>::value) return makeAnd(cnd, true);
-            if(std::is_same<Q, OrCondition>::value) return makeOr(cnd, true);
+            if(std::is_same<Q, AndCondition>::value) return makeAnd(cnd);
+            if(std::is_same<Q, OrCondition>::value) return makeOr(cnd);
             return std::make_shared<Q>(cnd);            
         }
         
@@ -3239,7 +3235,7 @@ namespace PetriEngine {
             if(neg && other._constraints.size() > 1)
             {
                 std::cout << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
-                exit(0);
+                assert(false);
             }
             auto il = _constraints.begin();
             for(auto& c : other._constraints)
@@ -3263,22 +3259,24 @@ namespace PetriEngine {
                     else
                     {
                         std::cout << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
-                        exit(0);
+                        assert(false);
                     }
                     c2._place = c._place;
-                    c2._name = c._name;
                     assert(c2._lower <= c2._upper);
                 }
                 else
                 {
                     c2 = c;
                 }
-                if(il == _constraints.end())
+                
+                if(il == _constraints.end() || il->_place != c2._place)
                 {
+                    c2._name = c._name;
                     il = _constraints.insert(il, c2);
                 }
                 else
                 {
+                    assert(il->_name.compare(c2._name) == 0);
                     il->_lower = std::max(il->_lower, c2._lower);
                     il->_upper = std::min(il->_upper, c2._upper);
                 }
