@@ -494,26 +494,7 @@ namespace PetriEngine {
                 if(!res) break;
             }
             
-            auto r2 = _negated xor res ? RTRUE : RFALSE;
-            
-  /*          if(rres != r2)
-            {
-                context.net()->print(context.marking());
-                std::cout << "WRONG " << std::endl;
-                _org->toString(std::cout);
-                std::cout << std::endl;
-                toString(std::cout);
-                std::cout << std::endl;
-
-                bool res = true;
-                    for(auto& c : _constraints)
-                    {
-                        res = res && context.marking()[c._place] <= c._upper &&
-                                     context.marking()[c._place] >= c._lower;
-                        if(!res) break;
-                    }
-            }*/
-            return r2;
+            return _negated xor res ? RTRUE : RFALSE;
         }
         
         Condition::Result CompareCondition::evaluate(const EvaluationContext& context) const {
@@ -1576,7 +1557,10 @@ namespace PetriEngine {
                 assert(r.neglps);
                 assert(r.lps);
 
-                if(r.formula->isTriviallyTrue()) return Retval(BooleanCondition::TRUE_CONSTANT);
+                if(r.formula->isTriviallyTrue())
+                {
+                    return Retval(BooleanCondition::TRUE_CONSTANT);
+                }
                 else if(r.formula->isTriviallyFalse())
                 {
                     continue;
@@ -1648,13 +1632,10 @@ namespace PetriEngine {
         }
         
         Retval CompareConjunction::simplify(SimplificationContext& context) const {
-            //std::cout << "BEGIN " << std::endl;
             if(context.timeout())
             {
                 return Retval(std::make_shared<CompareConjunction>(*this, context.negated()));
             }
-            
-//            std::vector<Condition_ptr> conditions;
             AbstractProgramCollection_ptr lps = nullptr;
             std::vector<AbstractProgramCollection_ptr>  neglps;
             auto neg = context.negated() != _negated;
@@ -1723,14 +1704,6 @@ namespace PetriEngine {
                 return Retval(BooleanCondition::getShared(!neg));
             }
             
-            /*AndCondition(conditions).toString(std::cout);
-            std::cout << std::endl;
-            auto wneg = context.negated();
-            if(wneg)context.negate();
-            AndCondition(conditions).simplify(context).formula->toString(std::cout);
-            std::cout << std::endl;
-            if(wneg) context.negate();            
-            */
             try {
                 if(!context.timeout() && lps &&  !lps->satisfiable(context))
                 {
@@ -1820,9 +1793,6 @@ namespace PetriEngine {
                     return std::make_shared<CompareConjunction>(std::move(nconstraints), context.negated() != _negated);
                 }
             }();
-            
-//            rc->toString(std::cout);
-//            std::cout << std::endl;
             
             if(!neg)
             {
@@ -2292,11 +2262,6 @@ namespace PetriEngine {
         
         Condition_ptr EXCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "EXCondition << ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             auto a = _cond->pushNegation(stats, context, true, negated);
             if(negated)
             {
@@ -2311,22 +2276,12 @@ namespace PetriEngine {
                 { ++stats[4]; return std::make_shared<NotCondition>(DeadlockCondition::DEADLOCK); }
                 a = std::make_shared<EXCondition>(a);
             }
-#ifdef DBG
-            std::cout << "EXCondition >> ";
-            a->toString(std::cout);
-            std::cout << std::endl;
-#endif
             return a;
             }, stats, context, nested, negated);
         }
 
         Condition_ptr AXCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "AXCondition << ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             auto a = _cond->pushNegation(stats, context, true, negated);
             if(negated)
             {
@@ -2341,11 +2296,6 @@ namespace PetriEngine {
                 { ++stats[7]; return DeadlockCondition::DEADLOCK; }
                 a = std::make_shared<AXCondition>(a);
             }
-#ifdef DBG
-            std::cout << "AXCondition >> ";
-            a->toString(std::cout);
-            std::cout << std::endl;
-#endif
             return a;
             }, stats, context, nested, negated);
         }
@@ -2353,11 +2303,6 @@ namespace PetriEngine {
         
         Condition_ptr EFCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "EFCondition " << this << " << ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             auto a = _cond->pushNegation(stats, context, true, false);
 
             if(auto cond = dynamic_cast<NotCondition*>(a.get()))
@@ -2380,54 +2325,24 @@ namespace PetriEngine {
             {
                 ++stats[9];
                 if(negated) a = std::make_shared<NotCondition>(a);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
             }
             else if(auto cond = dynamic_cast<AFCondition*>(a.get()))
             {
                 ++stats[10];
                 a = EFCondition((*cond)[0]).pushNegation(stats, context, nested, negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
             }
-/*            else if(auto cond = dynamic_cast<EXCondition*>(a.get()))
-            {
-                a = EXCondition(std::make_shared<EFCondition>((*cond)[0])).pushNegation(negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
-                return a;
-            }*/
             else if(auto cond = dynamic_cast<EUCondition*>(a.get()))
             {
                 ++stats[11];
                 a = EFCondition((*cond)[1]).pushNegation(stats, context, nested, negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
             }
             else if(auto cond = dynamic_cast<AUCondition*>(a.get()))
             {
                 ++stats[12];
                 a = EFCondition((*cond)[1]).pushNegation(stats, context, nested, negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
             }
             else if(auto cond = dynamic_cast<OrCondition*>(a.get()))
@@ -2445,22 +2360,12 @@ namespace PetriEngine {
                     pef.push_back(std::make_shared<EFCondition>(i));
                 }
                 a = makeOr(pef)->pushNegation(stats, context, nested, negated);
-#ifdef DBG
-                std::cout << "EFCondition " << this << " >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
             }
             else
             {        
                 Condition_ptr b = std::make_shared<EFCondition>(a);
                 if(negated) b = std::make_shared<NotCondition>(b);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                b->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return b;
             }
             }, stats, context, nested, negated);
@@ -2469,11 +2374,6 @@ namespace PetriEngine {
 
         Condition_ptr AFCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "AFCondition << ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             auto a = _cond->pushNegation(stats, context, true, false);
             if(auto cond = dynamic_cast<NotCondition*>(a.get()))
             {
@@ -2488,11 +2388,6 @@ namespace PetriEngine {
             {
                 ++stats[15];
                 if(negated) return std::make_shared<NotCondition>(a);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
 
             }
@@ -2500,11 +2395,6 @@ namespace PetriEngine {
             {
                 ++stats[16];
                 if(negated) return std::make_shared<NotCondition>(a);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
             }
             else if(auto cond = dynamic_cast<OrCondition*>(a.get()))
@@ -2536,11 +2426,6 @@ namespace PetriEngine {
             }
             auto b = std::make_shared<AFCondition>(a);
             if(negated) return std::make_shared<NotCondition>(b);
-#ifdef DBG
-            std::cout << "AFCondition >> ";
-            b->toString(std::cout);
-            std::cout << std::endl;
-#endif
             return b;
             }, stats, context, nested, negated);
         }
@@ -2784,11 +2669,6 @@ namespace PetriEngine {
                     makeOr(nef)))); 
             if(other.size() == 1) return other[0];
             auto res = makeAnd(other);
-#ifdef DBG
-            std::cout << "PUSH AND  >> ";
-            res->toString(std::cout);
-            std::cout << std::endl;
-#endif
             return res;
         }
         
@@ -2820,11 +2700,6 @@ namespace PetriEngine {
 
         Condition_ptr OrCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "OrCondition >> ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             return negated ? pushAnd(_conds, stats, context, nested, true) :
                              pushOr (_conds, stats, context, nested, false);
             }, stats, context, nested, negated);
@@ -2833,11 +2708,6 @@ namespace PetriEngine {
         
         Condition_ptr AndCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "AndCondition >> ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             return negated ? pushOr (_conds, stats, context, nested, true) :
                              pushAnd(_conds, stats, context, nested, false);
 
@@ -2851,11 +2721,6 @@ namespace PetriEngine {
         
         Condition_ptr NotCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "NotCondition >> ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             if(negated) ++stats[30];
             return _cond->pushNegation(stats, context, nested, !negated);
             }, stats, context, nested, negated);
@@ -2895,6 +2760,15 @@ namespace PetriEngine {
         
         Condition_ptr NotEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            for(int i = 0; i < 2; ++i)
+            {
+                if(auto e = dynamic_pointer_cast<LiteralExpr>(operator [](i)))
+                    if(e->value() == 0) 
+                        return GreaterThanCondition(
+                                operator []((i+1)%2), 
+                                operator [](i)
+                                    ).pushNegation(stats, context, nested, negated);
+            }
             if(negated) return std::make_shared<EqualCondition>(_expr1, _expr2);
             else        return std::make_shared<NotEqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);
@@ -2903,6 +2777,15 @@ namespace PetriEngine {
         
         Condition_ptr EqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            for(int i = 0; i < 2; ++i)
+            {
+                if(auto e = dynamic_pointer_cast<LiteralExpr>(operator [](i)))
+                    if(e->value() == 0) 
+                        return LessThanOrEqualCondition(
+                                operator []((i+1)%2), 
+                                operator [](i)
+                                    ).pushNegation(stats, context, nested, negated);
+            }
             if(negated) return std::make_shared<NotEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<EqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);
@@ -3046,12 +2929,13 @@ namespace PetriEngine {
                 {
                     if(!neg)
                     {
-                        if(val < c._lower)
+                        if(val < c._lower && c._lower != 0)
                         {
                             assert(!neg);
                             generator.presetOf(c._place);
                         }
-                        else if(val > c._upper)
+                        
+                        if(val > c._upper && c._upper != std::numeric_limits<uint32_t>::max())
                         {
                             assert(!neg);
                             generator.postsetOf(c._place);
@@ -3059,13 +2943,14 @@ namespace PetriEngine {
                     }
                     else
                     {
-                        if(val >= c._lower)
-                        {
-                            generator.presetOf(c._place);
-                        }
-                        else if(val <= c._upper)
+                        if(val >= c._lower && c._lower != 0)
                         {
                             generator.postsetOf(c._place);
+                        }
+                        
+                        if(val <= c._upper && c._upper != std::numeric_limits<uint32_t>::max())
+                        {
+                            generator.presetOf(c._place);
                         }
                     }
                 }
@@ -3199,22 +3084,8 @@ namespace PetriEngine {
                     }
 
                     std::vector<Condition_ptr> cnds{ptr};
-                    if(auto lc = std::dynamic_pointer_cast<CompareConjunction>(_conds.size() == 0 ? nullptr : _conds[0]))
-                    {
-                        if((std::is_same<T, OrCondition>::value  &&  lc->isNegated()) ||
-                           (std::is_same<T, AndCondition>::value && !lc->isNegated()))
-                        {
-                            lc->merge(cnds, std::is_same<T, OrCondition>::value);
-                        }
-                        else
-                        {
-                            _conds.insert(_conds.begin(), std::make_shared<CompareConjunction>(cnds, std::is_same<T, OrCondition>::value));
-                        }
-                    }
-                    else
-                    {
-                        _conds.insert(_conds.begin(), std::make_shared<CompareConjunction>(cnds, std::is_same<T, OrCondition>::value));                        
-                    }
+                    auto cmp = std::make_shared<CompareConjunction>(cnds, std::is_same<T, OrCondition>::value);
+                    tryMerge<T>(_conds, cmp);
                 }
             }
             else if (auto conj = std::dynamic_pointer_cast<CompareConjunction>(ptr))
@@ -3224,18 +3095,23 @@ namespace PetriEngine {
                 {
                     if(auto lc = std::dynamic_pointer_cast<CompareConjunction>(_conds.size() == 0 ? nullptr : _conds[0]))
                     {
-                        if(conj->singular() || lc->isNegated() == conj->isNegated())
+                        if(lc->isNegated() == std::is_same<T, OrCondition>::value)
                         {
-                            lc->merge(*conj);
+                            auto cpy = std::make_shared<CompareConjunction>(*lc);
+                            cpy->merge(*conj);
+                            _conds[0] = cpy;
                         }
                         else
                         {
-                            _conds.insert(_conds.begin(), conj);
+                            if(conj->isNegated() == std::is_same<T, OrCondition>::value)
+                                _conds.insert(_conds.begin(), conj);
+                            else
+                                _conds.insert(_conds.begin(), std::make_shared<CompareConjunction>(*conj, true));
                         }
                     }
                     else
                     {
-                        _conds.insert(_conds.begin(), conj);                        
+                        _conds.insert(_conds.begin(), conj);
                     }
                 }
                 else
@@ -3313,38 +3189,47 @@ namespace PetriEngine {
                 std::cout << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
                 exit(0);
             }
-            auto il = _constraints.begin();
             for(auto& c : other._constraints)
             {
+                auto il = std::find_if(_constraints.begin(), _constraints.end(), [&](auto& a){
+                    return a._name.compare(c._name) == 0;
+                });
+
                 while(il != _constraints.end() && il->_place < c._place) ++il;
                 cons_t c2;
                 if(neg)
                 {
-                    if(c._lower != 0) c2._upper = c._lower + 1;
-                    if(c._upper != std::numeric_limits<uint32_t>::max())
+                    if(c._upper == 0)
                     {
-                        if(c._upper == 0)
-                        {
-                            c2._lower = 1;
-                            c2._upper = 0;
-                        }
-                        else
-                            c2._lower = c._upper - 1;
+                        c2._lower = 1;
+                    }
+                    else if (c._upper == std::numeric_limits<uint32_t>::max())
+                    {
+                        c2._upper = c._lower + 1;
+                    }
+                    else if(c._lower == 0)
+                    {
+                        c2._lower = c._upper - 1;
+                    }
+                    else
+                    {
+                        std::cout << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
+                        exit(0);
                     }
                     c2._place = c._place;
                     c2._name = c._name;
+                    assert(c2._lower <= c2._upper);
                 }
                 else
                 {
                     c2 = c;
                 }
-                if(il == _constraints.end() || il->_place > c._place)
+                if(il == _constraints.end())
                 {
-                    il = _constraints.insert(il, c2);
+                     _constraints.insert(il, c2);
                 }
                 else
                 {
-                    assert(il->_place == c2._place);
                     il->_lower = std::max(il->_lower, c2._lower);
                     il->_upper = std::min(il->_upper, c2._upper);
                 }
@@ -3378,7 +3263,7 @@ namespace PetriEngine {
                 {
                     return a._name.compare(id->name()) == 0;
                 });
-                if(lb == std::end(_constraints) || lb->_name.compare(id->name()) != 0)
+                if(lb == std::end(_constraints))
                 {
                     cons_t next;
                     next._place = id->offset();
@@ -3390,10 +3275,6 @@ namespace PetriEngine {
                     assert(id->name().compare(lb->_name) == 0);
                 }
 
-/*                std::cout << "CHECKING " << std::endl;
-                c->toString(std::cout);
-                std::cout << std::endl;
-*/
                 if(dynamic_cast<LessThanOrEqualCondition*>(c.get()))
                 {
                     if(!negated)
@@ -3446,22 +3327,10 @@ namespace PetriEngine {
                 else
                 {
                     std::cout << "UNKNOWN " << std::endl;
-                    c->toString(std::cout);
-                    std::cout << std::endl;
                     assert(false);
                 }
-                
-/*                std::cout << "BECAME " << std::endl;
-                toString(std::cout);
-                std::cout << std::endl;
-                std::cout << "NEGATED = " << negated << std::endl;
-                _org->toString(std::cout);
-                std::cout << std::endl;
-                std::cout << "DONE " << std::endl;
-  */              
             }            
         }
-        
     } // PQL
 } // PetriEngine
 

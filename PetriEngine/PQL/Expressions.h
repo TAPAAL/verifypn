@@ -511,7 +511,7 @@ namespace PetriEngine {
                 std::string _name;
             };
 
-            CompareConjunction()
+            CompareConjunction() 
             {};
         public:
             CompareConjunction(const std::vector<cons_t>&& cons, bool negated) 

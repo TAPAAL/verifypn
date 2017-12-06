@@ -598,9 +598,6 @@ int main(int argc, char* argv[]) {
                     std::cout << std::endl;
                 }
                 queries[i].get()->setInvariant(isInvariant);
-                std::cout << "RWSTATS POST:";
-                stats.print(std::cout);
-                std::cout << std::endl;
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
                 std::cerr << "Exception information: " << ba.what() << std::endl;
