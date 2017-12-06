@@ -3487,6 +3487,18 @@ namespace PetriEngine {
                     _constant = this->apply(_constant, lit->value());
                 else if (auto id = dynamic_pointer_cast<PQL::IdentifierExpr>(e)) {
                     _ids.emplace_back(id->offset(), id->name());
+                } 
+                else if(auto c = dynamic_pointer_cast<CommutativeExpr>(e))
+                {
+                    // we should move up plus/multiply here when possible;
+                    if(e->_ids.size() == 0 && e->_exprs.size() == 0)
+                    {
+                        _constant = apply(_constant, e->_constant);
+                    }
+                    else
+                    {
+                        _exprs.emplace_back(std::move(e));                        
+                    }
                 } else {
                     _exprs.emplace_back(std::move(e));
                 }
