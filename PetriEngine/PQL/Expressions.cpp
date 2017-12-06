@@ -1062,7 +1062,7 @@ namespace PetriEngine {
         uint32_t CompareConjunction::distance(DistanceContext& context) const {
             uint32_t d = 0;
             auto neg = context.negated() != _negated;
-//            if(true || !neg)
+            if(!neg)
             {
                 for(auto& c : _constraints)
                 {
@@ -1071,7 +1071,7 @@ namespace PetriEngine {
                          (c._lower == 0 ? 0 : delta<GreaterThanOrEqualCondition>(pv, c._lower, neg));
                 }
             }
-/*            else
+            else
             {
                 bool first = true;
                 for(auto& c : _constraints)
@@ -1093,7 +1093,7 @@ namespace PetriEngine {
                         first = false;
                     }
                 }
-            }*/
+            }
             return d;
         }
 
