@@ -1431,7 +1431,7 @@ namespace PetriEngine {
         {
             Member res;
             bool first = true;
-            if(_constant != constant)
+            if(_constant != constant || (_exprs.size() == 0 && _ids.size() == 0))
             {
                 first = false;
                 res = Member(_constant);
@@ -3491,9 +3491,9 @@ namespace PetriEngine {
                 else if(auto c = dynamic_pointer_cast<CommutativeExpr>(e))
                 {
                     // we should move up plus/multiply here when possible;
-                    if(e->_ids.size() == 0 && e->_exprs.size() == 0)
+                    if(c->_ids.size() == 0 && c->_exprs.size() == 0)
                     {
-                        _constant = apply(_constant, e->_constant);
+                        _constant = apply(_constant, c->_constant);
                     }
                     else
                     {
