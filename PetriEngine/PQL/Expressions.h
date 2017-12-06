@@ -53,6 +53,10 @@ namespace PetriEngine {
                 return sum;
             }
             void toString(std::ostream&) const override;
+            auto begin() { return _exprs.begin(); }
+            auto end() { return _exprs.end(); }
+            auto begin() const { return _exprs.begin(); }
+            auto end() const { return _exprs.end(); }            
         private:
             virtual int apply(int v1, int v2) const = 0;
             virtual std::string op() const = 0;
@@ -509,6 +513,10 @@ namespace PetriEngine {
                 uint32_t _upper = std::numeric_limits<uint32_t>::max();
                 uint32_t _lower = 0;
                 std::string _name;
+                bool operator<(const cons_t& other) const
+                {
+                    return _place < other._place;
+                }
             };
 
             CompareConjunction() 
