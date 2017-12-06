@@ -1745,6 +1745,7 @@ namespace PetriEngine {
             std::vector<AbstractProgramCollection_ptr>  neglps;
             auto neg = context.negated() != _negated;
             std::vector<cons_t> nconstraints;
+//            std::vector<Condition_ptr> conditions;
             for(auto& c : _constraints) 
             {
                 nconstraints.push_back(c);
@@ -1801,7 +1802,6 @@ namespace PetriEngine {
                     nconstraints.pop_back();
 
                 assert(nconstraints.size() <= neglps.size()*2);
-                assert(nconstraints.size() >= neglps.size());
             }
             
             if(lps == nullptr && !context.timeout()) 
@@ -1899,6 +1899,7 @@ namespace PetriEngine {
                 }
             }();
             
+
             if(!neg)
             {
                 return Retval(
@@ -3250,11 +3251,11 @@ namespace PetriEngine {
                     }
                     else if (c._upper == std::numeric_limits<uint32_t>::max())
                     {
-                        c2._upper = c._lower + 1;
+                        c2._upper = c._lower + (other._negated ? -1 :  1);
                     }
                     else if(c._lower == 0)
                     {
-                        c2._lower = c._upper - 1;
+                        c2._lower = c._upper + (other._negated ?  1 : -1);
                     }
                     else
                     {
@@ -3268,7 +3269,7 @@ namespace PetriEngine {
                 {
                     c2 = c;
                 }
-                
+                            
                 if(il == _constraints.end() || il->_place != c2._place)
                 {
                     c2._name = c._name;
@@ -3276,7 +3277,6 @@ namespace PetriEngine {
                 }
                 else
                 {
-                    assert(il->_name.compare(c2._name) == 0);
                     il->_lower = std::max(il->_lower, c2._lower);
                     il->_upper = std::min(il->_upper, c2._upper);
                 }

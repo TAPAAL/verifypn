@@ -413,7 +413,7 @@ namespace PetriEngine {
         class LogicalCondition : public Condition {
         public:
             int formulaSize() const override {
-                size_t i = 1;
+                size_t i = _conds.size() - 1;
                 for(auto& c : _conds) i += c->formulaSize();
                 return i;
             }
@@ -540,7 +540,7 @@ namespace PetriEngine {
                     if(c._lower != 0) ++sum;
                     if(c._upper != std::numeric_limits<uint32_t>::max()) ++sum;
                 }
-                return sum;
+                return ((sum*2)-1)+(_negated ? 1 : 0);
             }
             void analyze(AnalysisContext& context) override;
             uint32_t distance(DistanceContext& context) const override;

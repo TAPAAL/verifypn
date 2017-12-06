@@ -543,9 +543,7 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-    
-    if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
-    
+        
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
     
@@ -555,6 +553,8 @@ int main(int argc, char* argv[]) {
     PetriNet* qnet = b2.makePetriNet(false);
     MarkVal* qm0 = qnet->makeInitialMarking();
     ResultPrinter p2(&b2, &options, querynames);
+
+    if(queries.size() == 0 || contextAnalysis(b2, queries) != ContinueCode)  return ErrorCode;
     
     if (options.queryReductionTimeout > 0) {
         LPCache cache;
