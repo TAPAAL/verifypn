@@ -27,6 +27,7 @@
 #include <iostream>
 #include <set>
 #include <cmath>
+#include <numeric>
 
 using namespace PetriEngine::Simplification;
 
@@ -179,6 +180,18 @@ namespace PetriEngine {
             }
             ss << ")";
         }
+
+        void CommutativeExpr::toString(std::ostream& ss) const {
+            ss << "( " << _constant;
+            for(auto& i : _ids)
+                ss << " " << op() << " " << i.second;
+            for(auto& e : _exprs)
+            {
+                ss << " " << op() << " ";
+                e->toString(ss);
+            }
+        }
+
 
         void MinusExpr::toString(std::ostream& out) const {
             out << "-";
@@ -420,14 +433,21 @@ namespace PetriEngine {
             });
         }
 
-        void MultiplyExpr::analyze(AnalysisContext& context) {
-            NaryExpr::analyze(context);
-            std::sort(std::begin(_exprs), std::end(_exprs), expr_cmp);
-        }
-
-        void PlusExpr::analyze(AnalysisContext& context) {
-            NaryExpr::analyze(context);
-            std::sort(std::begin(_exprs), std::end(_exprs), expr_cmp);
+        void CommutativeExpr::analyze(AnalysisContext& context) {
+            for(auto& i : _ids)
+            {
+                AnalysisContext::ResolutionResult result = context.resolve(i.second);
+                if (result.success) {
+                    i.first = result.offset;
+                } else {
+                    ExprError error("Unable to resolve identifier \"" + i.second + "\"",
+                            i.second.length());
+                    context.reportError(error);
+                }
+            }
+            std::sort(_ids.begin(), _ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
+            if(_exprs.size() > 0)
+                NaryExpr::analyze(context);
         }
 
         void MinusExpr::analyze(AnalysisContext& context) {
@@ -502,19 +522,22 @@ namespace PetriEngine {
             }
             return r;
         }
-       
+        
         int32_t NaryExpr::preOp(const EvaluationContext& context) const {
             return _exprs[0]->evaluate(context);
         }
 
-        int32_t MultiplyExpr::preOp(const EvaluationContext& context) const {
-            return NaryExpr::preOp(context);
+        int32_t CommutativeExpr::preOp(const EvaluationContext& context) const {
+            int32_t res = _constant;
+            for(auto& i : _ids) res = this->apply(res, context.marking()[i.first]);
+            return res;
         }
 
-        int32_t PlusExpr::preOp(const EvaluationContext& context) const {
-            return NaryExpr::preOp(context);
+        int CommutativeExpr::evaluate(const EvaluationContext& context) const {
+            if(_exprs.size() == 0) return preOp(context);
+            return NaryExpr::evaluate(context);
         }
-
+        
         int MinusExpr::evaluate(const EvaluationContext& context) const {
             return -(_expr->evaluate(context));
         }
@@ -1118,11 +1141,19 @@ namespace PetriEngine {
             
             if(tk) {
                 generateTabs(ss,tabs) << "<tokens-count>\n";
+                for(auto& e : _ids) generateTabs(ss,tabs+1) << "<place>" << e.second << "</place>\n";
                 for(auto& e : _exprs) e->toXML(ss,tabs+1, true);
                 generateTabs(ss,tabs) << "</tokens-count>\n";
                 return;
             }
             generateTabs(ss,tabs) << "<integer-sum>\n";
+            generateTabs(ss,tabs+1) << "<integer-constant>" + std::to_string(_constant) + "</integer-constant>\n";
+            for(auto& i : _ids)
+            {
+                generateTabs(ss,tabs+1) << "<tokens-count>\n"; 
+                generateTabs(ss,tabs+2) << "<place>" << i.second << "</place>\n";
+                generateTabs(ss,tabs+1) << "</tokens-count>\n";                
+            }
             for(auto& e : _exprs) e->toXML(ss,tabs+1, tokencount);
             generateTabs(ss,tabs) << "</integer-sum>\n";
         }
@@ -1370,10 +1401,34 @@ namespace PetriEngine {
             return memberForPlace(_offsetInMarking, context);
         }
         
+        Member CommutativeExpr::commutativeCons(int constant, SimplificationContext& context, std::function<void(Member& a, Member b)> op) const
+        {
+            Member res;
+            bool first = true;
+            if(_constant != constant)
+            {
+                first = false;
+                res = Member(_constant);
+            }
+            
+            for(auto& i : _ids)
+            {
+                if(first) res = memberForPlace(i.first, context);
+                else op(res, memberForPlace(i.first, context));
+                first = false;
+            }
+
+            for(auto& e : _exprs)
+            {
+                if(first) res = e->constraint(context);
+                else op(res, e->constraint(context));
+                first = false;
+            }
+            return res;            
+        }
+        
         Member PlusExpr::constraint(SimplificationContext& context) const {
-            Member res = _exprs[0]->constraint(context);
-            for(size_t i = 1; i < _exprs.size(); ++i) res += _exprs[i]->constraint(context);
-            return res;
+            return commutativeCons(0, context, [](auto& a , auto b){ a += b;});
         }
         
         Member SubtractExpr::constraint(SimplificationContext& context) const {
@@ -1383,9 +1438,7 @@ namespace PetriEngine {
         }
         
         Member MultiplyExpr::constraint(SimplificationContext& context) const {
-            Member res = _exprs[0]->constraint(context);
-            for(size_t i = 1; i < _exprs.size(); ++i) res *= _exprs[i]->constraint(context);
-            return res;
+            return commutativeCons(1, context, [](auto& a , auto b){ a *= b;});
         }
         
         Member MinusExpr::constraint(SimplificationContext& context) const {
@@ -2819,7 +2872,7 @@ namespace PetriEngine {
             }, stats, context, nested, negated);
         }
         
-        template<int32_t C, typename Q, typename CM>
+/*        template<int32_t C, typename Q, typename CM>
         Condition_ptr tryDistribute(const CompareCondition& cmp, int id1 = 0, int id2 = 1)
         {
             auto lit = dynamic_pointer_cast<LiteralExpr>(cmp[id1]);
@@ -2832,7 +2885,7 @@ namespace PetriEngine {
             if(std::is_same<Q, OrCondition>::value) return makeOr(cnd);
             return std::make_shared<Q>(cnd);            
         }
-        
+*/        
         Condition_ptr LessThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
 //            if(auto r = tryDistribute<0,OrCondition, LessThanCondition>(*this)) return r->pushNegation(stats, context, nested, negated);
@@ -2924,11 +2977,13 @@ namespace PetriEngine {
         /******************** Stubborn reduction interesting transitions ********************/
         
         void PlusExpr::incr(ReducingSuccessorGenerator& generator) const { 
-            for(auto& e : _exprs) e->incr(generator);                
+            for(auto& i : _ids) generator.presetOf(i.first);
+            for(auto& e : _exprs) e->incr(generator);
         }
         
         void PlusExpr::decr(ReducingSuccessorGenerator& generator) const {
-            for(auto& e : _exprs) e->decr(generator);                
+            for(auto& i : _ids) generator.postsetOf(i.first);
+            for(auto& e : _exprs) e->decr(generator);
         }
         
         void SubtractExpr::incr(ReducingSuccessorGenerator& generator) const {
@@ -2942,6 +2997,11 @@ namespace PetriEngine {
         }
         
         void MultiplyExpr::incr(ReducingSuccessorGenerator& generator) const {
+            for(auto& i : _ids)
+            {
+                generator.presetOf(i.first);
+                generator.postsetOf(i.first);
+            }
             for(auto& e : _exprs)
             {
                 e->incr(generator);
@@ -3375,6 +3435,20 @@ namespace PetriEngine {
                 }
             }            
         }
+       
+        CommutativeExpr::CommutativeExpr(std::vector<Expr_ptr>&& exprs, int initial)
+        : NaryExpr(), _constant(initial) {
+            for (auto& e : exprs) {
+                if (auto lit = dynamic_pointer_cast<PQL::LiteralExpr>(e))
+                    _constant = this->apply(_constant, lit->value());
+                else if (auto id = dynamic_pointer_cast<PQL::IdentifierExpr>(e)) {
+                    _ids.emplace_back(id->offset(), id->name());
+                } else {
+                    _exprs.emplace_back(std::move(e));
+                }
+            }
+        }
+
     } // PQL
 } // PetriEngine
 

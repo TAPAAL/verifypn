@@ -41,6 +41,8 @@ namespace PetriEngine {
 
         /** Base class for all binary expressions */
         class NaryExpr : public Expr {
+        protected:
+            NaryExpr() {};
         public:
 
             NaryExpr(std::vector<Expr_ptr>&& exprs) : _exprs(std::move(exprs)) {
@@ -53,24 +55,39 @@ namespace PetriEngine {
                 return sum;
             }
             void toString(std::ostream&) const override;
-            auto begin() { return _exprs.begin(); }
-            auto end() { return _exprs.end(); }
-            auto begin() const { return _exprs.begin(); }
-            auto end() const { return _exprs.end(); }            
-        private:
-            virtual int apply(int v1, int v2) const = 0;
-            virtual std::string op() const = 0;
         protected:
+            virtual int apply(int v1, int v2) const { return 0; };
+            virtual std::string op() const = 0;
             std::vector<Expr_ptr> _exprs;
             virtual int32_t preOp(const EvaluationContext& context) const;
         };
+        
+        class CommutativeExpr : public NaryExpr
+        {
+        public:
+            CommutativeExpr(std::vector<Expr_ptr>&& exprs, int initial);            
+            virtual void analyze(AnalysisContext& context) override;
+            int evaluate(const EvaluationContext& context) const override;
+            int formulaSize() const override{
+                size_t sum = 2 + _ids.size();
+                if(_ids.size() > 0) sum += _ids.size() + (_exprs.size() == 0 ? -1 : 0);
+                for(auto& e : _exprs) sum += e->formulaSize();
+                return sum;
+            }
+            void toString(std::ostream&) const override;            
+        protected:
+            virtual int32_t preOp(const EvaluationContext& context) const;
+            int32_t _constant;
+            std::vector<std::pair<uint32_t,std::string>> _ids;
+            Member commutativeCons(int constant, SimplificationContext& context, std::function<void(Member& a, Member b)> op) const;
+        };
 
         /** Binary plus expression */
-        class PlusExpr : public NaryExpr {
+        class PlusExpr : public CommutativeExpr {
         public:
 
             PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk = false) :
-            NaryExpr(std::move(exprs)), tk(tk)
+            CommutativeExpr(std::move(exprs), 0), tk(tk)
             {
             }
             
@@ -80,11 +97,7 @@ namespace PetriEngine {
             bool tk = false;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
-            void analyze(AnalysisContext& context) override;            
         protected:
-            virtual int32_t preOp(const EvaluationContext& context) const override;
-
-        private:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
             std::string op() const override;
@@ -107,26 +120,26 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
-        private:
+        protected:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
             std::string op() const override;
         };
 
         /** Binary multiplication expression **/
-        class MultiplyExpr : public NaryExpr {
+        class MultiplyExpr : public CommutativeExpr {
         public:
 
-            using NaryExpr::NaryExpr;
+            MultiplyExpr(std::vector<Expr_ptr>&& exprs) :
+            CommutativeExpr(std::move(exprs), 1)
+            {
+            }
             Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
-            void analyze(AnalysisContext& context) override;
         protected:
-            virtual int32_t preOp(const EvaluationContext& context) const override;
-        private:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
             std::string op() const override;
