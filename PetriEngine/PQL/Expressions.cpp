@@ -223,7 +223,8 @@ namespace PetriEngine {
         }
         
         void CompareConjunction::toString(std::ostream& out) const {
-            if(_negated) out << "(not";
+            out << "(";
+            if(_negated) out << "not";
             bool first = true;
             for(auto& c : _constraints)
             {
@@ -236,7 +237,7 @@ namespace PetriEngine {
                     out << "(" << c._upper << " >= " << c._name << ")";
                 first = false;
             }
-            if(_negated) out << ")";
+            out << ")";
         }
 
         void CompareCondition::toString(std::ostream& out) const {
@@ -291,7 +292,8 @@ namespace PetriEngine {
         }
         
         void CompareConjunction::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
-            if(_negated) out << "(!";
+            out << "(";
+            if(_negated) out << "!";
             bool first = true;
             for(auto& c : _constraints)
             {
@@ -304,7 +306,7 @@ namespace PetriEngine {
                     out << "(" << c._upper << " >= " << context.netName << "." << c._name << ")";
                 first = false;
             }
-            if(_negated) out << ")";
+            out << ")";
         }
 
         void CompareCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
@@ -3193,9 +3195,7 @@ namespace PetriEngine {
         void postMerge(std::vector<Condition_ptr>& conds) {
             std::sort(std::begin(conds), std::end(conds),
                     [](auto& a, auto& b) {
-                        return a->isTemporal() == b->isTemporal() ?
-                                    a->formulaSize() < b->formulaSize() : 
-                                    a->isTemporal() < b->isTemporal(); 
+                        return a->isTemporal() < b->isTemporal(); 
                     });
         } 
         
