@@ -70,10 +70,9 @@ namespace PetriEngine {
             virtual void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) const override;
             int formulaSize() const override{
-                size_t sum = 2 + _ids.size();
-                if(_ids.size() > 0) sum += _ids.size() + (_exprs.size() == 0 ? -1 : 0);
+                size_t sum = _ids.size();
                 for(auto& e : _exprs) sum += e->formulaSize();
-                return sum;
+                return sum + 1;
             }
             void toString(std::ostream&) const override;            
         protected:
@@ -427,7 +426,7 @@ namespace PetriEngine {
         class LogicalCondition : public Condition {
         public:
             int formulaSize() const override {
-                size_t i = _conds.size() - 1;
+                size_t i = 1;
                 for(auto& c : _conds) i += c->formulaSize();
                 return i;
             }
@@ -548,11 +547,14 @@ namespace PetriEngine {
             void merge(const std::vector<Condition_ptr>&, bool negated);
             
             int formulaSize() const override{
-                int sum = 0;
+                int sum = 1;
                 for(auto& c : _constraints)
                 {
-                    if(c._lower != 0) ++sum;
-                    if(c._upper != std::numeric_limits<uint32_t>::max()) ++sum;
+                    if(c._lower == c._upper) ++sum;
+                    else {
+                        if(c._lower != 0) ++sum;
+                        if(c._upper != std::numeric_limits<uint32_t>::max()) ++sum;
+                    }
                 }
                 return ((sum*2)-1)+(_negated ? 1 : 0);
             }

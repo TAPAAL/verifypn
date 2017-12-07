@@ -499,32 +499,6 @@ namespace PetriEngine {
         void CompareCondition::analyze(AnalysisContext& context) {
             _expr1->analyze(context);
             _expr2->analyze(context);
-            auto remdup = [](auto& a, auto& b){
-                auto ai = a->_ids.begin();
-                auto bi = b->_ids.begin();
-                while(ai != a->_ids.end() && bi != b->_ids.end())
-                {
-                    while(ai != a->_ids.end() && ai->first < bi->first) ++ai;
-                    if(ai == a->_ids.end()) break;
-                    if(ai->first == bi->first)
-                    {
-                        ai = a->_ids.erase(ai);
-                        bi = b->_ids.erase(bi);
-                    }
-                    else
-                    {
-                        ++bi;
-                    }
-                    if(bi == b->_ids.end() || ai == a->_ids.end()) break;
-                }
-            };
-            if(auto p1 = dynamic_pointer_cast<PlusExpr>(_expr1))
-                if(auto p2 = dynamic_pointer_cast<PlusExpr>(_expr2))
-                    remdup(p1, p2);
-            
-            if(auto m1 = dynamic_pointer_cast<PlusExpr>(_expr1))
-                if(auto m2 = dynamic_pointer_cast<PlusExpr>(_expr2))
-                    remdup(m1, m2);                    
         }
         
         void NotCondition::analyze(AnalysisContext& context) {
@@ -2915,12 +2889,35 @@ namespace PetriEngine {
         
         bool CompareCondition::isTrivial() const
         {
-            if(auto p1 = dynamic_pointer_cast<PlusExpr>(_expr1))
-                if(auto p2 = dynamic_pointer_cast<PlusExpr>(_expr2))            
-                    return p1->_exprs.size() + p1->_ids.size() + p2->_exprs.size() + p2->_ids.size() == 0;
-
+            auto remdup = [](auto& a, auto& b){
+                auto ai = a->_ids.begin();
+                auto bi = b->_ids.begin();
+                while(ai != a->_ids.end() && bi != b->_ids.end())
+                {
+                    while(ai != a->_ids.end() && ai->first < bi->first) ++ai;
+                    if(ai == a->_ids.end()) break;
+                    if(ai->first == bi->first)
+                    {
+                        ai = a->_ids.erase(ai);
+                        bi = b->_ids.erase(bi);
+                    }
+                    else
+                    {
+                        ++bi;
+                    }
+                    if(bi == b->_ids.end() || ai == a->_ids.end()) break;
+                }
+            };
             if(auto p1 = dynamic_pointer_cast<PlusExpr>(_expr1))
                 if(auto p2 = dynamic_pointer_cast<PlusExpr>(_expr2))
+                    remdup(p1, p2);
+            
+            if(auto m1 = dynamic_pointer_cast<MultiplyExpr>(_expr1))
+                if(auto m2 = dynamic_pointer_cast<MultiplyExpr>(_expr2))
+                    remdup(m1, m2);                    
+            
+            if(auto p1 = dynamic_pointer_cast<CommutativeExpr>(_expr1))
+                if(auto p2 = dynamic_pointer_cast<CommutativeExpr>(_expr2))            
                     return p1->_exprs.size() + p1->_ids.size() + p2->_exprs.size() + p2->_ids.size() == 0;
             return false;
         }        
