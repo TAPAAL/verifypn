@@ -68,12 +68,12 @@ namespace PetriEngine {
             return _transitionnames.size();
         }
         
-        const std::map<std::string, uint32_t>& getPlaceNames() const
+        const std::unordered_map<std::string, uint32_t>& getPlaceNames() const
         {
             return _placenames;
         }
         
-        const std::map<std::string, uint32_t>& getTransitionNames() const
+        const std::unordered_map<std::string, uint32_t>& getTransitionNames() const
         {
             return _transitionnames;
         }
@@ -144,8 +144,8 @@ namespace PetriEngine {
         std::chrono::high_resolution_clock::time_point _start;
 
     protected:
-        std::map<std::string, uint32_t> _placenames;
-        std::map<std::string, uint32_t> _transitionnames;
+        std::unordered_map<std::string, uint32_t> _placenames;
+        std::unordered_map<std::string, uint32_t> _transitionnames;
         
         std::vector<Transition> _transitions;
         std::vector<Place> _places;

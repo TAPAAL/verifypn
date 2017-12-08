@@ -38,8 +38,8 @@ namespace PetriEngine {
         /** Context provided for context analysis */
         class AnalysisContext {
         protected:
-            const std::map<std::string, uint32_t>& _placeNames;
-            const std::map<std::string, uint32_t>& _transitionNames;
+            const unordered_map<std::string, uint32_t>& _placeNames;
+            const unordered_map<std::string, uint32_t>& _transitionNames;
             const PetriNet* _net;
             std::vector<ExprError> _errors;
         public:
@@ -52,7 +52,7 @@ namespace PetriEngine {
                 bool success;
             };
 
-            AnalysisContext(const std::map<std::string, uint32_t>& places, const std::map<std::string, uint32_t>& tnames, const PetriNet* net)
+            AnalysisContext(const std::unordered_map<std::string, uint32_t>& places, const std::unordered_map<std::string, uint32_t>& tnames, const PetriNet* net)
             : _placeNames(places), _transitionNames(tnames), _net(net) {
 
             }

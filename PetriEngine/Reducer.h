@@ -24,7 +24,7 @@ namespace PetriEngine {
         bool _deadlock;
     public:
 
-        QueryPlaceAnalysisContext(const std::map<std::string, uint32_t>& pnames, const std::map<std::string, uint32_t>& tnames, const PetriNet* net) 
+        QueryPlaceAnalysisContext(const std::unordered_map<std::string, uint32_t>& pnames, const std::unordered_map<std::string, uint32_t>& tnames, const PetriNet* net) 
         : PQL::AnalysisContext(pnames, tnames, net) {
             _placeInQuery.resize(_placeNames.size(), 0);
             _deadlock = false;
@@ -153,8 +153,8 @@ namespace PetriEngine {
         }
         
         std::vector<std::string> _initfire;
-        std::map<std::string, std::vector<std::string>> _postfire;
-        std::map<std::string, std::vector<ExpandedArc>> _extraconsume;
+        std::unordered_map<std::string, std::vector<std::string>> _postfire;
+        std::unordered_map<std::string, std::vector<ExpandedArc>> _extraconsume;
     };
 
     

@@ -22,7 +22,7 @@
 #include <list>
 #include <vector>
 #include <algorithm>
-#include <map>
+#include <unordered_map>
 #include <memory>
 
 #include "../PetriNet.h"
@@ -269,7 +269,7 @@ namespace PetriEngine {
                 _placenameforbound  = b;
             }
             
-            void indexPlaces(const std::map<std::string, uint32_t>& map)
+            void indexPlaces(const std::unordered_map<std::string, uint32_t>& map)
             {
                 _placeids.clear();
                 for(auto& i : _placenameforbound)

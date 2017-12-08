@@ -50,7 +50,7 @@ class PNMLParser {
         std::string id;
         bool isPlace;
     };
-    typedef std::map<std::string, NodeName> NodeNameMap;
+    typedef std::unordered_map<std::string, NodeName> NodeNameMap;
 
 public:
 
