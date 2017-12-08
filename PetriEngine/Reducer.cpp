@@ -788,7 +788,7 @@ namespace PetriEngine {
         }
     }
     
-    void Reducer::postFire(std::ostream& out, std::string transition)
+    void Reducer::postFire(std::ostream& out, const std::string& transition)
     {
         if(_postfire.count(transition) > 0)
         {
@@ -818,7 +818,7 @@ namespace PetriEngine {
         }
     }
     
-    void Reducer::extraConsume(std::ostream& out, std::string transition)
+    void Reducer::extraConsume(std::ostream& out, const std::string& transition)
     {
         if(_extraconsume.count(transition) > 0)
         {

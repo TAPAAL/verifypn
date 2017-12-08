@@ -115,8 +115,8 @@ namespace PetriEngine {
             return _ruleE;
         }
         
-        void postFire(std::ostream&, std::string transition);
-        void extraConsume(std::ostream&, std::string transition);
+        void postFire(std::ostream&, const std::string& transition);
+        void extraConsume(std::ostream&, const std::string& transition);
         void initFire(std::ostream&);
 
     private:
