@@ -119,6 +119,7 @@ namespace PetriEngine {
         {
             if(conds.size() == 0) return BooleanCondition::getShared(K);
             if(conds.size() == 1) return conds[0];
+
             std::vector<Condition_ptr> cnds;
             for(auto& c : conds) tryMerge<T>(cnds, c, aggressive);
             auto res = std::make_shared<T>(cnds);
@@ -483,17 +484,63 @@ namespace PetriEngine {
         void LogicalCondition::analyze(AnalysisContext& context) {
             for(auto& c : _conds) c->analyze(context);
         }
+
+        uint32_t getPlace(AnalysisContext& context, const std::string& name)
+        {
+            AnalysisContext::ResolutionResult result = context.resolve(name);
+            if (result.success) {
+                return result.offset;
+            } else {
+                ExprError error("Unable to resolve identifier \"" + name + "\"",
+                        name.length());
+                context.reportError(error);
+            }            
+            return -1;
+        }
+        
+        void FireableCondition::analyze(AnalysisContext& context)
+        {
+            if(_compiled)
+            {
+                _compiled->analyze(context);
+                return;
+            }
+            std::vector<Condition_ptr> conds;
+            AnalysisContext::ResolutionResult result = context.resolve(_name, false);
+            if (!result.success)
+            {
+                ExprError error("Unable to resolve identifier \"" + _name + "\"",
+                        _name.length());
+                context.reportError(error);
+            }            
+
+            assert(_name.compare(context.net()->transitionNames()[result.offset]) == 0);
+            auto preset = context.net()->preset(result.offset);
+            for(; preset.first != preset.second; ++preset.first)
+            {
+                assert(preset.first->place != std::numeric_limits<uint32_t>::max());
+                assert(preset.first->place != -1);
+                auto id = std::make_shared<IdentifierExpr>(context.net()->placeNames()[preset.first->place], preset.first->place);
+                auto lit = std::make_shared<LiteralExpr>(preset.first->tokens);
+
+                if(!preset.first->inhibitor)
+                {
+                    conds.emplace_back(std::make_shared<GreaterThanOrEqualCondition>(id, lit));
+                }
+                else if(preset.first->tokens > 0)
+                {
+                    conds.emplace_back(std::make_shared<LessThanCondition>(id, lit));
+                }
+            }
+            if(conds.size() == 1) _compiled = conds[0];
+            else _compiled = std::make_shared<AndCondition>(conds);
+            _compiled->analyze(context);
+        }
         
         void CompareConjunction::analyze(AnalysisContext& context) {
             for(auto& c : _constraints){
-                AnalysisContext::ResolutionResult result = context.resolve(c._name);
-                if (result.success) {
-                    c._place = result.offset;
-                } else {
-                    ExprError error("Unable to resolve identifier \"" + c._name + "\"",
-                            c._name.length());
-                    context.reportError(error);
-                }
+                c._place = getPlace(context, c._name);
+                assert(c._place >= 0);
             }
             std::sort(std::begin(_constraints), std::end(_constraints));
         }
@@ -2762,7 +2809,10 @@ namespace PetriEngine {
             for(auto& c : _conds)
             {
                 auto n = c->pushNegation(stats, context, nested, negate_children);
-                if(n->isTriviallyTrue()) return n;
+                if(n->isTriviallyTrue())
+                {
+                    return n;
+                }
                 if(n->isTriviallyFalse()) continue;
                 if(auto ef = dynamic_cast<EFCondition*>(n.get()))
                 {
@@ -2798,8 +2848,10 @@ namespace PetriEngine {
             }, stats, context, nested, negated);
         }
         
-        Condition_ptr CompareConjunction::pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr CompareConjunction::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
             return std::make_shared<CompareConjunction>(*this, negated);
+            }, stats, context, nested, negated);
         }
 
         

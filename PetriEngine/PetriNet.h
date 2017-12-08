@@ -64,6 +64,7 @@ namespace PetriEngine {
         /** Fire transition if possible and store result in result */
         bool deadlocked(const MarkVal* marking) const;
         bool fireable(const MarkVal* marking, int transitionIndex);
+        std::pair<const Invariant*, const Invariant*> preset(uint32_t id) const;
         
         uint32_t numberOfTransitions() const {
             return _ntransitions;

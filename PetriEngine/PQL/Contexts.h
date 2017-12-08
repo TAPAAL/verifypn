@@ -30,6 +30,7 @@
 #include "../PetriNet.h"
 #include "PetriEngine/Simplification/LPCache.h"
 #include "PQL.h"
+#include "../NetStructures.h"
 
 namespace PetriEngine {
     namespace PQL {
@@ -37,7 +38,9 @@ namespace PetriEngine {
         /** Context provided for context analysis */
         class AnalysisContext {
         protected:
-            std::map<std::string, uint32_t> _places;
+            const std::map<std::string, uint32_t>& _placeNames;
+            const std::map<std::string, uint32_t>& _transitionNames;
+            const PetriNet* _net;
             std::vector<ExprError> _errors;
         public:
 
@@ -49,19 +52,26 @@ namespace PetriEngine {
                 bool success;
             };
 
-            AnalysisContext(const std::map<std::string, uint32_t>& places)
-            : _places(places) {
+            AnalysisContext(const std::map<std::string, uint32_t>& places, const std::map<std::string, uint32_t>& tnames, const PetriNet* net)
+            : _placeNames(places), _transitionNames(tnames), _net(net) {
+
             }
             
             virtual void setHasDeadlock(){};
-
+            
+            const PetriNet* net() const
+            {
+                return _net;
+            }
+            
             /** Resolve an identifier */
-            virtual ResolutionResult resolve(std::string identifier) {
+            virtual ResolutionResult resolve(const std::string& identifier, bool place = true) {
                 ResolutionResult result;
                 result.offset = -1;
                 result.success = false;
-                auto it = _places.find(identifier);
-                if(it != _places.end())
+                auto& map = place ? _placeNames : _transitionNames;
+                auto it = map.find(identifier);
+                if(it != map.end())
                 {
                     result.offset = (int)it->second;
                     result.success = true;
@@ -190,7 +200,7 @@ namespace PetriEngine {
             
             void setLpTimeout(uint32_t i)
             {
-                _lpTimeout = i;
+                //_lpTimeout = i;
             }
             
             LPCache* cache() const

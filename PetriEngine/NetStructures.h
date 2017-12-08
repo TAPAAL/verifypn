@@ -37,9 +37,6 @@ namespace PetriEngine {
         std::vector<Arc> post;
         bool skip = false;
         bool inhib = false;
-
-        Transition() : pre(), post(), skip(false), inhib(false) {
-        }
     };
 
     struct Place {
@@ -47,9 +44,6 @@ namespace PetriEngine {
         std::vector<uint32_t> producers; // things producing
         bool skip = false;
         bool inhib = false;
-
-        Place() : consumers(), producers(), skip(false), inhib(false) {
-        }
     };
 }
 #endif /* NETSTRUCTURES_H */

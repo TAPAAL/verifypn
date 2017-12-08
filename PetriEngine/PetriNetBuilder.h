@@ -58,62 +58,63 @@ namespace PetriEngine {
             return initialMarking.data();
         }
         
-        uint32_t numberOfPlaces(){
+        uint32_t numberOfPlaces() const
+        {
             return _placenames.size();
         }
         
-        uint32_t numberOfTransitions()
+        uint32_t numberOfTransitions() const
         {
             return _transitionnames.size();
         }
         
-        const std::map<std::string, uint32_t>& getPlaceNames()
+        const std::map<std::string, uint32_t>& getPlaceNames() const
         {
             return _placenames;
         }
         
-        const std::map<std::string, uint32_t>& getTransitionNames()
+        const std::map<std::string, uint32_t>& getTransitionNames() const
         {
             return _transitionnames;
         }
-                
+
         void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query, 
                     std::vector<Reachability::ResultPrinter::Result>& results, 
-                    int reductiontype, bool reconstructTrace, int timeout = 60);
+                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout = 60);
         
-        size_t RemovedTransitions()
+        size_t RemovedTransitions() const
         {
             return reducer.RemovedTransitions();
         }
         
-        size_t RemovedPlaces()
+        size_t RemovedPlaces() const
         {
             return reducer.RemovedPlaces();
         }
 
-        size_t RuleA() {
+        size_t RuleA() const {
             return reducer.RuleA();
         }
 
-        size_t RuleB() {
+        size_t RuleB() const {
             return reducer.RuleB();
         }
 
-        size_t RuleC() {
+        size_t RuleC() const {
             return reducer.RuleC();
         }
 
-        size_t RuleD() {
+        size_t RuleD() const {
             return reducer.RuleD();
         }
         
-        size_t RuleE() {
+        size_t RuleE() const {
             return reducer.RuleE();
         }
         
         Reducer* getReducer() { return &reducer; }
         
-        std::vector<std::pair<std::string, uint32_t>> orphanPlaces() {
+        std::vector<std::pair<std::string, uint32_t>> orphanPlaces() const {
             std::vector<std::pair<std::string, uint32_t>> res;
             for(uint32_t p = 0; p < _places.size(); p++) {
                 if(_places[p].consumers.size() == 0 && _places[p].producers.size() == 0) {
@@ -128,7 +129,7 @@ namespace PetriEngine {
             return res;
         }
 
-        double getReductionTime(){
+        double getReductionTime() const {
             // duration in seconds
             auto end = std::chrono::high_resolution_clock::now();
             return (std::chrono::duration_cast<std::chrono::microseconds>(end - _start).count())*0.000001;

@@ -422,6 +422,54 @@ namespace PetriEngine {
         
         /******************** CONDITIONS ********************/
 
+                /* Fireable Condition -- placeholder, needs to be unfolded */
+        class FireableCondition : public Condition {
+        public:
+            FireableCondition(const std::string& tname) : _name(tname) {};
+            void analyze(AnalysisContext& context) override;
+            Result evaluate(const EvaluationContext& context) const override
+            { return _compiled->evaluate(context); }
+            Result evalAndSet(const EvaluationContext& context) override
+            { return _compiled->evalAndSet(context); }
+            uint32_t distance(DistanceContext& context) const override
+            { return _compiled->distance(context); }
+            void toString(std::ostream& ss) const override
+            { _compiled->toString(ss); } 
+            void toTAPAALQuery(std::ostream& s,TAPAALConditionExportContext& context) const override
+            { _compiled->toTAPAALQuery(s, context); }
+            Retval simplify(SimplificationContext& context) const override
+            { 
+                return _compiled->simplify(context); 
+            }
+            bool isReachability(uint32_t depth) const override
+            { return _compiled->isReachability(depth); }
+            bool isUpperBound() override
+            { return false; }
+            Condition_ptr prepareForReachability(bool negated) const override
+            { return _compiled->prepareForReachability(negated); }
+            Condition_ptr pushNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated) const override 
+            { 
+                return _compiled->pushNegation(stat, context, nested, negated); 
+            }
+            void toXML(std::ostream& ss, uint32_t tabs) const override 
+            { _compiled->toXML(ss, tabs);};
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override 
+            { _compiled->findInteresting(generator, negated); }
+            Quantifier getQuantifier() const override 
+            { return _compiled->getQuantifier(); }
+            Path getPath() const override 
+            { return _compiled->getPath(); }
+            CTLType getQueryType() const override 
+            { return _compiled->getQueryType(); }
+            int formulaSize() const override
+            { return _compiled->formulaSize(); }
+        private:
+            std::string _name;
+            Condition_ptr _compiled;
+        };
+        
+        
+        
         /* Logical conditon */
         class LogicalCondition : public Condition {
         public:
@@ -535,6 +583,7 @@ namespace PetriEngine {
             CompareConjunction() 
             {};
         public:
+            friend FireableCondition;
             CompareConjunction(const std::vector<cons_t>&& cons, bool negated) 
                     : _constraints(cons), _negated(negated) {};
             CompareConjunction(const std::vector<Condition_ptr>&, bool negated);
@@ -550,13 +599,15 @@ namespace PetriEngine {
                 int sum = 1;
                 for(auto& c : _constraints)
                 {
+                    assert(c._place >= 0);
                     if(c._lower == c._upper) ++sum;
                     else {
                         if(c._lower != 0) ++sum;
                         if(c._upper != std::numeric_limits<uint32_t>::max()) ++sum;
                     }
                 }
-                return ((sum*2)-1)+(_negated ? 1 : 0);
+                if(sum == 1) return 2;
+                else return (sum*2) + (sum-1);
             }
             void analyze(AnalysisContext& context) override;
             uint32_t distance(DistanceContext& context) const override;

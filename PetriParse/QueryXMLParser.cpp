@@ -38,8 +38,7 @@ int getChildCount(rapidxml::xml_node<> *n)
   return c;
 } 
 
-QueryXMLParser::QueryXMLParser(const PNMLParser::TransitionEnablednessMap &transitionEnabledness) {
-    _transitionEnabledness = transitionEnabledness;
+QueryXMLParser::QueryXMLParser() {
 }
 
 QueryXMLParser::~QueryXMLParser() { }
@@ -338,20 +337,12 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
     } else if (elementName == "is-fireable") {
         size_t nrOfChildren = getChildCount(element);
         if (nrOfChildren == 0) return nullptr;
+        std::vector<Condition_ptr> conds;
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
             if (strcmp(it->name(), "transition") != 0) return nullptr;            
-            string transitionName = it->value();
-            if (_transitionEnabledness.find(transitionName) == _transitionEnabledness.end()) {
-                fprintf(stderr, "XML Query Parsing error: Transition id=\"%s\" was not found!\n", transitionName.c_str());
-                return nullptr;
-            }
-            if (cond == nullptr) {
-                cond = _transitionEnabledness[transitionName];
-            } else {
-                cond = std::make_shared<OrCondition>(_transitionEnabledness[transitionName], cond); 
-            }        
+            conds.emplace_back(std::make_shared<FireableCondition>(it->value()));
         }
-        return cond;
+        return std::make_shared<OrCondition>(conds);
     }
     return nullptr;
 }

@@ -24,8 +24,9 @@ namespace PetriEngine {
         bool _deadlock;
     public:
 
-        QueryPlaceAnalysisContext(const std::map<std::string, uint32_t>& places) : PQL::AnalysisContext(places) {
-            _placeInQuery.resize(_places.size(), 0);
+        QueryPlaceAnalysisContext(const std::map<std::string, uint32_t>& pnames, const std::map<std::string, uint32_t>& tnames, const PetriNet* net) 
+        : PQL::AnalysisContext(pnames, tnames, net) {
+            _placeInQuery.resize(_placeNames.size(), 0);
             _deadlock = false;
         };
         
@@ -43,12 +44,13 @@ namespace PetriEngine {
             _deadlock = true;
         };
         
-        ResolutionResult resolve(std::string identifier) {
+        ResolutionResult resolve(const std::string& identifier, bool place) override {
+            if(!place) return PQL::AnalysisContext::resolve(identifier, false);
             ResolutionResult result;
             result.offset = -1;
             result.success = false;
-            auto it = _places.find(identifier);
-            if(it != _places.end())
+            auto it = _placeNames.find(identifier);
+            if(it != _placeNames.end())
             {
                 uint32_t i = it->second;
                 result.offset = (int)i;
