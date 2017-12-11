@@ -52,7 +52,7 @@ namespace PetriEngine {
             int formulaSize() const override{
                 size_t sum = 0;
                 for(auto& e : _exprs) sum += e->formulaSize();
-                return sum;
+                return sum + 1;
             }
             void toString(std::ostream&) const override;
         protected:
@@ -596,7 +596,7 @@ namespace PetriEngine {
             void merge(const std::vector<Condition_ptr>&, bool negated);
             
             int formulaSize() const override{
-                int sum = 1;
+                int sum = 0;
                 for(auto& c : _constraints)
                 {
                     assert(c._place >= 0);
@@ -607,7 +607,7 @@ namespace PetriEngine {
                     }
                 }
                 if(sum == 1) return 2;
-                else return (sum*2) + (sum-1);
+                else return (sum*2) + 1;
             }
             void analyze(AnalysisContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
@@ -805,7 +805,7 @@ namespace PetriEngine {
                 _temporal = _cond->isTemporal();
             }
             int formulaSize() const override{
-                return _cond->formulaSize(); // do not count the not node
+                return _cond->formulaSize() + 1;
             }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) const override;
@@ -843,10 +843,7 @@ namespace PetriEngine {
                 }
             }
             int formulaSize() const override{
-                if(trivial > 0)
-                    return 0;
-                else 
-                    return 1;
+                return 0;
             }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) const override;

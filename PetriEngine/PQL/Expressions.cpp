@@ -1496,92 +1496,62 @@ namespace PetriEngine {
         }
         
         Retval simplifyEX(Retval& r, SimplificationContext& context) {
-            auto st = context.getLpTimeout();
-            context.setLpTimeout(1);
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)) {
-                context.setLpTimeout(st);
                 return Retval(std::make_shared<NotCondition>(
                         std::make_shared<DeadlockCondition>()));
             } else if(r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)) {
-                context.setLpTimeout(st);
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } else {
-                context.setLpTimeout(st);
                 return Retval(std::make_shared<EXCondition>(r.formula));
             }
         }
         
         Retval simplifyAX(Retval& r, SimplificationContext& context) {
-            auto st = context.getLpTimeout();
-            context.setLpTimeout(1);
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)){
-                context.setLpTimeout(st);
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             } else if(r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)){
-                context.setLpTimeout(st);
                 return Retval(std::make_shared<DeadlockCondition>());
             } else{
-                context.setLpTimeout(st);
                 return Retval(std::make_shared<AXCondition>(r.formula));
             }
         }
         
         Retval simplifyEF(Retval& r, SimplificationContext& context){
-            auto st = context.getLpTimeout();
-            context.setLpTimeout(1);
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)){
-                context.setLpTimeout(st);
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             } else if(r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)){
-                context.setLpTimeout(st);
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } else {
-                context.setLpTimeout(st);
                 return Retval(std::make_shared<EFCondition>(r.formula));
             }
         }
         
         Retval simplifyAF(Retval& r, SimplificationContext& context){
-            auto st = context.getLpTimeout();
-            context.setLpTimeout(1);
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)){
-                context.setLpTimeout(st);
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             } else if(r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)){
-                context.setLpTimeout(st);
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } else {
-                context.setLpTimeout(st);
                 return Retval(std::make_shared<AFCondition>(r.formula));
             }
         }
         
         Retval simplifyEG(Retval& r, SimplificationContext& context){
-            auto st = context.getLpTimeout();
-            context.setLpTimeout(1);
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)){
-                context.setLpTimeout(st);
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             } else if(r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)){
-                context.setLpTimeout(st);
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } else {
-                context.setLpTimeout(st);
                 return Retval(std::make_shared<EGCondition>(r.formula));
             }
         }
         
         Retval simplifyAG(Retval& r, SimplificationContext& context){
-            auto st = context.getLpTimeout();
-            context.setLpTimeout(1);
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)){
-                context.setLpTimeout(st);
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             } else if(r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)){
-                context.setLpTimeout(st);
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } else {
-                context.setLpTimeout(st);
                 return Retval(std::make_shared<AGCondition>(r.formula));
             }
         }
@@ -1922,8 +1892,6 @@ namespace PetriEngine {
             // Lets try to see if the r1 AND r2 can ever be false at the same time
             // If not, then we know that r1 || r2 must be true.
             // we check this by checking if !r1 && !r2 is unsat
-            auto pt = context.getLpTimeout();
-            context.setLpTimeout(1);
             try {
                 // remove trivial rules from neglp
                 int ncnt = neglps.size() - 1;
@@ -1957,7 +1925,6 @@ namespace PetriEngine {
                // we are out of memory, deal with it.
                std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
             }            
-            context.setLpTimeout(pt);
             if(nconstraints.size() == 0)
             {
                 return Retval(BooleanCondition::getShared(!neg));                
@@ -2235,7 +2202,7 @@ namespace PetriEngine {
             {
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } 
-            else if(!context.timeout() && !neglps->satisfiable(context)) // EXPERIMENTAL
+            else if(!context.timeout() && !neglps->satisfiable(context))
             {
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             }
@@ -2427,21 +2394,6 @@ namespace PetriEngine {
         }
 
 /******************** Prepare CTL Queries ********************/
-
-
-        Condition_ptr initialMarkingRW(std::function<Condition_ptr ()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated)
-        {
-            auto res = func();
-            if(!nested)
-            {
-                auto e = res->evaluate(context);
-                if(e != Condition::RUNKNOWN) 
-                {
-                    return BooleanCondition::getShared(e);
-                }
-            }
-            return res;            
-        }
         
         Condition_ptr EGCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             ++stats[0];

@@ -287,6 +287,8 @@ namespace PetriEngine {
             virtual CTLType getQueryType() const = 0;
             virtual Quantifier getQuantifier() const = 0;
             virtual Path getPath() const = 0;
+            static std::shared_ptr<Condition> 
+            initialMarkingRW(std::function<std::shared_ptr<Condition> ()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated);
             
         protected:
             //Value for checking if condition is trivially true or false.

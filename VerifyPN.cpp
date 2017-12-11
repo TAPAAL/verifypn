@@ -566,15 +566,16 @@ int main(int argc, char* argv[]) {
             EvaluationContext context(qm0, qnet.get());
             if(options.printstatistics)
             {
-                std::cout << "\nQuery before reduction: ";
+/*                std::cout << "\nQuery before reduction: ";
                 queries[i]->toString(std::cout);
-                std::cout << std::endl;
+                std::cout << std::endl;*/
                 std::cout << "RWSTATS LEGEND:";
                 stats.printRules(std::cout);
                 std::cout << std::endl;
             }
             
-            queries[i] = queries[i]->pushNegation(stats, context, false, false);
+            queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false)
+                                    ->pushNegation(stats, context, false, false);
 
             if(options.printstatistics)
             {
@@ -603,9 +604,10 @@ int main(int argc, char* argv[]) {
 
             if(options.printstatistics)
             {
-                std::cout << "\nQuery after reduction: ";
+/*                std::cout << "\nQuery after reduction: ";
                 queries[i]->toString(std::cout);
-                std::cout << std::endl;
+                std::cout << std::endl;*/
+                if(queries[i]->prepareForReachability()) std::cout << "ONLY REACH" << std::endl;
             }
             if(options.printstatistics){
                 int postSize=queries[i]->formulaSize();
