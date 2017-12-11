@@ -1672,10 +1672,32 @@ namespace PetriEngine {
             }
         }
         
+        AbstractProgramCollection_ptr mergeLps(std::vector<AbstractProgramCollection_ptr>&& lps)
+        {
+            if(lps.size() == 0) return nullptr;
+            if(lps.size() == 1) return lps[0];
+            
+            int max = lps.size();
+            int j = 0;
+            int i = lps.size() -1;
+            while(i > 0)
+            {
+                if(i <= j) j = 0;
+                else
+                {
+                    lps[j] = std::make_shared<MergeCollection>(lps[j], lps[i]);
+                    --i;
+                    ++j;
+                }
+            }
+            
+            return lps[0];
+        }
+        
         Retval LogicalCondition::simplifyAnd(SimplificationContext& context) const {
 
             std::vector<Condition_ptr> conditions;
-            AbstractProgramCollection_ptr lps = nullptr;
+            std::vector<AbstractProgramCollection_ptr> lpsv;
             std::vector<AbstractProgramCollection_ptr>  neglps;
             for(auto& c : _conds)
             {
@@ -1690,9 +1712,8 @@ namespace PetriEngine {
                 }
                 
                 conditions.push_back(r.formula);
-                if(lps == nullptr) lps = r.lps;
-                else lps = std::make_shared<MergeCollection>(lps, r.lps);
-                neglps.push_back(r.neglps);
+                lpsv.emplace_back(r.lps);
+                neglps.emplace_back(r.neglps);
             }
             
             if(conditions.size() == 0)
@@ -1700,6 +1721,7 @@ namespace PetriEngine {
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             }
 
+            auto lps = mergeLps(std::move(lpsv));
 
             try {
                 if(!context.timeout() && !lps->satisfiable(context))
@@ -1726,8 +1748,7 @@ namespace PetriEngine {
         Retval LogicalCondition::simplifyOr(SimplificationContext& context) const {
 
             std::vector<Condition_ptr> conditions;
-            std::vector<AbstractProgramCollection_ptr> lps;
-            AbstractProgramCollection_ptr  neglps = nullptr;
+            std::vector<AbstractProgramCollection_ptr> lps, neglpsv;
             for(auto& c : _conds)
             {
                 auto r = c->simplify(context);
@@ -1744,10 +1765,11 @@ namespace PetriEngine {
                 }
                 conditions.push_back(r.formula);
                 lps.push_back(r.lps);
-                if(neglps == nullptr) neglps = r.neglps;
-                else neglps = std::make_shared<MergeCollection>(neglps, r.neglps);
+                neglpsv.emplace_back(r.lps);
             }
             
+            AbstractProgramCollection_ptr  neglps = mergeLps(std::move(neglpsv));
+
             if(conditions.size() == 0)
             {
                 return Retval(BooleanCondition::FALSE_CONSTANT);
@@ -1813,8 +1835,7 @@ namespace PetriEngine {
             {
                 return Retval(std::make_shared<CompareConjunction>(*this, context.negated()));
             }
-            AbstractProgramCollection_ptr lps = nullptr;
-            std::vector<AbstractProgramCollection_ptr>  neglps;
+            std::vector<AbstractProgramCollection_ptr>  neglps, lpsv;
             auto neg = context.negated() != _negated;
             std::vector<cons_t> nconstraints;
             for(auto& c : _constraints) 
@@ -1837,8 +1858,7 @@ namespace PetriEngine {
                         m2 = m1;
                         auto lp = std::make_shared<SingleProgram>(context.cache(), std::move(m1), constant, Simplification::OP_LE);
                         auto nlp = std::make_shared<SingleProgram>(context.cache(), std::move(m2), constant, Simplification::OP_GT);
-                        if(lps == nullptr) lps = lp;
-                        else lps = std::make_shared<MergeCollection>(lps, lp);
+                        lpsv.push_back(lp);
                         neglps.push_back(nlp);
                    }
                 }
@@ -1860,8 +1880,7 @@ namespace PetriEngine {
                         m2 = m1;
                         auto lp = std::make_shared<SingleProgram>(context.cache(), std::move(m1), constant, Simplification::OP_LE);
                         auto nlp = std::make_shared<SingleProgram>(context.cache(), std::move(m2), constant, Simplification::OP_GT);
-                        if(lps == nullptr) lps = lp;
-                        else lps = std::make_shared<MergeCollection>(lps, lp);
+                        lpsv.push_back(lp);
                         neglps.push_back(nlp);
                    }
                 }
@@ -1872,6 +1891,8 @@ namespace PetriEngine {
 
                 assert(nconstraints.size() <= neglps.size()*2);
             }
+            
+            auto lps = mergeLps(std::move(lpsv));
             
             if(lps == nullptr && !context.timeout()) 
             {
