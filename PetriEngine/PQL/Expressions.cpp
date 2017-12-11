@@ -1675,11 +1675,8 @@ namespace PetriEngine {
         AbstractProgramCollection_ptr mergeLps(std::vector<AbstractProgramCollection_ptr>&& lps)
         {
             if(lps.size() == 0) return nullptr;
-            if(lps.size() == 1) return lps[0];
-            
-            int max = lps.size();
             int j = 0;
-            int i = lps.size() -1;
+            int i = lps.size() - 1;
             while(i > 0)
             {
                 if(i <= j) j = 0;
@@ -1690,7 +1687,6 @@ namespace PetriEngine {
                     ++j;
                 }
             }
-            
             return lps[0];
         }
         
@@ -1765,7 +1761,7 @@ namespace PetriEngine {
                 }
                 conditions.push_back(r.formula);
                 lps.push_back(r.lps);
-                neglpsv.emplace_back(r.lps);
+                neglpsv.emplace_back(r.neglps);
             }
             
             AbstractProgramCollection_ptr  neglps = mergeLps(std::move(neglpsv));
