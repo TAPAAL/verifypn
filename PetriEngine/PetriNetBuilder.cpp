@@ -394,7 +394,8 @@ namespace PetriEngine {
         QueryPlaceAnalysisContext placecontext(getPlaceNames());
         for(uint32_t i = 0; i < queries.size(); ++i)
         {
-            if(results[i] == Reachability::ResultPrinter::Unknown)
+            if(results[i] == Reachability::ResultPrinter::Unknown ||
+               results[i] == Reachability::ResultPrinter::CTL )
             {
                 queries[i]->analyze(placecontext);        
             }
