@@ -656,7 +656,26 @@ int main(int argc, char* argv[]) {
 
         if(alldone) return SuccessCode;
     }
-
+    
+    //--------------------- Apply Net Reduction ---------------//
+        
+    if ( (options.enablereduction == 1 || options.enablereduction == 2) 
+         && std::all_of(queries.begin(), queries.end(), [](auto& a){ return !a->containsNext(); })) {
+        // Compute how many times each place appears in the query
+        builder.startTimer();
+        builder.reduce(queries, results, options.enablereduction, options.trace, nullptr, options.reductionTimeout);
+        printer.setReducer(builder.getReducer());        
+    }
+    
+    printStats(builder, options);
+    
+    auto net = std::unique_ptr<PetriNet>(builder.makePetriNet());
+    
+    for(auto& q : queries)
+    {
+        q->indexPlaces(builder.getPlaceNames());
+    }
+    
     //----------------------- Verify CTL queries -----------------------//
     std::vector<size_t> ctl_ids;
     for(size_t i = 0; i < queries.size(); ++i)
@@ -670,15 +689,15 @@ int main(int argc, char* argv[]) {
     if (ctl_ids.size() > 0) {
         options.isctl=true;
         PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
-        std::unique_ptr<PetriNet> ctlnet(builder.makePetriNet());
+
         // Assign indexes
-        if(queries.size() == 0 || contextAnalysis(builder, ctlnet.get(), queries) != ContinueCode)  return ErrorCode;
+        if(queries.size() == 0 || contextAnalysis(builder, net.get(), queries) != ContinueCode)  return ErrorCode;
         if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
         if(options.strategy != PetriEngine::Reachability::DFS){
             fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
             options.strategy = PetriEngine::Reachability::DFS;
         }
-        v = CTLMain(ctlnet.get(),
+        v = CTLMain(net.get(),
             options.ctlalgorithm,
             options.strategy,
             options.gamemode,
@@ -687,7 +706,7 @@ int main(int argc, char* argv[]) {
             querynames,
             queries,
             ctl_ids);
-                
+
         if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
             return v;
         }
@@ -695,24 +714,6 @@ int main(int argc, char* argv[]) {
         options.strategy=reachabilityStrategy;
     }
     options.isctl=false;
-    //--------------------- Apply Net Reduction ---------------//
-        
-    if (options.enablereduction == 1 || options.enablereduction == 2) {
-        // Compute how many times each place appears in the query
-        builder.startTimer();
-        std::unique_ptr<PetriNet> net(builder.makePetriNet(false));
-        builder.reduce(queries, results, options.enablereduction, options.trace, net.get(), options.reductionTimeout);
-        printer.setReducer(builder.getReducer());        
-    }
-    
-    printStats(builder, options);
-    
-    std::unique_ptr<PetriNet> net(builder.makePetriNet());
-    
-    for(auto& q : queries)
-    {
-        q->indexPlaces(builder.getPlaceNames());
-    }
     
     //----------------------- Siphon Trap ------------------------//
     

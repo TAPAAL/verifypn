@@ -289,7 +289,7 @@ namespace PetriEngine {
             virtual Path getPath() const = 0;
             static std::shared_ptr<Condition> 
             initialMarkingRW(std::function<std::shared_ptr<Condition> ()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated);
-            
+            virtual bool containsNext() const = 0;            
         protected:
             //Value for checking if condition is trivially true or false.
             //0 is undecided (default), 1 is true, 2 is false.

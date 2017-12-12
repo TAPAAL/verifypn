@@ -254,6 +254,7 @@ namespace PetriEngine {
             bool isUpperBound() override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
+            virtual bool containsNext() const override { return _cond->containsNext(); }
         private:
             virtual std::string op() const = 0;
             
@@ -272,7 +273,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override;
-            
+            bool containsNext() const override { return true; }            
         private:
             std::string op() const override;
         };
@@ -324,6 +325,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override;
+            bool containsNext() const override { return true; }
         private:
             std::string op() const override;
         };
@@ -385,7 +387,7 @@ namespace PetriEngine {
             { if(i == 0) return _cond1; return _cond2;}
             Path getPath() const override             
             { return Path::U; }
-
+            bool containsNext() const override { return _cond1->containsNext() || _cond2->containsNext(); }
         private:
             virtual std::string op() const = 0; 
             
@@ -463,6 +465,9 @@ namespace PetriEngine {
             { return _compiled->getQueryType(); }
             int formulaSize() const override
             { return _compiled->formulaSize(); }
+            bool containsNext() const override
+            { return false; }
+
         private:
             std::string _name;
             Condition_ptr _compiled;
@@ -503,6 +508,8 @@ namespace PetriEngine {
             auto end() const { return _conds.end(); }
             bool empty() const { return _conds.size() == 0; }
             bool singular() const { return _conds.size() == 1; }
+            bool containsNext() const override 
+            { return std::any_of(begin(), end(), [](auto& a){return a->containsNext();}); }
         protected:
             LogicalCondition() {};
             Retval simplifyOr(SimplificationContext& context) const;
@@ -632,6 +639,8 @@ namespace PetriEngine {
                                     (_constraints[0]._lower == 0 || 
                                      _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
             };
+            bool containsNext() const override { return false;}
+
         private:
             std::vector<cons_t> _constraints;
             bool _negated = false;
@@ -665,6 +674,7 @@ namespace PetriEngine {
                 if(id == 0) return _expr1;
                 else return _expr2;
             }
+            bool containsNext() const override { return false; }
         protected:
             uint32_t _distance(DistanceContext& c, 
                     std::function<uint32_t(uint32_t, uint32_t, bool)> d) const
@@ -825,6 +835,7 @@ namespace PetriEngine {
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             const Condition_ptr& operator[](size_t i) const { return _cond; };
             virtual bool isTemporal() const override { return _temporal;}
+            bool containsNext() const override { return false; }
 
         private:
             Condition_ptr _cond;
@@ -864,6 +875,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
+            bool containsNext() const override { return false; }
         private:
             const bool _value;
         };
@@ -894,6 +906,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
+            bool containsNext() const override { return false; }
         };
 
     }
