@@ -10,6 +10,7 @@
 #include "PetriNetBuilder.h"
 #include <PetriParse/PNMLParser.h>
 #include <queue>
+#include <set>
 
 namespace PetriEngine {
 
@@ -728,7 +729,8 @@ namespace PetriEngine {
             if(placeInQuery[p] > 0) continue;
             if(place.producers.size() > place.consumers.size()) continue;
             
-            bool ok = true;
+            std::set<uint32_t> notenabled;
+            bool ok = true;            
             for(uint cons : place.consumers)
             {
                 Transition& t = getTransition(cons);
@@ -737,12 +739,21 @@ namespace PetriEngine {
                     ok = false;
                     break;
                 }               
+                else
+                {
+                    notenabled.insert(cons);
+                }
             }
             
             if(!ok) continue;
-            
+
             for(uint prod : place.producers)
             {
+                if(notenabled.count(prod) == 0)
+                {
+                    ok = false;
+                    break;
+                }
                 // check that producing arcs originate from transition also 
                 // consuming. If so, we know it will never fire.
                 Transition& t = getTransition(prod);
@@ -755,17 +766,18 @@ namespace PetriEngine {
             }
             
             if(!ok) continue;
+
+            _ruleE++;
             
             parent->initialMarking[p] = 0;
             
-            auto torem = place.consumers;
-            for(uint cons : torem)
-            {
+            bool skipplace = notenabled.size() == place.consumers.size();
+            for(uint cons : notenabled)
                 skipTransition(cons);
-            }
 
-            skipPlace(p);
-            _ruleE++;
+            if(skipplace)
+                skipPlace(p);
+            
             continueReductions = true;
         }
         assert(consistent());
