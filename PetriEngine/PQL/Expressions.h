@@ -835,7 +835,7 @@ namespace PetriEngine {
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
             const Condition_ptr& operator[](size_t i) const { return _cond; };
             virtual bool isTemporal() const override { return _temporal;}
-            bool containsNext() const override { return false; }
+            bool containsNext() const override { return _cond->containsNext(); }
 
         private:
             Condition_ptr _cond;
