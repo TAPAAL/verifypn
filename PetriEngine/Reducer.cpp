@@ -180,12 +180,14 @@ namespace PetriEngine {
             assert(!t.skip || (t.pre.size() == 0 && t.post.size() == 0));
             for(Arc& a : t.pre)
             {
+                assert(a.weight > 0);
                 Place& p = parent->_places[a.place];
                 assert(!p.skip);
                 assert(std::find(p.consumers.begin(), p.consumers.end(), i) != p.consumers.end());
             }
             for(Arc& a : t.post)
             {
+                assert(a.weight > 0);
                 Place& p = parent->_places[a.place];
                 assert(!p.skip);
                 assert(std::find(p.producers.begin(), p.producers.end(), i) != p.producers.end());
@@ -239,14 +241,10 @@ namespace PetriEngine {
 
             // A2. we have more/less than one arc in pre or post
             // checked first to avoid out-of-bounds when looking up indexes.
-            if(trans.pre.size() != 1 || trans.post.size() != 1) continue;
+            if(trans.pre.size() != 1) continue;
 
             uint32_t pPre = trans.pre[0].place;
-            uint32_t pPost = trans.post[0].place;
-            
-            // A1. continue if source and destination are the same
-            if (pPre == pPost) continue;
-            
+                        
             // A2. Check that pPre goes only to t
             if(parent->_places[pPre].consumers.size() != 1) continue;
             
@@ -255,10 +253,21 @@ namespace PetriEngine {
             if(trans.pre[0].weight != 1 || trans.post[0].weight < 1) continue;
                         
             // A4. Do inhibitor check, neither T, pPre or pPost can be involved with any inhibitor
-            if(parent->_places[pPre].inhib || parent->_places[pPost].inhib || trans.inhib) continue;
-
+            if(parent->_places[pPre].inhib|| trans.inhib) continue;
+            
             // A5. dont mess with query!
-            if(placeInQuery[pPre] > 0 || placeInQuery[pPost]) continue;
+            if(placeInQuery[pPre] > 0) continue;
+            // check A1, A4 and A5 for post
+            bool ok = true;
+            for(auto& pPost : trans.post)
+            {
+                if(parent->_places[pPost.place].inhib || pPre == pPost.place || placeInQuery[pPost.place] > 0)
+                {
+                    ok = false;
+                    break;
+                }
+            }
+            if(!ok) continue;
             
             continueReductions = true;
             _ruleA++;
@@ -280,40 +289,45 @@ namespace PetriEngine {
                 }                
             }
             
-            size_t weight = trans.post[0].weight;
-            
-            // UA2. move the token for the initial marking, makes things simpler.
-            parent->initialMarking[pPost] += (parent->initialMarking[pPre] * weight);
+            for(auto& pPost : trans.post)
+            {
+                // UA2. move the token for the initial marking, makes things simpler.
+                parent->initialMarking[pPost.place] += (parent->initialMarking[pPre] * pPost.weight);
+            }
             parent->initialMarking[pPre] = 0;
 
             // Remove transition t and the place that has no tokens in m0
             // UA1. remove transition
+            auto toMove = trans.post;
             skipTransition(t);
-            assert(pPost != pPre);
 
             // UA2. update arcs
             for(auto& _t : parent->_places[pPre].producers)
             {
-                assert(pPre != pPost);
                 assert(_t != t);
                 // move output-arcs to post.
-                Transition& trans = getTransition(_t);
-                auto source = getOutArc(trans, pPre);
-                assert(source != trans.pre.end());
-                auto dest = getOutArc(trans, pPost);
-                if(dest == trans.post.end())
+                Transition& src = getTransition(_t);
+                auto source = *getOutArc(src, pPre);
+                for(auto& pPost : toMove)
                 {
-                    source->place = pPost;
-                    source->weight *= weight;
-                    parent->_places[pPost].producers.push_back(_t);
-
-                    std::sort(trans.post.begin(), trans.post.end());
-                    std::sort(  parent->_places[pPost].producers.begin(), 
-                                parent->_places[pPost].producers.end());
-                }
-                else
-                {
-                    dest->weight += (source->weight * weight);
+                    Arc a;
+                    a.place = pPost.place;
+                    a.weight = source.weight * pPost.weight;
+                    assert(a.weight > 0);
+                    a.inhib = false;
+                    auto dest = std::lower_bound(src.post.begin(), src.post.end(), a);
+                    if(dest == src.post.end() || dest->place != pPost.place)
+                    {
+                        dest = src.post.insert(dest, a);
+                        auto& prod = parent->_places[pPost.place].producers;
+                        auto lb = std::lower_bound(prod.begin(), prod.end(), _t);
+                        prod.insert(lb, _t);
+                    }
+                    else
+                    {
+                        dest->weight += (source.weight * pPost.weight);
+                    }
+                    assert(dest->weight > 0);
                 }
             }                
             // UA1. remove place
