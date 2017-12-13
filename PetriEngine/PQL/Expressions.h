@@ -76,7 +76,7 @@ namespace PetriEngine {
             }
             void toString(std::ostream&) const override;            
         protected:
-            virtual int32_t preOp(const EvaluationContext& context) const;
+            virtual int32_t preOp(const EvaluationContext& context) const override;
             int32_t _constant;
             std::vector<std::pair<uint32_t,std::string>> _ids;
             Member commutativeCons(int constant, SimplificationContext& context, std::function<void(Member& a, Member b)> op) const;
