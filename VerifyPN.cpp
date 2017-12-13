@@ -478,7 +478,9 @@ void printStats(PetriNetBuilder& builder, options_t& options)
                         << "Applications of rule B: " << builder.RuleB() << std::endl
                         << "Applications of rule C: " << builder.RuleC() << std::endl
                         << "Applications of rule D: " << builder.RuleD() << std::endl
-                        << "Applications of rule E: " << builder.RuleE() << std::endl;
+                        << "Applications of rule E: " << builder.RuleE() << std::endl
+                        << "Applications of rule F: " << builder.RuleF() << std::endl
+                        << "Applications of rule G: " << builder.RuleG() << std::endl;
         }
     }
 }

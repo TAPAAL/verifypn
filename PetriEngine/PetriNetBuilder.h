@@ -112,6 +112,14 @@ namespace PetriEngine {
             return reducer.RuleE();
         }
         
+        size_t RuleF() const {
+            return reducer.RuleF();
+        }
+        
+        size_t RuleG() const {
+            return reducer.RuleG();
+        }
+
         Reducer* getReducer() { return &reducer; }
         
         std::vector<std::pair<std::string, uint32_t>> orphanPlaces() const {

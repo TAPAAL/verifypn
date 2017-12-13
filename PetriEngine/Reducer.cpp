@@ -15,7 +15,7 @@
 namespace PetriEngine {
 
     Reducer::Reducer(PetriNetBuilder* p) 
-    : _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0), _ruleE(0), parent(p) {
+    : _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0), _ruleE(0), _ruleF(0), _ruleG(0), parent(p) {
     }
 
     Reducer::~Reducer() {
@@ -768,6 +768,7 @@ namespace PetriEngine {
             if(!ok) continue;
 
             _ruleE++;
+            continueReductions = true;
             
             parent->initialMarking[p] = 0;
             
@@ -778,9 +779,106 @@ namespace PetriEngine {
             if(skipplace)
                 skipPlace(p);
             
-            continueReductions = true;
         }
         assert(consistent());
+        return continueReductions;
+    }
+   
+    bool Reducer::ReducebyRuleF(uint32_t* placeInQuery) {
+        bool continueReductions = false;
+        const size_t numberofplaces = parent->numberOfPlaces();
+        for(uint32_t p = 0; p < numberofplaces; ++p)
+        {
+            if(hasTimedout()) return false;
+            Place& place = parent->_places[p];
+            if(place.skip) continue;
+            if(place.inhib) continue;
+            if(placeInQuery[p] > 0) continue;
+            if(place.consumers.size() > 0) continue;
+            
+            ++_ruleF;
+            continueReductions = true;
+            skipPlace(p);
+            std::vector<uint32_t> torem;
+            for(auto& t : place.producers)
+            {
+                auto& trans = parent->_transitions[t];
+                if(trans.post.size() != 0)
+                    continue;
+                bool ok = true;
+                for(auto& a : trans.pre)
+                {
+                    if(placeInQuery[a.place] > 0)
+                    {
+                        ok = false;
+                    }
+                }
+                if(ok) torem.push_back(t);
+            }
+            
+            for(auto t : torem)
+                skipTransition(t);
+            assert(consistent());
+        }
+        return continueReductions;
+    }
+
+    bool Reducer::ReducebyRuleG(uint32_t* placeInQuery) {
+        bool continueReductions = false;
+        const size_t ntrans = parent->numberOfTransitions();
+        for (uint32_t touter = 0; touter < ntrans; ++touter) {
+            if(hasTimedout()) return false;
+            Transition& trans = getTransition(touter);
+            if (trans.skip) continue;
+            if (trans.pre.size() == 0) continue;
+            
+            uint32_t nfire = std::numeric_limits<uint32_t>::max();
+            bool ok = true;
+            for(auto& a : trans.pre)
+            {
+                if(a.weight >= parent->initialMarking[a.place] && a.inhib) nfire = 0;
+                else if(!a.inhib)
+                {
+                    nfire = std::min(nfire, parent->initialMarking[a.place] / a.weight);
+                }
+                auto& place = parent->_places[a.place];
+                if(place.producers.size() > 0 ||
+                   place.consumers.size() > 1)
+                {
+                    ok = false;
+                }
+                if(placeInQuery[a.place] > 0)
+                {
+                    ok = false;
+                }
+                if(!ok) break;
+            }
+            
+            if(!ok) continue;
+
+            for(auto& a : trans.post)
+            {
+                if(placeInQuery[a.place] > 0) 
+                {
+                    ok = false;
+                    break;
+                }
+            }
+            
+            if(!ok) continue;
+            ++_ruleG;
+            continueReductions = true;
+
+            for(auto& a : trans.post)
+            {
+                parent->initialMarking[a.place] += a.weight* nfire;
+            }
+            auto rem = trans.pre;
+            skipTransition(touter);
+            for(auto& a : rem)
+                skipPlace(a.place);
+            assert(consistent());
+        }
         return continueReductions;
     }
 
@@ -794,16 +892,22 @@ namespace PetriEngine {
             bool changed = false;
             do
             {
-                do{
-                    changed = false;
-                    changed |= ReducebyRuleA(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleB(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleE(context.getQueryPlaceCount());
-                } while(changed && !hasTimedout());
-                // RuleC and RuleD are expensive, so wait with those till nothing else changes
-                changed |= ReducebyRuleD(context.getQueryPlaceCount());
-                changed |= ReducebyRuleC(context.getQueryPlaceCount());
-            } while(changed);
+                do
+                {
+                    do{
+                        changed = false;
+                        changed |= ReducebyRuleA(context.getQueryPlaceCount());
+                        changed |= ReducebyRuleB(context.getQueryPlaceCount());
+                        changed |= ReducebyRuleE(context.getQueryPlaceCount());
+                        changed |= ReducebyRuleF(context.getQueryPlaceCount());
+                    } while(changed && !hasTimedout());
+                    // RuleC and RuleD are expensive, so wait with those till nothing else changes
+                    changed |= ReducebyRuleD(context.getQueryPlaceCount());
+                    changed |= ReducebyRuleC(context.getQueryPlaceCount());
+                } while(!hasTimedout() && changed);
+                // wait with G to last, it can ruin other reduction rules
+                changed |= ReducebyRuleG(context.getQueryPlaceCount());
+            } while(!hasTimedout() && changed);
 
         } else if (enablereduction == 2) { // for k-boundedness checking only rules A and D are applicable
             while ( (
