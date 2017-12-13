@@ -40,7 +40,7 @@ namespace PetriEngine {
 
         bool hasDeadlock() { return _deadlock; }
         
-        virtual void setHasDeadlock(){
+        virtual void setHasDeadlock() override {
             _deadlock = true;
         };
         
