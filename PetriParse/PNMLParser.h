@@ -50,7 +50,7 @@ class PNMLParser {
         std::string id;
         bool isPlace;
     };
-    typedef std::map<std::string, NodeName> NodeNameMap;
+    typedef std::unordered_map<std::string, NodeName> NodeNameMap;
 
 public:
 
@@ -58,8 +58,6 @@ public:
         std::string name, text;
     };
     
-    typedef std::map<std::string, PetriEngine::PQL::Condition_ptr> TransitionEnablednessMap;
-
     PNMLParser() {
         builder = NULL;
     }
@@ -68,10 +66,6 @@ public:
 
     std::vector<Query> getQueries() {
         return queries;
-    }
-
-    TransitionEnablednessMap getTransitionEnabledness() {
-        return transitionEnabledness;
     }
 
 private:
@@ -89,7 +83,6 @@ private:
     ArcList inhibarcs;
     TransitionList transitions;
     std::vector<Query> queries;
-    TransitionEnablednessMap transitionEnabledness; // encodes the enabledness condition for each transition
 };
 
 #endif // PNMLPARSER_H

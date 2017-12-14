@@ -64,6 +64,7 @@ namespace PetriEngine {
         /** Fire transition if possible and store result in result */
         bool deadlocked(const MarkVal* marking) const;
         bool fireable(const MarkVal* marking, int transitionIndex);
+        std::pair<const Invariant*, const Invariant*> preset(uint32_t id) const;
         
         uint32_t numberOfTransitions() const {
             return _ntransitions;
@@ -85,20 +86,20 @@ namespace PetriEngine {
         {
             return _placenames;
         }
-        
-    private:
-        
+               
         void print(MarkVal const * const val) const
         {
             for(size_t i = 0; i < _nplaces; ++i)
             {
                 if(val[i] != 0)
                 {
-                    std::cout << i << " -> " << val[i] << std::endl;
+                    std::cout << _placenames[i] << "(" << i << ")" << " -> " << val[i] << std::endl;
                 }
             }
         }
-        
+
+    private:        
+
         /** Number of x variables
          * @remarks We could also get this from the _places vector, but I don't see any
          * any complexity garentees for this type.

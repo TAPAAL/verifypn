@@ -27,6 +27,7 @@
 #include <iostream>
 #include <set>
 #include <cmath>
+#include <numeric>
 
 using namespace PetriEngine::Simplification;
 
@@ -40,6 +41,107 @@ namespace PetriEngine {
             }
             return out;
         }
+        
+        /** FOR COMPILING AND CONSTRUCTING LOGICAL OPERATORS **/
+
+        template<typename T>
+        void tryMerge(std::vector<Condition_ptr>& _conds, const Condition_ptr& ptr, bool aggressive = false)
+        {
+            if(auto lor = std::dynamic_pointer_cast<T>(ptr))
+            {
+                for(auto& c : *lor) tryMerge<T>(_conds, c, aggressive);
+            }
+            else if (!aggressive)
+            {
+                _conds.emplace_back(ptr);
+            }
+            else if (auto comp = std::dynamic_pointer_cast<CompareCondition>(ptr))
+            {                
+                if((std::is_same<T, AndCondition>::value && std::dynamic_pointer_cast<NotEqualCondition>(ptr)) ||
+                   (std::is_same<T, OrCondition>::value && std::dynamic_pointer_cast<EqualCondition>(ptr)))
+                {
+                    _conds.emplace_back(ptr);
+                }
+                else
+                {
+                    if(! ((dynamic_cast<IdentifierExpr*>((*comp)[0].get()) && dynamic_cast<LiteralExpr*>((*comp)[1].get())) ||
+                          (dynamic_cast<IdentifierExpr*>((*comp)[1].get()) && dynamic_cast<LiteralExpr*>((*comp)[0].get()))))
+                    {
+                        _conds.emplace_back(ptr);
+                        return;
+                    }
+
+                    std::vector<Condition_ptr> cnds{ptr};
+                    auto cmp = std::make_shared<CompareConjunction>(cnds, std::is_same<T, OrCondition>::value);
+                    tryMerge<T>(_conds, cmp, aggressive);
+                }
+            }
+            else if (auto conj = std::dynamic_pointer_cast<CompareConjunction>(ptr))
+            {
+                if((std::is_same<T, OrCondition>::value  && ( conj->isNegated() || conj->singular())) ||
+                   (std::is_same<T, AndCondition>::value && (!conj->isNegated() || conj->singular())))
+                {
+                    if(auto lc = std::dynamic_pointer_cast<CompareConjunction>(_conds.size() == 0 ? nullptr : _conds[0]))
+                    {
+                        if(lc->isNegated() == std::is_same<T, OrCondition>::value)
+                        {
+                            auto cpy = std::make_shared<CompareConjunction>(*lc);
+                            cpy->merge(*conj);
+                            _conds[0] = cpy;
+                        }
+                        else
+                        {
+                            if(conj->isNegated() == std::is_same<T, OrCondition>::value)
+                                _conds.insert(_conds.begin(), conj);
+                            else
+                                _conds.insert(_conds.begin(), std::make_shared<CompareConjunction>(*conj, true));
+                        }
+                    }
+                    else
+                    {
+                        _conds.insert(_conds.begin(), conj);
+                    }
+                }
+                else
+                {
+                    _conds.emplace_back(ptr);                    
+                }
+            }
+            else
+            {
+                _conds.emplace_back(ptr);
+            }
+
+        }
+        
+        template<typename T, bool K>
+        Condition_ptr makeLog(const std::vector<Condition_ptr>& conds, bool aggressive)
+        {
+            if(conds.size() == 0) return BooleanCondition::getShared(K);
+            if(conds.size() == 1) return conds[0];
+
+            std::vector<Condition_ptr> cnds;
+            for(auto& c : conds) tryMerge<T>(cnds, c, aggressive);
+            auto res = std::make_shared<T>(cnds);
+            if(res->singular()) return *res->begin();
+            if(res->empty()) return BooleanCondition::getShared(K);
+            return res;
+        }
+        
+        Condition_ptr makeOr(const std::vector<Condition_ptr>& cptr) 
+        { return makeLog<OrCondition,false>(cptr, true); }
+        Condition_ptr makeAnd(const std::vector<Condition_ptr>& cptr) 
+        { return makeLog<AndCondition,true>(cptr, true); }
+        Condition_ptr makeOr(const Condition_ptr& a, const Condition_ptr& b) {  
+            std::vector<Condition_ptr> cnds{a,b};
+            return makeLog<OrCondition,false>(cnds, true); 
+        }
+        Condition_ptr makeAnd(const Condition_ptr& a, const Condition_ptr& b) 
+        {             
+            std::vector<Condition_ptr> cnds{a,b};
+            return makeLog<AndCondition,true>(cnds, true); 
+        }
+        
         
         // CONSTANTS
         Condition_ptr BooleanCondition::FALSE_CONSTANT = std::make_shared<BooleanCondition>(false);
@@ -80,6 +182,18 @@ namespace PetriEngine {
             ss << ")";
         }
 
+        void CommutativeExpr::toString(std::ostream& ss) const {
+            ss << "( " << _constant;
+            for(auto& i : _ids)
+                ss << " " << op() << " " << i.second;
+            for(auto& e : _exprs)
+            {
+                ss << " " << op() << " ";
+                e->toString(ss);
+            }
+        }
+
+
         void MinusExpr::toString(std::ostream& out) const {
             out << "-";
             _expr->toString(out);
@@ -105,6 +219,24 @@ namespace PetriEngine {
             {
                 out << " " << op() << " ";
                 _conds[i]->toString(out);
+            }
+            out << ")";
+        }
+        
+        void CompareConjunction::toString(std::ostream& out) const {
+            out << "(";
+            if(_negated) out << "not";
+            bool first = true;
+            for(auto& c : _constraints)
+            {
+                if(!first) out << " and ";
+                if(c._lower != 0) 
+                    out << "(" << c._lower << " <= " << c._name << ")";
+                if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max()) 
+                    out << " and ";
+                if(c._upper != std::numeric_limits<uint32_t>::max()) 
+                    out << "(" << c._upper << " >= " << c._name << ")";
+                first = false;
             }
             out << ")";
         }
@@ -156,6 +288,24 @@ namespace PetriEngine {
             {
                 out << " " << op() << " ";
                 _conds[i]->toTAPAALQuery(out, context);
+            }
+            out << ")";
+        }
+        
+        void CompareConjunction::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
+            out << "(";
+            if(_negated) out << "!";
+            bool first = true;
+            for(auto& c : _constraints)
+            {
+                if(!first) out << " and ";
+                if(c._lower != 0) 
+                    out << "(" << c._lower << " <= " << context.netName << "." << c._name << ")";
+                if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max()) 
+                    out << " and ";
+                if(c._lower != 0) 
+                    out << "(" << c._upper << " >= " << context.netName << "." << c._name << ")";
+                first = false;
             }
             out << ")";
         }
@@ -256,36 +406,33 @@ namespace PetriEngine {
 
         /******************** Context Analysis ********************/
 
-        auto expr_cmp = [](const Expr_ptr& a, const Expr_ptr& b){
-                if(dynamic_cast<LiteralExpr*>(a.get()))
-                {
-                    if(dynamic_cast<LiteralExpr*>(b.get())) return false;
-                    else return true;
-                }
-                else if(auto aa = dynamic_cast<IdentifierExpr*>(a.get()))
-                {
-                    if(dynamic_cast<LiteralExpr*>(b.get())) return false; 
-                    else if(auto bb = dynamic_cast<IdentifierExpr*>(b.get()))
-                    {
-                        return aa->offset() < bb->offset();
-                    }
-                    else return true;
-                }
-                return false;
-            };
-        
         void NaryExpr::analyze(AnalysisContext& context) {
             for(auto& e : _exprs) e->analyze(context);
+            std::sort(_exprs.begin(), _exprs.end(), [](auto& a, auto& b)
+            {
+                auto ida = dynamic_pointer_cast<PQL::IdentifierExpr>(a);
+                auto idb = dynamic_pointer_cast<PQL::IdentifierExpr>(b);
+                if(ida == NULL) return false;
+                if(ida && !idb) return true;
+                return ida->offset() < idb->offset();
+            });
         }
 
-        void MultiplyExpr::analyze(AnalysisContext& context) {
-            NaryExpr::analyze(context);
-            std::sort(std::begin(_exprs), std::end(_exprs), expr_cmp);
-        }
-
-        void PlusExpr::analyze(AnalysisContext& context) {
-            NaryExpr::analyze(context);
-            std::sort(std::begin(_exprs), std::end(_exprs), expr_cmp);
+        void CommutativeExpr::analyze(AnalysisContext& context) {
+            for(auto& i : _ids)
+            {
+                AnalysisContext::ResolutionResult result = context.resolve(i.second);
+                if (result.success) {
+                    i.first = result.offset;
+                } else {
+                    ExprError error("Unable to resolve identifier \"" + i.second + "\"",
+                            i.second.length());
+                    context.reportError(error);
+                }
+            }
+            std::sort(_ids.begin(), _ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
+            if(_exprs.size() > 0)
+                NaryExpr::analyze(context);
         }
 
         void MinusExpr::analyze(AnalysisContext& context) {
@@ -320,11 +467,71 @@ namespace PetriEngine {
             for(auto& c : _conds) c->analyze(context);
         }
 
+        uint32_t getPlace(AnalysisContext& context, const std::string& name)
+        {
+            AnalysisContext::ResolutionResult result = context.resolve(name);
+            if (result.success) {
+                return result.offset;
+            } else {
+                ExprError error("Unable to resolve identifier \"" + name + "\"",
+                        name.length());
+                context.reportError(error);
+            }            
+            return -1;
+        }
+        
+        void FireableCondition::analyze(AnalysisContext& context)
+        {
+            if(_compiled)
+            {
+                _compiled->analyze(context);
+                return;
+            }
+            std::vector<Condition_ptr> conds;
+            AnalysisContext::ResolutionResult result = context.resolve(_name, false);
+            if (!result.success)
+            {
+                ExprError error("Unable to resolve identifier \"" + _name + "\"",
+                        _name.length());
+                context.reportError(error);
+            }            
+
+            assert(_name.compare(context.net()->transitionNames()[result.offset]) == 0);
+            auto preset = context.net()->preset(result.offset);
+            for(; preset.first != preset.second; ++preset.first)
+            {
+                assert(preset.first->place != std::numeric_limits<uint32_t>::max());
+                assert(preset.first->place != -1);
+                auto id = std::make_shared<IdentifierExpr>(context.net()->placeNames()[preset.first->place], preset.first->place);
+                auto lit = std::make_shared<LiteralExpr>(preset.first->tokens);
+
+                if(!preset.first->inhibitor)
+                {
+                    conds.emplace_back(std::make_shared<GreaterThanOrEqualCondition>(id, lit));
+                }
+                else if(preset.first->tokens > 0)
+                {
+                    conds.emplace_back(std::make_shared<LessThanCondition>(id, lit));
+                }
+            }
+            if(conds.size() == 1) _compiled = conds[0];
+            else _compiled = std::make_shared<AndCondition>(conds);
+            _compiled->analyze(context);
+        }
+        
+        void CompareConjunction::analyze(AnalysisContext& context) {
+            for(auto& c : _constraints){
+                c._place = getPlace(context, c._name);
+                assert(c._place >= 0);
+            }
+            std::sort(std::begin(_constraints), std::end(_constraints));
+        }
+
         void CompareCondition::analyze(AnalysisContext& context) {
             _expr1->analyze(context);
             _expr2->analyze(context);
         }
-
+        
         void NotCondition::analyze(AnalysisContext& context) {
             _cond->analyze(context);
         }
@@ -346,19 +553,22 @@ namespace PetriEngine {
             }
             return r;
         }
-       
+        
         int32_t NaryExpr::preOp(const EvaluationContext& context) const {
             return _exprs[0]->evaluate(context);
         }
 
-        int32_t MultiplyExpr::preOp(const EvaluationContext& context) const {
-            return NaryExpr::preOp(context);
+        int32_t CommutativeExpr::preOp(const EvaluationContext& context) const {
+            int32_t res = _constant;
+            for(auto& i : _ids) res = this->apply(res, context.marking()[i.first]);
+            return res;
         }
 
-        int32_t PlusExpr::preOp(const EvaluationContext& context) const {
-            return NaryExpr::preOp(context);
+        int CommutativeExpr::evaluate(const EvaluationContext& context) const {
+            if(_exprs.size() == 0) return preOp(context);
+            return NaryExpr::evaluate(context);
         }
-
+        
         int MinusExpr::evaluate(const EvaluationContext& context) const {
             return -(_expr->evaluate(context));
         }
@@ -433,6 +643,19 @@ namespace PetriEngine {
             return res;
         }
         
+        Condition::Result CompareConjunction::evaluate(const EvaluationContext& context) const{
+//            auto rres = _org->evaluate(context);
+            bool res = true;
+            for(auto& c : _constraints)
+            {
+                res = res && context.marking()[c._place] <= c._upper &&
+                             context.marking()[c._place] >= c._lower;
+                if(!res) break;
+            }
+            
+            return _negated xor res ? RTRUE : RFALSE;
+        }
+        
         Condition::Result CompareCondition::evaluate(const EvaluationContext& context) const {
             int v1 = _expr1->evaluate(context);
             int v2 = _expr2->evaluate(context);
@@ -490,7 +713,6 @@ namespace PetriEngine {
             setSatisfied(res);
             return res;
         }
-
         
         Condition::Result UntilCondition::evalAndSet(const EvaluationContext& context) {
             auto r2 = _cond2->evalAndSet(context);
@@ -544,6 +766,12 @@ namespace PetriEngine {
             return res;
         }
 
+        Condition::Result CompareConjunction::evalAndSet(const EvaluationContext& context)
+        {
+            auto res = evaluate(context);
+            setSatisfied(res);
+            return res;
+        }
         
         Condition::Result CompareCondition::evalAndSet(const EvaluationContext& context) {
             int v1 = _expr1->evalAndSet(context);
@@ -835,6 +1063,44 @@ namespace PetriEngine {
             for(size_t i = 1; i < _conds.size(); ++i) d = delta(d, _conds[i]->distance(context), context);
             return d;
         }
+        
+        uint32_t CompareConjunction::distance(DistanceContext& context) const {
+            uint32_t d = 0;
+            auto neg = context.negated() != _negated;
+            if(!neg)
+            {
+                for(auto& c : _constraints)
+                {
+                    auto pv = context.marking()[c._place];
+                    d += (c._upper == std::numeric_limits<uint32_t>::max() ? 0 : delta<LessThanOrEqualCondition>(pv, c._upper, neg)) +
+                         (c._lower == 0 ? 0 : delta<GreaterThanOrEqualCondition>(pv, c._lower, neg));
+                }
+            }
+            else
+            {
+                bool first = true;
+                for(auto& c : _constraints)
+                {
+                    auto pv = context.marking()[c._place];
+                    if(c._upper != std::numeric_limits<uint32_t>::max())
+                    {
+                        auto d2 = delta<LessThanOrEqualCondition>(pv, c._upper, neg);
+                        if(first) d = d2;
+                        else      d = MIN(d, d2);
+                        first = false;
+                    }
+                    
+                    if(c._lower != 0)
+                    {
+                        auto d2 = delta<GreaterThanOrEqualCondition>(pv, c._upper, neg);
+                        if(first) d = d2;
+                        else      d = MIN(d, d2);
+                        first = false;
+                    }
+                }
+            }
+            return d;
+        }
 
         uint32_t AndCondition::delta(uint32_t d1,
                 uint32_t d2,
@@ -906,11 +1172,19 @@ namespace PetriEngine {
             
             if(tk) {
                 generateTabs(ss,tabs) << "<tokens-count>\n";
+                for(auto& e : _ids) generateTabs(ss,tabs+1) << "<place>" << e.second << "</place>\n";
                 for(auto& e : _exprs) e->toXML(ss,tabs+1, true);
                 generateTabs(ss,tabs) << "</tokens-count>\n";
                 return;
             }
             generateTabs(ss,tabs) << "<integer-sum>\n";
+            generateTabs(ss,tabs+1) << "<integer-constant>" + std::to_string(_constant) + "</integer-constant>\n";
+            for(auto& i : _ids)
+            {
+                generateTabs(ss,tabs+1) << "<tokens-count>\n"; 
+                generateTabs(ss,tabs+2) << "<place>" << i.second << "</place>\n";
+                generateTabs(ss,tabs+1) << "</tokens-count>\n";                
+            }
             for(auto& e : _exprs) e->toXML(ss,tabs+1, tokencount);
             generateTabs(ss,tabs) << "</integer-sum>\n";
         }
@@ -1052,7 +1326,32 @@ namespace PetriEngine {
             }
             generateTabs(out,tabs) << "</disjunction>\n";               
         }
-        
+
+        void CompareConjunction::toXML(std::ostream& out, uint32_t tabs) const
+        {
+            if(_negated) generateTabs(out,tabs++) << "<negation>";
+            if(_constraints.size() == 0) BooleanCondition::TRUE_CONSTANT->toXML(out, tabs);
+            else
+            {
+                generateTabs(out,tabs) << "<conjunction>\n";
+                for(auto& c : _constraints)
+                {
+                    generateTabs(out,tabs+1) << "<integer-le>\n";
+                    generateTabs(out,tabs+2) << "<tokens-count>\n";
+                    generateTabs(out,tabs+2) << c._place << "\n";
+                    generateTabs(out,tabs+2) << "<tokens-count>\n";
+                    generateTabs(out,tabs+1) << "</integer-le>\n";  
+                    generateTabs(out,tabs+1) << "<integer-gt>\n";
+                    generateTabs(out,tabs+2) << "<tokens-count>\n";
+                    generateTabs(out,tabs+2) << c._place << "\n";
+                    generateTabs(out,tabs+2) << "<tokens-count>\n";
+                    generateTabs(out,tabs+1) << "</integer-gt>\n";                      
+                }
+                generateTabs(out,tabs) << "</conjunction>\n";
+            }
+            if(_negated) generateTabs(out,--tabs) << "<negation>";
+        }
+
         void EqualCondition::toXML(std::ostream& out,uint32_t tabs) const {
             generateTabs(out,tabs) << "<integer-eq>\n";
             _expr1->toXML(out,tabs+1);
@@ -1119,20 +1418,48 @@ namespace PetriEngine {
             return Member(_value);
         }
         
-        Member IdentifierExpr::constraint(SimplificationContext& context) const {
+        Member memberForPlace(size_t p, SimplificationContext& context) 
+        {
             std::vector<int> row(context.net()->numberOfTransitions(), 0);
             row.shrink_to_fit();
-            uint32_t p = offset();
             for (size_t t = 0; t < context.net()->numberOfTransitions(); t++) {
                 row[t] = context.net()->outArc(t, p) - context.net()->inArc(p, t);
             }
-            return Member(std::move(row), context.marking()[p]);
+            return Member(std::move(row), context.marking()[p]);            
+        }
+        
+        Member IdentifierExpr::constraint(SimplificationContext& context) const {
+            return memberForPlace(_offsetInMarking, context);
+        }
+        
+        Member CommutativeExpr::commutativeCons(int constant, SimplificationContext& context, std::function<void(Member& a, Member b)> op) const
+        {
+            Member res;
+            bool first = true;
+            if(_constant != constant || (_exprs.size() == 0 && _ids.size() == 0))
+            {
+                first = false;
+                res = Member(_constant);
+            }
+            
+            for(auto& i : _ids)
+            {
+                if(first) res = memberForPlace(i.first, context);
+                else op(res, memberForPlace(i.first, context));
+                first = false;
+            }
+
+            for(auto& e : _exprs)
+            {
+                if(first) res = e->constraint(context);
+                else op(res, e->constraint(context));
+                first = false;
+            }
+            return res;            
         }
         
         Member PlusExpr::constraint(SimplificationContext& context) const {
-            Member res = _exprs[0]->constraint(context);
-            for(size_t i = 1; i < _exprs.size(); ++i) res += _exprs[i]->constraint(context);
-            return res;
+            return commutativeCons(0, context, [](auto& a , auto b){ a += b;});
         }
         
         Member SubtractExpr::constraint(SimplificationContext& context) const {
@@ -1142,9 +1469,7 @@ namespace PetriEngine {
         }
         
         Member MultiplyExpr::constraint(SimplificationContext& context) const {
-            Member res = _exprs[0]->constraint(context);
-            for(size_t i = 1; i < _exprs.size(); ++i) res *= _exprs[i]->constraint(context);
-            return res;
+            return commutativeCons(1, context, [](auto& a , auto b){ a *= b;});
         }
         
         Member MinusExpr::constraint(SimplificationContext& context) const {
@@ -1329,24 +1654,44 @@ namespace PetriEngine {
             }
         }
         
+        AbstractProgramCollection_ptr mergeLps(std::vector<AbstractProgramCollection_ptr>&& lps)
+        {
+            if(lps.size() == 0) return nullptr;
+            int j = 0;
+            int i = lps.size() - 1;
+            while(i > 0)
+            {
+                if(i <= j) j = 0;
+                else
+                {
+                    lps[j] = std::make_shared<MergeCollection>(lps[j], lps[i]);
+                    --i;
+                    ++j;
+                }
+            }
+            return lps[0];
+        }
+        
         Retval LogicalCondition::simplifyAnd(SimplificationContext& context) const {
 
             std::vector<Condition_ptr> conditions;
-            AbstractProgramCollection_ptr lps = nullptr;
+            std::vector<AbstractProgramCollection_ptr> lpsv;
             std::vector<AbstractProgramCollection_ptr>  neglps;
             for(auto& c : _conds)
             {
                 auto r = c->simplify(context);
-                if(r.formula->isTriviallyFalse()) return Retval(BooleanCondition::FALSE_CONSTANT);
+                if(r.formula->isTriviallyFalse())
+                {
+                    return Retval(BooleanCondition::FALSE_CONSTANT);
+                }
                 else if(r.formula->isTriviallyTrue())
                 {
                     continue;
                 }
                 
                 conditions.push_back(r.formula);
-                if(lps == nullptr) lps = r.lps;
-                else lps = std::make_shared<MergeCollection>(lps, r.lps);
-                neglps.push_back(r.neglps);
+                lpsv.emplace_back(r.lps);
+                neglps.emplace_back(r.neglps);
             }
             
             if(conditions.size() == 0)
@@ -1354,6 +1699,7 @@ namespace PetriEngine {
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             }
 
+            auto lps = mergeLps(std::move(lpsv));
 
             try {
                 if(!context.timeout() && !lps->satisfiable(context))
@@ -1372,7 +1718,7 @@ namespace PetriEngine {
             // we check this by checking if !r1 && !r2 is unsat
             
             return Retval(
-                    std::make_shared<AndCondition>(std::move(conditions)), 
+                    makeAnd(conditions), 
                     std::move(lps),
                     std::make_shared<UnionCollection>(std::move(neglps)));
         }
@@ -1380,25 +1726,28 @@ namespace PetriEngine {
         Retval LogicalCondition::simplifyOr(SimplificationContext& context) const {
 
             std::vector<Condition_ptr> conditions;
-            std::vector<AbstractProgramCollection_ptr> lps;
-            AbstractProgramCollection_ptr  neglps = nullptr;
+            std::vector<AbstractProgramCollection_ptr> lps, neglpsv;
             for(auto& c : _conds)
             {
                 auto r = c->simplify(context);
                 assert(r.neglps);
                 assert(r.lps);
 
-                if(r.formula->isTriviallyTrue()) return Retval(BooleanCondition::TRUE_CONSTANT);
+                if(r.formula->isTriviallyTrue())
+                {
+                    return Retval(BooleanCondition::TRUE_CONSTANT);
+                }
                 else if(r.formula->isTriviallyFalse())
                 {
                     continue;
                 }
                 conditions.push_back(r.formula);
                 lps.push_back(r.lps);
-                if(neglps == nullptr) neglps = r.neglps;
-                else neglps = std::make_shared<MergeCollection>(neglps, r.neglps);
+                neglpsv.emplace_back(r.neglps);
             }
             
+            AbstractProgramCollection_ptr  neglps = mergeLps(std::move(neglpsv));
+
             if(conditions.size() == 0)
             {
                 return Retval(BooleanCondition::FALSE_CONSTANT);
@@ -1421,7 +1770,7 @@ namespace PetriEngine {
             // we check this by checking if !r1 && !r2 is unsat
           
             return Retval(
-                    std::make_shared<OrCondition>(std::move(conditions)), 
+                    makeOr(conditions), 
                     std::make_shared<UnionCollection>(std::move(lps)), 
                     std::move(neglps));            
         }
@@ -1431,10 +1780,10 @@ namespace PetriEngine {
             {
                 if(context.negated()) 
                     return Retval(std::make_shared<NotCondition>(
-                            std::make_shared<AndCondition>(_conds)));
+                            makeAnd(_conds)));
                 else                  
                     return Retval(
-                            std::make_shared<AndCondition>(_conds));
+                            makeAnd(_conds));
             }
 
             if(context.negated())
@@ -1449,9 +1798,9 @@ namespace PetriEngine {
             {
                 if(context.negated()) 
                     return Retval(std::make_shared<NotCondition>(
-                            std::make_shared<OrCondition>(_conds)));
+                            makeOr(_conds)));
                 else                 
-                    return Retval(std::make_shared<OrCondition>(_conds));
+                    return Retval(makeOr(_conds));
             }
             if(context.negated())
                 return simplifyAnd(context);
@@ -1459,6 +1808,179 @@ namespace PetriEngine {
                 return simplifyOr(context);
         }
         
+        Retval CompareConjunction::simplify(SimplificationContext& context) const {
+            if(context.timeout())
+            {
+                return Retval(std::make_shared<CompareConjunction>(*this, context.negated()));
+            }
+            std::vector<AbstractProgramCollection_ptr>  neglps, lpsv;
+            auto neg = context.negated() != _negated;
+            std::vector<cons_t> nconstraints;
+            for(auto& c : _constraints) 
+            {
+                nconstraints.push_back(c);
+                if(c._lower != 0 /*&& !context.timeout()*/ )
+                {
+                    auto m2 = memberForPlace(c._place, context);
+                    Member m1(c._lower);
+                    // test for trivial comparison
+                    Trivial eval = m1 <= m2;
+                    if(eval != Trivial::Indeterminate) {
+                        if(eval == Trivial::False)
+                            return Retval(BooleanCondition::getShared(neg));
+                        else
+                            nconstraints.back()._lower = 0;
+                    } else { // if no trivial case
+                        int constant = m2.constant() - m1.constant();
+                        m1 -= m2;
+                        m2 = m1;
+                        auto lp = std::make_shared<SingleProgram>(context.cache(), std::move(m1), constant, Simplification::OP_LE);
+                        auto nlp = std::make_shared<SingleProgram>(context.cache(), std::move(m2), constant, Simplification::OP_GT);
+                        lpsv.push_back(lp);
+                        neglps.push_back(nlp);
+                   }
+                }
+         
+                if(c._upper != std::numeric_limits<uint32_t>::max() /*&& !context.timeout()*/)
+                {
+                    auto m1 = memberForPlace(c._place, context);
+                    Member m2(c._upper);
+                    // test for trivial comparison
+                    Trivial eval = m1 <= m2;
+                    if(eval != Trivial::Indeterminate) {
+                        if(eval == Trivial::False)
+                            return Retval(BooleanCondition::getShared(neg));
+                        else
+                            nconstraints.back()._upper = std::numeric_limits<uint32_t>::max();
+                    } else { // if no trivial case
+                        int constant = m2.constant() - m1.constant();
+                        m1 -= m2;
+                        m2 = m1;
+                        auto lp = std::make_shared<SingleProgram>(context.cache(), std::move(m1), constant, Simplification::OP_LE);
+                        auto nlp = std::make_shared<SingleProgram>(context.cache(), std::move(m2), constant, Simplification::OP_GT);
+                        lpsv.push_back(lp);
+                        neglps.push_back(nlp);
+                   }
+                }
+                
+                assert(nconstraints.size() > 0);
+                if(nconstraints.back()._lower == 0 && nconstraints.back()._upper == std::numeric_limits<uint32_t>::max())
+                    nconstraints.pop_back();
+
+                assert(nconstraints.size() <= neglps.size()*2);
+            }
+            
+            auto lps = mergeLps(std::move(lpsv));
+            
+            if(lps == nullptr && !context.timeout()) 
+            {
+                return Retval(BooleanCondition::getShared(!neg));
+            }
+            
+            try {
+                if(!context.timeout() && lps &&  !lps->satisfiable(context))
+                {
+                    return Retval(BooleanCondition::getShared(neg));
+                }           
+             }
+             catch(std::bad_alloc& e)
+             {
+                // we are out of memory, deal with it.
+                std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
+             }
+            // Lets try to see if the r1 AND r2 can ever be false at the same time
+            // If not, then we know that r1 || r2 must be true.
+            // we check this by checking if !r1 && !r2 is unsat
+            try {
+                // remove trivial rules from neglp
+                int ncnt = neglps.size() - 1;
+                for(int i = nconstraints.size() - 1; i >= 0; --i) 
+                {
+                    if(context.timeout()) break;
+                    assert(ncnt >= 0);
+                    size_t cnt = 0;
+                    auto& c = nconstraints[i];
+                    if(c._lower != 0) ++cnt;
+                    if(c._upper != std::numeric_limits<uint32_t>::max()) ++cnt;
+                    for(size_t j = 0; j < cnt ; ++j)
+                    {
+                        assert(ncnt >= 0);
+                        if(!neglps[ncnt]->satisfiable(context))
+                        {
+                            if(j == 1 || c._upper == std::numeric_limits<uint32_t>::max())
+                                c._lower = 0;
+                            else if(j == 0)
+                                c._upper = std::numeric_limits<uint32_t>::max();
+                            neglps.erase(neglps.begin() + ncnt);
+                        }
+                        if(c._upper == std::numeric_limits<uint32_t>::max() && c._lower == 0) 
+                            nconstraints.erase(nconstraints.begin() + i);
+                        --ncnt;
+                    }
+                }
+            }
+            catch(std::bad_alloc& e)
+            {
+               // we are out of memory, deal with it.
+               std::cout<<"Query reduction: memory exceeded during LPS merge."<<std::endl;
+            }            
+            if(nconstraints.size() == 0)
+            {
+                return Retval(BooleanCondition::getShared(!neg));                
+            }
+
+            
+            Condition_ptr rc = [&]() -> Condition_ptr {
+                if(nconstraints.size() == 1)
+                {
+                    auto& c = nconstraints[0];
+                    auto id = std::make_shared<IdentifierExpr>(c._name, c._place);
+                    auto ll = std::make_shared<LiteralExpr>(c._lower);
+                    auto lu = std::make_shared<LiteralExpr>(c._upper);
+                    if     (c._lower == c._upper && !neg) return std::make_shared<EqualCondition>(id, lu);
+                    else if(c._lower == c._upper &&  neg) return std::make_shared<NotEqualCondition>(id, lu);
+                    else
+                    {
+                        if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max())
+                        {
+                            if(neg) return makeOr(std::make_shared<LessThanCondition>(id, ll),std::make_shared<GreaterThanCondition>(id, lu));
+                            else    return makeAnd(std::make_shared<GreaterThanOrEqualCondition>(id, ll),std::make_shared<LessThanOrEqualCondition>(id, lu));
+                        }
+                        else if(c._lower != 0)
+                        {
+                            if(neg) return std::make_shared<LessThanCondition>(id, ll);
+                            else    return std::make_shared<GreaterThanOrEqualCondition>(id, ll);                       
+                        }
+                        else
+                        {
+                            if(neg) return std::make_shared<GreaterThanCondition>(id, lu);
+                            else    return std::make_shared<LessThanOrEqualCondition>(id, lu);                        
+                        }
+                    }
+                }
+                else
+                {
+                    return std::make_shared<CompareConjunction>(std::move(nconstraints), context.negated() != _negated);
+                }
+            }();
+            
+
+            if(!neg)
+            {
+                return Retval(
+                    rc, 
+                    std::move(lps),
+                    std::make_shared<UnionCollection>(std::move(neglps)));
+            }
+            else
+            {
+                return Retval(
+                    rc, 
+                    std::make_shared<UnionCollection>(std::move(neglps)),
+                    std::move(lps));                
+            }
+        }
+
         Retval EqualCondition::simplify(SimplificationContext& context) const {
             
             Member m1 = _expr1->constraint(context);
@@ -1679,7 +2201,7 @@ namespace PetriEngine {
             {
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } 
-            else if(!context.timeout() && !neglps->satisfiable(context)) // EXPERIMENTAL
+            else if(!context.timeout() && !neglps->satisfiable(context))
             {
                 return Retval(BooleanCondition::TRUE_CONSTANT);
             }
@@ -1795,8 +2317,7 @@ namespace PetriEngine {
                 return upper_bound;
             }
         }
-        
-        
+       
         bool CompareCondition::isUpperBound() {
             return placeNameForBound().size() > 0;
         }
@@ -1850,6 +2371,10 @@ namespace PetriEngine {
         Condition_ptr LogicalCondition::prepareForReachability(bool negated) const {
             return NULL;
         }
+
+        Condition_ptr CompareConjunction::prepareForReachability(bool negated) const {
+            return NULL;
+        }
         
         Condition_ptr CompareCondition::prepareForReachability(bool negated) const {
             return NULL;
@@ -1869,30 +2394,6 @@ namespace PetriEngine {
 
 /******************** Prepare CTL Queries ********************/
         
-        template<typename T, bool K>
-        Condition_ptr makeLog(std::vector<Condition_ptr>& conds)
-        {
-            if(conds.size() == 0) return BooleanCondition::getShared(K);
-            if(conds.size() == 1) return conds[0];
-            return std::make_shared<T>(conds);
-        }
-        
-        Condition_ptr makeOr(std::vector<Condition_ptr>& cptr) { return makeLog<OrCondition,false>(cptr); }
-        Condition_ptr makeAnd(std::vector<Condition_ptr>& cptr) { return makeLog<AndCondition,true>(cptr); }
-        Condition_ptr initialMarkingRW(std::function<Condition_ptr ()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated)
-        {
-            auto res = func();
-            if(!nested)
-            {
-                auto e = res->evaluate(context);
-                if(e != Condition::RUNKNOWN) 
-                {
-                    return BooleanCondition::getShared(e);
-                }
-            }
-            return res;            
-        }
-        
         Condition_ptr EGCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             ++stats[0];
             return AFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated);
@@ -1905,11 +2406,6 @@ namespace PetriEngine {
         
         Condition_ptr EXCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "EXCondition << ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             auto a = _cond->pushNegation(stats, context, true, negated);
             if(negated)
             {
@@ -1924,22 +2420,12 @@ namespace PetriEngine {
                 { ++stats[4]; return std::make_shared<NotCondition>(DeadlockCondition::DEADLOCK); }
                 a = std::make_shared<EXCondition>(a);
             }
-#ifdef DBG
-            std::cout << "EXCondition >> ";
-            a->toString(std::cout);
-            std::cout << std::endl;
-#endif
             return a;
             }, stats, context, nested, negated);
         }
 
         Condition_ptr AXCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "AXCondition << ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             auto a = _cond->pushNegation(stats, context, true, negated);
             if(negated)
             {
@@ -1954,11 +2440,6 @@ namespace PetriEngine {
                 { ++stats[7]; return DeadlockCondition::DEADLOCK; }
                 a = std::make_shared<AXCondition>(a);
             }
-#ifdef DBG
-            std::cout << "AXCondition >> ";
-            a->toString(std::cout);
-            std::cout << std::endl;
-#endif
             return a;
             }, stats, context, nested, negated);
         }
@@ -1966,11 +2447,6 @@ namespace PetriEngine {
         
         Condition_ptr EFCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "EFCondition " << this << " << ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             auto a = _cond->pushNegation(stats, context, true, false);
 
             if(auto cond = dynamic_cast<NotCondition*>(a.get()))
@@ -1993,54 +2469,24 @@ namespace PetriEngine {
             {
                 ++stats[9];
                 if(negated) a = std::make_shared<NotCondition>(a);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
             }
             else if(auto cond = dynamic_cast<AFCondition*>(a.get()))
             {
                 ++stats[10];
                 a = EFCondition((*cond)[0]).pushNegation(stats, context, nested, negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
             }
-/*            else if(auto cond = dynamic_cast<EXCondition*>(a.get()))
-            {
-                a = EXCondition(std::make_shared<EFCondition>((*cond)[0])).pushNegation(negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
-                return a;
-            }*/
             else if(auto cond = dynamic_cast<EUCondition*>(a.get()))
             {
                 ++stats[11];
                 a = EFCondition((*cond)[1]).pushNegation(stats, context, nested, negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
             }
             else if(auto cond = dynamic_cast<AUCondition*>(a.get()))
             {
                 ++stats[12];
                 a = EFCondition((*cond)[1]).pushNegation(stats, context, nested, negated);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
             }
             else if(auto cond = dynamic_cast<OrCondition*>(a.get()))
@@ -2058,22 +2504,12 @@ namespace PetriEngine {
                     pef.push_back(std::make_shared<EFCondition>(i));
                 }
                 a = makeOr(pef)->pushNegation(stats, context, nested, negated);
-#ifdef DBG
-                std::cout << "EFCondition " << this << " >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
             }
             else
             {        
                 Condition_ptr b = std::make_shared<EFCondition>(a);
                 if(negated) b = std::make_shared<NotCondition>(b);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                b->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return b;
             }
             }, stats, context, nested, negated);
@@ -2082,11 +2518,6 @@ namespace PetriEngine {
 
         Condition_ptr AFCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "AFCondition << ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             auto a = _cond->pushNegation(stats, context, true, false);
             if(auto cond = dynamic_cast<NotCondition*>(a.get()))
             {
@@ -2101,11 +2532,6 @@ namespace PetriEngine {
             {
                 ++stats[15];
                 if(negated) return std::make_shared<NotCondition>(a);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
 
             }
@@ -2113,11 +2539,6 @@ namespace PetriEngine {
             {
                 ++stats[16];
                 if(negated) return std::make_shared<NotCondition>(a);
-#ifdef DBG
-                std::cout << "EFCondition >> ";
-                a->toString(std::cout);
-                std::cout << std::endl;
-#endif
                 return a;
             }
             else if(auto cond = dynamic_cast<OrCondition*>(a.get()))
@@ -2149,73 +2570,10 @@ namespace PetriEngine {
             }
             auto b = std::make_shared<AFCondition>(a);
             if(negated) return std::make_shared<NotCondition>(b);
-#ifdef DBG
-            std::cout << "AFCondition >> ";
-            b->toString(std::cout);
-            std::cout << std::endl;
-#endif
             return b;
             }, stats, context, nested, negated);
         }
 
-        
-/*        template<typename T, typename E>
-        Condition_ptr pushAg(Condition_ptr& a, Condition_ptr& b, bool negated)
-        {
-            if(auto cond = dynamic_cast<NotCondition*>(a.get()))
-            {
-                if(auto c2 = dynamic_cast<EFCondition*>((*cond)[0].get()))
-                {
-                    Condition_ptr af = std::make_shared<T>(b);
-                    return OrCondition(
-                            b,
-                            std::make_shared<AndCondition>(
-                                a,
-                                af)
-                            ).pushNegation(negated, stats);
-                }
-            }
-            else if(auto cond = dynamic_cast<AndCondition*>(a.get()))
-            {
-                std::vector<Condition_ptr> ag, nag;
-                for(auto c : *cond)
-                {
-                    if(auto n = dynamic_cast<NotCondition*>(c.get()))
-                    {
-                        if(auto ef = dynamic_cast<EFCondition*>((*n)[0].get()))
-                        {
-                            ag.push_back(c);
-                        }
-                        else
-                        {
-                            nag.push_back(c);
-                        }
-                    }
-                    else
-                    {
-                        nag.push_back(c);                        
-                    }
-                }
-                if(ag.size() > 0)
-                {
-                    if(nag.size() == 0)
-                    {
-                        ag.push_back(std::make_shared<T>(b));
-                    }
-                    else
-                    {
-                        ag.push_back(std::make_shared<E>(makeAnd(nag), b));                        
-                    }
-                    return OrCondition(
-                            b,
-                            makeAnd(ag)
-                            ).pushNegation(negated, stats);
-                }
-            }
-            return nullptr;            
-        }
-  */      
-        
         Condition_ptr AUCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
             auto b = _cond2->pushNegation(stats, context, true, false);
@@ -2283,8 +2641,6 @@ namespace PetriEngine {
                 }
             }
             
-            /*auto pushag = pushAg<AFCondition, AUCondition>(a, b, negated);
-            if(pushag != nullptr) return pushag;*/
             auto c = std::make_shared<AUCondition>(a, b);
             if(negated) return std::make_shared<NotCondition>(c);
             return c;
@@ -2351,8 +2707,6 @@ namespace PetriEngine {
                     return makeOr(pef)->pushNegation(stats, context, nested, negated);
                 }
             }
-            /*auto pushag = pushAg<EFCondition, EUCondition>(a, b, negated);
-            if(pushag != nullptr) return pushag;*/
             auto c = std::make_shared<EUCondition>(a, b);
             if(negated) return std::make_shared<NotCondition>(c);
             return c;
@@ -2383,31 +2737,33 @@ namespace PetriEngine {
                 {
                     other.emplace_back(n);
                 }
-            }            
+            }         
             if(nef.size() + other.size() == 0) return BooleanCondition::TRUE_CONSTANT;
             if(nef.size() + other.size() == 1) 
-            { return nef.size() == 0 ? other[0] : std::make_shared<NotCondition>(std::make_shared<EFCondition>(nef[0]));}
+            { 
+                return nef.size() == 0 ? 
+                    other[0] : 
+                    std::make_shared<NotCondition>(std::make_shared<EFCondition>(nef[0]));
+            }
             if(nef.size() != 0) other.push_back(
                     std::make_shared<NotCondition>(
                     std::make_shared<EFCondition>(
                     makeOr(nef)))); 
             if(other.size() == 1) return other[0];
             auto res = makeAnd(other);
-#ifdef DBG
-            std::cout << "PUSH AND  >> ";
-            res->toString(std::cout);
-            std::cout << std::endl;
-#endif
             return res;
         }
         
         Condition_ptr pushOr(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children)
         {
-            std::vector<Condition_ptr> nef, other;            
+            std::vector<Condition_ptr> nef, other;       
             for(auto& c : _conds)
             {
                 auto n = c->pushNegation(stats, context, nested, negate_children);
-                if(n->isTriviallyTrue()) return n;
+                if(n->isTriviallyTrue())
+                {
+                    return n;
+                }
                 if(n->isTriviallyFalse()) continue;
                 if(auto ef = dynamic_cast<EFCondition*>(n.get()))
                 {
@@ -2429,11 +2785,6 @@ namespace PetriEngine {
 
         Condition_ptr OrCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "OrCondition >> ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             return negated ? pushAnd(_conds, stats, context, nested, true) :
                              pushOr (_conds, stats, context, nested, false);
             }, stats, context, nested, negated);
@@ -2442,33 +2793,64 @@ namespace PetriEngine {
         
         Condition_ptr AndCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "AndCondition >> ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             return negated ? pushOr (_conds, stats, context, nested, true) :
                              pushAnd(_conds, stats, context, nested, false);
 
+            }, stats, context, nested, negated);
+        }
+        
+        Condition_ptr CompareConjunction::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+            return initialMarkingRW([&]() -> Condition_ptr {
+            return std::make_shared<CompareConjunction>(*this, negated);
             }, stats, context, nested, negated);
         }
 
         
         Condition_ptr NotCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
-#ifdef DBG
-            std::cout << "NotCondition >> ";
-            toString(std::cout);
-            std::cout << std::endl;
-#endif
             if(negated) ++stats[30];
             return _cond->pushNegation(stats, context, nested, !negated);
             }, stats, context, nested, negated);
         }
-
+        
+        bool CompareCondition::isTrivial() const
+        {
+            auto remdup = [](auto& a, auto& b){
+                auto ai = a->_ids.begin();
+                auto bi = b->_ids.begin();
+                while(ai != a->_ids.end() && bi != b->_ids.end())
+                {
+                    while(ai != a->_ids.end() && ai->first < bi->first) ++ai;
+                    if(ai == a->_ids.end()) break;
+                    if(ai->first == bi->first)
+                    {
+                        ai = a->_ids.erase(ai);
+                        bi = b->_ids.erase(bi);
+                    }
+                    else
+                    {
+                        ++bi;
+                    }
+                    if(bi == b->_ids.end() || ai == a->_ids.end()) break;
+                }
+            };
+            if(auto p1 = dynamic_pointer_cast<PlusExpr>(_expr1))
+                if(auto p2 = dynamic_pointer_cast<PlusExpr>(_expr2))
+                    remdup(p1, p2);
+            
+            if(auto m1 = dynamic_pointer_cast<MultiplyExpr>(_expr1))
+                if(auto m2 = dynamic_pointer_cast<MultiplyExpr>(_expr2))
+                    remdup(m1, m2);                    
+            
+            if(auto p1 = dynamic_pointer_cast<CommutativeExpr>(_expr1))
+                if(auto p2 = dynamic_pointer_cast<CommutativeExpr>(_expr2))            
+                    return p1->_exprs.size() + p1->_ids.size() + p2->_exprs.size() + p2->_ids.size() == 0;
+            return false;
+        }        
         
         Condition_ptr LessThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
             if(negated) return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<LessThanCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);
@@ -2477,6 +2859,7 @@ namespace PetriEngine {
         
         Condition_ptr GreaterThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
             if(negated) return std::make_shared<LessThanCondition>(_expr1, _expr2);
             else        return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);
@@ -2485,6 +2868,7 @@ namespace PetriEngine {
         
         Condition_ptr LessThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
             if(negated) return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
             else        return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);
@@ -2493,14 +2877,24 @@ namespace PetriEngine {
         
         Condition_ptr GreaterThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
             if(negated) return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);
         }
-
-        
+                
         Condition_ptr NotEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
+            for(int i = 0; i < 2; ++i)
+            {
+                if(auto e = dynamic_pointer_cast<LiteralExpr>(operator [](i)))
+                    if(e->value() == 0) 
+                        return GreaterThanCondition(
+                                operator []((i+1)%2), 
+                                operator [](i)
+                                    ).pushNegation(stats, context, nested, negated);
+            }
             if(negated) return std::make_shared<EqualCondition>(_expr1, _expr2);
             else        return std::make_shared<NotEqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);
@@ -2509,6 +2903,16 @@ namespace PetriEngine {
         
         Condition_ptr EqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
+            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
+            for(int i = 0; i < 2; ++i)
+            {
+                if(auto e = dynamic_pointer_cast<LiteralExpr>(operator [](i)))
+                    if(e->value() == 0) 
+                        return LessThanOrEqualCondition(
+                                operator []((i+1)%2), 
+                                operator [](i)
+                                    ).pushNegation(stats, context, nested, negated);
+            }
             if(negated) return std::make_shared<NotEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<EqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);
@@ -2532,11 +2936,13 @@ namespace PetriEngine {
         /******************** Stubborn reduction interesting transitions ********************/
         
         void PlusExpr::incr(ReducingSuccessorGenerator& generator) const { 
-            for(auto& e : _exprs) e->incr(generator);                
+            for(auto& i : _ids) generator.presetOf(i.first);
+            for(auto& e : _exprs) e->incr(generator);
         }
         
         void PlusExpr::decr(ReducingSuccessorGenerator& generator) const {
-            for(auto& e : _exprs) e->decr(generator);                
+            for(auto& i : _ids) generator.postsetOf(i.first);
+            for(auto& e : _exprs) e->decr(generator);
         }
         
         void SubtractExpr::incr(ReducingSuccessorGenerator& generator) const {
@@ -2550,6 +2956,11 @@ namespace PetriEngine {
         }
         
         void MultiplyExpr::incr(ReducingSuccessorGenerator& generator) const {
+            for(auto& i : _ids)
+            {
+                generator.presetOf(i.first);
+                generator.postsetOf(i.first);
+            }
             for(auto& e : _exprs)
             {
                 e->incr(generator);
@@ -2618,6 +3029,63 @@ namespace PetriEngine {
                     {
                         c->findInteresting(generator, negated);
                         break;
+                    }
+                }
+            }
+        }
+        
+        void CompareConjunction::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
+             
+            auto neg = negated != _negated;
+            
+            for(auto& c : _constraints)
+            {
+                auto val = generator.parent()[c._place];
+                if(c._lower == c._upper)
+                {
+                    if(neg)
+                    {
+                        if(val != c._lower) continue;
+                        generator.postsetOf(c._place);
+                        generator.presetOf(c._place);
+                    }
+                    else
+                    {
+                        if(val == c._lower) continue;
+                        if(val > c._lower) {
+                            generator.postsetOf(c._place);
+                        } else {
+                            generator.presetOf(c._place);
+                        }   
+                    }
+                }
+                else
+                {
+                    if(!neg)
+                    {
+                        if(val < c._lower && c._lower != 0)
+                        {
+                            assert(!neg);
+                            generator.presetOf(c._place);
+                        }
+                        
+                        if(val > c._upper && c._upper != std::numeric_limits<uint32_t>::max())
+                        {
+                            assert(!neg);
+                            generator.postsetOf(c._place);
+                        }
+                    }
+                    else
+                    {
+                        if(val >= c._lower && c._lower != 0)
+                        {
+                            generator.postsetOf(c._place);
+                        }
+                        
+                        if(val <= c._upper && c._upper != std::numeric_limits<uint32_t>::max())
+                        {
+                            generator.presetOf(c._place);
+                        }
                     }
                 }
             }
@@ -2723,7 +3191,233 @@ namespace PetriEngine {
             } // else add nothing
         }
         
-        /******************** Just-In-Time Compilation ********************/
+        
+/********************** CONSTRUCTORS *********************************/
+
+        template<typename T>
+        void postMerge(std::vector<Condition_ptr>& conds) {
+            std::sort(std::begin(conds), std::end(conds),
+                    [](auto& a, auto& b) {
+                        return a->isTemporal() < b->isTemporal(); 
+                    });
+        } 
+        
+        AndCondition::AndCondition(std::vector<Condition_ptr>&& conds) {
+            for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
+            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            postMerge<AndCondition>(_conds);
+        }
+        
+        AndCondition::AndCondition(const std::vector<Condition_ptr>& conds) {
+            for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
+            for (auto& c : conds) _temporal = _temporal || c->isTemporal();
+            postMerge<AndCondition>(_conds);
+        }
+       
+        AndCondition::AndCondition(Condition_ptr left, Condition_ptr right) {
+            tryMerge<AndCondition>(_conds, left);
+            tryMerge<AndCondition>(_conds, right);
+            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            postMerge<AndCondition>(_conds);
+        }
+       
+        OrCondition::OrCondition(std::vector<Condition_ptr>&& conds) {
+            for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
+            for (auto& c : conds) _temporal = _temporal || c->isTemporal();
+            postMerge<AndCondition>(_conds);
+        }
+       
+        OrCondition::OrCondition(const std::vector<Condition_ptr>& conds) {
+            for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
+            for (auto& c : conds) _temporal = _temporal || c->isTemporal();
+            postMerge<AndCondition>(_conds);
+        }
+       
+        OrCondition::OrCondition(Condition_ptr left, Condition_ptr right) {
+            tryMerge<OrCondition>(_conds, left);
+            tryMerge<OrCondition>(_conds, right);
+            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            postMerge<AndCondition>(_conds);
+        }
+        
+
+        CompareConjunction::CompareConjunction(const std::vector<Condition_ptr>& conditions, bool negated)
+        {
+            _negated = negated;
+            merge(conditions, negated);
+        }
+        
+        void CompareConjunction::merge(const CompareConjunction& other)
+        {
+            auto neg = _negated != other._negated;
+            if(neg && other._constraints.size() > 1)
+            {
+                std::cout << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
+                assert(false);
+            }
+            auto il = _constraints.begin();
+            for(auto& c : other._constraints)
+            {
+                il = std::lower_bound(_constraints.begin(), _constraints.end(), c);
+                cons_t c2;
+                if(neg)
+                {
+                    if(c._upper == 0)
+                    {
+                        c2._lower = 1;
+                    }
+                    else if (c._upper == std::numeric_limits<uint32_t>::max())
+                    {
+                        c2._upper = c._lower + (other._negated ? -1 :  1);
+                    }
+                    else if(c._lower == 0)
+                    {
+                        c2._lower = c._upper + (other._negated ?  1 : -1);
+                    }
+                    else
+                    {
+                        std::cout << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
+                        assert(false);
+                    }
+                    c2._place = c._place;
+                    assert(c2._lower <= c2._upper);
+                }
+                else
+                {
+                    c2 = c;
+                }
+                            
+                if(il == _constraints.end() || il->_place != c2._place)
+                {
+                    c2._name = c._name;
+                    il = _constraints.insert(il, c2);
+                }
+                else
+                {
+                    il->_lower = std::max(il->_lower, c2._lower);
+                    il->_upper = std::min(il->_upper, c2._upper);
+                }
+            }
+        }
+        
+        void CompareConjunction::merge(const std::vector<Condition_ptr>& conditions, bool negated)
+        {
+
+            for(auto& c : conditions)
+            {
+                auto cmp = dynamic_cast<CompareCondition*>(c.get());
+                assert(cmp);
+                auto id = dynamic_cast<IdentifierExpr*>((*cmp)[0].get());
+                LiteralExpr* lit = nullptr;
+                bool inverted = false;
+                if(!id)
+                {
+                    id = dynamic_cast<IdentifierExpr*>((*cmp)[1].get());
+                    lit = dynamic_cast<LiteralExpr*>((*cmp)[0].get());
+                    inverted = true;
+                }
+                else
+                {
+                    lit = dynamic_cast<LiteralExpr*>((*cmp)[1].get());                
+                }
+                assert(lit);
+                assert(id);
+                uint32_t val = lit->value();
+                cons_t next;
+                next._place = id->offset();
+                auto lb = std::lower_bound(std::begin(_constraints), std::end(_constraints), next);
+                if(lb == std::end(_constraints))
+                {
+                    next._name = id->name();
+                    lb = _constraints.insert(lb, next);
+                }  
+                else
+                {
+                    assert(id->name().compare(lb->_name) == 0);
+                }
+
+                if(dynamic_cast<LessThanOrEqualCondition*>(c.get()))
+                {
+                    if(!negated)
+                        if(inverted) lb->_lower = std::max(lb->_lower, val);
+                        else         lb->_upper = std::min(lb->_upper, val);
+                    else
+                        if(!inverted) lb->_lower = std::max(lb->_lower, val+1);
+                        else          lb->_upper = std::min(lb->_upper, val-1);                        
+                }
+                else if(dynamic_cast<GreaterThanOrEqualCondition*>(c.get()))
+                {
+                    if(!negated)
+                        if(!inverted) lb->_lower = std::max(lb->_lower, val);
+                        else          lb->_upper = std::min(lb->_upper, val);
+                    else
+                        if(inverted) lb->_lower = std::max(lb->_lower, val+1);
+                        else         lb->_upper = std::min(lb->_upper, val-1);                        
+                }
+                else if(dynamic_cast<LessThanCondition*>(c.get()))
+                {
+                    if(!negated)
+                        if(inverted) lb->_lower = std::max(lb->_lower, val+1);
+                        else         lb->_upper = std::min(lb->_upper, val-1);
+                    else
+                        if(!inverted) lb->_lower = std::max(lb->_lower, val);
+                        else          lb->_upper = std::min(lb->_upper, val);
+                        
+                }
+                else if(dynamic_cast<GreaterThanCondition*>(c.get()))
+                {
+                    if(!negated)
+                        if(!inverted) lb->_lower = std::max(lb->_lower, val+1);
+                        else          lb->_upper = std::min(lb->_upper, val-1);
+                    else
+                        if(inverted) lb->_lower = std::max(lb->_lower, val);
+                        else         lb->_upper = std::min(lb->_upper, val);                       
+                }
+                else if(dynamic_cast<EqualCondition*>(c.get()))
+                {
+                    assert(!negated);
+                    lb->_lower = std::max(lb->_lower, val);
+                    lb->_upper = std::min(lb->_upper, val);
+                }
+                else if(dynamic_cast<NotEqualCondition*>(c.get()))
+                {
+                    assert(negated);
+                    lb->_lower = std::max(lb->_lower, val);
+                    lb->_upper = std::min(lb->_upper, val);
+                }
+                else
+                {
+                    std::cout << "UNKNOWN " << std::endl;
+                    assert(false);
+                }
+            }            
+        }
+       
+        CommutativeExpr::CommutativeExpr(std::vector<Expr_ptr>&& exprs, int initial)
+        : NaryExpr(), _constant(initial) {
+            for (auto& e : exprs) {
+                if (auto lit = dynamic_pointer_cast<PQL::LiteralExpr>(e))
+                    _constant = this->apply(_constant, lit->value());
+                else if (auto id = dynamic_pointer_cast<PQL::IdentifierExpr>(e)) {
+                    _ids.emplace_back(id->offset(), id->name());
+                } 
+                else if(auto c = dynamic_pointer_cast<CommutativeExpr>(e))
+                {
+                    // we should move up plus/multiply here when possible;
+                    if(c->_ids.size() == 0 && c->_exprs.size() == 0)
+                    {
+                        _constant = apply(_constant, c->_constant);
+                    }
+                    else
+                    {
+                        _exprs.emplace_back(std::move(e));                        
+                    }
+                } else {
+                    _exprs.emplace_back(std::move(e));
+                }
+            }
+        }
+
     } // PQL
 } // PetriEngine
 

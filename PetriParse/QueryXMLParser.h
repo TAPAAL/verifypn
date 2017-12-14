@@ -35,7 +35,7 @@ using namespace PetriEngine::PQL;
 
 class QueryXMLParser {
 public:
-    QueryXMLParser(const PNMLParser::TransitionEnablednessMap &transitionEnabledness);
+    QueryXMLParser();
     ~QueryXMLParser();
 
     struct QueryItem {
@@ -63,7 +63,6 @@ private:
     Condition_ptr parseBooleanFormula(rapidxml::xml_node<>*  element);
     Expr_ptr parseIntegerExpression(rapidxml::xml_node<>*  element);
     string parsePlace(rapidxml::xml_node<>*  element);
-    PNMLParser::TransitionEnablednessMap _transitionEnabledness;
 };
 
 #endif /* QUERYXMLPARSER_H */

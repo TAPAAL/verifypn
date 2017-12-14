@@ -41,7 +41,6 @@ void PNMLParser::parse(ifstream& xml,
     id2name.clear();
     arcs.clear();
     transitions.clear();
-    transitionEnabledness.clear();
 
     //Set the builder
     this->builder = builder;
@@ -60,11 +59,6 @@ void PNMLParser::parse(ifstream& xml,
     }
     
     parseElement(root);
-
-    // initialize transitionEnabledness
-    for (TransitionIter it = transitions.begin(); it != transitions.end(); it++) {
-        transitionEnabledness[it->id] = BooleanCondition::TRUE_CONSTANT;
-    }
 
     //Add all the transition
     for (TransitionIter it = transitions.begin(); it != transitions.end(); it++)
@@ -98,14 +92,6 @@ void PNMLParser::parse(ifstream& xml,
                             std::make_shared<IdentifierExpr>(source.id),
                             std::make_shared<LiteralExpr>(it->weight)
                         );
-            if(transitionEnabledness[target.id] == BooleanCondition::TRUE_CONSTANT)
-            {
-                transitionEnabledness[target.id] = cond;
-            }
-            else
-            {
-                transitionEnabledness[target.id] = std::make_shared<AndCondition>(cond, transitionEnabledness[target.id]);
-            }
         } else if (!source.isPlace && target.isPlace) {
             builder->addOutputArc(source.id, target.id, it->weight);
         } else {
@@ -127,14 +113,6 @@ void PNMLParser::parse(ifstream& xml,
                             std::make_shared<IdentifierExpr>(source.id),
                             std::make_shared<LiteralExpr>(inhibitor.weight)
                         );
-            if(transitionEnabledness[target.id] == BooleanCondition::TRUE_CONSTANT)
-            {
-                transitionEnabledness[target.id] = cond;
-            }
-            else
-            {
-                transitionEnabledness[target.id] = std::make_shared<AndCondition>(cond, transitionEnabledness[target.id]);
-            }      
         }
         else
         {

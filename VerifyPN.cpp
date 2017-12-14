@@ -69,10 +69,10 @@ using namespace PetriEngine::Reachability;
 
 #define VERSION  "2.1.0"
 
-ReturnValue contextAnalysis(PetriNetBuilder& builder, std::vector<std::shared_ptr<Condition> >& queries)
+ReturnValue contextAnalysis(PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries)
 {
     //Context analysis
-    AnalysisContext context(builder.getPlaceNames());
+    AnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net);
     for(auto& q : queries)
     {
         q->analyze(context);
@@ -349,7 +349,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 }
 
 auto
-readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std::vector<std::string>& qstrings)
+readQueries(options_t& options, std::vector<std::string>& qstrings)
 {
 
     std::vector<Condition_ptr > conditions;
@@ -391,7 +391,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
         }
         else
         {
-            QueryXMLParser XMLparser(tmap);
+            QueryXMLParser XMLparser;
             if (!XMLparser.parse(qfile, options.querynumbers)) {
                 fprintf(stderr, "Error: Failed parsing XML query file\n");
                 fprintf(stdout, "DO_NOT_COMPETE\n");
@@ -437,8 +437,7 @@ readQueries(PNMLParser::TransitionEnablednessMap& tmap, options_t& options, std:
     } 
  }
 
-ReturnValue parseModel( PNMLParser::TransitionEnablednessMap& transitionEnabledness,
-                        PetriNetBuilder& builder, options_t& options)
+ReturnValue parseModel(PetriNetBuilder& builder, options_t& options)
 {
     //Load the model
     ifstream mfile(options.modelfile, ifstream::in);
@@ -452,8 +451,6 @@ ReturnValue parseModel( PNMLParser::TransitionEnablednessMap& transitionEnabledn
     //Parse and build the petri net
     PNMLParser parser;
     parser.parse(mfile, &builder);
-
-    transitionEnabledness = parser.getTransitionEnabledness(); // Remember conditions for transitions
 
     // Close the file
     mfile.close();
@@ -525,13 +522,11 @@ int main(int argc, char* argv[]) {
     options.print();
   
     PetriNetBuilder builder;
-    PNMLParser::TransitionEnablednessMap transitionEnabledness;
-    
-    if(parseModel(transitionEnabledness, builder, options) != ContinueCode) return ErrorCode;
+    if(parseModel(builder, options) != ContinueCode) return ErrorCode;
     
     //----------------------- Parse Query -----------------------//
     std::vector<std::string> querynames;
-    auto queries = readQueries(transitionEnabledness, options, querynames);
+    auto queries = readQueries(options, querynames);
     
     if (options.upperboundcheck) {
         for (uint32_t i = 0; i < queries.size(); i++) {
@@ -543,18 +538,18 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-    
-    if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
-    
+        
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
     
     //----------------------- Query Simplification -----------------------//
     bool alldone = options.queryReductionTimeout > 0;
     PetriNetBuilder b2(builder);
-    PetriNet* qnet = b2.makePetriNet(false);
+    std::unique_ptr<PetriNet> qnet(b2.makePetriNet(false));
     MarkVal* qm0 = qnet->makeInitialMarking();
     ResultPrinter p2(&b2, &options, querynames);
+
+    if(queries.size() == 0 || contextAnalysis(b2, qnet.get(), queries) != ContinueCode)  return ErrorCode;
     
     if (options.queryReductionTimeout > 0) {
         LPCache cache;
@@ -562,13 +557,13 @@ int main(int argc, char* argv[]) {
         {
             if (queries[i]->isUpperBound()) continue;
             
-            SimplificationContext simplificationContext(qm0, qnet, options.queryReductionTimeout, 
+            SimplificationContext simplificationContext(qm0, qnet.get(), options.queryReductionTimeout, 
                     options.lpsolveTimeout, &cache);
             bool isInvariant = queries[i].get()->isInvariant();
             
             int preSize=queries[i]->formulaSize();
             negstat_t stats;            
-            EvaluationContext context(qm0, qnet);
+            EvaluationContext context(qm0, qnet.get());
             if(options.printstatistics)
             {
                 std::cout << "\nQuery before reduction: ";
@@ -579,7 +574,8 @@ int main(int argc, char* argv[]) {
                 std::cout << std::endl;
             }
             
-            queries[i] = queries[i]->pushNegation(stats, context, false, false);
+            queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false)
+                                    ->pushNegation(stats, context, false, false);
 
             if(options.printstatistics)
             {
@@ -598,14 +594,10 @@ int main(int argc, char* argv[]) {
                     std::cout << std::endl;
                 }
                 queries[i].get()->setInvariant(isInvariant);
-                std::cout << "RWSTATS POST:";
-                stats.print(std::cout);
-                std::cout << std::endl;
             } catch (std::bad_alloc& ba){
                 std::cerr << "Query reduction failed." << std::endl;
                 std::cerr << "Exception information: " << ba.what() << std::endl;
                 
-                delete qnet;
                 delete[] qm0;
                 std::exit(3);
             }
@@ -632,7 +624,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     
-    delete qnet;
+    qnet = nullptr;
     delete[] qm0;
 
     if (!options.statespaceexploration){
@@ -678,15 +670,15 @@ int main(int argc, char* argv[]) {
     if (ctl_ids.size() > 0) {
         options.isctl=true;
         PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
-        PetriNet* ctlnet = builder.makePetriNet();
+        std::unique_ptr<PetriNet> ctlnet(builder.makePetriNet());
         // Assign indexes
-        if(queries.size() == 0 || contextAnalysis(builder, queries) != ContinueCode)  return ErrorCode;
+        if(queries.size() == 0 || contextAnalysis(builder, ctlnet.get(), queries) != ContinueCode)  return ErrorCode;
         if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
         if(options.strategy != PetriEngine::Reachability::DFS){
             fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
             options.strategy = PetriEngine::Reachability::DFS;
         }
-        v = CTLMain(ctlnet,
+        v = CTLMain(ctlnet.get(),
             options.ctlalgorithm,
             options.strategy,
             options.gamemode,
@@ -695,9 +687,7 @@ int main(int argc, char* argv[]) {
             querynames,
             queries,
             ctl_ids);
-        
-        delete ctlnet;
-        
+                
         if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
             return v;
         }
@@ -710,13 +700,14 @@ int main(int argc, char* argv[]) {
     if (options.enablereduction == 1 || options.enablereduction == 2) {
         // Compute how many times each place appears in the query
         builder.startTimer();
-        builder.reduce(queries, results, options.enablereduction, options.trace, options.reductionTimeout);
+        std::unique_ptr<PetriNet> net(builder.makePetriNet(false));
+        builder.reduce(queries, results, options.enablereduction, options.trace, net.get(), options.reductionTimeout);
         printer.setReducer(builder.getReducer());        
     }
     
     printStats(builder, options);
     
-    PetriNet* net = builder.makePetriNet();
+    std::unique_ptr<PetriNet> net(builder.makePetriNet());
     
     for(auto& q : queries)
     {
@@ -753,7 +744,7 @@ int main(int argc, char* argv[]) {
     ReachabilitySearch strategy(printer, *net, options.kbound);
 
     //Analyse context again to reindex query
-    contextAnalysis(builder, queries);
+    contextAnalysis(builder, net.get(), queries);
 
     // Change default place-holder to default strategy
     if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
@@ -765,9 +756,7 @@ int main(int argc, char* argv[]) {
             options.statespaceexploration,
             options.printstatistics, 
             options.trace);
-   
-    delete net;
-    
+       
     return 0;
 }
 

@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 #include "PQL.h"
 #include "Contexts.h"
 #include "PetriEngine/Simplification/Member.h"
@@ -35,11 +36,13 @@ namespace PetriEngine {
     namespace PQL {
         
         std::string generateTabs(uint32_t tabs);
-
+        class CompareCondition;
         /******************** EXPRESSIONS ********************/
 
         /** Base class for all binary expressions */
         class NaryExpr : public Expr {
+        protected:
+            NaryExpr() {};
         public:
 
             NaryExpr(std::vector<Expr_ptr>&& exprs) : _exprs(std::move(exprs)) {
@@ -49,23 +52,42 @@ namespace PetriEngine {
             int formulaSize() const override{
                 size_t sum = 0;
                 for(auto& e : _exprs) sum += e->formulaSize();
-                return sum;
+                return sum + 1;
             }
             void toString(std::ostream&) const override;
-        private:
-            virtual int apply(int v1, int v2) const = 0;
-            virtual std::string op() const = 0;
         protected:
+            virtual int apply(int v1, int v2) const { return 0; };
+            virtual std::string op() const = 0;
             std::vector<Expr_ptr> _exprs;
             virtual int32_t preOp(const EvaluationContext& context) const;
         };
+        
+        class CommutativeExpr : public NaryExpr
+        {
+        public:
+            friend CompareCondition;
+            CommutativeExpr(std::vector<Expr_ptr>&& exprs, int initial);            
+            virtual void analyze(AnalysisContext& context) override;
+            int evaluate(const EvaluationContext& context) const override;
+            int formulaSize() const override{
+                size_t sum = _ids.size();
+                for(auto& e : _exprs) sum += e->formulaSize();
+                return sum + 1;
+            }
+            void toString(std::ostream&) const override;            
+        protected:
+            virtual int32_t preOp(const EvaluationContext& context) const override;
+            int32_t _constant;
+            std::vector<std::pair<uint32_t,std::string>> _ids;
+            Member commutativeCons(int constant, SimplificationContext& context, std::function<void(Member& a, Member b)> op) const;
+        };
 
         /** Binary plus expression */
-        class PlusExpr : public NaryExpr {
+        class PlusExpr : public CommutativeExpr {
         public:
 
             PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk = false) :
-            NaryExpr(std::move(exprs)), tk(tk)
+            CommutativeExpr(std::move(exprs), 0), tk(tk)
             {
             }
             
@@ -75,11 +97,7 @@ namespace PetriEngine {
             bool tk = false;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
-            void analyze(AnalysisContext& context) override;            
         protected:
-            virtual int32_t preOp(const EvaluationContext& context) const override;
-
-        private:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
             std::string op() const override;
@@ -102,26 +120,26 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
-        private:
+        protected:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
             std::string op() const override;
         };
 
         /** Binary multiplication expression **/
-        class MultiplyExpr : public NaryExpr {
+        class MultiplyExpr : public CommutativeExpr {
         public:
 
-            using NaryExpr::NaryExpr;
+            MultiplyExpr(std::vector<Expr_ptr>&& exprs) :
+            CommutativeExpr(std::move(exprs), 1)
+            {
+            }
             Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
-            void analyze(AnalysisContext& context) override;
         protected:
-            virtual int32_t preOp(const EvaluationContext& context) const override;
-        private:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
             std::string op() const override;
@@ -176,10 +194,13 @@ namespace PetriEngine {
         /** Identifier expression */
         class IdentifierExpr : public Expr {
         public:
-
-            IdentifierExpr(const std::string& name) : _name(name) {
-                _offsetInMarking = -1;
+            IdentifierExpr(const std::string& name, int offest) 
+            : _offsetInMarking(offest), _name(name) {
             }
+            
+            IdentifierExpr(const std::string& name) : IdentifierExpr(name, -1) {
+            }
+            
             void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) const override;
             void toString(std::ostream&) const override;
@@ -193,6 +214,10 @@ namespace PetriEngine {
             /** Offset in marking or valuation */
             int offset() const {
                 return _offsetInMarking;
+            }
+            const std::string& name()
+            {
+                return _name;
             }
             Member constraint(SimplificationContext& context) const override;
         private:
@@ -397,6 +422,54 @@ namespace PetriEngine {
         
         /******************** CONDITIONS ********************/
 
+                /* Fireable Condition -- placeholder, needs to be unfolded */
+        class FireableCondition : public Condition {
+        public:
+            FireableCondition(const std::string& tname) : _name(tname) {};
+            void analyze(AnalysisContext& context) override;
+            Result evaluate(const EvaluationContext& context) const override
+            { return _compiled->evaluate(context); }
+            Result evalAndSet(const EvaluationContext& context) override
+            { return _compiled->evalAndSet(context); }
+            uint32_t distance(DistanceContext& context) const override
+            { return _compiled->distance(context); }
+            void toString(std::ostream& ss) const override
+            { _compiled->toString(ss); } 
+            void toTAPAALQuery(std::ostream& s,TAPAALConditionExportContext& context) const override
+            { _compiled->toTAPAALQuery(s, context); }
+            Retval simplify(SimplificationContext& context) const override
+            { 
+                return _compiled->simplify(context); 
+            }
+            bool isReachability(uint32_t depth) const override
+            { return _compiled->isReachability(depth); }
+            bool isUpperBound() override
+            { return false; }
+            Condition_ptr prepareForReachability(bool negated) const override
+            { return _compiled->prepareForReachability(negated); }
+            Condition_ptr pushNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated) const override 
+            { 
+                return _compiled->pushNegation(stat, context, nested, negated); 
+            }
+            void toXML(std::ostream& ss, uint32_t tabs) const override 
+            { _compiled->toXML(ss, tabs);};
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override 
+            { _compiled->findInteresting(generator, negated); }
+            Quantifier getQuantifier() const override 
+            { return _compiled->getQuantifier(); }
+            Path getPath() const override 
+            { return _compiled->getPath(); }
+            CTLType getQueryType() const override 
+            { return _compiled->getQueryType(); }
+            int formulaSize() const override
+            { return _compiled->formulaSize(); }
+        private:
+            std::string _name;
+            Condition_ptr _compiled;
+        };
+        
+        
+        
         /* Logical conditon */
         class LogicalCondition : public Condition {
         public:
@@ -428,27 +501,12 @@ namespace PetriEngine {
             auto end() { return _conds.end(); }
             auto begin() const { return _conds.begin(); }
             auto end() const { return _conds.end(); }
+            bool empty() const { return _conds.size() == 0; }
+            bool singular() const { return _conds.size() == 1; }
         protected:
             LogicalCondition() {};
             Retval simplifyOr(SimplificationContext& context) const;
-            Retval simplifyAnd(SimplificationContext& context) const;      
-            template<typename T>
-            void tryMerge(const Condition_ptr& ptr)
-            {
-                if(auto lor = std::dynamic_pointer_cast<T>(ptr))
-                {
-                    _conds.insert(_conds.begin(), lor->_conds.begin(), lor->_conds.end());
-                }
-                else
-                {
-                    _conds.emplace_back(ptr);
-                }
-            }
-            void sort()
-            {
-                std::sort(std::begin(_conds), std::end(_conds), 
-                        [](auto& a, auto& b){ return a->isTemporal() < b->isTemporal(); });
-            }
+            Retval simplifyAnd(SimplificationContext& context) const;                  
 
         private:
             virtual uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const = 0;
@@ -463,26 +521,11 @@ namespace PetriEngine {
         class AndCondition : public LogicalCondition {
         public:
 
-            AndCondition(std::vector<Condition_ptr>&& conds) {
-                for(auto& c : conds) tryMerge<AndCondition>(c);
-                for(auto& c : _conds) _temporal = _temporal || c->isTemporal();
-                sort();
-            }
+            AndCondition(std::vector<Condition_ptr>&& conds);
 
-            AndCondition(const std::vector<Condition_ptr>& conds)
-            {
-                for(auto& c : conds) tryMerge<AndCondition>(c);
-                for(auto& c : conds) _temporal = _temporal || c->isTemporal();
-                sort();
-            }
+            AndCondition(const std::vector<Condition_ptr>& conds);
             
-            AndCondition(Condition_ptr left, Condition_ptr right)
-            {
-                this->tryMerge<AndCondition>(left);
-                this->tryMerge<AndCondition>(right);
-                for(auto& c : _conds) _temporal = _temporal || c->isTemporal();
-                sort();
-            }
+            AndCondition(Condition_ptr left, Condition_ptr right);
             
             Retval simplify(SimplificationContext& context) const override;
             Result evaluate(const EvaluationContext& context) const override;
@@ -503,26 +546,11 @@ namespace PetriEngine {
         class OrCondition : public LogicalCondition {
         public:
 
-            OrCondition(std::vector<Condition_ptr>&& conds) {
-                for(auto& c : conds) tryMerge<OrCondition>(c);
-                for(auto& c : conds) _temporal = _temporal || c->isTemporal();
-                sort();
-            }
+            OrCondition(std::vector<Condition_ptr>&& conds);
 
-            OrCondition(const std::vector<Condition_ptr>& conds)
-            {
-                for(auto& c : conds) tryMerge<OrCondition>(c);
-                for(auto& c : conds) _temporal = _temporal || c->isTemporal();
-                sort();
-            }
+            OrCondition(const std::vector<Condition_ptr>& conds);
 
-            OrCondition(Condition_ptr left, Condition_ptr right)
-            {
-                this->tryMerge<OrCondition>(left);
-                this->tryMerge<OrCondition>(right);
-                for(auto& c : _conds) _temporal = _temporal || c->isTemporal();
-                sort();
-            };
+            OrCondition(Condition_ptr left, Condition_ptr right);
             
             Retval simplify(SimplificationContext& context) const override;
             Result evaluate(const EvaluationContext& context) const override;
@@ -537,6 +565,78 @@ namespace PetriEngine {
             uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const override;
             std::string op() const override;
         };
+
+        class CompareConjunction : public Condition
+        {
+        private:
+            struct cons_t {
+                int32_t _place  = -1;
+                uint32_t _upper = std::numeric_limits<uint32_t>::max();
+                uint32_t _lower = 0;
+                std::string _name;
+                bool operator<(const cons_t& other) const
+                {
+                    return _place < other._place;
+                }
+            };
+
+            CompareConjunction() 
+            {};
+        public:
+            friend FireableCondition;
+            CompareConjunction(const std::vector<cons_t>&& cons, bool negated) 
+                    : _constraints(cons), _negated(negated) {};
+            CompareConjunction(const std::vector<Condition_ptr>&, bool negated);
+            CompareConjunction(const CompareConjunction& other, bool negated = false)
+            : _constraints(other._constraints), _negated(other._negated != negated)
+            {
+            };
+
+            void merge(const CompareConjunction& other);
+            void merge(const std::vector<Condition_ptr>&, bool negated);
+            
+            int formulaSize() const override{
+                int sum = 0;
+                for(auto& c : _constraints)
+                {
+                    assert(c._place >= 0);
+                    if(c._lower == c._upper) ++sum;
+                    else {
+                        if(c._lower != 0) ++sum;
+                        if(c._upper != std::numeric_limits<uint32_t>::max()) ++sum;
+                    }
+                }
+                if(sum == 1) return 2;
+                else return (sum*2) + 1;
+            }
+            void analyze(AnalysisContext& context) override;
+            uint32_t distance(DistanceContext& context) const override;
+            void toString(std::ostream& stream) const override;
+            void toTAPAALQuery(std::ostream& stream,TAPAALConditionExportContext& context) const override;
+            bool isReachability(uint32_t depth) const override { return depth > 0; };
+            bool isUpperBound() override { return false; }
+            Condition_ptr prepareForReachability(bool negated) const override;
+            CTLType getQueryType() const override { return CTLType::LOPERATOR; }
+            Path getPath() const override         { return Path::pError; }            
+            virtual void toXML(std::ostream& stream, uint32_t tabs) const override;
+            Retval simplify(SimplificationContext& context) const override;
+            Result evaluate(const EvaluationContext& context) const override;
+            Result evalAndSet(const EvaluationContext& context) override;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;   
+            Quantifier getQuantifier() const override { return _negated ? Quantifier::OR : Quantifier::AND; }
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
+            bool isNegated() const { return _negated; }
+            bool singular() const 
+            { 
+                return _constraints.size() == 1 && 
+                                    (_constraints[0]._lower == 0 || 
+                                     _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
+            };
+        private:
+            std::vector<cons_t> _constraints;
+            bool _negated = false;
+        };
+
 
         /* Comparison conditon */
         class CompareCondition : public Condition {
@@ -560,12 +660,18 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
+            const Expr_ptr& operator[](uint32_t id) const
+            {
+                if(id == 0) return _expr1;
+                else return _expr2;
+            }
         protected:
             uint32_t _distance(DistanceContext& c, 
                     std::function<uint32_t(uint32_t, uint32_t, bool)> d) const
             {
                 return d(_expr1->evaluate(c), _expr2->evaluate(c), c.negated());
             }
+            bool isTrivial() const;
         private:
             virtual bool apply(int v1, int v2) const = 0;
             virtual std::string op() const = 0;
@@ -699,7 +805,7 @@ namespace PetriEngine {
                 _temporal = _cond->isTemporal();
             }
             int formulaSize() const override{
-                return _cond->formulaSize(); // do not count the not node
+                return _cond->formulaSize() + 1;
             }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) const override;
@@ -737,10 +843,7 @@ namespace PetriEngine {
                 }
             }
             int formulaSize() const override{
-                if(trivial > 0)
-                    return 0;
-                else 
-                    return 1;
+                return 0;
             }
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) const override;

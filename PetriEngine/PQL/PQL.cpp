@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "PQL.h"
-
 #include "Contexts.h"
+#include "Expressions.h"
 
 namespace PetriEngine {
     namespace PQL {
@@ -45,6 +45,21 @@ namespace PetriEngine {
         Condition::~Condition() {
 
         }
+
+        Condition_ptr Condition::initialMarkingRW(std::function<Condition_ptr()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated)
+        {
+            auto res = func();
+            if(!nested)
+            {
+                auto e = res->evaluate(context);
+                if(e != Condition::RUNKNOWN) 
+                {
+                    return BooleanCondition::getShared(e);
+                }
+            }
+            return res;            
+        }
+
 
     } // PQL
 } // PetriEngine

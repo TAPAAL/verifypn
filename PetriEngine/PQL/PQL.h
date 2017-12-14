@@ -22,7 +22,7 @@
 #include <list>
 #include <vector>
 #include <algorithm>
-#include <map>
+#include <unordered_map>
 #include <memory>
 
 #include "../PetriNet.h"
@@ -269,7 +269,7 @@ namespace PetriEngine {
                 _placenameforbound  = b;
             }
             
-            void indexPlaces(const std::map<std::string, uint32_t>& map)
+            void indexPlaces(const std::unordered_map<std::string, uint32_t>& map)
             {
                 _placeids.clear();
                 for(auto& i : _placenameforbound)
@@ -287,6 +287,8 @@ namespace PetriEngine {
             virtual CTLType getQueryType() const = 0;
             virtual Quantifier getQuantifier() const = 0;
             virtual Path getPath() const = 0;
+            static std::shared_ptr<Condition> 
+            initialMarkingRW(std::function<std::shared_ptr<Condition> ()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated);
             
         protected:
             //Value for checking if condition is trivially true or false.
