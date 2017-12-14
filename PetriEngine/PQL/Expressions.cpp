@@ -406,24 +406,6 @@ namespace PetriEngine {
 
         /******************** Context Analysis ********************/
 
-        auto expr_cmp = [](const Expr_ptr& a, const Expr_ptr& b){
-                if(dynamic_cast<LiteralExpr*>(a.get()))
-                {
-                    if(dynamic_cast<LiteralExpr*>(b.get())) return false;
-                    else return true;
-                }
-                else if(auto aa = dynamic_cast<IdentifierExpr*>(a.get()))
-                {
-                    if(dynamic_cast<LiteralExpr*>(b.get())) return false; 
-                    else if(auto bb = dynamic_cast<IdentifierExpr*>(b.get()))
-                    {
-                        return aa->offset() < bb->offset();
-                    }
-                    else return true;
-                }
-                return false;
-            };
-        
         void NaryExpr::analyze(AnalysisContext& context) {
             for(auto& e : _exprs) e->analyze(context);
             std::sort(_exprs.begin(), _exprs.end(), [](auto& a, auto& b)
