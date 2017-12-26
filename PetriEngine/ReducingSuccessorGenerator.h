@@ -29,6 +29,9 @@ public:
     {
        return _current;
     }
+    void setQuery(PQL::Condition* ptr) { _queries.clear(); _queries = {ptr};}
+    void reset();
+
 private:
     bool *_enabled, *_stubborn;
     std::unique_ptr<place_t[]> _places;
@@ -39,8 +42,7 @@ private:
     bool _netContainsInhibitorArcs;
     std::vector<std::vector<uint32_t>> _inhibpost;
     
-    std::vector<std::shared_ptr<PQL::Condition> > _queries;
-    void reset();
+    std::vector<PQL::Condition* > _queries;
     void constructEnabled();
     void constructPrePost();
     void constructDependency();
