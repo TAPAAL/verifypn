@@ -704,6 +704,7 @@ int main(int argc, char* argv[]) {
             options.gamemode,
             options.printstatistics,
             true,
+            options.stubbornreduction,
             querynames,
             queries,
             ctl_ids);

@@ -21,7 +21,7 @@ public:
     using Condition = PetriEngine::PQL::Condition;
     using Condition_ptr = PetriEngine::PQL::Condition_ptr;
     using Marking = PetriEngine::Structures::State;
-    OnTheFlyDG(PetriEngine::PetriNet *t_net);
+    OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order);
 
     virtual ~OnTheFlyDG();
 
@@ -58,7 +58,7 @@ protected:
     uint32_t n_places = 0;
     size_t _markingCount = 0;
     size_t _configurationCount = 0;
-
+    bool _partial_order = false;
     //used after query is set
     Condition_ptr query = nullptr;
 

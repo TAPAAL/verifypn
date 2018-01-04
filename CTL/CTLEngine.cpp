@@ -76,6 +76,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
                     bool gamemode,
                     bool printstatistics,
                     bool mccoutput,
+                    bool partial_order,
                     const std::vector<std::string>& querynames,
                     const std::vector<std::shared_ptr<Condition>>& queries,
                     const std::vector<size_t>& querynumbers
@@ -89,7 +90,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
 
     for(auto qnum : querynumbers){
         CTLResult result(queries[qnum]);
-        PetriNets::OnTheFlyDG graph(net); 
+        PetriNets::OnTheFlyDG graph(net, partial_order); 
         graph.setQuery(result.query);
         std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
         bool solved = false;
