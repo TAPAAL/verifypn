@@ -190,8 +190,8 @@ namespace PetriEngine {
             _stubborn[_ordering.front()] = true;
             return;
         }
-        _queries.front()->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
         for (auto &q : _queries) {
+            q->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
             q->findInteresting(*this, false);
         }
         
