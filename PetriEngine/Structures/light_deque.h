@@ -48,6 +48,11 @@ class light_deque
             return _front == _back;
         }
         
+        size_t size()
+        {
+            return _back - _front;
+        }
+        
         T front()
         {
             return _data.get()[_front];

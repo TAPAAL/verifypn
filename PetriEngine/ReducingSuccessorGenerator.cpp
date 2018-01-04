@@ -18,7 +18,9 @@ namespace PetriEngine {
     }
 
     ReducingSuccessorGenerator::ReducingSuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries) : ReducingSuccessorGenerator(net) {
-        _queries = queries;
+        _queries.reserve(queries.size());
+        for(auto& q : queries)
+            _queries.push_back(q.get());
     }
 
     ReducingSuccessorGenerator::~ReducingSuccessorGenerator() {
@@ -182,6 +184,12 @@ namespace PetriEngine {
     void ReducingSuccessorGenerator::prepare(const Structures::State* state) {
         _parent = state;
         constructEnabled();
+        if(_ordering.size() == 0) return;
+        if(_ordering.size() == 1)
+        {
+            _stubborn[_ordering.front()] = true;
+            return;
+        }
         for (auto &q : _queries) {
             q->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
             q->findInteresting(*this, false);

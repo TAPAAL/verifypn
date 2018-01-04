@@ -2997,11 +2997,13 @@ namespace PetriEngine {
         }
         
         void SimpleQuantifierCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
-            // Not implemented
+            _cond->findInteresting(generator, negated);
         }
         
         void UntilCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
-            // Not implemented
+            _cond1->findInteresting(generator, negated);
+            _cond1->findInteresting(generator, !negated);
+            _cond2->findInteresting(generator, negated);
         }
         
         void AndCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {

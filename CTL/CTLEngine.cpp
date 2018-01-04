@@ -66,7 +66,6 @@ void printResult(const std::string& qname, CTLResult& result, bool statisticslev
         cout << "	Processed Edges   : " << result.processedEdges << endl;
         cout << "	Processed N. Edges: " << result.processedNegationEdges << endl;
         cout << "	Explored Configs  : " << result.exploredConfigurations << endl;
-        if(!only_stats) result.query->toString(cout);
         std::cout << endl;
     }
 }
@@ -77,6 +76,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
                     bool gamemode,
                     bool printstatistics,
                     bool mccoutput,
+                    bool partial_order,
                     const std::vector<std::string>& querynames,
                     const std::vector<std::shared_ptr<Condition>>& queries,
                     const std::vector<size_t>& querynumbers
@@ -90,7 +90,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
 
     for(auto qnum : querynumbers){
         CTLResult result(queries[qnum]);
-        PetriNets::OnTheFlyDG graph(net); 
+        PetriNets::OnTheFlyDG graph(net, partial_order); 
         graph.setQuery(result.query);
         std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
         bool solved = false;

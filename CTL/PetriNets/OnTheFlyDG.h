@@ -12,6 +12,7 @@
 #include "PetriEngine/Structures/ptrie_map.h"
 #include "PetriEngine/Structures/AlignedEncoder.h"
 #include "PetriEngine/Structures/linked_bucket.h"
+#include "PetriEngine/ReducingSuccessorGenerator.h"
 
 namespace PetriNets {
 class OnTheFlyDG : public DependencyGraph::BasicDependencyGraph
@@ -20,7 +21,7 @@ public:
     using Condition = PetriEngine::PQL::Condition;
     using Condition_ptr = PetriEngine::PQL::Condition_ptr;
     using Marking = PetriEngine::Structures::State;
-    OnTheFlyDG(PetriEngine::PetriNet *t_net);
+    OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order);
 
     virtual ~OnTheFlyDG();
 
@@ -57,7 +58,6 @@ protected:
     uint32_t n_places = 0;
     size_t _markingCount = 0;
     size_t _configurationCount = 0;
-
     //used after query is set
     Condition_ptr query = nullptr;
 
@@ -66,10 +66,27 @@ protected:
     {
         return fastEval(query.get(), unfolded);
     }
-    void nextStates(Marking& t_marking, 
+    void nextStates(Marking& t_marking, Condition*,
     std::function<void ()> pre, 
     std::function<bool (Marking&)> foreach, 
     std::function<void ()> post);
+    template<typename T>
+    void dowork(T& gen, bool& first, 
+    std::function<void ()>& pre, 
+    std::function<bool (Marking&)>& foreach)
+    {
+        gen.prepare(&query_marking);
+
+        while(gen.next(working_marking)){
+            if(first) pre();
+            first = false;
+            if(!foreach(working_marking))
+            {
+                gen.reset();
+                break;
+            }
+        }
+    }
     PetriConfig *createConfiguration(size_t marking, size_t own, Condition* query);
     PetriConfig *createConfiguration(size_t marking, size_t own, const Condition_ptr& query)
     {
@@ -86,7 +103,12 @@ protected:
 
     // Problem  with linked bucket and complex constructor
     linked_bucket_t<char[sizeof(PetriConfig)], 1024*1024>* conf_alloc = nullptr;
-        
+    
+    PetriEngine::ReducingSuccessorGenerator _redgen;
+    bool _partial_order = false;
+
 };
+
+
 }
 #endif // ONTHEFLYDG_H

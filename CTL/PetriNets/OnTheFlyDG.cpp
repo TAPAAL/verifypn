@@ -18,9 +18,10 @@ using namespace DependencyGraph;
 
 namespace PetriNets {
 
-OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net) : encoder(t_net->numberOfPlaces(), 0), 
+OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order) : encoder(t_net->numberOfPlaces(), 0), 
         edge_alloc(new linked_bucket_t<DependencyGraph::Edge,1024*10>(1)), 
-        conf_alloc(new linked_bucket_t<char[sizeof(PetriConfig)], 1024*1024>(1)) {
+        conf_alloc(new linked_bucket_t<char[sizeof(PetriConfig)], 1024*1024>(1)),
+        _redgen(*t_net), _partial_order(partial_order) {
     net = t_net;
     n_places = t_net->numberOfPlaces();
     n_transitions = t_net->numberOfTransitions();
@@ -37,7 +38,6 @@ OnTheFlyDG::~OnTheFlyDG()
     {
         ((PetriConfig*)&(*conf_alloc)[i])->~PetriConfig();
     }
-    std::cout << "NEDGES " << edge_alloc->size() << std::endl;
     delete conf_alloc;
     delete edge_alloc;
 }
@@ -176,7 +176,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 if (valid || left != NULL) {
                     //if left side is guaranteed to be not satisfied, skip successor generation
                     Edge* leftEdge = NULL;
-                    nextStates (query_marking,
+                    nextStates (query_marking, cond,
                                 [&](){ leftEdge = newEdge(*v, std::numeric_limits<uint32_t>::max());},
                                 [&](Marking& mark){
                                     auto res = fastEval(cond, &mark);
@@ -227,7 +227,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                     subquery->addTarget(c);
                 }
                 Edge* e1 = NULL;
-                nextStates(query_marking,
+                nextStates(query_marking, cond,
                         [&](){e1 = newEdge(*v, std::numeric_limits<uint32_t>::max());},
                         [&](Marking& mark)
                         {
@@ -264,7 +264,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 auto cond = static_cast<AXCondition*>(v->query);
                 Edge* e = newEdge(*v, std::numeric_limits<uint32_t>::max());
                 Condition::Result allValid = Condition::RTRUE;
-                nextStates(query_marking, 
+                nextStates(query_marking, cond,
                         [](){}, 
                         [&](Marking& mark){
                             auto res = fastEval((*cond)[0], &mark);
@@ -326,7 +326,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
 
                 Configuration *left = NULL;
                 bool valid = false;
-                nextStates(query_marking, 
+                nextStates(query_marking, cond,
                     [&](){
                         auto r0 = fastEval((*cond)[0], &query_marking);
                         if (r0 == Condition::RUNKNOWN) {
@@ -389,7 +389,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                     subquery->addTarget(c);
                 }
 
-                nextStates(query_marking,
+                nextStates(query_marking, cond,
                             [](){},
                             [&](Marking& mark){
                                 auto res = fastEval(cond, &mark);
@@ -424,7 +424,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
             else if(v->query->getPath() == X){
                 auto cond = static_cast<EXCondition*>(v->query);
                 auto query = (*cond)[0];
-                nextStates(query_marking, 
+                nextStates(query_marking, cond,
                         [](){}, 
                         [&](Marking& marking) {
                             auto res = fastEval(query, &marking);
@@ -478,25 +478,24 @@ Configuration* OnTheFlyDG::initialConfiguration()
     return initial_config;
 }
 
-void OnTheFlyDG::nextStates(Marking& t_marking, 
+
+void OnTheFlyDG::nextStates(Marking& t_marking, Condition* ptr,
     std::function<void ()> pre, 
     std::function<bool (Marking&)> foreach, 
     std::function<void ()> post)
 {
-
     bool first = true;
-    PetriEngine::SuccessorGenerator PNGen(*net);
-    PNGen.prepare(&query_marking);
     memcpy(working_marking.marking(), query_marking.marking(), n_places*sizeof(PetriEngine::MarkVal));    
-
-    
-    while(PNGen.next(working_marking)){
-        if(first) pre();
-        first = false;
-        if(!foreach(working_marking))
-        {
-            break;
-        }
+    auto qf = static_cast<QuantifierCondition*>(ptr);
+    if(!_partial_order || ptr->getQuantifier() != E || ptr->getPath() != F || (*qf)[0]->isTemporal())
+    {
+        PetriEngine::SuccessorGenerator PNGen(*net);
+        dowork<PetriEngine::SuccessorGenerator>(PNGen, first, pre, foreach);
+    }
+    else
+    {
+        _redgen.setQuery(ptr);
+        dowork<PetriEngine::ReducingSuccessorGenerator>(_redgen, first, pre, foreach);
     }
 
     if(!first) post();

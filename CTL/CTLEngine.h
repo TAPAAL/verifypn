@@ -16,6 +16,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
                     bool gamemode,
                     bool printstatistics,
                     bool mccoutput,
+                    bool partial_order,
                     const std::vector<std::string>& querynames,
                     const std::vector<std::shared_ptr<PetriEngine::PQL::Condition>>& reducedQueries,
                     const std::vector<size_t>& ids);

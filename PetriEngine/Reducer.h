@@ -114,7 +114,11 @@ namespace PetriEngine {
         size_t RuleE() const {
             return _ruleE;
         }
-        
+
+        size_t RuleF() const {
+            return _ruleF;
+        }
+
         void postFire(std::ostream&, const std::string& transition);
         void extraConsume(std::ostream&, const std::string& transition);
         void initFire(std::ostream&);
@@ -122,7 +126,7 @@ namespace PetriEngine {
     private:
         size_t _removedTransitions;
         size_t _removedPlaces;
-        size_t _ruleA, _ruleB, _ruleC, _ruleD, _ruleE;
+        size_t _ruleA, _ruleB, _ruleC, _ruleD, _ruleE, _ruleF;
         PetriNetBuilder* parent;
         bool reconstructTrace = false;
         std::chrono::high_resolution_clock::time_point _timer;
@@ -134,6 +138,7 @@ namespace PetriEngine {
         bool ReducebyRuleC(uint32_t* placeInQuery);
         bool ReducebyRuleD(uint32_t* placeInQuery);
         bool ReducebyRuleE(uint32_t* placeInQuery);
+        bool ReducebyRuleF(uint32_t* placeInQuery);
         
         std::string getTransitionName(uint32_t transition);
         std::string getPlaceName(uint32_t place);
