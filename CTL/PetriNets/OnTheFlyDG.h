@@ -58,7 +58,6 @@ protected:
     uint32_t n_places = 0;
     size_t _markingCount = 0;
     size_t _configurationCount = 0;
-    bool _partial_order = false;
     //used after query is set
     Condition_ptr query = nullptr;
 
@@ -106,7 +105,8 @@ protected:
     linked_bucket_t<char[sizeof(PetriConfig)], 1024*1024>* conf_alloc = nullptr;
     
     PetriEngine::ReducingSuccessorGenerator _redgen;
-        
+    bool _partial_order = false;
+
 };
 
 
