@@ -148,18 +148,10 @@ Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
             if (strcmp(it->name(), "place") != 0) return nullptr;
             auto place = parsePlace(it);
             if (place == "") return nullptr; // invalid place name
-            auto tmp = std::make_shared<LessThanCondition>(
-                            std::make_shared<IdentifierExpr>(place),
-                            std::make_shared<LiteralExpr>(0));
-            if (cond == nullptr) {
-                cond = tmp;
-            } else {
-                cond = std::make_shared<AndCondition>(cond, tmp);
-            }
             places.push_back(place);
         }
-        cond->setPlaceNameForBounds(places);
-        return std::make_shared<EFCondition>(cond);
+        auto bnds = std::make_shared<UpperBoundsCondition>(places);
+        return std::make_shared<EFCondition>(bnds);
     } else if ((cond = parseBooleanFormula(child)) != nullptr) {
         return cond;
     } else {

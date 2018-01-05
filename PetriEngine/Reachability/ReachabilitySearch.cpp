@@ -46,7 +46,6 @@ namespace PetriEngine {
                 if(results[i] == ResultPrinter::Unknown)
                 {
                     EvaluationContext ec(state.marking(), &_net);
-                    assert(!queries[i]->isUpperBound());
                     if(queries[i]->evaluate(ec) == Condition::RTRUE)
                     {
                         results[i] = printQuery(queries[i], i, ResultPrinter::Satisfied, ss, states);

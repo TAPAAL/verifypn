@@ -2,6 +2,7 @@
 #include "ReachabilityResult.h"
 #include "../PetriNetBuilder.h"
 #include "../options.h"
+#include "PetriEngine/PQL/Expressions.h"
 
 namespace PetriEngine {
     namespace Reachability {
@@ -61,11 +62,9 @@ namespace PetriEngine {
                     std::cout << "TRUE " << techniques << std::endl;
                 }
             } else if (retval == NotSatisfied) {
-                if (!query->placeNameForBound().empty()) {
-                    // find index of the place for reporting place bound
-
-                    std::cout << query->getBound() << " " << techniquesStateSpace << std::endl;
-
+                if(auto bound = dynamic_cast<PQL::UpperBoundsCondition*>(query))
+                {
+                    std::cout << bound->bounds() << " " << techniques << std::endl;
                 } else {
                     if(!options->statespaceexploration)
                     {

@@ -107,7 +107,7 @@ namespace PetriEngine {
             /** Perform context analysis */
             virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate the expression given marking and assignment */
-            virtual int evaluate(const EvaluationContext& context) const = 0;
+            virtual int evaluate(const EvaluationContext& context) = 0;
             int evalAndSet(const EvaluationContext& context);
             /** Generate LLVM intermediate code for this expr  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
@@ -193,9 +193,6 @@ namespace PetriEngine {
             enum Result {RUNKNOWN=-1,RFALSE=0,RTRUE=1};
         private:
             bool _inv = false;
-            std::vector<std::string> _placenameforbound;
-            std::vector<size_t> _placeids;
-            size_t _bound = 0;
             Result _eval = RUNKNOWN;
         public:
             /** Virtual destructor */
@@ -203,7 +200,7 @@ namespace PetriEngine {
             /** Perform context analysis  */
             virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate condition */
-            virtual Result evaluate(const EvaluationContext& context) const = 0;
+            virtual Result evaluate(const EvaluationContext& context) = 0;
             virtual Result evalAndSet(const EvaluationContext& context) = 0;
             /** Generate LLVM intermediate code for this condition  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
@@ -217,11 +214,9 @@ namespace PetriEngine {
             virtual Simplification::Retval simplify(SimplificationContext& context) const = 0;
             /** Check if query is a reachability query */
             virtual bool isReachability(uint32_t depth = 0) const = 0;
-            /** Check if query is an upper bound query */
-            virtual bool isUpperBound() = 0;
             /** Prepare reachability queries */
             virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
-            virtual std::shared_ptr<Condition> pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated = false) const = 0;
+            virtual std::shared_ptr<Condition> pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated = false) = 0;
             
             /** Output the condition as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
@@ -254,35 +249,11 @@ namespace PetriEngine {
                 _inv = isInvariant;
             }
            
-            size_t getBound()
-            {
-                return _bound;
-            }
-            
             bool isInvariant()
             {
                 return _inv;
             }
             
-            void setPlaceNameForBounds(std::vector<std::string>& b)
-            {
-                _placenameforbound  = b;
-            }
-            
-            void indexPlaces(const std::unordered_map<std::string, uint32_t>& map)
-            {
-                _placeids.clear();
-                for(auto& i : _placenameforbound)
-                {
-                    _placeids.push_back(map.at(i));
-                }
-                std::sort(_placeids.begin(), _placeids.end());
-            }
-            
-            std::vector<std::string>& placeNameForBound(){
-                return _placenameforbound;
-            }
-
             virtual bool isTemporal() const { return false;}
             virtual CTLType getQueryType() const = 0;
             virtual Quantifier getQuantifier() const = 0;

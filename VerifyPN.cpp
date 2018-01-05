@@ -340,11 +340,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         return ErrorCode;
     }
     
-    // Check if the choosen options are incompatible with upper bound queries
-    if(options.stubbornreduction || options.queryReductionTimeout > 0) {
-        options.upperboundcheck = true;
-    }
-
     return ContinueCode;
 }
 
@@ -529,17 +524,6 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> querynames;
     auto queries = readQueries(options, querynames);
     
-    if (options.upperboundcheck) {
-        for (uint32_t i = 0; i < queries.size(); i++) {
-            if (queries[i]->isUpperBound()) {
-                fprintf(stderr, "Error: Invalid options choosen for upper bound query. ");
-                fprintf(stderr, "Cannot use stubborn reduction, query simplification, or aggressive structural reduction.\n");
-                fprintf(stdout, "CANNOT_COMPUTE\n");
-                return ErrorCode;
-            }
-        }
-    }
-        
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
     
@@ -560,8 +544,6 @@ int main(int argc, char* argv[]) {
         LPCache cache;
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            if (queries[i]->isUpperBound()) continue;
-            
             SimplificationContext simplificationContext(qm0, qnet.get(), options.queryReductionTimeout, 
                     options.lpsolveTimeout, &cache);
             bool isInvariant = queries[i].get()->isInvariant();
@@ -680,11 +662,6 @@ int main(int argc, char* argv[]) {
     printStats(builder, options);
     
     auto net = std::unique_ptr<PetriNet>(builder.makePetriNet());
-    
-    for(auto& q : queries)
-    {
-        q->indexPlaces(builder.getPlaceNames());
-    }
     
     //----------------------- Verify CTL queries -----------------------//
     std::vector<size_t> ctl_ids;
