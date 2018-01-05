@@ -607,10 +607,13 @@ int main(int argc, char* argv[]) {
                 double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
                 
                 fprintf(stdout, "Query size reduced from %d to %d nodes (%.2f percent reduction).\n", preSize, postSize, redPerc);
-                if(simplificationContext.timeout()){
-                    fprintf(stdout, "Query reduction reached timeout.\n");
-                } else {
-                    fprintf(stdout, "Query reduction finished after %f seconds.\n", simplificationContext.getReductionTime());
+                if(options.queryReductionTimeout > 0)
+                {
+                    if(simplificationContext.timeout()){
+                        fprintf(stdout, "Query reduction reached timeout.\n");
+                    } else {
+                        fprintf(stdout, "Query reduction finished after %f seconds.\n", simplificationContext.getReductionTime());
+                    }
                 }
             }
         }
