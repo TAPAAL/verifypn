@@ -56,20 +56,19 @@ namespace PetriEngine {
             {
                 std::cout << "\nUnable to decide if " << querynames[index] << " is satisfied.";
             }
+            else if(auto bound = dynamic_cast<PQL::UpperBoundsCondition*>(query))
+            {
+                std::cout << bound->bounds() << " " << techniques << std::endl;
+            }
             else if (retval == Satisfied) {
                 if(!options->statespaceexploration)
                 {
                     std::cout << "TRUE " << techniques << std::endl;
                 }
             } else if (retval == NotSatisfied) {
-                if(auto bound = dynamic_cast<PQL::UpperBoundsCondition*>(query))
+                if(!options->statespaceexploration)
                 {
-                    std::cout << bound->bounds() << " " << techniques << std::endl;
-                } else {
-                    if(!options->statespaceexploration)
-                    {
-                        std::cout << "FALSE " << techniques << std::endl;
-                    }
+                    std::cout << "FALSE " << techniques << std::endl;
                 }
             }
             
