@@ -552,7 +552,11 @@ int main(int argc, char* argv[]) {
 
     if(queries.size() == 0 || contextAnalysis(b2, qnet.get(), queries) != ContinueCode)  return ErrorCode;
     
-    if (options.queryReductionTimeout > 0) {
+    if (options.queryReductionTimeout == 0 && options.strategy == PetriEngine::Reachability::OverApprox){ // Conflicting flags "-s OverApprox" and "-q 0"
+        return 0;
+    }
+    else 
+    {
         LPCache cache;
         for(size_t i = 0; i < queries.size(); ++i)
         {
@@ -584,23 +588,30 @@ int main(int argc, char* argv[]) {
                 stats.print(std::cout);
                 std::cout << std::endl;
             }
+            
+            if (options.queryReductionTimeout > 0)
+            {
+                try {
+                    negstat_t stats;            
+                    queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false);
+                    if(options.printstatistics)
+                    {
+                        std::cout << "RWSTATS POST:";
+                        stats.print(std::cout);
+                        std::cout << std::endl;
+                    }
+                    queries[i].get()->setInvariant(isInvariant);
+                } catch (std::bad_alloc& ba){
+                    std::cerr << "Query reduction failed." << std::endl;
+                    std::cerr << "Exception information: " << ba.what() << std::endl;
 
-            try {
-                negstat_t stats;            
-                queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false);
-                if(options.printstatistics)
-                {
-                    std::cout << "RWSTATS POST:";
-                    stats.print(std::cout);
-                    std::cout << std::endl;
+                    delete[] qm0;
+                    std::exit(3);
                 }
-                queries[i].get()->setInvariant(isInvariant);
-            } catch (std::bad_alloc& ba){
-                std::cerr << "Query reduction failed." << std::endl;
-                std::cerr << "Exception information: " << ba.what() << std::endl;
-                
-                delete[] qm0;
-                std::exit(3);
+            }
+            else
+            {
+                std::cout << "Skipping linear-programming (-q 0)" << std::endl;
             }
 
             if(options.printstatistics)
@@ -621,8 +632,6 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
-    } else if (options.strategy == PetriEngine::Reachability::OverApprox){ // Conflicting flags "-s OverApprox" and "-q 0"
-        return 0;
     }
     
     qnet = nullptr;
