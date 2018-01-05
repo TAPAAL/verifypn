@@ -514,13 +514,12 @@ void OnTheFlyDG::cleanUp()
 
 void OnTheFlyDG::setQuery(const Condition_ptr& query)
 {
+    this->query = query;
     delete[] working_marking.marking();
     delete[] query_marking.marking();
     working_marking.setMarking(nullptr);
     query_marking.setMarking(nullptr);
     initialConfiguration();
-    negstat_t s;
-    EvaluationContext context(working_marking.marking(), net);    
     delete[] working_marking.marking();
     delete[] query_marking.marking();
     working_marking.setMarking(nullptr);
