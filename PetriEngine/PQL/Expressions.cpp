@@ -724,7 +724,7 @@ namespace PetriEngine {
                 tmp += context.marking()[p._place];
             }
             _bound = std::max(tmp, _bound);
-            return _places.size() > 0 ? RUNKNOWN : RTRUE;
+            return _bound < _max ? RUNKNOWN : RTRUE;
         }
         
         /******************** Evaluation - save result ********************/
@@ -1066,8 +1066,15 @@ namespace PetriEngine {
             return 0;
         }
 
-        uint32_t UpperBoundsCondition::distance(DistanceContext& context) const {
-            return 0;
+        uint32_t UpperBoundsCondition::distance(DistanceContext& context) const 
+        {
+            size_t tmp = 0;
+            for(auto& p : _places)
+            {
+                tmp += context.marking()[p._place];
+            }
+            
+            return _max - tmp;
         }
         
         uint32_t EFCondition::distance(DistanceContext& context) const {
@@ -2322,7 +2329,7 @@ namespace PetriEngine {
                 } else { // if no trivial case
                     int constant = m2.constant() - m1.constant();
                     m1 -= m2;
-                    auto nlp = SingleProgram(context.cache(), std::move(m1), constant, Simplification::OP_GE);
+                    auto nlp = SingleProgram(context.cache(), std::move(m1), constant, Simplification::OP_LE);
                     if(nlp.satisfiable(context))
                     {
                         next.push_back(p);
@@ -2330,7 +2337,53 @@ namespace PetriEngine {
                }
             }            
             
-            return Retval(std::make_shared<UpperBoundsCondition>(next));
+            size_t tmin = 1;
+            size_t tmax = _max;
+            if(next.size() > 0)
+            {
+                // lets try to find an upper bound for the places so we can 
+                // terminate early if lucky.
+                auto m = memberForPlace(_places[0]._place, context);
+                for(size_t i = 1; i < _places.size(); ++i)
+                {
+                    m += memberForPlace(_places[i]._place, context);
+                }
+
+                while(!context.timeout() && tmin != _max)
+                {
+                    if(tmin > std::numeric_limits<uint32_t>::max() && tmax == std::numeric_limits<size_t>::max()) break;
+                    auto mid = (tmax / 2) + (tmin / 2); 
+                    Member c(mid);
+                    Trivial eval = c >= m;
+                    if(eval != Trivial::Indeterminate) {
+                        if(eval == Trivial::False)
+                        {
+                            tmax = mid;
+                        }
+                        else
+                        {
+                            tmin = mid;                     
+                        }
+                    } else { // if no trivial case
+                        int constant = m.constant() - c.constant();
+                        c -= m;
+                        auto nlp = SingleProgram(context.cache(), std::move(c), constant, Simplification::OP_GE);
+                        if(nlp.satisfiable(context))
+                        {
+                            tmax = mid;
+                        }
+                        else
+                        {
+                            tmin = mid;
+                        }
+                   }
+                }
+            }
+            else
+            {
+                tmax = 0;
+            }
+            return Retval(std::make_shared<UpperBoundsCondition>(next, tmax));
         }
         
         /******************** Check if query is a reachability query ********************/
@@ -3001,7 +3054,7 @@ namespace PetriEngine {
                 std::cout << "UPPER BOUNDS CANNOT BE NEGATED!" << std::endl;
                 exit(-1);
             }
-            return std::make_shared<UpperBoundsCondition>(_places);
+            return std::make_shared<UpperBoundsCondition>(_places, _max);
         }
 
         

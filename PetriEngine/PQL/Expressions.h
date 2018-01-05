@@ -918,8 +918,8 @@ namespace PetriEngine {
             {
                 for(auto& s : places) _places.push_back(s);
             }
-            UpperBoundsCondition(const std::vector<place_t>& places)
-                    : _places(places) {
+            UpperBoundsCondition(const std::vector<place_t>& places, size_t max)
+                    : _places(places), _max(max) {
             };
             int formulaSize() const override{
                 return _places.size();
@@ -944,6 +944,7 @@ namespace PetriEngine {
         private:
             std::vector<place_t> _places;
             size_t _bound = 0;
+            size_t _max = std::numeric_limits<size_t>::max();
 
         };
 
