@@ -2338,7 +2338,7 @@ namespace PetriEngine {
             }            
             
             size_t tmin = 1;
-            size_t tmax = _max;
+            size_t tmax = std::numeric_limits<int16_t>::max();
             if(next.size() > 0)
             {
                 // lets try to find an upper bound for the places so we can 
@@ -2351,7 +2351,11 @@ namespace PetriEngine {
 
                 while(!context.timeout() && tmin != _max)
                 {
-                    if(tmin > std::numeric_limits<uint32_t>::max() && tmax == std::numeric_limits<size_t>::max()) break;
+                    if(tmin > std::numeric_limits<uint8_t>::max() && tmax == std::numeric_limits<int16_t>::max()) 
+                    {
+                        tmax = std::numeric_limits<size_t>::max();
+                        break;
+                    }
                     auto mid = (tmax / 2) + (tmin / 2); 
                     Member c(mid);
                     Trivial eval = c >= m;
@@ -2367,7 +2371,7 @@ namespace PetriEngine {
                     } else { // if no trivial case
                         int constant = m.constant() - c.constant();
                         c -= m;
-                        auto nlp = SingleProgram(context.cache(), std::move(c), constant, Simplification::OP_GE);
+                        auto nlp = SingleProgram(context.cache(), std::move(c), constant, Simplification::OP_LE);
                         if(nlp.satisfiable(context))
                         {
                             tmax = mid;
