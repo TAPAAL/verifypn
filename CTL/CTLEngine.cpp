@@ -66,7 +66,6 @@ void printResult(const std::string& qname, CTLResult& result, bool statisticslev
         cout << "	Processed Edges   : " << result.processedEdges << endl;
         cout << "	Processed N. Edges: " << result.processedNegationEdges << endl;
         cout << "	Explored Configs  : " << result.exploredConfigurations << endl;
-        if(!only_stats) result.query->toString(cout);
         std::cout << endl;
     }
 }

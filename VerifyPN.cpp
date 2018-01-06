@@ -47,6 +47,7 @@
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/Reachability/ReachabilitySearch.h"
+#include "PetriEngine/Reachability/TARReachability.h"
 #include "PetriEngine/Reducer.h"
 #include "PetriParse/QueryXMLParser.h"
 #include "PetriParse/PNMLParser.h"
@@ -743,7 +744,7 @@ int main(int argc, char* argv[]) {
     //----------------------- Reachability -----------------------//
     
     //Create reachability search strategy
-    ReachabilitySearch strategy(printer, *net, options.kbound);
+    TARReachabilitySearch strategy(printer, *net, options.kbound);
 
     //Analyse context again to reindex query
     contextAnalysis(builder, net.get(), queries);
@@ -753,11 +754,11 @@ int main(int argc, char* argv[]) {
     
     //Reachability search
     strategy.reachable(queries, results, 
-            options.strategy,
-            options.stubbornreduction,
-            options.statespaceexploration,
-            options.printstatistics, 
-            options.trace);
+//            options.strategy,
+//            options.stubbornreduction,
+//            options.statespaceexploration,
+            options.printstatistics);
+//            options.trace);
        
     return 0;
 }

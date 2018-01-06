@@ -35,6 +35,8 @@ public:
         return _parent->marking();
     }
 
+    void reset();
+    
 protected:
     /**
      * Checks if the conditions are met for fireing t, if write != NULL,
@@ -63,7 +65,6 @@ private:
     const Structures::State* _parent;
     uint32_t _suc_pcounter;
     uint32_t _suc_tcounter;
-    void reset();
 
     friend class ReducingSuccessorGenerator;
 };
