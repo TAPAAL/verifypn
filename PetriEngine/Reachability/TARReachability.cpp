@@ -27,7 +27,7 @@
 
 //#define CLOSURE
 #define LATTICE
-//#define NOCHANGE
+#define NOCHANGE
 //#define POST
 //#define PRE
 //#define GENERIC
@@ -176,11 +176,11 @@ namespace PetriEngine {
                     changed = changed || interpolant.back().second;
                 }
 
-                /*
-                std::cout   << "[" << j << "]" << inter[j] << " ==> "
-                    << interpolant.back().second << " --> "
-                    << states[interpolant.back().second].interpolant << std::endl;
-        */
+                
+//                std::cout   << "[" << j << "]" << inter[j] << " ==> "
+//                    << interpolant.back().second << " --> "
+//                    << states[interpolant.back().second].interpolant << std::endl;
+        
 
                 if(astate == 1)
                 {
@@ -189,28 +189,14 @@ namespace PetriEngine {
                     astate = interpolant.back().second;
                 }
 
-              //  if(j < trace.size()) std::cout << trace[j].location << " ::::> " << trace[j].get_edge_cnt() << std::endl;
-
             }
 
-        //    std::cout << "CONSTRUCT" << std::endl;
-        //    std::cout << inter << std::endl;
-        //    printTrace(trace);
-        //    printInterpolants(trace[0].get_interpolants());
             if((size_t)from == trace.size()) return from;
 
             if(from > 0 || i > 0)
             {
                 const int tpos = from + i;
                 
-        #ifdef GENERIC
-                generatePost(context, encoder, loopstate, state, param_reach, 
-                            context.bool_val(true), 1, 0, trace[tpos - 1].get_edge_cnt(), &trace[tpos - 1]);
-        #endif
-        #ifdef GENERICPRE
-                generatePre(context, encoder, loopstate, state, param_reach, 
-                        states[interpolant[i].second].interpolant, astate, 0, trace[tpos - 1].get_edge_cnt(), &trace[tpos - 1]);
-        #endif
                 auto res = states[1].add_edge(trace[tpos - 1].get_edge_cnt(), astate);
                 changed = res || changed;
             }
@@ -239,23 +225,7 @@ namespace PetriEngine {
 
 
                 assert(i + 1 < interpolant.size());
-                size_t next = interpolant[i + 1].second;
-
-        #ifdef PRE
-        //        if(next != astate)
-                {
-                    generatePre(context, encoder, loopstate, state, param_reach, 
-                        context.bool_val(false), 0, loc, trace[tpos].get_edge_cnt(), &trace[tpos]);
-                }
-        #endif
-
-
-        #ifdef GENERICPRE        
-                {
-                   generatePre(context, encoder, loopstate, state, param_reach, 
-                            context.bool_val(false), 0, 0, trace[tpos].get_edge_cnt(), &trace[tpos]);
-                }
-        #endif           
+                size_t next = interpolant[i + 1].second;         
                 if(next == 0)
                 {
 
@@ -263,71 +233,14 @@ namespace PetriEngine {
                     changed = changed || added;
                     assert(i + from < trace.size());
                     break;
-                }
-
-
-
-                if(true //astate != next
-        #ifdef POST
-                        && generatePost(context, encoder, loopstate, state, param_reach, 
-                            context.bool_val(true), 1, loc, trace[tpos].get_edge_cnt(), &trace[tpos]))
-        #else
-                    )
-        #endif
-
-                {
-        #ifdef GENERIC
-                    generatePost(context, encoder, loopstate, state, param_reach, 
-                        context.bool_val(true), 1, 0, trace[tpos].get_edge_cnt(), &trace[tpos]);
-        #endif
-                }
-
+                } 
+                
                 if(next != 1) {
-
-                    // construct POST -- but only if we have not constructed it before!
-                    if( true //next != astate
-        #ifdef POST
-                         && generatePost(context, encoder, loopstate, state, param_reach, 
-                        states[astate].interpolant, astate, loc, trace[tpos].get_edge_cnt(), &trace[tpos])
-        #endif
-                    )
-
-                    {
-
-        #ifdef GENERIC
-                        generatePost(context, encoder, loopstate, state, param_reach, 
-                                            states[astate].interpolant, astate, 0, trace[tpos].get_edge_cnt(), &trace[tpos]);
-        #endif
-                    }
-
-                    if(astate != 1)
-                    {
-
-                        if(true //next != astate
-        #ifdef PRE
-                            && generatePre(context, encoder, loopstate, state, param_reach, 
-                            states[next].interpolant, next, loc, trace[tpos].get_edge_cnt(), &trace[tpos])
-        #endif
-                                )
-
-                        {
-        #ifdef GENERICPRE
-                            generatePre(context, encoder, loopstate, state, param_reach, 
-                                    states[next].interpolant, next, 0, trace[tpos].get_edge_cnt(), &trace[tpos]);
-        #endif
-                        }
-
-                    }
-
-                    {
-                        auto res = states[astate].add_edge(trace[tpos].get_edge_cnt(), next);
-                        changed = changed || res;
-                    }
+                    auto res = states[astate].add_edge(trace[tpos].get_edge_cnt(), next);
+                    changed = changed || res;
                 }
                 else
                 {
-//                    std::cout << inter << std::endl;
-//                    std::cout << inter[i] << std::endl;
                     assert(false);
                 }
 
@@ -377,10 +290,13 @@ namespace PetriEngine {
         std::pair<int,bool>  TARReachabilitySearch::isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, const PQL::Condition* condition)
         {
 
-            //std::cout << "IS VALID " << std::endl;
+//            std::cout << "IS VALID " << std::endl;
 
             std::vector<z3::expr> encoded = {context.bool_val(true)};
             std::vector<int32_t> uses(_net.numberOfPlaces(), 0);
+//            std::cout << "TRACE:";
+//            std::cout << std::endl;
+
             for(auto& t : trace)
             {
 
@@ -388,7 +304,7 @@ namespace PetriEngine {
                 {
                     continue;
                 }
-                //std::cout << _net.transitionNames()[t.get_edge_cnt() - 1] << std::endl;
+ //               std::cout << _net.transitionNames()[t.get_edge_cnt() - 1] << ",";
 
                 auto begin = context.bool_val(true);
                 auto pre = _net.preset(t.get_edge_cnt() - 1);
@@ -405,6 +321,8 @@ namespace PetriEngine {
                     }
                     else
                     {
+//                        std::cout << "\t" << _net.placeNames()[pre.first->place] << "(" << pre.first->place << ")" 
+//                                << " CONS " << pre.first->tokens << std::endl;
                         begin = begin && (context.int_const(name.c_str()) >= context.int_val(pre.first->tokens));
                         begin = begin && (context.int_const(nextname.c_str()) == (context.int_const(name.c_str()) - context.int_val(pre.first->tokens)));
                     }
@@ -412,14 +330,18 @@ namespace PetriEngine {
                 auto post = _net.postset(t.get_edge_cnt() - 1);
                 for(; post.first != post.second; ++post.first)
                 {
-                    string name = to_string(pre.first->place) + "~i" + to_string(uses[post.first->place]);
-                    ++uses[pre.first->place];
-                    string nextname = to_string(pre.first->place) + "~i" + to_string(uses[post.first->place]);
+                    string name = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
+                    ++uses[post.first->place];
+                    string nextname = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
                     begin = begin && context.int_const(name.c_str()) >= context.int_val(0);
                     begin = begin && context.int_const(nextname.c_str()) == (context.int_const(name.c_str()) + context.int_val(post.first->tokens));
+//                        std::cout << "\t" << _net.placeNames()[post.first->place] << "(" << post.first->place << ")" 
+//                                << " PROD " << post.first->tokens << std::endl;
                 }
                 encoded.push_back(begin);
             }
+            
+            
             std::vector<bool> incremented(uses.size(), false);
             encoded.push_back(condition->encodeSat(context, uses, incremented));
                         
@@ -429,14 +351,15 @@ namespace PetriEngine {
                 {
                     string name = to_string(i) + "~i0";
                     encoded[0] = encoded[0] && (context.int_const(name.c_str()) == context.int_val(initial.marking()[i]));
+                    //std::cout << "\t" << _net.placeNames()[i] << "(" << i << ")" << " INIT " << initial.marking()[i] << std::endl;
                 }
             }
             
-            /*for(auto& e : encoded)
+  /*          for(auto& e : encoded)
             {
                 std::cout << e << std::endl;
-            }*/
-            
+            }
+    */        
             const int to = encoded.size();
             int from = 0;
             int nvalid = to;
@@ -464,9 +387,7 @@ namespace PetriEngine {
                     trace.clear();
                     return std::pair<int,bool>(-1,false);
                 }
-        /*        std::cerr << "TRACE" << std::endl;
-                printTrace(trace);*/ 
-                /*std::cerr << "INTERPOLANT" << std::endl;
+/*                std::cerr << "INTERPOLANT" << std::endl;
                 std::cerr << interpolant << std::endl;
                 std::cerr << "DONE" << std::endl;*/
          
@@ -742,8 +663,7 @@ namespace PetriEngine {
             initial_interpols.push_back(1);
             do {
                 all_covered = true;
-                auto checked = AntiChain<char, size_t>();
-                char dummy = 0;
+                auto checked = AntiChain<uint32_t, size_t>();
                 // waiting-list with levels
                 waiting_t waiting;
                 // initialize
@@ -757,22 +677,29 @@ namespace PetriEngine {
                 while (!waiting.empty()) 
                 {
         //            sanity(waiting);
-//                    if((stepno % 1000) == 0)
+                    if((stepno % 1000) == 0)
                     {
-//                        cout << stepno << " : " << waiting.size() << " : " << waiting[0].get_interpolants().size() << " : " << states.size() << std::endl;
-//                        printStats();
+                        cout << stepno << " : " << waiting.size() << " : " << waiting[0].get_interpolants().size() << " : " << states.size() << std::endl;
+                        printStats();
                     }
+                    
+//                    std::cout << "NTRACE:";
+/*                    for(auto& t : waiting) {
+                        if(t.get_edge_cnt() > _net.transitionNames().size())
+                        {
+                            std::cout << "DONE" << std::endl;
+                        }
+                        else
+                        {
+                            std::cout << "(" << t.get_edge_cnt() << ")";
+                            if(t.get_edge_cnt() > 0)
+                                std::cout<< _net.transitionNames()[t.get_edge_cnt() - 1] << ",";
+                            else
+                                std::cout<< "TEST" << ",";
+                        }
+                    }
+                    std::cout << std::endl;*/
 
-        /*            std::cout << "TRACE" << std::endl;
-                    printTrace(waiting);
-                    printInterpolants(waiting[0]);*/
-
-                    /*if(kleeneCovered(waiting, symstate))
-                    {
-                        continue; // all traces from this state is covered by some kleene-automata
-                    }*/
-
-                    //loadLocs(waiting.back().location, symstate);  
                     {
                         clock_t b = clock();
                         bool r = popDone(waiting, /*symstate,*/ stepno);
@@ -781,6 +708,7 @@ namespace PetriEngine {
                         //tpop += double(e-b)/CLOCKS_PER_SEC;
                         if(r)
                         {
+//                            std::cout << "POP DONE" << std::endl;
                             continue;  // we have reached the end of the edge-iterator for this part of the trace
                         }                
                     }
@@ -798,59 +726,54 @@ namespace PetriEngine {
     //                    tinccheck += double(e-b)/CLOCKS_PER_SEC;
                         if(r) // Check if the next state makes the interpolant automata accept.
                         {
+//                            std::cout << "GOT ACCEPT" << std::endl;
                             state.next_edge(_net);
-                            //std::cout << "NEXT EDGE " << state.get_edge_cnt() << std::endl;
-                            //sanity(waiting);
                             continue;
                         }
                     }
 
                     bool next_edge = false;
-                    if(waiting.size() > 1 && waiting.back().get_edge_cnt() == 0) // check if proposition is satisfied
+                    if(waiting.back().get_edge_cnt() == 0) // check if proposition is satisfied
                     {
-        //                sanity(waiting);
-        //                ++validTraces;
                         clock_t begin = clock();
                         std::pair<int,bool> res = isValidTrace(waiting, solver_context, false, initial, query.get()); 
-                        initial_interpols = waiting[0].get_interpolants();
                         clock_t end = clock();
         //                tcheckTrace += double(end - begin) / CLOCKS_PER_SEC;
                         if(res.second)
                         {
-                            {
-        //                        printTrace(waiting); 
-                                std::cerr << "VALID TRACE FOUND!" << std::endl;
-                                std::cerr << "STEPS : " << stepno << std::endl;
-                                std::cerr << "INTERPOLANT AUTOMATAS : " << waiting[0].get_interpolants().size() << std::endl;
-        /*                        sink->tryPut(successor);
-                                printStats();
-        //                        printInterpolants(initial_interpols);*/
-                                intmap.clear();
-                                states.clear();
-                                return true;
-                            }
+                            std::cerr << "VALID TRACE FOUND!" << std::endl;
+                            std::cerr << "STEPS : " << stepno << std::endl;
+                            std::cerr << "INTERPOLANT AUTOMATAS : " << waiting[0].get_interpolants().size() << std::endl;
+                            intmap.clear();
+                            states.clear();
+                            return true;
                         }
                         else
                         {
                             handleInvalidTrace(waiting, res.first);
                             all_covered = false;
-        //                    sanity(waiting);
                             initial_interpols = waiting[0].get_interpolants();
-        #ifdef ROBUSTNESS
-        #ifndef RESET
-                            continue;
-        #endif
-                            if(param_reach.operator Z3_ast() != old.operator Z3_ast())
+                            /*std::cout << "AUTOMATA" << std::endl;
+                            for(size_t i = 0; i < states.size(); ++i)
                             {
-                                break;
+                                std::cout << "[" << i << "] : " << (states[i].is_accepting() ? "ACCEPT " : "") << std::endl;
+                                std::cout << "\t" << states[i].interpolant << std::endl;
+                                for(AutomataEdge& e : states[i].get_edges())
+                                {
+                                    if(e.edge > 0)
+                                        std::cout << "\t" << _net.transitionNames()[e.edge-1] << "(" << e.edge << ") --> [";
+                                    else
+                                        std::cout << "\tTEST(" << e.edge << ") --> [";
+                                    for(auto& to : e.to) std::cout << to << ",";
+                                    std::cout << "]" << std::endl;
+                                }
+
                             }
-                            else
-                            {
-                                continue;
-                            }
-        #else
+                            
+                            std::cout << "INITIAL " ;
+                            for(auto& s : initial_interpols) std::cout << s << ",";
+                            std::cout << std::endl;*/
                             continue;
-        #endif
                         }
                     }
                     else
@@ -861,6 +784,7 @@ namespace PetriEngine {
                     if(next_edge)
                     {
     //                    sanity(waiting);
+                        uint32_t dummy = 0;
                         state_t next;
                         clock_t b = clock();
                         size_t tmp = 0; 
@@ -891,15 +815,13 @@ namespace PetriEngine {
                                 ++cur;
                             }
         #endif      
-                            //std::cout << "VS " << minimal.size() << " <= " << waiting.back().get_interpolants().size() << std::endl;
                             checked.insert(dummy, minimal);
-        //                    assert(inserted);
+                            //                    assert(inserted);
                             clock_t e = clock();
     //                        tantiInsert += double(e-b)/CLOCKS_PER_SEC;
                             next.reset_edges(_net);
                             next.set_interpolants(minimal);  
                             waiting.push_back(next);
-    //                        sanity(waiting);
                         }
                     }
                 }
@@ -942,7 +864,7 @@ namespace PetriEngine {
 
 /*            std::cout << "FROM INTER IS ";
             for(size_t j : state.get_interpolants()) std::cout << j << ", ";
-            std::cout << std::endl;
+            std::cout << std::endl << " TO INTER IS ";
             for(size_t j : maximal) std::cout << j << ", ";
             std::cout << std::endl;*/
 
@@ -958,6 +880,7 @@ namespace PetriEngine {
                 AutomataState& as = states[i];
                 if(as.is_accepting())
                 {
+//                    std::cout << "ACCEPTING NEXT " << i << std::endl;
                     assert(false);
                     break;
                 }
@@ -980,6 +903,7 @@ namespace PetriEngine {
                     auto it = as.first_edge(state.get_edge_cnt());
                     //std::cout << (cit - as.get_edges().begin()) << " VS " << (it - as.get_edges().begin()) << std::endl;
                     //assert(cit == as.get_edges().end() || it == cit);
+
                     while(it != as.get_edges().end())
                     {
                         if(it->edge != state.get_edge_cnt())    { break; }
@@ -989,7 +913,11 @@ namespace PetriEngine {
                         assert(ae.to.size() > 0);
                         auto other = nextinter.begin();
                         auto next = ae.to.begin();
-                        if(*next == 0) return true;
+                        if(*next == 0) 
+                        {
+//                            std::cout << "[" << i << "]" << " --> " << ae.edge << " " << *next << std::endl;
+                            return true;
+                        }
                         for(;next != ae.to.end(); ++next)
                         {
                             while(*other < *next && other != nextinter.end())
@@ -1070,24 +998,28 @@ namespace PetriEngine {
                 if(next == nextinter.end() || *next != i)
                 {
                     // added non-interfering
-                    /*if(!loaded)
+                    if(!loaded && state.get_edge_cnt() != 0)
                     {
-                        auto* se = state.get_edge_cnt().getSender(system.get());
-                        auto* re = state.get_edge_cnt().getReciever(system.get());
+                        auto pre = _net.preset(state.get_edge_cnt() - 1);
+                        auto post = _net.postset(state.get_edge_cnt() - 1);
+                        auto lb = writes.begin();
+                        for(; pre.first != pre.second; ++pre.first)
+                        {
+                            if(pre.first->inhibitor) continue;
+                            while(lb != writes.end() && *lb < pre.first->place) ++lb;
+                            if(lb == writes.end() || *lb == pre.first->place)
+                                lb = writes.insert(lb, pre.first->place);
+                        }
+                        lb = writes.begin();
+                        for(; post.first != post.second; ++post.first)
+                        {
+                            while(lb != writes.end() && *lb < post.first->place) ++lb;
+                            if(lb == writes.end() || *lb == post.first->place)
+                                lb = writes.insert(lb, post.first->place);
+                        }
 
-                        if(re) 
-                        {
-                            auto& rew = re->getWrites();
-                            auto& sew = se->getWrites();
-                            std::set_union(rew.begin(), rew.end(), sew.begin(), sew.end(), std::back_inserter(writes));
-                        }
-                        else
-                        {
-                            auto& sew = se->getWrites();
-                            std::copy(sew.begin(), sew.end(), std::back_inserter(writes));
-                        }
                         loaded = true;
-                    }*/
+                    }
 
 
                     bool ok = true;
@@ -1126,9 +1058,9 @@ namespace PetriEngine {
             }
         #endif
 
-/*        std::cout << "NEXT INTER IS ";
-            for(size_t j : nextinter) std::cout << j << ", ";
-            std::cout << std::endl;*/
+//        std::cout << "NEXT INTER IS ";
+//            for(size_t j : nextinter) std::cout << j << ", ";
+//            std::cout << std::endl;
 
         #ifdef ANTISIM
         //#ifndef NDEBUG

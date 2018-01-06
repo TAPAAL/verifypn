@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <set>
 
 namespace PetriEngine {
     using namespace PQL;
@@ -87,14 +88,16 @@ namespace PetriEngine {
                     return true;
                 }
             }
+            
+            std::ostream& operator<<(std::ostream& os) const
+            {
+                os << edge << " ==> ";
+                for(size_t i : to) os << i << ", ";
+                return os;
+            }
         };
 
-        /*std::ostream& operator<<(std::ostream& os, const AutomataEdge& ae)
-        {
-            os << ae.edge << " ==> ";
-            for(size_t i : ae.to) os << i << ", ";
-            return os;
-        }*/
+
 
         struct AutomataState
         {
@@ -262,7 +265,8 @@ namespace PetriEngine {
             {
 //                std::string tname = "t0";
                 ++edgecnt;
-/*                while(edgecnt <= net.numberOfTransitions() && tname.compare(net.transitionNames()[edgecnt - 1]) != 0)
+                /*std::set<std::string> names{"k56", "k31", "k33", "k57", "k34"};
+                while(edgecnt <= net.numberOfTransitions() && names.count(net.transitionNames()[edgecnt - 1]) == 0)
                 {
                     ++edgecnt;
                 }*/

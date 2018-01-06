@@ -135,7 +135,7 @@ namespace PetriEngine {
     {
         uint32_t first = _transitions[id].outputs;
         uint32_t last = _transitions[id+1].inputs;
-        return std::make_pair(&_invariants[last], &_invariants[last]);
+        return std::make_pair(&_invariants[first], &_invariants[last]);
     }
     
     bool PetriNet::fireable(const MarkVal *marking, int transitionIndex)

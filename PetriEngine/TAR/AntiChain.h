@@ -50,7 +50,11 @@ class AntiChain
                 {
                     if(std::includes(set.begin(), set.end(), s.begin(), s.end()))
                     {
+                        /*std::cout << "SUBSUMBED BY ";
+                        for(auto& e : s) std::cout << e << ",";
+                        std::cout << std::endl;*/
                         exists = true;
+                        break;
                     }
                 }
             }
@@ -91,9 +95,9 @@ class AntiChain
         {
             bool inserted = false;
             if(map.size() <= (size_t)el) map.resize(el + 1);
-            /*std::cout << "ANTI (" << el << ") -> ";
-            for(auto& e : set) std::cout << e << ",";
-            std::cout << std::endl;*/
+            //std::cout << "ANTI (" << (size_t)el << ") -> ";
+            //for(auto& e : set) std::cout << e << ",";
+            //std::cout << std::endl;
             if(!subsumed(el, set))
             {
                 auto& chains = map[el];
