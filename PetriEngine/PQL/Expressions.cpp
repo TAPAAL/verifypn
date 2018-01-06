@@ -898,7 +898,7 @@ namespace PetriEngine {
                 }
             }
 
-            return res;
+            return _negated ? ! res : res;
         }
 
         z3::expr NotCondition::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
