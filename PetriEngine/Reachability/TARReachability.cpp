@@ -294,8 +294,8 @@ namespace PetriEngine {
 
             std::vector<z3::expr> encoded = {context.bool_val(true)};
             std::vector<int32_t> uses(_net.numberOfPlaces(), 0);
-//            std::cout << "TRACE:";
-//            std::cout << std::endl;
+/*            std::cout << "TRACE:";
+            std::cout << std::endl;*/
 
             for(auto& t : trace)
             {
@@ -304,7 +304,7 @@ namespace PetriEngine {
                 {
                     continue;
                 }
- //               std::cout << _net.transitionNames()[t.get_edge_cnt() - 1] << ",";
+//                std::cout << _net.transitionNames()[t.get_edge_cnt() - 1] << ",";
 
                 auto begin = context.bool_val(true);
                 auto pre = _net.preset(t.get_edge_cnt() - 1);
@@ -335,19 +335,19 @@ namespace PetriEngine {
                     string nextname = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
                     begin = begin && context.int_const(name.c_str()) >= context.int_val(0);
                     begin = begin && context.int_const(nextname.c_str()) == (context.int_const(name.c_str()) + context.int_val(post.first->tokens));
-//                        std::cout << "\t" << _net.placeNames()[post.first->place] << "(" << post.first->place << ")" 
-//                                << " PROD " << post.first->tokens << std::endl;
+                        //std::cout << "\t" << _net.placeNames()[post.first->place] << "(" << post.first->place << ")" 
+                          //      << " PROD " << post.first->tokens << std::endl;
                 }
                 encoded.push_back(begin);
             }
             
             
-            std::vector<bool> incremented(uses.size(), false);
-            encoded.push_back(condition->encodeSat(context, uses, incremented));
+            std::vector<bool> in_query(uses.size(), false);
+            encoded.push_back(condition->encodeSat(context, uses, in_query));
                         
             for(size_t i = 0; i < uses.size(); ++i)
             {
-                if(uses[i] > 0)
+                if(uses[i] > 0 || in_query[i])
                 {
                     string name = to_string(i) + "~i0";
                     encoded[0] = encoded[0] && (context.int_const(name.c_str()) == context.int_val(initial.marking()[i]));
@@ -355,11 +355,10 @@ namespace PetriEngine {
                 }
             }
             
-  /*          for(auto& e : encoded)
+        /*    for(auto& e : encoded)
             {
                 std::cout << e << std::endl;
-            }
-    */        
+            }*/
             const int to = encoded.size();
             int from = 0;
             int nvalid = to;
@@ -677,11 +676,11 @@ namespace PetriEngine {
                 while (!waiting.empty()) 
                 {
         //            sanity(waiting);
-                    if((stepno % 1000) == 0)
+                    /*if((stepno % 1000) == 0)
                     {
                         cout << stepno << " : " << waiting.size() << " : " << waiting[0].get_interpolants().size() << " : " << states.size() << std::endl;
                         printStats();
-                    }
+                    }*/
                     
 //                    std::cout << "NTRACE:";
 /*                    for(auto& t : waiting) {

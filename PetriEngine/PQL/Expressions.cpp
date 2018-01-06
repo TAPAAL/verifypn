@@ -192,6 +192,7 @@ namespace PetriEngine {
                 ss << " " << op() << " ";
                 e->toString(ss);
             }
+            ss << ")";
         }
 
 
@@ -884,7 +885,6 @@ namespace PetriEngine {
             for(auto& c : _constraints)
             {
                 string name = std::to_string(c._place) + "~i" + std::to_string(uses[c._place]);
-                if(!incremented[c._place]) ++uses[c._place];
                 incremented[c._place] = true;
 
                 auto var = context.int_const(name.c_str());
@@ -957,6 +957,13 @@ namespace PetriEngine {
             {
                 res = res + e->encodeSat(context, uses, incremented);
             }
+            for(auto& i : _ids)
+            {
+                string name = std::to_string(i.first) + "~i" + std::to_string(uses[i.first]);
+                incremented[i.first] = true;
+
+                res = res + context.int_const(name.c_str());
+            }
             return res;
         }
 
@@ -965,6 +972,13 @@ namespace PetriEngine {
             for(auto& e : _exprs)
             {
                 res = res * e->encodeSat(context, uses, incremented);
+            }
+            for(auto& i : _ids)
+            {
+                string name = std::to_string(i.first) + "~i" + std::to_string(uses[i.first]);
+                incremented[i.first] = true;
+
+                res = res * context.int_const(name.c_str());
             }
             return res;
         }
@@ -980,7 +994,6 @@ namespace PetriEngine {
 
         z3::expr IdentifierExpr::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             string name = std::to_string(_offsetInMarking) + "~i" + std::to_string(uses[_offsetInMarking]);
-            if(!incremented[_offsetInMarking]) ++uses[_offsetInMarking];
             incremented[_offsetInMarking] = true;
 
             return context.int_const(name.c_str());
