@@ -18,10 +18,10 @@ using namespace DependencyGraph;
 
 namespace PetriNets {
 
-OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net) : encoder(t_net->numberOfPlaces(), 0), 
+OnTheFlyDG::OnTheFlyDG(PetriEngine::PetriNet *t_net, bool partial_order) : encoder(t_net->numberOfPlaces(), 0), 
         edge_alloc(new linked_bucket_t<DependencyGraph::Edge,1024*10>(1)), 
         conf_alloc(new linked_bucket_t<char[sizeof(PetriConfig)], 1024*1024>(1)),
-        _redgen(*t_net) {
+        _redgen(*t_net), _partial_order(partial_order) {
     net = t_net;
     n_places = t_net->numberOfPlaces();
     n_transitions = t_net->numberOfTransitions();
@@ -487,7 +487,7 @@ void OnTheFlyDG::nextStates(Marking& t_marking, Condition* ptr,
     bool first = true;
     memcpy(working_marking.marking(), query_marking.marking(), n_places*sizeof(PetriEngine::MarkVal));    
     auto qf = static_cast<QuantifierCondition*>(ptr);
-    if(ptr->getQuantifier() != E || ptr->getPath() != F || (*qf)[0]->isTemporal())
+    if(!_partial_order || ptr->getQuantifier() != E || ptr->getPath() != F || (*qf)[0]->isTemporal())
     {
         PetriEngine::SuccessorGenerator PNGen(*net);
         dowork<PetriEngine::SuccessorGenerator>(PNGen, first, pre, foreach);
@@ -514,14 +514,12 @@ void OnTheFlyDG::cleanUp()
 
 void OnTheFlyDG::setQuery(const Condition_ptr& query)
 {
+    this->query = query;
     delete[] working_marking.marking();
     delete[] query_marking.marking();
     working_marking.setMarking(nullptr);
     query_marking.setMarking(nullptr);
     initialConfiguration();
-    negstat_t s;
-    EvaluationContext context(working_marking.marking(), net);    
-    this->query = query->pushNegation(s, context, false, false); // make sure that EG and AG is pushed
     delete[] working_marking.marking();
     delete[] query_marking.marking();
     working_marking.setMarking(nullptr);

@@ -341,11 +341,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         return ErrorCode;
     }
     
-    // Check if the choosen options are incompatible with upper bound queries
-    if(options.stubbornreduction || options.queryReductionTimeout > 0) {
-        options.upperboundcheck = true;
-    }
-
     return ContinueCode;
 }
 
@@ -530,17 +525,6 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> querynames;
     auto queries = readQueries(options, querynames);
     
-    if (options.upperboundcheck) {
-        for (uint32_t i = 0; i < queries.size(); i++) {
-            if (queries[i]->isUpperBound()) {
-                fprintf(stderr, "Error: Invalid options choosen for upper bound query. ");
-                fprintf(stderr, "Cannot use stubborn reduction, query simplification, or aggressive structural reduction.\n");
-                fprintf(stdout, "CANNOT_COMPUTE\n");
-                return ErrorCode;
-            }
-        }
-    }
-        
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
     
@@ -553,12 +537,14 @@ int main(int argc, char* argv[]) {
 
     if(queries.size() == 0 || contextAnalysis(b2, qnet.get(), queries) != ContinueCode)  return ErrorCode;
     
-    if (options.queryReductionTimeout > 0) {
+    if (options.queryReductionTimeout == 0 && options.strategy == PetriEngine::Reachability::OverApprox){ // Conflicting flags "-s OverApprox" and "-q 0"
+        return 0;
+    }
+    else 
+    {
         LPCache cache;
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            if (queries[i]->isUpperBound()) continue;
-            
             SimplificationContext simplificationContext(qm0, qnet.get(), options.queryReductionTimeout, 
                     options.lpsolveTimeout, &cache);
             bool isInvariant = queries[i].get()->isInvariant();
@@ -585,23 +571,30 @@ int main(int argc, char* argv[]) {
                 stats.print(std::cout);
                 std::cout << std::endl;
             }
+            
+            if (options.queryReductionTimeout > 0)
+            {
+                try {
+                    negstat_t stats;            
+                    queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false);
+                    if(options.printstatistics)
+                    {
+                        std::cout << "RWSTATS POST:";
+                        stats.print(std::cout);
+                        std::cout << std::endl;
+                    }
+                    queries[i].get()->setInvariant(isInvariant);
+                } catch (std::bad_alloc& ba){
+                    std::cerr << "Query reduction failed." << std::endl;
+                    std::cerr << "Exception information: " << ba.what() << std::endl;
 
-            try {
-                negstat_t stats;            
-                queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false);
-                if(options.printstatistics)
-                {
-                    std::cout << "RWSTATS POST:";
-                    stats.print(std::cout);
-                    std::cout << std::endl;
+                    delete[] qm0;
+                    std::exit(3);
                 }
-                queries[i].get()->setInvariant(isInvariant);
-            } catch (std::bad_alloc& ba){
-                std::cerr << "Query reduction failed." << std::endl;
-                std::cerr << "Exception information: " << ba.what() << std::endl;
-                
-                delete[] qm0;
-                std::exit(3);
+            }
+            else
+            {
+                std::cout << "Skipping linear-programming (-q 0)" << std::endl;
             }
 
             if(options.printstatistics)
@@ -615,15 +608,16 @@ int main(int argc, char* argv[]) {
                 double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
                 
                 fprintf(stdout, "Query size reduced from %d to %d nodes (%.2f percent reduction).\n", preSize, postSize, redPerc);
-                if(simplificationContext.timeout()){
-                    fprintf(stdout, "Query reduction reached timeout.\n");
-                } else {
-                    fprintf(stdout, "Query reduction finished after %f seconds.\n", simplificationContext.getReductionTime());
+                if(options.queryReductionTimeout > 0)
+                {
+                    if(simplificationContext.timeout()){
+                        fprintf(stdout, "Query reduction reached timeout.\n");
+                    } else {
+                        fprintf(stdout, "Query reduction finished after %f seconds.\n", simplificationContext.getReductionTime());
+                    }
                 }
             }
         }
-    } else if (options.strategy == PetriEngine::Reachability::OverApprox){ // Conflicting flags "-s OverApprox" and "-q 0"
-        return 0;
     }
     
     qnet = nullptr;
@@ -673,11 +667,6 @@ int main(int argc, char* argv[]) {
     
     auto net = std::unique_ptr<PetriNet>(builder.makePetriNet());
     
-    for(auto& q : queries)
-    {
-        q->indexPlaces(builder.getPlaceNames());
-    }
-    
     //----------------------- Verify CTL queries -----------------------//
     std::vector<size_t> ctl_ids;
     for(size_t i = 0; i < queries.size(); ++i)
@@ -705,6 +694,7 @@ int main(int argc, char* argv[]) {
             options.gamemode,
             options.printstatistics,
             true,
+            options.stubbornreduction,
             querynames,
             queries,
             ctl_ids);
