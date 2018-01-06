@@ -205,8 +205,8 @@ namespace PetriEngine {
             {
                 if(from == 0)
                 {
-                    assert(i + from < trace.size());
-                    return i + from;
+                    //assert(i + from < trace.size());
+                    return std::min(i + from, trace.size() - 1);
                 }
                 else
                 {
@@ -294,8 +294,8 @@ namespace PetriEngine {
 
             std::vector<z3::expr> encoded = {context.bool_val(true)};
             std::vector<int32_t> uses(_net.numberOfPlaces(), 0);
-/*            std::cout << "TRACE:";
-            std::cout << std::endl;*/
+//            std::cout << "TRACE:";
+//            std::cout << std::endl;
 
             for(auto& t : trace)
             {
@@ -321,7 +321,7 @@ namespace PetriEngine {
                     }
                     else
                     {
-//                        std::cout << "\t" << _net.placeNames()[pre.first->place] << "(" << pre.first->place << ")" 
+ //                       std::cout << "\t" << _net.placeNames()[pre.first->place] << "(" << pre.first->place << ")" 
 //                                << " CONS " << pre.first->tokens << std::endl;
                         begin = begin && (context.int_const(name.c_str()) >= context.int_val(pre.first->tokens));
                         begin = begin && (context.int_const(nextname.c_str()) == (context.int_const(name.c_str()) - context.int_val(pre.first->tokens)));
@@ -335,8 +335,8 @@ namespace PetriEngine {
                     string nextname = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
                     begin = begin && context.int_const(name.c_str()) >= context.int_val(0);
                     begin = begin && context.int_const(nextname.c_str()) == (context.int_const(name.c_str()) + context.int_val(post.first->tokens));
-                        //std::cout << "\t" << _net.placeNames()[post.first->place] << "(" << post.first->place << ")" 
-                          //      << " PROD " << post.first->tokens << std::endl;
+ //                       std::cout << "\t" << _net.placeNames()[post.first->place] << "(" << post.first->place << ")" 
+ //                               << " PROD " << post.first->tokens << std::endl;
                 }
                 encoded.push_back(begin);
             }
@@ -351,11 +351,11 @@ namespace PetriEngine {
                 {
                     string name = to_string(i) + "~i0";
                     encoded[0] = encoded[0] && (context.int_const(name.c_str()) == context.int_val(initial.marking()[i]));
-                    //std::cout << "\t" << _net.placeNames()[i] << "(" << i << ")" << " INIT " << initial.marking()[i] << std::endl;
+ //                   std::cout << "\t" << _net.placeNames()[i] << "(" << i << ")" << " INIT " << initial.marking()[i] << std::endl;
                 }
             }
             
-        /*    for(auto& e : encoded)
+ /*           for(auto& e : encoded)
             {
                 std::cout << e << std::endl;
             }*/
@@ -676,11 +676,11 @@ namespace PetriEngine {
                 while (!waiting.empty()) 
                 {
         //            sanity(waiting);
-                    /*if((stepno % 1000) == 0)
+                    if((stepno % 1000) == 0)
                     {
                         cout << stepno << " : " << waiting.size() << " : " << waiting[0].get_interpolants().size() << " : " << states.size() << std::endl;
                         printStats();
-                    }*/
+                    }
                     
 //                    std::cout << "NTRACE:";
 /*                    for(auto& t : waiting) {
@@ -752,7 +752,7 @@ namespace PetriEngine {
                             handleInvalidTrace(waiting, res.first);
                             all_covered = false;
                             initial_interpols = waiting[0].get_interpolants();
-                            /*std::cout << "AUTOMATA" << std::endl;
+/*                            std::cout << "AUTOMATA" << std::endl;
                             for(size_t i = 0; i < states.size(); ++i)
                             {
                                 std::cout << "[" << i << "] : " << (states[i].is_accepting() ? "ACCEPT " : "") << std::endl;
