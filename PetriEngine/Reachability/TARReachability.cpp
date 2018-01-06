@@ -377,7 +377,7 @@ namespace PetriEngine {
         std::pair<int,bool>  TARReachabilitySearch::isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, const PQL::Condition* condition)
         {
 
-//            std::cout << "IS VALID " << std::endl;
+            //std::cout << "IS VALID " << std::endl;
 
             std::vector<z3::expr> encoded = {context.bool_val(true)};
             std::vector<int32_t> uses(_net.numberOfPlaces(), 0);
@@ -388,7 +388,7 @@ namespace PetriEngine {
                 {
                     continue;
                 }
-//                std::cout << _net.transitionNames()[t.get_edge_cnt() - 1] << std::endl;
+                //std::cout << _net.transitionNames()[t.get_edge_cnt() - 1] << std::endl;
 
                 auto begin = context.bool_val(true);
                 auto pre = _net.preset(t.get_edge_cnt() - 1);
@@ -432,7 +432,7 @@ namespace PetriEngine {
                 }
             }
             
-/*            for(auto& e : encoded)
+            /*for(auto& e : encoded)
             {
                 std::cout << e << std::endl;
             }*/
@@ -450,7 +450,7 @@ namespace PetriEngine {
                 //tvalidRange += double(end - begin)/ CLOCKS_PER_SEC;
                 if(res) 
                 {
-                    return std::pair<int,bool>(nvalid, from > 0);
+                    return std::pair<int,bool>(nvalid, from == 0);
                 }
                 else
                 {
@@ -466,7 +466,7 @@ namespace PetriEngine {
                 }
         /*        std::cerr << "TRACE" << std::endl;
                 printTrace(trace);*/ 
-/*                std::cerr << "INTERPOLANT" << std::endl;
+                /*std::cerr << "INTERPOLANT" << std::endl;
                 std::cerr << interpolant << std::endl;
                 std::cerr << "DONE" << std::endl;*/
          
@@ -818,11 +818,11 @@ namespace PetriEngine {
                         if(res.second)
                         {
                             {
-        /*                        printTrace(waiting); 
+        //                        printTrace(waiting); 
                                 std::cerr << "VALID TRACE FOUND!" << std::endl;
                                 std::cerr << "STEPS : " << stepno << std::endl;
                                 std::cerr << "INTERPOLANT AUTOMATAS : " << waiting[0].get_interpolants().size() << std::endl;
-                                sink->tryPut(successor);
+        /*                        sink->tryPut(successor);
                                 printStats();
         //                        printInterpolants(initial_interpols);*/
                                 intmap.clear();
