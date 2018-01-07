@@ -303,21 +303,25 @@ namespace PetriEngine {
                 for(;pre.first != pre.second; ++pre.first)
                 {
                     string name = std::to_string(pre.first->place) + "~i" + std::to_string(uses[pre.first->place]);
+                    auto ppre = context.int_const(name.c_str());
                     if(pre.first->inhibitor)
                     {
                         in_query[pre.first->place] = true;
-                        begin = begin && (context.int_const(name.c_str()) < context.int_val(pre.first->tokens));
+                        begin = begin && (ppre < context.int_val(pre.first->tokens));
                     }
                     else
                     {
                         ++uses[pre.first->place];
                         string nextname = to_string(pre.first->place) + "~i" + to_string(uses[pre.first->place]);
-                        begin = begin && context.int_const(nextname.c_str()) >= context.int_val(0);
+                        auto ppost = context.int_const(nextname.c_str());
+
+                        
+//                        begin = begin && ppost >= context.int_val(0);
+                        begin = begin && ppre >= context.int_val(pre.first->tokens);
+                        begin = begin && (ppost == (ppre - context.int_val(pre.first->tokens)));
 
 //                        std::cout << "\t" << _net.placeNames()[pre.first->place] << "(" << pre.first->place << ")" 
 //                                << " CONS " << pre.first->tokens << std::endl;
-                        begin = begin && (context.int_const(name.c_str()) >= context.int_val(pre.first->tokens));
-                        begin = begin && (context.int_const(nextname.c_str()) == (context.int_const(name.c_str()) - context.int_val(pre.first->tokens)));
                     }
                 }
                 auto post = _net.postset(t.get_edge_cnt() - 1);
@@ -326,8 +330,11 @@ namespace PetriEngine {
                     string name = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
                     ++uses[post.first->place];
                     string nextname = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
-                    begin = begin && context.int_const(name.c_str()) >= context.int_val(0);
-                    begin = begin && context.int_const(nextname.c_str()) == (context.int_const(name.c_str()) + context.int_val(post.first->tokens));
+                    auto ppre = context.int_const(name.c_str());
+                    auto ppost = context.int_const(nextname.c_str());
+                    begin = begin && ppost >= context.int_val(post.first->tokens);
+                    begin = begin && ppost == (ppre + context.int_val(post.first->tokens));
+                    
 //                        std::cout << "\t" << _net.placeNames()[post.first->place] << "(" << post.first->place << ")" 
 //                                << " PROD " << post.first->tokens << std::endl;
                 }
@@ -392,8 +399,8 @@ namespace PetriEngine {
                 }
 /*                std::cerr << "INTERPOLANT" << std::endl;
                 std::cerr << interpolant << std::endl;
-                std::cerr << "DONE" << std::endl;*/
-  
+                std::cerr << "DONE" << std::endl;
+  */
                 {
                     clock_t begin = clock();
                     from = constructAutomata(from, trace, interpolant, context);
@@ -628,7 +635,7 @@ namespace PetriEngine {
         
         bool TARReachabilitySearch::tryReach(   const std::shared_ptr<PQL::Condition> & query, 
                                         std::vector<ResultPrinter::Result>& results,
-                                        bool printstats, Structures::State& initial)
+                                        bool printstats, bool printtrace, Structures::State& initial)
         {
 
             
@@ -701,8 +708,8 @@ namespace PetriEngine {
                                 std::cout<< "TEST" << ",";
                         }
                     }
-                    std::cout << std::endl;*/
-
+                    std::cout << std::endl;
+*/
                     {
                         clock_t b = clock();
                         bool r = popDone(waiting, /*symstate,*/ stepno);
@@ -711,7 +718,7 @@ namespace PetriEngine {
                         //tpop += double(e-b)/CLOCKS_PER_SEC;
                         if(r)
                         {
-//                            std::cout << "POP DONE" << std::endl;
+  //                          std::cout << "POP DONE" << std::endl;
                             continue;  // we have reached the end of the edge-iterator for this part of the trace
                         }                
                     }
@@ -749,6 +756,8 @@ namespace PetriEngine {
                             std::cerr << "INTERPOLANT AUTOMATAS : " << waiting[0].get_interpolants().size() << std::endl;
                             intmap.clear();
                             states.clear();
+                            if(printtrace)
+                                printTrace(waiting);
                             return true;
                         }
                         else
@@ -776,7 +785,8 @@ namespace PetriEngine {
                             std::cout << "INITIAL " ;
                             for(auto& s : initial_interpols) std::cout << s << ",";
                             std::cout << std::endl;
-                            std::cout << "DONE" << std::endl;*/
+                            std::cout << "DONE" << std::endl;
+ */
                             continue;
                         }
                     }
@@ -830,6 +840,7 @@ namespace PetriEngine {
                     }
                 }
 //            ++oloops;
+                //std::cout << "### RESTART !! " << std::endl;
             } while(!all_covered);
 
             //std::cout << "STEPS : " << stepno << std::endl;
@@ -871,8 +882,8 @@ namespace PetriEngine {
             for(size_t j : state.get_interpolants()) std::cout << j << ", ";
             std::cout << std::endl << " TO INTER IS ";
             for(size_t j : maximal) std::cout << j << ", ";
-            std::cout << std::endl;*/
-
+            std::cout << std::endl;
+*/
             assert(is_sorted(maximal.begin(), maximal.end()));
             for(size_t i : maximal)
             {
@@ -973,7 +984,7 @@ namespace PetriEngine {
             auto next = nextinter.begin();
             std::vector<size_t> writes;
 
-
+            if(!state.get_edge_cnt() == 0)
             for(size_t i : maximal)
             {
                 if(i == 0)
@@ -987,7 +998,7 @@ namespace PetriEngine {
                 if(next == nextinter.end() || *next != i)
                 {
                     // added non-interfering
-                    if(!loaded && state.get_edge_cnt() != 0)
+                    if(!loaded)
                     {
 //                        std::cout << "MODIFIES [" << _net.transitionNames()[state.get_edge_cnt() - 1] << "] : " << std::endl << "\t";
 
@@ -1001,6 +1012,7 @@ namespace PetriEngine {
                             if(lb == writes.end() || *lb != pre.first->place)
                                 lb = writes.insert(lb, pre.first->place);
                         }
+                        assert(std::is_sorted(writes.begin(), writes.end()));
                         lb = writes.begin();
                         for(; post.first != post.second; ++post.first)
                         {
@@ -1008,19 +1020,19 @@ namespace PetriEngine {
                             if(lb == writes.end() || *lb != post.first->place)
                                 lb = writes.insert(lb, post.first->place);
                         }
+                        assert(std::is_sorted(writes.begin(), writes.end()));
 
                         loaded = true;
 //                        for(auto i : writes) std::cout << i <<  ",";
 //                        std::cout << std::endl;
                     }
-
-
+    
                     bool ok = true;
                     auto iw = writes.begin(); 
                     auto ic = as.restricts.begin();
-  //                  std::cout << "INVARIANT [" << as.interpolant << "] : " << std::endl << "\t";
- //                   for(auto i : as.restricts) std::cout << i <<  ",";
- //                   std::cout << std::endl;
+  /*                  std::cout << "INVARIANT [" << as.interpolant << "] : " << std::endl << "\t";
+                    for(auto i : as.restricts) std::cout << i <<  ",";
+                    std::cout << std::endl;*/
                     while(iw != writes.end() && ic != as.restricts.end())
                     {
                         if(*ic < *iw)
@@ -1038,6 +1050,7 @@ namespace PetriEngine {
                     }
                     if(ok) 
                     {
+//                        std::cout << "OK, NO CHANGE" << std::endl;
                         nextinter.insert(next, i);
                         if(as.simulates.size() > 0)
                         {
@@ -1056,8 +1069,8 @@ namespace PetriEngine {
         
 /*            std::cout << "NEXT INTER IS ";
             for(size_t j : nextinter) std::cout << j << ", ";
-            std::cout << std::endl;*/
-
+            std::cout << std::endl;
+*/
         #ifdef ANTISIM
         //#ifndef NDEBUG
             maximal.clear();
@@ -1079,11 +1092,46 @@ namespace PetriEngine {
             return false;
         }
         
-        
+        void TARReachabilitySearch::printTrace(waiting_t& stack)
+        {
+            std::cerr << "Trace:\n<trace>\n";
+            
+            if(_reducer != NULL)
+                _reducer->initFire(std::cerr);
+            
+            for(auto& t : stack)
+            {
+                if(t.get_edge_cnt() == 0) break;
+                std::string tname = _net.transitionNames()[t.get_edge_cnt() - 1];
+                std::cerr << "\t<transition id=\"" << tname << "\">\n";
+                
+                // well, yeah, we are not really efficient in constructing the trace.
+                // feel free to improve
+                auto pre = _net.preset(t.get_edge_cnt() - 1);
+                for(; pre.first != pre.second; ++pre.first)
+                {                    
+                    for(size_t token = 0; token < pre.first->tokens; ++token )
+                    {
+                        std::cerr << "\t\t<token place=\"" << _net.placeNames()[pre.first->place] << "\" age=\"0\"/>\n";
+                    }
+                }
+                
+                if(_reducer != NULL)
+                    _reducer->extraConsume(std::cerr, tname);
+                
+                std::cerr << "\t</transition>\n";
+                
+                if(_reducer != NULL)
+                    _reducer->postFire(std::cerr, tname);
+                
+            }
+            
+            std::cerr << "</trace>\n" << std::endl;
+        }
         
         void TARReachabilitySearch::reachable(   std::vector<std::shared_ptr<PQL::Condition> >& queries, 
                                         std::vector<ResultPrinter::Result>& results,
-                                        bool printstats)
+                                        bool printstats, bool printtrace)
         {
 
             // set up working area
@@ -1102,7 +1150,7 @@ namespace PetriEngine {
             {
                 if(results[i] == ResultPrinter::Unknown)
                 {
-                    bool res = tryReach(queries[i], results, printstats, state);
+                    bool res = tryReach(queries[i], results, printstats, printtrace, state);
                     if(res)
                         results[i] = ResultPrinter::Satisfied;
                     else

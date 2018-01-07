@@ -32,8 +32,8 @@ namespace PetriEngine {
 
         public:
 
-            TARReachabilitySearch(ResultPrinter& printer, PetriNet& net, int kbound = 0)
-            : printer(printer), _net(net) {
+            TARReachabilitySearch(ResultPrinter& printer, PetriNet& net, Reducer* reducer, int kbound = 0)
+            : printer(printer), _net(net), _reducer(reducer) {
                 _kbound = kbound;
             }
             
@@ -44,13 +44,13 @@ namespace PetriEngine {
             void reachable(
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
-                bool printstats);
+                bool printstats, bool printtrace);
         private:
             typedef std::vector<state_t> waiting_t;
-            
+            void printTrace(waiting_t& stack);
             bool tryReach(   const std::shared_ptr<PQL::Condition>& query, 
                                         std::vector<ResultPrinter::Result>& results,
-                                        bool printstats, Structures::State& initial);
+                                        bool printstats, bool printtrace, Structures::State& initial);
             size_t computeSimulation(size_t index, size_t sim_hint = 1, size_t simed_hint = 0);
             bool popDone(waiting_t& waiting, size_t& stepno);
             bool checkInclussion(state_t& state, std::vector<size_t>& nextinter, z3::context& ctx);
@@ -71,6 +71,7 @@ namespace PetriEngine {
             
             int _kbound;
             PetriNet& _net;
+            Reducer* _reducer;
             struct el_t
             {
                 z3::expr expr;

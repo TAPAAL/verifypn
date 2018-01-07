@@ -126,6 +126,7 @@ namespace PetriEngine {
     {
         ++_removedTransitions;
         Transition& trans = getTransition(t);
+        std::cout << "TRANS " << getTransitionName(t) << std::endl;
         assert(!trans.skip);
         for(auto p : trans.post)
         {
@@ -145,6 +146,7 @@ namespace PetriEngine {
     {
         ++_removedPlaces;
         Place& pl = parent->_places[place];
+        std::cout << "PLACE " << getPlaceName(place) << std::endl;
         assert(!pl.skip);
         pl.skip = true;
         for(auto& t : pl.consumers)

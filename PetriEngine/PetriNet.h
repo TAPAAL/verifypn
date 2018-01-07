@@ -97,6 +97,8 @@ namespace PetriEngine {
                 }
             }
         }
+        
+        void sort();
 
     private:        
 

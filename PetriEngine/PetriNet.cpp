@@ -160,4 +160,15 @@ namespace PetriEngine {
         return marking;
     }
     
+    void PetriNet::sort()
+    {
+        for(size_t i = 0; i < _ntransitions; ++i)
+        {
+            TransPtr& t = _transitions[i];
+            std::sort(&_invariants[t.inputs], &_invariants[t.outputs], [](const auto& a, const auto& b) { return a.place < b.place; });
+            TransPtr& t2 = _transitions[i + 1];
+            std::sort(&_invariants[t.outputs], &_invariants[t2.inputs], [](const auto& a, const auto& b) { return a.place < b.place; });            
+        }
+    }
+    
 } // PetriEngine

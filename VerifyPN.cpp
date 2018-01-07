@@ -734,7 +734,7 @@ int main(int argc, char* argv[]) {
     //----------------------- Reachability -----------------------//
     
     //Create reachability search strategy
-    TARReachabilitySearch strategy(printer, *net, options.kbound);
+    TARReachabilitySearch strategy(printer, *net, builder.getReducer(), options.kbound);
 
     //Analyse context again to reindex query
     contextAnalysis(builder, net.get(), queries);
@@ -747,8 +747,8 @@ int main(int argc, char* argv[]) {
 //            options.strategy,
 //            options.stubbornreduction,
 //            options.statespaceexploration,
-            options.printstatistics);
-//            options.trace);
+            options.printstatistics,
+            options.trace);
        
     return 0;
 }
