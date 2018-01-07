@@ -289,17 +289,21 @@ namespace PetriEngine {
 //            std::cout << "TRACE:";
 //            std::cout << std::endl;
             std::vector<bool> in_query(uses.size(), false);
+            size_t m = 0;
             for(auto& t : trace)
             {
-
+                ++m;
                 if(t.get_edge_cnt() == 0) 
                 {
                     continue;
                 }
 //                std::cout << _net.transitionNames()[t.get_edge_cnt() - 1] << std::endl;
 
-                auto begin = context.bool_val(true);
                 auto pre = _net.preset(t.get_edge_cnt() - 1);
+                std::string mname = "m~i" + to_string(m);                
+                auto mult = context.int_const(mname.c_str());
+                auto begin = mult >= 1;
+                std::vector<size_t> inhibs;
                 for(;pre.first != pre.second; ++pre.first)
                 {
                     string name = std::to_string(pre.first->place) + "~i" + std::to_string(uses[pre.first->place]);
@@ -308,32 +312,39 @@ namespace PetriEngine {
                     {
                         in_query[pre.first->place] = true;
                         begin = begin && (ppre < context.int_val(pre.first->tokens));
+                        inhibs.push_back(pre.first->inhibitor);
                     }
                     else
                     {
                         ++uses[pre.first->place];
                         string nextname = to_string(pre.first->place) + "~i" + to_string(uses[pre.first->place]);
                         auto ppost = context.int_const(nextname.c_str());
-
                         
 //                        begin = begin && ppost >= context.int_val(0);
-                        begin = begin && ppre >= context.int_val(pre.first->tokens);
-                        begin = begin && (ppost == (ppre - context.int_val(pre.first->tokens)));
+                        begin = begin && ppre >= (context.int_val(pre.first->tokens) * mult) ;
+                        begin = begin && (ppost == (ppre - (mult * context.int_val(pre.first->tokens))));
 
 //                        std::cout << "\t" << _net.placeNames()[pre.first->place] << "(" << pre.first->place << ")" 
 //                                << " CONS " << pre.first->tokens << std::endl;
                     }
                 }
                 auto post = _net.postset(t.get_edge_cnt() - 1);
+                auto iit = inhibs.begin();
                 for(; post.first != post.second; ++post.first)
                 {
+                    while(iit != inhibs.end() && *iit < post.first->place) ++iit;
+                    if(iit != inhibs.end() && *iit == post.first->place)
+                    {
+                        begin = begin && mult == 1;
+                        iit = inhibs.end();
+                    }
                     string name = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
                     ++uses[post.first->place];
                     string nextname = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
                     auto ppre = context.int_const(name.c_str());
                     auto ppost = context.int_const(nextname.c_str());
-                    begin = begin && ppost >= context.int_val(post.first->tokens);
-                    begin = begin && ppost == (ppre + context.int_val(post.first->tokens));
+                    begin = begin && ppost >= (mult*context.int_val(post.first->tokens));
+                    begin = begin && ppost == (ppre + (mult*context.int_val(post.first->tokens)));
                     
 //                        std::cout << "\t" << _net.placeNames()[post.first->place] << "(" << post.first->place << ")" 
 //                                << " PROD " << post.first->tokens << std::endl;
