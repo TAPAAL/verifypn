@@ -294,8 +294,8 @@ namespace PetriEngine {
 
             std::vector<z3::expr> encoded = {context.bool_val(true)};
             std::vector<int32_t> uses(_net.numberOfPlaces(), 0);
-//            std::cout << "TRACE:";
-//            std::cout << std::endl;
+ //           std::cout << "TRACE:";
+ //           std::cout << std::endl;
 
             for(auto& t : trace)
             {
@@ -304,7 +304,7 @@ namespace PetriEngine {
                 {
                     continue;
                 }
-//                std::cout << _net.transitionNames()[t.get_edge_cnt() - 1] << ",";
+                //std::cout << _net.transitionNames()[t.get_edge_cnt() - 1] << std::endl;
 
                 auto begin = context.bool_val(true);
                 auto pre = _net.preset(t.get_edge_cnt() - 1);
@@ -321,7 +321,7 @@ namespace PetriEngine {
                     }
                     else
                     {
- //                       std::cout << "\t" << _net.placeNames()[pre.first->place] << "(" << pre.first->place << ")" 
+//                        std::cout << "\t" << _net.placeNames()[pre.first->place] << "(" << pre.first->place << ")" 
 //                                << " CONS " << pre.first->tokens << std::endl;
                         begin = begin && (context.int_const(name.c_str()) >= context.int_val(pre.first->tokens));
                         begin = begin && (context.int_const(nextname.c_str()) == (context.int_const(name.c_str()) - context.int_val(pre.first->tokens)));
@@ -335,8 +335,8 @@ namespace PetriEngine {
                     string nextname = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
                     begin = begin && context.int_const(name.c_str()) >= context.int_val(0);
                     begin = begin && context.int_const(nextname.c_str()) == (context.int_const(name.c_str()) + context.int_val(post.first->tokens));
- //                       std::cout << "\t" << _net.placeNames()[post.first->place] << "(" << post.first->place << ")" 
- //                               << " PROD " << post.first->tokens << std::endl;
+//                        std::cout << "\t" << _net.placeNames()[post.first->place] << "(" << post.first->place << ")" 
+//                                << " PROD " << post.first->tokens << std::endl;
                 }
                 encoded.push_back(begin);
             }
@@ -351,11 +351,11 @@ namespace PetriEngine {
                 {
                     string name = to_string(i) + "~i0";
                     encoded[0] = encoded[0] && (context.int_const(name.c_str()) == context.int_val(initial.marking()[i]));
- //                   std::cout << "\t" << _net.placeNames()[i] << "(" << i << ")" << " INIT " << initial.marking()[i] << std::endl;
+//                    std::cout << "\t" << _net.placeNames()[i] << "(" << i << ")" << " INIT " << initial.marking()[i] << std::endl;
                 }
             }
             
- /*           for(auto& e : encoded)
+/*            for(auto& e : encoded)
             {
                 std::cout << e << std::endl;
             }*/
@@ -388,8 +388,8 @@ namespace PetriEngine {
                 }
 /*                std::cerr << "INTERPOLANT" << std::endl;
                 std::cerr << interpolant << std::endl;
-                std::cerr << "DONE" << std::endl;*/
-         
+                std::cerr << "DONE" << std::endl;
+  */       
                 {
                     clock_t begin = clock();
                     from = constructAutomata(from, trace, interpolant, context);
@@ -682,8 +682,8 @@ namespace PetriEngine {
                         printStats();
                     }
                     
-//                    std::cout << "NTRACE:";
-/*                    for(auto& t : waiting) {
+/*                    std::cout << "NTRACE:";
+                    for(auto& t : waiting) {
                         if(t.get_edge_cnt() > _net.transitionNames().size())
                         {
                             std::cout << "DONE" << std::endl;
@@ -697,8 +697,8 @@ namespace PetriEngine {
                                 std::cout<< "TEST" << ",";
                         }
                     }
-                    std::cout << std::endl;*/
-
+                    std::cout << std::endl;
+*/
                     {
                         clock_t b = clock();
                         bool r = popDone(waiting, /*symstate,*/ stepno);
@@ -752,7 +752,7 @@ namespace PetriEngine {
                             handleInvalidTrace(waiting, res.first);
                             all_covered = false;
                             initial_interpols = waiting[0].get_interpolants();
-/*                            std::cout << "AUTOMATA" << std::endl;
+                            /*std::cout << "AUTOMATA" << std::endl;
                             for(size_t i = 0; i < states.size(); ++i)
                             {
                                 std::cout << "[" << i << "] : " << (states[i].is_accepting() ? "ACCEPT " : "") << std::endl;
@@ -783,7 +783,7 @@ namespace PetriEngine {
                     if(next_edge)
                     {
     //                    sanity(waiting);
-                        uint32_t dummy = 0;
+                        uint32_t dummy = state.get_edge_cnt() == 0 ? 0 : 1;
                         state_t next;
                         clock_t b = clock();
                         size_t tmp = 0; 
@@ -999,6 +999,8 @@ namespace PetriEngine {
                     // added non-interfering
                     if(!loaded && state.get_edge_cnt() != 0)
                     {
+//                        std::cout << "MODIFIES [" << _net.transitionNames()[state.get_edge_cnt() - 1] << "] : " << std::endl << "\t";
+
                         auto pre = _net.preset(state.get_edge_cnt() - 1);
                         auto post = _net.postset(state.get_edge_cnt() - 1);
                         auto lb = writes.begin();
@@ -1006,24 +1008,29 @@ namespace PetriEngine {
                         {
                             if(pre.first->inhibitor) continue;
                             while(lb != writes.end() && *lb < pre.first->place) ++lb;
-                            if(lb == writes.end() || *lb == pre.first->place)
+                            if(lb == writes.end() || *lb != pre.first->place)
                                 lb = writes.insert(lb, pre.first->place);
                         }
                         lb = writes.begin();
                         for(; post.first != post.second; ++post.first)
                         {
                             while(lb != writes.end() && *lb < post.first->place) ++lb;
-                            if(lb == writes.end() || *lb == post.first->place)
+                            if(lb == writes.end() || *lb != post.first->place)
                                 lb = writes.insert(lb, post.first->place);
                         }
 
                         loaded = true;
+//                        for(auto i : writes) std::cout << i <<  ",";
+//                        std::cout << std::endl;
                     }
 
 
                     bool ok = true;
                     auto iw = writes.begin(); 
                     auto ic = as.restricts.begin();
+  //                  std::cout << "INVARIANT [" << as.interpolant << "] : " << std::endl << "\t";
+ //                   for(auto i : as.restricts) std::cout << i <<  ",";
+ //                   std::cout << std::endl;
                     while(iw != writes.end() && ic != as.restricts.end())
                     {
                         if(*ic < *iw)
@@ -1056,11 +1063,11 @@ namespace PetriEngine {
                 }
             }
         #endif
-
-//        std::cout << "NEXT INTER IS ";
-//            for(size_t j : nextinter) std::cout << j << ", ";
-//            std::cout << std::endl;
-
+        
+/*            std::cout << "NEXT INTER IS ";
+            for(size_t j : nextinter) std::cout << j << ", ";
+            std::cout << std::endl;
+*/
         #ifdef ANTISIM
         //#ifndef NDEBUG
             maximal.clear();

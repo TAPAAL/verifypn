@@ -217,9 +217,8 @@ namespace PetriEngine {
 //            key_t location = 0;
             bool operator == (const state_t& other)
             {
-                if( //location == other.location &&
-    //                edgecnt == other.edgecnt &&
-                    interpolant.size() == other.interpolant.size() &&
+                if((edgecnt == 0) != (other.edgecnt == 0)) return false;
+                if( interpolant.size() == other.interpolant.size() &&
                     std::equal( interpolant.begin(),        interpolant.end(), 
                                 other.interpolant.begin(),  other.interpolant.end()))
                 {
@@ -235,9 +234,8 @@ namespace PetriEngine {
 
             bool operator <= (const state_t& other)
             {
-                if( //location == other.location &&
-      //              edgecnt == other.edgecnt &&
-                    interpolant.size() <= other.interpolant.size() &&
+                if((edgecnt == 0) != (other.edgecnt == 0)) return false;
+                if( interpolant.size() <= other.interpolant.size() &&
                     std::includes(other.interpolant.begin(), other.interpolant.end(),
                                   interpolant.begin(), interpolant.end()))
                 {

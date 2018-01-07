@@ -50,7 +50,7 @@ class AntiChain
                 {
                     if(std::includes(set.begin(), set.end(), s.begin(), s.end()))
                     {
-                        /*std::cout << "SUBSUMBED BY ";
+/*                        std::cout << "SUBSUMBED BY ";
                         for(auto& e : s) std::cout << e << ",";
                         std::cout << std::endl;*/
                         exists = true;
