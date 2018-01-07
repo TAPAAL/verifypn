@@ -434,7 +434,7 @@ namespace PetriEngine {
                 std::vector<size_t> buffer;
                 if(checkInclussion(waiting[i - 1], waiting[i].get_interpolants(), states[0].interpolant.ctx()))
                 {
-                    waiting.resize(i - 1);
+                    if(i != 1) waiting.resize(i - 1);
                     break;
                 }
             }
@@ -680,7 +680,7 @@ namespace PetriEngine {
                 while (!waiting.empty()) 
                 {
         //            sanity(waiting);
-/*                    if((stepno % 1000) == 0)
+                    /*if((stepno % 1000) == 0)
                     {
                         cout << stepno << " : " << waiting.size() << " : " << waiting[0].get_interpolants().size() << " : " << states.size() << std::endl;
                         printStats();
@@ -701,8 +701,8 @@ namespace PetriEngine {
                                 std::cout<< "TEST" << ",";
                         }
                     }
-                    std::cout << std::endl;
-*/
+                    std::cout << std::endl;*/
+
                     {
                         clock_t b = clock();
                         bool r = popDone(waiting, /*symstate,*/ stepno);
@@ -755,14 +755,9 @@ namespace PetriEngine {
                         {
                             handleInvalidTrace(waiting, res.first);
                             all_covered = false;
-                            if(waiting.size() == 0)
-                            {
-                                intmap.clear();
-                                states.clear();
-                                return false;
-                            }
+                            assert(waiting.size() > 0);
                             initial_interpols = waiting[0].get_interpolants();
-                            /*std::cout << "AUTOMATA" << std::endl;
+/*                            std::cout << "AUTOMATA" << std::endl;
                             for(size_t i = 0; i < states.size(); ++i)
                             {
                                 std::cout << "[" << i << "] : " << (states[i].is_accepting() ? "ACCEPT " : "") << std::endl;
@@ -958,23 +953,7 @@ namespace PetriEngine {
                             }
                             assert(nextinter.size() == 0 || nextinter[0] != 0);
                         }
-                        /*if(ae.to == 0)
-                        {
-                            return true;
-                        }
-                        {
-                            auto lb = std::lower_bound(nextinter.begin(), nextinter.end(), ae.to);
-                            if(lb == nextinter.end() || *lb != ae.to)
-                            {
-                                nextinter.insert(lb, ae.to);
-                                std::vector<size_t> buffer;
-                                std::set_union( nextinter.begin(), nextinter.end(),
-                                                states[ae.to].simulates.begin(), states[ae.to].simulates.end(),
-                                                std::back_inserter(buffer));
-                                nextinter.swap(buffer);
-                            }
-                            assert(nextinter[0] != 0);
-                        }*/
+     
                     }
         #ifndef NDEBUG
                     assert(is_sorted(as.get_edges().begin(), as.get_edges().end()));
@@ -1077,8 +1056,8 @@ namespace PetriEngine {
         
 /*            std::cout << "NEXT INTER IS ";
             for(size_t j : nextinter) std::cout << j << ", ";
-            std::cout << std::endl;
-*/
+            std::cout << std::endl;*/
+
         #ifdef ANTISIM
         //#ifndef NDEBUG
             maximal.clear();
