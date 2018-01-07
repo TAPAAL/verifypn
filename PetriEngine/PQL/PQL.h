@@ -110,7 +110,7 @@ namespace PetriEngine {
             /** Evaluate the expression given marking and assignment */
             virtual int evaluate(const EvaluationContext& context) = 0;
             int evalAndSet(const EvaluationContext& context);
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const = 0;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const = 0;
             /** Generate LLVM intermediate code for this expr  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert expression to string */
@@ -205,7 +205,7 @@ namespace PetriEngine {
             virtual Result evaluate(const EvaluationContext& context) = 0;
             virtual Result evalAndSet(const EvaluationContext& context) = 0;
             
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const = 0;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const = 0;
             
             /** Generate LLVM intermediate code for this condition  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;

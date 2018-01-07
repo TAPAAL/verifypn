@@ -25,18 +25,10 @@
 #include "../TAR/AntiChain.h"
 #include "../TAR/Renamer.h"
 
-//#define CLOSURE
 #define LATTICE
 #define NOCHANGE
-//#define POST
-//#define PRE
-//#define GENERIC
-//#define GENERICPRE
-//#define NOKLEENE
+#define NOKLEENE
 #define ANTISIM
-//#define PROBING
-//#define REMOVEEDGES
-//#define RESET
 
 namespace PetriEngine {
     using namespace PQL;
@@ -294,9 +286,9 @@ namespace PetriEngine {
 
             std::vector<z3::expr> encoded = {context.bool_val(true)};
             std::vector<int32_t> uses(_net.numberOfPlaces(), 0);
- //           std::cout << "TRACE:";
- //           std::cout << std::endl;
-
+//            std::cout << "TRACE:";
+//            std::cout << std::endl;
+            std::vector<bool> in_query(uses.size(), false);
             for(auto& t : trace)
             {
 
@@ -304,23 +296,24 @@ namespace PetriEngine {
                 {
                     continue;
                 }
-                //std::cout << _net.transitionNames()[t.get_edge_cnt() - 1] << std::endl;
+//                std::cout << _net.transitionNames()[t.get_edge_cnt() - 1] << std::endl;
 
                 auto begin = context.bool_val(true);
                 auto pre = _net.preset(t.get_edge_cnt() - 1);
                 for(;pre.first != pre.second; ++pre.first)
                 {
                     string name = std::to_string(pre.first->place) + "~i" + std::to_string(uses[pre.first->place]);
-                    ++uses[pre.first->place];
-                    string nextname = to_string(pre.first->place) + "~i" + to_string(uses[pre.first->place]);
-                    begin = begin && context.int_const(nextname.c_str()) >= context.int_val(0);
                     if(pre.first->inhibitor)
                     {
+                        in_query[pre.first->place] = true;
                         begin = begin && (context.int_const(name.c_str()) < context.int_val(pre.first->tokens));
-                        begin = begin && (context.int_const(nextname.c_str()) == context.int_const(name.c_str()) );
                     }
                     else
                     {
+                        ++uses[pre.first->place];
+                        string nextname = to_string(pre.first->place) + "~i" + to_string(uses[pre.first->place]);
+                        begin = begin && context.int_const(nextname.c_str()) >= context.int_val(0);
+
 //                        std::cout << "\t" << _net.placeNames()[pre.first->place] << "(" << pre.first->place << ")" 
 //                                << " CONS " << pre.first->tokens << std::endl;
                         begin = begin && (context.int_const(name.c_str()) >= context.int_val(pre.first->tokens));
@@ -338,23 +331,34 @@ namespace PetriEngine {
 //                        std::cout << "\t" << _net.placeNames()[post.first->place] << "(" << post.first->place << ")" 
 //                                << " PROD " << post.first->tokens << std::endl;
                 }
+                if(_kbound > 0)
+                {
+                    auto sum = context.int_val(0);
+                    for(size_t i = 0; i < uses.size(); ++i)
+                    {
+                        string name = to_string(i) + "~i" + to_string(uses[i]);
+                        sum = sum + context.int_const(name.c_str());
+                        in_query[i] = true;
+                    }
+                    begin = begin && (sum <= context.int_val(_kbound));
+                }
                 encoded.push_back(begin);
             }
             
             
-            std::vector<bool> in_query(uses.size(), false);
-            encoded.push_back(condition->encodeSat(context, uses, in_query));
-                        
+
+            encoded.push_back(condition->encodeSat(_net, context, uses, in_query));
+                    
             for(size_t i = 0; i < uses.size(); ++i)
             {
                 if(uses[i] > 0 || in_query[i])
                 {
                     string name = to_string(i) + "~i0";
                     encoded[0] = encoded[0] && (context.int_const(name.c_str()) == context.int_val(initial.marking()[i]));
-//                    std::cout << "\t" << _net.placeNames()[i] << "(" << i << ")" << " INIT " << initial.marking()[i] << std::endl;
+                    //std::cout << "\t" << _net.placeNames()[i] << "(" << i << ")" << " INIT " << initial.marking()[i] << std::endl;                    
                 }
             }
-            
+
 /*            for(auto& e : encoded)
             {
                 std::cout << e << std::endl;
@@ -388,8 +392,8 @@ namespace PetriEngine {
                 }
 /*                std::cerr << "INTERPOLANT" << std::endl;
                 std::cerr << interpolant << std::endl;
-                std::cerr << "DONE" << std::endl;
-  */       
+                std::cerr << "DONE" << std::endl;*/
+  
                 {
                     clock_t begin = clock();
                     from = constructAutomata(from, trace, interpolant, context);
@@ -472,7 +476,7 @@ namespace PetriEngine {
 
             AutomataState& state = states[index];
             z3::context& ctx = state.interpolant.ctx();
-            z3::solver solver(ctx, "QF_LRA");
+            z3::solver solver(ctx);
         //    std::cout << "SIM FOR : " << state.interpolant << std::endl;
             if(index != sim_hint)
             {
@@ -676,11 +680,11 @@ namespace PetriEngine {
                 while (!waiting.empty()) 
                 {
         //            sanity(waiting);
-                    if((stepno % 1000) == 0)
+/*                    if((stepno % 1000) == 0)
                     {
                         cout << stepno << " : " << waiting.size() << " : " << waiting[0].get_interpolants().size() << " : " << states.size() << std::endl;
                         printStats();
-                    }
+                    }*/
                     
 /*                    std::cout << "NTRACE:";
                     for(auto& t : waiting) {
@@ -751,6 +755,12 @@ namespace PetriEngine {
                         {
                             handleInvalidTrace(waiting, res.first);
                             all_covered = false;
+                            if(waiting.size() == 0)
+                            {
+                                intmap.clear();
+                                states.clear();
+                                return false;
+                            }
                             initial_interpols = waiting[0].get_interpolants();
                             /*std::cout << "AUTOMATA" << std::endl;
                             for(size_t i = 0; i < states.size(); ++i)
@@ -766,12 +776,12 @@ namespace PetriEngine {
                                     for(auto& to : e.to) std::cout << to << ",";
                                     std::cout << "]" << std::endl;
                                 }
-
                             }
                             
                             std::cout << "INITIAL " ;
                             for(auto& s : initial_interpols) std::cout << s << ",";
-                            std::cout << std::endl;*/
+                            std::cout << std::endl;
+                            std::cout << "DONE" << std::endl;*/
                             continue;
                         }
                     }
@@ -847,6 +857,7 @@ namespace PetriEngine {
         //    z3::solver solver(ctx, "QF_LRA");
             std::vector<size_t> maximal = state.get_interpolants();
         #ifdef ANTISIM
+            assert(is_sorted(maximal.begin(), maximal.end()));
             if(maximal.size() == 0 || maximal[0] != 1) maximal.insert(maximal.begin(), 1);
 
             assert(maximal.size() == 0 || maximal[0] != 0);

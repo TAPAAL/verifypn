@@ -280,6 +280,7 @@ namespace PetriEngine {
 
             inline void add_interpolant(size_t ninter)
             {
+                assert(is_sorted(interpolant.begin(), interpolant.end()));
                 assert(ninter != 0);
                 if(interpolant.size() == 0 || interpolant.back() < ninter)
                 {
@@ -292,16 +293,19 @@ namespace PetriEngine {
                     if(lb != interpolant.end() && *lb == ninter) { return; }
                     interpolant.insert(lb, ninter);
                 }
+                assert(is_sorted(interpolant.begin(), interpolant.end()));
             }
 
             inline std::vector<size_t>& get_interpolants()
             {
                 assert(interpolant.size() == 0 || interpolant[0] != 0);
+                assert(is_sorted(interpolant.begin(), interpolant.end()));
                 return interpolant;
             }
 
             inline void set_interpolants(std::vector<size_t> & interpolants)
             {
+                assert(is_sorted(interpolants.begin(), interpolants.end()));
                 assert(interpolant.size() == 0 || interpolant[0] != 0);
                 interpolant = interpolants;
                 assert(interpolant.size() == 0 || interpolant[0] != 0);

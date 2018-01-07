@@ -97,7 +97,7 @@ namespace PetriEngine {
             bool tk = false;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         protected:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
@@ -121,7 +121,7 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         protected:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
@@ -141,7 +141,7 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         protected:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
@@ -166,7 +166,7 @@ namespace PetriEngine {
             int formulaSize() const override{
                 return _expr->formulaSize() + 1;
             }
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             Expr_ptr _expr;
         };
@@ -191,7 +191,7 @@ namespace PetriEngine {
                 return _value;
             };
             Member constraint(SimplificationContext& context) const override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             int _value;
         };
@@ -225,7 +225,7 @@ namespace PetriEngine {
                 return _name;
             }
             Member constraint(SimplificationContext& context) const override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             /** Offset in marking, -1 if undefined, should be resolved during analysis */
             int _offsetInMarking;
@@ -260,9 +260,9 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
             virtual bool containsNext() const override { return _cond->containsNext(); }
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const
             {
-                return _cond->encodeSat(context, uses, incremented);
+                return _cond->encodeSat(net, context, uses, incremented);
             }
         private:
             virtual std::string op() const = 0;
@@ -385,7 +385,7 @@ namespace PetriEngine {
             
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const
             {
                 return context.bool_val(true);
             }
@@ -477,7 +477,7 @@ namespace PetriEngine {
             { return _compiled->formulaSize(); }
             bool containsNext() const override
             { return false; }
-            z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const override
+            z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const override
             {
                 assert(false);
                 return context.bool_val(false);
@@ -557,7 +557,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::AND; }
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             //int logicalOp() const;
             uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const override;
@@ -582,7 +582,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;   
             Quantifier getQuantifier() const override { return Quantifier::OR; }
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             //int logicalOp() const;
             uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const override;
@@ -655,7 +655,7 @@ namespace PetriEngine {
                                      _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
             };
             bool containsNext() const override { return false;}
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             std::vector<cons_t> _constraints;
             bool _negated = false;
@@ -723,7 +723,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             bool apply(int v1, int v2) const override;
             std::string op() const override;
@@ -742,7 +742,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             bool apply(int v1, int v2) const override;
             std::string op() const override;
@@ -760,7 +760,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             bool apply(int v1, int v2) const override;
             std::string op() const override;
@@ -778,7 +778,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             bool apply(int v1, int v2) const override;
             std::string op() const override;
@@ -796,7 +796,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             bool apply(int v1, int v2) const override;
             std::string op() const override;
@@ -813,7 +813,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) override;
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             bool apply(int v1, int v2) const override;
             std::string op() const override;
@@ -850,7 +850,7 @@ namespace PetriEngine {
             const Condition_ptr& operator[](size_t i) const { return _cond; };
             virtual bool isTemporal() const override { return _temporal;}
             bool containsNext() const override { return _cond->containsNext(); }
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             Condition_ptr _cond;
             bool _temporal = false;
@@ -889,7 +889,7 @@ namespace PetriEngine {
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const
             {
                 return context.bool_val(_value);
             }
@@ -923,7 +923,7 @@ namespace PetriEngine {
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         };
         
         class UpperBoundsCondition : public Condition
@@ -968,7 +968,7 @@ namespace PetriEngine {
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
             size_t bounds() const { return _bound; }
-            virtual z3::expr encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         private:
             std::vector<place_t> _places;
             size_t _bound = 0;

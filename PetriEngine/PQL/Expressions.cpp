@@ -858,28 +858,28 @@ namespace PetriEngine {
         /******************** Encode as SAT  ********************/
         
 
-        z3::expr OrCondition::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+        z3::expr OrCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             if(_conds.size() == 0) return context.bool_val(false);
-            auto res = _conds[0]->encodeSat(context, uses, incremented);
+            auto res = _conds[0]->encodeSat(net, context, uses, incremented);
             for(size_t i = 1 ; i < _conds.size(); ++i)
             {
-                res = res || _conds[i]->encodeSat(context, uses, incremented);
+                res = res || _conds[i]->encodeSat(net, context, uses, incremented);
             }
             return res;
         }
 
-        z3::expr AndCondition::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+        z3::expr AndCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             if(_conds.size() == 0) return context.bool_val(true);
-            auto res = _conds[0]->encodeSat(context, uses, incremented);
+            auto res = _conds[0]->encodeSat(net, context, uses, incremented);
             for(size_t i = 1 ; i < _conds.size(); ++i)
             {
-                res = res && _conds[i]->encodeSat(context, uses, incremented);
+                res = res && _conds[i]->encodeSat(net, context, uses, incremented);
             }
             return res;
         }
         
         
-        z3::expr CompareConjunction::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+        z3::expr CompareConjunction::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             if(_constraints.size() == 0) return context.bool_val(!_negated);
             auto res = context.bool_val(true);
             for(auto& c : _constraints)
@@ -901,61 +901,61 @@ namespace PetriEngine {
             return _negated ? ! res : res;
         }
 
-        z3::expr NotCondition::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
-            auto res = _cond->encodeSat(context, uses, incremented);
+        z3::expr NotCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            auto res = _cond->encodeSat(net, context, uses, incremented);
             return ! res;
         }
 
-        z3::expr NotEqualCondition::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+        z3::expr NotEqualCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
         {
-            return  _expr1->encodeSat(context, uses, incremented) != 
-                    _expr2->encodeSat(context, uses, incremented);
+            return  _expr1->encodeSat(net, context, uses, incremented) != 
+                    _expr2->encodeSat(net, context, uses, incremented);
         }
 
-        z3::expr EqualCondition::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+        z3::expr EqualCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
         {
-            return  _expr1->encodeSat(context, uses, incremented) == 
-                    _expr2->encodeSat(context, uses, incremented);
+            return  _expr1->encodeSat(net, context, uses, incremented) == 
+                    _expr2->encodeSat(net, context, uses, incremented);
         }
         
-        z3::expr LessThanCondition::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+        z3::expr LessThanCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
         {
-            return  _expr1->encodeSat(context, uses, incremented) < 
-                    _expr2->encodeSat(context, uses, incremented);
+            return  _expr1->encodeSat(net, context, uses, incremented) < 
+                    _expr2->encodeSat(net, context, uses, incremented);
         }
 
-        z3::expr LessThanOrEqualCondition::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+        z3::expr LessThanOrEqualCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
         {
-            return  _expr1->encodeSat(context, uses, incremented) <= 
-                    _expr2->encodeSat(context, uses, incremented);
+            return  _expr1->encodeSat(net, context, uses, incremented) <= 
+                    _expr2->encodeSat(net, context, uses, incremented);
         }
         
-        z3::expr GreaterThanCondition::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+        z3::expr GreaterThanCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
         {
-            return  _expr1->encodeSat(context, uses, incremented) > 
-                    _expr2->encodeSat(context, uses, incremented);
+            return  _expr1->encodeSat(net, context, uses, incremented) > 
+                    _expr2->encodeSat(net, context, uses, incremented);
         }        
 
-        z3::expr GreaterThanOrEqualCondition::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+        z3::expr GreaterThanOrEqualCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
         {
-            return  _expr1->encodeSat(context, uses, incremented) >= 
-                    _expr2->encodeSat(context, uses, incremented);
+            return  _expr1->encodeSat(net, context, uses, incremented) >= 
+                    _expr2->encodeSat(net, context, uses, incremented);
         }
 
-        z3::expr SubtractExpr::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+        z3::expr SubtractExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             auto res = context.int_val(0);
             for(auto& e : _exprs)
             {
-                res = res - e->encodeSat(context, uses, incremented);
+                res = res - e->encodeSat(net, context, uses, incremented);
             }
             return res;
         }
 
-        z3::expr PlusExpr::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+        z3::expr PlusExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             auto res = context.int_val(_constant);
             for(auto& e : _exprs)
             {
-                res = res + e->encodeSat(context, uses, incremented);
+                res = res + e->encodeSat(net, context, uses, incremented);
             }
             for(auto& i : _ids)
             {
@@ -967,11 +967,11 @@ namespace PetriEngine {
             return res;
         }
 
-        z3::expr MultiplyExpr::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+        z3::expr MultiplyExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             auto res = context.int_val(_constant);
             for(auto& e : _exprs)
             {
-                res = res * e->encodeSat(context, uses, incremented);
+                res = res * e->encodeSat(net, context, uses, incremented);
             }
             for(auto& i : _ids)
             {
@@ -983,29 +983,43 @@ namespace PetriEngine {
             return res;
         }
 
-        z3::expr MinusExpr::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
-            auto res = _expr->encodeSat(context, uses, incremented);
+        z3::expr MinusExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            auto res = _expr->encodeSat(net, context, uses, incremented);
             return context.int_val(0) - res;
         }
 
-        z3::expr LiteralExpr::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+        z3::expr LiteralExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             return context.int_val(_value);
         }
 
-        z3::expr IdentifierExpr::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+        z3::expr IdentifierExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             string name = std::to_string(_offsetInMarking) + "~i" + std::to_string(uses[_offsetInMarking]);
             incremented[_offsetInMarking] = true;
 
             return context.int_const(name.c_str());
         }
 
-        z3::expr DeadlockCondition::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
-            assert(false);
-            //TODO we need the net here
-            return context.bool_val(false);
+        z3::expr DeadlockCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            auto res = context.bool_val(true);
+            for(size_t i = 0; i < net.numberOfTransitions(); ++i)
+            {
+                auto pre = net.preset(i);
+                auto trans = context.bool_val(false);
+                for(; pre.first != pre.second; ++pre.first)
+                {
+                    string name = std::to_string(pre.first->place) + "~i" + std::to_string(uses[pre.first->place]);
+                    incremented[pre.first->place] = true;
+                    if(pre.first->inhibitor)
+                        trans = trans || (context.int_const(name.c_str()) >= context.int_val(pre.first->tokens));
+                    else
+                        trans = trans || (context.int_const(name.c_str()) < context.int_val(pre.first->tokens));
+                }
+                res = res && trans;
+            }
+            return res;
         }
 
-        z3::expr UpperBoundsCondition::encodeSat(z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+        z3::expr UpperBoundsCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             assert(false);
             //TODO we need parameter synth here!
             return context.bool_val(false);
