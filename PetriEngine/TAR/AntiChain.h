@@ -31,8 +31,6 @@ class AntiChain
         std::vector<node_t*> children;
     };
     
-//    std::unordered_map<T, std::vector<node_t*>> nmap;
-    
     public:
         AntiChain(){};
         
@@ -58,36 +56,6 @@ class AntiChain
                     }
                 }
             }
-            
-            
-            /*{
-                auto it = nmap.find(el);
-                if(it != nmap.end() && it->first == el)
-                {
-                    assert(it->second != NULL);
-                    stack<node_t*> waiting;
-                    for(auto n : it->second) waiting.push(n);
-                    while(!waiting.empty())
-                    {
-                        node_t* n = waiting.top();
-                        waiting.pop();
-                        auto sit = std::lower_bound(set.begin(), set.end(), n->key);
-                        if(sit != set.end() && *sit == n->key)
-                        {
-                            if(n->children.size() == 0)
-                            {
-                                assert(exists);
-                                return true;
-                            }
-                            else
-                            {
-                                for(node_t* c : n->children) waiting.push(c);
-                            }
-                        }
-                    }
-                }
-            }*/
-            
             return exists;
         }
         
@@ -115,36 +83,6 @@ class AntiChain
             {
                 inserted = false;
             }
-            
-            /*if(inserted) {
-                auto it = nmap.find(el);
-                node_t* from = NULL;
-                size_t index = 0;
-                if(it != nmap.end() && it->first == el)
-                {
-                    std
-                    it->second;
-                    for(; index < set.size(); ++index)
-                    {
-                        if(from->key)
-                    }
-                }
-                else
-                {
-                    from = new node_t;
-                    from->key = set[0];
-                    nmap[el] = from;
-                    ++index;
-                }
-                
-                for(; index < set.size(); ++index)
-                {
-                    next = new node_t;                    
-                    next->key = set[index];
-                    from->children.push_back(next);
-                    from = next;
-                }
-            }*/
             
             return inserted;
         }  

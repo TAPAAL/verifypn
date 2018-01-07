@@ -34,12 +34,31 @@ namespace PetriEngine {
     using namespace PQL;
     namespace Reachability {
 
+        void inline_union(std::vector<size_t>& into, const std::vector<size_t>& other)
+        {
+            into.reserve(into.size() + other.size());
+            auto iit = into.begin();
+            auto oit = other.begin();
+
+            while(oit != other.end())
+            {
+                while(iit != into.end() && *iit < *oit) ++iit;
+                if(iit == into.end())
+                {
+                    into.insert(iit, oit, other.end());
+                    break;
+                }
+                else if(*iit != *oit)
+                {
+                    iit = into.insert(iit, *oit);
+                }
+                ++oit;
+            }
+        }       
+        
         
         std::pair<bool, size_t> TARReachabilitySearch::stateForPredicate(int type, z3::expr pred, z3::context& context, size_t sim_hint, size_t simed_hint)
         {
-        //    sim_hint = 1;
-        //    simed_hint = 0;
-            clock_t begin = clock();
             Renamer renamer(context);
             z3::expr predicate = renamer.rename(pred);
 
@@ -51,10 +70,6 @@ namespace PetriEngine {
             {        
                 return std::make_pair(false, 0);   
             } 
-            /*else if(renamer.variables_seen().size() == 0)
-            {
-                return std::make_pair(false, 1);
-            }*/
 
             auto& fres = intmap[pred.hash()];
             for(el_t& r : fres)
@@ -76,20 +91,13 @@ namespace PetriEngine {
                 {
                     if(r.expr.operator Z3_ast() == predicate.operator Z3_ast())
                     {
-            //            std::cout << "MATCH\n" << r.expr << "\n #<=>#\n" <<  predicate  << std::endl;
                         found = true;
                         astate = r.state;
                         break;
                     }           
-            /*            else
-                    {
-                        std::cout << r.expr << "\n" << target << std::endl;
-                        std::cout << "NOMATCH" << std::endl;
-                    }*/
                 }
                 if(!found)
                 {
-        //        std::cout << "INSERTING " << predicate << std::endl;
                     z3::solver solver(context, "QF_LRA");
                     for(size_t hint : {sim_hint, simed_hint})
                     {
@@ -103,11 +111,6 @@ namespace PetriEngine {
                             if(solver.check() == z3::unsat)
                             {
                                 res.emplace_back(predicate, hint);
-            //                    std::cout << "UNSEEN" << std::endl;
-            //                    std::cout << opred << std::endl;
-            //                    std::cout << predicate << std::endl;
-            //                    std::cout << states[hint].interpolant << std::endl;
-                                //                    sanity();
                                 states[hint].type = states[hint].type | type;
                                 fres.emplace_back(pred, astate);
                                 return std::make_pair(true, hint);
@@ -119,33 +122,13 @@ namespace PetriEngine {
                     states.emplace_back(predicate);
                     states[astate].restricts = renamer.variables_seen();
                     states[astate].type = type;
-            //        sanity(context, trace, interpolant);
                     astate = computeSimulation(astate, sim_hint, simed_hint);
-            //        sanity(context, trace, interpolant);
-            //        sanity();
                     res.emplace_back(predicate, astate);
-            //        std::cout << "NEW" << std::endl;
-            //        std::cout << opred << std::endl;
-            //        std::cout << predicate << std::endl;
-            //        sanity(context, trace, interpolant);
                 }
             }
 
             clock_t end = clock();
-            /*if(type == 8)
-            {
-                tSimNormal += double(end - begin)/ CLOCKS_PER_SEC;
-            }
-            else if(type == 2)
-            {
-                tSimPost += double(end - begin)/ CLOCKS_PER_SEC;
-            } 
-            else if(type == 16)
-            {
-                tSimPre += double(end - begin)/ CLOCKS_PER_SEC;        
-            }*/
             fres.emplace_back(pred, astate);
-        //    sanity();
             return std::make_pair(!found, astate);
         }
 
@@ -168,19 +151,12 @@ namespace PetriEngine {
                     changed = changed || interpolant.back().second;
                 }
 
-                
-//                std::cout   << "[" << j << "]" << inter[j] << " ==> "
-//                    << interpolant.back().second << " --> "
-//                    << states[interpolant.back().second].interpolant << std::endl;
-        
-
                 if(astate == 1)
                 {
                     assert(j == 0 || i == j - 1);
                     i = j;
                     astate = interpolant.back().second;
                 }
-
             }
 
             if((size_t)from == trace.size()) return from;
@@ -197,7 +173,6 @@ namespace PetriEngine {
             {
                 if(from == 0)
                 {
-                    //assert(i + from < trace.size());
                     return std::min(i + from, trace.size() - 1);
                 }
                 else
@@ -213,7 +188,7 @@ namespace PetriEngine {
             {
                 int tpos = from + i;
 
-                if(tpos < trace.size()) trace[tpos].add_interpolant(astate);
+                if(tpos < (int)trace.size()) trace[tpos].add_interpolant(astate);
 
 
                 assert(i + 1 < interpolant.size());
@@ -271,23 +246,14 @@ namespace PetriEngine {
                 default:
                     break;
             }
-/*            std::cout << "CONSTRAINT" << std::endl;
-            std::cout << cons << std::endl;
-            std::cout << "INTERPOLANTS " << std::endl;
-            std::cout << interpolant << std::endl;
-            std::cout << "DONE" << std::endl;*/
             return range_valid; 
         }
         
         std::pair<int,bool>  TARReachabilitySearch::isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, const PQL::Condition* condition)
         {
 
-//            std::cout << "IS VALID " << std::endl;
-
             std::vector<z3::expr> encoded = {context.bool_val(true)};
             std::vector<int32_t> uses(_net.numberOfPlaces(), 0);
-//            std::cout << "TRACE:";
-//            std::cout << std::endl;
             std::vector<bool> in_query(uses.size(), false);
             size_t m = 0;
             for(auto& t : trace)
@@ -297,13 +263,11 @@ namespace PetriEngine {
                 {
                     continue;
                 }
-//                std::cout << _net.transitionNames()[t.get_edge_cnt() - 1] << std::endl;
-
                 auto pre = _net.preset(t.get_edge_cnt() - 1);
                 std::string mname = "m~i" + to_string(m);                
                 auto mult = context.int_const(mname.c_str());
                 auto begin = mult >= 1;
-                std::vector<size_t> inhibs;
+                bool has_inhib = false;
                 for(;pre.first != pre.second; ++pre.first)
                 {
                     string name = std::to_string(pre.first->place) + "~i" + std::to_string(uses[pre.first->place]);
@@ -312,7 +276,7 @@ namespace PetriEngine {
                     {
                         in_query[pre.first->place] = true;
                         begin = begin && (ppre < context.int_val(pre.first->tokens));
-                        inhibs.push_back(pre.first->inhibitor);
+                        has_inhib = true;
                     }
                     else
                     {
@@ -320,24 +284,15 @@ namespace PetriEngine {
                         string nextname = to_string(pre.first->place) + "~i" + to_string(uses[pre.first->place]);
                         auto ppost = context.int_const(nextname.c_str());
                         
-//                        begin = begin && ppost >= context.int_val(0);
                         begin = begin && ppre >= (context.int_val(pre.first->tokens) * mult) ;
                         begin = begin && (ppost == (ppre - (mult * context.int_val(pre.first->tokens))));
-
-//                        std::cout << "\t" << _net.placeNames()[pre.first->place] << "(" << pre.first->place << ")" 
-//                                << " CONS " << pre.first->tokens << std::endl;
                     }
                 }
                 auto post = _net.postset(t.get_edge_cnt() - 1);
-                auto iit = inhibs.begin();
+
                 for(; post.first != post.second; ++post.first)
                 {
-                    while(iit != inhibs.end() && *iit < post.first->place) ++iit;
-                    if(iit != inhibs.end() && *iit == post.first->place)
-                    {
-                        begin = begin && mult == 1;
-                        iit = inhibs.end();
-                    }
+                   
                     string name = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
                     ++uses[post.first->place];
                     string nextname = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
@@ -346,9 +301,11 @@ namespace PetriEngine {
                     begin = begin && ppost >= (mult*context.int_val(post.first->tokens));
                     begin = begin && ppost == (ppre + (mult*context.int_val(post.first->tokens)));
                     
-//                        std::cout << "\t" << _net.placeNames()[post.first->place] << "(" << post.first->place << ")" 
-//                                << " PROD " << post.first->tokens << std::endl;
                 }
+                
+                if(has_inhib)
+                    begin = begin && mult == 1;
+                
                 if(_kbound > 0)
                 {
                     auto sum = context.int_val(0);
@@ -373,14 +330,8 @@ namespace PetriEngine {
                 {
                     string name = to_string(i) + "~i0";
                     encoded[0] = encoded[0] && (context.int_const(name.c_str()) == context.int_val(initial.marking()[i]));
-                    //std::cout << "\t" << _net.placeNames()[i] << "(" << i << ")" << " INIT " << initial.marking()[i] << std::endl;                    
                 }
             }
-
-/*            for(auto& e : encoded)
-            {
-                std::cout << e << std::endl;
-            }*/
             const int to = encoded.size();
             int from = 0;
             int nvalid = to;
@@ -388,10 +339,7 @@ namespace PetriEngine {
             while(from < to)
             {
                 z3::expr_vector interpolant(context); 
-                clock_t begin = clock();
                 bool res = findValidRange(from, to, context, interpolant, encoded);
-                clock_t end = clock();
-                //tvalidRange += double(end - begin)/ CLOCKS_PER_SEC;
                 if(res) 
                 {
                     return std::pair<int,bool>(nvalid, from == 0);
@@ -401,29 +349,20 @@ namespace PetriEngine {
                     valid = false;
                 }
 
-
-                //    std::cout << interpolant.size() << std::endl;
                 if(interpolant.size() == 0)
                 {
                     trace.clear();
                     return std::pair<int,bool>(-1,false);
                 }
-/*                std::cerr << "INTERPOLANT" << std::endl;
-                std::cerr << interpolant << std::endl;
-                std::cerr << "DONE" << std::endl;
-  */
-                {
-                    clock_t begin = clock();
-                    from = constructAutomata(from, trace, interpolant, context);
-                    clock_t end = clock();
-                    //tconstructAutomata += double(end - begin)/ CLOCKS_PER_SEC;
-                }
+                
+                from = constructAutomata(from, trace, interpolant, context);
+                
                 assert(!valid);
                 from += 1;
                 nvalid = std::min(nvalid, from);
-        #ifdef NOKLEENE
+#ifdef NOKLEENE
                 break;
-        #endif
+#endif
             }
 
             return std::pair<int,bool>(nvalid,valid);
@@ -457,9 +396,7 @@ namespace PetriEngine {
                 }
             }
             if(waiting.size() == 0) return;
-            //sanity(waiting);
             waiting.back().reset_edges(_net);
-//            sanity(waiting);
         }
         
         
@@ -468,7 +405,6 @@ namespace PetriEngine {
             bool popped = false;
             while(waiting.back().get_edge_cnt() > _net.numberOfTransitions()) // we have tried all transitions for this state-pair!
             {
-//                ++stepno;
                 assert(waiting.size() > 0);
                 waiting.pop_back(); 
                 popped = true;
@@ -484,29 +420,19 @@ namespace PetriEngine {
 
         size_t TARReachabilitySearch::computeSimulation(size_t index, size_t sim_hint, size_t simed_hint)
         {
-        #ifndef LATTICE
-        //    clock_t end = clock();
-        //    tSim += double(end - begin)/ CLOCKS_PER_SEC;
+#ifndef LATTICE
             return index;
-        #else
-            clock_t begin = clock();
-
-
+#else
             AutomataState& state = states[index];
             z3::context& ctx = state.interpolant.ctx();
             z3::solver solver(ctx);
-        //    std::cout << "SIM FOR : " << state.interpolant << std::endl;
             if(index != sim_hint)
             {
                 auto lb = std::lower_bound(state.simulates.begin(), state.simulates.end(), sim_hint);
                 if(lb == state.simulates.end() || *lb != sim_hint)
                 {
                     state.simulates.insert(lb, sim_hint);
-                    std::vector<size_t> b2;
-                    std::set_union( state.simulates.begin(), state.simulates.end(), 
-                                    states[sim_hint].simulates.begin(), states[sim_hint].simulates.end(),
-                                    std::back_inserter(b2));
-                    state.simulates.swap(b2);
+                    inline_union(state.simulates, states[sim_hint].simulates);
                 }
             }
 
@@ -516,18 +442,13 @@ namespace PetriEngine {
                 if(lb == state.simulators.end() || *lb != simed_hint)
                 {
                     state.simulators.insert(lb, simed_hint);
-                    std::vector<size_t> b2;
-                    std::set_union( state.simulators.begin(), state.simulators.end(), 
-                                    states[simed_hint].simulators.begin(), states[simed_hint].simulators.end(),
-                                    std::back_inserter(b2));
-                    state.simulators.swap(b2);
+                    inline_union(state.simulators, states[simed_hint].simulators);
                 }
             }
 
             for(size_t i = 2; i < states.size(); ++i)
             {
                 AutomataState& other = states[i];
-        //        if((state.type & states[i].type) == 0) continue;
                 if(i == index) continue;
                 auto lb = std::lower_bound(state.simulates.begin(), state.simulates.end(), i);
                 if(lb != state.simulates.end() && *lb == i && i != sim_hint) continue;
@@ -535,30 +456,18 @@ namespace PetriEngine {
                 if(lb2 != state.simulators.end() && *lb2 == i && i != simed_hint) continue;
                 bool same = true;
                 if(
-        //            (state.type == 2 ||
-        //            (other.type % state.type) != 0)
-                    /*&&*/ (
-//                        (!state.only_discrete || other.only_discrete) &&
                         state.restricts.size() >= other.restricts.size() &&
                         std::includes(  state.restricts.begin(), state.restricts.end(),
-                                    other.restricts.begin(), other.restricts.end())))
+                                    other.restricts.begin(), other.restricts.end()))
                 {
-                    clock_t sbegin = clock();
                     solver.reset();
                     solver.add(state.interpolant && (!other.interpolant));
                     auto r = solver.check();
-                    clock_t send = clock();
-//                    tSims += double(send - sbegin)/ CLOCKS_PER_SEC;
                     if(r == z3::unsat)
                     {
                         // state simulates other (the proof used in state is stronger)
                         if(lb == state.simulates.end() || *lb != i) state.simulates.insert(lb, i);
-                        std::vector<size_t> b2;
-                        std::set_union( state.simulates.begin(), state.simulates.end(), 
-                                        other.simulates.begin(), other.simulates.end(),
-                                        std::back_inserter(b2));
-                        state.simulates.swap(b2);
-            //            assert(state.simulators.size() == 0 || state.simulators[0] != 0);
+                        inline_union(state.simulates, other.simulates);
                     }
                     else
                     {
@@ -569,39 +478,22 @@ namespace PetriEngine {
                 {
                     same = false;
                 }
-        //        else
-                if( /*(    state.type == 16 ||
-                        (state.type == 8  && ((other.type % (2 + 8)) != 0)) 
-                        (state.type == 2  && ((other.type %  2)      != 0))
-                    )
-                        (state.type == 16 ||
-                        (other.type % state.type) != 0)
-                    && */(
-//                    (!other.only_discrete || state.only_discrete) &&
+                if( 
                     state.restricts.size() <= other.restricts.size() &&
                     std::includes(  other.restricts.begin(), other.restricts.end(),
-                                    state.restricts.begin(), state.restricts.end())))
+                                    state.restricts.begin(), state.restricts.end()))
                 {
-                    clock_t sbegin = clock();
                     solver.reset();
                     solver.add((!state.interpolant) && other.interpolant);
                     auto r = solver.check();
-                    clock_t send = clock();
-//                    tSimed += double(send - sbegin)/ CLOCKS_PER_SEC;
                     if(r == z3::unsat)
                     {
                         if(!same)
                         {
                             // state is simulated by states[i] (the proof used in state is weaker)
                             if(lb2 == state.simulators.end() || *lb2 != i) state.simulators.insert(lb2, i);
-
-                            std::vector<size_t> b2;
-                            std::set_union( state.simulators.begin(), state.simulators.end(), 
-                                            other.simulators.begin(), other.simulators.end(),
-                                            std::back_inserter(b2));
-                            state.simulators.swap(b2);
+                            inline_union(state.simulators, other.simulators);
                         }
-        //                assert(state.simulators.size() == 0 || state.simulators[0] != 0);
                     }
                     else
                     {
@@ -611,15 +503,8 @@ namespace PetriEngine {
                     {
                         other.type = other.type | state.type;
                         states.erase(states.begin() + index);
-                        clock_t end = clock();
-//                        tSim += double(end - begin)/ CLOCKS_PER_SEC;
-        //                sanity();
                         return i;
                     }
-        /*            else
-                    {
-                        // Proofs are incomparable.
-                    }*/
                 }
             }
 
@@ -636,9 +521,6 @@ namespace PetriEngine {
             }
             assert(states[1].simulates.size() == 0);
             assert(states[0].simulators.size() == 0);    
-            clock_t end = clock();
-        //    tSim += double(end - begin)/ CLOCKS_PER_SEC;
-        //    sanity();
             return index;
         #endif
         }
@@ -675,8 +557,6 @@ namespace PetriEngine {
             /* Explore unexplored states.
              */
 
-    
-    
             bool all_covered = true;
             size_t stepno = 0;
 
@@ -690,76 +570,30 @@ namespace PetriEngine {
                 // initialize
                 {
                     state_t state;
-                    //state.location = saveLocs(successor->state);
                     state.reset_edges(_net);
                     state.set_interpolants(initial_interpols);
                     waiting.push_back(state);
                 }
                 while (!waiting.empty()) 
                 {
-        //            sanity(waiting);
-                    /*if((stepno % 1000) == 0)
-                    {
-                        cout << stepno << " : " << waiting.size() << " : " << waiting[0].get_interpolants().size() << " : " << states.size() << std::endl;
-                        printStats();
-                    }*/
-                    
-/*                    std::cout << "NTRACE:";
-                    for(auto& t : waiting) {
-                        if(t.get_edge_cnt() > _net.transitionNames().size())
-                        {
-                            std::cout << "DONE" << std::endl;
-                        }
-                        else
-                        {
-                            std::cout << "(" << t.get_edge_cnt() << ")";
-                            if(t.get_edge_cnt() > 0)
-                                std::cout<< _net.transitionNames()[t.get_edge_cnt() - 1] << ",";
-                            else
-                                std::cout<< "TEST" << ",";
-                        }
-                    }
-                    std::cout << std::endl;
-*/
-                    {
-                        clock_t b = clock();
-                        bool r = popDone(waiting, /*symstate,*/ stepno);
-                        //sanity(waiting);
-                        clock_t e = clock();
-                        //tpop += double(e-b)/CLOCKS_PER_SEC;
-                        if(r)
-                        {
-  //                          std::cout << "POP DONE" << std::endl;
-                            continue;  // we have reached the end of the edge-iterator for this part of the trace
-                        }                
-                    }
+                    if(popDone(waiting, stepno)) 
+                        continue;  // we have reached the end of the edge-iterator for this part of the trace
 
                     ++stepno;
 
                     assert(waiting.size() > 0 );
                     state_t& state = waiting.back();
                     std::vector<size_t> nextinter;
+                    if(checkInclussion(state, nextinter, solver_context)) // Check if the next state makes the interpolant automata accept.
                     {
-                        clock_t b = clock();
-        //                std::cout << "ITT " << stepno << std::endl;
-                        bool r = checkInclussion(state, nextinter, solver_context);
-                        clock_t e = clock();
-    //                    tinccheck += double(e-b)/CLOCKS_PER_SEC;
-                        if(r) // Check if the next state makes the interpolant automata accept.
-                        {
-//                            std::cout << "GOT ACCEPT" << std::endl;
-                            state.next_edge(_net);
-                            continue;
-                        }
+                        state.next_edge(_net);
+                        continue;
                     }
 
                     bool next_edge = false;
                     if(waiting.back().get_edge_cnt() == 0) // check if proposition is satisfied
                     {
-                        clock_t begin = clock();
                         std::pair<int,bool> res = isValidTrace(waiting, solver_context, false, initial, query.get()); 
-                        clock_t end = clock();
-        //                tcheckTrace += double(end - begin) / CLOCKS_PER_SEC;
                         if(res.second)
                         {
                             std::cerr << "VALID TRACE FOUND!" << std::endl;
@@ -777,27 +611,6 @@ namespace PetriEngine {
                             all_covered = false;
                             assert(waiting.size() > 0);
                             initial_interpols = waiting[0].get_interpolants();
-/*                            std::cout << "AUTOMATA" << std::endl;
-                            for(size_t i = 0; i < states.size(); ++i)
-                            {
-                                std::cout << "[" << i << "] : " << (states[i].is_accepting() ? "ACCEPT " : "") << std::endl;
-                                std::cout << "\t" << states[i].interpolant << std::endl;
-                                for(AutomataEdge& e : states[i].get_edges())
-                                {
-                                    if(e.edge > 0)
-                                        std::cout << "\t" << _net.transitionNames()[e.edge-1] << "(" << e.edge << ") --> [";
-                                    else
-                                        std::cout << "\tTEST(" << e.edge << ") --> [";
-                                    for(auto& to : e.to) std::cout << to << ",";
-                                    std::cout << "]" << std::endl;
-                                }
-                            }
-                            
-                            std::cout << "INITIAL " ;
-                            for(auto& s : initial_interpols) std::cout << s << ",";
-                            std::cout << std::endl;
-                            std::cout << "DONE" << std::endl;
- */
                             continue;
                         }
                     }
@@ -808,23 +621,17 @@ namespace PetriEngine {
 
                     if(next_edge)
                     {
-    //                    sanity(waiting);
                         uint32_t dummy = state.get_edge_cnt() == 0 ? 0 : 1;
                         state_t next;
-                        clock_t b = clock();
-                        size_t tmp = 0; 
                         bool res = checked.subsumed(dummy, nextinter);
-                        clock_t e = clock();
-    //                    tantiChain += double(e-b)/CLOCKS_PER_SEC;
                         if(res)
                         {
                             waiting.back().next_edge(_net);
                         }
                         else
                         {
-                            clock_t b = clock();                    
                             std::vector<size_t> minimal = nextinter;
-        #ifdef ANTISIM
+#ifdef ANTISIM
                             std::vector<size_t> buffer;
                             size_t cur = 2;
                             while(true)
@@ -839,66 +646,52 @@ namespace PetriEngine {
                                 minimal.swap(buffer);
                                 ++cur;
                             }
-        #endif      
+#endif      
                             checked.insert(dummy, minimal);
-                            //                    assert(inserted);
-                            clock_t e = clock();
-    //                        tantiInsert += double(e-b)/CLOCKS_PER_SEC;
                             next.reset_edges(_net);
                             next.set_interpolants(minimal);  
                             waiting.push_back(next);
                         }
                     }
                 }
-//            ++oloops;
-                //std::cout << "### RESTART !! " << std::endl;
             } while(!all_covered);
 
-            //std::cout << "STEPS : " << stepno << std::endl;
             intmap.clear();
             states.clear();
-            //    std::cout << "STEPS : " << stepno << std::endl;
-        //    std::cout << "INTERPOLANT AUTOMATAS : " << waiting[0].get_interpolants().size() << std::endl;
+            std::cout << "STEPS : " << stepno << std::endl;
+            std::cout << "INTERPOLANT AUTOMATAS : " << initial_interpols.size() << std::endl;
             return false;            
         }
-        
+
         bool TARReachabilitySearch::checkInclussion(state_t& state, std::vector<size_t>& nextinter, z3::context& ctx)
         {
-         //   Encoder enc(ctx, *system.get());
-        //    enc.reset();
-        //    z3::expr dv = enc.delay_var();
-        //    z3::expr edge = encodeEdges(ctx, enc, state.get_edge_cnt(), symstate);
-
-            if(nextinter.size() == 0 || nextinter[0] != 1) nextinter.insert(nextinter.begin(), 1);
-        //    Renamer rn(ctx);
-        //    z3::solver solver(ctx, "QF_LRA");
-            std::vector<size_t> maximal = state.get_interpolants();
-        #ifdef ANTISIM
-            assert(is_sorted(maximal.begin(), maximal.end()));
-            if(maximal.size() == 0 || maximal[0] != 1) maximal.insert(maximal.begin(), 1);
-
-            assert(maximal.size() == 0 || maximal[0] != 0);
-            assert(is_sorted(maximal.begin(), maximal.end()));
-            for(size_t i : state.get_interpolants())
+#ifdef ANTISIM
+            auto maximal = expandSimulation(state.get_interpolants());
+#else
+            auto maximal = state.get_interpolants();
+#endif
+            // if NFA accepts the trace after this instruction, abort.
+            if(followSymbol(maximal, nextinter, state.get_edge_cnt()))
             {
-                std::vector<size_t> buffer;
-                std::set_union(states[i].simulates.begin(), states[i].simulates.end(),
-                                maximal.begin(), maximal.end(), std::back_inserter(buffer));
-                maximal.swap(buffer);
-                assert(maximal.size() == 0 || maximal[0] != 0);
+                return true;
             }
-        #endif
 
-/*            std::cout << "FROM INTER IS ";
-            for(size_t j : state.get_interpolants()) std::cout << j << ", ";
-            std::cout << std::endl << " TO INTER IS ";
-            for(size_t j : maximal) std::cout << j << ", ";
-            std::cout << std::endl;
-*/
-            assert(is_sorted(maximal.begin(), maximal.end()));
-            for(size_t i : maximal)
+#ifdef NOCHANGE
+            addNonChanging(state, maximal, nextinter);
+#endif
+        
+#ifdef ANTISIM
+            nextinter = expandSimulation(nextinter);
+#endif
+            return false;
+        }
+        
+        bool TARReachabilitySearch::followSymbol(std::vector<size_t>& from, std::vector<size_t>& nextinter, size_t symbol)
+        {
+            if(nextinter.size() == 0 || nextinter[0] != 1) nextinter.insert(nextinter.begin(), 1);
+            assert(is_sorted(from.begin(), from.end()));
+            for(size_t i : from)
             {
-
                 if(i == 0)
                 {
                     assert(false);
@@ -907,7 +700,6 @@ namespace PetriEngine {
                 AutomataState& as = states[i];
                 if(as.is_accepting())
                 {
-//                    std::cout << "ACCEPTING NEXT " << i << std::endl;
                     assert(false);
                     break;
                 }
@@ -918,79 +710,69 @@ namespace PetriEngine {
                     if(lb == nextinter.end() || *lb != i) nextinter.insert(lb, i);
                 }
 
-                /*std::cout << "FROM " << &state << std::endl;
-                std::cout << "#####LOOKING FOR " << state.get_edge_cnt() << " -->   " << std::endl;
-                auto it = as.get_edges().begin();
-                while(it != as.get_edges().end()) {
-                    std::cout << "SKIP " << std::endl;
-                    std::cout << it->edge << std::endl;
-                    ++it;
-                }*/
-                {
-                    auto it = as.first_edge(state.get_edge_cnt());
-                    //std::cout << (cit - as.get_edges().begin()) << " VS " << (it - as.get_edges().begin()) << std::endl;
-                    //assert(cit == as.get_edges().end() || it == cit);
+                auto it = as.first_edge(symbol);
 
-                    while(it != as.get_edges().end())
+                while(it != as.get_edges().end())
+                {
+                    if(it->edge != symbol)    { break; }
+                    AutomataEdge& ae = *it;
+                    ++it;
+                    assert(ae.to.size() > 0);
+                    auto other = nextinter.begin();
+                    auto next = ae.to.begin();
+                    if(*next == 0) 
                     {
-                        if(it->edge != state.get_edge_cnt())    { break; }
-            //            std::cout << "OK!" << std::endl;
-                        AutomataEdge& ae = *it;
-                        ++it;
-                        assert(ae.to.size() > 0);
-                        auto other = nextinter.begin();
-                        auto next = ae.to.begin();
-                        if(*next == 0) 
+                        return true;
+                    }
+                    for(;next != ae.to.end(); ++next)
+                    {
+                        while(*other < *next && other != nextinter.end())
                         {
-//                            std::cout << "[" << i << "]" << " --> " << ae.edge << " " << *next << std::endl;
-                            return true;
+                            ++other;
                         }
-                        for(;next != ae.to.end(); ++next)
+                        if(other != nextinter.end() && *next == *other)
                         {
-                            while(*other < *next && other != nextinter.end())
+                            ++other;
+                        }
+                        else
+                        {
+                            other = nextinter.insert(other, *next);
+                            assert(*next < states.size());
+                            if(states[*next].simulates.size() > 0)
                             {
-                                ++other;
-                            }
-                            if(other != nextinter.end() && *next == *other)
-                            {
-                                ++other;
+                                inline_union(nextinter, states[*next].simulates);
+                                other = std::lower_bound(nextinter.begin(), nextinter.end(), (*next) + 1);
                             }
                             else
                             {
-                                other = nextinter.insert(other, *next);
-                                assert(*next < states.size());
-                                if(states[*next].simulates.size() > 0)
-                                {
-                                    std::vector<size_t> buffer;
-                                    std::set_union( nextinter.begin(), nextinter.end(),
-                                                    states[*next].simulates.begin(), states[*next].simulates.end(),
-                                                    std::back_inserter(buffer));
-                                    nextinter.swap(buffer);
-                                    other = std::lower_bound(nextinter.begin(), nextinter.end(), (*next) + 1);
-                                }
-                                else
-                                {
-                                    ++other;
-                                }
+                                ++other;
                             }
-                            assert(nextinter.size() == 0 || nextinter[0] != 0);
                         }
-     
+                        assert(nextinter.size() == 0 || nextinter[0] != 0);
                     }
-        #ifndef NDEBUG
-                    assert(is_sorted(as.get_edges().begin(), as.get_edges().end()));
-
-                    while(it != as.get_edges().end())
-                    {
-                        assert(it->edge != state.get_edge_cnt());
-                        ++it;
-                    }
-        #endif
                 }
             }
+            return false;            
+        }
+        
+        std::vector<size_t> TARReachabilitySearch::expandSimulation(std::vector<size_t>& org)
+        {
+            std::vector<size_t> maximal = org;
+            assert(is_sorted(maximal.begin(), maximal.end()));
+            if(maximal.size() == 0 || maximal[0] != 1) maximal.insert(maximal.begin(), 1);
 
-
-        #ifdef NOCHANGE
+            assert(maximal.size() == 0 || maximal[0] != 0);
+            assert(is_sorted(maximal.begin(), maximal.end()));
+            for(size_t i : org)
+            {
+                inline_union(maximal, states[i].simulates);
+            }            
+            return maximal;
+        }
+        
+        
+        void TARReachabilitySearch::addNonChanging(state_t& state, std::vector<size_t>& maximal, std::vector<size_t>& nextinter)
+        {
             bool loaded = false;
             auto next = nextinter.begin();
             std::vector<size_t> writes;
@@ -1004,15 +786,12 @@ namespace PetriEngine {
                     continue;
                 }
                 AutomataState& as = states[i];
-        //            assert(as.restricts.size() > 0);
                 while(next != nextinter.end() && *next < i) { ++next; };
                 if(next == nextinter.end() || *next != i)
                 {
                     // added non-interfering
                     if(!loaded)
                     {
-//                        std::cout << "MODIFIES [" << _net.transitionNames()[state.get_edge_cnt() - 1] << "] : " << std::endl << "\t";
-
                         auto pre = _net.preset(state.get_edge_cnt() - 1);
                         auto post = _net.postset(state.get_edge_cnt() - 1);
                         auto lb = writes.begin();
@@ -1034,16 +813,11 @@ namespace PetriEngine {
                         assert(std::is_sorted(writes.begin(), writes.end()));
 
                         loaded = true;
-//                        for(auto i : writes) std::cout << i <<  ",";
-//                        std::cout << std::endl;
                     }
     
                     bool ok = true;
                     auto iw = writes.begin(); 
                     auto ic = as.restricts.begin();
-  /*                  std::cout << "INVARIANT [" << as.interpolant << "] : " << std::endl << "\t";
-                    for(auto i : as.restricts) std::cout << i <<  ",";
-                    std::cout << std::endl;*/
                     while(iw != writes.end() && ic != as.restricts.end())
                     {
                         if(*ic < *iw)
@@ -1061,46 +835,15 @@ namespace PetriEngine {
                     }
                     if(ok) 
                     {
-//                        std::cout << "OK, NO CHANGE" << std::endl;
                         nextinter.insert(next, i);
                         if(as.simulates.size() > 0)
                         {
-                            std::vector<size_t> buffer;
-                            std::set_union( nextinter.begin(), nextinter.end(),
-                                            as.simulates.begin(), as.simulates.end(),
-                                            std::back_inserter(buffer));
-                            assert(buffer[0] != 0);
-                            nextinter.swap(buffer);
+                            inline_union(nextinter, as.simulates);
                             next = std::lower_bound(nextinter.begin(), nextinter.end(), i + 1);
                         }
                     }
                 }
-            }
-        #endif
-        
-/*            std::cout << "NEXT INTER IS ";
-            for(size_t j : nextinter) std::cout << j << ", ";
-            std::cout << std::endl;
-*/
-        #ifdef ANTISIM
-        //#ifndef NDEBUG
-            maximal.clear();
-            maximal = nextinter;
-            if(maximal.size() == 0 || maximal[0] != 1) maximal.insert(maximal.begin(), 1);
-
-            for(size_t i : nextinter)
-            {
-                std::vector<size_t> buffer;
-                std::set_union(states[i].simulates.begin(), states[i].simulates.end(),
-                                maximal.begin(), maximal.end(), std::back_inserter(buffer));
-                maximal.swap(buffer);
-            }
-        //    assert(maximal.size() == nextinter.size());
-            maximal.swap(nextinter);
-        //#endif
-        #endif
-
-            return false;
+            }            
         }
         
         void TARReachabilitySearch::printTrace(waiting_t& stack)
@@ -1187,15 +930,9 @@ namespace PetriEngine {
                 {
                     EvaluationContext ec(state.marking(), &_net);
                     if(queries[i]->evaluate(ec) == Condition::RTRUE)
-                    {
                         results[i] = printQuery(queries[i], i, ResultPrinter::Satisfied);
-//                        std::cout << queries[i]->toString() << std::endl;
-//                        state.print(_net);
-                    }
                     else
-                    {
                         alldone = false;
-                    }
                 }
             }  
             return alldone;

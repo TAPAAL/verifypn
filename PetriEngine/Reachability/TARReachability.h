@@ -45,6 +45,10 @@ namespace PetriEngine {
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
                 bool printstats, bool printtrace);
+        protected:
+            virtual void addNonChanging(state_t& state, std::vector<size_t>& maximal, std::vector<size_t>& nextinter);
+            virtual std::vector<size_t> expandSimulation(std::vector<size_t>& from);
+            virtual bool followSymbol(std::vector<size_t>& from, std::vector<size_t>& nextinter, size_t symbol);
         private:
             typedef std::vector<state_t> waiting_t;
             void printTrace(waiting_t& stack);
@@ -54,6 +58,7 @@ namespace PetriEngine {
             size_t computeSimulation(size_t index, size_t sim_hint = 1, size_t simed_hint = 0);
             bool popDone(waiting_t& waiting, size_t& stepno);
             bool checkInclussion(state_t& state, std::vector<size_t>& nextinter, z3::context& ctx);
+
             void handleInvalidTrace(waiting_t& waiting, int nvalid);
             std::pair<int,bool>  isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, const PQL::Condition* condition);
             bool findValidRange( int& from, 

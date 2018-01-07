@@ -148,13 +148,16 @@ namespace PetriEngine {
             {
                 AutomataEdge edge(e);
                 auto lb = std::lower_bound(edges.begin(), edges.end(), edge);
+#ifndef NDEBUG
                 bool isnew = false;
-
+#endif
                 if(lb == edges.end() || *lb != edge)
                 {
                     assert(lb == edges.end() || *lb != edge);
                     lb = edges.insert(lb, edge);
+#ifndef NDEBUG
                     isnew = true;
+#endif
                  }
                 assert(*lb == edge);
                 assert(is_sorted(edges.begin(), edges.end()));
