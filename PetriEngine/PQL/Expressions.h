@@ -971,7 +971,7 @@ namespace PetriEngine {
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
             virtual void setUpperBound(size_t bound)
             {
-                _bound = bound;
+                _bound = std::max(_bound, bound);
             }
         private:
             std::vector<place_t> _places;

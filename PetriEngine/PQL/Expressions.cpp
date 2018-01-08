@@ -1028,7 +1028,7 @@ namespace PetriEngine {
                 incremented[p._place] = true;
                 res = res + context.int_const(name.c_str());
             }
-            return res <= context.int_const("~b");
+            return res >= context.int_const("~b");
         }
 
         /******************** Apply (BinaryExpr subclasses) ********************/

@@ -292,7 +292,7 @@ namespace PetriEngine {
             z3::tactic eqs(context, "solve-eqs");
             z3::tactic simplify(context, "ctx-solver-simplify");
             z3::goal g(context);
-            g.add(qf);
+            g.add(z3::implies(!param_reach, qf));
             z3::apply_result res = qe.apply(g);
             auto result = context.bool_val(false);
             for(size_t i = 0; i < res.size(); ++i)
@@ -626,7 +626,6 @@ namespace PetriEngine {
                                         std::vector<ResultPrinter::Result>& results,
                                         bool printstats, bool printtrace, Structures::State& initial)
         {
-
             
             // Construct our constraints
             z3::config config;
@@ -652,7 +651,6 @@ namespace PetriEngine {
             std::vector<bool> in_query(_net.numberOfPlaces(), false);
             std::vector<int32_t> uses(_net.numberOfPlaces(), 0);
             auto param = solver_context.bool_val(false);//solver_context.int_val(0) <= solver_context.int_const("~b");
-            std::cout << param << std::endl;
             auto sat_query = query->encodeSat(_net, solver_context, uses, in_query);
             { // try to simplify the proposition more!
                 z3::tactic simplify(solver_context, "ctx-solver-simplify");
@@ -788,6 +786,8 @@ namespace PetriEngine {
             std::cout << "INTERPOLANT AUTOMATAS : " << initial_interpols.size() << std::endl;
             if(auto upper = dynamic_cast<PQL::UpperBoundsCondition*>(query.get()))
             {
+                EvaluationContext eval(initial.marking(),&_net);
+                upper->evaluate(eval);
                 auto str = param.to_string();
                 size_t bound = 0;
                 if(str.compare("false") != 0)
