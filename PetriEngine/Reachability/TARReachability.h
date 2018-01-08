@@ -49,6 +49,9 @@ namespace PetriEngine {
             virtual void addNonChanging(state_t& state, std::vector<size_t>& maximal, std::vector<size_t>& nextinter);
             virtual std::vector<size_t> expandSimulation(std::vector<size_t>& from);
             virtual bool followSymbol(std::vector<size_t>& from, std::vector<size_t>& nextinter, size_t symbol);
+            z3::expr computeParameters(
+                z3::context& context, std::vector<z3::expr>& encoded, z3::expr& param_reach, 
+                const std::vector<uint32_t>&, const std::vector<bool>& inq, const std::vector<bool>& read);
         private:
             typedef std::vector<state_t> waiting_t;
             void printTrace(waiting_t& stack);
@@ -60,7 +63,7 @@ namespace PetriEngine {
             bool checkInclussion(state_t& state, std::vector<size_t>& nextinter, z3::context& ctx);
 
             void handleInvalidTrace(waiting_t& waiting, int nvalid);
-            std::pair<int,bool>  isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, z3::expr& query, const std::vector<bool>& inq);
+            std::pair<int,bool>  isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, z3::expr& query, const std::vector<bool>& inq, z3::expr& param);
             bool findValidRange( int& from, 
                                             const int to, 
                                             z3::context& context, 

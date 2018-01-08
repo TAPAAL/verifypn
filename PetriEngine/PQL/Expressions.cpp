@@ -1020,9 +1020,15 @@ namespace PetriEngine {
         }
 
         z3::expr UpperBoundsCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
-            assert(false);
-            //TODO we need parameter synth here!
-            return context.bool_val(false);
+            auto res = context.int_val(0);
+            
+            for(auto& p : _places)
+            {
+                string name = std::to_string(p._place) + "~i" + std::to_string(uses[p._place]);
+                incremented[p._place] = true;
+                res = res + context.int_const(name.c_str());
+            }
+            return res <= context.int_const("~b");
         }
 
         /******************** Apply (BinaryExpr subclasses) ********************/

@@ -24,6 +24,7 @@
 #include "../PQL/Contexts.h"
 #include "../TAR/AntiChain.h"
 #include "../TAR/Renamer.h"
+#include "PetriEngine/PQL/Expressions.h"
 
 #define LATTICE
 #define NOCHANGE
@@ -248,8 +249,76 @@ namespace PetriEngine {
             }
             return range_valid; 
         }
+
+        z3::expr TARReachabilitySearch::computeParameters(
+                z3::context& context, 
+                std::vector<z3::expr>& encoded, 
+                z3::expr& param_reach, const std::vector<uint32_t>& used, const std::vector<bool>& inq, const std::vector<bool>& read)
+        {
+            z3::expr cons = context.bool_val(true);
+            for(size_t i = 0; i < encoded.size(); ++i)
+            {
+                cons = cons && encoded[i];
+            }
+
+
+            z3::expr_vector names(context);
+            for(size_t i = 0; i < used.size(); ++i)
+            {
+                if(used[i] > 0)
+                {
+                    for(size_t n = 0; n <= used[i]; ++n)
+                    {
+                        string name = to_string(i) + "~i" + to_string(n);
+                        names.push_back(context.int_const(name.c_str()));
+                    }
+                }
+                else if(inq[i] || read[i])
+                {
+                    string name = to_string(i) + "~i0";
+                    names.push_back(context.int_const(name.c_str()));                    
+                }
+            }
+            
+            for(size_t i = 0; i < encoded.size(); ++i)
+            {
+                std::string mname = "m~i" + to_string(i);                
+                names.push_back(context.int_const(mname.c_str()));
+            }
+
+
+            z3::expr qf = z3::exists(names, cons);
+            z3::tactic qe(context, "qe2");
+            z3::tactic eqs(context, "solve-eqs");
+            z3::tactic simplify(context, "ctx-solver-simplify");
+            z3::goal g(context);
+            g.add(qf);
+            z3::apply_result res = qe.apply(g);
+            auto result = context.bool_val(false);
+            for(size_t i = 0; i < res.size(); ++i)
+            {
+                z3::goal g2 = res[i];
+                if(g2.size() == 0)
+                {
+                    return context.bool_val(true);
+                }
+                else
+                {
+                    result = result || g2.as_expr();
+                }
+            }
+
+            {
+                z3::goal g2(context);
+                g2.add(result);        
+                z3::apply_result res = (eqs & simplify & eqs).apply(g2);
+                result =  res[0].as_expr().simplify();    
+            }
+            return result;
+        }
+
         
-        std::pair<int,bool>  TARReachabilitySearch::isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, z3::expr& query, const std::vector<bool>& inq)
+        std::pair<int,bool>  TARReachabilitySearch::isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, z3::expr& query, const std::vector<bool>& inq, z3::expr& param)
         {
 
             std::vector<z3::expr> encoded = {context.bool_val(true)};
@@ -333,6 +402,10 @@ namespace PetriEngine {
             Renamer ren(context);
             encoded.push_back(ren.rename(query, uses.data()));
 
+            if(ren.has_param())
+            {
+                encoded[0] = encoded[0] && !param;
+            }
                     
             for(size_t i = 0; i < uses.size(); ++i)
             {
@@ -352,6 +425,19 @@ namespace PetriEngine {
                 bool res = findValidRange(from, to, context, interpolant, encoded);
                 if(res) 
                 {
+                    if(ren.has_param() && from == 0)
+                    {
+                        
+                        /*
+                                         z3::context& context, 
+                std::vector<z3::expr>& encoded, 
+                z3::expr& param_reach, std::vector<uint32_t>& used, std::vector<bool>& inq, std::vector<bool>& read, waiting_t& trace)
+                         */
+                        param = computeParameters(context, encoded, param, uses, inq, in_inhib);
+                        encoded[0] = encoded[0] && !param;
+                        continue;
+                        assert(false);
+                    }
                     return std::pair<int,bool>(nvalid, from == 0);
                 }
                 else
@@ -565,6 +651,8 @@ namespace PetriEngine {
 
             std::vector<bool> in_query(_net.numberOfPlaces(), false);
             std::vector<int32_t> uses(_net.numberOfPlaces(), 0);
+            auto param = solver_context.bool_val(false);//solver_context.int_val(0) <= solver_context.int_const("~b");
+            std::cout << param << std::endl;
             auto sat_query = query->encodeSat(_net, solver_context, uses, in_query);
             { // try to simplify the proposition more!
                 z3::tactic simplify(solver_context, "ctx-solver-simplify");
@@ -631,7 +719,7 @@ namespace PetriEngine {
                     bool next_edge = false;
                     if(waiting.back().get_edge_cnt() == 0) // check if proposition is satisfied
                     {
-                        std::pair<int,bool> res = isValidTrace(waiting, solver_context, false, initial, sat_query, in_query);
+                        std::pair<int,bool> res = isValidTrace(waiting, solver_context, false, initial, sat_query, in_query, param);
                         if(res.second)
                         {
                             std::cerr << "VALID TRACE FOUND!" << std::endl;
@@ -698,6 +786,17 @@ namespace PetriEngine {
             states.clear();
             std::cout << "STEPS : " << stepno << std::endl;
             std::cout << "INTERPOLANT AUTOMATAS : " << initial_interpols.size() << std::endl;
+            if(auto upper = dynamic_cast<PQL::UpperBoundsCondition*>(query.get()))
+            {
+                auto str = param.to_string();
+                size_t bound = 0;
+                if(str.compare("false") != 0)
+                {
+                    str[str.size() - 4] = 0;
+                    sscanf(&str[4], "%zu", &bound);
+                }
+                upper->setUpperBound(bound);
+            }
             return false;            
         }
 

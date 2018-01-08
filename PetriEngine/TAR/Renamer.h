@@ -24,6 +24,7 @@ private:
     std::vector<size_t> seen;
     bool do_rename = true;
     bool contains_real = false;
+    bool contains_param = false;
     
     void visit(z3::expr node, const uint32_t* indexes)
     {
@@ -46,6 +47,7 @@ private:
                 }
                 else if(oldname[0] == '~') // constant or epsilon
                 {
+                    contains_param = true;
                     return;
                 }
                 oldname = oldname.substr(1);
@@ -141,6 +143,7 @@ public:
 
     
     bool has_real() { return contains_real; };
+    bool has_param() { return contains_param; };
 };
 #endif /* RENAMER_H */
 
