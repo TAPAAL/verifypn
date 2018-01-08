@@ -249,12 +249,12 @@ namespace PetriEngine {
             return range_valid; 
         }
         
-        std::pair<int,bool>  TARReachabilitySearch::isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, const PQL::Condition* condition)
+        std::pair<int,bool>  TARReachabilitySearch::isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, z3::expr& query, const std::vector<bool>& inq)
         {
 
             std::vector<z3::expr> encoded = {context.bool_val(true)};
-            std::vector<int32_t> uses(_net.numberOfPlaces(), 0);
-            std::vector<bool> in_query(uses.size(), false);
+            std::vector<uint32_t> uses(_net.numberOfPlaces(), 0);
+            std::vector<bool> in_inhib(uses.size(), false);
             size_t m = 0;
             for(auto& t : trace)
             {
@@ -274,7 +274,7 @@ namespace PetriEngine {
                     auto ppre = context.int_const(name.c_str());
                     if(pre.first->inhibitor)
                     {
-                        in_query[pre.first->place] = true;
+                        in_inhib[pre.first->place] = true;
                         begin = begin && (ppre < context.int_val(pre.first->tokens));
                         has_inhib = true;
                     }
@@ -305,7 +305,6 @@ namespace PetriEngine {
                 
                 if(has_inhib)
                     begin = begin && mult == 1;
-                
                 if(_kbound > 0)
                 {
                     auto sum = context.int_val(0);
@@ -313,7 +312,7 @@ namespace PetriEngine {
                     {
                         string name = to_string(i) + "~i" + to_string(uses[i]);
                         sum = sum + context.int_const(name.c_str());
-                        in_query[i] = true;
+                        in_inhib[i] = true;
                     }
                     begin = begin && (sum <= context.int_val(_kbound));
                 }
@@ -321,12 +320,23 @@ namespace PetriEngine {
             }
             
             
+            /*auto q = query;
+            for(size_t i = 0; i < _net.numberOfPlaces(); ++i)
+            {
+                if(inq[i])
+                {
+                    string qname = to_string(i) + "~i" + to_string(numeric_limits<int32_t>::max());
+                    string pname = to_string(i) + "~i" + to_string(uses[i]);
+                    q = q && (context.int_const(qname.c_str()) == context.int_const(pname.c_str()));                    
+                }
+            }*/
+            Renamer ren(context);
+            encoded.push_back(ren.rename(query, uses.data()));
 
-            encoded.push_back(condition->encodeSat(_net, context, uses, in_query));
                     
             for(size_t i = 0; i < uses.size(); ++i)
             {
-                if(uses[i] > 0 || in_query[i])
+                if(uses[i] > 0 || in_inhib[i] || inq[i])
                 {
                     string name = to_string(i) + "~i0";
                     encoded[0] = encoded[0] && (context.int_const(name.c_str()) == context.int_val(initial.marking()[i]));
@@ -553,9 +563,37 @@ namespace PetriEngine {
             intmap[solver_context.bool_val(false).hash()].emplace_back(solver_context.bool_val(false), 0);
             intmap[solver_context.bool_val(true).hash()].emplace_back(solver_context.bool_val(true), 1);
 
-
-            /* Explore unexplored states.
-             */
+            std::vector<bool> in_query(_net.numberOfPlaces(), false);
+            std::vector<int32_t> uses(_net.numberOfPlaces(), 0);
+            auto sat_query = query->encodeSat(_net, solver_context, uses, in_query);
+            { // try to simplify the proposition more!
+                z3::tactic simplify(solver_context, "ctx-solver-simplify");
+                z3::goal g(solver_context);
+                g.add(sat_query);
+                z3::apply_result res = simplify.apply(g);
+                z3::expr result = solver_context.bool_val(false);
+               
+                for(size_t i = 0; i < res.size(); ++i)
+                {
+                    z3::goal g2 = res[i];
+                    if(g2.size() == 0)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        result = result || g2.as_expr();
+                    }
+                }
+                Renamer renamer(solver_context);
+                renamer.contains(result);
+                in_query = std::vector<bool>(_net.numberOfPlaces(), false);
+                for(auto i : renamer.variables_seen())
+                    in_query[i] = true;
+                sat_query = result;
+            }
+            
+            /* Do the verification */
 
             bool all_covered = true;
             size_t stepno = 0;
@@ -593,7 +631,7 @@ namespace PetriEngine {
                     bool next_edge = false;
                     if(waiting.back().get_edge_cnt() == 0) // check if proposition is satisfied
                     {
-                        std::pair<int,bool> res = isValidTrace(waiting, solver_context, false, initial, query.get()); 
+                        std::pair<int,bool> res = isValidTrace(waiting, solver_context, false, initial, sat_query, in_query);
                         if(res.second)
                         {
                             std::cerr << "VALID TRACE FOUND!" << std::endl;

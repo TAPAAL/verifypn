@@ -25,7 +25,7 @@ private:
     bool do_rename = true;
     bool contains_real = false;
     
-    void visit(z3::expr node, const size_t* indexes)
+    void visit(z3::expr node, const uint32_t* indexes)
     {
         false_const = false;
         if(node.is_const())
@@ -121,7 +121,7 @@ public:
         visit(expression, NULL);
     }
     
-    z3::expr rename(z3::expr expression, const size_t* indexes = NULL)
+    z3::expr rename(z3::expr expression, const uint32_t* indexes = NULL)
     {
         contains_real = false;
         do_rename = true;

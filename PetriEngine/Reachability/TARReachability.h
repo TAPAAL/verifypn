@@ -60,7 +60,7 @@ namespace PetriEngine {
             bool checkInclussion(state_t& state, std::vector<size_t>& nextinter, z3::context& ctx);
 
             void handleInvalidTrace(waiting_t& waiting, int nvalid);
-            std::pair<int,bool>  isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, const PQL::Condition* condition);
+            std::pair<int,bool>  isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, z3::expr& query, const std::vector<bool>& inq);
             bool findValidRange( int& from, 
                                             const int to, 
                                             z3::context& context, 
