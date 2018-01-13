@@ -1,5 +1,5 @@
 /* TAPAAL untimed verification engine verifypn 
- * Copyright (C) 2011-2017  Jonas Finnemann Jensen <jopsen@gmail.com>,
+ * Copyright (C) 2011-2018  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                          Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                          Lars Kærlund Østergaard <larsko@gmail.com>,
  *                          Jiri Srba <srba.jiri@gmail.com>,
@@ -67,7 +67,7 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
-#define VERSION  "2.1.0"
+#define VERSION  "2.2.0"
 
 ReturnValue contextAnalysis(PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries)
 {
@@ -279,7 +279,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             return SuccessCode;
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
             printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERSION);
-            printf("Copyright (C) 2011-2017\n");
+            printf("Copyright (C) 2011-2018\n");
             printf("                        Frederik Meyer Boenneland <sadpantz@gmail.com>\n");
             printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
             printf("                        Peter Fogh <peter.f1992@gmail.com>\n");
