@@ -96,7 +96,7 @@ uint32_t AlignedEncoder::writeTokens(size_t offset, const uint32_t* data)
 {
     if(sizeof(T) == sizeof(uint32_t))
     {
-        memcmp(&(_scratchpad.raw()[offset]), data, _places*sizeof(T));        
+        memcpy(&(_scratchpad.raw()[offset]), data, _places*sizeof(T));        
     } 
     else
     {
