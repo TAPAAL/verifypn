@@ -785,44 +785,66 @@ namespace PetriEngine {
     }
    
     bool Reducer::ReducebyRuleF(uint32_t* placeInQuery) {
-        bool continueReductions = false;
-        const size_t numberofplaces = parent->numberOfPlaces();
-        for(uint32_t p = 0; p < numberofplaces; ++p)
+        std::vector<uint32_t> wtrans;
+        std::vector<bool> tseen(parent->numberOfTransitions(), false);
+        
+        for(uint32_t p = 0; p < parent->numberOfPlaces(); ++p)
         {
-            if(hasTimedout()) return false;
-            Place& place = parent->_places[p];
-            if(place.skip) continue;
-            if(place.inhib) continue;
-            if(placeInQuery[p] > 0) continue;
-            if(place.consumers.size() > 0) continue;
-            
-            ++_ruleF;
-            continueReductions = true;
-            skipPlace(p);
-            std::vector<uint32_t> torem;
-            for(auto& t : place.producers)
+            if(placeInQuery[p] > 0)
             {
-                auto& trans = parent->_transitions[t];
-                if(trans.post.size() != 0)
-                    continue;
-                bool ok = true;
-                for(auto& a : trans.pre)
+                const Place& place = parent->_places[p];
+                std::vector<uint32_t> buff;
+                std::set_union(place.consumers.begin(), place.consumers.end(), wtrans.begin(), wtrans.end(), std::back_inserter(buff));
+                buff.swap(wtrans);
+            }
+        }
+        
+        for(auto t : wtrans)
+            tseen[t] = true;
+        std::vector<bool> pseen(parent->numberOfPlaces(), false);        
+        while(!wtrans.empty())
+        {
+            auto t = wtrans.back();
+            wtrans.pop_back();
+            const Transition& trans = parent->_transitions[t];
+            for(const Arc& arc : trans.pre)
+            {
+                const Place& place = parent->_places[arc.place];
+                pseen[arc.place] = true;
+                for(auto pt : place.producers)
                 {
-                    if(placeInQuery[a.place] > 0)
+                    if(!tseen[pt])
                     {
-                        ok = false;
+                        tseen[pt] = true;
+                        wtrans.push_back(pt);
                     }
                 }
-                if(ok) torem.push_back(t);
             }
-            
-            for(auto t : torem)
-                skipTransition(t);
-            assert(consistent());
         }
-        return continueReductions;
+        
+        bool reduced = false;
+        for(size_t t = 0; t < parent->numberOfTransitions(); ++t)
+        {
+            if(!tseen[t] && !parent->_transitions[t].skip)
+            {
+                ++_ruleF;
+                skipTransition(t);
+                reduced = true;
+            }
+        }
+        
+        for(size_t p = 0; p < parent->numberOfPlaces(); ++p)
+        {
+            if(!pseen[p] && !parent->_places[p].skip)
+            {
+                ++_ruleF;
+                skipPlace(p);
+                reduced = true;
+            }
+        }
+        return reduced;
     }
-
+   
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
