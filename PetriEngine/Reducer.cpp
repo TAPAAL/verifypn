@@ -793,14 +793,25 @@ namespace PetriEngine {
             if(placeInQuery[p] > 0)
             {
                 const Place& place = parent->_places[p];
-                std::vector<uint32_t> buff;
-                std::set_union(place.consumers.begin(), place.consumers.end(), wtrans.begin(), wtrans.end(), std::back_inserter(buff));
-                buff.swap(wtrans);
+                for(auto t : place.consumers)
+                {
+                    if(!tseen[t])
+                    {
+                        wtrans.push_back(t);
+                        tseen[t] = true;
+                    }
+                }
+                for(auto t : place.producers)
+                {
+                    if(!tseen[t])
+                    {
+                        wtrans.push_back(t);
+                        tseen[t] = true;
+                    }
+                }
             }
         }
         
-        for(auto t : wtrans)
-            tseen[t] = true;
         std::vector<bool> pseen(parent->numberOfPlaces(), false);        
         while(!wtrans.empty())
         {
@@ -822,6 +833,7 @@ namespace PetriEngine {
             }
         }
         
+        
         bool reduced = false;
         for(size_t t = 0; t < parent->numberOfTransitions(); ++t)
         {
@@ -835,13 +847,14 @@ namespace PetriEngine {
         
         for(size_t p = 0; p < parent->numberOfPlaces(); ++p)
         {
-            if(!pseen[p] && !parent->_places[p].skip)
+            if(!pseen[p] && !parent->_places[p].skip && placeInQuery[p] == 0)
             {
                 ++_ruleF;
                 skipPlace(p);
                 reduced = true;
             }
         }
+        
         return reduced;
     }
    
