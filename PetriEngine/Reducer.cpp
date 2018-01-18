@@ -784,7 +784,7 @@ namespace PetriEngine {
         return continueReductions;
     }
    
-    bool Reducer::ReducebyRuleF(uint32_t* placeInQuery, bool remove_loops) {
+    bool Reducer::ReducebyRuleF(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers) {
         bool reduced = false;
         if(remove_loops)
         {
@@ -825,19 +825,33 @@ namespace PetriEngine {
                 const Transition& trans = parent->_transitions[t];
                 for(const Arc& arc : trans.pre)
                 {
-                    const Place& place = parent->_places[arc.place];
-                    pseen[arc.place] = true;
-                    for(auto pt : place.producers)
+                    if(!pseen[arc.place])
                     {
-                        if(!tseen[pt])
+                        const Place& place = parent->_places[arc.place];
+                        for(auto pt : place.producers)
                         {
-                            tseen[pt] = true;
-                            wtrans.push_back(pt);
+                            if(!tseen[pt])
+                            {
+                                tseen[pt] = true;
+                                wtrans.push_back(pt);
+                            }
+                        }
+                        if(!remove_consumers)
+                        {
+                            for(auto pt : place.consumers)
+                            {
+                                if(!tseen[pt])
+                                {
+                                    tseen[pt] = true;
+                                    wtrans.push_back(pt);                                    
+                                }
+                            }
                         }
                     }
+                    pseen[arc.place] = true;
                 }
             }
-            
+
             for(size_t t = 0; t < parent->numberOfTransitions(); ++t)
             {
                 if(!tseen[t] && !parent->_transitions[t].skip)
@@ -850,8 +864,9 @@ namespace PetriEngine {
 
             for(size_t p = 0; p < parent->numberOfPlaces(); ++p)
             {
-                if(!pseen[p] && !parent->_places[p].skip && placeInQuery[p] == 0)
+                if(!pseen[p] && !parent->_places[p].skip)
                 {
+                    assert(placeInQuery[p] == 0);
                     ++_ruleF;
                     skipPlace(p);
                     reduced = true;
@@ -899,12 +914,14 @@ namespace PetriEngine {
         return reduced;
     }
    
-    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops) {
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
         this->reconstructTrace = reconstructTrace;
         if (enablereduction == 1) { // in the aggressive reduction all four rules are used as long as they remove something
+            if(remove_loops)
+                ReducebyRuleF(context.getQueryPlaceCount(), remove_loops, remove_consumers);
             bool changed = false;
             do
             {
@@ -913,7 +930,8 @@ namespace PetriEngine {
                     changed |= ReducebyRuleA(context.getQueryPlaceCount());
                     changed |= ReducebyRuleB(context.getQueryPlaceCount());
                     changed |= ReducebyRuleE(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleF(context.getQueryPlaceCount(), remove_loops);
+                    if(!remove_loops) 
+                        changed |= ReducebyRuleF(context.getQueryPlaceCount(), remove_loops, remove_consumers);
                 } while(changed && !hasTimedout());
                 // RuleC and RuleD are expensive, so wait with those till nothing else changes
                 changed |= ReducebyRuleD(context.getQueryPlaceCount());

@@ -85,7 +85,7 @@ namespace PetriEngine {
         Reducer(PetriNetBuilder*);
         ~Reducer();
         void Print(QueryPlaceAnalysisContext& context); // prints the net, just for debugging
-        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops);
+        void Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers);
         
         size_t RemovedTransitions() const {
             return _removedTransitions;
@@ -138,7 +138,7 @@ namespace PetriEngine {
         bool ReducebyRuleC(uint32_t* placeInQuery);
         bool ReducebyRuleD(uint32_t* placeInQuery);
         bool ReducebyRuleE(uint32_t* placeInQuery);
-        bool ReducebyRuleF(uint32_t* placeInQuery, bool remove_loops);
+        bool ReducebyRuleF(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers);
         
         std::string getTransitionName(uint32_t transition);
         std::string getPlaceName(uint32_t place);
