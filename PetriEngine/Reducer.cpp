@@ -784,81 +784,144 @@ namespace PetriEngine {
         return continueReductions;
     }
    
-    bool Reducer::ReducebyRuleF(uint32_t* placeInQuery) {
-        std::vector<uint32_t> wtrans;
-        std::vector<bool> tseen(parent->numberOfTransitions(), false);
-        
-        for(uint32_t p = 0; p < parent->numberOfPlaces(); ++p)
-        {
-            if(placeInQuery[p] > 0)
-            {
-                const Place& place = parent->_places[p];
-                for(auto t : place.consumers)
-                {
-                    if(!tseen[t])
-                    {
-                        wtrans.push_back(t);
-                        tseen[t] = true;
-                    }
-                }
-                for(auto t : place.producers)
-                {
-                    if(!tseen[t])
-                    {
-                        wtrans.push_back(t);
-                        tseen[t] = true;
-                    }
-                }
-            }
-        }
-        
-        std::vector<bool> pseen(parent->numberOfPlaces(), false);        
-        while(!wtrans.empty())
-        {
-            auto t = wtrans.back();
-            wtrans.pop_back();
-            const Transition& trans = parent->_transitions[t];
-            for(const Arc& arc : trans.pre)
-            {
-                const Place& place = parent->_places[arc.place];
-                pseen[arc.place] = true;
-                for(auto pt : place.producers)
-                {
-                    if(!tseen[pt])
-                    {
-                        tseen[pt] = true;
-                        wtrans.push_back(pt);
-                    }
-                }
-            }
-        }
-        
-        
+    bool Reducer::ReducebyRuleF(uint32_t* placeInQuery, bool remove_loops) {
         bool reduced = false;
-        for(size_t t = 0; t < parent->numberOfTransitions(); ++t)
+        if(remove_loops)
         {
-            if(!tseen[t] && !parent->_transitions[t].skip)
+            std::vector<uint32_t> wtrans;
+            std::vector<bool> tseen(parent->numberOfTransitions(), false);
+
+            for(uint32_t p = 0; p < parent->numberOfPlaces(); ++p)
             {
-                ++_ruleF;
-                skipTransition(t);
-                reduced = true;
+                if(hasTimedout()) return false;
+                if(placeInQuery[p] > 0)
+                {
+                    const Place& place = parent->_places[p];
+                    for(auto t : place.consumers)
+                    {
+                        if(!tseen[t])
+                        {
+                            wtrans.push_back(t);
+                            tseen[t] = true;
+                        }
+                    }
+                    for(auto t : place.producers)
+                    {
+                        if(!tseen[t])
+                        {
+                            wtrans.push_back(t);
+                            tseen[t] = true;
+                        }
+                    }
+                }
+            }
+
+            std::vector<bool> pseen(parent->numberOfPlaces(), false);        
+            while(!wtrans.empty())
+            {
+                if(hasTimedout()) return false;
+                auto t = wtrans.back();
+                wtrans.pop_back();
+                const Transition& trans = parent->_transitions[t];
+                for(const Arc& arc : trans.pre)
+                {
+                    const Place& place = parent->_places[arc.place];
+                    pseen[arc.place] = true;
+                    for(auto pt : place.producers)
+                    {
+                        if(!tseen[pt])
+                        {
+                            tseen[pt] = true;
+                            wtrans.push_back(pt);
+                        }
+                    }
+                }
+            }
+            
+            for(size_t t = 0; t < parent->numberOfTransitions(); ++t)
+            {
+                if(!tseen[t] && !parent->_transitions[t].skip)
+                {
+                    ++_ruleF;
+                    skipTransition(t);
+                    reduced = true;
+                }
+            }
+
+            for(size_t p = 0; p < parent->numberOfPlaces(); ++p)
+            {
+                if(!pseen[p] && !parent->_places[p].skip && placeInQuery[p] == 0)
+                {
+                    ++_ruleF;
+                    skipPlace(p);
+                    reduced = true;
+                }
             }
         }
-        
-        for(size_t p = 0; p < parent->numberOfPlaces(); ++p)
+        else
         {
-            if(!pseen[p] && !parent->_places[p].skip && placeInQuery[p] == 0)
+            const size_t numberoftrans = parent->numberOfTransitions();
+            for(uint32_t t = 0; t < numberoftrans; ++t)
             {
+                if(hasTimedout()) return false;
+                Transition& trans = parent->_transitions[t];
+                if(trans.skip) continue;
+                if(trans.inhib) continue;
+                if(trans.post.size() > 0) continue;
+                bool ok = true;
+                for(Arc& arc : trans.pre)
+                {
+                    if(placeInQuery[arc.place] > 0)
+                        ok = false;
+                }
+                
+                if(ok)
+                {
+                    reduced = true;
+                    skipTransition(t);
+                }
+            }
+            
+            const size_t numberofplaces = parent->numberOfPlaces();
+            for(uint32_t p = 0; p < numberofplaces; ++p)
+            {
+                if(hasTimedout()) return false;
+                Place& place = parent->_places[p];
+                if(place.skip) continue;
+                if(place.inhib) continue;
+                if(placeInQuery[p] > 0) continue;
+                if(place.consumers.size() > 0) continue;
+
                 ++_ruleF;
-                skipPlace(p);
                 reduced = true;
+                skipPlace(p);
+                std::vector<uint32_t> torem;
+                for(auto& t : place.producers)
+                {
+                    auto& trans = parent->_transitions[t];
+                    if(trans.post.size() != 0)
+                        continue;
+                    bool ok = true;
+                    for(auto& a : trans.pre)
+                    {
+                        if(placeInQuery[a.place] > 0)
+                        {
+                            ok = false;
+                        }
+                    }
+                    if(ok) torem.push_back(t);
+                }
+
+                for(auto t : torem)
+                    skipTransition(t);
+                assert(consistent());
             }
         }
         
         return reduced;
     }
    
-    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout) {
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
@@ -872,7 +935,7 @@ namespace PetriEngine {
                     changed |= ReducebyRuleA(context.getQueryPlaceCount());
                     changed |= ReducebyRuleB(context.getQueryPlaceCount());
                     changed |= ReducebyRuleE(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleF(context.getQueryPlaceCount());
+                    changed |= ReducebyRuleF(context.getQueryPlaceCount(), remove_loops);
                 } while(changed && !hasTimedout());
                 // RuleC and RuleD are expensive, so wait with those till nothing else changes
                 changed |= ReducebyRuleD(context.getQueryPlaceCount());

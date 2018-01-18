@@ -197,6 +197,8 @@ namespace PetriEngine {
             std::vector<size_t> _placeids;
             size_t _bound = 0;
             Result _eval = RUNKNOWN;
+        protected:
+            bool _loop_sensitive = false;            
         public:
             /** Virtual destructor */
             virtual ~Condition();
@@ -219,6 +221,7 @@ namespace PetriEngine {
             virtual bool isReachability(uint32_t depth = 0) const = 0;
             /** Check if query is an upper bound query */
             virtual bool isUpperBound() = 0;
+            virtual bool isLoopSensitive() const { return _loop_sensitive; };
             /** Prepare reachability queries */
             virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
             virtual std::shared_ptr<Condition> pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated = false) const = 0;

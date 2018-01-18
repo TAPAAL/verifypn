@@ -274,6 +274,7 @@ namespace PetriEngine {
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override;
             bool containsNext() const override { return true; }            
+            virtual bool isLoopSensitive() const override { return true; }
         private:
             std::string op() const override;
         };
@@ -292,6 +293,7 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             Result evaluate(const EvaluationContext& context) const override;
             Result evalAndSet(const EvaluationContext& context) override;
+            virtual bool isLoopSensitive() const override { return true; }
         private:
             std::string op() const override;
         };
@@ -326,6 +328,7 @@ namespace PetriEngine {
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override;
             bool containsNext() const override { return true; }
+            virtual bool isLoopSensitive() const override { return true; }
         private:
             std::string op() const override;
         };
@@ -360,6 +363,7 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             Result evaluate(const EvaluationContext& context) const override;
             Result evalAndSet(const EvaluationContext& context) override;
+            virtual bool isLoopSensitive() const override { return true; }
         private:
             std::string op() const override;
         };     
@@ -417,7 +421,7 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) const override;
-            
+            virtual bool isLoopSensitive() const override { return true; }
         private:
             std::string op() const override;
         };
@@ -813,6 +817,7 @@ namespace PetriEngine {
             NotCondition(const Condition_ptr cond) {
                 _cond = cond;
                 _temporal = _cond->isTemporal();
+                _loop_sensitive = _cond->isLoopSensitive();
             }
             int formulaSize() const override{
                 return _cond->formulaSize() + 1;
@@ -885,6 +890,7 @@ namespace PetriEngine {
         public:
 
             DeadlockCondition() {
+                _loop_sensitive = true;
             }
             int formulaSize() const override{
                 return 1;

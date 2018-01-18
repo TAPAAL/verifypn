@@ -3207,12 +3207,14 @@ namespace PetriEngine {
         AndCondition::AndCondition(std::vector<Condition_ptr>&& conds) {
             for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge<AndCondition>(_conds);
         }
         
         AndCondition::AndCondition(const std::vector<Condition_ptr>& conds) {
             for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
-            for (auto& c : conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge<AndCondition>(_conds);
         }
        
@@ -3220,18 +3222,21 @@ namespace PetriEngine {
             tryMerge<AndCondition>(_conds, left);
             tryMerge<AndCondition>(_conds, right);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge<AndCondition>(_conds);
         }
        
         OrCondition::OrCondition(std::vector<Condition_ptr>&& conds) {
             for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
-            for (auto& c : conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge<AndCondition>(_conds);
         }
        
         OrCondition::OrCondition(const std::vector<Condition_ptr>& conds) {
             for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
-            for (auto& c : conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge<AndCondition>(_conds);
         }
        
@@ -3239,6 +3244,7 @@ namespace PetriEngine {
             tryMerge<OrCondition>(_conds, left);
             tryMerge<OrCondition>(_conds, right);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge<AndCondition>(_conds);
         }
         
