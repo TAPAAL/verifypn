@@ -241,6 +241,7 @@ namespace PetriEngine {
         public:
             SimpleQuantifierCondition(const Condition_ptr cond) {
                 _cond = cond;
+                _loop_sensitive = cond->isLoopSensitive();
             }
             int formulaSize() const override{
                 return _cond->formulaSize() + 1;
@@ -373,6 +374,7 @@ namespace PetriEngine {
             UntilCondition(const Condition_ptr cond1, const Condition_ptr cond2) {
                 _cond1 = cond1;
                 _cond2 = cond2;
+                _loop_sensitive = _cond1->isLoopSensitive() || _cond2->isLoopSensitive();
             }
             int formulaSize() const override{
                 return _cond1->formulaSize() + _cond2->formulaSize() + 1;

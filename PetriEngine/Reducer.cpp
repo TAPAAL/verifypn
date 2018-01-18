@@ -859,29 +859,7 @@ namespace PetriEngine {
             }
         }
         else
-        {
-            const size_t numberoftrans = parent->numberOfTransitions();
-            for(uint32_t t = 0; t < numberoftrans; ++t)
-            {
-                if(hasTimedout()) return false;
-                Transition& trans = parent->_transitions[t];
-                if(trans.skip) continue;
-                if(trans.inhib) continue;
-                if(trans.post.size() > 0) continue;
-                bool ok = true;
-                for(Arc& arc : trans.pre)
-                {
-                    if(placeInQuery[arc.place] > 0)
-                        ok = false;
-                }
-                
-                if(ok)
-                {
-                    reduced = true;
-                    skipTransition(t);
-                }
-            }
-            
+        {            
             const size_t numberofplaces = parent->numberOfPlaces();
             for(uint32_t p = 0; p < numberofplaces; ++p)
             {
