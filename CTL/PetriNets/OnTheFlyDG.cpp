@@ -520,10 +520,6 @@ void OnTheFlyDG::setQuery(const Condition_ptr& query)
     working_marking.setMarking(nullptr);
     query_marking.setMarking(nullptr);
     initialConfiguration();
-    delete[] working_marking.marking();
-    delete[] query_marking.marking();
-    working_marking.setMarking(nullptr);
-    query_marking.setMarking(nullptr);
     assert(this->query);
 }
 

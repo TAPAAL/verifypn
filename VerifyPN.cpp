@@ -528,23 +528,20 @@ int main(int argc, char* argv[]) {
     ResultPrinter p2(&b2, &options, querynames);
 
     if(queries.size() == 0 || contextAnalysis(b2, qnet.get(), queries) != ContinueCode)  return ErrorCode;
-    
-    if (options.queryReductionTimeout == 0 && options.strategy == PetriEngine::Reachability::OverApprox){ // Conflicting flags "-s OverApprox" and "-q 0"
+
+    if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout > 0) // Conflicting flags "-s OverApprox" and "-q 0"
+    {
         return 0;
     }
     else 
     {
+        // simplification. We always want to do negation-push and initial marking check.
         LPCache cache;
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            SimplificationContext simplificationContext(qm0, qnet.get(), options.queryReductionTimeout, 
-                    options.lpsolveTimeout, &cache);
-            bool isInvariant = queries[i].get()->isInvariant();
-            
-            int preSize=queries[i]->formulaSize();
             negstat_t stats;            
             EvaluationContext context(qm0, qnet.get());
-            if(options.printstatistics)
+            if(options.printstatistics && options.queryReductionTimeout > 0)
             {
                 std::cout << "\nQuery before reduction: ";
                 queries[i]->toString(std::cout);
@@ -553,11 +550,13 @@ int main(int argc, char* argv[]) {
                 stats.printRules(std::cout);
                 std::cout << std::endl;
             }
-            
+
+            int preSize=queries[i]->formulaSize(); 
+            bool isInvariant = queries[i].get()->isInvariant(); 
             queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false)
                                     ->pushNegation(stats, context, false, false);
-
-            if(options.printstatistics)
+            
+            if(options.queryReductionTimeout > 0)
             {
                 std::cout << "RWSTATS PRE:";
                 stats.print(std::cout);
@@ -566,6 +565,8 @@ int main(int argc, char* argv[]) {
             
             if (options.queryReductionTimeout > 0)
             {
+	        SimplificationContext simplificationContext(qm0, qnet.get(), options.queryReductionTimeout,
+                        options.lpsolveTimeout, &cache);
                 try {
                     negstat_t stats;            
                     queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false);
@@ -583,34 +584,31 @@ int main(int argc, char* argv[]) {
                     delete[] qm0;
                     std::exit(3);
                 }
-            }
+                std::cout << "\nQuery after reduction: ";
+                queries[i]->toString(std::cout);
+                std::cout << std::endl;
+                if(simplificationContext.timeout()){
+                    fprintf(stdout, "Query reduction reached timeout.\n");
+                } else {
+                    fprintf(stdout, "Query reduction finished after %f seconds.\n", simplificationContext.getReductionTime());
+                }
+ 
+	    }
             else
             {
                 std::cout << "Skipping linear-programming (-q 0)" << std::endl;
             }
+            queries[i].get()->setInvariant(isInvariant);
+
 
             if(options.printstatistics)
             {
-                std::cout << "\nQuery after reduction: ";
-                queries[i]->toString(std::cout);
-                std::cout << std::endl;
-            }
-            if(options.printstatistics){
                 int postSize=queries[i]->formulaSize();
                 double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
-                
                 fprintf(stdout, "Query size reduced from %d to %d nodes (%.2f percent reduction).\n", preSize, postSize, redPerc);
-                if(options.queryReductionTimeout > 0)
-                {
-                    if(simplificationContext.timeout()){
-                        fprintf(stdout, "Query reduction reached timeout.\n");
-                    } else {
-                        fprintf(stdout, "Query reduction finished after %f seconds.\n", simplificationContext.getReductionTime());
-                    }
-                }
             }
         }
-    }
+    } 
     
     qnet = nullptr;
     delete[] qm0;
