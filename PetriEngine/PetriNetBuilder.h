@@ -92,28 +92,9 @@ namespace PetriEngine {
             return reducer.RemovedPlaces();
         }
 
-        size_t RuleA() const {
-            return reducer.RuleA();
-        }
-
-        size_t RuleB() const {
-            return reducer.RuleB();
-        }
-
-        size_t RuleC() const {
-            return reducer.RuleC();
-        }
-
-        size_t RuleD() const {
-            return reducer.RuleD();
-        }
-        
-        size_t RuleE() const {
-            return reducer.RuleE();
-        }
-        
-        size_t RuleF() const {
-            return reducer.RuleF();
+        void printStats(std::ostream& out)
+        {
+            reducer.printStats(out);
         }
         
         Reducer* getReducer() { return &reducer; }

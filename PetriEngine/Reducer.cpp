@@ -15,7 +15,7 @@
 namespace PetriEngine {
 
     Reducer::Reducer(PetriNetBuilder* p) 
-    : _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0), _ruleE(0), _ruleF(0), parent(p) {
+    : parent(p) {
     }
 
     Reducer::~Reducer() {
@@ -832,19 +832,21 @@ namespace PetriEngine {
                         {
                             if(!tseen[pt])
                             {
+                                Transition& trans = parent->_transitions[pt];
+                                if(std::equal(trans.pre.begin(), trans.pre.end(), trans.post.begin(), trans.post.end()))
+                                    continue;
                                 tseen[pt] = true;
                                 wtrans.push_back(pt);
                             }
                         }
-                        if(!remove_consumers)
+
+
+                        for(auto pt : place.consumers)
                         {
-                            for(auto pt : place.consumers)
+                            if(!tseen[pt] && (!remove_consumers || placeInQuery[pt] > 0))
                             {
-                                if(!tseen[pt])
-                                {
-                                    tseen[pt] = true;
-                                    wtrans.push_back(pt);                                    
-                                }
+                                tseen[pt] = true;
+                                wtrans.push_back(pt);                                    
                             }
                         }
                     }
@@ -864,7 +866,7 @@ namespace PetriEngine {
 
             for(size_t p = 0; p < parent->numberOfPlaces(); ++p)
             {
-                if(!pseen[p] && !parent->_places[p].skip)
+                if(!pseen[p] && !parent->_places[p].skip && placeInQuery[p] == 0)
                 {
                     assert(placeInQuery[p] == 0);
                     ++_ruleF;
@@ -914,22 +916,138 @@ namespace PetriEngine {
         return reduced;
     }
    
+    bool Reducer::ReducebyRuleG(uint32_t* placeInQuery) {
+        bool continueReductions = false;
+        const size_t numberofplaces = parent->numberOfPlaces();
+        for(uint32_t p = 0; p < numberofplaces; ++p)
+        {
+            if(hasTimedout()) return false;
+            Place& place = parent->_places[p];
+            if(place.skip) continue;
+            if(place.inhib) continue;
+            if(place.producers.size() != place.consumers.size()) continue;
+            
+            bool ok = true;
+            for(uint cons : place.consumers)
+            {
+                Transition& t = getTransition(cons);
+                auto w = getInArc(p, t)->weight;
+                if(w > parent->initialMarking[p])
+                {
+                    ok = false;
+                    break;
+                }               
+                else
+                {
+                    auto it = getOutArc(t, p);
+                    if(it == t.post.end() || it->place != p ||
+                       (it->weight < w  && placeInQuery[p] == 0) ||
+                       (it->weight != w && placeInQuery[p] > 0))
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+            }
+            
+            if(!ok) continue;
+            
+            ++_ruleG;
+            if(placeInQuery[p] != 0)
+            {
+/*                for(auto& t : place.consumers)
+                {
+                    Transition& trans = getTransition(t);
+                    auto ait = getInArc(p, trans);
+                    if(ait != trans.pre.end() && ait->place == p)
+                    {
+                        continueReductions = true;
+                        trans.pre.erase(ait);
+                    }
+                }
+
+                for(auto& t : place.producers)
+                {
+                    Transition& trans = getTransition(t);
+                    auto ait = getOutArc(trans, p);
+                    if(ait != trans.post.end() && ait->place == p)
+                    {
+                        continueReductions = true;
+                        trans.post.erase(ait);
+                    }
+                }*/
+            }
+            else
+            {
+                if((numberofplaces - _removedPlaces) > 1)
+                {
+                    skipPlace(p);
+                    continueReductions = true;
+                }
+            }
+            
+        }
+        assert(consistent());
+        return continueReductions;
+    }
+    
+    
+    bool Reducer::ReducebyRuleH(uint32_t* placeInQuery, bool remove_loops) {
+        if(!remove_loops) return false;
+        bool continueReductions = false;
+        for(uint32_t t = 0; t < parent->numberOfTransitions(); ++t)
+        {
+            if(hasTimedout()) return false;
+            Transition& trans = parent->_transitions[t];
+            if(trans.skip) continue;
+            if(trans.inhib) continue;
+            if(trans.pre.size() != trans.post.size()) continue;
+            if(!remove_loops && trans.post.size() == 0) continue;
+            
+            auto preit = trans.pre.begin();
+            auto postit = trans.post.begin();
+            
+            bool ok = true;
+            for(size_t i = 0; i < trans.pre.size(); ++i)
+            {
+                if(preit->place != postit->place ||
+                   preit->weight != postit->weight ||
+                   preit->inhib)
+                {
+                    ok = false;
+                    break;
+                }
+                ++preit;
+                ++postit;
+            }
+            
+            if(!ok) continue;
+            
+            ++_ruleH;
+            skipTransition(t);
+        }
+        assert(consistent());
+        return continueReductions;
+    }
+    
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
         this->reconstructTrace = reconstructTrace;
         if (enablereduction == 1) { // in the aggressive reduction all four rules are used as long as they remove something
-            if(remove_loops)
-                ReducebyRuleF(context.getQueryPlaceCount(), remove_loops, remove_consumers);
             bool changed = false;
             do
             {
+                if(remove_loops)
+                    ReducebyRuleF(context.getQueryPlaceCount(), remove_loops, remove_consumers);
                 do{
                     changed = false;
                     changed |= ReducebyRuleA(context.getQueryPlaceCount());
                     changed |= ReducebyRuleB(context.getQueryPlaceCount());
                     changed |= ReducebyRuleE(context.getQueryPlaceCount());
+                    changed |= ReducebyRuleG(context.getQueryPlaceCount());
+                    changed |= ReducebyRuleH(context.getQueryPlaceCount(), remove_loops);
                     if(!remove_loops) 
                         changed |= ReducebyRuleF(context.getQueryPlaceCount(), remove_loops, remove_consumers);
                 } while(changed && !hasTimedout());

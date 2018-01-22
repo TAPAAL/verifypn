@@ -471,15 +471,8 @@ void printStats(PetriNetBuilder& builder, options_t& options)
             std::cout << "Structural reduction finished after " << builder.getReductionTime() <<
                     " seconds" << std::endl;
             
-            std::cout   << "\nNet reduction is enabled.\n"
-                        << "Removed transitions: " << builder.RemovedTransitions() << std::endl
-                        << "Removed places: " << builder.RemovedPlaces() << std::endl
-                        << "Applications of rule A: " << builder.RuleA() << std::endl
-                        << "Applications of rule B: " << builder.RuleB() << std::endl
-                        << "Applications of rule C: " << builder.RuleC() << std::endl
-                        << "Applications of rule D: " << builder.RuleD() << std::endl
-                        << "Applications of rule E: " << builder.RuleE() << std::endl
-                        << "Applications of rule F: " << builder.RuleF() << std::endl;
+            std::cout   << "\nNet reduction is enabled.\n";
+            builder.printStats(std::cout);
         }
     }
 }

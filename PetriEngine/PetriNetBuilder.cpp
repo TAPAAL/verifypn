@@ -369,7 +369,7 @@ namespace PetriEngine {
                 --trindex;
             }
         }
-        
+        net->sort();
         return net;
     }
     
