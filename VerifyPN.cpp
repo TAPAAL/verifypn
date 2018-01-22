@@ -552,21 +552,16 @@ int main(int argc, char* argv[]) {
 
     if(queries.size() == 0 || contextAnalysis(b2, qnet.get(), queries) != ContinueCode)  return ErrorCode;
 
-    // simplification. We always want to do negation-push and initial marking check.
     if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout > 0) // Conflicting flags "-s OverApprox" and "-q 0"
         return 0;
 
+    // simplification. We always want to do negation-push and initial marking check.
     {
         LPCache cache;
         for(size_t i = 0; i < queries.size(); ++i)
         {
             if (queries[i]->isUpperBound()) continue;
             
-            SimplificationContext simplificationContext(qm0, qnet.get(), options.queryReductionTimeout, 
-                    options.lpsolveTimeout, &cache);
-            bool isInvariant = queries[i].get()->isInvariant();
-            
-            int preSize=queries[i]->formulaSize();
             negstat_t stats;            
             EvaluationContext context(qm0, qnet.get());
             if(options.printstatistics && options.queryReductionTimeout > 0)
@@ -581,8 +576,15 @@ int main(int argc, char* argv[]) {
             
             queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false)
                                     ->pushNegation(stats, context, false, false);
+            
             if(options.queryReductionTimeout > 0)
             {
+                SimplificationContext simplificationContext(qm0, qnet.get(), options.queryReductionTimeout, 
+                        options.lpsolveTimeout, &cache);
+                bool isInvariant = queries[i].get()->isInvariant();
+
+                int preSize=queries[i]->formulaSize();
+
                 if(options.printstatistics)
                 {
                     std::cout << "RWSTATS PRE:";
