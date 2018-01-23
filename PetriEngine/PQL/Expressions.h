@@ -587,9 +587,10 @@ namespace PetriEngine {
                 }
             };
 
-            CompareConjunction() 
-            {};
+
         public:
+            CompareConjunction(bool negated = false) 
+                    : _negated(false) {};
             friend FireableCondition;
             CompareConjunction(const std::vector<cons_t>&& cons, bool negated) 
                     : _constraints(cons), _negated(negated) {};
