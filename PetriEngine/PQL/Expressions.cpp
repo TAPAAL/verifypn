@@ -3250,7 +3250,6 @@ namespace PetriEngine {
         CompareConjunction::CompareConjunction(const std::vector<Condition_ptr>& conditions, bool negated)
         {
             _negated = negated;
-            assert(!negated);
             merge(conditions, negated);
         }
         
