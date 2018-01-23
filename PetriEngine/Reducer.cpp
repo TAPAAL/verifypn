@@ -251,7 +251,7 @@ namespace PetriEngine {
             
             // A3. We have weight of more than one on input
             // and is empty on output (should not happen).
-            if(trans.pre[0].weight != 1 || trans.post[0].weight < 1) continue;
+            if(trans.pre[0].weight != 1) continue;
                         
             // A4. Do inhibitor check, neither T, pPre or pPost can be involved with any inhibitor
             if(parent->_places[pPre].inhib|| trans.inhib) continue;
