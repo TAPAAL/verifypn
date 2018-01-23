@@ -94,7 +94,11 @@ namespace PetriEngine {
                             if(conj->isNegated() == std::is_same<T, OrCondition>::value)
                                 _conds.insert(_conds.begin(), conj);
                             else
-                                _conds.insert(_conds.begin(), std::make_shared<CompareConjunction>(*conj, true));
+                            {
+                                auto next = std::make_shared<CompareConjunction>(std::is_same<T, OrCondition>::value);
+                                next->merge(*conj);
+                                _conds.insert(_conds.begin(), next);
+                            }
                         }
                     }
                     else
@@ -3246,6 +3250,7 @@ namespace PetriEngine {
         CompareConjunction::CompareConjunction(const std::vector<Condition_ptr>& conditions, bool negated)
         {
             _negated = negated;
+            assert(!negated);
             merge(conditions, negated);
         }
         
