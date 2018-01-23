@@ -552,7 +552,7 @@ int main(int argc, char* argv[]) {
 
     if(queries.size() == 0 || contextAnalysis(b2, qnet.get(), queries) != ContinueCode)  return ErrorCode;
 
-    if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout > 0) // Conflicting flags "-s OverApprox" and "-q 0"
+    if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout == 0) // Conflicting flags "-s OverApprox" and "-q 0"
         return 0;
 
     // simplification. We always want to do negation-push and initial marking check.
