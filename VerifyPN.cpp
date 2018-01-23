@@ -545,8 +545,8 @@ int main(int argc, char* argv[]) {
 
     if(queries.size() == 0 || contextAnalysis(b2, qnet.get(), queries) != ContinueCode)  return ErrorCode;
 
-    if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout > 0) // Conflicting flags "-s OverApprox" and "-q 0"
-        return 0;
+    if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout == 0) // Conflicting flags "-s OverApprox" and "-q 0"
+        return ErrorCode;
 
     // simplification. We always want to do negation-push and initial marking check.
     {
@@ -736,7 +736,7 @@ int main(int argc, char* argv[]) {
         }
         
         if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-            return 0;
+            return SuccessCode;
         }
     }
     
@@ -759,6 +759,6 @@ int main(int argc, char* argv[]) {
             options.printstatistics, 
             options.trace);
        
-    return 0;
+    return SuccessCode;
 }
 
