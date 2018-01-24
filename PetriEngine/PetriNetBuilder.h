@@ -80,7 +80,7 @@ namespace PetriEngine {
 
         void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query, 
                     std::vector<Reachability::ResultPrinter::Result>& results, 
-                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout = 60);
+                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout);
         
         size_t RemovedTransitions() const
         {
@@ -92,28 +92,9 @@ namespace PetriEngine {
             return reducer.RemovedPlaces();
         }
 
-        size_t RuleA() const {
-            return reducer.RuleA();
-        }
-
-        size_t RuleB() const {
-            return reducer.RuleB();
-        }
-
-        size_t RuleC() const {
-            return reducer.RuleC();
-        }
-
-        size_t RuleD() const {
-            return reducer.RuleD();
-        }
-        
-        size_t RuleE() const {
-            return reducer.RuleE();
-        }
-        
-        size_t RuleF() const {
-            return reducer.RuleF();
+        void printStats(std::ostream& out)
+        {
+            reducer.printStats(out);
         }
         
         Reducer* getReducer() { return &reducer; }

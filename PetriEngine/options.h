@@ -31,6 +31,7 @@ struct options_t {
     bool gamemode = false;
     bool isctl = false;
     CTL::CTLAlgorithmType ctlalgorithm = CTL::CZero;
+    bool tar = false;
     
     void print() {
         if (!printstatistics) {

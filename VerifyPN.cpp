@@ -1,5 +1,5 @@
 /* TAPAAL untimed verification engine verifypn 
- * Copyright (C) 2011-2017  Jonas Finnemann Jensen <jopsen@gmail.com>,
+ * Copyright (C) 2011-2018  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                          Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                          Lars Kærlund Østergaard <larsko@gmail.com>,
  *                          Jiri Srba <srba.jiri@gmail.com>,
@@ -68,7 +68,7 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
-#define VERSION  "2.1.0"
+#define VERSION  "2.2.0"
 
 ReturnValue contextAnalysis(PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries)
 {
@@ -215,6 +215,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid siphon-depth count \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        } else if (strcmp(argv[i], "-tar") == 0)
+        {
+            options.tar = true;
+            
         } else if (strcmp(argv[i], "-ctl") == 0){
             if(argc > i + 1){
                 if(strcmp(argv[i + 1], "local") == 0){
@@ -280,7 +284,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             return SuccessCode;
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
             printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERSION);
-            printf("Copyright (C) 2011-2017\n");
+            printf("Copyright (C) 2011-2018\n");
             printf("                        Frederik Meyer Boenneland <sadpantz@gmail.com>\n");
             printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
             printf("                        Peter Fogh <peter.f1992@gmail.com>\n");
@@ -467,15 +471,8 @@ void printStats(PetriNetBuilder& builder, options_t& options)
             std::cout << "Structural reduction finished after " << builder.getReductionTime() <<
                     " seconds" << std::endl;
             
-            std::cout   << "\nNet reduction is enabled.\n"
-                        << "Removed transitions: " << builder.RemovedTransitions() << std::endl
-                        << "Removed places: " << builder.RemovedPlaces() << std::endl
-                        << "Applications of rule A: " << builder.RuleA() << std::endl
-                        << "Applications of rule B: " << builder.RuleB() << std::endl
-                        << "Applications of rule C: " << builder.RuleC() << std::endl
-                        << "Applications of rule D: " << builder.RuleD() << std::endl
-                        << "Applications of rule E: " << builder.RuleE() << std::endl
-                        << "Applications of rule F: " << builder.RuleF() << std::endl;
+            std::cout   << "\nNet reduction is enabled.\n";
+            builder.printStats(std::cout);
         }
     }
 }
@@ -536,23 +533,23 @@ int main(int argc, char* argv[]) {
     ResultPrinter p2(&b2, &options, querynames);
 
     if(queries.size() == 0 || contextAnalysis(b2, qnet.get(), queries) != ContinueCode)  return ErrorCode;
-    
-    if (options.queryReductionTimeout == 0 && options.strategy == PetriEngine::Reachability::OverApprox){ // Conflicting flags "-s OverApprox" and "-q 0"
-        return 0;
+
+    if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout == 0)
+    { 
+        // Conflicting flags "-s OverApprox" and "-q 0"
+        std::cerr << "Conflicting flags '-s OverApprox' and '-q 0'" << std::endl;
+        return ErrorCode;
     }
-    else 
+
+    // simplification. We always want to do negation-push and initial marking check.
     {
+        // simplification. We always want to do negation-push and initial marking check.
         LPCache cache;
         for(size_t i = 0; i < queries.size(); ++i)
         {
-            SimplificationContext simplificationContext(qm0, qnet.get(), options.queryReductionTimeout, 
-                    options.lpsolveTimeout, &cache);
-            bool isInvariant = queries[i].get()->isInvariant();
-            
-            int preSize=queries[i]->formulaSize();
             negstat_t stats;            
             EvaluationContext context(qm0, qnet.get());
-            if(options.printstatistics)
+            if(options.printstatistics && options.queryReductionTimeout > 0)
             {
                 std::cout << "\nQuery before reduction: ";
                 queries[i]->toString(std::cout);
@@ -561,11 +558,13 @@ int main(int argc, char* argv[]) {
                 stats.printRules(std::cout);
                 std::cout << std::endl;
             }
-            
+
+            int preSize=queries[i]->formulaSize(); 
+            bool isInvariant = queries[i].get()->isInvariant(); 
             queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false)
                                     ->pushNegation(stats, context, false, false);
-
-            if(options.printstatistics)
+            
+            if(options.queryReductionTimeout > 0)
             {
                 std::cout << "RWSTATS PRE:";
                 stats.print(std::cout);
@@ -574,6 +573,8 @@ int main(int argc, char* argv[]) {
             
             if (options.queryReductionTimeout > 0)
             {
+	        SimplificationContext simplificationContext(qm0, qnet.get(), options.queryReductionTimeout,
+                        options.lpsolveTimeout, &cache);
                 try {
                     negstat_t stats;            
                     queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false);
@@ -591,34 +592,31 @@ int main(int argc, char* argv[]) {
                     delete[] qm0;
                     std::exit(3);
                 }
-            }
+                std::cout << "\nQuery after reduction: ";
+                queries[i]->toString(std::cout);
+                std::cout << std::endl;
+                if(simplificationContext.timeout()){
+                    fprintf(stdout, "Query reduction reached timeout.\n");
+                } else {
+                    fprintf(stdout, "Query reduction finished after %f seconds.\n", simplificationContext.getReductionTime());
+                }
+ 
+	    }
             else
             {
                 std::cout << "Skipping linear-programming (-q 0)" << std::endl;
             }
+            queries[i].get()->setInvariant(isInvariant);
+
 
             if(options.printstatistics)
             {
-                std::cout << "\nQuery after reduction: ";
-                queries[i]->toString(std::cout);
-                std::cout << std::endl;
-            }
-            if(options.printstatistics){
                 int postSize=queries[i]->formulaSize();
                 double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
-                
                 fprintf(stdout, "Query size reduced from %d to %d nodes (%.2f percent reduction).\n", preSize, postSize, redPerc);
-                if(options.queryReductionTimeout > 0)
-                {
-                    if(simplificationContext.timeout()){
-                        fprintf(stdout, "Query reduction reached timeout.\n");
-                    } else {
-                        fprintf(stdout, "Query reduction finished after %f seconds.\n", simplificationContext.getReductionTime());
-                    }
-                }
             }
         }
-    }
+    } 
     
     qnet = nullptr;
     delete[] qm0;
@@ -727,29 +725,45 @@ int main(int argc, char* argv[]) {
         }
         
         if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-            return 0;
+            return SuccessCode;
         }
     }
     
     //----------------------- Reachability -----------------------//
-    
-    //Create reachability search strategy
-    TARReachabilitySearch strategy(printer, *net, builder.getReducer(), options.kbound);
 
     //Analyse context again to reindex query
     contextAnalysis(builder, net.get(), queries);
-
-    // Change default place-holder to default strategy
-    if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
     
-    //Reachability search
-    strategy.reachable(queries, results, 
-//            options.strategy,
-//            options.stubbornreduction,
-//            options.statespaceexploration,
-            options.printstatistics,
-            options.trace);
+    if(options.tar)
+    {
+        //Create reachability search strategy
+        TARReachabilitySearch strategy(printer, *net, builder.getReducer(), options.kbound);
+
+        // Change default place-holder to default strategy
+        fprintf(stdout, "Search strategy option was ignored as the TAR engine is called.\n");
+        options.strategy = PetriEngine::Reachability::DFS;
+
+        //Reachability search
+        strategy.reachable(queries, results, 
+                options.printstatistics,
+                options.trace);
+    }
+    else
+    {
+        ReachabilitySearch strategy(printer, *net, options.kbound);
+
+        // Change default place-holder to default strategy
+        if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
+
+        //Reachability search
+        strategy.reachable(queries, results, 
+                options.strategy,
+                options.stubbornreduction,
+                options.statespaceexploration,
+                options.printstatistics, 
+                options.trace);
+    }
        
-    return 0;
+    return SuccessCode;
 }
 

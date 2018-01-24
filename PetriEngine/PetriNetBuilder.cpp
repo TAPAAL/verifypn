@@ -393,15 +393,19 @@ namespace PetriEngine {
                                     int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout)
     {
         QueryPlaceAnalysisContext placecontext(getPlaceNames(), getTransitionNames(), net);
+        bool all_reach = true;
+        bool remove_loops = true;
         for(uint32_t i = 0; i < queries.size(); ++i)
         {
             if(results[i] == Reachability::ResultPrinter::Unknown ||
                results[i] == Reachability::ResultPrinter::CTL )
             {
-                queries[i]->analyze(placecontext);        
+                queries[i]->analyze(placecontext);
+                all_reach &= (results[i] != Reachability::ResultPrinter::CTL);
+                remove_loops &= !queries[i]->isLoopSensitive();
             }
         }
-        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout);
+        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach);
     }
 
 
