@@ -1470,9 +1470,9 @@ namespace PetriEngine {
         }
         
         void EFCondition::toXML(std::ostream& out,uint32_t tabs) const {
-            generateTabs(out,tabs) << "<exist-path>\n" ; generateTabs(out,tabs+1) << "<finally>\n";
+            generateTabs(out,tabs) << "<exists-path>\n" ; generateTabs(out,tabs+1) << "<finally>\n";
             _cond->toXML(out,tabs+2);
-            generateTabs(out,tabs+1) << "</finally>\n" ; generateTabs(out,tabs) << "</exist-path>\n";
+            generateTabs(out,tabs+1) << "</finally>\n" ; generateTabs(out,tabs) << "</exists-path>\n";
         }
         
         void AFCondition::toXML(std::ostream& out,uint32_t tabs) const {
@@ -1482,9 +1482,9 @@ namespace PetriEngine {
         }
         
         void EGCondition::toXML(std::ostream& out,uint32_t tabs) const {            
-            generateTabs(out,tabs) << "<exist-path>\n" ; generateTabs(out,tabs+1) << "<globally>\n";
+            generateTabs(out,tabs) << "<exists-path>\n" ; generateTabs(out,tabs+1) << "<globally>\n";
             _cond->toXML(out,tabs+2);            
-            generateTabs(out,tabs+1) <<  "</globally>\n" ; generateTabs(out,tabs) << "</exist-path>\n";
+            generateTabs(out,tabs+1) <<  "</globally>\n" ; generateTabs(out,tabs) << "</exists-path>\n";
         }
         
         void AGCondition::toXML(std::ostream& out,uint32_t tabs) const {            
@@ -1494,11 +1494,11 @@ namespace PetriEngine {
         }
         
         void EUCondition::toXML(std::ostream& out,uint32_t tabs) const {
-            generateTabs(out,tabs) << "<exist-path>\n" ; generateTabs(out,tabs+1) << "<until>\n" ; generateTabs(out,tabs+2) << "<before>\n";
+            generateTabs(out,tabs) << "<exists-path>\n" ; generateTabs(out,tabs+1) << "<until>\n" ; generateTabs(out,tabs+2) << "<before>\n";
             _cond1->toXML(out,tabs+3);
             generateTabs(out,tabs+2) << "</before>\n" ; generateTabs(out,tabs+2) << "<reach>\n";
             _cond2->toXML(out,tabs+3);
-            generateTabs(out,tabs+2) << "</reach>\n" ; generateTabs(out,tabs+1) << "</until>\n" ; generateTabs(out,tabs) << "</exist-path>\n";
+            generateTabs(out,tabs+2) << "</reach>\n" ; generateTabs(out,tabs+1) << "</until>\n" ; generateTabs(out,tabs) << "</exists-path>\n";
         }
         
         void AUCondition::toXML(std::ostream& out,uint32_t tabs) const {
@@ -1579,23 +1579,36 @@ namespace PetriEngine {
             if(_constraints.size() == 0) BooleanCondition::TRUE_CONSTANT->toXML(out, tabs);
             else
             {
-                generateTabs(out,tabs) << "<conjunction>\n";
+                bool single = _constraints.size() == 1 && 
+                                (_constraints[0]._lower == 0 ||
+                                 _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
+                if(!single) 
+                    generateTabs(out,tabs) << "<conjunction>\n";
                 for(auto& c : _constraints)
                 {
-                    generateTabs(out,tabs+1) << "<integer-le>\n";
-                    generateTabs(out,tabs+2) << "<tokens-count>\n";
-                    generateTabs(out,tabs+2) << c._place << "\n";
-                    generateTabs(out,tabs+2) << "<tokens-count>\n";
-                    generateTabs(out,tabs+1) << "</integer-le>\n";  
-                    generateTabs(out,tabs+1) << "<integer-gt>\n";
-                    generateTabs(out,tabs+2) << "<tokens-count>\n";
-                    generateTabs(out,tabs+2) << c._place << "\n";
-                    generateTabs(out,tabs+2) << "<tokens-count>\n";
-                    generateTabs(out,tabs+1) << "</integer-gt>\n";                      
+                    if(c._lower != 0)
+                    {
+                        generateTabs(out,tabs+1) << "<integer-ge>\n";
+                        generateTabs(out,tabs+2) << "<tokens-count>\n";
+                        generateTabs(out,tabs+3) << "<place>" << c._name << "</place>\n";
+                        generateTabs(out,tabs+2) << "</tokens-count>\n";
+                        generateTabs(out,tabs+2) << "<integer-constant>" << c._lower << "</integer-constant>\n";
+                        generateTabs(out,tabs+1) << "</integer-ge>\n";  
+                    }
+                    if(c._upper != std::numeric_limits<uint32_t>::max())
+                    {
+                        generateTabs(out,tabs+1) << "<integer-le>\n";
+                        generateTabs(out,tabs+2) << "<tokens-count>\n";
+                        generateTabs(out,tabs+3) << "<place>" << c._name << "</place>\n";
+                        generateTabs(out,tabs+2) << "</tokens-count>\n";
+                        generateTabs(out,tabs+2) << "<integer-constant>" << c._upper << "</integer-constant>\n";
+                        generateTabs(out,tabs+1) << "</integer-le>\n";                      
+                    }
                 }
-                generateTabs(out,tabs) << "</conjunction>\n";
+                if(!single)
+                    generateTabs(out,tabs) << "</conjunction>\n";
             }
-            if(_negated) generateTabs(out,--tabs) << "<negation>";
+            if(_negated) generateTabs(out,--tabs) << "</negation>";
         }
 
         void EqualCondition::toXML(std::ostream& out,uint32_t tabs) const {

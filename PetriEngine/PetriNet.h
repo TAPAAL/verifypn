@@ -99,6 +99,8 @@ namespace PetriEngine {
         }
         
         void sort();
+        
+        void toXML(std::ostream& out);
 
     private:        
 

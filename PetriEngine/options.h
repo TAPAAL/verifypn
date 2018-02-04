@@ -33,6 +33,9 @@ struct options_t {
     CTL::CTLAlgorithmType ctlalgorithm = CTL::CZero;
     bool tar = false;
     
+    std::string query_out_file;
+    std::string model_out_file;
+    
     void print() {
         if (!printstatistics) {
             return;

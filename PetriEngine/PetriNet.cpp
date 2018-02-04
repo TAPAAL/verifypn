@@ -171,4 +171,68 @@ namespace PetriEngine {
         }
     }
     
+    void PetriNet::toXML(std::ostream& out)
+    {
+        out << "<?xml version=\"1.0\"?>\n"
+            << "<pnml xmlns=\"http://www.pnml.org/version-2009/grammar/pnml\">\n" 
+            << "<net id=\"ClientsAndServers-PT-N0500P0\" type=\"http://www.pnml.org/version-2009/grammar/ptnet\">\n";
+        out << "<page id=\"page0\">\n" 
+            << "<name>\n" 
+            << "<text>DefaultPage</text>" 
+            << "</name>";
+
+        for(size_t i = 0; i < _nplaces; ++i)
+        {
+            auto& p = _placenames[i];
+            out << "<place id=\"" << p << "\">\n"
+                << "<name><text>" << p << "</text></name>\n";
+            if(_initialMarking[i] > 0)
+            {
+                out << "<initialMarking><text>" << _initialMarking[i] << "</text></initialMarking>\n";
+            }
+            out << "</place>\n";
+        }
+        for(size_t i = 0; i < _ntransitions; ++i)
+        {
+            out << "<transition id=\"" << _transitionnames[i] << "\">\n"
+                << "<name><text>" << _transitionnames[i] << "</text></name>\n";
+            out << "</transition>\n";
+        }
+        size_t id = 0;
+        for(size_t t = 0; t < _ntransitions; ++t)
+        {
+            auto pre = preset(t);
+
+            for(; pre.first != pre.second; ++pre.first)
+            {
+                out << "<arc id=\"" << (id++) << "\" source=\""
+                    << _placenames[pre.first->place] << "\" target=\""
+                    << _transitionnames[t] << "\">\n";
+                
+                if(pre.first->tokens > 1)
+                {
+                    out << "<inscription><text>" << pre.first->tokens << "</text></inscription>\n";                    
+                }
+                
+                out << "</arc>\n";
+            }
+
+            auto post = postset(t);
+            for(; post.first != post.second; ++post.first)
+            {
+                out << "<arc id=\"" << (id++) << "\" source=\""
+                    << _transitionnames[t] << "\" target=\""
+                    << _placenames[post.first->place] << "\">\n";
+                
+                if(post.first->tokens > 1)
+                {
+                    out << "<inscription><text>" << post.first->tokens << "</text></inscription>\n";                    
+                }
+                
+                out << "</arc>\n";
+            }
+        }
+        out << "</page></net>\n</pnml>";
+    }
+    
 } // PetriEngine
