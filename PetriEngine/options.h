@@ -26,6 +26,7 @@ struct options_t {
     int queryReductionTimeout = 30, lpsolveTimeout = 10;
     uint32_t siphontrapTimeout = 0;
     uint32_t siphonDepth = 0;
+    uint32_t cores = 1;
 
     //CTL Specific options
     bool gamemode = false;

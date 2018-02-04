@@ -43,6 +43,7 @@
 #include <map>
 #include <memory>
 #include <utility>
+#include <thread>
 
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Contexts.h"
@@ -227,6 +228,17 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         else if (strcmp(argv[i], "--write-reduced") == 0)
         {
             options.model_out_file = std::string(argv[++i]);
+        }
+        else if (strcmp(argv[i], "-a") == 0)
+        {
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%u", &options.cores) != 1) {
+                fprintf(stderr, "Argument Error: Invalid cores count \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
         }
         else if (strcmp(argv[i], "-ctl") == 0){
             if(argc > i + 1){
@@ -539,87 +551,109 @@ int main(int argc, char* argv[]) {
     // simplification. We always want to do negation-push and initial marking check.
     {
         // simplification. We always want to do negation-push and initial marking check.
-        LPCache cache;
-        int used = 0;
+        std::vector<LPCache> caches(options.cores);
+        std::atomic<uint32_t> to_handle(queries.size());
+        auto begin = std::chrono::high_resolution_clock::now();
+        auto end = std::chrono::high_resolution_clock::now();
         std::vector<bool> hadTo(queries.size(), true);
+
         do
         {
-            for(size_t i = 0; i < queries.size(); ++i)
+            auto qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
+            std::atomic<uint32_t> cnt(0);
+            std::vector<std::thread> threads;
+            std::vector<std::stringstream> tstream(queries.size());
+            for(size_t c = 0; c < std::min<uint32_t>(options.cores, queries.size()); ++c)
             {
-                if(!hadTo[i]) continue;
-                hadTo[i] = false;
-                auto qt = (options.queryReductionTimeout - used) / queries.size();
-                negstat_t stats;            
-                EvaluationContext context(qm0, qnet.get());
-                if(options.printstatistics && options.queryReductionTimeout > 0)
-                {
-                    std::cout << "\nQuery before reduction: ";
-                    queries[i]->toString(std::cout);
-                    std::cout << std::endl;
-                    std::cout << "RWSTATS LEGEND:";
-                    stats.printRules(std::cout);
-                    std::cout << std::endl;
-                }
+                threads.push_back(std::thread([&,c](){ 
+                    auto& out = tstream[c];
+                    auto& cache = caches[c];
+                    while(true)
+                    {
+                    auto i = cnt++;
+                    if(i >= queries.size()) return;                
+                    if(!hadTo[i]) continue;
+                    hadTo[i] = false;
+                    negstat_t stats;            
+                    EvaluationContext context(qm0, qnet.get());
+                    if(options.printstatistics && options.queryReductionTimeout > 0)
+                    {
+                        out << "\nQuery before reduction: ";
+                        queries[i]->toString(std::cout);
+                        out << std::endl;
+                        out << "RWSTATS LEGEND:";
+                        stats.printRules(std::cout);
+                        out << std::endl;
+                    }
 
-                int preSize=queries[i]->formulaSize(); 
-                bool isInvariant = queries[i].get()->isInvariant(); 
-                queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false)
-                                        ->pushNegation(stats, context, false, false);
+                    int preSize=queries[i]->formulaSize(); 
+                    bool isInvariant = queries[i].get()->isInvariant(); 
+                    queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false)
+                                            ->pushNegation(stats, context, false, false);
 
-                if(options.queryReductionTimeout > 0)
-                {
-                    std::cout << "RWSTATS PRE:";
-                    stats.print(std::cout);
-                    std::cout << std::endl;
-                }
+                    if(options.queryReductionTimeout > 0)
+                    {
+                        out << "RWSTATS PRE:";
+                        stats.print(out);
+                        out << std::endl;
+                    }
 
-                if (options.queryReductionTimeout > 0)
-                {
-                    SimplificationContext simplificationContext(qm0, qnet.get(), qt,
-                            options.lpsolveTimeout, &cache);
-                    try {
-                        negstat_t stats;            
-                        queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false);
-                        if(options.printstatistics)
-                        {
-                            std::cout << "RWSTATS POST:";
-                            stats.print(std::cout);
-                            std::cout << std::endl;
+                    if (options.queryReductionTimeout > 0)
+                    {
+                        SimplificationContext simplificationContext(qm0, qnet.get(), qt,
+                                options.lpsolveTimeout, &cache);
+                        try {
+                            negstat_t stats;            
+                            queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false);
+                            if(options.printstatistics)
+                            {
+                                out << "RWSTATS POST:";
+                                stats.print(out);
+                                out << std::endl;
+                            }
+                            queries[i].get()->setInvariant(isInvariant);
+                        } catch (std::bad_alloc& ba){
+                            std::cerr << "Query reduction failed." << std::endl;
+                            std::cerr << "Exception information: " << ba.what() << std::endl;
+
+                            delete[] qm0;
+                            std::exit(3);
                         }
-                        queries[i].get()->setInvariant(isInvariant);
-                    } catch (std::bad_alloc& ba){
-                        std::cerr << "Query reduction failed." << std::endl;
-                        std::cerr << "Exception information: " << ba.what() << std::endl;
-
-                        delete[] qm0;
-                        std::exit(3);
+                        out << "\nQuery after reduction: ";
+                        queries[i]->toString(out);
+                        out << std::endl;
+                        if(simplificationContext.timeout()){
+                            out << "Query reduction reached timeout.\n";
+                            hadTo[i] = true;
+                        } else {
+                            out << "Query reduction finished after " << simplificationContext.getReductionTime() << " seconds.\n";
+                            --to_handle;
+                        }
                     }
-                    std::cout << "\nQuery after reduction: ";
-                    queries[i]->toString(std::cout);
-                    std::cout << std::endl;
-                    if(simplificationContext.timeout()){
-                        fprintf(stdout, "Query reduction reached timeout.\n");
-                        hadTo[i] = true;
-                    } else {
-                        fprintf(stdout, "Query reduction finished after %f seconds.\n", simplificationContext.getReductionTime());
+                    else
+                    {
+                        out << "Skipping linear-programming (-q 0)" << std::endl;
                     }
-                    used += simplificationContext.getReductionTime();
-                }
-                else
-                {
-                    std::cout << "Skipping linear-programming (-q 0)" << std::endl;
-                }
-                queries[i].get()->setInvariant(isInvariant);
+                    queries[i].get()->setInvariant(isInvariant);
 
 
-                if(options.printstatistics)
-                {
-                    int postSize=queries[i]->formulaSize();
-                    double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
-                    fprintf(stdout, "Query size reduced from %d to %d nodes (%.2f percent reduction).\n", preSize, postSize, redPerc);
-                }
+                    if(options.printstatistics)
+                    {
+                        int postSize=queries[i]->formulaSize();
+                        double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
+                        out << "Query size reduced from " << preSize << " to " << postSize << " nodes ( " << redPerc << " percent reduction).\n";
+                    }
+                    }
+                }));
             }
-        } while(std::any_of(hadTo.begin(), hadTo.end(), [](auto a) { return a;}) && used < options.queryReductionTimeout);
+            for(size_t i = 0; i < options.cores; ++i)
+            {
+                threads[i].join();
+                std::cout << tstream[i].str();
+                std::cout << std::endl;
+            }
+            end = std::chrono::high_resolution_clock::now();
+        } while(std::any_of(hadTo.begin(), hadTo.end(), [](auto a) { return a;}) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.queryReductionTimeout);
     } 
     
     if(options.query_out_file.size() > 0)
