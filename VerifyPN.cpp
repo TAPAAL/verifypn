@@ -559,7 +559,9 @@ int main(int argc, char* argv[]) {
 
         do
         {
-            auto qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
+            auto qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / ( 1 + (to_handle / options.cores));
+            if(to_handle <= options.cores)
+                qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count());
             std::atomic<uint32_t> cnt(0);
             std::vector<std::thread> threads;
             std::vector<std::stringstream> tstream(queries.size());
