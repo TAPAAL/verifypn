@@ -556,7 +556,13 @@ int main(int argc, char* argv[]) {
         auto begin = std::chrono::high_resolution_clock::now();
         auto end = std::chrono::high_resolution_clock::now();
         std::vector<bool> hadTo(queries.size(), true);
-
+        if(options.printstatistics && options.queryReductionTimeout > 0)
+        {
+            negstat_t stats;            
+            std::cout << "RWSTATS LEGEND:";
+            stats.printRules(std::cout);            
+            std::cout << std::endl;
+        }
         do
         {
             auto qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / ( 1 + (to_handle / options.cores));
@@ -582,9 +588,6 @@ int main(int argc, char* argv[]) {
                     {
                         out << "\nQuery before reduction: ";
                         queries[i]->toString(std::cout);
-                        out << std::endl;
-                        out << "RWSTATS LEGEND:";
-                        stats.printRules(std::cout);
                         out << std::endl;
                     }
 
