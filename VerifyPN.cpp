@@ -229,7 +229,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         {
             options.model_out_file = std::string(argv[++i]);
         }
-        else if (strcmp(argv[i], "-a") == 0)
+        else if (strcmp(argv[i], "-z") == 0)
         {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -566,13 +566,13 @@ int main(int argc, char* argv[]) {
         do
         {
             auto qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / ( 1 + (to_handle / options.cores));
-            if(to_handle <= options.cores)
-                qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count());
-            qt = std::max<uint32_t>(qt, 1);
+            if(to_handle <= options.cores || options.cores == 1)
+                qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
             std::atomic<uint32_t> cnt(0);
             std::vector<std::thread> threads;
             std::vector<std::stringstream> tstream(queries.size());
-            for(size_t c = 0; c < std::min<uint32_t>(options.cores, queries.size()); ++c)
+            uint32_t old = to_handle;
+            for(size_t c = 0; c < std::min<uint32_t>(options.cores, old); ++c)
             {
                 threads.push_back(std::thread([&,c](){ 
                     auto& out = tstream[c];
@@ -588,7 +588,7 @@ int main(int argc, char* argv[]) {
                     if(options.printstatistics && options.queryReductionTimeout > 0)
                     {
                         out << "\nQuery before reduction: ";
-                        queries[i]->toString(std::cout);
+                        queries[i]->toString(out);
                         out << std::endl;
                     }
 
@@ -604,7 +604,7 @@ int main(int argc, char* argv[]) {
                         out << std::endl;
                     }
 
-                    if (options.queryReductionTimeout > 0)
+                    if (options.queryReductionTimeout > 0 && qt > 0)
                     {
                         SimplificationContext simplificationContext(qm0, qnet.get(), qt,
                                 options.lpsolveTimeout, &cache);
@@ -625,7 +625,7 @@ int main(int argc, char* argv[]) {
                             delete[] qm0;
                             std::exit(3);
                         }
-                        
+
                         if(options.printstatistics)
                         {
                             out << "\nQuery after reduction: ";
@@ -658,7 +658,7 @@ int main(int argc, char* argv[]) {
                     }
                 }));
             }
-            for(size_t i = 0; i < options.cores; ++i)
+            for(size_t i = 0; i < std::min<uint32_t>(options.cores, old); ++i)
             {
                 threads[i].join();
                 std::cout << tstream[i].str();
