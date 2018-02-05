@@ -597,7 +597,7 @@ int main(int argc, char* argv[]) {
                     queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false)
                                             ->pushNegation(stats, context, false, false);
 
-                    if(options.queryReductionTimeout > 0)
+                    if(options.queryReductionTimeout > 0 && options.printstatistics)
                     {
                         out << "RWSTATS PRE:";
                         stats.print(out);
@@ -625,18 +625,24 @@ int main(int argc, char* argv[]) {
                             delete[] qm0;
                             std::exit(3);
                         }
-                        out << "\nQuery after reduction: ";
-                        queries[i]->toString(out);
-                        out << std::endl;
+                        
+                        if(options.printstatistics)
+                        {
+                            out << "\nQuery after reduction: ";
+                            queries[i]->toString(out);
+                            out << std::endl;
+                        }
                         if(simplificationContext.timeout()){
-                            out << "Query reduction reached timeout.\n";
+                            if(options.printstatistics)
+                                out << "Query reduction reached timeout.\n";
                             hadTo[i] = true;
                         } else {
-                            out << "Query reduction finished after " << simplificationContext.getReductionTime() << " seconds.\n";
+                            if(options.printstatistics)
+                                out << "Query reduction finished after " << simplificationContext.getReductionTime() << " seconds.\n";
                             --to_handle;
                         }
                     }
-                    else
+                    else if(options.printstatistics)
                     {
                         out << "Skipping linear-programming (-q 0)" << std::endl;
                     }
