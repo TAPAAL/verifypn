@@ -566,7 +566,7 @@ int main(int argc, char* argv[]) {
         do
         {
             auto qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / ( 1 + (to_handle / options.cores));
-            if(to_handle <= options.cores || options.cores == 1)
+            if((to_handle <= options.cores || options.cores == 1) && to_handle > 0)
                 qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
             std::atomic<uint32_t> cnt(0);
             std::vector<std::thread> threads;
@@ -665,7 +665,7 @@ int main(int argc, char* argv[]) {
                 std::cout << std::endl;
             }
             end = std::chrono::high_resolution_clock::now();
-        } while(std::any_of(hadTo.begin(), hadTo.end(), [](auto a) { return a;}) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.queryReductionTimeout);
+        } while(std::any_of(hadTo.begin(), hadTo.end(), [](auto a) { return a;}) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.queryReductionTimeout && to_handle > 0);
     } 
     
     if(options.query_out_file.size() > 0)
