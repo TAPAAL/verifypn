@@ -503,81 +503,34 @@ namespace PetriEngine {
                     Place& place2 = parent->_places[p2];
 
                     // C2, C3. Consumer and producer-sets must match
-                    if(place1.consumers.size() != place2.consumers.size() ||
-                       place1.producers.size() != place2.producers.size())
+                    if(place1.consumers.size() < place2.consumers.size() ||
+                       place1.producers.size() > place2.producers.size())
                         break;
 
-                    uint mult = std::numeric_limits<uint>::max();
+                    double mult = std::numeric_limits<double>::infinity();
 
                     // C8. Consumers must match with weights
                     int ok = 0;
-                    for(int i = place1.consumers.size() - 1; i >= 0; --i)
+                    size_t j = 0;
+                    for(size_t i = 0; i < place2.consumers.size(); ++i)
                     {
-                        if(place1.consumers[i] != place2.consumers[i])
+                        while(place1.consumers[j] < place2.consumers[i] && j < place1.consumers.size()) ++j;
+                        if(place1.consumers.size() <= j || place1.consumers[j] != place2.consumers[i])
                         {
                             ok = 2;
                             break;
                         }
 
-                        Transition& trans = getTransition(place1.consumers[i]);
+                        Transition& trans = getTransition(place1.consumers[j]);
                         auto a1 = getInArc(p1, trans);
                         auto a2 = getInArc(p2, trans);
-                        if(a2 == trans.pre.end())
-                        {
-                            ok = 2;
-                            break;
-                        }
                         assert(a1 != trans.pre.end());
+                        assert(a2 != trans.pre.end());
+                        mult = std::min(mult, ((double)a2->weight) / ((double)a1->weight));
 
-                        if(mult == std::numeric_limits<uint>::max())
+                        if(mult < 1)
                         {
-                            if(a2->weight < a1->weight || (a2->weight % a1->weight) != 0)
-                            {
-                                ok = 1;
-                                break;
-                            }
-                            mult = a2->weight / a1->weight;
-                        }
-                        else if(a1->weight*mult != a2->weight)
-                        {
-                            ok = 2;
-                            break;
-                        }
-                    }
-
-                    if(ok == 2) break;
-                    else if(ok == 1) continue;
-
-                    // C7. Producers must match with weights
-                    for(int i = place1.producers.size() - 1; i >= 0; --i)
-                    {
-                        if(place1.producers[i] != place2.producers[i])
-                        {
-                            ok = 2;
-                            break;
-                        }
-
-                        Transition& trans = getTransition(place1.producers[i]);
-                        auto a1 = getOutArc(trans, p1);
-                        auto a2 = getOutArc(trans, p2);
-                        if( a2 == trans.post.end())
-                        {
-                            ok = 2;
-                            break;
-                        }
-                        assert(a1 != trans.post.end());
-                        if(mult == std::numeric_limits<uint>::max())
-                        {
-                            if(a2->weight < a1->weight || (a2->weight % a1->weight) != 0)
-                            {
-                                ok = 1;
-                                break;
-                            }
-                            mult = a2->weight / a1->weight;
-                        }
-                        else if(a1->weight*mult != a2->weight)
-                        {
-                            ok = 2;
+                            ok = 1;
                             break;
                         }
                     }
@@ -586,9 +539,38 @@ namespace PetriEngine {
                     else if(ok == 1) continue;
 
                     // C6. We do not care about excess markings in p2.
-                    if(mult != std::numeric_limits<uint>::max() &&
-                            (parent->initialMarking[p1] * mult) > parent->initialMarking[p2])
+                    if(mult != std::numeric_limits<double>::infinity() &&
+                            (((double)parent->initialMarking[p1]) * mult) > (double)parent->initialMarking[p2])
                         continue;
+
+                    
+                    // C7. Producers must match with weights
+                    j = 0;
+                    for(size_t i = 0; i < place1.producers.size(); ++i)
+                    {
+                        while(place2.producers[j] < place1.producers[i] && j < place2.producers.size()) ++j;
+                        if(place1.producers[i] != place2.producers[j])
+                        {
+                            ok = 2;
+                            break;
+                        }
+
+                        Transition& trans = getTransition(place1.producers[i]);
+                        auto a1 = getOutArc(trans, p1);
+                        auto a2 = getOutArc(trans, p2);
+                        assert(a1 != trans.post.end());
+                        assert(a2 != trans.post.end());
+
+                        if(((double)a1->weight)*mult >= (double)a2->weight)
+                        {
+                            ok = 1;
+                            break;
+                        }
+                    }
+
+                    if(ok == 2) break;
+                    else if(ok == 1) continue;
+
 
                     parent->initialMarking[p2] = 0;
 
@@ -825,32 +807,45 @@ namespace PetriEngine {
                 const Transition& trans = parent->_transitions[t];
                 for(const Arc& arc : trans.pre)
                 {
-                    if(!pseen[arc.place])
+                    const Place& place = parent->_places[arc.place];
+                    if(arc.inhib)
                     {
-                        const Place& place = parent->_places[arc.place];
-                        for(auto pt : place.producers)
-                        {
-                            if(!tseen[pt])
-                            {
-                                Transition& trans = parent->_transitions[pt];
-                                if(std::equal(trans.pre.begin(), trans.pre.end(), trans.post.begin(), trans.post.end()))
-                                    continue;
-                                tseen[pt] = true;
-                                wtrans.push_back(pt);
-                            }
-                        }
-
-
                         for(auto pt : place.consumers)
                         {
-                            if(!tseen[pt] && (!remove_consumers || placeInQuery[pt] > 0))
+                            if(!tseen[pt])
                             {
                                 tseen[pt] = true;
                                 wtrans.push_back(pt);                                    
                             }
-                        }
+                        }                        
                     }
-                    pseen[arc.place] = true;
+                    else
+                    {
+                        if(!pseen[arc.place])
+                        {
+                            for(auto pt : place.producers)
+                            {
+                                if(!tseen[pt])
+                                {
+                                    Transition& trans = parent->_transitions[pt];
+                                    if(std::equal(trans.pre.begin(), trans.pre.end(), trans.post.begin(), trans.post.end()))
+                                        continue;
+                                    tseen[pt] = true;
+                                    wtrans.push_back(pt);
+                                }
+                            }
+
+                            for(auto pt : place.consumers)
+                            {
+                                if(!tseen[pt] && (!remove_consumers || placeInQuery[pt] > 0))
+                                {
+                                    tseen[pt] = true;
+                                    wtrans.push_back(pt);                                    
+                                }
+                            }
+                        }
+                        pseen[arc.place] = true;
+                    }
                 }
             }
 
@@ -925,7 +920,8 @@ namespace PetriEngine {
             Place& place = parent->_places[p];
             if(place.skip) continue;
             if(place.inhib) continue;
-            if(place.producers.size() != place.consumers.size()) continue;
+            if(place.producers.size() < place.consumers.size()) continue;
+            if(placeInQuery[p] != 0) continue; 
             
             bool ok = true;
             for(uint cons : place.consumers)
@@ -940,9 +936,9 @@ namespace PetriEngine {
                 else
                 {
                     auto it = getOutArc(t, p);
-                    if(it == t.post.end() || it->place != p ||
-                       (it->weight < w  && placeInQuery[p] == 0) ||
-                       (it->weight != w && placeInQuery[p] > 0))
+                    if(it == t.post.end() || 
+                       it->place != p     ||
+                       it->weight < w)
                     {
                         ok = false;
                         break;
@@ -953,37 +949,11 @@ namespace PetriEngine {
             if(!ok) continue;
             
             ++_ruleG;
-            if(placeInQuery[p] != 0)
+            
+            if((numberofplaces - _removedPlaces) > 1)
             {
-/*                for(auto& t : place.consumers)
-                {
-                    Transition& trans = getTransition(t);
-                    auto ait = getInArc(p, trans);
-                    if(ait != trans.pre.end() && ait->place == p)
-                    {
-                        continueReductions = true;
-                        trans.pre.erase(ait);
-                    }
-                }
-
-                for(auto& t : place.producers)
-                {
-                    Transition& trans = getTransition(t);
-                    auto ait = getOutArc(trans, p);
-                    if(ait != trans.post.end() && ait->place == p)
-                    {
-                        continueReductions = true;
-                        trans.post.erase(ait);
-                    }
-                }*/
-            }
-            else
-            {
-                if((numberofplaces - _removedPlaces) > 1)
-                {
-                    skipPlace(p);
-                    continueReductions = true;
-                }
+                skipPlace(p);
+                continueReductions = true;
             }
             
         }
@@ -1001,24 +971,28 @@ namespace PetriEngine {
             Transition& trans = parent->_transitions[t];
             if(trans.skip) continue;
             if(trans.inhib) continue;
-            if(trans.pre.size() != trans.post.size()) continue;
+            if(trans.pre.size() < trans.post.size()) continue;
             if(!remove_loops && trans.post.size() == 0) continue;
             
             auto preit = trans.pre.begin();
-            auto postit = trans.post.begin();
             
             bool ok = true;
-            for(size_t i = 0; i < trans.pre.size(); ++i)
+            for(size_t i = 0; i < trans.post.size(); ++i)
             {
-                if(preit->place != postit->place ||
-                   preit->weight != postit->weight ||
+                while(preit != trans.pre.end() && preit->place < preit->place)
+                    ++preit;
+                if(preit == trans.post.end()             ||
+                   preit->place != trans.post[i].place  ||
+                   preit->weight < trans.post[i].weight ||
                    preit->inhib)
                 {
                     ok = false;
                     break;
                 }
-                ++preit;
-                ++postit;
+                else
+                {
+                    ++preit;
+                }
             }
             
             if(!ok) continue;
