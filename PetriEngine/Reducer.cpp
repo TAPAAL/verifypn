@@ -972,28 +972,33 @@ namespace PetriEngine {
             if(trans.skip) continue;
             if(trans.inhib) continue;
             if(trans.pre.size() < trans.post.size()) continue;
-            if(!remove_loops && trans.post.size() == 0) continue;
+            if(!remove_loops && trans.pre.size() == 0) continue;
             
-            auto preit = trans.pre.begin();
             
-            bool ok = true;
-            for(size_t i = 0; i < trans.post.size(); ++i)
+            bool ok;
+            for(auto& p : trans.pre)
             {
-                while(preit != trans.pre.end() && preit->place < preit->place)
-                    ++preit;
-                if(preit == trans.post.end()             ||
-                   preit->place != trans.post[i].place  ||
-                   preit->weight < trans.post[i].weight ||
-                   preit->inhib)
+                if(p.inhib || placeInQuery[p.place] > 0 || parent->_places[p.place].inhib)
                 {
                     ok = false;
                     break;
                 }
-                else
+            }
+            if(!ok) continue;
+            
+            
+            for(auto& p : trans.post)
+            {
+                auto a = getInArc(p.place, trans);
+                if(a == trans.pre.end() ||
+                   a->place != p.place  ||
+                   a->weight < p.weight)
                 {
-                    ++preit;
+                    ok = false;
+                    break;
                 }
             }
+            
             
             if(!ok) continue;
             
