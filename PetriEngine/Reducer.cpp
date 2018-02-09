@@ -542,7 +542,9 @@ namespace PetriEngine {
                     // C6. We do not care about excess markings in p2.
                     if(mult != std::numeric_limits<double>::infinity() &&
                             (((double)parent->initialMarking[p1]) * mult) > (double)parent->initialMarking[p2])
+                    {
                         continue;
+                    }
 
                     
                     // C7. Producers must match with weights
@@ -562,7 +564,7 @@ namespace PetriEngine {
                         assert(a1 != trans.post.end());
                         assert(a2 != trans.post.end());
 
-                        if(((double)a1->weight)*mult >= (double)a2->weight)
+                        if(((double)a1->weight)*mult > (double)a2->weight)
                         {
                             ok = 1;
                             break;
@@ -974,28 +976,49 @@ namespace PetriEngine {
             if(trans.inhib) continue;
             if(trans.pre.size() < trans.post.size()) continue;
             if(!remove_loops && trans.pre.size() == 0) continue;
-            if(std::any_of(trans.pre.begin(), trans.pre.end(), [](auto& a){ return a.inhib;})) continue;
             
             auto postit = trans.post.begin();
+            auto preit = trans.pre.begin();
             
             bool ok = true;
-            for(auto& post : trans.post)
+            while(true)
             {
-                auto preit = getInArc(post.place, trans);
-                if(
-                   preit == trans.pre.end() ||
-                   preit->place != post.place ||
-                   (placeInQuery[preit->place] > 0 && preit->weight != post.weight) ||
-                   (placeInQuery[preit->place] == 0 && preit->weight < post.weight))
+                if(preit == trans.pre.end() && postit == trans.post.end())
+                    break;
+                if(preit->inhib)
                 {
                     ok = false;
                     break;
                 }
-                ++postit;
+                if(postit != trans.post.end() && preit->place == postit->place)
+                {
+                    if((placeInQuery[preit->place] > 0 && preit->weight != postit->weight) ||
+                       (placeInQuery[preit->place] == 0 && preit->weight < postit->weight))
+                    {
+                        ok = false;
+                        break;
+                    }
+                    ++preit;
+                    ++postit;
+                }
+                else if(postit == trans.post.end() || preit->place < postit->place) 
+                {
+                    if(placeInQuery[preit->place] > 0)
+                    {
+                        ok = false;
+                        break;
+                    }
+                    ++preit;
+                }
+                else
+                {
+                    // could not match a post with a pre
+                    ok = false;
+                    break;
+                }
             }
                         
             if(!ok) continue;
-            
             ++_ruleH;
             skipTransition(t);
         }
