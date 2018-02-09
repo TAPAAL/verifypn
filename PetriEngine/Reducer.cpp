@@ -11,6 +11,7 @@
 #include <PetriParse/PNMLParser.h>
 #include <queue>
 #include <set>
+#include <algorithm>
 
 namespace PetriEngine {
 
@@ -973,33 +974,26 @@ namespace PetriEngine {
             if(trans.inhib) continue;
             if(trans.pre.size() < trans.post.size()) continue;
             if(!remove_loops && trans.pre.size() == 0) continue;
+            if(std::any_of(trans.pre.begin(), trans.pre.end(), [](auto& a){ return a.inhib;})) continue;
             
+            auto postit = trans.post.begin();
             
-            bool ok;
-            for(auto& p : trans.pre)
+            bool ok = true;
+            for(auto& post : trans.post)
             {
-                if(p.inhib || placeInQuery[p.place] > 0 || parent->_places[p.place].inhib)
+                auto preit = getInArc(post.place, trans);
+                if(
+                   preit == trans.pre.end() ||
+                   preit->place != post.place ||
+                   (placeInQuery[preit->place] > 0 && preit->weight != post.weight) ||
+                   (placeInQuery[preit->place] == 0 && preit->weight < post.weight))
                 {
                     ok = false;
                     break;
                 }
+                ++postit;
             }
-            if(!ok) continue;
-            
-            
-            for(auto& p : trans.post)
-            {
-                auto a = getInArc(p.place, trans);
-                if(a == trans.pre.end() ||
-                   a->place != p.place  ||
-                   a->weight < p.weight)
-                {
-                    ok = false;
-                    break;
-                }
-            }
-            
-            
+                        
             if(!ok) continue;
             
             ++_ruleH;
