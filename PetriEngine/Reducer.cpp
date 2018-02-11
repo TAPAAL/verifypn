@@ -985,6 +985,11 @@ namespace PetriEngine {
             {
                 if(preit == trans.pre.end() && postit == trans.post.end())
                     break;
+                if(preit == trans.pre.end())
+                {
+                    ok = false;
+                    break;
+                }
                 if(preit->inhib)
                 {
                     ok = false;
