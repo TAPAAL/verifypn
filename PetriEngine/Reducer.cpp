@@ -95,10 +95,10 @@ namespace PetriEngine {
             return ait;
         }
         else 
-            {
+        {
             return trans.post.end();
-            }
         }
+    }
     
     ArcIter Reducer::getInArc(uint32_t place, Transition& trans)
     {
@@ -111,7 +111,7 @@ namespace PetriEngine {
         }
         else 
         {
-        return trans.pre.end();
+            return trans.pre.end();
         }
     }
     
@@ -1031,6 +1031,124 @@ namespace PetriEngine {
         return continueReductions;
     }
     
+    bool Reducer::ReducebyRuleI(uint32_t* placeInQuery)
+    {
+        for(uint32_t p1 = 0; p1 < parent->numberOfPlaces(); ++p1)
+        {
+            if(placeInQuery[p1] > 0) continue;
+            auto& place1 = parent->_places[p1];
+            if(place1.skip) continue;
+            if(place1.inhib) continue;
+            if(place1.consumers.size() == 0) continue;
+            if(place1.producers.size() == 0) continue;
+            for(uint32_t p2 = p1 + 1; p2 < parent->numberOfPlaces(); ++p2)
+            {
+                if(placeInQuery[p2] > 0) continue;
+                auto& place2 = parent->_places[p2];
+                if(place2.skip) continue;
+                if(place2.inhib) continue;
+                if(place2.consumers.size() == 0) continue;
+                if(place2.producers.size() == 0) continue;
+                               
+                auto check = [&](auto& shr){
+                    for(auto t : shr)
+                    {
+                        auto& trans = parent->_transitions[t];
+                        if(trans.post.size() == 1 &&
+                           trans.pre.size() == 1)
+                        {
+                            if(trans.pre[0].weight != 1 ||
+                               trans.post[0].weight != 1)
+                            {
+                                return std::numeric_limits<uint32_t>::max();
+                            }
+                            else
+                            {
+                                return t;
+                            }
+                        }
+                        else
+                        {
+                                return std::numeric_limits<uint32_t>::max();
+                        }
+                    }
+                    return std::numeric_limits<uint32_t>::max();                
+                };
+
+                std::vector<uint32_t> shr1;
+                std::set_intersection(  place1.consumers.begin(), place1.consumers.end(),
+                                        place2.producers.begin(), place2.producers.end(),
+                                        std::back_inserter(shr1));
+                
+                auto t1 = check(shr1);
+                if(t1 >= parent->numberOfTransitions()) continue;
+                
+                std::vector<uint32_t> shr2;
+                std::set_intersection(  place2.consumers.begin(), place2.consumers.end(),
+                                        place1.producers.begin(), place1.producers.end(),
+                                        std::back_inserter(shr2));
+                auto t2 = check(shr2);
+                if(t2 >= parent->numberOfTransitions()) continue;                
+
+                ++_ruleI;
+                
+                {
+
+                    for(auto p2it : place2.consumers)
+                    {
+                        auto& t = parent->_transitions[p2it];
+                        auto arc = getInArc(p2, t);
+                        assert(arc != t.pre.end());
+                        assert(arc->place == p2);
+                        auto a = *arc;
+                        a.place = p1;
+                        auto dest = std::lower_bound(t.pre.begin(), t.pre.end(), a);
+                        if(dest == t.pre.end() || dest->place != p1)
+                        {
+                            t.pre.insert(dest, a);
+                            auto lb = std::lower_bound(place1.consumers.begin(), place1.consumers.end(), p2it);
+                            place1.consumers.insert(lb, p2it);
+                        }
+                        else
+                        {
+                            dest->weight += a.weight;
+                        }
+                        consistent();
+                    }
+                }
+                
+                {
+                    auto p2it = place2.producers.begin();
+
+                    for(;p2it != place2.producers.end(); ++p2it)
+                    {
+                        auto& t = parent->_transitions[*p2it];
+                        Arc a = *getOutArc(t, p2);
+                        a.place = p1;
+                        auto dest = std::lower_bound(t.post.begin(), t.post.end(), a);
+                        if(dest == t.post.end() || dest->place != p1)
+                        {
+                            t.post.insert(dest, a);
+                            auto lb = std::lower_bound(place1.producers.begin(), place1.producers.end(), *p2it);
+                            place1.producers.insert(lb, *p2it);
+                        }
+                        else
+                        {
+                            dest->weight += a.weight;
+                        }
+                        consistent();
+                    }
+                }
+                
+                parent->initialMarking[p1] += parent->initialMarking[p2];
+                
+                skipPlace(p2);
+                skipTransition(t2);
+            }
+        }
+        
+    }
+    
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
@@ -1049,6 +1167,7 @@ namespace PetriEngine {
                     changed |= ReducebyRuleE(context.getQueryPlaceCount());
                     changed |= ReducebyRuleG(context.getQueryPlaceCount());
                     changed |= ReducebyRuleH(context.getQueryPlaceCount(), remove_loops);
+                    changed |= ReducebyRuleI(context.getQueryPlaceCount());
                     if(!remove_loops) 
                         changed |= ReducebyRuleF(context.getQueryPlaceCount(), remove_loops, remove_consumers);
                 } while(changed && !hasTimedout());

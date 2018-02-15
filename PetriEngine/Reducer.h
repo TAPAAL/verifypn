@@ -106,7 +106,8 @@ namespace PetriEngine {
                 << "Applications of rule E: " << _ruleE << "\n"
                 << "Applications of rule F: " << _ruleF << "\n"
                 << "Applications of rule G: " << _ruleG << "\n"
-                << "Applications of rule H: " << _ruleH << std::endl;
+                << "Applications of rule H: " << _ruleH << "\n"
+                << "Applications of rule I: " << _ruleI << std::endl;
         }
 
         void postFire(std::ostream&, const std::string& transition);
@@ -116,7 +117,7 @@ namespace PetriEngine {
     private:
         size_t _removedTransitions = 0;
         size_t _removedPlaces= 0;
-        size_t _ruleA = 0, _ruleB = 0, _ruleC = 0, _ruleD = 0, _ruleE = 0, _ruleF = 0, _ruleG = 0, _ruleH = 0;
+        size_t _ruleA = 0, _ruleB = 0, _ruleC = 0, _ruleD = 0, _ruleE = 0, _ruleF = 0, _ruleG = 0, _ruleH = 0, _ruleI = 0;
         PetriNetBuilder* parent = nullptr;
         bool reconstructTrace = false;
         std::chrono::high_resolution_clock::time_point _timer;
@@ -131,6 +132,7 @@ namespace PetriEngine {
         bool ReducebyRuleF(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers);
         bool ReducebyRuleG(uint32_t* placeInQuery);
         bool ReducebyRuleH(uint32_t* placeInQuery, bool remove_loops);
+        bool ReducebyRuleI(uint32_t* placeInQuery);
         
         std::string getTransitionName(uint32_t transition);
         std::string getPlaceName(uint32_t place);
