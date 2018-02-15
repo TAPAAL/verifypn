@@ -1033,65 +1033,42 @@ namespace PetriEngine {
     
     bool Reducer::ReducebyRuleI(uint32_t* placeInQuery)
     {
-        for(uint32_t p1 = 0; p1 < parent->numberOfPlaces(); ++p1)
+        bool continueReductions = false;
+        for(uint32_t t1 = 0; t1 < parent->numberOfTransitions(); ++t1)
         {
+            auto& trans1 = parent->_transitions[t1];
+            if(trans1.skip) continue;
+            if(trans1.inhib) continue;
+            if(trans1.pre.size() != 1) continue;
+            if(trans1.post.size() != 1) continue;
+            auto p1 = trans1.pre[0].place;
+            auto p2 = trans1.post[0].place;
+            if(trans1.pre[0].weight != 1) continue;
+            if(trans1.post[0].weight != 1) continue;
+            if(p1 == p2) continue;
             if(placeInQuery[p1] > 0) continue;
-            auto& place1 = parent->_places[p1];
-            if(place1.skip) continue;
-            if(place1.inhib) continue;
-            if(place1.consumers.size() == 0) continue;
-            if(place1.producers.size() == 0) continue;
-            for(uint32_t p2 = p1 + 1; p2 < parent->numberOfPlaces(); ++p2)
+            if(placeInQuery[p2] > 0) continue;
+            if(parent->_places[p1].inhib) continue;
+            if(parent->_places[p2].inhib) continue;
+            
+            for(uint32_t t2 = t1 + 1; t2 < parent->numberOfTransitions(); ++t2)
             {
-                if(placeInQuery[p2] > 0) continue;
+                auto& trans2 = parent->_transitions[t2];
+                if(trans2.skip) continue;
+                if(trans2.inhib) continue;
+                if(trans2.pre.size() != 1) continue;
+                if(trans2.post.size() != 1) continue;
+                if(trans2.pre[0].weight != 1) continue;
+                if(trans2.post[0].weight != 1) continue;
+                if(trans2.pre[0].place != p2) continue;                
+                if(trans2.post[0].place != p1) continue;                
+
+               ++_ruleI;
+                skipTransition(t2);
+
+                auto& place1 = parent->_places[p1];
                 auto& place2 = parent->_places[p2];
-                if(place2.skip) continue;
-                if(place2.inhib) continue;
-                if(place2.consumers.size() == 0) continue;
-                if(place2.producers.size() == 0) continue;
-                               
-                auto check = [&](auto& shr){
-                    for(auto t : shr)
-                    {
-                        auto& trans = parent->_transitions[t];
-                        if(trans.post.size() == 1 &&
-                           trans.pre.size() == 1)
-                        {
-                            if(trans.pre[0].weight != 1 ||
-                               trans.post[0].weight != 1)
-                            {
-                                return std::numeric_limits<uint32_t>::max();
-                            }
-                            else
-                            {
-                                return t;
-                            }
-                        }
-                        else
-                        {
-                                return std::numeric_limits<uint32_t>::max();
-                        }
-                    }
-                    return std::numeric_limits<uint32_t>::max();                
-                };
 
-                std::vector<uint32_t> shr1;
-                std::set_intersection(  place1.consumers.begin(), place1.consumers.end(),
-                                        place2.producers.begin(), place2.producers.end(),
-                                        std::back_inserter(shr1));
-                
-                auto t1 = check(shr1);
-                if(t1 >= parent->numberOfTransitions()) continue;
-                
-                std::vector<uint32_t> shr2;
-                std::set_intersection(  place2.consumers.begin(), place2.consumers.end(),
-                                        place1.producers.begin(), place1.producers.end(),
-                                        std::back_inserter(shr2));
-                auto t2 = check(shr2);
-                if(t2 >= parent->numberOfTransitions()) continue;                
-
-                ++_ruleI;
-                
                 {
 
                     for(auto p2it : place2.consumers)
@@ -1143,10 +1120,10 @@ namespace PetriEngine {
                 parent->initialMarking[p1] += parent->initialMarking[p2];
                 
                 skipPlace(p2);
-                skipTransition(t2);
+                continueReductions = true;
             }
-        }
-        
+        }   
+        return continueReductions;
     }
     
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers) {
