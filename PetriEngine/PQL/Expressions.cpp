@@ -3399,11 +3399,11 @@ namespace PetriEngine {
             }            
         }
        
-        CommutativeExpr::CommutativeExpr(std::vector<Expr_ptr>&& exprs, int initial)
-        : NaryExpr(), _constant(initial) {
+        void CommutativeExpr::init(std::vector<Expr_ptr>&& exprs)
+        {
             for (auto& e : exprs) {
                 if (auto lit = dynamic_pointer_cast<PQL::LiteralExpr>(e))
-                    _constant = this->apply(_constant, lit->value());
+                    _constant = apply(_constant, lit->value());
                 else if (auto id = dynamic_pointer_cast<PQL::IdentifierExpr>(e)) {
                     _ids.emplace_back(id->offset(), id->name());
                 } 
@@ -3422,6 +3422,16 @@ namespace PetriEngine {
                     _exprs.emplace_back(std::move(e));
                 }
             }
+        }
+        
+        PlusExpr::PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk) : CommutativeExpr(0), tk(tk)
+        {
+            init(std::move(exprs));
+        }
+        
+        MultiplyExpr::MultiplyExpr(std::vector<Expr_ptr>&& exprs) : CommutativeExpr(1)
+        {
+            init(std::move(exprs));
         }
 
     } // PQL

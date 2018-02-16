@@ -56,17 +56,19 @@ namespace PetriEngine {
             }
             void toString(std::ostream&) const override;
         protected:
-            virtual int apply(int v1, int v2) const { return 0; };
+            virtual int apply(int v1, int v2) const = 0;
             virtual std::string op() const = 0;
             std::vector<Expr_ptr> _exprs;
             virtual int32_t preOp(const EvaluationContext& context) const;
         };
         
+        class PlusExpr;
+        class MultiplyExpr;
+        
         class CommutativeExpr : public NaryExpr
         {
         public:
             friend CompareCondition;
-            CommutativeExpr(std::vector<Expr_ptr>&& exprs, int initial);            
             virtual void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) const override;
             int formulaSize() const override{
@@ -76,6 +78,8 @@ namespace PetriEngine {
             }
             void toString(std::ostream&) const override;            
         protected:
+            CommutativeExpr(int constant): _constant(constant) {};
+            void init(std::vector<Expr_ptr>&& exprs);
             virtual int32_t preOp(const EvaluationContext& context) const override;
             int32_t _constant;
             std::vector<std::pair<uint32_t,std::string>> _ids;
@@ -86,10 +90,7 @@ namespace PetriEngine {
         class PlusExpr : public CommutativeExpr {
         public:
 
-            PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk = false) :
-            CommutativeExpr(std::move(exprs), 0), tk(tk)
-            {
-            }
+            PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk = false);
             
             Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
@@ -130,10 +131,7 @@ namespace PetriEngine {
         class MultiplyExpr : public CommutativeExpr {
         public:
 
-            MultiplyExpr(std::vector<Expr_ptr>&& exprs) :
-            CommutativeExpr(std::move(exprs), 1)
-            {
-            }
+            MultiplyExpr(std::vector<Expr_ptr>&& exprs);
             Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
