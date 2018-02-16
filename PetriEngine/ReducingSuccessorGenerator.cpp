@@ -214,13 +214,13 @@ namespace PetriEngine {
                 uint32_t linv = ptr.outputs;
 
                 for (; finv < linv; finv++) {
-//                    if(_net._invariants[finv].direction < 0)
+                    if(_net._invariants[finv].direction != 0)
                         postsetOf(_net._invariants[finv].place);
                 }
                 if(_netContainsInhibitorArcs){
                     uint32_t next_finv = _net._transitions[tr+1].inputs;
                     for (; linv < next_finv; linv++) {                    
-//                        if(_net._invariants[finv].direction > 0)
+                        if(_net._invariants[finv].direction != 0)
                             inhibitorPostsetOf(_net._invariants[finv].place);
                     }
                 }
