@@ -34,6 +34,7 @@ public:
 
 private:
     bool *_enabled, *_stubborn;
+    std::unique_ptr<uint8_t> _places_seen;
     std::unique_ptr<place_t[]> _places;
     std::unique_ptr<uint32_t> _transitions;
     light_deque<uint32_t> _unprocessed, _ordering;

@@ -10,7 +10,7 @@ namespace PetriEngine {
         _enabled = new bool[net._ntransitions];
         _stubborn = new bool[net._ntransitions];
         _dependency = new uint32_t[net._ntransitions];
-
+        _places_seen.reset(new uint8_t[_net.numberOfPlaces()]);
         reset();
         constructPrePost();
         constructDependency();
@@ -139,6 +139,8 @@ namespace PetriEngine {
     }
     
     void ReducingSuccessorGenerator::presetOf(uint32_t place) {
+        if((_places_seen.get()[place] & 1) != 0) return;
+        _places_seen.get()[place] = _places_seen.get()[place] | 1;
         for (uint32_t t = _places.get()[place].pre; t < _places.get()[place].post; t++) {
             uint32_t newstub = _transitions.get()[t];
             if(!_stubborn[newstub]){
@@ -149,6 +151,8 @@ namespace PetriEngine {
     }
     
     void ReducingSuccessorGenerator::postsetOf(uint32_t place) {
+        if((_places_seen.get()[place] & 2) != 0) return;
+        _places_seen.get()[place] = _places_seen.get()[place] | 2;
         for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) {
             uint32_t newstub = _transitions.get()[t];
             if(!_stubborn[newstub]){
@@ -159,6 +163,8 @@ namespace PetriEngine {
     }
     
     void ReducingSuccessorGenerator::inhibitorPostsetOf(uint32_t place){
+        if((_places_seen.get()[place] & 4) != 0) return;
+        _places_seen.get()[place] = _places_seen.get()[place] | 4;
         for(uint32_t& newstub : _inhibpost[place]){
             if(!_stubborn[newstub]){
                 _stubborn[newstub] = true;
@@ -183,6 +189,7 @@ namespace PetriEngine {
 
     void ReducingSuccessorGenerator::prepare(const Structures::State* state) {
         _parent = state;
+        memset(_places_seen.get(), 0, _net.numberOfPlaces());
         constructEnabled();
         if(_ordering.size() == 0) return;
         if(_ordering.size() == 1)
@@ -212,15 +219,27 @@ namespace PetriEngine {
                     }
                 }
             } else {
+                bool ok = false;
+                bool inhib = false;
+                uint32_t cand = 0;
+               
                 for (; finv < linv; ++finv) {
                     const Invariant& inv = _net._invariants[finv];
                     if ((*_parent).marking()[inv.place] < inv.tokens) {
-                        presetOf(inv.place);
-                        break;
+                        cand = inv.place;
+                        inhib = false;
+                        ok = (_places_seen.get()[cand] & 1) != 0;
                     } else if ((*_parent).marking()[inv.place] >= inv.tokens && inv.inhibitor) {
-                        postsetOf(inv.place);
-                        break;
+                        cand = inv.place;
+                        inhib = true;
+                        ok = (_places_seen.get()[cand] & 2) != 0;
                     }
+                    if(ok) break;
+                }
+                if(!ok)
+                {
+                    if(!inhib) presetOf(cand);
+                    else       postsetOf(cand);
                 }
             }
         }
