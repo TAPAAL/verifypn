@@ -142,11 +142,7 @@ namespace PetriEngine {
         if((_places_seen.get()[place] & 1) != 0) return;
         _places_seen.get()[place] = _places_seen.get()[place] | 1;
         for (uint32_t t = _places.get()[place].pre; t < _places.get()[place].post; t++) {
-            uint32_t newstub = _transitions.get()[t];
-            if(!_stubborn[newstub]){
-                _stubborn[newstub] = true;
-                _unprocessed.push_back(newstub);
-            }
+            addToStub(_transitions.get()[t]);
         }
     }
     
@@ -154,23 +150,27 @@ namespace PetriEngine {
         if((_places_seen.get()[place] & 2) != 0) return;
         _places_seen.get()[place] = _places_seen.get()[place] | 2;
         for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) {
-            uint32_t newstub = _transitions.get()[t];
-            if(!_stubborn[newstub]){
-                _stubborn[newstub] = true;
-                _unprocessed.push_back(newstub);
-            }
+            addToStub(_transitions.get()[t]);
+        }
+    }
+    
+    void ReducingSuccessorGenerator::addToStub(uint32_t t)
+    {
+        if(!_stubborn[t])
+        {
+            _stubborn[t] = true;
+            if(_enabled[t])
+                _unprocessed_en.push_back(t);
+            else
+                _unprocessed_nen.push_back(t);
         }
     }
     
     void ReducingSuccessorGenerator::inhibitorPostsetOf(uint32_t place){
         if((_places_seen.get()[place] & 4) != 0) return;
         _places_seen.get()[place] = _places_seen.get()[place] | 4;
-        for(uint32_t& newstub : _inhibpost[place]){
-            if(!_stubborn[newstub]){
-                _stubborn[newstub] = true;
-                _unprocessed.push_back(newstub);
-            }
-        }
+        for(uint32_t& newstub : _inhibpost[place])
+            addToStub(newstub);
     }
     
     void ReducingSuccessorGenerator::postPresetOf(uint32_t t) {
@@ -202,29 +202,43 @@ namespace PetriEngine {
             q->findInteresting(*this, false);
         }
         
-        while (!_unprocessed.empty()) {
-            uint32_t tr = _unprocessed.front();
-            _unprocessed.pop_front();
-            const TransPtr& ptr = _net._transitions[tr];
-            uint32_t finv = ptr.inputs;
-            uint32_t linv = ptr.outputs;
-            uint32_t next_finv = _net._transitions[tr+1].inputs;
-            if (_enabled[tr]) {
+        while (!_unprocessed_en.empty() || !_unprocessed_nen.empty()) {
+            // first lets try to handle all the enabled.
+            // we have no choices here anyway.
+            while(!_unprocessed_en.empty())
+            {
+                uint32_t tr = _unprocessed_en.front();
+                _unprocessed_en.pop_front();
+                const TransPtr& ptr = _net._transitions[tr];
+                uint32_t finv = ptr.inputs;
+                uint32_t linv = ptr.outputs;
+
                 for (; finv < linv; finv++) {
-                    if(_net._invariants[finv].direction < 0)
+//                    if(_net._invariants[finv].direction < 0)
                         postsetOf(_net._invariants[finv].place);
                 }
                 if(_netContainsInhibitorArcs){
+                    uint32_t next_finv = _net._transitions[tr+1].inputs;
                     for (; linv < next_finv; linv++) {                    
-                        if(_net._invariants[finv].direction > 0)
+//                        if(_net._invariants[finv].direction > 0)
                             inhibitorPostsetOf(_net._invariants[finv].place);
                     }
                 }
-            } else {
+            }
+            
+            // while we have some choices AND no unprocessed enabled.
+            while(!_unprocessed_nen.empty() && _unprocessed_en.empty()) {
+                uint32_t tr = _unprocessed_nen.front();
+                _unprocessed_nen.pop_front();
+                const TransPtr& ptr = _net._transitions[tr];
+                uint32_t finv = ptr.inputs;
+                uint32_t linv = ptr.outputs;
                 bool ok = false;
                 bool inhib = false;
                 uint32_t cand = 0;
                
+                // Lets try to see if we havent already added sufficient pre/post 
+                // for this transition.
                 for (; finv < linv; ++finv) {
                     const Invariant& inv = _net._invariants[finv];
                     if ((*_parent).marking()[inv.place] < inv.tokens && !inv.inhibitor) {
@@ -238,6 +252,9 @@ namespace PetriEngine {
                     }
                     if(ok) break;
                 }
+                
+                // OK, we didnt have sufficient, we just pick whatever is left
+                // in cand.
                 if(!ok)
                 {
                     if(!inhib) presetOf(cand);
