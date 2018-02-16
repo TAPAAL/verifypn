@@ -211,6 +211,7 @@ namespace PetriEngine {
                     iv.place = pre.place;
                     iv.tokens = pre.weight;
                     iv.inhibitor = pre.inhib;
+                    iv.direction = 1;
                     assert(pre.inhib);
                     assert(place_cons_count[pre.place] > 0);
                     --place_cons_count[pre.place];
@@ -293,6 +294,7 @@ namespace PetriEngine {
                     iv.place = pre.place;
                     iv.tokens = pre.weight;
                     iv.inhibitor = pre.inhib;
+                    iv.direction = pre.inhib ? 0 : 1;                    
                     ++freeinv;
                     assert(place_cons_count[pre.place] > 0);
                     --place_cons_count[pre.place];
@@ -302,10 +304,30 @@ namespace PetriEngine {
                 for(auto post : trans.post)
                 {
                     assert(freeinv < net->_ninvariants);
-                    net->_invariants[freeinv].place = post.place;
-                    net->_invariants[freeinv].tokens = post.weight;                    
+                    auto& post_inv = net->_invariants[freeinv];
+                    post_inv.place = post.place;
+                    post_inv.tokens = post.weight;    
+                    post_inv.direction = -1;
                     --place_prod_count[post.place];
                     ++freeinv;
+                    for(auto i = net->_transitions[freetrans].inputs; i < net->_transitions[freetrans].outputs; ++i)
+                    {
+                        auto& pre_inv = net->_invariants[i];
+                        if(pre_inv.place == post.place)
+                        {
+                            if(pre_inv.inhibitor)
+                                post_inv.direction = pre_inv.direction = 1;
+                            else if(pre_inv.tokens == post_inv.tokens)
+                                post_inv.direction = pre_inv.direction = 0;
+                            else if(pre_inv.tokens < post_inv.tokens)
+                                post_inv.direction = pre_inv.direction = 1;
+                            else if(pre_inv.tokens > post_inv.tokens)
+                                post_inv.direction = pre_inv.direction = -1;                                
+                            else 
+                                assert(false);
+                            break;
+                        }
+                    }
                 }
                 
                 trans_idmap[t] = freetrans;

@@ -48,6 +48,7 @@ namespace PetriEngine {
         uint32_t place;
         uint32_t tokens;
         bool inhibitor;
+        int8_t direction;
         // we can pack things here, but might give slowdown
     } /*__attribute__((packed))*/; 
     

@@ -211,11 +211,13 @@ namespace PetriEngine {
             uint32_t next_finv = _net._transitions[tr+1].inputs;
             if (_enabled[tr]) {
                 for (; finv < linv; finv++) {
-                    postsetOf(_net._invariants[finv].place);
+                    if(_net._invariants[finv].direction < 0)
+                        postsetOf(_net._invariants[finv].place);
                 }
                 if(_netContainsInhibitorArcs){
                     for (; linv < next_finv; linv++) {                    
-                        inhibitorPostsetOf(_net._invariants[finv].place);
+                        if(_net._invariants[finv].direction > 0)
+                            inhibitorPostsetOf(_net._invariants[finv].place);
                     }
                 }
             } else {
@@ -225,7 +227,7 @@ namespace PetriEngine {
                
                 for (; finv < linv; ++finv) {
                     const Invariant& inv = _net._invariants[finv];
-                    if ((*_parent).marking()[inv.place] < inv.tokens) {
+                    if ((*_parent).marking()[inv.place] < inv.tokens && !inv.inhibitor) {
                         cand = inv.place;
                         inhib = false;
                         ok = (_places_seen.get()[cand] & 1) != 0;
