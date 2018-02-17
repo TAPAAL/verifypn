@@ -159,10 +159,7 @@ namespace PetriEngine {
         if(!_stubborn[t])
         {
             _stubborn[t] = true;
-            if(_enabled[t])
-                _unprocessed_en.push_back(t);
-            else
-                _unprocessed_nen.push_back(t);
+            _unprocessed.push_back(t);
         }
     }
     
@@ -202,37 +199,27 @@ namespace PetriEngine {
             q->findInteresting(*this, false);
         }
         
-        while (!_unprocessed_en.empty() || !_unprocessed_nen.empty()) {
-            // first lets try to handle all the enabled.
-            // we have no choices here anyway.
-            while(!_unprocessed_en.empty())
-            {
-                uint32_t tr = _unprocessed_en.front();
-                _unprocessed_en.pop_front();
-                const TransPtr& ptr = _net._transitions[tr];
-                uint32_t finv = ptr.inputs;
-                uint32_t linv = ptr.outputs;
+        while (!_unprocessed.empty()) {
+            uint32_t tr = _unprocessed.front();
+            _unprocessed.pop_front();
+            const TransPtr& ptr = _net._transitions[tr];
+            uint32_t finv = ptr.inputs;
+            uint32_t linv = ptr.outputs;
+            if(_enabled[tr]){
+
 
                 for (; finv < linv; finv++) {
-                    if(_net._invariants[finv].direction != 0)
+                    if(_net._invariants[finv].direction < 0)
                         postsetOf(_net._invariants[finv].place);
                 }
                 if(_netContainsInhibitorArcs){
                     uint32_t next_finv = _net._transitions[tr+1].inputs;
                     for (; linv < next_finv; linv++) {                    
-                        if(_net._invariants[finv].direction != 0)
+                        if(_net._invariants[finv].direction > 0)
                             inhibitorPostsetOf(_net._invariants[finv].place);
                     }
                 }
-            }
-            
-            // while we have some choices AND no unprocessed enabled.
-            while(!_unprocessed_nen.empty() && _unprocessed_en.empty()) {
-                uint32_t tr = _unprocessed_nen.front();
-                _unprocessed_nen.pop_front();
-                const TransPtr& ptr = _net._transitions[tr];
-                uint32_t finv = ptr.inputs;
-                uint32_t linv = ptr.outputs;
+            } else {
                 bool ok = false;
                 bool inhib = false;
                 uint32_t cand = 0;
