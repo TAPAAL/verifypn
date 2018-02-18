@@ -206,18 +206,14 @@ namespace PetriEngine {
             uint32_t finv = ptr.inputs;
             uint32_t linv = ptr.outputs;
             if(_enabled[tr]){
-
-
                 for (; finv < linv; finv++) {
-                    if(_net._invariants[finv].direction < 0)
+                    if(_net._invariants[finv].direction > 0)
                         postsetOf(_net._invariants[finv].place);
                 }
-                if(_netContainsInhibitorArcs){
+                if(_netContainsInhibitorArcs && _net._invariants[finv].direction < 0){
                     uint32_t next_finv = _net._transitions[tr+1].inputs;
-                    for (; linv < next_finv; linv++) {                    
-                        if(_net._invariants[finv].direction > 0)
-                            inhibitorPostsetOf(_net._invariants[finv].place);
-                    }
+                    for (; linv < next_finv; linv++)                    
+                        inhibitorPostsetOf(_net._invariants[finv].place);
                 }
             } else {
                 bool ok = false;
@@ -231,11 +227,11 @@ namespace PetriEngine {
                     if ((*_parent).marking()[inv.place] < inv.tokens && !inv.inhibitor) {
                         cand = inv.place;
                         inhib = false;
-                        ok = (_places_seen.get()[cand] & 1) != 0;
+                        ok = ((_places_seen.get()[cand] & 1) != 0) || (_net._invariants[finv].direction < 0);
                     } else if ((*_parent).marking()[inv.place] >= inv.tokens && inv.inhibitor) {
                         cand = inv.place;
                         inhib = true;
-                        ok = (_places_seen.get()[cand] & 2) != 0;
+                        ok = ((_places_seen.get()[cand] & 2) != 0) || (_net._invariants[finv].direction < 0);
                     }
                     if(ok) break;
                 }
