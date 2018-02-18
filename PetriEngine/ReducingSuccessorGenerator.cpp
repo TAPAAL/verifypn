@@ -227,7 +227,7 @@ namespace PetriEngine {
                     if ((*_parent).marking()[inv.place] < inv.tokens && !inv.inhibitor) {
                         cand = inv.place;
                         inhib = false;
-                        ok = ((_places_seen.get()[cand] & 1) != 0) || (_net._invariants[finv].direction < 0);
+                        ok = ((_places_seen.get()[cand] & 1) != 0) || (_net._invariants[finv].direction > 0);
                     } else if ((*_parent).marking()[inv.place] >= inv.tokens && inv.inhibitor) {
                         cand = inv.place;
                         inhib = true;
