@@ -142,15 +142,43 @@ namespace PetriEngine {
         if((_places_seen.get()[place] & 1) != 0) return;
         _places_seen.get()[place] = _places_seen.get()[place] | 1;
         for (uint32_t t = _places.get()[place].pre; t < _places.get()[place].post; t++) {
-            addToStub(_transitions.get()[t]);
-        }
+            bool tok = false;
+            auto tr = _transitions.get()[t];
+            if(_stubborn[tr]) continue;
+            for(auto tiv = _net.preset(tr); tiv.first != tiv.second; ++tiv.first)
+            {
+                if(tiv.first->place == place)
+                {
+                    tok = tiv.first->direction <= 0;
+                    break;
+                }
+            }
+            if(!tok)
+                addToStub(tr);
+        }                        
     }
     
-    void ReducingSuccessorGenerator::postsetOf(uint32_t place) {
+    void ReducingSuccessorGenerator::postsetOf(uint32_t place, bool keep_pos) {
         if((_places_seen.get()[place] & 2) != 0) return;
         _places_seen.get()[place] = _places_seen.get()[place] | 2;
         for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) {
-            addToStub(_transitions.get()[t]);
+            if(keep_pos) addToStub(_transitions.get()[t]);
+            else
+            {
+                bool tok = false;
+                auto tr = _transitions.get()[t];
+                if(_stubborn[tr]) continue;
+                for(auto tiv = _net.preset(tr); tiv.first != tiv.second; ++tiv.first)
+                {
+                    if(tiv.first->place == place)
+                    {
+                        tok = tiv.first->direction >= 0;
+                        break;
+                    }
+                }
+                if(!tok)
+                    addToStub(tr);
+            }
         }
     }
     
@@ -208,7 +236,7 @@ namespace PetriEngine {
             if(_enabled[tr]){
                 for (; finv < linv; finv++) {
                     if(_net._invariants[finv].direction > 0)
-                        postsetOf(_net._invariants[finv].place);
+                        postsetOf(_net._invariants[finv].place, true);
                 }
                 if(_netContainsInhibitorArcs && _net._invariants[finv].direction < 0){
                     uint32_t next_finv = _net._transitions[tr+1].inputs;
@@ -242,25 +270,7 @@ namespace PetriEngine {
                 assert(cand != std::numeric_limits<uint32_t>::max());
                 if(!ok && cand != std::numeric_limits<uint32_t>::max())
                 {
-                    if(!inhib)
-                    {
-                        _places_seen.get()[cand] = _places_seen.get()[cand] | 1;
-                        for (uint32_t t = _places.get()[cand].pre; t < _places.get()[cand].post; t++) {
-                            bool tok = false;
-                            auto tr = _transitions.get()[t];
-                            if(_stubborn[tr]) continue;
-                            for(auto tiv = _net.preset(tr); tiv.first != tiv.second; ++tiv.first)
-                            {
-                                if(tiv.first->place == cand)
-                                {
-                                    ok = tiv.first->direction <= 0;
-                                    break;
-                                }
-                            }
-                            if(!tok)
-                                addToStub(tr);
-                        }                        
-                    }
+                    if(!inhib) presetOf(cand);
                     else       postsetOf(cand);
                 }
             }

@@ -21,7 +21,7 @@ public:
     void prepare(const Structures::State* state);
     bool next(Structures::State& write);
     void presetOf(uint32_t place);
-    void postsetOf(uint32_t place);
+    void postsetOf(uint32_t place, bool keep_pos = false);
     void postPresetOf(uint32_t t);
     void inhibitorPostsetOf(uint32_t place);
     uint32_t leastDependentEnabled();
