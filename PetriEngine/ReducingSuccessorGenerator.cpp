@@ -225,20 +225,22 @@ namespace PetriEngine {
                 for (; finv < linv; ++finv) {
                     const Invariant& inv = _net._invariants[finv];
                     if ((*_parent).marking()[inv.place] < inv.tokens && !inv.inhibitor) {
-                        cand = inv.place;
                         inhib = false;
-                        ok = ((_places_seen.get()[cand] & 1) != 0) || (_net._invariants[finv].direction > 0);
+                        ok = (_places_seen.get()[cand] & 1) != 0;
+                        if(_net._invariants[finv].direction < 0)
+                            cand = inv.place;
                     } else if ((*_parent).marking()[inv.place] >= inv.tokens && inv.inhibitor) {
-                        cand = inv.place;
                         inhib = true;
-                        ok = ((_places_seen.get()[cand] & 2) != 0) || (_net._invariants[finv].direction < 0);
+                        ok = (_places_seen.get()[cand] & 2) != 0;
+                        if(_net._invariants[finv].direction > 0)
+                            cand = inv.place;
                     }
                     if(ok) break;
+
                 }
                 
                 // OK, we didnt have sufficient, we just pick whatever is left
                 // in cand.
-                assert(cand != std::numeric_limits<uint32_t>::max());
                 if(!ok && cand != std::numeric_limits<uint32_t>::max())
                 {
                     if(!inhib) presetOf(cand);
