@@ -162,8 +162,8 @@ namespace PetriEngine {
         if((_places_seen.get()[place] & 2) != 0) return;
         _places_seen.get()[place] = _places_seen.get()[place] | 2;
         for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) {
-            /*if(keep_pos)*/ addToStub(_transitions.get()[t]);
-/*            else
+            if(keep_pos) addToStub(_transitions.get()[t]);
+            else
             {
                 bool tok = false;
                 auto tr = _transitions.get()[t];
@@ -178,7 +178,7 @@ namespace PetriEngine {
                 }
                 if(!tok)
                     addToStub(tr);
-            }*/
+            }
         }
     }
     
