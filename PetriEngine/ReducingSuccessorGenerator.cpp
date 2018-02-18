@@ -227,13 +227,11 @@ namespace PetriEngine {
                     if ((*_parent).marking()[inv.place] < inv.tokens && !inv.inhibitor) {
                         inhib = false;
                         ok = (_places_seen.get()[inv.place] & 1) != 0;
-                        if(_net._invariants[finv].direction < 0)
-                            cand = inv.place;
+                        cand = inv.place;
                     } else if ((*_parent).marking()[inv.place] >= inv.tokens && inv.inhibitor) {
                         inhib = true;
                         ok = (_places_seen.get()[inv.place] & 2) != 0;
-                        if(_net._invariants[finv].direction > 0)
-                            cand = inv.place;
+                        cand = inv.place;
                     }
                     if(ok) break;
 
@@ -241,9 +239,28 @@ namespace PetriEngine {
                 
                 // OK, we didnt have sufficient, we just pick whatever is left
                 // in cand.
+                assert(cand != std::numeric_limits<uint32_t>::max());
                 if(!ok && cand != std::numeric_limits<uint32_t>::max())
                 {
-                    if(!inhib) presetOf(cand);
+                    if(!inhib)
+                    {
+                        _places_seen.get()[cand] = _places_seen.get()[cand] | 1;
+                        for (uint32_t t = _places.get()[cand].pre; t < _places.get()[cand].post; t++) {
+                            bool tok = false;
+                            auto tr = _transitions.get()[t];
+                            if(_stubborn[tr]) continue;
+                            for(auto tiv = _net.preset(tr); tiv.first != tiv.second; ++tiv.first)
+                            {
+                                if(tiv.first->place == cand)
+                                {
+                                    ok = tiv.first->direction <= 0;
+                                    break;
+                                }
+                            }
+                            if(!tok)
+                                addToStub(tr);
+                        }                        
+                    }
                     else       postsetOf(cand);
                 }
             }
