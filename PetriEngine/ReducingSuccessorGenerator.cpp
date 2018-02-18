@@ -218,7 +218,7 @@ namespace PetriEngine {
             } else {
                 bool ok = false;
                 bool inhib = false;
-                uint32_t cand = 0;
+                uint32_t cand = std::numeric_limits<uint32_t>::max();
                
                 // Lets try to see if we havent already added sufficient pre/post 
                 // for this transition.
@@ -238,7 +238,8 @@ namespace PetriEngine {
                 
                 // OK, we didnt have sufficient, we just pick whatever is left
                 // in cand.
-                if(!ok)
+                assert(cand != std::numeric_limits<uint32_t>::max());
+                if(!ok && cand != std::numeric_limits<uint32_t>::max())
                 {
                     if(!inhib) presetOf(cand);
                     else       postsetOf(cand);
