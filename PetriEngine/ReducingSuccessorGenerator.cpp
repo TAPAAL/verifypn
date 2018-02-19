@@ -98,7 +98,7 @@ namespace PetriEngine {
             }
 
         }
-//        assert(offset == ntrans);
+        assert(offset == ntrans);
         _places.get()[p].pre = offset;
         _places.get()[p].post = offset;
     }
@@ -144,14 +144,13 @@ namespace PetriEngine {
         for (uint32_t t = _places.get()[place].pre; t < _places.get()[place].post; t++)
         {
             auto tr = _transitions.get()[t];
-            if(_stubborn[tr]) continue;
             bool tok = false;
             if(_stubborn[tr]) continue;
             for(auto tiv = _net.preset(tr); tiv.first != tiv.second; ++tiv.first)
             {
                 if(tiv.first->place == place)
                 {
-                    tok = tiv.first->direction > 0;
+                    tok = tiv.first->direction <= 0;
                     break;
                 }
             }
@@ -161,16 +160,13 @@ namespace PetriEngine {
         }
     }
     
-    void ReducingSuccessorGenerator::postsetOf(uint32_t place, bool keep_pos) {
-        
-        uint8_t mod = keep_pos ? 2 : (2 | 8);
-        
-        if((_places_seen.get()[place] & mod) == mod) return;
-        _places_seen.get()[place] = _places_seen.get()[place] | mod;
+    void ReducingSuccessorGenerator::postsetOf(uint32_t place, bool keep_pos) {       
+        if((_places_seen.get()[place] & 2) != 0) return;
+        _places_seen.get()[place] = _places_seen.get()[place] | 2;
         for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) {
             auto tr = _transitions.get()[t];
             if(_stubborn[tr]) continue;
-            /*if(keep_pos) addToStub(tr);
+            if(keep_pos) addToStub(tr);
             else
             {
                 bool tok = false;
@@ -179,13 +175,14 @@ namespace PetriEngine {
                 {
                     if(tiv.first->place == place)
                     {
-                        tok = tiv.first->direction < 0;
+                        tok = tiv.first->direction >= 0;
                         break;
                     }
                 }
-                if(!tok)*/
+                if(!tok)
                     addToStub(tr);
-//            }
+            }
+            addToStub(tr);
         }
     }
     
@@ -243,7 +240,11 @@ namespace PetriEngine {
             if(_enabled[tr]){
                 for (; finv < linv; finv++) {
                     if(_net._invariants[finv].direction < 0)
-                        postsetOf(_net._invariants[finv].place, true);
+                    {
+                        auto place = _net._invariants[finv].place;
+                        for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) 
+                            addToStub(_transitions.get()[t]);
+                    }
                 }
                 if(_netContainsInhibitorArcs){
                     uint32_t next_finv = _net._transitions[tr+1].inputs;
