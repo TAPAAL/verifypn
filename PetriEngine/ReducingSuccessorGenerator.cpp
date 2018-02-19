@@ -63,8 +63,7 @@ namespace PetriEngine {
             finv = linv;
             linv = _net._transitions[t + 1].inputs;
             for (; finv < linv; finv++) { // Pre set of places
-                if(_net._invariants[finv].direction > 0)
-                    tmp_places[_net._invariants[finv].place].first.push_back(t);
+                tmp_places[_net._invariants[finv].place].first.push_back(t);
             }
         }
 
@@ -143,33 +142,50 @@ namespace PetriEngine {
         if((_places_seen.get()[place] & 1) != 0) return;
         _places_seen.get()[place] = _places_seen.get()[place] | 1;
         for (uint32_t t = _places.get()[place].pre; t < _places.get()[place].post; t++)
-                addToStub(_transitions.get()[t]);
+        {
+            auto tr = _transitions.get()[t];
+            if(_stubborn[tr]) continue;
+            bool tok = false;
+            if(_stubborn[tr]) continue;
+            for(auto tiv = _net.preset(tr); tiv.first != tiv.second; ++tiv.first)
+            {
+                if(tiv.first->place == place)
+                {
+                    tok = tiv.first->direction > 0;
+                    break;
+                }
+            }
+            if(!tok)
+                addToStub(tr);
+            //addToStub(_transitions.get()[t]);
+        }
     }
     
     void ReducingSuccessorGenerator::postsetOf(uint32_t place, bool keep_pos) {
         
         uint8_t mod = keep_pos ? 2 : (2 | 8);
         
-        if((_places_seen.get()[place] & mod) != 0) return;
+        if((_places_seen.get()[place] & mod) == mod) return;
         _places_seen.get()[place] = _places_seen.get()[place] | mod;
         for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) {
-            if(keep_pos) addToStub(_transitions.get()[t]);
+            auto tr = _transitions.get()[t];
+            if(_stubborn[tr]) continue;
+            /*if(keep_pos) addToStub(tr);
             else
             {
-                auto tr = _transitions.get()[t];
                 bool tok = false;
                 if(_stubborn[tr]) continue;
                 for(auto tiv = _net.preset(tr); tiv.first != tiv.second; ++tiv.first)
                 {
                     if(tiv.first->place == place)
                     {
-                        tok = tiv.first->direction == 0;
+                        tok = tiv.first->direction < 0;
                         break;
                     }
                 }
-                if(!tok)
+                if(!tok)*/
                     addToStub(tr);
-            }
+//            }
         }
     }
     
