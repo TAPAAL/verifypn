@@ -216,6 +216,7 @@ namespace PetriEngine {
                     assert(place_cons_count[pre.place] > 0);
                     --place_cons_count[pre.place];
                     ++freeinv;
+                    assert(false);
                 }
                 
                 net->_transitions[freetrans].outputs = freeinv;
