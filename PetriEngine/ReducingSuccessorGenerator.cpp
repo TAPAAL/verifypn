@@ -53,8 +53,7 @@ namespace PetriEngine {
             uint32_t linv = ptr.outputs;
             for (; finv < linv; finv++) { // Post set of places
                 if (_net._invariants[finv].inhibitor) {
-                    if(_net._invariants[finv].direction < 0)
-                        _inhibpost[_net._invariants[finv].place].push_back(t);
+                    _inhibpost[_net._invariants[finv].place].push_back(t);
                     _netContainsInhibitorArcs=true;
                 } else {
                     tmp_places[_net._invariants[finv].place].second.emplace_back(t, _net._invariants[finv].direction);
