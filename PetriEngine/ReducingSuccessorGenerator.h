@@ -15,6 +15,16 @@ public:
     struct place_t {
         uint32_t pre, post;
     };
+    struct trans_t {
+        uint32_t index;
+        int8_t direction;
+        trans_t() = default;
+        trans_t(uint32_t id, int8_t dir) : index(id), direction(dir) {};
+        bool operator<(const trans_t& t) const
+        {
+            return index < t.index;
+        }
+    };
     ReducingSuccessorGenerator(const PetriNet& net);
     ReducingSuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries);
     virtual ~ReducingSuccessorGenerator();
@@ -37,7 +47,7 @@ private:
     bool *_enabled, *_stubborn;
     std::unique_ptr<uint8_t> _places_seen;
     std::unique_ptr<place_t[]> _places;
-    std::unique_ptr<uint32_t> _transitions;
+    std::unique_ptr<trans_t[]> _transitions;
     light_deque<uint32_t> _unprocessed, _ordering;
     uint32_t *_dependency;
     uint32_t _current;
