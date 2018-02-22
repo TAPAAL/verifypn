@@ -822,6 +822,17 @@ namespace PetriEngine {
                         {
                             if(!tseen[pt])
                             {
+                                Transition& trans = parent->_transitions[pt];
+                                auto it = trans.post.begin();
+                                for(; it != trans.post.end(); ++it)
+                                    if(it->place >= arc.place) break;
+                                if(it != trans.pre.end() && it->place == arc.place)
+                                {
+                                    auto it2 = trans.pre.begin();
+                                    for(; it2 != trans.pre.end(); ++it2)
+                                        if(it2->place >= arc.place || it2->inhib) break;
+                                    if(it->weight <= it2->weight) continue;
+                                }
                                 tseen[pt] = true;
                                 wtrans.push_back(pt);                                    
                             }
