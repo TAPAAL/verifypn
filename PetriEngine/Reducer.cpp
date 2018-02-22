@@ -516,7 +516,7 @@ namespace PetriEngine {
                     size_t j = 0;
                     for(size_t i = 0; i < place2.consumers.size(); ++i)
                     {
-                        while(place1.consumers[j] < place2.consumers[i] && j < place1.consumers.size()) ++j;
+                        while(j < place1.consumers.size() && place1.consumers[j] < place2.consumers[i] ) ++j;
                         if(place1.consumers.size() <= j || place1.consumers[j] != place2.consumers[i])
                         {
                             ok = 2;
@@ -992,7 +992,7 @@ namespace PetriEngine {
     }
     
     
-    bool Reducer::ReducebyRuleG(uint32_t* placeInQuery, bool remove_loops) {
+    bool Reducer::ReducebyRuleG(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers) {
         if(!remove_loops) return false;
         bool continueReductions = false;
         for(uint32_t t = 0; t < parent->numberOfTransitions(); ++t)
@@ -1024,6 +1024,11 @@ namespace PetriEngine {
                 }
                 if(postit != trans.post.end() && preit->place == postit->place)
                 {
+                    if(!remove_consumers && preit->weight != postit->weight)
+                    {
+                        ok = false;
+                        break;
+                    }
                     if((placeInQuery[preit->place] > 0 && preit->weight != postit->weight) ||
                        (placeInQuery[preit->place] == 0 && preit->weight < postit->weight))
                     {
@@ -1035,7 +1040,7 @@ namespace PetriEngine {
                 }
                 else if(postit == trans.post.end() || preit->place < postit->place) 
                 {
-                    if(placeInQuery[preit->place] > 0)
+                    if(placeInQuery[preit->place] > 0 || !remove_consumers)
                     {
                         ok = false;
                         break;
@@ -1153,7 +1158,7 @@ namespace PetriEngine {
         return continueReductions;
     }
     
-    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers) {
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
@@ -1162,21 +1167,21 @@ namespace PetriEngine {
             bool changed = false;
             do
             {
-                if(remove_loops)
+                if(remove_loops && !next_safe)
                     ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers);
                 do{
                     changed = false;
-                    changed |= ReducebyRuleB(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleA(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleE(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleF(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleG(context.getQueryPlaceCount(), remove_loops);
-                    if(!remove_loops) 
+                    if(!next_safe) changed |= ReducebyRuleB(context.getQueryPlaceCount());
+                    if(!next_safe) changed |= ReducebyRuleA(context.getQueryPlaceCount());
+                                   changed |= ReducebyRuleE(context.getQueryPlaceCount());
+                    if(!next_safe) changed |= ReducebyRuleF(context.getQueryPlaceCount());
+                    if(!next_safe) changed |= ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers);
+                    if(!remove_loops && !next_safe) 
                         changed |= ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers);
                 } while(changed && !hasTimedout());
                 // RuleC and RuleD are expensive, so wait with those till nothing else changes
-                changed |= ReducebyRuleC(context.getQueryPlaceCount());
-                changed |= ReducebyRuleD(context.getQueryPlaceCount());
+                               changed |= ReducebyRuleC(context.getQueryPlaceCount());
+                if(!next_safe) changed |= ReducebyRuleD(context.getQueryPlaceCount());
 
                 if(!changed)
                     // Only try RuleH last. It can reduce applicability of other rules.
@@ -1187,9 +1192,9 @@ namespace PetriEngine {
             bool changed = true;
             while (changed && !hasTimedout()) {
                 changed = false;
-                changed |= ReducebyRuleA(context.getQueryPlaceCount());
-                changed |= ReducebyRuleD(context.getQueryPlaceCount());
-                changed |= ReducebyRuleH(context.getQueryPlaceCount());
+                if(!next_safe) changed |= ReducebyRuleA(context.getQueryPlaceCount());
+                if(!next_safe) changed |= ReducebyRuleD(context.getQueryPlaceCount());
+                               changed |= ReducebyRuleH(context.getQueryPlaceCount());
             }
         }
     }

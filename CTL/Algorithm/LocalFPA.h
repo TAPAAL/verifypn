@@ -16,6 +16,7 @@ public:
         if(type != PetriEngine::Reachability::DFS)
         {
             std::cerr << "CTL-Engine currently only supports DFS."   <<  std::endl;
+            assert(false);
             exit(ErrorCode);
         }
         strategy = new SearchStrategy::DFSSearch();

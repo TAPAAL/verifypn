@@ -454,6 +454,7 @@ namespace PetriEngine {
         QueryPlaceAnalysisContext placecontext(getPlaceNames(), getTransitionNames(), net);
         bool all_reach = true;
         bool remove_loops = true;
+        bool contains_next = false;
         for(uint32_t i = 0; i < queries.size(); ++i)
         {
             if(results[i] == Reachability::ResultPrinter::Unknown ||
@@ -462,9 +463,10 @@ namespace PetriEngine {
                 queries[i]->analyze(placecontext);
                 all_reach &= (results[i] != Reachability::ResultPrinter::CTL);
                 remove_loops &= !queries[i]->isLoopSensitive();
+                contains_next |= queries[i]->containsNext();
             }
         }
-        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach);
+        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, contains_next);
     }
 
 

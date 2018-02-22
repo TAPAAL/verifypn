@@ -124,6 +124,7 @@ namespace PetriEngine {
     }
 
     void ReducingSuccessorGenerator::constructEnabled() {
+        _ordering.clear();
         for (uint32_t p = 0; p < _net._nplaces; ++p) {
             // orphans are currently under "place 0" as a special case
             if (p == 0 || (*_parent).marking()[p] > 0) { 
@@ -266,6 +267,7 @@ namespace PetriEngine {
             _current = _ordering.front();
             _ordering.pop_front();
             if (_stubborn[_current]) {
+                assert(_enabled[_current]);
                 memcpy(write.marking(), (*_parent).marking(), _net._nplaces*sizeof(MarkVal));
                 consumePreset(write, _current);
                 producePostset(write, _current);

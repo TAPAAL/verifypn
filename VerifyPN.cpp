@@ -723,8 +723,7 @@ int main(int argc, char* argv[]) {
     
     //--------------------- Apply Net Reduction ---------------//
         
-    if ( (options.enablereduction == 1 || options.enablereduction == 2) 
-         && std::all_of(queries.begin(), queries.end(), [](auto& a){ return !a->containsNext(); })) {
+    if (options.enablereduction == 1 || options.enablereduction == 2) {
         // Compute how many times each place appears in the query
         builder.startTimer();
         builder.reduce(queries, results, options.enablereduction, options.trace, nullptr, options.reductionTimeout);
