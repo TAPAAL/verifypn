@@ -484,6 +484,7 @@ namespace PetriEngine {
 
                 for(size_t swp = 0; swp < 2; ++swp)
                 {
+                    if(hasTimedout()) return false;
                     if( parent->_places[pinner].skip ||
                         parent->_places[pouter].skip) break;
                     
@@ -613,7 +614,6 @@ namespace PetriEngine {
             if (tout.inhib) continue;
 
             for (uint32_t tinner = touter + 1; tinner < ntrans; ++tinner) {
-
                 Transition& tin = getTransition(tinner);
                 if (tin.skip || tout.skip) continue;
 
@@ -621,6 +621,7 @@ namespace PetriEngine {
                 if (tin.inhib) continue;
 
                 for (size_t swp = 0; swp < 2; ++swp) {
+                    if(hasTimedout()) return false;
 
                     if (tin.skip || tout.skip) break;
                     
@@ -711,18 +712,22 @@ namespace PetriEngine {
             Place& place = parent->_places[p];
             if(place.skip) continue;
             if(place.inhib) continue;
-            if(placeInQuery[p] > 0) continue;
             if(place.producers.size() > place.consumers.size()) continue;
             
             std::set<uint32_t> notenabled;
-            bool ok = true;            
+            bool ok = true;
             for(uint cons : place.consumers)
             {
                 Transition& t = getTransition(cons);
-                if(getInArc(p, t)->weight <= parent->initialMarking[p])
+                auto in = getInArc(p, t);
+                if(in->weight <= parent->initialMarking[p])
                 {
-                    ok = false;
-                    break;
+                    auto out = getOutArc(t, p);
+                    if(out == t.post.end() || out->place != p || out->weight >= in->weight)
+                    {
+                        ok = false;
+                        break;
+                    }
                 }               
                 else
                 {
@@ -730,7 +735,7 @@ namespace PetriEngine {
                 }
             }
             
-            if(!ok) continue;
+            if(!ok || notenabled.size() == 0) continue;
 
             for(uint prod : place.producers)
             {
@@ -757,7 +762,7 @@ namespace PetriEngine {
             
             parent->initialMarking[p] = 0;
             
-            bool skipplace = notenabled.size() == place.consumers.size();
+            bool skipplace = (notenabled.size() == place.consumers.size()) && (placeInQuery[p] == 0);
             for(uint cons : notenabled)
                 skipTransition(cons);
 
@@ -769,7 +774,7 @@ namespace PetriEngine {
         return continueReductions;
     }
    
-    bool Reducer::ReducebyRuleF(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers) {
+    bool Reducer::ReducebyRuleI(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers) {
         bool reduced = false;
         if(remove_loops)
         {
@@ -866,7 +871,6 @@ namespace PetriEngine {
             {
                 if(!tseen[t] && !parent->_transitions[t].skip)
                 {
-                    ++_ruleF;
                     skipTransition(t);
                     reduced = true;
                 }
@@ -877,11 +881,13 @@ namespace PetriEngine {
                 if(!pseen[p] && !parent->_places[p].skip && placeInQuery[p] == 0)
                 {
                     assert(placeInQuery[p] == 0);
-                    ++_ruleF;
                     skipPlace(p);
                     reduced = true;
                 }
             }
+            
+            if(reduced)
+                ++_ruleI;
         }
         else
         {            
@@ -895,7 +901,7 @@ namespace PetriEngine {
                 if(placeInQuery[p] > 0) continue;
                 if(place.consumers.size() > 0) continue;
 
-                ++_ruleF;
+                ++_ruleI;
                 reduced = true;
                 skipPlace(p);
                 std::vector<uint32_t> torem;
@@ -924,7 +930,7 @@ namespace PetriEngine {
         return reduced;
     }
    
-    bool Reducer::ReducebyRuleG(uint32_t* placeInQuery) {
+    bool Reducer::ReducebyRuleF(uint32_t* placeInQuery) {
         bool continueReductions = false;
         const size_t numberofplaces = parent->numberOfPlaces();
         for(uint32_t p = 0; p < numberofplaces; ++p)
@@ -961,7 +967,7 @@ namespace PetriEngine {
             
             if(!ok) continue;
             
-            ++_ruleG;
+            ++_ruleF;
             
             if((numberofplaces - _removedPlaces) > 1)
             {
@@ -975,7 +981,7 @@ namespace PetriEngine {
     }
     
     
-    bool Reducer::ReducebyRuleH(uint32_t* placeInQuery, bool remove_loops) {
+    bool Reducer::ReducebyRuleG(uint32_t* placeInQuery, bool remove_loops) {
         if(!remove_loops) return false;
         bool continueReductions = false;
         for(uint32_t t = 0; t < parent->numberOfTransitions(); ++t)
@@ -1034,14 +1040,14 @@ namespace PetriEngine {
             }
                         
             if(!ok) continue;
-            ++_ruleH;
+            ++_ruleG;
             skipTransition(t);
         }
         assert(consistent());
         return continueReductions;
     }
     
-    bool Reducer::ReducebyRuleI(uint32_t* placeInQuery)
+    bool Reducer::ReducebyRuleH(uint32_t* placeInQuery)
     {
         bool continueReductions = false;
         for(uint32_t t1 = 0; t1 < parent->numberOfTransitions(); ++t1)
@@ -1073,7 +1079,7 @@ namespace PetriEngine {
                 if(trans2.pre[0].place != p2) continue;                
                 if(trans2.post[0].place != p1) continue;                
 
-               ++_ruleI;
+               ++_ruleH;
                 skipTransition(t2);
 
                 auto& place1 = parent->_places[p1];
@@ -1146,30 +1152,33 @@ namespace PetriEngine {
             do
             {
                 if(remove_loops)
-                    ReducebyRuleF(context.getQueryPlaceCount(), remove_loops, remove_consumers);
+                    ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers);
                 do{
                     changed = false;
-                    changed |= ReducebyRuleA(context.getQueryPlaceCount());
                     changed |= ReducebyRuleB(context.getQueryPlaceCount());
+                    changed |= ReducebyRuleA(context.getQueryPlaceCount());
                     changed |= ReducebyRuleE(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleG(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleH(context.getQueryPlaceCount(), remove_loops);
+                    changed |= ReducebyRuleF(context.getQueryPlaceCount());
+                    changed |= ReducebyRuleG(context.getQueryPlaceCount(), remove_loops);
                     if(!remove_loops) 
-                        changed |= ReducebyRuleF(context.getQueryPlaceCount(), remove_loops, remove_consumers);
+                        changed |= ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers);
                 } while(changed && !hasTimedout());
                 // RuleC and RuleD are expensive, so wait with those till nothing else changes
-                changed |= ReducebyRuleD(context.getQueryPlaceCount());
                 changed |= ReducebyRuleC(context.getQueryPlaceCount());
+                changed |= ReducebyRuleD(context.getQueryPlaceCount());
+
                 if(!changed)
-                    // Only try RuleI last. It can reduce applicability of other rules.
-                    changed |= ReducebyRuleI(context.getQueryPlaceCount());
+                    // Only try RuleH last. It can reduce applicability of other rules.
+                    changed |= ReducebyRuleH(context.getQueryPlaceCount());
             } while(!hasTimedout() && changed);
 
         } else if (enablereduction == 2) { // for k-boundedness checking only rules A and D are applicable
-            while ( (
-                        ReducebyRuleA(context.getQueryPlaceCount()) ||
-                        ReducebyRuleD(context.getQueryPlaceCount())
-                    ) && !hasTimedout()) {
+            bool changed = true;
+            while (changed && !hasTimedout()) {
+                changed = false;
+                changed |= ReducebyRuleA(context.getQueryPlaceCount());
+                changed |= ReducebyRuleD(context.getQueryPlaceCount());
+                changed |= ReducebyRuleH(context.getQueryPlaceCount());
             }
         }
     }

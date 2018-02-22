@@ -129,10 +129,10 @@ namespace PetriEngine {
         bool ReducebyRuleC(uint32_t* placeInQuery);
         bool ReducebyRuleD(uint32_t* placeInQuery);
         bool ReducebyRuleE(uint32_t* placeInQuery);
-        bool ReducebyRuleF(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers);
-        bool ReducebyRuleG(uint32_t* placeInQuery);
-        bool ReducebyRuleH(uint32_t* placeInQuery, bool remove_loops);
-        bool ReducebyRuleI(uint32_t* placeInQuery);
+        bool ReducebyRuleI(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers);
+        bool ReducebyRuleF(uint32_t* placeInQuery);
+        bool ReducebyRuleG(uint32_t* placeInQuery, bool remove_loops);
+        bool ReducebyRuleH(uint32_t* placeInQuery);
         
         std::string getTransitionName(uint32_t transition);
         std::string getPlaceName(uint32_t place);
