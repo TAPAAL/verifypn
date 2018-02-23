@@ -273,6 +273,7 @@ Expr_ptr QueryBinaryParser::parseExpr(std::ifstream& bin, const std::vector<std:
     }
     else
     {
+        std::cout << t << std::endl;
         assert(false);
         return nullptr;
     }

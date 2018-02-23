@@ -1428,7 +1428,7 @@ namespace PetriEngine {
             out.write(reinterpret_cast<const char*>(&_constant), sizeof(int32_t));
             uint32_t size = _ids.size();
             out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
-            _exprs.size();
+            size = _exprs.size();
             out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
             for(auto& id : _ids)
                 out.write(reinterpret_cast<const char*>(&id.first), sizeof(uint32_t));
