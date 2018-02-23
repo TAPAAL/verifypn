@@ -1183,7 +1183,7 @@ namespace PetriEngine {
                                changed |= ReducebyRuleC(context.getQueryPlaceCount());
                 if(!next_safe) changed |= ReducebyRuleD(context.getQueryPlaceCount());
 
-                if(!changed)
+                if(!changed && !next_safe)
                     // Only try RuleH last. It can reduce applicability of other rules.
                     changed |= ReducebyRuleH(context.getQueryPlaceCount());
             } while(!hasTimedout() && changed);
@@ -1194,7 +1194,7 @@ namespace PetriEngine {
                 changed = false;
                 if(!next_safe) changed |= ReducebyRuleA(context.getQueryPlaceCount());
                 if(!next_safe) changed |= ReducebyRuleD(context.getQueryPlaceCount());
-                               changed |= ReducebyRuleH(context.getQueryPlaceCount());
+                if(!next_safe) changed |= ReducebyRuleH(context.getQueryPlaceCount());
             }
         }
     }
