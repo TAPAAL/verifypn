@@ -10,13 +10,13 @@
 
 namespace PetriEngine {
     namespace Colored {
-        Color::Color(ColorType* colorTypeName, uint32_t id, const Color** colors, const size_t colorSize)
-            : _tuple(colors), _tupleSize(colorSize), _colorType(colorTypeName), _id(id), _colorName(0)
+        Color::Color(ColorType* colorType, uint32_t id, const Color** colors, const size_t colorSize)
+            : _tuple(colors), _tupleSize(colorSize), _colorType(colorType), _id(id), _colorName(0)
         {
         }
         
-        Color::Color(ColorType* colorTypeName, uint32_t id, const char* color)
-                : _tuple(0), _tupleSize(1), _colorType(colorTypeName), _id(id), _colorName(color)
+        Color::Color(ColorType* colorType, uint32_t id, const char* color)
+                : _tuple(0), _tupleSize(1), _colorType(colorType), _id(id), _colorName(color)
         {
         }
         
@@ -36,6 +36,27 @@ namespace PetriEngine {
                 throw "Cannot compare colors from different types";
             }
             return _id < other._id;
+        }
+        
+        bool Color::operator> (const Color& other) const {
+            if (_colorType == other._colorType) {
+                throw "Cannot compare colors from different types";
+            }
+            return _id > other._id;
+        }
+        
+        bool Color::operator<= (const Color& other) const {
+            if (_colorType == other._colorType) {
+                throw "Cannot compare colors from different types";
+            }
+            return _id <= other._id;
+        }
+        
+        bool Color::operator>= (const Color& other) const {
+            if (_colorType == other._colorType) {
+                throw "Cannot compare colors from different types";
+            }
+            return _id >= other._id;
         }
         
         const Color& Color::operator++ () const {

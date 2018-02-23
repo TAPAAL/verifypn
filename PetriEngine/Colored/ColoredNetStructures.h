@@ -17,6 +17,7 @@
 #include <vector>
 #include <set>
 #include "Colors.h"
+#include "Expressions.h"
 
 namespace PetriEngine {
     namespace Colored {

@@ -26,7 +26,7 @@ namespace PetriEngine {
         
         // Should make constructor protected, and make ColorType Friendly
         class Color {
-        private:
+        protected:
             const Color** _tuple;
             const size_t _tupleSize;
             ColorType* _colorType;
@@ -34,8 +34,8 @@ namespace PetriEngine {
             uint32_t _id;
             
         public:
-            Color(ColorType* colorTypeName, uint32_t id, const Color** colors, const size_t colorSize);
-            Color(ColorType* colorTypeName, uint32_t id, const char* color);
+            Color(ColorType* colorType, uint32_t id, const Color** colors, const size_t colorSize);
+            Color(ColorType* colorType, uint32_t id, const char* color);
             
             bool isTuple() const {
                 return _tupleSize > 1;
@@ -48,11 +48,21 @@ namespace PetriEngine {
                 return std::string(_colorName);
             }
             
+            ColorType* getColorType() {
+                return _colorType;
+            }
+            
             const Color* operator[] (size_t index) const;
             bool operator< (const Color& other) const;
+            bool operator> (const Color& other) const;
+            bool operator<= (const Color& other) const;
+            bool operator>= (const Color& other) const;
             
             bool operator== (const Color& other) const {
                 return _colorType == other._colorType && _id == other._id;
+            }
+            bool operator!= (const Color& other) const {
+                return !((*this) == other);
             }
             
             const Color& operator++ () const;
@@ -85,6 +95,11 @@ namespace PetriEngine {
             std::vector<Color> _colors;
             
         public:
+            ColorType(std::vector<ColorType*> elements);
+            ColorType();
+            
+            void addColor(const char* colorName);
+            
             size_t size() const {
                 return _colors.size();
             }
@@ -110,11 +125,18 @@ namespace PetriEngine {
             bool operator== (const ColorType& other) const {
                 return true; // TODO
             }
+            
+            // TODO: Add iterator
         };
         
         struct Variable {
             char* name;
             ColorType* colorType;
+        };
+        
+        struct Binding {
+            Variable* var;
+            Color* color;
         };
     }
 }

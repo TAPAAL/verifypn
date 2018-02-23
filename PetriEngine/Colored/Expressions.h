@@ -35,12 +35,12 @@ namespace PetriEngine {
             ColorExpression();
             virtual ~ColorExpression() {}
             
-            virtual Color* eval(ExpressionContext& context) const = 0;
+            virtual const Color* eval(ExpressionContext& context) const = 0;
         };
         
         class DotConstantExpression : public ColorExpression {
         public:
-            Color* eval(ExpressionContext& context) const override {
+            const Color* eval(ExpressionContext& context) const override {
                 return DotConstant::dotConstant();
             }
         };
@@ -50,7 +50,7 @@ namespace PetriEngine {
             Variable* _variable;
             
         public:
-            Color* eval(ExpressionContext& context) const override {
+            const Color* eval(ExpressionContext& context) const override {
                 return context.binding[_variable->name];
             }
             
@@ -62,7 +62,7 @@ namespace PetriEngine {
             Color* _userOperator;
             
         public:
-            Color* eval(ExpressionContext& context) const override {
+            const Color* eval(ExpressionContext& context) const override {
                 return _userOperator;
             }
             
@@ -98,7 +98,7 @@ namespace PetriEngine {
             ColorExpression* _color;
             
         public:
-            Color* eval(ExpressionContext& context) const override {
+            const Color* eval(ExpressionContext& context) const override {
                 return &++(*_color->eval(context));
             }
             
@@ -110,7 +110,7 @@ namespace PetriEngine {
             ColorExpression* _color;
             
         public:
-            Color* eval(ExpressionContext& context) const override {
+            const Color* eval(ExpressionContext& context) const override {
                 return &--(*_color->eval(context));
             }
             
@@ -122,7 +122,7 @@ namespace PetriEngine {
             std::vector<ColorExpression*> _colors;
             
         public:
-            Color* eval(ExpressionContext& context) const override {
+            const Color* eval(ExpressionContext& context) const override {
                 return nullptr; // TODO
             }
             
@@ -137,6 +137,120 @@ namespace PetriEngine {
             virtual bool eval(ExpressionContext& context) const = 0;
         };
         
+        class LessThanExpression : public GuardExpression {
+        private:
+            ColorExpression* _left;
+            ColorExpression* _right;
+            
+        public:
+            bool eval(ExpressionContext& context) const override {
+                return _left->eval(context) < _right->eval(context);
+            }
+            
+            LessThanExpression(ColorExpression* left, ColorExpression* right);
+        };
+        
+        class GreaterThanExpression : public GuardExpression {
+        private:
+            ColorExpression* _left;
+            ColorExpression* _right;
+            
+        public:
+            bool eval(ExpressionContext& context) const override {
+                return _left->eval(context) > _right->eval(context);
+            }
+            
+            GreaterThanExpression(ColorExpression* left, ColorExpression* right);
+        };
+        
+        class LessThanEqExpression : public GuardExpression {
+        private:
+            ColorExpression* _left;
+            ColorExpression* _right;
+            
+        public:
+            bool eval(ExpressionContext& context) const override {
+                return _left->eval(context) <= _right->eval(context);
+            }
+            
+            LessThanEqExpression(ColorExpression* left, ColorExpression* right);
+        };
+        
+        class GreaterThanEqExpression : public GuardExpression {
+        private:
+            ColorExpression* _left;
+            ColorExpression* _right;
+            
+        public:
+            bool eval(ExpressionContext& context) const override {
+                return _left->eval(context) >= _right->eval(context);
+            }
+            
+            GreaterThanEqExpression(ColorExpression* left, ColorExpression* right);
+        };
+        
+        class EqualityExpression : public GuardExpression {
+        private:
+            ColorExpression* _left;
+            ColorExpression* _right;
+            
+        public:
+            bool eval(ExpressionContext& context) const override {
+                return _left->eval(context) == _right->eval(context);
+            }
+            
+            EqualityExpression(ColorExpression* left, ColorExpression* right);
+        };
+        
+        class InequalityExpression : public GuardExpression {
+        private:
+            ColorExpression* _left;
+            ColorExpression* _right;
+            
+        public:
+            bool eval(ExpressionContext& context) const override {
+                return _left->eval(context) != _right->eval(context);
+            }
+            
+            InequalityExpression(ColorExpression* left, ColorExpression* right);
+        };
+        
+        class NotExpression : public GuardExpression {
+        private:
+            GuardExpression* _expr;
+            
+        public:
+            bool eval(ExpressionContext& context) const override {
+                return !_expr->eval(context);
+            }
+        };
+        
+        class AndExpression : public GuardExpression {
+        private:
+            GuardExpression* _left;
+            GuardExpression* _right;
+            
+        public:
+            bool eval(ExpressionContext& context) const override {
+                return _left->eval(context) && _right->eval(context);
+            }
+            
+            AndExpression(GuardExpression* left, GuardExpression* right);
+        };
+        
+        class OrExpression : public GuardExpression {
+        private:
+            GuardExpression* _left;
+            GuardExpression* _right;
+            
+        public:
+            bool eval(ExpressionContext& context) const override {
+                return _left->eval(context) || _right->eval(context);
+            }
+            
+            OrExpression(GuardExpression* left, GuardExpression* right);
+        };
+        
         class ArcExpression {
         public:
             ArcExpression();
@@ -145,21 +259,47 @@ namespace PetriEngine {
             virtual Multiset eval(ExpressionContext& context) const = 0;
         };
         
+        class AllExpression {
+        private:
+            UserSortExpression* _sort;
+            
+        public:
+            std::vector<const Color*> eval(ExpressionContext& context) const {
+                ColorType* ct = _sort->eval(context);
+                std::vector<const Color*> colors;
+                for (size_t i = 0; i < ct->size(); i++) {
+                    colors.push_back(&(*ct)[i]);
+                }
+                return colors;
+            }
+            
+            AllExpression(UserSortExpression* sort);
+        };
+        
         class NumberOfExpression : public ArcExpression {
         private:
             uint32_t _number;
             ColorExpression* _color;
+            AllExpression* _all;
             
         public:
-            Multiset eval(ExpressionContext& context) const {
-                // TODO
+            Multiset eval(ExpressionContext& context) const override {
+                if (_color != nullptr) {
+                    return Multiset(std::make_pair(_color->eval(context), _number));
+                }
+                if (_all != nullptr) {
+                    std::vector<const Color*> colors = _all->eval(context);
+                    std::vector<std::pair<const Color*,uint32_t>> col;
+                    for (auto elem : colors) {
+                        col.push_back(std::make_pair(elem, _number));
+                    }
+                    return Multiset(col);
+                }
+                return Multiset();
             }
             
             NumberOfExpression(ColorExpression* color, uint32_t number = 1);
-        };
-        
-        class AllExpression {
-            // TODO
+            NumberOfExpression(AllExpression* all, uint32_t number = 1);
         };
         
         class AddExpression : public ArcExpression {
@@ -167,8 +307,8 @@ namespace PetriEngine {
             std::vector<ArcExpression*> _constituents;
             
         public:
-            Multiset eval(ExpressionContext& context) const {
-                Multiset ms();
+            Multiset eval(ExpressionContext& context) const override {
+                Multiset ms;
                 for (auto expr : _constituents) {
                     ms += expr->eval(context);
                 }
@@ -184,7 +324,7 @@ namespace PetriEngine {
             ArcExpression* _right;
             
         public:
-            Multiset eval(ExpressionContext& context) const {
+            Multiset eval(ExpressionContext& context) const override {
                 return _left->eval(context) - _right->eval(context);
             }
             
@@ -197,7 +337,7 @@ namespace PetriEngine {
             ArcExpression* _expr;
             
         public:
-            Multiset eval(ExpressionContext& context) const {
+            Multiset eval(ExpressionContext& context) const override {
                 return _expr->eval(context) * _scalar;
             }
             

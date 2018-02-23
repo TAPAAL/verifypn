@@ -26,17 +26,19 @@ namespace PetriEngine {
         public:
             Multiset();
             Multiset(const Multiset& orig);
+            Multiset(std::pair<const Color*,uint32_t> color);
+            Multiset(std::vector<std::pair<const Color*,uint32_t>>& colors);
             virtual ~Multiset();
             
-            Multiset operator+ (Multiset& other);
-            Multiset operator- (Multiset& other);
-            Multiset operator* (uint32_t scalar);
-            void operator+= (Multiset& other);
-            void operator-= (Multiset& other);
+            Multiset operator+ (const Multiset& other) const;
+            Multiset operator- (const Multiset& other) const;
+            Multiset operator* (uint32_t scalar) const;
+            void operator+= (const Multiset& other);
+            void operator-= (const Multiset& other);
             void operator*= (uint32_t scalar);
             
         private:
-            std::vector<std::pair<Color*,uint32_t>> _data;
+            std::vector<std::pair<const Color*,uint32_t>> _data;
         };
     }
 }
