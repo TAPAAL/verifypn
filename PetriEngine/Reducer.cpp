@@ -1188,7 +1188,7 @@ namespace PetriEngine {
                     changed |= ReducebyRuleH(context.getQueryPlaceCount());
             } while(!hasTimedout() && changed);
 
-        } else if (enablereduction == 2) { // for k-boundedness checking only rules A and D are applicable
+        } else if (enablereduction == 2) { // for k-boundedness checking only rules A, D and H are applicable
             bool changed = true;
             while (changed && !hasTimedout()) {
                 changed = false;

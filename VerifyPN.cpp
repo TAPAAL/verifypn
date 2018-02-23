@@ -51,6 +51,7 @@
 #include "PetriEngine/Reachability/TARReachability.h"
 #include "PetriEngine/Reducer.h"
 #include "PetriParse/QueryXMLParser.h"
+#include "PetriParse/QueryBinaryParser.h"
 #include "PetriParse/PNMLParser.h"
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriEngine/PQL/PQL.h"
@@ -224,6 +225,13 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         else if (strcmp(argv[i], "--write-simplified") == 0)
         {
             options.query_out_file = std::string(argv[++i]);
+        }
+        else if(strcmp(argv[i], "--binary-query-io") == 0)
+        {
+            if (sscanf(argv[++i], "%u", &options.binary_query_io) != 1 || options.binary_query_io > 3) {
+                fprintf(stderr, "Argument Error: Invalid binary-query-io value \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
         }
         else if (strcmp(argv[i], "--write-reduced") == 0)
         {
@@ -412,16 +420,32 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
         }
         else
         {
-            QueryXMLParser XMLparser;
-            if (!XMLparser.parse(qfile, options.querynumbers)) {
-                fprintf(stderr, "Error: Failed parsing XML query file\n");
-                fprintf(stdout, "DO_NOT_COMPETE\n");
-                conditions.clear();
-                return conditions;
+            std::vector<QueryItem> queries;
+            if(options.binary_query_io & 1)
+            {
+                QueryBinaryParser parser;
+                if (!parser.parse(qfile, options.querynumbers)) {
+                    fprintf(stderr, "Error: Failed parsing binary query file\n");
+                    fprintf(stdout, "DO_NOT_COMPETE\n");
+                    conditions.clear();
+                    return conditions;
+                }     
+                queries = std::move(parser.queries);
+            }
+            else
+            {
+                QueryXMLParser parser;
+                if (!parser.parse(qfile, options.querynumbers)) {
+                    fprintf(stderr, "Error: Failed parsing XML query file\n");
+                    fprintf(stdout, "DO_NOT_COMPETE\n");
+                    conditions.clear();
+                    return conditions;
+                }
+                queries = std::move(parser.queries);
             }
 
             size_t i = 0;
-            for(auto& q : XMLparser.queries)
+            for(auto& q : queries)
             {
                 if(!options.querynumbers.empty()
                         && options.querynumbers.count(i) == 0)
@@ -431,7 +455,7 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
                 }
                 ++i;
 
-                if (q.parsingResult == QueryXMLParser::QueryItem::UNSUPPORTED_QUERY) {
+                if (q.parsingResult == QueryItem::UNSUPPORTED_QUERY) {
                     fprintf(stdout, "The selected query in the XML query file is not supported\n");
                     fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
                     continue;
@@ -498,20 +522,56 @@ void printStats(PetriNetBuilder& builder, options_t& options)
     }
 }
 
-void getXMLQueries(vector<std::shared_ptr<Condition>>& queries, vector<std::string>& querynames, std::vector<uint32_t>& order, std::ostream& out) {
-
-
-    out << "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
+void writeQueries(vector<std::shared_ptr<Condition>>& queries, vector<std::string>& querynames, std::vector<uint32_t>& order, std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names) 
+{
+    fstream out;
+    
+    if(binary)
+    {
+        out.open(filename, std::ios::binary | std::ios::out);
+        uint32_t cnt = 0;
+        for(uint32_t j = 0; j < queries.size(); j++) {
+            if(queries[j]->isTriviallyTrue() || queries[j]->isTriviallyFalse()) continue;
+            ++cnt;
+        }
+        out.write(reinterpret_cast<const char *>(&cnt), sizeof(uint32_t));
+        cnt = place_names.size();
+        out.write(reinterpret_cast<const char *>(&cnt), sizeof(uint32_t));
+        for(auto& kv : place_names)
+        {
+            out.write(reinterpret_cast<const char *>(&kv.second), sizeof(uint32_t));
+            out.write(kv.first.data(), kv.first.size());
+            out.write("\0", sizeof(char));
+        }
+    }
+    else
+    {
+        out.open(filename, std::ios::out);
+        out << "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
+    }
     
     for(uint32_t j = 0; j < queries.size(); j++) {
         auto i = order[j];
         if(queries[i]->isTriviallyTrue() || queries[i]->isTriviallyFalse()) continue;
-        out << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
-        queries[i]->toXML(out, 3);
-        out << "    </formula>\n  </property>\n";
+        if(binary)
+        {
+            out.write(querynames[i].data(), querynames[i].size());
+            out.write("\0", sizeof(char));
+            queries[i]->toBinary(out);
+        }
+        else
+        {
+            out << "  <property>\n    <id>" << querynames[i] << "</id>\n    <description>Simplified</description>\n    <formula>\n";
+            queries[i]->toXML(out, 3);
+            out << "    </formula>\n  </property>\n";
+        }
     }
-            
-    out << "</property-set>\n";
+        
+    if(binary == 0)
+    {
+        out << "</property-set>\n";
+    }
+    out.close();
 }
 
 int main(int argc, char* argv[]) {
@@ -670,8 +730,6 @@ int main(int argc, char* argv[]) {
     
     if(options.query_out_file.size() > 0)
     {
-        fstream file;
-        file.open(options.query_out_file, std::ios::out);
         std::vector<uint32_t> reorder(queries.size());
         for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
         std::sort(reorder.begin(), reorder.end(), [&queries](auto a, auto b){
@@ -684,8 +742,7 @@ int main(int argc, char* argv[]) {
                 return queries[a]->containsNext() < queries[b]->containsNext();
             return queries[a]->formulaSize() < queries[b]->formulaSize();
         });
-        getXMLQueries(queries, querynames, reorder, file);
-        file.close();
+        writeQueries(queries, querynames, reorder, options.query_out_file, options.binary_query_io & 2, builder.getPlaceNames());
     }
     
     qnet = nullptr;

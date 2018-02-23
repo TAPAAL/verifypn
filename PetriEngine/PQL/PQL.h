@@ -41,7 +41,7 @@ namespace PetriEngine {
     namespace PQL {
         
         enum CTLType {PATHQEURY = 1, LOPERATOR = 2, EVAL = 3, TYPE_ERROR = -1};
-        enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, EMPTY = -1 };
+        enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, COMPCONJ = 6, DEADLOCK = 7, UPPERBOUNDS = 8, BOOLEAN = 9, EMPTY = -1 };
         enum Path { G = 1, X = 2, F = 3, U = 4, pError = -1 };
         
         
@@ -121,6 +121,7 @@ namespace PetriEngine {
             virtual Simplification::Member constraint(SimplificationContext& context) const = 0;
             /** Output the expression as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const = 0;
+            virtual void toBinary(std::ostream&) const = 0;
             /** Stubborn reduction: increasing and decreasing sets */
             virtual void incr(ReducingSuccessorGenerator& generator) const = 0;
             virtual void decr(ReducingSuccessorGenerator& generator) const = 0;
@@ -229,6 +230,8 @@ namespace PetriEngine {
             
             /** Output the condition as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
+            virtual void toBinary(std::ostream& out) const = 0;
+
             /** Find interesting transitions in stubborn reduction*/
             virtual void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const = 0;
             /** Checks if the condition is trivially true */
@@ -269,7 +272,7 @@ namespace PetriEngine {
             virtual Path getPath() const = 0;
             static std::shared_ptr<Condition> 
             initialMarkingRW(std::function<std::shared_ptr<Condition> ()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated);
-            virtual bool containsNext() const = 0;            
+            virtual bool containsNext() const = 0;   
         protected:
             //Value for checking if condition is trivially true or false.
             //0 is undecided (default), 1 is true, 2 is false.

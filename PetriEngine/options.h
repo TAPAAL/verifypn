@@ -33,6 +33,7 @@ struct options_t {
     bool isctl = false;
     CTL::CTLAlgorithmType ctlalgorithm = CTL::CZero;
     bool tar = false;
+    uint32_t binary_query_io = 0;
     
     std::string query_out_file;
     std::string model_out_file;

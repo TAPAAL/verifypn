@@ -1392,6 +1392,148 @@ namespace PetriEngine {
             return _distance(context, delta<EqualCondition>);
         }
 
+        /******************** BIN output ********************/
+        
+        void LiteralExpr::toBinary(std::ostream& out) const {
+            out.write("l", sizeof(char));
+            out.write(reinterpret_cast<const char*>(&_value), sizeof(int));
+        }
+        
+        void IdentifierExpr::toBinary(std::ostream& out) const {
+            out.write("i", sizeof(char));
+            out.write(reinterpret_cast<const char*>(&_offsetInMarking), sizeof(int));            
+        }
+        
+        void MinusExpr::toBinary(std::ostream& out) const
+        {
+            auto e1 = std::make_shared<PQL::LiteralExpr>(0);
+            std::vector<Expr_ptr> exprs;
+            exprs.push_back(e1);
+            exprs.push_back(_expr);
+            PQL::SubtractExpr(std::move(exprs)).toBinary(out);
+        }
+        
+        void SubtractExpr::toBinary(std::ostream& out) const {
+            out.write("-", sizeof(char));
+            uint32_t size = _exprs.size();
+            out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+            for(auto& e : _exprs)
+                e->toBinary(out);
+        }
+
+        void CommutativeExpr::toBinary(std::ostream& out) const
+        {
+            auto sop = op();
+            out.write(&sop[0], sizeof(char));
+            out.write(reinterpret_cast<const char*>(&_constant), sizeof(int32_t));
+            uint32_t size = _ids.size();
+            out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+            _exprs.size();
+            out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+            for(auto& id : _ids)
+                out.write(reinterpret_cast<const char*>(&id.first), sizeof(uint32_t));
+            for(auto& e : _exprs)
+                e->toBinary(out);
+        }
+        
+        void SimpleQuantifierCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = getQuantifier();
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            _cond->toBinary(out);
+        }
+        
+        void UntilCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = getQuantifier();
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            _cond1->toBinary(out);
+            _cond2->toBinary(out);
+        }
+        
+        void LogicalCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = getQuantifier();
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            uint32_t size = _conds.size();
+            out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+            for(auto& c : _conds) c->toBinary(out);
+        }
+        
+        void CompareConjunction::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = Quantifier::COMPCONJ;
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            out.write(reinterpret_cast<const char*>(&_negated), sizeof(bool));
+            uint32_t size = _constraints.size();
+            out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+            for(auto& c : _constraints)
+            {
+                out.write(reinterpret_cast<const char*>(&c._place), sizeof(int32_t));                
+                out.write(reinterpret_cast<const char*>(&c._lower), sizeof(uint32_t));
+                out.write(reinterpret_cast<const char*>(&c._upper), sizeof(uint32_t));
+            }
+        }
+        
+        void CompareCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = getQuantifier();
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            std::string sop = op();
+            out.write(sop.data(), sop.size());
+            out.write("\0", sizeof(char));
+            _expr1->toBinary(out);
+            _expr2->toBinary(out);
+        }
+        
+        void DeadlockCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = Quantifier::DEADLOCK;
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+        }
+        
+        void BooleanCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = Quantifier::BOOLEAN;
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            out.write(reinterpret_cast<const char*>(&_value), sizeof(bool));
+        }
+        
+        void UpperBoundsCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = Quantifier::UPPERBOUNDS;
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));            
+            uint32_t size = _places.size();
+            out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));                        
+            for(auto& b : _places)
+                out.write(reinterpret_cast<const char*>(b._place), sizeof(uint32_t));                        
+        }
+        
+        void NotCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = getQuantifier();
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            _cond->toBinary(out);
+        }
+        
         /******************** CTL Output ********************/ 
         
         void LiteralExpr::toXML(std::ostream& out,uint32_t tabs, bool tokencount) const {

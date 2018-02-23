@@ -69,6 +69,7 @@ namespace PetriEngine {
             CommutativeExpr(std::vector<Expr_ptr>&& exprs, int initial);            
             virtual void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
+            void toBinary(std::ostream&) const override;
             int formulaSize() const override{
                 size_t sum = _ids.size();
                 for(auto& e : _exprs) sum += e->formulaSize();
@@ -122,6 +123,8 @@ namespace PetriEngine {
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+            void toBinary(std::ostream&) const override;
+
         protected:
             int apply(int v1, int v2) const override;
             //int binaryOp() const;
@@ -161,6 +164,7 @@ namespace PetriEngine {
             Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
+            void toBinary(std::ostream&) const override;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
             int formulaSize() const override{
@@ -182,6 +186,7 @@ namespace PetriEngine {
             void toString(std::ostream&) const override;
             Expr::Types type() const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
+            void toBinary(std::ostream&) const override;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
             int formulaSize() const override{
@@ -211,6 +216,7 @@ namespace PetriEngine {
             void toString(std::ostream&) const override;
             Expr::Types type() const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
+            void toBinary(std::ostream&) const override;
             void incr(ReducingSuccessorGenerator& generator) const override;
             void decr(ReducingSuccessorGenerator& generator) const override;
             int formulaSize() const override{
@@ -258,6 +264,7 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void toString(std::ostream&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
+            void toBinary(std::ostream& out) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
             virtual bool containsNext() const override { return _cond->containsNext(); }
@@ -397,6 +404,7 @@ namespace PetriEngine {
             }
             void toString(std::ostream&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
+            void toBinary(std::ostream& out) const override;            
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
@@ -457,6 +465,9 @@ namespace PetriEngine {
             { _compiled->toString(ss); } 
             void toTAPAALQuery(std::ostream& s,TAPAALConditionExportContext& context) const override
             { _compiled->toTAPAALQuery(s, context); }
+            void toBinary(std::ostream& out) const override
+            { _compiled->toBinary(out); }
+
             Retval simplify(SimplificationContext& context) const override
             { 
                 return _compiled->simplify(context); 
@@ -509,6 +520,7 @@ namespace PetriEngine {
             
             uint32_t distance(DistanceContext& context) const override;
             void toString(std::ostream&) const override;
+            void toBinary(std::ostream& out) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
@@ -597,7 +609,7 @@ namespace PetriEngine {
 
         class CompareConjunction : public Condition
         {
-        private:
+        public:
             struct cons_t {
                 int32_t _place  = -1;
                 uint32_t _upper = std::numeric_limits<uint32_t>::max();
@@ -609,8 +621,6 @@ namespace PetriEngine {
                 }
             };
 
-
-        public:
             CompareConjunction(bool negated = false) 
                     : _negated(false) {};
             friend FireableCondition;
@@ -643,6 +653,7 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             void toString(std::ostream& stream) const override;
             void toTAPAALQuery(std::ostream& stream,TAPAALConditionExportContext& context) const override;
+            void toBinary(std::ostream& out) const override;
             bool isReachability(uint32_t depth) const override { return depth > 0; };
             Condition_ptr prepareForReachability(bool negated) const override;
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
@@ -685,6 +696,7 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void toString(std::ostream&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
+            void toBinary(std::ostream& out) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
@@ -851,6 +863,7 @@ namespace PetriEngine {
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) override;
             void toXML(std::ostream&, uint32_t tabs) const override;
+            void toBinary(std::ostream&) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::NEG; }
             Path getPath() const override { return Path::pError; }
@@ -892,6 +905,7 @@ namespace PetriEngine {
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) override;
             void toXML(std::ostream&, uint32_t tabs) const override;
+            void toBinary(std::ostream&) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
@@ -926,6 +940,7 @@ namespace PetriEngine {
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) override;
             void toXML(std::ostream&, uint32_t tabs) const override;
+            void toBinary(std::ostream&) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             static Condition_ptr DEADLOCK;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
@@ -966,6 +981,7 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override;
             void toString(std::ostream&) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
+            void toBinary(std::ostream&) const override;
             Retval simplify(SimplificationContext& context) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
