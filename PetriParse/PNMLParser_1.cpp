@@ -200,15 +200,15 @@ PetriEngine::Colored::GuardExpression* PNMLParser::parseGuardExpression(rapidxml
 
 PetriEngine::Colored::ColorExpression* PNMLParser::parseColorExpression(rapidxml::xml_node* element) {
     if (strcmp(element->name(), "dotconstant") == 0) {
-        
+        return new PetriEngine::Colored::DotConstantExpression();
     } else if (strcmp(element->name(), "variable") == 0) {
-        
+        return new PetriEngine::Colored::VariableExpression(variables[element->first_attribute("refvariable")->value()]);
     } else if (strcmp(element->name(), "useroperator") == 0) {
-        
+        return new PetriEngine::Colored::UserOperatorExpression(findColor(element->first_attribute("declaration")->value()));
     } else if (strcmp(element->name(), "successor") == 0) {
-        
+        return new PetriEngine::Colored::SuccessorExpression(parseColorExpression(element->first_node()));
     } else if (strcmp(element->name(), "predecessor") == 0) {
-        
+        return new PetriEngine::Colored::PredecessorExpression(parseColorExpression(element->first_node()));
     } else if (strcmp(element->name(), "subterm") == 0) {
         return parseColorExpression(element->first_node());
     }

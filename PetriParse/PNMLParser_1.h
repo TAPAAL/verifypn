@@ -89,6 +89,7 @@ private:
     void parseValue(rapidxml::xml_node<>* element, std::string& text);
     void parsePosition(rapidxml::xml_node<>* element, double& x, double& y);
     void parseQueries(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::Color* findColor(const char* name) const;
     PetriEngine::AbstractPetriNetBuilder* builder;
     NodeNameMap id2name;
     ArcList arcs;
