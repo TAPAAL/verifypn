@@ -153,6 +153,7 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
                 places.emplace_back(names[id]);
                 places.back()._place = id;
             }
+            return std::make_shared<UpperBoundsCondition>(places, 0);
         }
         else
         {
