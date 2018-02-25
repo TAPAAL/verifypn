@@ -60,7 +60,10 @@ void PNMLParser::parse(ifstream& xml,
         exit(-1);
     }
     
-    parseDeclarations(root->first_node("net")->first_node("declaration"));
+    auto declarations = root->first_node("net")->first_node("declaration");
+    isColored = declarations != nullptr;
+    if (isColored)
+        parseDeclarations(declarations);
     parseElement(root);
 
     //Add all the transition
@@ -150,11 +153,6 @@ void PNMLParser::parse(ifstream& xml,
 }
 
 void PNMLParser::parseDeclarations(rapidxml::xml_node<>* element) {
-    if (!element) {
-        isColored = false;
-        return;
-    }
-    isColored = true;
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
         if (strcmp(it->name(), "namedsort") == 0) {
             parseNamedSort(it);
@@ -164,6 +162,8 @@ void PNMLParser::parseDeclarations(rapidxml::xml_node<>* element) {
                 parseUserSort(it->first_node())
             };
             variables[it->first_attribute("id")->value()] = var;
+        } else {
+            parseDeclarations(element->first_node());
         }
     }
 }
@@ -175,10 +175,11 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
     
     auto ct = new PetriEngine::Colored::ColorType();
     for (auto it = type->first_node(); it; it = it->next_sibling()) {
+        //printf("%s\n", it->name());
         ct->addColor(it->first_attribute("id")->value());
     }
-
-    colorTypes[type->first_attribute("id")->value()] = ct;
+    //printf("%s\n", type->name());
+    colorTypes[element->first_attribute("id")->value()] = ct;
 }
 
 PetriEngine::Colored::ArcExpression* PNMLParser::parseArcExpression(rapidxml::xml_node<>* element) {
@@ -280,15 +281,18 @@ PetriEngine::Colored::ColorExpression* PNMLParser::parseColorExpression(rapidxml
 
 PetriEngine::Colored::AllExpression* PNMLParser::parseAllExpression(rapidxml::xml_node<>* element) {
     if (strcmp(element->name(), "all") == 0) {
+        //printf("%s\n", element->first_node()->name());
         return new PetriEngine::Colored::AllExpression(parseUserSort(element->first_node()));
     } else if (strcmp(element->name(), "subterm") == 0) {
         return parseAllExpression(element->first_node());
     }
+    //printf("%s\n", element->name());
     return nullptr;
 }
 
 PetriEngine::Colored::ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>* element) {
     if (strcmp(element->name(), "usersort") == 0) {
+        //printf("%s\n", element->first_attribute("declaration")->value());
         auto type = colorTypes[element->first_attribute("declaration")->value()];
         return type;
     }
@@ -521,8 +525,8 @@ const PetriEngine::Colored::Color* PNMLParser::findColor(const char* name) const
     for (auto elem : colorTypes) {
         try {
             return &(*elem.second)[name];
-        } catch (std::string e) {} 
+        } catch (...) {}
     }
-    printf("Could not find color: %s\n", name);
+    printf("Could not find color: %s\nCANNOT_COMPUTE\n", name);
     exit(-1);
 }
