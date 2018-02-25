@@ -1521,6 +1521,7 @@ namespace PetriEngine {
             out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));            
             uint32_t size = _places.size();
             out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));                        
+            out.write(reinterpret_cast<const char*>(&_max), sizeof(size_t));     
             for(auto& b : _places)
                 out.write(reinterpret_cast<const char*>(&b._place), sizeof(uint32_t));                        
         }
