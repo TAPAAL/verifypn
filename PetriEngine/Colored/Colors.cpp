@@ -11,12 +11,12 @@
 namespace PetriEngine {
     namespace Colored {
         Color::Color(ColorType* colorType, uint32_t id, const Color** colors, const size_t colorSize)
-            : _tuple(colors), _tupleSize(colorSize), _colorType(colorType), _id(id), _colorName(0)
+                : _tuple(colors), _tupleSize(colorSize), _colorType(colorType), _colorName(0), _id(id)
         {
         }
         
         Color::Color(ColorType* colorType, uint32_t id, const char* color)
-                : _tuple(0), _tupleSize(1), _colorType(colorType), _id(id), _colorName(color)
+                : _tuple(0), _tupleSize(1), _colorType(colorType), _colorName(color), _id(id)
         {
         }
         
@@ -93,9 +93,13 @@ namespace PetriEngine {
         }
         
         
+        void ColorType::addColor(const char* colorName) {
+            _colors.push_back(Color(this, _colors.size(), colorName));
+        }
+        
         const Color& ColorType::operator[] (const char* index) const {
             for (size_t i = 0; i < _colors.size(); i++) {
-                if (!strcmp(_colors[i].toString().c_str(), index))
+                if (strcmp(_colors[i].toString().c_str(), index) == 0)
                     return _colors[i];
             }
             throw "Index out of bounds";

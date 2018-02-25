@@ -18,40 +18,54 @@
 #include <unordered_map>
 
 #include "ColoredNetStructures.h"
+#include "../AbstractPetriNetBuilder.h"
+#include "../PetriNetBuilder.h"
 
 namespace PetriEngine {
-    class ColoredPetriNetBuilder {
+    class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
     public:
         ColoredPetriNetBuilder();
         ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig);
         virtual ~ColoredPetriNetBuilder();
         
-//        /** Add a new place with a unique name */
-//        void addPlace(const std::string& name,
-//                int tokens,
-//                double x = 0,
-//                double y = 0) override;
-//        /** Add a new transition with a unique name */
-//        void addTransition(const std::string& name,
-//                double x = 0,
-//                double y = 0) override;
-//        /** Add input arc with given weight */
-//        void addInputArc(const std::string& place,
-//                const std::string& transition,
-//                bool inhibitor,
-//                int) override;
-//        /** Add output arc with given weight */
-//        void addOutputArc(const std::string& transition,
-//                const std::string& place,
-//                int weight = 1) override;
-//
-//        void sort() override;
+        void addPlace(const std::string& name,
+                int tokens,
+                double x = 0,
+                double y = 0) override ;
+        void addPlace(const std::string& name,
+                Colored::Multiset tokens,
+                double x = 0,
+                double y = 0) override;
+        void addTransition(const std::string& name,
+                double x = 0,
+                double y = 0) override;
+        void addTransition(const std::string& name,
+                Colored::GuardExpression* guard,
+                double x = 0,
+                double y = 0) override;
+        void addInputArc(const std::string& place,
+                const std::string& transition,
+                bool inhibitor,
+                int) override;
+        void addInputArc(const std::string& place,
+                const std::string& transition,
+                Colored::ArcExpression* expr) override;
+        void addOutputArc(const std::string& transition,
+                const std::string& place,
+                int weight = 1) override;
+        void addOutputArc(const std::string& transition,
+                const std::string& place,
+                Colored::ArcExpression* expr) override;
+
+        void sort() override;
+        
+        PetriNetBuilder& unfold();
     private:
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
         std::vector<Colored::Arc> _arcs;
         std::unordered_map<std::string,Colored::ColorType> _colors;
-
+        PetriNetBuilder _ptBuilder;
     };
 }
 

@@ -28,6 +28,9 @@
 #include "PetriEngine/AbstractPetriNetBuilder.h"
 #include "rapidxml/rapidxml.hpp"
 #include "../PetriEngine/PQL/PQL.h"
+#include "../PetriEngine/Colored/ColoredNetStructures.h"
+#include "../PetriEngine/Colored/Expressions.h"
+#include "../PetriEngine/Colored/Colors.h"
 
 class PNMLParser {
 
@@ -35,6 +38,7 @@ class PNMLParser {
         std::string source,
         target;
         int weight;
+        PetriEngine::Colored::ArcExpression* expr;
     };
     typedef std::vector<Arc> ArcList;
     typedef ArcList::iterator ArcIter;
@@ -42,6 +46,7 @@ class PNMLParser {
     struct Transition {
         std::string id;
         double x, y;
+        PetriEngine::Colored::GuardExpression* expr;
     };
     typedef std::vector<Transition> TransitionList;
     typedef TransitionList::iterator TransitionIter;
@@ -51,6 +56,9 @@ class PNMLParser {
         bool isPlace;
     };
     typedef std::unordered_map<std::string, NodeName> NodeNameMap;
+    
+    typedef std::unordered_map<std::string, PetriEngine::Colored::ColorType*> ColorTypeMap;
+    typedef std::unordered_map<std::string, PetriEngine::Colored::Variable*> VariableMap;
 
 public:
 
@@ -73,15 +81,27 @@ private:
     void parsePlace(rapidxml::xml_node<>* element);
     void parseArc(rapidxml::xml_node<>* element, bool inhibitor = false);
     void parseTransition(rapidxml::xml_node<>* element);
+    void parseDeclarations(rapidxml::xml_node<>* element);
+    void parseNamedSort(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::ArcExpression* parseArcExpression(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::GuardExpression* parseGuardExpression(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::ColorExpression* parseColorExpression(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::AllExpression* parseAllExpression(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::ColorType* parseUserSort(rapidxml::xml_node<>* element);
     void parseTransportArc(rapidxml::xml_node<>* element);
     void parseValue(rapidxml::xml_node<>* element, std::string& text);
+    uint32_t parseNumberConstant(rapidxml::xml_node<>* element);
     void parsePosition(rapidxml::xml_node<>* element, double& x, double& y);
     void parseQueries(rapidxml::xml_node<>* element);
+    const PetriEngine::Colored::Color* findColor(const char* name) const;
     PetriEngine::AbstractPetriNetBuilder* builder;
     NodeNameMap id2name;
     ArcList arcs;
     ArcList inhibarcs;
     TransitionList transitions;
+    ColorTypeMap colorTypes;
+    VariableMap variables;
+    bool isColored;
     std::vector<Query> queries;
 };
 

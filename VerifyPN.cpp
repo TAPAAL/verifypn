@@ -61,6 +61,7 @@
 
 #include "CTL/CTLEngine.h"
 #include "PetriEngine/PQL/Expressions.h"
+#include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 
 using namespace std;
 using namespace PetriEngine;
@@ -437,7 +438,7 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
     } 
  }
 
-ReturnValue parseModel(PetriNetBuilder& builder, options_t& options)
+ReturnValue parseModel(AbstractPetriNetBuilder& builder, options_t& options)
 {
     //Load the model
     ifstream mfile(options.modelfile, ifstream::in);
@@ -522,8 +523,8 @@ int main(int argc, char* argv[]) {
     if(v != ContinueCode) return v;
     options.print();
   
-    PetriNetBuilder builder;
-    if(parseModel(builder, options) != ContinueCode) return ErrorCode;
+    ColoredPetriNetBuilder cpnBuilder;
+    if(parseModel(cpnBuilder, options) != ContinueCode) return ErrorCode;
     
     //----------------------- Parse Query -----------------------//
     std::vector<std::string> querynames;
@@ -539,7 +540,8 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-        
+    
+    auto builder = cpnBuilder.unfold();
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
     

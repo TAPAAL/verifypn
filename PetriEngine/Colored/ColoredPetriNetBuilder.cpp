@@ -22,5 +22,45 @@ namespace PetriEngine {
 
     ColoredPetriNetBuilder::~ColoredPetriNetBuilder() {
     }
+    
+    void ColoredPetriNetBuilder::addPlace(const std::string& name, int tokens, double x, double y) {
+        
+    }
+    
+    void ColoredPetriNetBuilder::addPlace(const std::string& name, Colored::Multiset tokens, double x, double y) {
+        
+    }
+    
+    void ColoredPetriNetBuilder::addTransition(const std::string& name, double x, double y) {
+        
+    }
+    
+    void ColoredPetriNetBuilder::addTransition(const std::string& name, Colored::GuardExpression* guard, double x, double y) {
+        
+    }
+    
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, int) {
+        
+    }
+    
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, Colored::ArcExpression* expr) {
+        
+    }
+    
+    void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, int weight) {
+        
+    }
+    
+    void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, Colored::ArcExpression* expr) {
+        
+    }
+    
+    void ColoredPetriNetBuilder::sort() {
+        
+    }
+    
+    PetriNetBuilder& ColoredPetriNetBuilder::unfold() {
+        return _ptBuilder;
+    }
 }
 

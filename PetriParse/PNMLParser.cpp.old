@@ -27,7 +27,7 @@
 #include <string.h>
 
 
-#include "PNMLParser_1.h"
+#include "PNMLParser.h"
 #include "../PetriEngine/errorcodes.h"
 #include "PetriEngine/PQL/Expressions.h"
 
@@ -41,8 +41,6 @@ void PNMLParser::parse(ifstream& xml,
     id2name.clear();
     arcs.clear();
     transitions.clear();
-    inhibarcs.clear();
-    colorTypes.clear();
 
     //Set the builder
     this->builder = builder;
@@ -60,7 +58,6 @@ void PNMLParser::parse(ifstream& xml,
         exit(-1);
     }
     
-    parseDeclarations(root->first_node("net")->first_node("declaration"));
     parseElement(root);
 
     //Add all the transition
@@ -134,84 +131,7 @@ void PNMLParser::parse(ifstream& xml,
     arcs.clear();
     transitions.clear();
     inhibarcs.clear();
-    colorTypes.clear();
     builder->sort();
-}
-
-void PNMLParser::parseDeclarations(rapidxml::xml_node* element) {
-    if (!element) {
-        return;
-    }
-    for (auto it = element->first_node(); it; it->next_sibling()) {
-        if (strcmp(it->name(), "namedsort") == 0) {
-            parseNamedSort(it);
-        } else if (strcmp(it->name(), "variabledecl") == 0) {
-            variables[it->first_attribute("id")->value()] = it->first_node()->first_attribute("declaration")->value();
-        }
-    }
-}
-
-void PNMLParser::parseNamedSort(rapidxml::xml_node* element) {
-    auto type = element->first_node();
-    if (strcmp(type->name(), "dot") == 0)
-        return;
-    
-    auto ct = new PetriEngine::Colored::ColorType();
-    for (auto it = type->first_node(); it; it->next_sibling()) {
-        ct->addColor(it->first_attribute("id")->value());
-    }
-
-    colorTypes[type->first_attribute("id")->value()] = ct;
-}
-
-PetriEngine::Colored::ArcExpression* PNMLParser::parseArcExpression(rapidxml::xml_node* element) {
-    if (strcmp(element->name(), "numberof") == 0) {
-        
-    } else if (strcmp(element->name(), "add") == 0) {
-        
-    } else if (strcmp(element->name(), "subtract") == 0) {
-        
-    } else if (strcmp(element->name(), "scalarproduct") == 0) {
-        
-    } else if (strcmp(element->name(), "subterm") == 0) {
-        return parseArcExpression(element->first_node());
-    }
-}
-
-PetriEngine::Colored::GuardExpression* PNMLParser::parseGuardExpression(rapidxml::xml_node* element) {
-    if (strcmp(element->name(), "lt") == 0 || strcmp(element->name(), "lessthan") == 0) {
-        
-    } else if (strcmp(element->name(), "gt") == 0 || strcmp(element->name(), "greaterthan") == 0) {
-        
-    } else if (strcmp(element->name(), "leq") == 0 || strcmp(element->name(), "lessthanorequal") == 0) {
-        
-    } else if (strcmp(element->name(), "geq") == 0 || strcmp(element->name(), "greaterthanorequal") == 0) {
-        
-    } else if (strcmp(element->name(), "eq") == 0 || strcmp(element->name(), "equality") == 0) {
-        
-    } else if (strcmp(element->name(), "neq") == 0 || strcmp(element->name(), "inequality") == 0) {
-        
-    } else if (strcmp(element->name(), "not") == 0) {
-        
-    } else if (strcmp(element->name(), "subterm") == 0) {
-        return parseArcExpression(element->first_node());
-    }
-}
-
-PetriEngine::Colored::ColorExpression* PNMLParser::parseColorExpression(rapidxml::xml_node* element) {
-    if (strcmp(element->name(), "dotconstant") == 0) {
-        return new PetriEngine::Colored::DotConstantExpression();
-    } else if (strcmp(element->name(), "variable") == 0) {
-        return new PetriEngine::Colored::VariableExpression(variables[element->first_attribute("refvariable")->value()]);
-    } else if (strcmp(element->name(), "useroperator") == 0) {
-        return new PetriEngine::Colored::UserOperatorExpression(findColor(element->first_attribute("declaration")->value()));
-    } else if (strcmp(element->name(), "successor") == 0) {
-        return new PetriEngine::Colored::SuccessorExpression(parseColorExpression(element->first_node()));
-    } else if (strcmp(element->name(), "predecessor") == 0) {
-        return new PetriEngine::Colored::PredecessorExpression(parseColorExpression(element->first_node()));
-    } else if (strcmp(element->name(), "subterm") == 0) {
-        return parseColorExpression(element->first_node());
-    }
 }
 
 void PNMLParser::parseElement(rapidxml::xml_node<>* element) {
@@ -265,11 +185,6 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
     double x = 0, y = 0;
     string id(element->first_attribute("id")->value());
 
-    auto hlinitial = element->first_node("hlinitialMarking");
-    if (hlinitial) {
-        auto hlinitialMarking = parseArcExpression(hlinitial->first_node());
-    }
-    
     auto initial = element->first_attribute("initialMarking");
     long long initialMarking = 0;
     if(initial)

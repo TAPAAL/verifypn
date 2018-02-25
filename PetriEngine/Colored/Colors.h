@@ -96,7 +96,7 @@ namespace PetriEngine {
             
         public:
             ColorType(std::vector<ColorType*> elements);
-            ColorType();
+            ColorType() : _colors() {}
             
             void addColor(const char* colorName);
             

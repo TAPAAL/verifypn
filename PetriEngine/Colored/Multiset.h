@@ -37,8 +37,10 @@ namespace PetriEngine {
             void operator-= (const Multiset& other);
             void operator*= (uint32_t scalar);
             
+            bool empty() const;
+            
         private:
-            std::vector<std::pair<const Color*,uint32_t>> _data;
+            std::vector<std::pair<const Color*,uint32_t>> _set;
         };
     }
 }
