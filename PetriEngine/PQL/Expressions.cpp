@@ -930,6 +930,27 @@ namespace PetriEngine {
             return ">=";
         }
 
+        /******************** free of places ********************/        
+
+        bool NaryExpr::placeFree() const
+        {
+            for(auto& e : _exprs)
+                if(!e->placeFree())
+                    return false;
+            return true;
+        }
+        
+        bool CommutativeExpr::placeFree() const
+        {
+            if(_ids.size() > 0) return false;
+            return NaryExpr::placeFree();
+        }
+        
+        bool MinusExpr::placeFree() const
+        {
+            return _expr->placeFree();
+        }
+        
         /******************** Expr::type() implementation ********************/
 
         Expr::Types PlusExpr::type() const {
@@ -2849,7 +2870,7 @@ namespace PetriEngine {
             if(auto p1 = dynamic_pointer_cast<CommutativeExpr>(_expr1))
                 if(auto p2 = dynamic_pointer_cast<CommutativeExpr>(_expr2))            
                     return p1->_exprs.size() + p1->_ids.size() + p2->_exprs.size() + p2->_ids.size() == 0;
-            return false;
+            return _expr1->placeFree() && _expr2->placeFree();
         }        
         
         Condition_ptr LessThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
@@ -2890,15 +2911,6 @@ namespace PetriEngine {
         Condition_ptr NotEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
-            for(int i = 0; i < 2; ++i)
-            {
-                if(auto e = dynamic_pointer_cast<LiteralExpr>(operator [](i)))
-                    if(e->value() == 0) 
-                        return GreaterThanCondition(
-                                operator []((i+1)%2), 
-                                operator [](i)
-                                    ).pushNegation(stats, context, nested, negated);
-            }
             if(negated) return std::make_shared<EqualCondition>(_expr1, _expr2);
             else        return std::make_shared<NotEqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);
@@ -2908,15 +2920,6 @@ namespace PetriEngine {
         Condition_ptr EqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
-            for(int i = 0; i < 2; ++i)
-            {
-                if(auto e = dynamic_pointer_cast<LiteralExpr>(operator [](i)))
-                    if(e->value() == 0) 
-                        return LessThanOrEqualCondition(
-                                operator []((i+1)%2), 
-                                operator [](i)
-                                    ).pushNegation(stats, context, nested, negated);
-            }
             if(negated) return std::make_shared<NotEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<EqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);

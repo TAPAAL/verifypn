@@ -55,6 +55,8 @@ namespace PetriEngine {
                 return sum + 1;
             }
             void toString(std::ostream&) const override;
+            bool placeFree() const override;
+
         protected:
             virtual int apply(int v1, int v2) const = 0;
             virtual std::string op() const = 0;
@@ -77,6 +79,7 @@ namespace PetriEngine {
                 return sum + 1;
             }
             void toString(std::ostream&) const override;            
+            bool placeFree() const override;
         protected:
             CommutativeExpr(int constant): _constant(constant) {};
             void init(std::vector<Expr_ptr>&& exprs);
@@ -156,6 +159,7 @@ namespace PetriEngine {
             int formulaSize() const override{
                 return _expr->formulaSize() + 1;
             }
+            bool placeFree() const override;
         private:
             Expr_ptr _expr;
         };
@@ -180,6 +184,7 @@ namespace PetriEngine {
                 return _value;
             };
             Member constraint(SimplificationContext& context) const override;
+            bool placeFree() const override { return true; }
         private:
             int _value;
         };
@@ -213,6 +218,7 @@ namespace PetriEngine {
                 return _name;
             }
             Member constraint(SimplificationContext& context) const override;
+            bool placeFree() const override { return false; }
         private:
             /** Offset in marking, -1 if undefined, should be resolved during analysis */
             int _offsetInMarking;
