@@ -30,10 +30,12 @@ public:
     virtual ~ReducingSuccessorGenerator();
     void prepare(const Structures::State* state);
     bool next(Structures::State& write);
-    void presetOf(uint32_t place);
-    void postsetOf(uint32_t place, bool keep_pos = false);
-    void postPresetOf(uint32_t t);
+    void presetOf(uint32_t place, bool make_closure = false);
+    void postsetOf(uint32_t place, bool make_closure = false);
+    void postPresetOf(uint32_t t, bool make_closure = false);
     void inhibitorPostsetOf(uint32_t place);
+    bool seenPre(uint32_t place) const;
+    bool seenPost(uint32_t place) const;
     uint32_t leastDependentEnabled();
     uint32_t fired()
     {
@@ -44,6 +46,7 @@ public:
 
 private:
     inline void addToStub(uint32_t t);
+    void closure();
     bool *_enabled, *_stubborn;
     std::unique_ptr<uint8_t> _places_seen;
     std::unique_ptr<place_t[]> _places;

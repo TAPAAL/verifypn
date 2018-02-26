@@ -3403,12 +3403,12 @@ namespace PetriEngine {
         /******************** Stubborn reduction interesting transitions ********************/
         
         void PlusExpr::incr(ReducingSuccessorGenerator& generator) const { 
-            for(auto& i : _ids) generator.presetOf(i.first);
+            for(auto& i : _ids) generator.presetOf(i.first, true);
             for(auto& e : _exprs) e->incr(generator);
         }
         
         void PlusExpr::decr(ReducingSuccessorGenerator& generator) const {
-            for(auto& i : _ids) generator.postsetOf(i.first);
+            for(auto& i : _ids) generator.postsetOf(i.first, true);
             for(auto& e : _exprs) e->decr(generator);
         }
         
@@ -3425,8 +3425,8 @@ namespace PetriEngine {
         void MultiplyExpr::incr(ReducingSuccessorGenerator& generator) const {
             for(auto& i : _ids)
             {
-                generator.presetOf(i.first);
-                generator.postsetOf(i.first);
+                generator.presetOf(i.first, true);
+                generator.postsetOf(i.first, true);
             }
             for(auto& e : _exprs)
             {
@@ -3456,11 +3456,11 @@ namespace PetriEngine {
         }
 
         void IdentifierExpr::incr(ReducingSuccessorGenerator& generator) const {
-            generator.presetOf(_offsetInMarking);
+            generator.presetOf(_offsetInMarking, true);
         }
         
         void IdentifierExpr::decr(ReducingSuccessorGenerator& generator) const {
-             generator.postsetOf(_offsetInMarking);
+             generator.postsetOf(_offsetInMarking, true);
         }
         
         void SimpleQuantifierCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
@@ -3506,7 +3506,8 @@ namespace PetriEngine {
         void CompareConjunction::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
              
             auto neg = negated != _negated;
-            
+            int32_t cand = std::numeric_limits<int32_t>::max();
+            bool pre = false;
             for(auto& c : _constraints)
             {
                 auto val = generator.parent()[c._place];
@@ -3515,16 +3516,18 @@ namespace PetriEngine {
                     if(neg)
                     {
                         if(val != c._lower) continue;
-                        generator.postsetOf(c._place);
-                        generator.presetOf(c._place);
+                        generator.postsetOf(c._place, true);
+                        generator.presetOf(c._place, true);
                     }
                     else
                     {
                         if(val == c._lower) continue;
                         if(val > c._lower) {
-                            generator.postsetOf(c._place);
+                            cand = c._place;
+                            pre = false;
                         } else {
-                            generator.presetOf(c._place);
+                            cand = c._place;
+                            pre = true;
                         }   
                     }
                 }
@@ -3535,27 +3538,47 @@ namespace PetriEngine {
                         if(val < c._lower && c._lower != 0)
                         {
                             assert(!neg);
-                            generator.presetOf(c._place);
+                            cand = c._place;
+                            pre = true;
                         }
                         
                         if(val > c._upper && c._upper != std::numeric_limits<uint32_t>::max())
                         {
                             assert(!neg);
-                            generator.postsetOf(c._place);
+                            cand = c._place;
+                            pre = false;
                         }
                     }
                     else
                     {
                         if(val >= c._lower && c._lower != 0)
                         {
-                            generator.postsetOf(c._place);
+                            generator.postsetOf(c._place, true);
                         }
                         
                         if(val <= c._upper && c._upper != std::numeric_limits<uint32_t>::max())
                         {
-                            generator.presetOf(c._place);
+                            generator.presetOf(c._place, true);
                         }
                     }
+                }
+                if(cand != std::numeric_limits<uint32_t>::max())
+                {
+                    if(pre && generator.seenPre(cand))
+                        return;
+                    else if(!pre && generator.seenPost(cand))
+                        return;
+                }
+            }
+            if(cand != std::numeric_limits<uint32_t>::max())
+            {
+                if(pre)
+                {
+                    generator.presetOf(cand, true);
+                }
+                else if(!pre)
+                {
+                    generator.postsetOf(cand, true);
                 }
             }
         }
@@ -3656,7 +3679,7 @@ namespace PetriEngine {
         
         void DeadlockCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!isSatisfied()){
-                generator.postPresetOf(generator.leastDependentEnabled());
+                generator.postPresetOf(generator.leastDependentEnabled(), true);
             } // else add nothing
         }
 

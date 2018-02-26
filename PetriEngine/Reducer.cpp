@@ -840,41 +840,38 @@ namespace PetriEngine {
                     }
                     else
                     {
-                        if(!pseen[arc.place])
+                        for(auto pt : place.producers)
                         {
-                            for(auto pt : place.producers)
-                            {
-                                if(!tseen[pt])
-                                {                                    
-                                    Transition& trans = parent->_transitions[pt];
-                                    auto it = trans.pre.begin();
-                                    for(; it != trans.pre.end(); ++it)
-                                        if(it->place >= arc.place) break;
-                                    
-                                    if(it != trans.pre.end() && it->place == arc.place && !it->inhib)
-                                    {
-                                        auto it2 = trans.post.begin();
-                                        for(; it2 != trans.post.end(); ++it2)
-                                            if(it2->place >= arc.place) break;
-                                        if(it->weight >= it2->weight) continue;
-                                    }
+                            if(!tseen[pt])
+                            {                                    
+                                Transition& trans = parent->_transitions[pt];
+                                auto it = trans.pre.begin();
+                                for(; it != trans.pre.end(); ++it)
+                                    if(it->place >= arc.place) break;
 
-                                    tseen[pt] = true;
-                                    wtrans.push_back(pt);
-                                }
-                            }
-
-                            for(auto pt : place.consumers)
-                            {
-                                if(!tseen[pt] && (!remove_consumers || placeInQuery[pt] > 0))
+                                if(it != trans.pre.end() && it->place == arc.place && !it->inhib)
                                 {
-                                    tseen[pt] = true;
-                                    wtrans.push_back(pt);                                    
+                                    auto it2 = trans.post.begin();
+                                    for(; it2 != trans.post.end(); ++it2)
+                                        if(it2->place >= arc.place) break;
+                                    if(it->weight >= it2->weight) continue;
                                 }
+
+                                tseen[pt] = true;
+                                wtrans.push_back(pt);
                             }
                         }
-                        pseen[arc.place] = true;
+
+                        for(auto pt : place.consumers)
+                        {
+                            if(!tseen[pt] && (!remove_consumers || placeInQuery[pt] > 0))
+                            {
+                                tseen[pt] = true;
+                                wtrans.push_back(pt);                                    
+                            }
+                        }
                     }
+                    pseen[arc.place] = true;
                 }
             }
 

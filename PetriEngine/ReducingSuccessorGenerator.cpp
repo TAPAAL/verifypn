@@ -139,8 +139,18 @@ namespace PetriEngine {
             }
         }
     }
+
+    bool ReducingSuccessorGenerator::seenPre(uint32_t place) const
+    {
+        return (_places_seen.get()[place] & 1) != 0;
+    }
     
-    void ReducingSuccessorGenerator::presetOf(uint32_t place) {
+    bool ReducingSuccessorGenerator::seenPost(uint32_t place) const
+    {
+        return (_places_seen.get()[place] & 2) != 0;
+    }
+    
+    void ReducingSuccessorGenerator::presetOf(uint32_t place, bool make_closure) {
         if((_places_seen.get()[place] & 1) != 0) return;
         _places_seen.get()[place] = _places_seen.get()[place] | 1;
         for (uint32_t t = _places.get()[place].pre; t < _places.get()[place].post; t++)
@@ -148,9 +158,10 @@ namespace PetriEngine {
             auto& tr = _transitions.get()[t];
             addToStub(tr.index);
         }
+        if(make_closure) closure();            
     }
     
-    void ReducingSuccessorGenerator::postsetOf(uint32_t place, bool keep_pos) {       
+    void ReducingSuccessorGenerator::postsetOf(uint32_t place, bool make_closure) {       
         if((_places_seen.get()[place] & 2) != 0) return;
         _places_seen.get()[place] = _places_seen.get()[place] | 2;
         for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) {
@@ -158,6 +169,7 @@ namespace PetriEngine {
             if(tr.direction < 0)
                 addToStub(tr.index);
         }
+        if(make_closure) closure();
     }
     
     void ReducingSuccessorGenerator::addToStub(uint32_t t)
@@ -176,15 +188,15 @@ namespace PetriEngine {
             addToStub(newstub);
     }
     
-    void ReducingSuccessorGenerator::postPresetOf(uint32_t t) {
+    void ReducingSuccessorGenerator::postPresetOf(uint32_t t, bool make_closure) {
         const TransPtr& ptr = _net._transitions[t];
         uint32_t finv = ptr.inputs;
         uint32_t linv = ptr.outputs;
         for (; finv < linv; finv++) { // pre-set of t
             if(_net._invariants[finv].inhibitor){ 
-                presetOf(_net._invariants[finv].place);
+                presetOf(_net._invariants[finv].place, make_closure);
             } else {
-                postsetOf(_net._invariants[finv].place); 
+                postsetOf(_net._invariants[finv].place, make_closure); 
             }
         }        
     }
@@ -205,6 +217,11 @@ namespace PetriEngine {
             q->findInteresting(*this, false);
         }
         
+        closure();
+    }
+    
+    void ReducingSuccessorGenerator::closure()
+    {
         while (!_unprocessed.empty()) {
             uint32_t tr = _unprocessed.front();
             _unprocessed.pop_front();
@@ -259,7 +276,7 @@ namespace PetriEngine {
                     else       postsetOf(cand);
                 }
             }
-        }
+        }        
     }
 
     bool ReducingSuccessorGenerator::next(Structures::State& write) {
