@@ -404,7 +404,6 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
         }
         if(els.size() == 1) 
             els.emplace(els.begin(), std::make_shared<LiteralExpr>(0));
-
         return std::make_shared<SubtractExpr>(std::move(els));
     }
     return nullptr;

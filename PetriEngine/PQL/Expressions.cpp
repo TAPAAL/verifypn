@@ -412,14 +412,6 @@ namespace PetriEngine {
 
         void NaryExpr::analyze(AnalysisContext& context) {
             for(auto& e : _exprs) e->analyze(context);
-            std::sort(_exprs.begin(), _exprs.end(), [](auto& a, auto& b)
-            {
-                auto ida = dynamic_pointer_cast<PQL::IdentifierExpr>(a);
-                auto idb = dynamic_pointer_cast<PQL::IdentifierExpr>(b);
-                if(ida == NULL) return false;
-                if(ida && !idb) return true;
-                return ida->offset() < idb->offset();
-            });
         }
 
         void CommutativeExpr::analyze(AnalysisContext& context) {
