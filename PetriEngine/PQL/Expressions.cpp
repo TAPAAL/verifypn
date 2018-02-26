@@ -3562,7 +3562,7 @@ namespace PetriEngine {
                         }
                     }
                 }
-                if(cand != std::numeric_limits<uint32_t>::max())
+                if(cand != std::numeric_limits<int32_t>::max())
                 {
                     if(pre && generator.seenPre(cand))
                         return;
@@ -3570,7 +3570,7 @@ namespace PetriEngine {
                         return;
                 }
             }
-            if(cand != std::numeric_limits<uint32_t>::max())
+            if(cand != std::numeric_limits<int32_t>::max())
             {
                 if(pre)
                 {
