@@ -110,11 +110,6 @@ namespace PetriEngine {
 
             SubtractExpr(std::vector<Expr_ptr>&& exprs) : NaryExpr(std::move(exprs))
             {
-                if(_exprs.size() != 2)
-                {
-                    std::cout << "SubstractExpr requieres exactly two sub-expressions" << std::endl;
-                    exit(-1);
-                }
             }
             Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
