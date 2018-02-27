@@ -130,6 +130,10 @@ namespace PetriEngine {
     
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         
+        for (auto b : transition) {
+
+        }
+
     }
 }
 
