@@ -370,7 +370,8 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
             parseValue(it, text);
             initialMarking = atoll(text.c_str());
         } else if (strcmp(it->name(),"hlinitialMarking") == 0) {
-            auto context = PetriEngine::Colored::ExpressionContext {};
+            PetriEngine::Colored::ExpressionContext context;
+            context.colorTypes = colorTypes;
             hlinitialMarking = parseArcExpression(it->first_node("structure"))->eval(context);
         } else if (strcmp(it->name(), "type") == 0) {
             type = parseUserSort(it);

@@ -7,9 +7,17 @@
 #include "Colors.h"
 #include <sstream>
 #include <string>
+#include <iostream>
+#include <algorithm>
+#include <iterator>
 
 namespace PetriEngine {
     namespace Colored {
+        std::ostream& operator<<(std::ostream& stream, const Color& color) {
+            stream << color.toString();
+            return stream;
+        }
+        
         Color::Color(ColorType* colorType, uint32_t id, const Color** colors, const size_t colorSize)
                 : _tuple(colors), _tupleSize(colorSize), _colorType(colorType), _colorName(0), _id(id)
         {
@@ -74,17 +82,29 @@ namespace PetriEngine {
         }
         
         std::string Color::toString() const {
+            toString(this);
+        }
+        
+        std::string Color::toString(const Color* color) const {
             if (this->isTuple()) {
                 std::ostringstream oss;
                 oss << "(";
-                for (size_t i = 0; i < _tupleSize; i++) {
-                    oss << _tuple[i]->toString();
-                    if (i < _tupleSize - 1) oss << ",";
+                for (size_t i = 0; i < color->_tupleSize; i++) {
+                    oss << color->_tuple[i]->toString();
+                    if (i < color->_tupleSize - 1) oss << ",";
                 }
                 oss << ")";
                 return oss.str();
             }
-            return std::string(_colorName);
+            return std::string(color->_colorName);
+        }
+        
+        std::string Color::toString(const std::vector<Color*>& colors) const {
+            std::ostringstream oss;
+            oss << "(";
+            std::copy(colors.begin(), colors.end(), std::ostream_iterator<Color>(oss, ","));
+            oss << ")";
+            return oss.str();
         }
         
         

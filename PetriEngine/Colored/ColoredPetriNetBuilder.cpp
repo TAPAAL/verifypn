@@ -123,6 +123,12 @@ namespace PetriEngine {
     }
     
     void ColoredPetriNetBuilder::unfoldPlace(Colored::Place& place) {
+        for (auto c : *place.type) {
+            _ptBuilder.addPlace(place.name + ";" + c.toString(), place.marking[c]);
+        }
+    }
+    
+    void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         
     }
 }

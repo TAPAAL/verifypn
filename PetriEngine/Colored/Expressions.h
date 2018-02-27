@@ -27,6 +27,17 @@ namespace PetriEngine {
     namespace Colored {
         struct ExpressionContext {
             std::unordered_map<std::string, Color*> binding;
+            std::unordered_map<std::string, ColorType*> colorTypes;
+            
+            ColorType* findColor(std::string& color) const {
+                for (auto elem : colorTypes) {
+                    try {
+                        return &(*elem.second)[color];
+                    } catch (...) {}
+                }
+                printf("Could not find color: %s\nCANNOT_COMPUTE\n", color);
+                exit(-1);
+            }
         };
         
         class Expression {
@@ -147,7 +158,11 @@ namespace PetriEngine {
             
         public:
             const Color* eval(ExpressionContext& context) const override {
-                return nullptr; // TODO
+                std::vector<Color*> colors;
+                for (auto color : _colors) {
+                    colors.push_back(color->eval(context));
+                }
+                return context.findColor(Color::toString(colors));
             }
             
             void getVariables(std::set<Variable*>& variables) override {

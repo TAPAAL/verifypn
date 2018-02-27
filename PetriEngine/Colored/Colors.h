@@ -26,6 +26,9 @@ namespace PetriEngine {
         
         // Should make constructor protected, and make ColorType Friendly
         class Color {
+        public:
+            friend std::ostream& operator<< (std::ostream& stream, const Color& color);
+            
         protected:
             const Color** _tuple;
             const size_t _tupleSize;
@@ -69,6 +72,8 @@ namespace PetriEngine {
             const Color& operator-- () const;
             
             std::string toString() const;
+            std::string toString(const Color* color) const;
+            std::string toString(const std::vector<Color*>& colors) const;
         };
         
         /*
@@ -91,6 +96,10 @@ namespace PetriEngine {
         };
         
         class ColorType {
+        public:
+            typedef std::vector<Color>::iterator iterator;
+            typedef std::vector<Color>::const_iterator const_iterator;
+            
         private:
             std::vector<Color> _colors;
             
@@ -126,7 +135,21 @@ namespace PetriEngine {
                 return true; // TODO
             }
             
-            // TODO: Add iterator
+            iterator begin() {
+                return _colors.begin();
+            }
+            
+            const_iterator begin() const {
+                return _colors.begin();
+            }
+            
+            iterator end() {
+                return _colors.end();
+            }
+            
+            const_iterator end() const {
+                return _colors.end();
+            }
         };
         
         struct Variable {

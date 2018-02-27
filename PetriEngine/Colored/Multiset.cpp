@@ -22,10 +22,10 @@ namespace PetriEngine {
             _set = orig._set;
         }
         
-        Multiset::Multiset(std::vector<std::pair<const Color*,uint32_t>>& colors)
-                : _set(colors)
-        {
-        }
+//        Multiset::Multiset(std::vector<std::pair<const Color*,uint32_t>>& colors)
+//                : _set(colors)
+//        {
+//        }
 
         Multiset::~Multiset() {
         }
@@ -57,6 +57,18 @@ namespace PetriEngine {
         }
         
         void Multiset::operator *=(uint32_t other) {
+            
+        }
+        
+        uint32_t Multiset::operator [](const Color* color) const {
+            
+        }
+        
+        uint32_t& Multiset::operator [](const Color* color) {
+            
+        }
+        
+        bool Multiset::empty() const {
             
         }
     }

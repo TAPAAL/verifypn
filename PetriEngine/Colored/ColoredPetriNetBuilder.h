@@ -84,6 +84,19 @@ namespace PetriEngine {
         void unfoldTransition(Colored::Transition& transition);
         void unfoldArc(Colored::Arc& arc);
     };
+    
+    class BindingGenerator {
+    public:
+        class Iterator {
+            
+        };
+        
+        BindingGenerator(Colored::GuardExpression* guard, std::set<Colored::Variable*> variables);
+        
+        Colored::Binding nextBinding();
+        Iterator begin();
+        Iterator end();
+    };
 }
 
 #endif /* COLOREDPETRINETBUILDER_H */
