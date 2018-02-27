@@ -82,11 +82,11 @@ namespace PetriEngine {
         }
         
         std::string Color::toString() const {
-            toString(this);
+            return toString(this);
         }
         
-        std::string Color::toString(const Color* color) const {
-            if (this->isTuple()) {
+        std::string Color::toString(const Color* color) {
+            if (color->isTuple()) {
                 std::ostringstream oss;
                 oss << "(";
                 for (size_t i = 0; i < color->_tupleSize; i++) {
@@ -99,10 +99,10 @@ namespace PetriEngine {
             return std::string(color->_colorName);
         }
         
-        std::string Color::toString(const std::vector<Color*>& colors) const {
+        std::string Color::toString(const std::vector<const Color*>& colors) {
             std::ostringstream oss;
             oss << "(";
-            std::copy(colors.begin(), colors.end(), std::ostream_iterator<Color>(oss, ","));
+            std::copy(colors.begin(), colors.end(), std::ostream_iterator<const Color*>(oss, ","));
             oss << ")";
             return oss.str();
         }

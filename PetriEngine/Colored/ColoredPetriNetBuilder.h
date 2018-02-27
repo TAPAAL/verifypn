@@ -35,6 +35,7 @@ namespace PetriEngine {
                 double x = 0,
                 double y = 0) override ;
         void addPlace(const std::string& name,
+                Colored::ColorType* type,
                 Colored::Multiset tokens,
                 double x = 0,
                 double y = 0) override;

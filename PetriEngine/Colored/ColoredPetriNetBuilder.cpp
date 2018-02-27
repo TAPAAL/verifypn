@@ -90,7 +90,7 @@ namespace PetriEngine {
         
         Colored::Arc arc;
         arc.place = p;
-        arc.transition = p;
+        arc.transition = t;
         arc.expr = expr;
         arc.input = input;
         _arcs.push_back(arc);
@@ -124,11 +124,15 @@ namespace PetriEngine {
     
     void ColoredPetriNetBuilder::unfoldPlace(Colored::Place& place) {
         for (auto c : *place.type) {
-            _ptBuilder.addPlace(place.name + ";" + c.toString(), place.marking[c]);
+            _ptBuilder.addPlace(place.name + ";" + c.toString(), place.marking[&c], 0.0, 0.0);
         }
     }
     
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
+        
+    }
+    
+    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc) {
         
     }
 }

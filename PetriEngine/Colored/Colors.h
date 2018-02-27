@@ -72,8 +72,8 @@ namespace PetriEngine {
             const Color& operator-- () const;
             
             std::string toString() const;
-            std::string toString(const Color* color) const;
-            std::string toString(const std::vector<Color*>& colors) const;
+            static std::string toString(const Color* color);
+            static std::string toString(const std::vector<const Color*>& colors);
         };
         
         /*
