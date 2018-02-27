@@ -426,9 +426,16 @@ namespace PetriEngine {
                     context.reportError(error);
                 }
             }
+            NaryExpr::analyze(context);
             std::sort(_ids.begin(), _ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
-            if(_exprs.size() > 0)
-                NaryExpr::analyze(context);
+            std::sort(_exprs.begin(), _exprs.end(), [](auto& a, auto& b)
+            {
+                auto ida = dynamic_pointer_cast<PQL::IdentifierExpr>(a);
+                auto idb = dynamic_pointer_cast<PQL::IdentifierExpr>(b);
+                if(ida == NULL) return false;
+                if(ida && !idb) return true;
+                return ida->offset() < idb->offset();
+            });
         }
 
         void MinusExpr::analyze(AnalysisContext& context) {
@@ -557,6 +564,7 @@ namespace PetriEngine {
         int32_t CommutativeExpr::preOp(const EvaluationContext& context) const {
             int32_t res = _constant;
             for(auto& i : _ids) res = this->apply(res, context.marking()[i.first]);
+            if(_exprs.size() > 0) res = this->apply(res, _exprs[0]->evaluate(context));
             return res;
         }
 
