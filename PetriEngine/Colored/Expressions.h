@@ -29,7 +29,14 @@ namespace PetriEngine {
             std::unordered_map<std::string, Color*> binding;
         };
         
-        class ColorExpression {
+        class Expression {
+        public:
+            Expression() {}
+            
+            virtual void getVariables(std::set<Variable*>& variables) {}
+        };
+        
+        class ColorExpression : public Expression {
         public:
             ColorExpression() {}
             virtual ~ColorExpression() {}
@@ -51,6 +58,10 @@ namespace PetriEngine {
         public:
             const Color* eval(ExpressionContext& context) const override {
                 return context.binding[_variable->name];
+            }
+            
+            void getVariables(std::set<Variable*>& variables) override {
+                variables.insert(_variable);
             }
             
             VariableExpression(Variable* variable)
@@ -105,6 +116,10 @@ namespace PetriEngine {
                 return &++(*_color->eval(context));
             }
             
+            void getVariables(std::set<Variable*>& variables) override {
+                _color->getVariables(variables);
+            }
+            
             SuccessorExpression(ColorExpression* color)
                     : _color(color) {}
         };
@@ -116,6 +131,10 @@ namespace PetriEngine {
         public:
             const Color* eval(ExpressionContext& context) const override {
                 return &--(*_color->eval(context));
+            }
+            
+            void getVariables(std::set<Variable*>& variables) override {
+                _color->getVariables(variables);
             }
             
             PredecessorExpression(ColorExpression* color)
@@ -131,11 +150,17 @@ namespace PetriEngine {
                 return nullptr; // TODO
             }
             
+            void getVariables(std::set<Variable*>& variables) override {
+                for (auto elem : _colors) {
+                    elem->getVariables(variables);
+                }
+            }
+            
             TupleExpression(std::vector<ColorExpression*> colors)
                     : _colors(colors) {}
         };
         
-        class GuardExpression {
+        class GuardExpression : public Expression {
         public:
             GuardExpression() {}
             virtual ~GuardExpression() {}
@@ -153,6 +178,11 @@ namespace PetriEngine {
                 return _left->eval(context) < _right->eval(context);
             }
             
+            void getVariables(std::set<Variable*>& variables) override {
+                _left->getVariables(variables);
+                _right->getVariables(variables);
+            }
+            
             LessThanExpression(ColorExpression* left, ColorExpression* right)
                     : _left(left), _right(right) {}
         };
@@ -165,6 +195,11 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) > _right->eval(context);
+            }
+            
+            void getVariables(std::set<Variable*>& variables) override {
+                _left->getVariables(variables);
+                _right->getVariables(variables);
             }
             
             GreaterThanExpression(ColorExpression* left, ColorExpression* right)
@@ -181,6 +216,11 @@ namespace PetriEngine {
                 return _left->eval(context) <= _right->eval(context);
             }
             
+            void getVariables(std::set<Variable*>& variables) override {
+                _left->getVariables(variables);
+                _right->getVariables(variables);
+            }
+            
             LessThanEqExpression(ColorExpression* left, ColorExpression* right)
                     : _left(left), _right(right) {}
         };
@@ -193,6 +233,11 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) >= _right->eval(context);
+            }
+            
+            void getVariables(std::set<Variable*>& variables) override {
+                _left->getVariables(variables);
+                _right->getVariables(variables);
             }
             
             GreaterThanEqExpression(ColorExpression* left, ColorExpression* right)
@@ -209,6 +254,11 @@ namespace PetriEngine {
                 return _left->eval(context) == _right->eval(context);
             }
             
+            void getVariables(std::set<Variable*>& variables) override {
+                _left->getVariables(variables);
+                _right->getVariables(variables);
+            }
+            
             EqualityExpression(ColorExpression* left, ColorExpression* right)
                     : _left(left), _right(right) {}
         };
@@ -221,6 +271,11 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) != _right->eval(context);
+            }
+            
+            void getVariables(std::set<Variable*>& variables) override {
+                _left->getVariables(variables);
+                _right->getVariables(variables);
             }
             
             InequalityExpression(ColorExpression* left, ColorExpression* right)
@@ -236,6 +291,11 @@ namespace PetriEngine {
                 return !_expr->eval(context);
             }
             
+            void getVariables(std::set<Variable*>& variables) override {
+                _left->getVariables(variables);
+                _right->getVariables(variables);
+            }
+            
             NotExpression(GuardExpression* expr) : _expr(expr) {}
         };
         
@@ -247,6 +307,11 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) && _right->eval(context);
+            }
+            
+            void getVariables(std::set<Variable*>& variables) override {
+                _left->getVariables(variables);
+                _right->getVariables(variables);
             }
             
             AndExpression(GuardExpression* left, GuardExpression* right)
@@ -263,11 +328,16 @@ namespace PetriEngine {
                 return _left->eval(context) || _right->eval(context);
             }
             
+            void getVariables(std::set<Variable*>& variables) override {
+                _left->getVariables(variables);
+                _right->getVariables(variables);
+            }
+            
             OrExpression(GuardExpression* left, GuardExpression* right)
                     : _left(left), _right(right) {}
         };
         
-        class ArcExpression {
+        class ArcExpression : public Expression {
         public:
             ArcExpression() {}
             virtual ~ArcExpression() {}
@@ -314,6 +384,12 @@ namespace PetriEngine {
                 return Multiset(col);
             }
             
+            void getVariables(std::set<Variable*>& variables) override {
+                for (auto elem : _color) {
+                    elem->getVariables(variables);
+                }
+            }
+            
             NumberOfExpression(std::vector<ColorExpression*> color, uint32_t number = 1)
                     : _number(number), _color(color), _all(nullptr) {}
             NumberOfExpression(AllExpression* all, uint32_t number = 1)
@@ -333,6 +409,12 @@ namespace PetriEngine {
                 return ms;
             }
             
+            void getVariables(std::set<Variable*>& variables) override {
+                for (auto elem : _constituents) {
+                    elem->getVariables(variables);
+                }
+            }
+            
             AddExpression(std::vector<ArcExpression*> constituents)
                     : _constituents(constituents) {}
         };
@@ -347,6 +429,11 @@ namespace PetriEngine {
                 return _left->eval(context) - _right->eval(context);
             }
             
+            void getVariables(std::set<Variable*>& variables) override {
+                _left->getVariables(variables);
+                _right->getVariables(variables);
+            }
+            
             SubtractExpression(ArcExpression* left, ArcExpression* right)
                     : _left(left), _right(right) {}
         };
@@ -359,6 +446,10 @@ namespace PetriEngine {
         public:
             Multiset eval(ExpressionContext& context) const override {
                 return _expr->eval(context) * _scalar;
+            }
+            
+            void getVariables(std::set<Variable*>& variables) override {
+                _expr->getVariables(variables);
             }
             
             ScalarProductExpression(ArcExpression* expr, uint32_t scalar)

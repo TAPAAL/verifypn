@@ -23,6 +23,8 @@
 
 namespace PetriEngine {
     class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
+        typedef std::unordered_map<std::string, Colored::ColorType*> ColorTypeMap;
+        
     public:
         ColoredPetriNetBuilder();
         ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig);
@@ -56,16 +58,31 @@ namespace PetriEngine {
         void addOutputArc(const std::string& transition,
                 const std::string& place,
                 Colored::ArcExpression* expr) override;
+        void addColorType(const std::string& id,
+                Colored::ColorType* type) override;
+
 
         void sort() override;
         
         PetriNetBuilder& unfold();
     private:
+        std::unordered_map<std::string,uint32_t> _placenames;
+        std::unordered_map<std::string,uint32_t> _transitionnames;
+        
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
         std::vector<Colored::Arc> _arcs;
-        std::unordered_map<std::string,Colored::ColorType> _colors;
+        ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
+        
+        void addArc(const std::string& place,
+                const std::string& transition,
+                Colored::ArcExpression* expr,
+                bool input);
+        
+        void unfoldPlace(Colored::Place& place);
+        void unfoldTransition(Colored::Transition& transition);
+        void unfoldArc(Colored::Arc& arc);
     };
 }
 

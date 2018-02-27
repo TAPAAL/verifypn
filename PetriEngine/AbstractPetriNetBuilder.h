@@ -30,6 +30,9 @@ namespace PetriEngine {
 
     /** Abstract builder for petri nets */
     class AbstractPetriNetBuilder {
+    protected:
+        bool isColored = false;
+        
     public:
         /** Add a new place with a unique name */
         virtual void addPlace(const std::string& name,
@@ -38,6 +41,7 @@ namespace PetriEngine {
                 double y = 0) = 0;
         /** Add a new colored place with a unique name */
         virtual void addPlace(const std::string& name,
+                Colored::ColorType* type,
                 Colored::Multiset tokens,
                 double x = 0,
                 double y = 0)
@@ -82,6 +86,17 @@ namespace PetriEngine {
         {
             std::cout << "Colored output arcs are not supported in standard P/T nets" << std::endl;
             exit(-1);
+        }
+        /** Add color types with id */
+        virtual void addColorType(const std::string& id,
+                Colored::ColorType* type)
+        {
+            std::cout << "Color types are not supported in standard P/T nets" << std::endl;
+            exit(-1);
+        }
+        
+        virtual void enableColors() {
+            isColored = true;
         }
 
         virtual void sort() = 0;

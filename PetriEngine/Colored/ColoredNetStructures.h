@@ -18,22 +18,28 @@
 #include <set>
 #include "Colors.h"
 #include "Expressions.h"
+#include "Multiset.h"
 
 namespace PetriEngine {
     namespace Colored {
         
         struct Arc {
-            
+            uint32_t place;
+            uint32_t transition;
+            ArcExpression* expr;
+            bool input;
         };
         
         struct Transition {
-            const char* name;
-            
+            std::string name;
+            GuardExpression* guard;
+            std::unordered_map<std::string,Binding> bindings;
         };
         
         struct Place {
-            const char* name;
-            std::multiset<Color> marking;
+            std::string name;
+            ColorType* type;
+            Multiset marking;
         };
     }
 }

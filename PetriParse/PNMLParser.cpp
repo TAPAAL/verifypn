@@ -62,8 +62,10 @@ void PNMLParser::parse(ifstream& xml,
     
     auto declarations = root->first_node("net")->first_node("declaration");
     isColored = declarations != nullptr;
-    if (isColored)
+    if (isColored) {
+        builder->enableColors();
         parseDeclarations(declarations);
+    }
     parseElement(root);
 
     //Add all the transition
@@ -295,6 +297,8 @@ PetriEngine::Colored::ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>*
         //printf("%s\n", element->first_attribute("declaration")->value());
         auto type = colorTypes[element->first_attribute("declaration")->value()];
         return type;
+    } else if (element) {
+        return parseUserSort(element->first_node());
     }
     return nullptr;
 }
@@ -353,6 +357,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
     auto initial = element->first_attribute("initialMarking");
     long long initialMarking = 0;
     PetriEngine::Colored::Multiset hlinitialMarking;
+    PetriEngine::Colored::ColorType* type;
     if(initial)
          initialMarking = atoll(initial->value());
 
@@ -367,6 +372,8 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
         } else if (strcmp(it->name(),"hlinitialMarking") == 0) {
             auto context = PetriEngine::Colored::ExpressionContext {};
             hlinitialMarking = parseArcExpression(it->first_node("structure"))->eval(context);
+        } else if (strcmp(it->name(), "type") == 0) {
+            type = parseUserSort(it);
         }
     }
     
@@ -376,10 +383,14 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
         exit(ErrorCode);
     }
     //Create place
-    if (isColored) {
+    if (!isColored) {
         builder->addPlace(id, initialMarking, x, y);
     } else {
-        builder->addPlace(id, hlinitialMarking, x, y);
+        if (!type) {
+            std::cerr << "Places " << id << " is missing color type" << std::endl;
+            exit(ErrorCode);
+        }
+        builder->addPlace(id, type, hlinitialMarking, x, y);
     }
     //Map id to name
     NodeName nn;
