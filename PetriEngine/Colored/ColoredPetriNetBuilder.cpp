@@ -90,10 +90,11 @@ namespace PetriEngine {
         
         Colored::Arc arc;
         arc.place = p;
-        arc.transition = p;
+        arc.transition = t;
         arc.expr = expr;
         arc.input = input;
         _arcs.push_back(arc);
+        _transitions[t].arcs.push_back(&*_arcs.rbegin());
     }
     
     void ColoredPetriNetBuilder::addColorType(const std::string& id, Colored::ColorType* type) {
@@ -124,16 +125,108 @@ namespace PetriEngine {
     
     void ColoredPetriNetBuilder::unfoldPlace(Colored::Place& place) {
         for (auto c : *place.type) {
-            _ptBuilder.addPlace(place.name + ";" + c.toString(), place.marking[c]);
+            _ptBuilder.addPlace(place.name + ";" + c.toString(), place.marking[&c], 0.0, 0.0);
         }
     }
     
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
-        
-        for (auto b : transition) {
-
+        BindingGenerator gen(transition);
+        for (auto b : gen) {
+            size_t i = transition.bindings.size();
+            std::unordered_map<std::string, const Colored::Color*> binding;
+            for (auto elem : b) {
+                binding[elem.var->name] = elem.color;
+            }
+            transition.bindings.push_back(binding);
+            _ptBuilder.addTransition(transition.name + ";" + std::to_string(i), 0.0, 0.0);
         }
-
+    }
+    
+    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc) {
+        Colored::Transition& transition = _transitions[arc.transition];
+        for (size_t i = 0; i < transition.bindings.size(); ++i) {
+            Colored::ExpressionContext context {transition.bindings[i], _colors};
+            Colored::Multiset ms = arc.expr->eval(context);
+            for (auto color : ms) {
+                std::string pName(_places[arc.place].name + ";" + color.first->toString());
+                std::string tName(transition.name + ";" + std::to_string(i));
+                if (arc.input) {
+                    _ptBuilder.addInputArc(pName, tName, false, color.second);
+                } else {
+                    _ptBuilder.addOutputArc(tName, pName, color.second);
+                }
+            }
+        }
+    }
+    
+    BindingGenerator::Iterator::Iterator(BindingGenerator* generator)
+            : _generator(generator)
+    {
+    }
+            
+    bool BindingGenerator::Iterator::operator==(Iterator& other) {
+        _generator == other._generator;
+    }
+    
+    bool BindingGenerator::Iterator::operator!=(Iterator& other) {
+        _generator != other._generator;
+    }
+    
+    BindingGenerator::Iterator& BindingGenerator::Iterator::operator++() {
+        _generator->nextBinding();
+        if (_generator->isInitial()) _generator = nullptr;
+        return *this;
+    }
+    
+    std::vector<Colored::Binding> BindingGenerator::Iterator::operator++(int) {
+        auto prev = _generator->currentBinding();
+        ++*this;
+        return prev;
+    }
+    
+    std::vector<Colored::Binding>& BindingGenerator::Iterator::operator*() {
+        return _generator->currentBinding();
+    }
+    
+    BindingGenerator::BindingGenerator(Colored::Transition& transition) {
+        _expr = transition.guard;
+        std::set<Colored::Variable*> variables;
+        _expr->getVariables(variables);
+        for (auto arc : transition.arcs) {
+            arc->expr->getVariables(variables);
+        }
+        for (auto var : variables) {
+            _bindings.push_back(Colored::Binding {var, &(*var->colorType)[0]});
+        }
+    }
+    
+    std::vector<Colored::Binding>& BindingGenerator::nextBinding() {
+        for (size_t i = 0; i < _bindings.size(); ++i) {
+            const Colored::Color* next = ++_bindings[i].color;
+            if (next->getId() != 0) {
+                break;
+            }
+        }
+        return _bindings;
+    }
+    
+    std::vector<Colored::Binding>& BindingGenerator::currentBinding() {
+        return _bindings;
+    }
+    
+    bool BindingGenerator::isInitial() const {
+        for (auto b : _bindings) {
+            if (b.color->getId() != 0) return false;
+        }
+        return true;
+    }
+    
+    BindingGenerator::Iterator BindingGenerator::begin() {
+        return Iterator(this);
+    }
+    
+    BindingGenerator::Iterator BindingGenerator::end() {
+        return Iterator(nullptr);
     }
 }
 

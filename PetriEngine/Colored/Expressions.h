@@ -17,6 +17,7 @@
 #include <string>
 #include <unordered_map>
 #include <set>
+#include <stdlib.h>
 
 #include "Colors.h"
 #include "Multiset.h"
@@ -26,16 +27,18 @@ namespace PetriEngine {
     
     namespace Colored {
         struct ExpressionContext {
-            std::unordered_map<std::string, Color*> binding;
-            std::unordered_map<std::string, ColorType*> colorTypes;
+            std::unordered_map<std::string, const Color*>& binding;
+            std::unordered_map<std::string, ColorType*>& colorTypes;
             
-            ColorType* findColor(std::string& color) const {
+            const Color* findColor(const std::string& color) const {
+                if (color.compare("dot") == 0)
+                    return DotConstant::dotConstant();
                 for (auto elem : colorTypes) {
                     try {
                         return &(*elem.second)[color];
                     } catch (...) {}
                 }
-                printf("Could not find color: %s\nCANNOT_COMPUTE\n", color);
+                printf("Could not find color: %s\nCANNOT_COMPUTE\n", color.c_str());
                 exit(-1);
             }
         };
@@ -158,7 +161,7 @@ namespace PetriEngine {
             
         public:
             const Color* eval(ExpressionContext& context) const override {
-                std::vector<Color*> colors;
+                std::vector<const Color*> colors;
                 for (auto color : _colors) {
                     colors.push_back(color->eval(context));
                 }
@@ -307,8 +310,7 @@ namespace PetriEngine {
             }
             
             void getVariables(std::set<Variable*>& variables) override {
-                _left->getVariables(variables);
-                _right->getVariables(variables);
+                _expr->getVariables(variables);
             }
             
             NotExpression(GuardExpression* expr) : _expr(expr) {}

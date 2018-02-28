@@ -23,11 +23,13 @@
 namespace PetriEngine {
     namespace Colored {
         class Multiset {
+            typedef std::vector<std::pair<const Color*,uint32_t>> Internal;
+            
         public:
             Multiset();
             Multiset(const Multiset& orig);
             Multiset(std::pair<const Color*,uint32_t> color);
-            //Multiset(std::vector<std::pair<const Color*,uint32_t>>& colors);
+            Multiset(std::vector<std::pair<const Color*,uint32_t>>& colors);
             virtual ~Multiset();
             
             Multiset operator+ (const Multiset& other) const;
@@ -37,12 +39,15 @@ namespace PetriEngine {
             void operator-= (const Multiset& other);
             void operator*= (uint32_t scalar);
             uint32_t operator[] (const Color* color) const;
-            void operator[] (const Color* color);
+            uint32_t& operator[] (const Color* color);
             
             bool empty() const;
             
+            Internal::iterator begin();
+            Internal::iterator end();
+            
         private:
-            std::vector<std::pair<const Color*,uint32_t>> _set;
+            Internal _set;
         };
     }
 }

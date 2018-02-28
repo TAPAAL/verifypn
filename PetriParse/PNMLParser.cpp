@@ -172,13 +172,15 @@ void PNMLParser::parseDeclarations(rapidxml::xml_node<>* element) {
 
 void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
     auto type = element->first_node();
-    if (strcmp(type->name(), "dot") == 0)
-        return;
-    
     auto ct = new PetriEngine::Colored::ColorType();
-    for (auto it = type->first_node(); it; it = it->next_sibling()) {
-        //printf("%s\n", it->name());
-        ct->addColor(it->first_attribute("id")->value());
+    
+    if (strcmp(type->name(), "dot") == 0) {
+        ct->addDot();
+    } else {
+        for (auto it = type->first_node(); it; it = it->next_sibling()) {
+            //printf("%s\n", it->name());
+            ct->addColor(it->first_attribute("id")->value());
+        }
     }
     //printf("%s\n", type->name());
     colorTypes[element->first_attribute("id")->value()] = ct;
@@ -293,14 +295,19 @@ PetriEngine::Colored::AllExpression* PNMLParser::parseAllExpression(rapidxml::xm
 }
 
 PetriEngine::Colored::ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>* element) {
-    if (strcmp(element->name(), "usersort") == 0) {
+    if (!element)
+        return nullptr;
+    
+    auto structure = element->first_node("structure");
+    if (structure) {
+        auto usersort = structure->first_node();
+        printf("%s\n", usersort->name());
         //printf("%s\n", element->first_attribute("declaration")->value());
-        auto type = colorTypes[element->first_attribute("declaration")->value()];
+        auto type = colorTypes[usersort->first_attribute("declaration")->value()];
         return type;
-    } else if (element) {
+    } else {
         return parseUserSort(element->first_node());
     }
-    return nullptr;
 }
 
 void PNMLParser::parseElement(rapidxml::xml_node<>* element) {
@@ -370,8 +377,8 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
             parseValue(it, text);
             initialMarking = atoll(text.c_str());
         } else if (strcmp(it->name(),"hlinitialMarking") == 0) {
-            PetriEngine::Colored::ExpressionContext context;
-            context.colorTypes = colorTypes;
+            std::unordered_map<std::string, const PetriEngine::Colored::Color*> binding;
+            PetriEngine::Colored::ExpressionContext context {binding, colorTypes};
             hlinitialMarking = parseArcExpression(it->first_node("structure"))->eval(context);
         } else if (strcmp(it->name(), "type") == 0) {
             type = parseUserSort(it);
@@ -388,7 +395,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
         builder->addPlace(id, initialMarking, x, y);
     } else {
         if (!type) {
-            std::cerr << "Places " << id << " is missing color type" << std::endl;
+            std::cerr << "Place '" << id << "' is missing color type" << std::endl;
             exit(ErrorCode);
         }
         builder->addPlace(id, type, hlinitialMarking, x, y);

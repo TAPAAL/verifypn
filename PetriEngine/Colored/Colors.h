@@ -55,6 +55,10 @@ namespace PetriEngine {
                 return _colorType;
             }
             
+            uint32_t getId() const {
+                return _id;
+            }
+            
             const Color* operator[] (size_t index) const;
             bool operator< (const Color& other) const;
             bool operator> (const Color& other) const;
@@ -72,8 +76,8 @@ namespace PetriEngine {
             const Color& operator-- () const;
             
             std::string toString() const;
-            std::string toString(const Color* color) const;
-            std::string toString(const std::vector<Color*>& colors) const;
+            static std::string toString(const Color* color);
+            static std::string toString(const std::vector<const Color*>& colors);
         };
         
         /*
@@ -85,7 +89,7 @@ namespace PetriEngine {
             DotConstant();
             
         public:
-            static const DotConstant* dotConstant() {
+            static const Color* dotConstant() {
                 static DotConstant _instance;
                 
                 return &_instance;
@@ -108,6 +112,9 @@ namespace PetriEngine {
             ColorType() : _colors() {}
             
             void addColor(const char* colorName);
+            void addDot() {
+                _colors.push_back(*DotConstant::dotConstant());
+            }
             
             size_t size() const {
                 return _colors.size();
@@ -159,7 +166,11 @@ namespace PetriEngine {
         
         struct Binding {
             Variable* var;
-            Color* color;
+            const Color* color;
+            
+            bool operator==(Binding& other) {
+                return strcmp(var->name, other.var->name) == 0;
+            }
         };
     }
 }

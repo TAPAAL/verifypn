@@ -35,6 +35,7 @@ namespace PetriEngine {
                 double x = 0,
                 double y = 0) override ;
         void addPlace(const std::string& name,
+                Colored::ColorType* type,
                 Colored::Multiset tokens,
                 double x = 0,
                 double y = 0) override;
@@ -88,12 +89,28 @@ namespace PetriEngine {
     class BindingGenerator {
     public:
         class Iterator {
+        private:
+            BindingGenerator* _generator;
             
+        public:
+            Iterator(BindingGenerator* generator);
+            
+            bool operator==(Iterator& other);
+            bool operator!=(Iterator& other);
+            Iterator& operator++();
+            std::vector<Colored::Binding> operator++(int);
+            std::vector<Colored::Binding>& operator*();
         };
+    private:
+        Colored::GuardExpression* _expr;
+        std::vector<Colored::Binding> _bindings;
         
-        BindingGenerator(Colored::GuardExpression* guard, std::set<Colored::Variable*> variables);
+    public:
+        BindingGenerator(Colored::Transition& transition);
         
-        Colored::Binding nextBinding();
+        std::vector<Colored::Binding>& nextBinding();
+        std::vector<Colored::Binding>& currentBinding();
+        bool isInitial() const;
         Iterator begin();
         Iterator end();
     };
