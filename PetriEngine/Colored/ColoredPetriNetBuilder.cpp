@@ -202,6 +202,7 @@ namespace PetriEngine {
         }
         for (auto arc : transition.arcs) {
             //arc->expr->expressionType();
+            assert(arc->expr != nullptr);
             arc->expr->getVariables(variables);
         }
         for (auto var : variables) {
