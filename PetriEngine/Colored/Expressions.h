@@ -19,6 +19,8 @@
 #include <set>
 #include <stdlib.h>
 #include <iostream>
+#include <cassert>
+
 
 #include "Colors.h"
 #include "Multiset.h"
@@ -381,13 +383,17 @@ namespace PetriEngine {
         public:
             std::vector<const Color*> eval(ExpressionContext& context) const {
                 std::vector<const Color*> colors;
+                assert(_sort != nullptr);
                 for (size_t i = 0; i < _sort->size(); i++) {
                     colors.push_back(&(*_sort)[i]);
                 }
                 return colors;
             }
             
-            AllExpression(ColorType* sort) : _sort(sort) {}
+            AllExpression(ColorType* sort) : _sort(sort) 
+            {
+                assert(sort != nullptr);
+            }
         };
         
         class NumberOfExpression : public ArcExpression {

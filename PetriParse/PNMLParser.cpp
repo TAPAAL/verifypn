@@ -228,6 +228,7 @@ PetriEngine::Colored::ArcExpression* PNMLParser::parseArcExpression(rapidxml::xm
     } else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {
         return parseArcExpression(element->first_node());
     }
+    assert(false);
     return nullptr;
 }
 
@@ -258,9 +259,20 @@ PetriEngine::Colored::GuardExpression* PNMLParser::parseGuardExpression(rapidxml
         return new PetriEngine::Colored::InequalityExpression(parseColorExpression(left), parseColorExpression(right));
     } else if (strcmp(element->name(), "not") == 0) {
         return new PetriEngine::Colored::NotExpression(parseGuardExpression(element->first_node()));
+    } else if (strcmp(element->name(), "and") == 0) {
+        auto left = element->first_node();
+        auto right = left->next_sibling();
+        return new PetriEngine::Colored::AndExpression(parseGuardExpression(left), parseGuardExpression(right));
+    } else if (strcmp(element->name(), "or") == 0) {
+        auto left = element->first_node();
+        auto right = left->next_sibling();
+        return new PetriEngine::Colored::OrExpression(parseGuardExpression(left), parseGuardExpression(right));
     } else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {
         return parseGuardExpression(element->first_node());
     }
+    
+    printf("Could not parse '%s' as a guard expression\n", element->name());
+    assert(false);
     return nullptr;
 }
 
@@ -284,6 +296,7 @@ PetriEngine::Colored::ColorExpression* PNMLParser::parseColorExpression(rapidxml
     } else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {
         return parseColorExpression(element->first_node());
     }
+    assert(false);
     return nullptr;
 }
 
@@ -295,6 +308,7 @@ PetriEngine::Colored::AllExpression* PNMLParser::parseAllExpression(rapidxml::xm
         return parseAllExpression(element->first_node());
     }
     //printf("%s\n", element->name());
+    
     return nullptr;
 }
 
@@ -310,7 +324,7 @@ PetriEngine::Colored::ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>*
             }
         }
     }
-    
+    assert(false);
     return nullptr;
 }
 
@@ -437,6 +451,8 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
         expr = parseArcExpression(it->first_node("structure"));
     }
     
+    if (isColored)
+        assert(expr != nullptr);
     Arc arc;
     arc.source = source;
     arc.target = target;

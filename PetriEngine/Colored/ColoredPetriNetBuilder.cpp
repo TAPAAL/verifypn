@@ -99,6 +99,7 @@ namespace PetriEngine {
         arc.input = input;
         _arcs.push_back(arc);
         _transitions[t].arcs.push_back(&_arcs.back());
+        assert(_transitions[t].arcs.back() == &_arcs.back());
     }
     
     void ColoredPetriNetBuilder::addColorType(const std::string& id, Colored::ColorType* type) {
