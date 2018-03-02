@@ -296,7 +296,10 @@ PetriEngine::Colored::AllExpression* PNMLParser::parseAllExpression(rapidxml::xm
 
 PetriEngine::Colored::ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>* element) {
     if (!element)
+    {
+        assert(false);
         return nullptr;
+    }
     
     auto structure = element->first_node("structure");
     if (structure) {
@@ -304,6 +307,7 @@ PetriEngine::Colored::ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>*
         printf("%s\n", usersort->name());
         //printf("%s\n", element->first_attribute("declaration")->value());
         auto type = colorTypes[usersort->first_attribute("declaration")->value()];
+        assert(type != nullptr);
         return type;
     } else {
         return parseUserSort(element->first_node());
