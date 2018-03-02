@@ -106,7 +106,7 @@ namespace PetriEngine {
         std::vector<Colored::Binding> _bindings;
         
     public:
-        BindingGenerator(Colored::Transition& transition);
+        BindingGenerator(Colored::Transition& transition, const std::vector<Colored::Arc>& arcs);
         
         std::vector<Colored::Binding>& nextBinding();
         std::vector<Colored::Binding>& currentBinding();

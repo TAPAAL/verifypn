@@ -95,11 +95,12 @@ namespace PetriEngine {
         Colored::Arc arc;
         arc.place = p;
         arc.transition = t;
+        assert(expr != nullptr);
         arc.expr = expr;
         arc.input = input;
+        _transitions[t].arcs.push_back(_arcs.size());
         _arcs.push_back(arc);
-        _transitions[t].arcs.push_back(&_arcs.back());
-        assert(_transitions[t].arcs.back() == &_arcs.back());
+//        assert(_transitions[t].arcs.back() == &_arcs.back());
     }
     
     void ColoredPetriNetBuilder::addColorType(const std::string& id, Colored::ColorType* type) {
@@ -136,7 +137,7 @@ namespace PetriEngine {
     
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         std::cout << transition.name << std::endl;
-        BindingGenerator gen(transition);
+        BindingGenerator gen(transition, _arcs);
         for (auto b : gen) {
             size_t i = transition.bindings.size();
             std::unordered_map<std::string, const Colored::Color*> binding;
@@ -194,16 +195,17 @@ namespace PetriEngine {
         return _generator->currentBinding();
     }
     
-    BindingGenerator::BindingGenerator(Colored::Transition& transition) {
+    BindingGenerator::BindingGenerator(Colored::Transition& transition, const std::vector<Colored::Arc>& arcs) {
         _expr = transition.guard;
         std::set<Colored::Variable*> variables;
         if (_expr != nullptr) {
             _expr->getVariables(variables);
         }
-        for (auto arc : transition.arcs) {
+        for (auto ai : transition.arcs) {
+            auto& arc = arcs[ai];
             //arc->expr->expressionType();
-            assert(arc->expr != nullptr);
-            arc->expr->getVariables(variables);
+            assert(arc.expr != nullptr);
+            arc.expr->getVariables(variables);
         }
         for (auto var : variables) {
             _bindings.push_back(Colored::Binding {var, &(*var->colorType)[0]});

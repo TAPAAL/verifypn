@@ -34,7 +34,7 @@ namespace PetriEngine {
             std::string name;
             GuardExpression* guard;
             std::vector<std::unordered_map<std::string,const Color*>> bindings;
-            std::vector<Colored::Arc*> arcs;
+            std::vector<size_t> arcs;
         };
         
         struct Place {
