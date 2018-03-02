@@ -137,7 +137,7 @@ namespace PetriEngine {
     
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         std::cout << transition.name << std::endl;
-        BindingGenerator gen(transition, _arcs);
+        BindingGenerator gen(transition, _arcs, _colors);
         for (auto b : gen) {
             size_t i = transition.bindings.size();
             std::unordered_map<std::string, const Colored::Color*> binding;
@@ -195,7 +195,11 @@ namespace PetriEngine {
         return _generator->currentBinding();
     }
     
-    BindingGenerator::BindingGenerator(Colored::Transition& transition, const std::vector<Colored::Arc>& arcs) {
+    BindingGenerator::BindingGenerator(Colored::Transition& transition,
+            const std::vector<Colored::Arc>& arcs,
+            ColoredPetriNetBuilder::ColorTypeMap& colorTypes)
+        : _colorTypes(colorTypes)
+    {
         _expr = transition.guard;
         std::set<Colored::Variable*> variables;
         if (_expr != nullptr) {
@@ -212,12 +216,32 @@ namespace PetriEngine {
         }
     }
     
+    bool BindingGenerator::eval() {
+        if (_expr == nullptr)
+            return true;
+        
+        std::unordered_map<std::string, const Colored::Color*> binding;
+        for (auto elem : _bindings) {
+            binding[elem.var->name] = elem.color;
+        }
+        Colored::ExpressionContext context {binding, _colorTypes};
+        return _expr->eval(context);
+    }
+    
     std::vector<Colored::Binding>& BindingGenerator::nextBinding() {
-        for (size_t i = 0; i < _bindings.size(); ++i) {
-            const Colored::Color* next = ++_bindings[i].color;
-            if (next->getId() != 0) {
-                break;
+        bool test = false;
+        while (!test) {
+            for (size_t i = 0; i < _bindings.size(); ++i) {
+                const Colored::Color* next = ++_bindings[i].color;
+                if (next->getId() != 0) {
+                    break;
+                }
             }
+            
+            test = eval();
+            
+            if (isInitial())
+                break;
         }
         return _bindings;
     }

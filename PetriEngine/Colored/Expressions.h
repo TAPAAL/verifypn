@@ -37,9 +37,14 @@ namespace PetriEngine {
                 if (color.compare("dot") == 0)
                     return DotConstant::dotConstant();
                 for (auto elem : colorTypes) {
+                    printf("Trying color type: %s\n", elem.first.c_str());
                     try {
                         return &(*elem.second)[color];
-                    } catch (...) {}
+                    } catch (...) {
+                        for (auto& col : *elem.second) {
+                            std::cout << col << std::endl;
+                        }
+                    }
                 }
                 printf("Could not find color: %s\nCANNOT_COMPUTE\n", color.c_str());
                 exit(-1);
@@ -51,7 +56,7 @@ namespace PetriEngine {
             Expression() {}
             
             virtual void getVariables(std::set<Variable*>& variables) {
-                std::cout << "Calling unimplemented getVariables()" << std::endl;
+                //std::cout << "Calling unimplemented getVariables()" << std::endl;
             }
             
             virtual void expressionType() {

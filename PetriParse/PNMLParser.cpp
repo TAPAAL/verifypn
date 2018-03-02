@@ -187,7 +187,9 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
         }
     }
     //printf("%s\n", type->name());
-    colorTypes[element->first_attribute("id")->value()] = ct;
+    std::string id = element->first_attribute("id")->value();
+    colorTypes[id] = ct;
+    builder->addColorType(id, ct);
 }
 
 PetriEngine::Colored::ArcExpression* PNMLParser::parseArcExpression(rapidxml::xml_node<>* element) {
@@ -207,6 +209,7 @@ PetriEngine::Colored::ArcExpression* PNMLParser::parseArcExpression(rapidxml::xm
         } else {
             std::vector<PetriEngine::Colored::ColorExpression*> colors;
             for (auto it = first; it; it = it->next_sibling()) {
+                printf("%s\n", it->name());
                 colors.push_back(parseColorExpression(it));
             }
             return new PetriEngine::Colored::NumberOfExpression(colors, number);
@@ -287,7 +290,7 @@ PetriEngine::Colored::ColorExpression* PNMLParser::parseColorExpression(rapidxml
         return new PetriEngine::Colored::SuccessorExpression(parseColorExpression(element->first_node()));
     } else if (strcmp(element->name(), "predecessor") == 0) {
         return new PetriEngine::Colored::PredecessorExpression(parseColorExpression(element->first_node()));
-    } else if (strcmp(element->name(), "tuple")) {
+    } else if (strcmp(element->name(), "tuple") == 0) {
         std::vector<PetriEngine::Colored::ColorExpression*> colors;
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
             colors.push_back(parseColorExpression(it));
@@ -566,7 +569,11 @@ const PetriEngine::Colored::Color* PNMLParser::findColor(const char* name) const
     for (auto elem : colorTypes) {
         try {
             return &(*elem.second)[name];
-        } catch (...) {}
+        } catch (...) {
+//            for (auto& col : *elem.second) {
+//                std::cout << col << std::endl;
+//            }
+        }
     }
     printf("Could not find color: %s\nCANNOT_COMPUTE\n", name);
     exit(-1);

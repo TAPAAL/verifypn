@@ -23,6 +23,7 @@
 
 namespace PetriEngine {
     class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
+    public:
         typedef std::unordered_map<std::string, Colored::ColorType*> ColorTypeMap;
         
     public:
@@ -104,9 +105,14 @@ namespace PetriEngine {
     private:
         Colored::GuardExpression* _expr;
         std::vector<Colored::Binding> _bindings;
+        ColoredPetriNetBuilder::ColorTypeMap& _colorTypes;
+        
+        bool eval();
         
     public:
-        BindingGenerator(Colored::Transition& transition, const std::vector<Colored::Arc>& arcs);
+        BindingGenerator(Colored::Transition& transition,
+                const std::vector<Colored::Arc>& arcs,
+                ColoredPetriNetBuilder::ColorTypeMap& colorTypes);
         
         std::vector<Colored::Binding>& nextBinding();
         std::vector<Colored::Binding>& currentBinding();
