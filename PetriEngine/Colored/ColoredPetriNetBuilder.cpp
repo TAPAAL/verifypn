@@ -76,10 +76,12 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, Colored::ArcExpression* expr, bool input) {
         if(_transitionnames.count(transition) == 0)
         {
+            std::cout << "Transition '" << transition << "' not found. Adding it." << std::endl;
             addTransition(transition,0.0,0.0);
         }
         if(_placenames.count(place) == 0)
         {
+            std::cout << "Place '" << place << "' not found. Adding it." << std::endl;
             addPlace(place,0,0,0);
         }
         uint32_t p = _placenames[place];
@@ -88,13 +90,15 @@ namespace PetriEngine {
         assert(t < _transitions.size());
         assert(p < _places.size());
         
+        //std::set<Colored::Variable*> variables;
+        
         Colored::Arc arc;
         arc.place = p;
         arc.transition = t;
         arc.expr = expr;
         arc.input = input;
         _arcs.push_back(arc);
-        _transitions[t].arcs.push_back(&*_arcs.rbegin());
+        _transitions[t].arcs.push_back(&_arcs.back());
     }
     
     void ColoredPetriNetBuilder::addColorType(const std::string& id, Colored::ColorType* type) {
@@ -130,6 +134,7 @@ namespace PetriEngine {
     }
     
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
+        std::cout << transition.name << std::endl;
         BindingGenerator gen(transition);
         for (auto b : gen) {
             size_t i = transition.bindings.size();
@@ -165,11 +170,11 @@ namespace PetriEngine {
     }
             
     bool BindingGenerator::Iterator::operator==(Iterator& other) {
-        _generator == other._generator;
+        return _generator == other._generator;
     }
     
     bool BindingGenerator::Iterator::operator!=(Iterator& other) {
-        _generator != other._generator;
+        return _generator != other._generator;
     }
     
     BindingGenerator::Iterator& BindingGenerator::Iterator::operator++() {
@@ -191,8 +196,11 @@ namespace PetriEngine {
     BindingGenerator::BindingGenerator(Colored::Transition& transition) {
         _expr = transition.guard;
         std::set<Colored::Variable*> variables;
-        _expr->getVariables(variables);
+        if (_expr != nullptr) {
+            _expr->getVariables(variables);
+        }
         for (auto arc : transition.arcs) {
+            //arc->expr->expressionType();
             arc->expr->getVariables(variables);
         }
         for (auto var : variables) {

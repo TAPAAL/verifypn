@@ -69,14 +69,18 @@ void PNMLParser::parse(ifstream& xml,
     parseElement(root);
 
     //Add all the transition
-    for (TransitionIter it = transitions.begin(); it != transitions.end(); it++)
-        if (!isColored)
+    for (TransitionIter it = transitions.begin(); it != transitions.end(); ++it)
+        if (!isColored) {
             builder->addTransition(it->id, it->x, it->y);
-        else
+        } else {
             builder->addTransition(it->id, it->expr, it->x, it->y);
+        }
 
     //Add all the arcs
     for (ArcIter it = arcs.begin(); it != arcs.end(); it++) {
+        std::set<Colored::Variable*> variables;
+        auto a = *it;
+        
         //Check that source id exists
         if (id2name.find(it->source) == id2name.end()) {
             fprintf(stderr,
@@ -161,7 +165,7 @@ void PNMLParser::parseDeclarations(rapidxml::xml_node<>* element) {
         } else if (strcmp(it->name(), "variabledecl") == 0) {
             auto var = new PetriEngine::Colored::Variable {
                 it->first_attribute("id")->value(),
-                parseUserSort(it->first_node())
+                parseUserSort(it)
             };
             variables[it->first_attribute("id")->value()] = var;
         } else {
@@ -286,7 +290,7 @@ PetriEngine::Colored::ColorExpression* PNMLParser::parseColorExpression(rapidxml
 PetriEngine::Colored::AllExpression* PNMLParser::parseAllExpression(rapidxml::xml_node<>* element) {
     if (strcmp(element->name(), "all") == 0) {
         //printf("%s\n", element->first_node()->name());
-        return new PetriEngine::Colored::AllExpression(parseUserSort(element->first_node()));
+        return new PetriEngine::Colored::AllExpression(parseUserSort(element));
     } else if (strcmp(element->name(), "subterm") == 0) {
         return parseAllExpression(element->first_node());
     }
@@ -295,19 +299,19 @@ PetriEngine::Colored::AllExpression* PNMLParser::parseAllExpression(rapidxml::xm
 }
 
 PetriEngine::Colored::ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>* element) {
-    if (!element)
-        return nullptr;
-    
-    auto structure = element->first_node("structure");
-    if (structure) {
-        auto usersort = structure->first_node();
-        printf("%s\n", usersort->name());
-        //printf("%s\n", element->first_attribute("declaration")->value());
-        auto type = colorTypes[usersort->first_attribute("declaration")->value()];
-        return type;
-    } else {
-        return parseUserSort(element->first_node());
+    if (element) {
+        for (auto it = element->first_node(); it; it = it->next_sibling()) {
+            if (strcmp(it->name(), "usersort") == 0) {
+                return colorTypes[it->first_attribute("declaration")->value()];
+            } else if (strcmp(it->name(), "structure") == 0
+                    || strcmp(it->name(), "type") == 0
+                    || strcmp(it->name(), "subterm") == 0) {
+                return parseUserSort(it);
+            }
+        }
     }
+    
+    return nullptr;
 }
 
 void PNMLParser::parseElement(rapidxml::xml_node<>* element) {
@@ -484,6 +488,7 @@ void PNMLParser::parseTransition(rapidxml::xml_node<>* element) {
     t.x = 0;
     t.y = 0;
     t.id = element->first_attribute("id")->value();
+    t.expr = nullptr;
 
 
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
@@ -491,6 +496,7 @@ void PNMLParser::parseTransition(rapidxml::xml_node<>* element) {
         if (strcmp(it->name(), "graphics") == 0) {
             parsePosition(it, t.x, t.y);
         } else if (strcmp(it->name(), "condition") == 0) {
+            //printf("Adding expression '%s' to transition '%s'\n", it->first_node("structure")->first_node()->name(), t.id.c_str());
             t.expr = parseGuardExpression(it->first_node("structure"));
         } else if (strcmp(it->name(), "conditions") == 0) {
             std::cout << "conditions not supported" << std::endl;

@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <set>
 #include <stdlib.h>
+#include <iostream>
 
 #include "Colors.h"
 #include "Multiset.h"
@@ -47,7 +48,13 @@ namespace PetriEngine {
         public:
             Expression() {}
             
-            virtual void getVariables(std::set<Variable*>& variables) {}
+            virtual void getVariables(std::set<Variable*>& variables) {
+                std::cout << "Calling unimplemented getVariables()" << std::endl;
+            }
+            
+            virtual void expressionType() {
+                std::cout << "Expression" << std::endl;
+            }
         };
         
         class ColorExpression : public Expression {
@@ -95,7 +102,7 @@ namespace PetriEngine {
                     : _userOperator(userOperator) {}
         };
         
-        class UserSortExpression {
+        class UserSortExpression : public Expression {
         private:
             ColorType* _userSort;
             
@@ -108,7 +115,7 @@ namespace PetriEngine {
                     : _userSort(userSort) {}
         };
         
-        class NumberConstantExpression {
+        class NumberConstantExpression : public Expression {
         private:
             uint32_t _number;
             
@@ -360,9 +367,14 @@ namespace PetriEngine {
             virtual ~ArcExpression() {}
             
             virtual Multiset eval(ExpressionContext& context) const = 0;
+            virtual void getVariables(std::set<Variable*>& variables) override {}
+            virtual void expressionType() override {
+                std::cout << "ArcExpression" << std::endl;
+            }
+
         };
         
-        class AllExpression {
+        class AllExpression : public Expression {
         private:
             ColorType* _sort;
             
