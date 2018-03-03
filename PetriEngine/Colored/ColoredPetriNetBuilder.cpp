@@ -113,15 +113,15 @@ namespace PetriEngine {
     
     PetriNetBuilder& ColoredPetriNetBuilder::unfold() {
         if (isColored) {
-            for (auto place : _places) {
+            for (auto& place : _places) {
                 unfoldPlace(place);
             }
 
-            for (auto transition : _transitions) {
+            for (auto& transition : _transitions) {
                 unfoldTransition(transition);
             }
 
-            for (auto arc : _arcs) {
+            for (auto& arc : _arcs) {
                 unfoldArc(arc);
             }
         }
@@ -131,7 +131,9 @@ namespace PetriEngine {
     
     void ColoredPetriNetBuilder::unfoldPlace(Colored::Place& place) {
         for (auto c : *place.type) {
-            _ptBuilder.addPlace(place.name + ";" + c.toString(), place.marking[&c], 0.0, 0.0);
+            std::string name = place.name + ";" + c.toString();
+            _ptBuilder.addPlace(name, place.marking[&c], 0.0, 0.0);
+            _ptplacenames[place.name][&c] = name;
         }
     }
     
@@ -145,7 +147,9 @@ namespace PetriEngine {
                 binding[elem.var->name] = elem.color;
             }
             transition.bindings.push_back(binding);
-            _ptBuilder.addTransition(transition.name + ";" + std::to_string(i), 0.0, 0.0);
+            std::string name = transition.name + ";" + std::to_string(i);
+            _ptBuilder.addTransition(name, 0.0, 0.0);
+            _pttransitionnames[transition.name].push_back(name);
         }
     }
     
@@ -155,8 +159,10 @@ namespace PetriEngine {
             Colored::ExpressionContext context {transition.bindings[i], _colors};
             Colored::Multiset ms = arc.expr->eval(context);
             for (auto color : ms) {
-                std::string pName(_places[arc.place].name + ";" + color.first->toString());
-                std::string tName(transition.name + ";" + std::to_string(i));
+                if (color.second == 0)
+                    continue;
+                std::string pName = _ptplacenames[_places[arc.place].name][color.first];
+                std::string tName = _pttransitionnames[transition.name][i];
                 if (arc.input) {
                     _ptBuilder.addInputArc(pName, tName, false, color.second);
                 } else {
@@ -214,6 +220,9 @@ namespace PetriEngine {
         for (auto var : variables) {
             _bindings.push_back(Colored::Binding {var, &(*var->colorType)[0]});
         }
+        
+        if (!eval())
+            nextBinding();
     }
     
     bool BindingGenerator::eval() {

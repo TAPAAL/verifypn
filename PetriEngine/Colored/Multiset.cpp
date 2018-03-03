@@ -59,7 +59,7 @@ namespace PetriEngine {
         
         void Multiset::operator -=(const Multiset& other) {
             for (auto c : _set) {
-                c.second = std::min(c.second - other[c.first], 0u);
+                c.second = std::max(c.second - other[c.first], 0u);
             }
         }
         

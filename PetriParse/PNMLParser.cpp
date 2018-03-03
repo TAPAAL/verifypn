@@ -209,7 +209,7 @@ PetriEngine::Colored::ArcExpression* PNMLParser::parseArcExpression(rapidxml::xm
         } else {
             std::vector<PetriEngine::Colored::ColorExpression*> colors;
             for (auto it = first; it; it = it->next_sibling()) {
-                printf("%s\n", it->name());
+                //printf("%s\n", it->name());
                 colors.push_back(parseColorExpression(it));
             }
             return new PetriEngine::Colored::NumberOfExpression(colors, number);
