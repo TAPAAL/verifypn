@@ -130,7 +130,7 @@ namespace PetriEngine {
     }
     
     void ColoredPetriNetBuilder::unfoldPlace(Colored::Place& place) {
-        for (auto c : *place.type) {
+        for (auto& c : *place.type) {
             std::string name = place.name + ";" + c.toString();
             _ptBuilder.addPlace(name, place.marking[&c], 0.0, 0.0);
             _ptplacenames[place.name][&c] = name;
@@ -138,12 +138,12 @@ namespace PetriEngine {
     }
     
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
-        std::cout << transition.name << std::endl;
+        //std::cout << transition.name << std::endl;
         BindingGenerator gen(transition, _arcs, _colors);
-        for (auto b : gen) {
+        for (auto& b : gen) {
             size_t i = transition.bindings.size();
             std::unordered_map<std::string, const Colored::Color*> binding;
-            for (auto elem : b) {
+            for (auto& elem : b) {
                 binding[elem.var->name] = elem.color;
             }
             transition.bindings.push_back(binding);
@@ -158,7 +158,7 @@ namespace PetriEngine {
         for (size_t i = 0; i < transition.bindings.size(); ++i) {
             Colored::ExpressionContext context {transition.bindings[i], _colors};
             Colored::Multiset ms = arc.expr->eval(context);
-            for (auto color : ms) {
+            for (auto& color : ms) {
                 if (color.second == 0)
                     continue;
                 std::string pName = _ptplacenames[_places[arc.place].name][color.first];
@@ -230,7 +230,7 @@ namespace PetriEngine {
             return true;
         
         std::unordered_map<std::string, const Colored::Color*> binding;
-        for (auto elem : _bindings) {
+        for (auto& elem : _bindings) {
             binding[elem.var->name] = elem.color;
         }
         Colored::ExpressionContext context {binding, _colorTypes};
@@ -260,7 +260,7 @@ namespace PetriEngine {
     }
     
     bool BindingGenerator::isInitial() const {
-        for (auto b : _bindings) {
+        for (auto& b : _bindings) {
             if (b.color->getId() != 0) return false;
         }
         return true;
