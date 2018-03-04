@@ -55,7 +55,7 @@ namespace PetriEngine {
         public:
             Expression() {}
             
-            virtual void getVariables(std::set<Variable*>& variables) {
+            virtual void getVariables(std::set<Variable*>& variables) const {
                 //std::cout << "Calling unimplemented getVariables()" << std::endl;
             }
             
@@ -88,12 +88,15 @@ namespace PetriEngine {
                 return context.binding[_variable->name];
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
+                //printf("Getting variable: %s\n", _variable->name.c_str());
                 variables.insert(_variable);
             }
             
             VariableExpression(Variable* variable)
-                    : _variable(variable) {}
+                    : _variable(variable) {
+                //printf("Creating variable expression with var: %s\n", _variable->name.c_str());
+            }
         };
         
         class UserOperatorExpression : public ColorExpression {
@@ -144,7 +147,7 @@ namespace PetriEngine {
                 return &++(*_color->eval(context));
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _color->getVariables(variables);
             }
             
@@ -161,7 +164,7 @@ namespace PetriEngine {
                 return &--(*_color->eval(context));
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _color->getVariables(variables);
             }
             
@@ -182,7 +185,7 @@ namespace PetriEngine {
                 return context.findColor(Color::toString(colors));
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 for (auto elem : _colors) {
                     elem->getVariables(variables);
                 }
@@ -210,7 +213,7 @@ namespace PetriEngine {
                 return _left->eval(context) < _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _left->getVariables(variables);
                 _right->getVariables(variables);
             }
@@ -229,7 +232,7 @@ namespace PetriEngine {
                 return _left->eval(context) > _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _left->getVariables(variables);
                 _right->getVariables(variables);
             }
@@ -248,7 +251,7 @@ namespace PetriEngine {
                 return _left->eval(context) <= _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _left->getVariables(variables);
                 _right->getVariables(variables);
             }
@@ -267,7 +270,7 @@ namespace PetriEngine {
                 return _left->eval(context) >= _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _left->getVariables(variables);
                 _right->getVariables(variables);
             }
@@ -286,7 +289,7 @@ namespace PetriEngine {
                 return _left->eval(context) == _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _left->getVariables(variables);
                 _right->getVariables(variables);
             }
@@ -305,7 +308,7 @@ namespace PetriEngine {
                 return _left->eval(context) != _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _left->getVariables(variables);
                 _right->getVariables(variables);
             }
@@ -323,7 +326,7 @@ namespace PetriEngine {
                 return !_expr->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _expr->getVariables(variables);
             }
             
@@ -340,7 +343,7 @@ namespace PetriEngine {
                 return _left->eval(context) && _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _left->getVariables(variables);
                 _right->getVariables(variables);
             }
@@ -359,7 +362,7 @@ namespace PetriEngine {
                 return _left->eval(context) || _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _left->getVariables(variables);
                 _right->getVariables(variables);
             }
@@ -374,7 +377,7 @@ namespace PetriEngine {
             virtual ~ArcExpression() {}
             
             virtual Multiset eval(ExpressionContext& context) const = 0;
-            virtual void getVariables(std::set<Variable*>& variables) override {}
+
             virtual void expressionType() override {
                 std::cout << "ArcExpression" << std::endl;
             }
@@ -424,7 +427,9 @@ namespace PetriEngine {
                 return Multiset(col);
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
+                if (_all != nullptr)
+                    return;
                 for (auto elem : _color) {
                     elem->getVariables(variables);
                 }
@@ -449,7 +454,7 @@ namespace PetriEngine {
                 return ms;
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 for (auto elem : _constituents) {
                     elem->getVariables(variables);
                 }
@@ -469,7 +474,7 @@ namespace PetriEngine {
                 return _left->eval(context) - _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _left->getVariables(variables);
                 _right->getVariables(variables);
             }
@@ -488,7 +493,7 @@ namespace PetriEngine {
                 return _expr->eval(context) * _scalar;
             }
             
-            void getVariables(std::set<Variable*>& variables) override {
+            void getVariables(std::set<Variable*>& variables) const override {
                 _expr->getVariables(variables);
             }
             

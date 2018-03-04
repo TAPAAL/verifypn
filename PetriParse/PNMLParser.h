@@ -88,6 +88,7 @@ private:
     PetriEngine::Colored::ColorExpression* parseColorExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::AllExpression* parseAllExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::ColorType* parseUserSort(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::NumberOfExpression* parseNumberOfExpression(rapidxml::xml_node<>* element);
     void parseTransportArc(rapidxml::xml_node<>* element);
     void parseValue(rapidxml::xml_node<>* element, std::string& text);
     uint32_t parseNumberConstant(rapidxml::xml_node<>* element);

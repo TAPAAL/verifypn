@@ -130,10 +130,13 @@ namespace PetriEngine {
     }
     
     void ColoredPetriNetBuilder::unfoldPlace(Colored::Place& place) {
-        for (auto& c : *place.type) {
-            std::string name = place.name + ";" + c.toString();
-            _ptBuilder.addPlace(name, place.marking[&c], 0.0, 0.0);
-            _ptplacenames[place.name][&c] = name;
+        //std::cout << place.name << std::endl;
+        for (size_t i = 0; i < place.type->size(); ++i) {
+            //std::cout << c.toString() << std::endl;
+            std::string name = place.name + ";" + std::to_string(i);
+            const Colored::Color* color = &(*place.type)[i];
+            _ptBuilder.addPlace(name, place.marking[color], 0.0, 0.0);
+            _ptplacenames[place.name][color] = name;
         }
     }
     
@@ -206,6 +209,7 @@ namespace PetriEngine {
             ColoredPetriNetBuilder::ColorTypeMap& colorTypes)
         : _colorTypes(colorTypes)
     {
+        //std::cout << "Generating bindings on: " << transition.name << std::endl;
         _expr = transition.guard;
         std::set<Colored::Variable*> variables;
         if (_expr != nullptr) {
@@ -218,6 +222,7 @@ namespace PetriEngine {
             arc.expr->getVariables(variables);
         }
         for (auto var : variables) {
+            //printf("BindingGen var: %s\n", var->name);
             _bindings.push_back(Colored::Binding {var, &(*var->colorType)[0]});
         }
         

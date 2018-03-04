@@ -160,7 +160,7 @@ namespace PetriEngine {
         };
         
         struct Variable {
-            char* name;
+            std::string name;
             ColorType* colorType;
         };
         
@@ -169,7 +169,7 @@ namespace PetriEngine {
             const Color* color;
             
             bool operator==(Binding& other) {
-                return strcmp(var->name, other.var->name) == 0;
+                return var->name.compare(other.var->name);
             }
         };
     }

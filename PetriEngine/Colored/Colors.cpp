@@ -10,6 +10,7 @@
 #include <iostream>
 #include <algorithm>
 #include <iterator>
+#include <cassert>
 
 namespace PetriEngine {
     namespace Colored {
@@ -21,11 +22,15 @@ namespace PetriEngine {
         Color::Color(ColorType* colorType, uint32_t id, const Color** colors, const size_t colorSize)
                 : _tuple(colors), _tupleSize(colorSize), _colorType(colorType), _colorName(0), _id(id)
         {
+            if (colorType != nullptr)
+                assert(id <= colorType->size());
         }
         
         Color::Color(ColorType* colorType, uint32_t id, const char* color)
                 : _tuple(0), _tupleSize(1), _colorType(colorType), _colorName(color), _id(id)
         {
+            if (colorType != nullptr)
+                assert(id <= colorType->size());
         }
         
         
@@ -96,6 +101,7 @@ namespace PetriEngine {
                 oss << ")";
                 return oss.str();
             }
+            //printf("%s\n", color->_colorName);
             return std::string(color->_colorName);
         }
         
