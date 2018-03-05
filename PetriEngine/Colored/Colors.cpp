@@ -19,15 +19,15 @@ namespace PetriEngine {
             return stream;
         }
         
-        Color::Color(ColorType* colorType, uint32_t id, const Color** colors, const size_t colorSize)
-                : _tuple(colors), _tupleSize(colorSize), _colorType(colorType), _colorName(0), _id(id)
+        Color::Color(ColorType* colorType, uint32_t id, std::vector<const Color*>& colors)
+                : _tuple(colors), _colorType(colorType), _colorName(0), _id(id)
         {
             if (colorType != nullptr)
                 assert(id <= colorType->size());
         }
         
         Color::Color(ColorType* colorType, uint32_t id, const char* color)
-                : _tuple(0), _tupleSize(1), _colorType(colorType), _colorName(color), _id(id)
+                : _tuple(), _colorType(colorType), _colorName(color), _id(id)
         {
             if (colorType != nullptr)
                 assert(id <= colorType->size());
@@ -37,9 +37,6 @@ namespace PetriEngine {
         const Color* Color::operator[] (size_t index) const {
             if (!this->isTuple()) {
                 throw "Cannot access tuple if not a tuple color";
-            }
-            if (index >= _tupleSize) {
-                throw "Index out of range";
             }
             return _tuple[index];
         }
@@ -76,13 +73,16 @@ namespace PetriEngine {
             if (_id >= _colorType->size() - 1) {
                 return (*_colorType)[0];
             }
+            assert(_id + 1 < _colorType->size());
             return (*_colorType)[_id + 1];
         }
         
         const Color& Color::operator-- () const {
+            //printf("Predecessor of %s\n", toString().c_str());
             if (_id <= 0) {
                 return (*_colorType)[_colorType->size() - 1];
             }
+            assert(_id - 1 >= 0);
             return (*_colorType)[_id - 1];
         }
         
@@ -94,9 +94,9 @@ namespace PetriEngine {
             if (color->isTuple()) {
                 std::ostringstream oss;
                 oss << "(";
-                for (size_t i = 0; i < color->_tupleSize; i++) {
+                for (size_t i = 0; i < color->_tuple.size(); i++) {
                     oss << color->_tuple[i]->toString();
-                    if (i < color->_tupleSize - 1) oss << ",";
+                    if (i < color->_tuple.size() - 1) oss << ",";
                 }
                 oss << ")";
                 return oss.str();
@@ -110,8 +110,9 @@ namespace PetriEngine {
             if (colors.size() > 1)
                 oss << "(";
             
-            for (auto c : colors) {
-                oss << c->toString();
+            for (size_t i = 0; i < colors.size(); i++) {
+                oss << colors[i]->toString();
+                if (i < colors.size() - 1) oss << ",";
             }
 
             if (colors.size() > 1)
@@ -127,6 +128,10 @@ namespace PetriEngine {
         
         void ColorType::addColor(const char* colorName) {
             _colors.push_back(Color(this, _colors.size(), colorName));
+        }
+        
+        void ColorType::addColor(std::vector<const Color*>& colors) {
+            _colors.push_back(Color(this, (uint32_t)_colors.size(), colors));
         }
         
         const Color& ColorType::operator[] (const char* index) const {

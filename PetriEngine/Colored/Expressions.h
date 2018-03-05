@@ -37,7 +37,7 @@ namespace PetriEngine {
                 if (color.compare("dot") == 0)
                     return DotConstant::dotConstant();
                 for (auto elem : colorTypes) {
-                    printf("Trying color type: %s\n", elem.first.c_str());
+                    //printf("Trying color type: %s\n", elem.first.c_str());
                     try {
                         return &(*elem.second)[color];
                     } catch (...) {
@@ -85,6 +85,7 @@ namespace PetriEngine {
             
         public:
             const Color* eval(ExpressionContext& context) const override {
+                //printf("Binding variable '%s' to color '%s'\n", _variable->name.c_str(), context.binding[_variable->name]->toString().c_str());
                 return context.binding[_variable->name];
             }
             

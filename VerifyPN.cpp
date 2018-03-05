@@ -542,6 +542,7 @@ int main(int argc, char* argv[]) {
     }
     
     auto builder = cpnBuilder.unfold();
+    builder.sort();
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
     

@@ -174,6 +174,14 @@ void PNMLParser::parseDeclarations(rapidxml::xml_node<>* element) {
     }
 }
 
+bool isInitialBinding(std::vector<const PetriEngine::Colored::Color*>& binding) {
+    for (auto color : binding) {
+        if (color->getId() != 0)
+            return false;
+    }
+    return true;
+}
+
 void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
     auto type = element->first_node();
     auto ct = new PetriEngine::Colored::ColorType();
@@ -181,6 +189,25 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
     
     if (strcmp(type->name(), "dot") == 0) {
         ct->addDot();
+    } else if (strcmp(type->name(), "productsort") == 0) {
+        std::vector<PetriEngine::Colored::ColorType*> components;
+        for (auto it = type->first_node(); it; it = it->next_sibling()) {
+            if (strcmp(it->name(), "usersort") == 0) {
+                components.push_back(colorTypes[it->first_attribute("declaration")->value()]);
+            }
+        }
+        std::vector<const PetriEngine::Colored::Color*> binding(components.size());
+        for (size_t i = 0; i < components.size(); ++i) {
+            binding[i] = &(*components[i])[0];
+        }
+        do {
+            ct->addColor(binding);
+            for (auto& c : binding) {
+                c = &++*c;
+                if (c->getId() != 0)
+                    break;
+            }
+        } while (!isInitialBinding(binding));
     } else {
         for (auto it = type->first_node(); it; it = it->next_sibling()) {
             //printf("%s\n", it->name());

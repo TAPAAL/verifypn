@@ -159,6 +159,9 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc) {
         Colored::Transition& transition = _transitions[arc.transition];
         for (size_t i = 0; i < transition.bindings.size(); ++i) {
+//            for (auto& b : transition.bindings[i]) {
+//                printf("Binding var '%s'\n", b.first.c_str());
+//            }
             Colored::ExpressionContext context {transition.bindings[i], _colors};
             Colored::Multiset ms = arc.expr->eval(context);
             for (auto& color : ms) {
@@ -222,7 +225,7 @@ namespace PetriEngine {
             arc.expr->getVariables(variables);
         }
         for (auto var : variables) {
-            //printf("BindingGen var: %s\n", var->name);
+            //printf("BindingGen var: %s\n", var->name.c_str());
             _bindings.push_back(Colored::Binding {var, &(*var->colorType)[0]});
         }
         
@@ -236,6 +239,7 @@ namespace PetriEngine {
         
         std::unordered_map<std::string, const Colored::Color*> binding;
         for (auto& elem : _bindings) {
+            //printf("Evaluating var '%s' with color '%s'\n", elem.var->name.c_str(), elem.color->toString().c_str());
             binding[elem.var->name] = elem.color;
         }
         Colored::ExpressionContext context {binding, _colorTypes};
@@ -246,16 +250,16 @@ namespace PetriEngine {
         bool test = false;
         while (!test) {
             for (size_t i = 0; i < _bindings.size(); ++i) {
-                const Colored::Color* next = ++_bindings[i].color;
-                if (next->getId() != 0) {
+                _bindings[i].color = &++(*_bindings[i].color);
+                if (_bindings[i].color->getId() != 0) {
                     break;
                 }
             }
             
-            test = eval();
-            
             if (isInitial())
                 break;
+            
+            test = eval();
         }
         return _bindings;
     }

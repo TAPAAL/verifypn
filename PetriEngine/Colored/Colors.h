@@ -30,18 +30,17 @@ namespace PetriEngine {
             friend std::ostream& operator<< (std::ostream& stream, const Color& color);
             
         protected:
-            const Color** _tuple;
-            const size_t _tupleSize;
+            const std::vector<const Color*> _tuple;
             ColorType* _colorType;
             const char* _colorName;
             uint32_t _id;
             
         public:
-            Color(ColorType* colorType, uint32_t id, const Color** colors, const size_t colorSize);
+            Color(ColorType* colorType, uint32_t id, std::vector<const Color*>& colors);
             Color(ColorType* colorType, uint32_t id, const char* color);
             
             bool isTuple() const {
-                return _tupleSize > 1;
+                return _tuple.size() > 1;
             }
             
             std::string getColorName() const {
@@ -112,6 +111,7 @@ namespace PetriEngine {
             ColorType() : _colors() {}
             
             void addColor(const char* colorName);
+            void addColor(std::vector<const Color*>& colors);
             void addDot() {
                 _colors.push_back(*DotConstant::dotConstant());
             }
