@@ -32,7 +32,7 @@ namespace PetriEngine {
         protected:
             const std::vector<const Color*> _tuple;
             ColorType* _colorType;
-            const char* _colorName;
+            std::string _colorName;
             uint32_t _id;
             
         public:
@@ -43,11 +43,11 @@ namespace PetriEngine {
                 return _tuple.size() > 1;
             }
             
-            std::string getColorName() const {
+            const std::string& getColorName() const {
                 if (this->isTuple()) {
                     throw "Cannot get color from a tuple color.";
                 }
-                return std::string(_colorName);
+                return _colorName;
             }
             
             ColorType* getColorType() {

@@ -20,7 +20,7 @@ namespace PetriEngine {
         }
         
         Color::Color(ColorType* colorType, uint32_t id, std::vector<const Color*>& colors)
-                : _tuple(colors), _colorType(colorType), _colorName(0), _id(id)
+                : _tuple(colors), _colorType(colorType), _colorName(""), _id(id)
         {
             if (colorType != nullptr)
                 assert(id <= colorType->size());

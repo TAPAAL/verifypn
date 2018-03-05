@@ -42,7 +42,7 @@ namespace PetriEngine {
                         return &(*elem.second)[color];
                     } catch (...) {
                         for (auto& col : *elem.second) {
-                            std::cout << col << std::endl;
+                            //std::cout << col << std::endl;
                         }
                     }
                 }
