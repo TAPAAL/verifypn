@@ -41,9 +41,9 @@ namespace PetriEngine {
                     try {
                         return &(*elem.second)[color];
                     } catch (...) {
-                        for (auto& col : *elem.second) {
-                            //std::cout << col << std::endl;
-                        }
+//                        for (auto& col : *elem.second) {
+//                            //std::cout << col << std::endl;
+//                        }
                     }
                 }
                 printf("Could not find color: %s\nCANNOT_COMPUTE\n", color.c_str());
