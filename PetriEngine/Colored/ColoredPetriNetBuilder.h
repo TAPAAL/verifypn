@@ -25,7 +25,7 @@ namespace PetriEngine {
     class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
     public:
         typedef std::unordered_map<std::string, Colored::ColorType*> ColorTypeMap;
-        typedef std::unordered_map<std::string, std::unordered_map<const Colored::Color*, std::string>> PTPlaceMap;
+        typedef std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>> PTPlaceMap;
         typedef std::unordered_map<std::string, std::vector<std::string>> PTTransitionMap;
         
     public:
@@ -85,7 +85,8 @@ namespace PetriEngine {
         }
 
         uint32_t getUnfoldedPlaceCount() const {
-            return _ptBuilder.numberOfPlaces();
+            return _nptplaces;
+            //return _ptBuilder.numberOfPlaces();
         }
 
         uint32_t getUnfoldedTransitionCount() const {

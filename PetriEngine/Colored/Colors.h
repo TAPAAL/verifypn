@@ -96,6 +96,10 @@ namespace PetriEngine {
             
             DotConstant(DotConstant const&) = delete;
             void operator=(DotConstant const&) = delete;
+
+            bool operator== (const DotConstant& other) {
+                return true;
+            }
         };
         
         class ColorType {
