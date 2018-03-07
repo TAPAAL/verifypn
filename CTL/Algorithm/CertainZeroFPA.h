@@ -5,6 +5,7 @@
 #include "CTL/DependencyGraph/Edge.h"
 #include "CTL/DependencyGraph/Configuration.h"
 #include "PetriEngine/Reachability/ReachabilitySearch.h"
+#include "CTL/SearchStrategy/SearchStrategy.h"
 
 
 namespace Algorithm {
@@ -12,25 +13,16 @@ namespace Algorithm {
 class CertainZeroFPA : public FixedPointAlgorithm
 {
 public:
-    CertainZeroFPA(PetriEngine::Reachability::Strategy type) : FixedPointAlgorithm()
+    CertainZeroFPA(PetriEngine::Reachability::Strategy type) : FixedPointAlgorithm(type)
     {
-        if(type != PetriEngine::Reachability::DFS)
-        {
-            std::cerr << "CTL-Engine currently only supports DFS."   <<  std::endl;
-            assert(false);
-            exit(ErrorCode);
-        }
-        strategy = new SearchStrategy::DFSSearch();
     }
     virtual ~CertainZeroFPA()
     {
-        delete strategy;
     }
     virtual bool search(DependencyGraph::BasicDependencyGraph &t_graph) override;
 protected:
 
     DependencyGraph::BasicDependencyGraph *graph;
-    SearchStrategy::DFSSearch *strategy;
     DependencyGraph::Configuration* vertex;
     
     void checkEdge(DependencyGraph::Edge* e, bool only_assign = false);

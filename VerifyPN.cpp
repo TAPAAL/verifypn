@@ -817,10 +817,6 @@ int main(int argc, char* argv[]) {
         // Assign indexes
         if(queries.size() == 0 || contextAnalysis(builder, net.get(), queries) != ContinueCode)  return ErrorCode;
         if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
-        if(options.strategy != PetriEngine::Reachability::DFS){
-            fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
-            options.strategy = PetriEngine::Reachability::DFS;
-        }
         v = CTLMain(net.get(),
             options.ctlalgorithm,
             options.strategy,

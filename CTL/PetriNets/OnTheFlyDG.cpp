@@ -10,7 +10,7 @@
 #include "PetriEngine/SuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Expressions.h"
-#include "CTL/SearchStrategy/iSearchStrategy.h"
+#include "CTL/SearchStrategy/SearchStrategy.h"
 
 
 using namespace PetriEngine::PQL;
