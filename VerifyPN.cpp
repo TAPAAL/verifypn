@@ -485,6 +485,22 @@ void printStats(PetriNetBuilder& builder, options_t& options)
     }
 }
 
+void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
+    if (options.printstatistics) {
+        if (!builder.isColored() && !builder.isUnfolded())
+            return;
+        std::cout << "\nSize of colored net: " <<
+                builder.getPlaceCount() << " places, " <<
+                builder.getTransitionCount() << " transitions, and " <<
+                builder.getArcCount() << " arcs" << std::endl;
+        std::cout << "Size of unfolded net: " <<
+                builder.getUnfoldedPlaceCount() << " places, " <<
+                builder.getUnfoldedTransitionCount() << " transitions, and " <<
+                builder.getUnfoldedArcCount() << " arcs" << std::endl;
+        std::cout << "Unfolded in " << builder.getUnfoldTime() << " seconds" << std::endl;
+    }
+}
+
 std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
     bool cont = false;    
     for(uint32_t i = 0; i < results.size(); i++) {
@@ -542,6 +558,7 @@ int main(int argc, char* argv[]) {
     }
     
     auto builder = cpnBuilder.unfold();
+    printUnfoldingStats(cpnBuilder, options);
     builder.sort();
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);

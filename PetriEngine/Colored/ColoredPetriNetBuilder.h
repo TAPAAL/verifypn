@@ -67,6 +67,38 @@ namespace PetriEngine {
 
 
         void sort() override;
+
+        double getUnfoldTime() const {
+            return _time;
+        }
+
+        uint32_t getPlaceCount() const {
+            return _places.size();
+        }
+
+        uint32_t getTransitionCount() const {
+            return _transitions.size();
+        }
+
+        uint32_t getArcCount() const {
+            return _arcs.size();
+        }
+
+        uint32_t getUnfoldedPlaceCount() const {
+            return _ptBuilder.numberOfPlaces();
+        }
+
+        uint32_t getUnfoldedTransitionCount() const {
+            return _ptBuilder.numberOfTransitions();
+        }
+
+        uint32_t getUnfoldedArcCount() const {
+            return _nptarcs;
+        }
+
+        bool isUnfolded() const {
+            return _unfolded;
+        }
         
         PetriNetBuilder& unfold();
     private:
@@ -74,12 +106,18 @@ namespace PetriEngine {
         std::unordered_map<std::string,uint32_t> _transitionnames;
         PTPlaceMap _ptplacenames;
         PTTransitionMap _pttransitionnames;
+        uint32_t _nptplaces;
+        uint32_t _npttransitions;
+        uint32_t _nptarcs;
         
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
         std::vector<Colored::Arc> _arcs;
         ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
+        bool _unfolded;
+
+        double _time;
         
         void addArc(const std::string& place,
                 const std::string& transition,

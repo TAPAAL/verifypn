@@ -12,9 +12,10 @@
  */
 
 #include "ColoredPetriNetBuilder.h"
+#include <chrono>
 
 namespace PetriEngine {
-    ColoredPetriNetBuilder::ColoredPetriNetBuilder() {
+    ColoredPetriNetBuilder::ColoredPetriNetBuilder() : _unfolded(false) {
     }
 
     ColoredPetriNetBuilder::ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig) {
@@ -24,7 +25,7 @@ namespace PetriEngine {
     }
     
     void ColoredPetriNetBuilder::addPlace(const std::string& name, int tokens, double x, double y) {
-        if (!isColored) {
+        if (!_isColored) {
             _ptBuilder.addPlace(name, tokens, x, y);
         }
     }
@@ -39,7 +40,7 @@ namespace PetriEngine {
     }
     
     void ColoredPetriNetBuilder::addTransition(const std::string& name, double x, double y) {
-        if (!isColored) {
+        if (!_isColored) {
             _ptBuilder.addTransition(name, x, y);
         }
     }
@@ -54,7 +55,7 @@ namespace PetriEngine {
     }
     
     void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, int weight) {
-        if (!isColored) {
+        if (!_isColored) {
             _ptBuilder.addInputArc(place, transition, inhibitor, weight);
         }
     }
@@ -64,7 +65,7 @@ namespace PetriEngine {
     }
     
     void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, int weight) {
-        if (!isColored) {
+        if (!_isColored) {
             _ptBuilder.addOutputArc(transition, place, weight);
         }
     }
@@ -112,7 +113,8 @@ namespace PetriEngine {
     }
     
     PetriNetBuilder& ColoredPetriNetBuilder::unfold() {
-        if (isColored) {
+        auto start = std::chrono::high_resolution_clock::now();
+        if (_isColored && !_unfolded) {
             for (auto& place : _places) {
                 unfoldPlace(place);
             }
@@ -124,7 +126,10 @@ namespace PetriEngine {
             for (auto& arc : _arcs) {
                 unfoldArc(arc);
             }
+            _unfolded = true;
         }
+        auto end = std::chrono::high_resolution_clock::now();
+        _time = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
 
         return _ptBuilder;
     }
@@ -137,6 +142,7 @@ namespace PetriEngine {
             const Colored::Color* color = &(*place.type)[i];
             _ptBuilder.addPlace(name, place.marking[color], 0.0, 0.0);
             _ptplacenames[place.name][color] = name;
+            ++_nptplaces;
         }
     }
     
@@ -153,6 +159,7 @@ namespace PetriEngine {
             std::string name = transition.name + ";" + std::to_string(i);
             _ptBuilder.addTransition(name, 0.0, 0.0);
             _pttransitionnames[transition.name].push_back(name);
+            ++_npttransitions;
         }
     }
     
@@ -174,6 +181,7 @@ namespace PetriEngine {
                 } else {
                     _ptBuilder.addOutputArc(tName, pName, color.second);
                 }
+                ++_nptarcs;
             }
         }
     }

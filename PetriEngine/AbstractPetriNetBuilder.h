@@ -31,7 +31,7 @@ namespace PetriEngine {
     /** Abstract builder for petri nets */
     class AbstractPetriNetBuilder {
     protected:
-        bool isColored = false;
+        bool _isColored = false;
         
     public:
         /** Add a new place with a unique name */
@@ -96,7 +96,11 @@ namespace PetriEngine {
         }
         
         virtual void enableColors() {
-            isColored = true;
+            _isColored = true;
+        }
+
+        virtual bool isColored() const {
+            return _isColored;
         }
 
         virtual void sort() = 0;
