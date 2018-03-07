@@ -23,7 +23,24 @@
 namespace PetriEngine {
     namespace Colored {
         class Multiset {
-            typedef std::vector<std::pair<const Color*,uint32_t>> Internal;
+        private:
+            class Iterator {
+            private:
+                Multiset* ms;
+                size_t index;
+
+            public:
+                Iterator(Multiset* ms, size_t index)
+                        : ms(ms), index(index) {}
+
+                bool operator==(Iterator& other);
+                bool operator!=(Iterator& other);
+                Iterator& operator++();
+                std::pair<const Color*,uint32_t&> operator++(int);
+                std::pair<const Color*,uint32_t&> operator*();
+            };
+
+            typedef std::vector<std::pair<uint32_t,uint32_t>> Internal;
             
         public:
             Multiset();
@@ -43,11 +60,12 @@ namespace PetriEngine {
             
             bool empty() const;
             
-            Internal::iterator begin();
-            Internal::iterator end();
+            Iterator begin();
+            Iterator end();
             
         private:
             Internal _set;
+            ColorType* type;
         };
     }
 }

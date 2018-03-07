@@ -50,7 +50,7 @@ namespace PetriEngine {
                 return _colorName;
             }
             
-            ColorType* getColorType() {
+            ColorType* getColorType() const {
                 return _colorType;
             }
             
@@ -109,10 +109,13 @@ namespace PetriEngine {
             
         private:
             std::vector<Color> _colors;
+            uintptr_t _id;
             
         public:
             ColorType(std::vector<ColorType*> elements);
-            ColorType() : _colors() {}
+            ColorType() : _colors() {
+                _id = (uintptr_t)this;
+            }
             
             void addColor(const char* colorName);
             void addColor(std::vector<const Color*>& colors);
@@ -143,7 +146,11 @@ namespace PetriEngine {
             }
             
             bool operator== (const ColorType& other) const {
-                return true; // TODO
+                return _id == other._id;
+            }
+
+            uintptr_t getId() {
+                return _id;
             }
             
             iterator begin() {

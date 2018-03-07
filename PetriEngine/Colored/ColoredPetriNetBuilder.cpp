@@ -140,6 +140,7 @@ namespace PetriEngine {
             //std::cout << c.toString() << std::endl;
             std::string name = place.name + ";" + std::to_string(i);
             const Colored::Color* color = &(*place.type)[i];
+            //std::cout << name << std::endl;
             _ptBuilder.addPlace(name, place.marking[color], 0.0, 0.0);
             _ptplacenames[place.name][color->getId()] = name;
             ++_nptplaces;
@@ -171,17 +172,17 @@ namespace PetriEngine {
 //            }
             Colored::ExpressionContext context {transition.bindings[i], _colors};
             Colored::Multiset ms = arc.expr->eval(context);
-            for (auto& color : ms) {
+            for (auto color : ms) {
                 if (color.second == 0)
                     continue;
                 std::string pName = _ptplacenames[_places[arc.place].name][color.first->getId()];
                 std::string tName = _pttransitionnames[transition.name][i];
-                if (pName.empty()) {
-                    std::cout << "place: " << _places[arc.place].name << " color: " << color.first->toString() << std::endl;
-                    for (auto& col : _ptplacenames[_places[arc.place].name]) {
-                        std::cout << "\tPossible color: " << col.first << std::endl;
-                    }
-                }
+//                if (pName.empty()) {
+//                    std::cout << "place: " << _places[arc.place].name << " color: " << color.first->toString() << std::endl;
+//                    for (auto& col : _ptplacenames[_places[arc.place].name]) {
+//                        std::cout << "\tPossible color: " << col.first << std::endl;
+//                    }
+//                }
                 if (arc.input) {
                     _ptBuilder.addInputArc(pName, tName, false, color.second);
                 } else {
