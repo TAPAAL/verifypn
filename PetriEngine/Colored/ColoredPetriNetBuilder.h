@@ -85,8 +85,8 @@ namespace PetriEngine {
         }
 
         uint32_t getUnfoldedPlaceCount() const {
-            return _nptplaces;
-            //return _ptBuilder.numberOfPlaces();
+            //return _nptplaces;
+            return _ptBuilder.numberOfPlaces();
         }
 
         uint32_t getUnfoldedTransitionCount() const {
