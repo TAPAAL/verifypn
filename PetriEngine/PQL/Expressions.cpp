@@ -64,8 +64,8 @@ namespace PetriEngine {
                 }
                 else
                 {
-                    if(! ((dynamic_cast<IdentifierExpr*>((*comp)[0].get()) && dynamic_cast<LiteralExpr*>((*comp)[1].get())) ||
-                          (dynamic_cast<IdentifierExpr*>((*comp)[1].get()) && dynamic_cast<LiteralExpr*>((*comp)[0].get()))))
+                    if(! ((dynamic_cast<UnfoldedIdentifierExpr*>((*comp)[0].get()) && dynamic_cast<LiteralExpr*>((*comp)[1].get())) ||
+                          (dynamic_cast<UnfoldedIdentifierExpr*>((*comp)[1].get()) && dynamic_cast<LiteralExpr*>((*comp)[0].get()))))
                     {
                         _conds.emplace_back(ptr);
                         return;
@@ -171,7 +171,7 @@ namespace PetriEngine {
             out << _value;
         }
 
-        void IdentifierExpr::toString(std::ostream& out) const {
+        void UnfoldedIdentifierExpr::toString(std::ostream& out) const {
             out << _name;
         }
 
@@ -414,8 +414,8 @@ namespace PetriEngine {
             for(auto& e : _exprs) e->analyze(context);
             std::sort(_exprs.begin(), _exprs.end(), [](auto& a, auto& b)
             {
-                auto ida = dynamic_pointer_cast<PQL::IdentifierExpr>(a);
-                auto idb = dynamic_pointer_cast<PQL::IdentifierExpr>(b);
+                auto ida = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(a);
+                auto idb = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(b);
                 if(ida == NULL) return false;
                 if(ida && !idb) return true;
                 return ida->offset() < idb->offset();
@@ -447,7 +447,7 @@ namespace PetriEngine {
             return;
         }
 
-        void IdentifierExpr::analyze(AnalysisContext& context) {
+        void UnfoldedIdentifierExpr::analyze(AnalysisContext& context) {
             AnalysisContext::ResolutionResult result = context.resolve(_name);
             if (result.success) {
                 _offsetInMarking = result.offset;
@@ -506,7 +506,7 @@ namespace PetriEngine {
             {
                 assert(preset.first->place != std::numeric_limits<uint32_t>::max());
                 assert(preset.first->place != -1);
-                auto id = std::make_shared<IdentifierExpr>(context.net()->placeNames()[preset.first->place], preset.first->place);
+                auto id = std::make_shared<UnfoldedIdentifierExpr>(context.net()->placeNames()[preset.first->place], preset.first->place);
                 auto lit = std::make_shared<LiteralExpr>(preset.first->tokens);
 
                 if(!preset.first->inhibitor)
@@ -581,7 +581,7 @@ namespace PetriEngine {
             return _value;
         }
 
-        int IdentifierExpr::evaluate(const EvaluationContext& context) const {
+        int UnfoldedIdentifierExpr::evaluate(const EvaluationContext& context) const {
             assert(_offsetInMarking != -1);
             return context.marking()[_offsetInMarking];
         }
@@ -952,6 +952,10 @@ namespace PetriEngine {
             return Expr::LiteralExpr;
         }
 
+        Expr::Types UnfoldedIdentifierExpr::type() const {
+            return Expr::IdentifierExpr;
+        }
+
         Expr::Types IdentifierExpr::type() const {
             return Expr::IdentifierExpr;
         }
@@ -1156,7 +1160,7 @@ namespace PetriEngine {
             generateTabs(out,tabs) << "<integer-constant>" + std::to_string(_value) + "</integer-constant>\n";
         }
         
-        void IdentifierExpr::toXML(std::ostream& out,uint32_t tabs, bool tokencount) const {
+        void UnfoldedIdentifierExpr::toXML(std::ostream& out,uint32_t tabs, bool tokencount) const {
             if (tokencount) {
                 generateTabs(out,tabs) << "<place>" << _name << "</place>\n";
             }
@@ -1432,7 +1436,7 @@ namespace PetriEngine {
             return Member(std::move(row), context.marking()[p]);            
         }
         
-        Member IdentifierExpr::constraint(SimplificationContext& context) const {
+        Member UnfoldedIdentifierExpr::constraint(SimplificationContext& context) const {
             return memberForPlace(_offsetInMarking, context);
         }
         
@@ -1938,7 +1942,7 @@ namespace PetriEngine {
                 if(nconstraints.size() == 1)
                 {
                     auto& c = nconstraints[0];
-                    auto id = std::make_shared<IdentifierExpr>(c._name, c._place);
+                    auto id = std::make_shared<UnfoldedIdentifierExpr>(c._name, c._place);
                     auto ll = std::make_shared<LiteralExpr>(c._lower);
                     auto lu = std::make_shared<LiteralExpr>(c._upper);
                     if     (c._lower == c._upper && !neg) return std::make_shared<EqualCondition>(id, lu);
@@ -2992,11 +2996,11 @@ namespace PetriEngine {
             // Add nothing
         }
 
-        void IdentifierExpr::incr(ReducingSuccessorGenerator& generator) const {
+        void UnfoldedIdentifierExpr::incr(ReducingSuccessorGenerator& generator) const {
             generator.presetOf(_offsetInMarking);
         }
         
-        void IdentifierExpr::decr(ReducingSuccessorGenerator& generator) const {
+        void UnfoldedIdentifierExpr::decr(ReducingSuccessorGenerator& generator) const {
              generator.postsetOf(_offsetInMarking);
         }
         
@@ -3313,12 +3317,12 @@ namespace PetriEngine {
             {
                 auto cmp = dynamic_cast<CompareCondition*>(c.get());
                 assert(cmp);
-                auto id = dynamic_cast<IdentifierExpr*>((*cmp)[0].get());
+                auto id = dynamic_cast<UnfoldedIdentifierExpr*>((*cmp)[0].get());
                 LiteralExpr* lit = nullptr;
                 bool inverted = false;
                 if(!id)
                 {
-                    id = dynamic_cast<IdentifierExpr*>((*cmp)[1].get());
+                    id = dynamic_cast<UnfoldedIdentifierExpr*>((*cmp)[1].get());
                     lit = dynamic_cast<LiteralExpr*>((*cmp)[0].get());
                     inverted = true;
                 }
@@ -3404,7 +3408,7 @@ namespace PetriEngine {
             for (auto& e : exprs) {
                 if (auto lit = dynamic_pointer_cast<PQL::LiteralExpr>(e))
                     _constant = this->apply(_constant, lit->value());
-                else if (auto id = dynamic_pointer_cast<PQL::IdentifierExpr>(e)) {
+                else if (auto id = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(e)) {
                     _ids.emplace_back(id->offset(), id->name());
                 } 
                 else if(auto c = dynamic_pointer_cast<CommutativeExpr>(e))

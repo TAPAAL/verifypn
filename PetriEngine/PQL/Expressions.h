@@ -191,14 +191,31 @@ namespace PetriEngine {
             int _value;
         };
 
-        /** Identifier expression */
+
         class IdentifierExpr : public Expr {
         public:
-            IdentifierExpr(const std::string& name, int offest) 
+            void analyze(AnalysisContext& context) override;
+            int evaluate(const EvaluationContext& context) const override;
+            void toString(std::ostream&) const override;
+            Expr::Types type() const override;
+            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
+            void incr(ReducingSuccessorGenerator& generator) const override;
+            void decr(ReducingSuccessorGenerator& generator) const override;
+            int formulaSize() const override{
+                return 1;
+            }
+
+            Member constraint(SimplificationContext& context) const override;
+        };
+
+        /** Identifier expression */
+        class UnfoldedIdentifierExpr : public Expr {
+        public:
+            UnfoldedIdentifierExpr(const std::string& name, int offest)
             : _offsetInMarking(offest), _name(name) {
             }
             
-            IdentifierExpr(const std::string& name) : IdentifierExpr(name, -1) {
+            UnfoldedIdentifierExpr(const std::string& name) : UnfoldedIdentifierExpr(name, -1) {
             }
             
             void analyze(AnalysisContext& context) override;
