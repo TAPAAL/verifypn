@@ -96,15 +96,19 @@ namespace PetriEngine {
             const std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>>& _coloredPlaceNames;
             const std::unordered_map<std::string, std::vector<std::string>>& _coloredTransitionNames;
 
+            bool _colored;
+
         public:
             ColoredAnalysisContext(const std::unordered_map<std::string, uint32_t>& places,
                                    const std::unordered_map<std::string, uint32_t>& tnames,
                                    const PetriNet* net,
                                    const std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>>& cplaces,
-                                   const std::unordered_map<std::string, std::vector<std::string>>& ctnames)
+                                   const std::unordered_map<std::string, std::vector<std::string>>& ctnames,
+                                   bool colored)
                     : AnalysisContext(places, tnames, net),
                       _coloredPlaceNames(cplaces),
-                      _coloredTransitionNames(ctnames)
+                      _coloredTransitionNames(ctnames),
+                      _colored(colored)
             {}
 
             bool resolvePlace(const std::string& place, std::unordered_map<uint32_t,std::string>& out) {
@@ -123,6 +127,10 @@ namespace PetriEngine {
                     return true;
                 }
                 return false;
+            }
+
+            bool isColored() const {
+                return _colored;
             }
         };
 

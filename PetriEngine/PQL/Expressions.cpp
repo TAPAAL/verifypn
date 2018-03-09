@@ -435,7 +435,6 @@ namespace PetriEngine {
                 }
             }
             std::sort(_ids.begin(), _ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
-            printf("%lu\n", _exprs.size());
             if(_exprs.size() > 0)
                 NaryExpr::analyze(context);
         }
@@ -474,36 +473,27 @@ namespace PetriEngine {
 
             try {
                 auto& coloredContext = dynamic_cast<ColoredAnalysisContext&>(context);
+                if (!coloredContext.isColored()) {
+                    throw bad_cast();
+                }
+
                 std::unordered_map<uint32_t,std::string> names;
                 if (!coloredContext.resolvePlace(_name, names)) {
                     ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
                     coloredContext.reportError(error);
                 }
 
-                assert(!names.empty());
                 if (names.size() == 1) {
                     _compiled = generateUnfoldedIdentifierExpr(coloredContext, names, 0);
                 } else {
-                    std::vector<Expr_ptr> identifiers(names.size());
+                    std::vector<Expr_ptr> identifiers;
                     for (auto& unfoldedName : names) {
                         identifiers.push_back(generateUnfoldedIdentifierExpr(coloredContext,names,unfoldedName.first));
-                        identifiers.back()->toString(std::cout);
-                        std::cout << std::endl;
                     }
-                    auto plus = PQL::PlusExpr(std::move(identifiers));
-                    plus.toString(std::cout);
-                    std::cout << std::endl;
                     _compiled = std::make_shared<PQL::PlusExpr>(std::move(identifiers));
-                    _compiled->toString(std::cout);
-                    std::cout << std::endl;
                 }
             } catch (bad_cast&) {
                 _compiled = std::make_shared<UnfoldedIdentifierExpr>(_name, getPlace(context, _name));
-            }
-            if (!context.errors().empty()) {
-                for (auto& e : context.errors()) {
-                    std::cout << e.text() << std::endl;
-                }
             }
             _compiled->analyze(context);
         }
@@ -3467,9 +3457,6 @@ namespace PetriEngine {
                         _exprs.emplace_back(std::move(e));                        
                     }
                 } else {
-                    std::cout << "Placing expr: " << std::endl;
-                    e->toString(std::cout);
-                    std::cout << endl;
                     _exprs.emplace_back(std::move(e));
                 }
             }
