@@ -70,10 +70,10 @@ using namespace PetriEngine::Reachability;
 
 #define VERSION  "2.2.0"
 
-ReturnValue contextAnalysis(PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries)
+ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries)
 {
     //Context analysis
-    AnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net);
+    ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net, cpnBuilder.getUnfoldedPlaceNames(), cpnBuilder.getUnfoldedTransitionNames());
     for(auto& q : queries)
     {
         q->analyze(context);
@@ -570,7 +570,7 @@ int main(int argc, char* argv[]) {
     MarkVal* qm0 = qnet->makeInitialMarking();
     ResultPrinter p2(&b2, &options, querynames);
 
-    if(queries.size() == 0 || contextAnalysis(b2, qnet.get(), queries) != ContinueCode)  return ErrorCode;
+    if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)  return ErrorCode;
 
     if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout == 0)
     { 
@@ -722,7 +722,7 @@ int main(int argc, char* argv[]) {
         PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
 
         // Assign indexes
-        if(queries.size() == 0 || contextAnalysis(builder, net.get(), queries) != ContinueCode)  return ErrorCode;
+        if(queries.size() == 0 || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)  return ErrorCode;
         if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
         if(options.strategy != PetriEngine::Reachability::DFS){
             fprintf(stdout, "Search strategy was changed to DFS as the CTL engine is called.\n");
@@ -777,7 +777,7 @@ int main(int argc, char* argv[]) {
     ReachabilitySearch strategy(printer, *net, options.kbound);
 
     //Analyse context again to reindex query
-    contextAnalysis(builder, net.get(), queries);
+    contextAnalysis(cpnBuilder, builder, net.get(), queries);
 
     // Change default place-holder to default strategy
     if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;

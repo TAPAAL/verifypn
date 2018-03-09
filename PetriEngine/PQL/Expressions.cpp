@@ -435,6 +435,7 @@ namespace PetriEngine {
                 }
             }
             std::sort(_ids.begin(), _ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
+            printf("%lu\n", _exprs.size());
             if(_exprs.size() > 0)
                 NaryExpr::analyze(context);
         }
@@ -445,6 +446,66 @@ namespace PetriEngine {
 
         void LiteralExpr::analyze(AnalysisContext&) {
             return;
+        }
+
+        uint32_t getPlace(AnalysisContext& context, const std::string& name)
+        {
+            AnalysisContext::ResolutionResult result = context.resolve(name);
+            if (result.success) {
+                return result.offset;
+            } else {
+                ExprError error("Unable to resolve identifier \"" + name + "\"",
+                                name.length());
+                context.reportError(error);
+            }
+            return -1;
+        }
+
+        Expr_ptr generateUnfoldedIdentifierExpr(ColoredAnalysisContext& context, std::unordered_map<uint32_t,std::string>& names, uint32_t colorIndex) {
+            std::string& place = names[colorIndex];
+            return std::make_shared<UnfoldedIdentifierExpr>(place, getPlace(context, place));
+        }
+
+        void IdentifierExpr::analyze(AnalysisContext &context) {
+            if (_compiled) {
+                _compiled->analyze(context);
+                return;
+            }
+
+            try {
+                auto& coloredContext = dynamic_cast<ColoredAnalysisContext&>(context);
+                std::unordered_map<uint32_t,std::string> names;
+                if (!coloredContext.resolvePlace(_name, names)) {
+                    ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
+                    coloredContext.reportError(error);
+                }
+
+                assert(!names.empty());
+                if (names.size() == 1) {
+                    _compiled = generateUnfoldedIdentifierExpr(coloredContext, names, 0);
+                } else {
+                    std::vector<Expr_ptr> identifiers(names.size());
+                    for (auto& unfoldedName : names) {
+                        identifiers.push_back(generateUnfoldedIdentifierExpr(coloredContext,names,unfoldedName.first));
+                        identifiers.back()->toString(std::cout);
+                        std::cout << std::endl;
+                    }
+                    auto plus = PQL::PlusExpr(std::move(identifiers));
+                    plus.toString(std::cout);
+                    std::cout << std::endl;
+                    _compiled = std::make_shared<PQL::PlusExpr>(std::move(identifiers));
+                    _compiled->toString(std::cout);
+                    std::cout << std::endl;
+                }
+            } catch (bad_cast&) {
+                _compiled = std::make_shared<UnfoldedIdentifierExpr>(_name, getPlace(context, _name));
+            }
+            if (!context.errors().empty()) {
+                for (auto& e : context.errors()) {
+                    std::cout << e.text() << std::endl;
+                }
+            }
+            _compiled->analyze(context);
         }
 
         void UnfoldedIdentifierExpr::analyze(AnalysisContext& context) {
@@ -469,19 +530,6 @@ namespace PetriEngine {
         
         void LogicalCondition::analyze(AnalysisContext& context) {
             for(auto& c : _conds) c->analyze(context);
-        }
-
-        uint32_t getPlace(AnalysisContext& context, const std::string& name)
-        {
-            AnalysisContext::ResolutionResult result = context.resolve(name);
-            if (result.success) {
-                return result.offset;
-            } else {
-                ExprError error("Unable to resolve identifier \"" + name + "\"",
-                        name.length());
-                context.reportError(error);
-            }            
-            return -1;
         }
         
         void FireableCondition::analyze(AnalysisContext& context)
@@ -953,10 +1001,6 @@ namespace PetriEngine {
         }
 
         Expr::Types UnfoldedIdentifierExpr::type() const {
-            return Expr::IdentifierExpr;
-        }
-
-        Expr::Types IdentifierExpr::type() const {
             return Expr::IdentifierExpr;
         }
 
@@ -3423,6 +3467,9 @@ namespace PetriEngine {
                         _exprs.emplace_back(std::move(e));                        
                     }
                 } else {
+                    std::cout << "Placing expr: " << std::endl;
+                    e->toString(std::cout);
+                    std::cout << endl;
                     _exprs.emplace_back(std::move(e));
                 }
             }

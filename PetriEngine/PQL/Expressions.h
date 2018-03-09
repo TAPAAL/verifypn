@@ -194,18 +194,37 @@ namespace PetriEngine {
 
         class IdentifierExpr : public Expr {
         public:
+            IdentifierExpr(const std::string& name) : _name(name) {}
             void analyze(AnalysisContext& context) override;
-            int evaluate(const EvaluationContext& context) const override;
-            void toString(std::ostream&) const override;
-            Expr::Types type() const override;
-            void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
-            void incr(ReducingSuccessorGenerator& generator) const override;
-            void decr(ReducingSuccessorGenerator& generator) const override;
-            int formulaSize() const override{
-                return 1;
+            int evaluate(const EvaluationContext& context) const override {
+                return _compiled->evaluate(context);
+            }
+            void toString(std::ostream& os) const override {
+                _compiled->toString(os);
+            }
+            Expr::Types type() const override {
+                return _compiled->type();
+            }
+            void toXML(std::ostream& os, uint32_t tabs, bool tokencount = false) const override {
+                _compiled->toXML(os, tabs, tokencount);
+            }
+            void incr(ReducingSuccessorGenerator& generator) const override {
+                _compiled->incr(generator);
+            }
+            void decr(ReducingSuccessorGenerator& generator) const override {
+                _compiled->decr(generator);
+            }
+            int formulaSize() const override {
+                return _compiled->formulaSize();
             }
 
-            Member constraint(SimplificationContext& context) const override;
+            Member constraint(SimplificationContext& context) const override {
+                return _compiled->constraint(context);
+            }
+
+        private:
+            std::string _name;
+            Expr_ptr _compiled;
         };
 
         /** Identifier expression */

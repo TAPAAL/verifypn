@@ -100,6 +100,14 @@ namespace PetriEngine {
         bool isUnfolded() const {
             return _unfolded;
         }
+
+        const PTPlaceMap& getUnfoldedPlaceNames() const {
+            return _ptplacenames;
+        }
+
+        const PTTransitionMap& getUnfoldedTransitionNames() const {
+            return _pttransitionnames;
+        }
         
         PetriNetBuilder& unfold();
     private:
