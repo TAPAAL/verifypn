@@ -522,7 +522,7 @@ namespace PetriEngine {
             for(auto& c : _conds) c->analyze(context);
         }
         
-        void FireableCondition::analyze(AnalysisContext& context)
+        void UnfoldedFireableCondition::analyze(AnalysisContext& context)
         {
             if(_compiled)
             {
@@ -560,7 +560,40 @@ namespace PetriEngine {
             else _compiled = std::make_shared<AndCondition>(conds);
             _compiled->analyze(context);
         }
-        
+
+        void FireableCondition::analyze(AnalysisContext &context) {
+            if (_compiled) {
+                _compiled->analyze(context);
+                return;
+            }
+
+            try {
+                auto& coloredContext = dynamic_cast<ColoredAnalysisContext&>(context);
+                if (!coloredContext.isColored()) {
+                    throw bad_cast();
+                }
+
+                std::vector<std::string> names;
+                if (!coloredContext.resolveTransition(_name, names)) {
+                    ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
+                    coloredContext.reportError(error);
+                }
+
+                if (names.size() == 1) {
+                    _compiled = std::make_shared<UnfoldedFireableCondition>(names[0]);
+                } else {
+                    std::vector<Condition_ptr> identifiers;
+                    for (auto& unfoldedName : names) {
+                        identifiers.push_back(std::make_shared<UnfoldedFireableCondition>(unfoldedName));
+                    }
+                    _compiled = std::make_shared<OrCondition>(std::move(identifiers));
+                }
+            } catch (bad_cast&) {
+                _compiled = std::make_shared<UnfoldedFireableCondition>(_name);
+            }
+            _compiled->analyze(context);
+        }
+
         void CompareConjunction::analyze(AnalysisContext& context) {
             for(auto& c : _constraints){
                 c._place = getPlace(context, c._name);

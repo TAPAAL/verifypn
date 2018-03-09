@@ -460,11 +460,10 @@ namespace PetriEngine {
         
         /******************** CONDITIONS ********************/
 
-                /* Fireable Condition -- placeholder, needs to be unfolded */
-        class FireableCondition : public Condition {
+
+        class ExpandableCondition : public Condition {
         public:
-            FireableCondition(const std::string& tname) : _name(tname) {};
-            void analyze(AnalysisContext& context) override;
+            ExpandableCondition(const std::string& tname) : _name(tname) {};
             Result evaluate(const EvaluationContext& context) const override
             { return _compiled->evaluate(context); }
             Result evalAndSet(const EvaluationContext& context) override
@@ -504,12 +503,24 @@ namespace PetriEngine {
             bool containsNext() const override
             { return false; }
 
-        private:
+        protected:
             std::string _name;
             Condition_ptr _compiled;
         };
-        
-        
+
+        /* Fireable Condition -- placeholder, needs to be unfolded */
+        class UnfoldedFireableCondition : public ExpandableCondition {
+        public:
+            UnfoldedFireableCondition(const std::string& tname) : ExpandableCondition(tname) {};
+            void analyze(AnalysisContext& context) override;
+        };
+
+        class FireableCondition : public ExpandableCondition {
+        public:
+            FireableCondition(const std::string& tname) : ExpandableCondition(tname) {};
+            void analyze(AnalysisContext& context) override;
+        };
+
         
         /* Logical conditon */
         class LogicalCondition : public Condition {
