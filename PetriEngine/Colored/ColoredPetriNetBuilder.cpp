@@ -172,6 +172,7 @@ namespace PetriEngine {
 //            }
             Colored::ExpressionContext context {transition.bindings[i], _colors};
             Colored::Multiset ms = arc.expr->eval(context);
+            ms.clean();
             for (auto color : ms) {
                 if (color.second == 0)
                     continue;

@@ -122,6 +122,12 @@ namespace PetriEngine {
             return _set.empty();
         }
 
+        void Multiset::clean() {
+            _set.erase(std::remove_if(_set.begin(), _set.end(), [&](auto elem) {
+                return elem.second == 0;
+            }));
+        }
+
         Multiset::Iterator Multiset::begin() {
             return Iterator(this, 0);
         }

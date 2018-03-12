@@ -59,6 +59,7 @@ namespace PetriEngine {
             uint32_t& operator[] (const Color* color);
             
             bool empty() const;
+            void clean();
             
             Iterator begin();
             Iterator end();
