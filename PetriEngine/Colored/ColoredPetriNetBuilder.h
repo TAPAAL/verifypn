@@ -115,9 +115,9 @@ namespace PetriEngine {
         std::unordered_map<std::string,uint32_t> _transitionnames;
         PTPlaceMap _ptplacenames;
         PTTransitionMap _pttransitionnames;
-        uint32_t _nptplaces;
-        uint32_t _npttransitions;
-        uint32_t _nptarcs;
+        uint32_t _nptplaces = 0;
+        uint32_t _npttransitions = 0;
+        uint32_t _nptarcs = 0;
         
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;

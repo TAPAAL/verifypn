@@ -13,6 +13,8 @@
 
 #include <ios>
 #include <algorithm>
+#include <iostream>
+#include <sstream>
 
 #include "Multiset.h"
 
@@ -30,7 +32,7 @@ namespace PetriEngine {
                 : _set(), type(nullptr)
         {
             for (auto& c : colors) {
-                (*this)[c.first] = c.second;
+                (*this)[c.first] += c.second;
             }
         }
 
@@ -92,7 +94,7 @@ namespace PetriEngine {
         }
 
         uint32_t Multiset::operator [](const Color* color) const {
-            if (type != nullptr && type->getId() != color->getColorType()->getId()) {
+            if (type != nullptr && type->getId() == color->getColorType()->getId()) {
                 for (auto c : _set) {
                     if (c.first == color->getId())
                         return c.second;
@@ -123,8 +125,11 @@ namespace PetriEngine {
         }
 
         void Multiset::clean() {
+            if (std::find_if(_set.begin(), _set.end(), [&](auto elem) { return elem.second == 0; }) == _set.end())
+                return;
+
             _set.erase(std::remove_if(_set.begin(), _set.end(), [&](auto elem) {
-                return elem.second == 0;
+                return elem.second != 0;
             }));
         }
 
@@ -163,6 +168,18 @@ namespace PetriEngine {
             if (ms->type != nullptr)
                 color = &(*ms->type)[item.first];
             return { color, item.second };
+        }
+
+        std::string Multiset::toString() const {
+            std::ostringstream oss;
+            for (size_t i = 0; i < _set.size(); ++i) {
+                oss << _set[i].second << "'(" << (*type)[_set[i].first].toString() << ")";
+                if (i < _set.size() - 1) {
+                    oss << " + ";
+                }
+            }
+
+            return oss.str();
         }
     }
 }

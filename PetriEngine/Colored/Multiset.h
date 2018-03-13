@@ -60,9 +60,15 @@ namespace PetriEngine {
             
             bool empty() const;
             void clean();
+
+            size_t distinctSize() const {
+                return _set.size();
+            }
             
             Iterator begin();
             Iterator end();
+
+            std::string toString() const;
             
         private:
             Internal _set;

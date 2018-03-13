@@ -173,9 +173,16 @@ namespace PetriEngine {
             Colored::ExpressionContext context {transition.bindings[i], _colors};
             Colored::Multiset ms = arc.expr->eval(context);
             ms.clean();
+//            if (arc.input) {
+//                std::cout << "Arc from place '" << _places[arc.place].name << "' to transition '" << transition.name;
+//            } else {
+//                std::cout << "Arc from transition '" << transition.name << "' to place '" << _places[arc.place].name;
+//            }
+//            std::cout << "' under binding '" << i << "' has " << ms.distinctSize() << " distinct elements" << std::endl;
             for (auto color : ms) {
-                if (color.second == 0)
+                if (color.second == 0) {
                     continue;
+                }
                 std::string pName = _ptplacenames[_places[arc.place].name][color.first->getId()];
                 std::string tName = _pttransitionnames[transition.name][i];
 //                if (pName.empty()) {
@@ -184,6 +191,12 @@ namespace PetriEngine {
 //                        std::cout << "\tPossible color: " << col.first << std::endl;
 //                    }
 //                }
+//                if (arc.input) {
+//                    std::cout << "Arc from place '" << _places[arc.place].name << "' to transition '" << transition.name;
+//                } else {
+//                    std::cout << "Arc from transition '" << transition.name << "' to place '" << _places[arc.place].name;
+//                }
+//                std::cout << "' under binding '" << i << "' with color '" << color.first->toString() << "' with " << color.second << " tokens" << std::endl;
                 if (arc.input) {
                     _ptBuilder.addInputArc(pName, tName, false, color.second);
                 } else {
