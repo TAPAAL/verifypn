@@ -38,7 +38,7 @@ class PNMLParser {
         std::string source,
         target;
         int weight;
-        PetriEngine::Colored::ArcExpression* expr;
+        PetriEngine::Colored::ArcExpression_ptr expr;
     };
     typedef std::vector<Arc> ArcList;
     typedef ArcList::iterator ArcIter;
@@ -46,7 +46,7 @@ class PNMLParser {
     struct Transition {
         std::string id;
         double x, y;
-        PetriEngine::Colored::GuardExpression* expr;
+        PetriEngine::Colored::GuardExpression_ptr expr;
     };
     typedef std::vector<Transition> TransitionList;
     typedef TransitionList::iterator TransitionIter;
@@ -83,12 +83,12 @@ private:
     void parseTransition(rapidxml::xml_node<>* element);
     void parseDeclarations(rapidxml::xml_node<>* element);
     void parseNamedSort(rapidxml::xml_node<>* element);
-    PetriEngine::Colored::ArcExpression* parseArcExpression(rapidxml::xml_node<>* element);
-    PetriEngine::Colored::GuardExpression* parseGuardExpression(rapidxml::xml_node<>* element);
-    PetriEngine::Colored::ColorExpression* parseColorExpression(rapidxml::xml_node<>* element);
-    PetriEngine::Colored::AllExpression* parseAllExpression(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::ArcExpression_ptr parseArcExpression(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::GuardExpression_ptr parseGuardExpression(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::ColorExpression_ptr parseColorExpression(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::AllExpression_ptr parseAllExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::ColorType* parseUserSort(rapidxml::xml_node<>* element);
-    PetriEngine::Colored::NumberOfExpression* parseNumberOfExpression(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::NumberOfExpression_ptr parseNumberOfExpression(rapidxml::xml_node<>* element);
     void parseTransportArc(rapidxml::xml_node<>* element);
     void parseValue(rapidxml::xml_node<>* element, std::string& text);
     uint32_t parseNumberConstant(rapidxml::xml_node<>* element);

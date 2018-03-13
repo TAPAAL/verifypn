@@ -26,13 +26,13 @@ namespace PetriEngine {
         struct Arc {
             uint32_t place;
             uint32_t transition;
-            ArcExpression* expr;
+            ArcExpression_ptr expr;
             bool input;
         };
         
         struct Transition {
             std::string name;
-            GuardExpression* guard;
+            GuardExpression_ptr guard;
             std::vector<std::unordered_map<std::string,const Color*>> bindings;
             std::vector<size_t> arcs;
         };

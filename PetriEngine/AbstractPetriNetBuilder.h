@@ -55,7 +55,7 @@ namespace PetriEngine {
                 double y = 0) = 0;
         /** Add a new colored transition with a unique name */
         virtual void addTransition(const std::string& name,
-                Colored::GuardExpression* guard,
+                Colored::GuardExpression_ptr guard,
                 double x = 0,
                 double y = 0)
         {
@@ -70,7 +70,7 @@ namespace PetriEngine {
         /** Add colored input arc with given arc expression */
         virtual void addInputArc(const std::string& place,
                 const std::string& transition,
-                Colored::ArcExpression* expr)
+                Colored::ArcExpression_ptr expr)
         {
             std::cout << "Colored input arcs are not supported in standard P/T nets" << std::endl;
             exit(-1);
@@ -82,7 +82,7 @@ namespace PetriEngine {
         /** Add output arc with given arc expression */
         virtual void addOutputArc(const std::string& transition,
                 const std::string& place,
-                Colored::ArcExpression* expr)
+                Colored::ArcExpression_ptr expr)
         {
             std::cout << "Colored output arcs are not supported in standard P/T nets" << std::endl;
             exit(-1);

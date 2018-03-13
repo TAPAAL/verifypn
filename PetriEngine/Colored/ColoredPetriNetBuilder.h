@@ -46,7 +46,7 @@ namespace PetriEngine {
                 double x = 0,
                 double y = 0) override;
         void addTransition(const std::string& name,
-                Colored::GuardExpression* guard,
+                Colored::GuardExpression_ptr guard,
                 double x = 0,
                 double y = 0) override;
         void addInputArc(const std::string& place,
@@ -55,13 +55,13 @@ namespace PetriEngine {
                 int) override;
         void addInputArc(const std::string& place,
                 const std::string& transition,
-                Colored::ArcExpression* expr) override;
+                Colored::ArcExpression_ptr expr) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
                 int weight = 1) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
-                Colored::ArcExpression* expr) override;
+                Colored::ArcExpression_ptr expr) override;
         void addColorType(const std::string& id,
                 Colored::ColorType* type) override;
 
@@ -130,7 +130,7 @@ namespace PetriEngine {
         
         void addArc(const std::string& place,
                 const std::string& transition,
-                Colored::ArcExpression* expr,
+                Colored::ArcExpression_ptr expr,
                 bool input);
         
         void unfoldPlace(Colored::Place& place);
@@ -154,7 +154,7 @@ namespace PetriEngine {
             std::vector<Colored::Binding>& operator*();
         };
     private:
-        Colored::GuardExpression* _expr;
+        Colored::GuardExpression_ptr _expr;
         std::vector<Colored::Binding> _bindings;
         ColoredPetriNetBuilder::ColorTypeMap& _colorTypes;
         
