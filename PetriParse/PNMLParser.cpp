@@ -235,7 +235,12 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml:
     } else if (strcmp(element->name(), "subtract") == 0) {
         auto left = element->first_node();
         auto right = left->next_sibling();
-        return std::make_shared<PetriEngine::Colored::SubtractExpression>(parseArcExpression(left), parseArcExpression(right));
+        auto res = std::make_shared<PetriEngine::Colored::SubtractExpression>(parseArcExpression(left), parseArcExpression(right));
+        auto next = right;
+        while ((next = next->next_sibling())) {
+            res = std::make_shared<PetriEngine::Colored::SubtractExpression>(res, parseArcExpression(next));
+        }
+        return res;
     } else if (strcmp(element->name(), "scalarproduct") == 0) {
         auto scalar = element->first_node();
         auto ms = scalar->next_sibling();
