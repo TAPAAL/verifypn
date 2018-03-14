@@ -123,6 +123,7 @@ namespace PetriEngine {
     }
 
     void ReducingSuccessorGenerator::constructEnabled() {
+        _ordering.clear();
         for (uint32_t p = 0; p < _net._nplaces; ++p) {
             // orphans are currently under "place 0" as a special case
             if (p == 0 || (*_parent).marking()[p] > 0) { 
