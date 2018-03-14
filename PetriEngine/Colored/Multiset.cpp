@@ -83,7 +83,7 @@ namespace PetriEngine {
                 const Color* color = DotConstant::dotConstant();
                 if (type != nullptr)
                     color = &((*type)[c.first]);
-                (*this)[color] = std::max(c.second - other[color], 0u);
+                (*this)[color] = std::min(c.second - other[color], c.second);
             }
         }
 
@@ -129,7 +129,7 @@ namespace PetriEngine {
                 return;
 
             _set.erase(std::remove_if(_set.begin(), _set.end(), [&](auto elem) {
-                return elem.second != 0;
+                return elem.second == 0;
             }));
         }
 
