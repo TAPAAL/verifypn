@@ -172,7 +172,7 @@ namespace PetriEngine {
 //            }
             Colored::ExpressionContext context {transition.bindings[i], _colors};
             Colored::Multiset ms = arc.expr->eval(context);
-            ms.clean();
+            //ms.clean();
 //            if (arc.input) {
 //                std::cout << "Arc from place '" << _places[arc.place].name << "' to transition '" << transition.name;
 //            } else {
