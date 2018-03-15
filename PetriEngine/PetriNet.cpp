@@ -42,7 +42,7 @@ namespace PetriEngine {
         _transitions[_ntransitions].outputs = _ninvariants;
         _placeToPtrs[_nplaces] = _ntransitions;
         _initialMarking = new MarkVal[_nplaces];
-        assert(_nplaces > 0);
+//        assert(_nplaces > 0);
     }
 
     PetriNet::~PetriNet() {
