@@ -393,8 +393,8 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
         if (els.size() < 2)  return nullptr; // at least two integer subexpression are required
 
         return  isMult ? 
-                std::dynamic_pointer_cast<Expr>(std::make_shared<PlusExpr>(std::move(els))) :
-                std::dynamic_pointer_cast<Expr>(std::make_shared<MultiplyExpr>(std::move(els)));
+                std::dynamic_pointer_cast<Expr>(std::make_shared<MultiplyExpr>(std::move(els))) :
+                std::dynamic_pointer_cast<Expr>(std::make_shared<PlusExpr>(std::move(els)));
 ;
     } else if (elementName == "integer-difference") {
         auto children = element->first_node();
@@ -404,7 +404,6 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
         }
         if(els.size() == 1) 
             els.emplace(els.begin(), std::make_shared<LiteralExpr>(0));
-
         return std::make_shared<SubtractExpr>(std::move(els));
     }
     return nullptr;

@@ -107,10 +107,10 @@ void PNMLParser::parse(ifstream& xml,
             }
 
             // cout << "ARC: " << source.id << " to " << target.id << " weight " << it->weight << endl;
-            auto cond = std::make_shared<GreaterThanOrEqualCondition>(
-                            std::make_shared<IdentifierExpr>(source.id),
-                            std::make_shared<LiteralExpr>(it->weight)
-                        );
+//            auto cond = std::make_shared<GreaterThanOrEqualCondition>(
+//                            std::make_shared<IdentifierExpr>(source.id),
+//                            std::make_shared<LiteralExpr>(it->weight)
+//                        );
         } else if (!source.isPlace && target.isPlace) {
             if (!isColored) {
                 builder->addOutputArc(source.id, target.id, it->weight);
@@ -132,10 +132,10 @@ void PNMLParser::parse(ifstream& xml,
         if (source.isPlace && !target.isPlace) {
             builder->addInputArc(source.id, target.id, true, inhibitor.weight);
             
-            auto cond = std::make_shared<LessThanCondition>(
-                            std::make_shared<IdentifierExpr>(source.id),
-                            std::make_shared<LiteralExpr>(inhibitor.weight)
-                        );
+//            auto cond = std::make_shared<LessThanCondition>(
+//                            std::make_shared<IdentifierExpr>(source.id),
+//                            std::make_shared<LiteralExpr>(inhibitor.weight)
+//                        );
         }
         else
         {
