@@ -128,6 +128,8 @@ namespace PetriEngine {
             /** Count size of the entire formula in number of nodes */
             virtual int formulaSize() const = 0;
             
+            virtual bool placeFree() const = 0;
+            
             void setEval(int eval) {
                 _eval = eval;
             }

@@ -434,14 +434,6 @@ namespace PetriEngine {
 
         void NaryExpr::analyze(AnalysisContext& context) {
             for(auto& e : _exprs) e->analyze(context);
-            std::sort(_exprs.begin(), _exprs.end(), [](auto& a, auto& b)
-            {
-                auto ida = dynamic_pointer_cast<PQL::IdentifierExpr>(a);
-                auto idb = dynamic_pointer_cast<PQL::IdentifierExpr>(b);
-                if(ida == NULL) return false;
-                if(ida && !idb) return true;
-                return ida->offset() < idb->offset();
-            });
         }
 
         void CommutativeExpr::analyze(AnalysisContext& context) {
@@ -456,9 +448,16 @@ namespace PetriEngine {
                     context.reportError(error);
                 }
             }
+            NaryExpr::analyze(context);
             std::sort(_ids.begin(), _ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
-            if(_exprs.size() > 0)
-                NaryExpr::analyze(context);
+            std::sort(_exprs.begin(), _exprs.end(), [](auto& a, auto& b)
+            {
+                auto ida = dynamic_pointer_cast<PQL::IdentifierExpr>(a);
+                auto idb = dynamic_pointer_cast<PQL::IdentifierExpr>(b);
+                if(ida == NULL) return false;
+                if(ida && !idb) return true;
+                return ida->offset() < idb->offset();
+            });
         }
 
         void MinusExpr::analyze(AnalysisContext& context) {
@@ -603,6 +602,7 @@ namespace PetriEngine {
         int32_t CommutativeExpr::preOp(const EvaluationContext& context) const {
             int32_t res = _constant;
             for(auto& i : _ids) res = this->apply(res, context.marking()[i.first]);
+            if(_exprs.size() > 0) res = this->apply(res, _exprs[0]->evaluate(context));
             return res;
         }
 
@@ -1161,6 +1161,27 @@ namespace PetriEngine {
             return ">=";
         }
 
+        /******************** free of places ********************/        
+
+        bool NaryExpr::placeFree() const
+        {
+            for(auto& e : _exprs)
+                if(!e->placeFree())
+                    return false;
+            return true;
+        }
+        
+        bool CommutativeExpr::placeFree() const
+        {
+            if(_ids.size() > 0) return false;
+            return NaryExpr::placeFree();
+        }
+        
+        bool MinusExpr::placeFree() const
+        {
+            return _expr->placeFree();
+        }
+        
         /******************** Expr::type() implementation ********************/
 
         Expr::Types PlusExpr::type() const {
@@ -3303,7 +3324,7 @@ namespace PetriEngine {
             if(auto p1 = dynamic_pointer_cast<CommutativeExpr>(_expr1))
                 if(auto p2 = dynamic_pointer_cast<CommutativeExpr>(_expr2))            
                     return p1->_exprs.size() + p1->_ids.size() + p2->_exprs.size() + p2->_ids.size() == 0;
-            return false;
+            return _expr1->placeFree() && _expr2->placeFree();
         }        
         
         Condition_ptr LessThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) {
@@ -3344,15 +3365,6 @@ namespace PetriEngine {
         Condition_ptr NotEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
-            for(int i = 0; i < 2; ++i)
-            {
-                if(auto e = dynamic_pointer_cast<LiteralExpr>(operator [](i)))
-                    if(e->value() == 0) 
-                        return GreaterThanCondition(
-                                operator []((i+1)%2), 
-                                operator [](i)
-                                    ).pushNegation(stats, context, nested, negated);
-            }
             if(negated) return std::make_shared<EqualCondition>(_expr1, _expr2);
             else        return std::make_shared<NotEqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);
@@ -3362,15 +3374,6 @@ namespace PetriEngine {
         Condition_ptr EqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
-            for(int i = 0; i < 2; ++i)
-            {
-                if(auto e = dynamic_pointer_cast<LiteralExpr>(operator [](i)))
-                    if(e->value() == 0) 
-                        return LessThanOrEqualCondition(
-                                operator []((i+1)%2), 
-                                operator [](i)
-                                    ).pushNegation(stats, context, nested, negated);
-            }
             if(negated) return std::make_shared<NotEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<EqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated);
@@ -3896,11 +3899,11 @@ namespace PetriEngine {
             }            
         }
        
-        CommutativeExpr::CommutativeExpr(std::vector<Expr_ptr>&& exprs, int initial)
-        : NaryExpr(), _constant(initial) {
+        void CommutativeExpr::init(std::vector<Expr_ptr>&& exprs)
+        {
             for (auto& e : exprs) {
                 if (auto lit = dynamic_pointer_cast<PQL::LiteralExpr>(e))
-                    _constant = this->apply(_constant, lit->value());
+                    _constant = apply(_constant, lit->value());
                 else if (auto id = dynamic_pointer_cast<PQL::IdentifierExpr>(e)) {
                     _ids.emplace_back(id->offset(), id->name());
                 } 
@@ -3919,6 +3922,16 @@ namespace PetriEngine {
                     _exprs.emplace_back(std::move(e));
                 }
             }
+        }
+        
+        PlusExpr::PlusExpr(std::vector<Expr_ptr>&& exprs, bool tk) : CommutativeExpr(0), tk(tk)
+        {
+            init(std::move(exprs));
+        }
+        
+        MultiplyExpr::MultiplyExpr(std::vector<Expr_ptr>&& exprs) : CommutativeExpr(1)
+        {
+            init(std::move(exprs));
         }
 
     } // PQL
