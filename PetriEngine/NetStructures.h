@@ -30,6 +30,11 @@ namespace PetriEngine {
         {
             return place < other.place;
         }
+        
+        bool operator == (const Arc& other) const
+        {
+            return place == other.place && weight == other.weight && inhib == other.inhib;
+        }
     };
 
     struct Transition {

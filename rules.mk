@@ -8,10 +8,10 @@ $(TARGET): $(DEPS) $(OBJECTS)
 	$(CC) $^ $(LDFLAGS) -o $@
 
 release: CFLAGS += -Wall -pedantic-errors -O2 -DNDEBUG
-release: LDFLAGS += -O2 -DNDEBUG
+release: LDFLAGS += -O2 -DNDEBUG -Wl,-Bstatic -lz3 -lgmp -Wl,-Bdynamic -lpthread 
 release: $(TARGET)
 debug: CFLAGS += -g
-debug: LDFLAGS += -g
+debug: LDFLAGS += -g -Wl,-Bstatic -lz3 -lgmp -Wl,-Bdynamic -lpthread 
 debug: $(TARGET)
 
 # Rules for updating lexer and parser

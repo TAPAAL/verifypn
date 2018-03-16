@@ -54,6 +54,14 @@ namespace PetriEngine {
                 auto e = res->evaluate(context);
                 if(e != Condition::RUNKNOWN) 
                 {
+                    if(res->getQuantifier() == E && res->getPath() == F)
+                    {
+                        auto ef = static_cast<EFCondition*>(res.get());
+                        if(dynamic_cast<UpperBoundsCondition*>((*ef)[0].get()))
+                        {
+                            return res;
+                        }
+                    }
                     return BooleanCondition::getShared(e);
                 }
             }

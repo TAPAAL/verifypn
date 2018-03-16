@@ -10,7 +10,7 @@
 #include "PetriEngine/SuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Expressions.h"
-#include "CTL/SearchStrategy/iSearchStrategy.h"
+#include "CTL/SearchStrategy/SearchStrategy.h"
 
 
 using namespace PetriEngine::PQL;
@@ -514,16 +514,12 @@ void OnTheFlyDG::cleanUp()
 
 void OnTheFlyDG::setQuery(const Condition_ptr& query)
 {
-    delete[] working_marking.marking();
-    delete[] query_marking.marking();
-    working_marking.setMarking(nullptr);
-    query_marking.setMarking(nullptr);
-    initialConfiguration();
     this->query = query;
     delete[] working_marking.marking();
     delete[] query_marking.marking();
     working_marking.setMarking(nullptr);
     query_marking.setMarking(nullptr);
+    initialConfiguration();
     assert(this->query);
 }
 

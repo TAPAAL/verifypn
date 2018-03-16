@@ -83,11 +83,6 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
         )
 {
 
-    if(strategytype != PetriEngine::Reachability::DFS){
-        std::cerr << "Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
-        return ErrorCode;
-    }
-
     for(auto qnum : querynumbers){
         CTLResult result(queries[qnum]);
         PetriNets::OnTheFlyDG graph(net, partial_order); 

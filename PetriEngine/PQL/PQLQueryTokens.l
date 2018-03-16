@@ -67,7 +67,6 @@ std::shared_ptr<Condition> ParseQuery(const std::string& queryString, std::vecto
 
 	//Delete the buffer
 	pqlq_delete_buffer(buf);
-        query->setPlaceNameForBounds(placenameforbound);
 	return query;
 } 
 }}

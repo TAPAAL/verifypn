@@ -11,6 +11,7 @@
  * Created on 30 March 2016, 19:50
  */
 
+#include <cassert>
 #include "SuccessorGenerator.h"
 #include "Structures/State.h"
 namespace PetriEngine {
@@ -35,11 +36,13 @@ namespace PetriEngine {
     }
 
     void SuccessorGenerator::consumePreset(Structures::State& write, uint32_t t) {
+
         const TransPtr& ptr = _net._transitions[t];
         uint32_t finv = ptr.inputs;
         uint32_t linv = ptr.outputs;
         for (; finv < linv; ++finv) {
             if(!_net._invariants[finv].inhibitor) {
+                assert(write.marking()[_net._invariants[finv].place] >= _net._invariants[finv].tokens);
                 write.marking()[_net._invariants[finv].place] -= _net._invariants[finv].tokens;
             }
         }
@@ -74,6 +77,7 @@ namespace PetriEngine {
             size_t n = write.marking()[_net._invariants[finv].place];
             n += _net._invariants[finv].tokens;
             if (n >= std::numeric_limits<uint32_t>::max()) {
+                std::cerr << "Exceeded 2**32 limit of tokens in a single place ("  << n << ")" << std::endl;
                 exit(-1);
             }
             write.marking()[_net._invariants[finv].place] = n;

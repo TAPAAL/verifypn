@@ -2,6 +2,7 @@
 #include "ReachabilityResult.h"
 #include "../PetriNetBuilder.h"
 #include "../options.h"
+#include "PetriEngine/PQL/Expressions.h"
 
 namespace PetriEngine {
     namespace Reachability {
@@ -51,9 +52,20 @@ namespace PetriEngine {
                 retval = query->isInvariant() ? Satisfied : NotSatisfied;
 
             //Print result
+            auto bound = query;
+            if(auto ef = dynamic_cast<PQL::EFCondition*>(query))
+            {
+                bound = (*ef)[0].get();
+            }
+            bound = dynamic_cast<PQL::UpperBoundsCondition*>(bound);
+            
             if (retval == Unknown)
             {
                 std::cout << "\nUnable to decide if " << querynames[index] << " is satisfied.";
+            }
+            else if(bound)
+            {
+                std::cout << ((PQL::UpperBoundsCondition*)bound)->bounds() << " " << techniques << std::endl;
             }
             else if (retval == Satisfied) {
                 if(!options->statespaceexploration)
@@ -61,16 +73,9 @@ namespace PetriEngine {
                     std::cout << "TRUE " << techniques << std::endl;
                 }
             } else if (retval == NotSatisfied) {
-                if (!query->placeNameForBound().empty()) {
-                    // find index of the place for reporting place bound
-
-                    std::cout << query->getBound() << " " << techniquesStateSpace << std::endl;
-
-                } else {
-                    if(!options->statespaceexploration)
-                    {
-                        std::cout << "FALSE " << techniques << std::endl;
-                    }
+                if(!options->statespaceexploration)
+                {
+                    std::cout << "FALSE " << techniques << std::endl;
                 }
             }
             

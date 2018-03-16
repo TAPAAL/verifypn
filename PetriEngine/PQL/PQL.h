@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <memory>
+#include <z3++.h>
 
 #include "../PetriNet.h"
 #include "../Structures/State.h"
@@ -40,7 +41,7 @@ namespace PetriEngine {
     namespace PQL {
         
         enum CTLType {PATHQEURY = 1, LOPERATOR = 2, EVAL = 3, TYPE_ERROR = -1};
-        enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, EMPTY = -1 };
+        enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, COMPCONJ = 6, DEADLOCK = 7, UPPERBOUNDS = 8, BOOLEAN = 9, EMPTY = -1 };
         enum Path { G = 1, X = 2, F = 3, U = 4, pError = -1 };
         
         
@@ -107,8 +108,9 @@ namespace PetriEngine {
             /** Perform context analysis */
             virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate the expression given marking and assignment */
-            virtual int evaluate(const EvaluationContext& context) const = 0;
+            virtual int evaluate(const EvaluationContext& context) = 0;
             int evalAndSet(const EvaluationContext& context);
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const = 0;
             /** Generate LLVM intermediate code for this expr  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert expression to string */
@@ -119,6 +121,7 @@ namespace PetriEngine {
             virtual Simplification::Member constraint(SimplificationContext& context) const = 0;
             /** Output the expression as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const = 0;
+            virtual void toBinary(std::ostream&) const = 0;
             /** Stubborn reduction: increasing and decreasing sets */
             virtual void incr(ReducingSuccessorGenerator& generator) const = 0;
             virtual void decr(ReducingSuccessorGenerator& generator) const = 0;
@@ -195,18 +198,20 @@ namespace PetriEngine {
             enum Result {RUNKNOWN=-1,RFALSE=0,RTRUE=1};
         private:
             bool _inv = false;
-            std::vector<std::string> _placenameforbound;
-            std::vector<size_t> _placeids;
-            size_t _bound = 0;
             Result _eval = RUNKNOWN;
+        protected:
+            bool _loop_sensitive = false;            
         public:
             /** Virtual destructor */
             virtual ~Condition();
             /** Perform context analysis  */
             virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate condition */
-            virtual Result evaluate(const EvaluationContext& context) const = 0;
+            virtual Result evaluate(const EvaluationContext& context) = 0;
             virtual Result evalAndSet(const EvaluationContext& context) = 0;
+            
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const = 0;
+            
             /** Generate LLVM intermediate code for this condition  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert condition to string */
@@ -219,14 +224,16 @@ namespace PetriEngine {
             virtual Simplification::Retval simplify(SimplificationContext& context) const = 0;
             /** Check if query is a reachability query */
             virtual bool isReachability(uint32_t depth = 0) const = 0;
-            /** Check if query is an upper bound query */
-            virtual bool isUpperBound() = 0;
+
+            virtual bool isLoopSensitive() const { return _loop_sensitive; };
             /** Prepare reachability queries */
             virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
-            virtual std::shared_ptr<Condition> pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated = false) const = 0;
+            virtual std::shared_ptr<Condition> pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated = false) = 0;
             
             /** Output the condition as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
+            virtual void toBinary(std::ostream& out) const = 0;
+
             /** Find interesting transitions in stubborn reduction*/
             virtual void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const = 0;
             /** Checks if the condition is trivially true */
@@ -256,42 +263,18 @@ namespace PetriEngine {
                 _inv = isInvariant;
             }
            
-            size_t getBound()
-            {
-                return _bound;
-            }
-            
             bool isInvariant()
             {
                 return _inv;
             }
             
-            void setPlaceNameForBounds(std::vector<std::string>& b)
-            {
-                _placenameforbound  = b;
-            }
-            
-            void indexPlaces(const std::unordered_map<std::string, uint32_t>& map)
-            {
-                _placeids.clear();
-                for(auto& i : _placenameforbound)
-                {
-                    _placeids.push_back(map.at(i));
-                }
-                std::sort(_placeids.begin(), _placeids.end());
-            }
-            
-            std::vector<std::string>& placeNameForBound(){
-                return _placenameforbound;
-            }
-
             virtual bool isTemporal() const { return false;}
             virtual CTLType getQueryType() const = 0;
             virtual Quantifier getQuantifier() const = 0;
             virtual Path getPath() const = 0;
             static std::shared_ptr<Condition> 
             initialMarkingRW(std::function<std::shared_ptr<Condition> ()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated);
-            virtual bool containsNext() const = 0;            
+            virtual bool containsNext() const = 0;   
         protected:
             //Value for checking if condition is trivially true or false.
             //0 is undecided (default), 1 is true, 2 is false.

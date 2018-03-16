@@ -215,6 +215,7 @@ void Algorithm::CertainZeroFPA::explore(Configuration *c)
             }
         }
     }
+    strategy->flush();
 }
 
 void Algorithm::CertainZeroFPA::addDependency(Edge *e, Configuration *target)
