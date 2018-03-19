@@ -1416,7 +1416,7 @@ yyreduce:
 
   case 26:
 #line 82 "PetriEngine/PQL/PQLQueryParser.y" /* yacc.c:1646  */
-    { (yyval.expr) = new UnfoldedIdentifierExpr(*(yyvsp[0].string)); delete (yyvsp[0].string); }
+    { (yyval.expr) = new IdentifierExpr(*(yyvsp[0].string)); delete (yyvsp[0].string); }
 #line 1421 "PetriEngine/PQL/PQLQueryParser.parser.cpp" /* yacc.c:1646  */
     break;
 

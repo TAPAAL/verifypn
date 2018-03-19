@@ -232,7 +232,15 @@ namespace PetriEngine {
             Member constraint(SimplificationContext& context) const override {
                 return _compiled->constraint(context);
             }
-
+            
+            void toBinary(std::ostream& s) const override {
+                _compiled->toBinary(s);
+            }
+            
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const
+            {
+                return _compiled->encodeSat(net, context, uses, incremented);
+            }
         private:
             std::string _name;
             Expr_ptr _compiled;

@@ -483,7 +483,7 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
                 assert(false);
                 return nullptr; // invalid place name
             }
-            auto id = std::make_shared<UnfoldedIdentifierExpr>(placeName);
+            auto id = std::make_shared<IdentifierExpr>(placeName);
             ids.emplace_back(id);
         }
         
