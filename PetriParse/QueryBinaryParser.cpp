@@ -147,7 +147,7 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
             size_t max;
             binary.read(reinterpret_cast<char*>(&size), sizeof(uint32_t));            
             binary.read(reinterpret_cast<char*>(&max), sizeof(size_t));            
-            std::vector<UpperBoundsCondition::place_t> places;
+            std::vector<UnfoldedUpperBoundsCondition::place_t> places;
             for(size_t i = 0; i < size; ++i)
             {
                 uint32_t id;
@@ -155,7 +155,7 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
                 places.emplace_back(names[id]);
                 places.back()._place = id;
             }
-            return std::make_shared<UpperBoundsCondition>(places, max);
+            return std::make_shared<UnfoldedUpperBoundsCondition>(places, max);
         }
         else
         {

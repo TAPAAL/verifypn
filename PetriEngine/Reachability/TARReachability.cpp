@@ -784,7 +784,7 @@ namespace PetriEngine {
             states.clear();
             std::cout << "STEPS : " << stepno << std::endl;
             std::cout << "INTERPOLANT AUTOMATAS : " << initial_interpols.size() << std::endl;
-            if(auto upper = dynamic_cast<PQL::UpperBoundsCondition*>(query.get()))
+            if(auto upper = dynamic_cast<PQL::UnfoldedUpperBoundsCondition*>(query.get()))
             {
                 EvaluationContext eval(initial.marking(),&_net);
                 upper->evaluate(eval);

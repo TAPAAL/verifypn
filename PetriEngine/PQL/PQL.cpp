@@ -57,7 +57,7 @@ namespace PetriEngine {
                     if(res->getQuantifier() == E && res->getPath() == F)
                     {
                         auto ef = static_cast<EFCondition*>(res.get());
-                        if(dynamic_cast<UpperBoundsCondition*>((*ef)[0].get()))
+                        if(dynamic_cast<UnfoldedUpperBoundsCondition*>((*ef)[0].get()))
                         {
                             return res;
                         }

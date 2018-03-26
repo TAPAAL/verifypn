@@ -272,7 +272,7 @@ namespace PetriEngine {
             out << "deadlock";
         }
         
-        void UpperBoundsCondition::toString(std::ostream& out) const {
+        void UnfoldedUpperBoundsCondition::toString(std::ostream& out) const {
             out << "bounds (";
             for(size_t i = 0; i < _places.size(); ++i)
             {
@@ -370,7 +370,7 @@ namespace PetriEngine {
             out << "deadlock";
         }
 
-        void UpperBoundsCondition::toTAPAALQuery(std::ostream& out, TAPAALConditionExportContext&) const {
+        void UnfoldedUpperBoundsCondition::toTAPAALQuery(std::ostream& out, TAPAALConditionExportContext&) const {
             out << "bounds (";
             for(size_t i = 0; i < _places.size(); ++i)
             {
@@ -632,7 +632,38 @@ namespace PetriEngine {
             c.setHasDeadlock();
         }
         
-        void UpperBoundsCondition::analyze(AnalysisContext& c)
+        void UpperBoundsCondition::analyze(AnalysisContext& context)
+        {
+            if (_compiled) {
+                _compiled->analyze(context);
+                return;
+            }
+
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
+            if(coloredContext != nullptr && coloredContext->isColored())
+            {
+                std::vector<std::string> uplaces;
+                for(auto& p : _places)
+                {
+                    std::unordered_map<uint32_t,std::string> names;
+                    if (!coloredContext->resolvePlace(p, names)) {
+                        ExprError error("Unable to resolve colored identifier \"" + p + "\"", p.length());
+                        coloredContext->reportError(error);
+                    }
+
+                    for(auto& id : names)
+                    {
+                        uplaces.push_back(names[id.first]);
+                    }
+                }
+                _compiled = std::make_shared<UnfoldedUpperBoundsCondition>(uplaces);
+            } else {
+                _compiled = std::make_shared<UnfoldedUpperBoundsCondition>(_places);
+            }
+            _compiled->analyze(context);
+        }
+        
+        void UnfoldedUpperBoundsCondition::analyze(AnalysisContext& c)
         {
             for(auto& p : _places)
             {
@@ -787,7 +818,7 @@ namespace PetriEngine {
             return RTRUE;
         }
         
-        Condition::Result UpperBoundsCondition::evaluate(const EvaluationContext& context) {
+        Condition::Result UnfoldedUpperBoundsCondition::evaluate(const EvaluationContext& context) {
             size_t tmp = 0;
             for(auto& p : _places)
             {
@@ -916,7 +947,7 @@ namespace PetriEngine {
             return isSatisfied() ? RTRUE : RFALSE;
         }
         
-        Condition::Result UpperBoundsCondition::evalAndSet(const EvaluationContext& context)
+        Condition::Result UnfoldedUpperBoundsCondition::evalAndSet(const EvaluationContext& context)
         {
             auto res = evaluate(context);
             setSatisfied(res);
@@ -1087,7 +1118,7 @@ namespace PetriEngine {
             return res;
         }
 
-        z3::expr UpperBoundsCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+        z3::expr UnfoldedUpperBoundsCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             auto res = context.int_val(0);
             
             for(auto& p : _places)
@@ -1333,7 +1364,7 @@ namespace PetriEngine {
             return 0;
         }
 
-        uint32_t UpperBoundsCondition::distance(DistanceContext& context) const 
+        uint32_t UnfoldedUpperBoundsCondition::distance(DistanceContext& context) const 
         {
             size_t tmp = 0;
             for(auto& p : _places)
@@ -1598,7 +1629,7 @@ namespace PetriEngine {
             out.write(reinterpret_cast<const char*>(&_value), sizeof(bool));
         }
         
-        void UpperBoundsCondition::toBinary(std::ostream& out) const
+        void UnfoldedUpperBoundsCondition::toBinary(std::ostream& out) const
         {
             auto path = getPath();
             auto quant = Quantifier::UPPERBOUNDS;
@@ -1899,7 +1930,7 @@ namespace PetriEngine {
             generateTabs(out,tabs) << "<deadlock/>\n"; 
         }
         
-        void UpperBoundsCondition::toXML(std::ostream& out, uint32_t tabs) const {
+        void UnfoldedUpperBoundsCondition::toXML(std::ostream& out, uint32_t tabs) const {
             generateTabs(out, tabs) << "<place-bound>\n";
             for(auto& p : _places)
                 generateTabs(out, tabs + 1) << "<place>" << p._name << "</place>\n";
@@ -2731,7 +2762,7 @@ namespace PetriEngine {
             }
         }
         
-        Retval UpperBoundsCondition::simplify(SimplificationContext& context) const 
+        Retval UnfoldedUpperBoundsCondition::simplify(SimplificationContext& context) const 
         {
             std::vector<place_t> next;
             for(auto& p : _places)
@@ -2810,7 +2841,7 @@ namespace PetriEngine {
             {
                 tmax = 0;
             }
-            return Retval(std::make_shared<UpperBoundsCondition>(next, tmax));
+            return Retval(std::make_shared<UnfoldedUpperBoundsCondition>(next, tmax));
         }
         
         /******************** Check if query is a reachability query ********************/
@@ -2870,7 +2901,7 @@ namespace PetriEngine {
             return depth > 0;
         }
         
-        bool UpperBoundsCondition::isReachability(uint32_t depth) const {
+        bool UnfoldedUpperBoundsCondition::isReachability(uint32_t depth) const {
             return depth > 0;
         }
                 
@@ -2931,7 +2962,7 @@ namespace PetriEngine {
             return NULL;
         }
 
-        Condition_ptr UpperBoundsCondition::prepareForReachability(bool negated) const {
+        Condition_ptr UnfoldedUpperBoundsCondition::prepareForReachability(bool negated) const {
             return NULL;
         }
         
@@ -3457,13 +3488,13 @@ namespace PetriEngine {
             }, stats, context, nested, negated);
         }
         
-        Condition_ptr UpperBoundsCondition::pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) {
+        Condition_ptr UnfoldedUpperBoundsCondition::pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated) {
             if(negated)
             {
                 std::cout << "UPPER BOUNDS CANNOT BE NEGATED!" << std::endl;
                 exit(-1);
             }
-            return std::make_shared<UpperBoundsCondition>(_places, _max);
+            return std::make_shared<UnfoldedUpperBoundsCondition>(_places, _max);
         }
 
         
@@ -3750,7 +3781,7 @@ namespace PetriEngine {
             } // else add nothing
         }
 
-        void UpperBoundsCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+        void UnfoldedUpperBoundsCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             for(auto& p : _places)
                 generator.presetOf(p._place);
         }

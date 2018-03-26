@@ -1006,8 +1006,56 @@ namespace PetriEngine {
             bool containsNext() const override { return false; }
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
         };
-        
+
         class UpperBoundsCondition : public Condition
+        {
+        public:
+            
+            UpperBoundsCondition(const std::vector<std::string>& places) : _places(places)
+            {
+            }
+
+            int formulaSize() const override{
+                return _places.size();
+            }
+            void analyze(AnalysisContext& context) override;
+            Result evaluate(const EvaluationContext& context) override
+            { return _compiled->evaluate(context); }
+            Result evalAndSet(const EvaluationContext& context) override
+            { return _compiled->evalAndSet(context); }
+            uint32_t distance(DistanceContext& context) const override
+            { return _compiled->distance(context); }
+            void toString(std::ostream& out) const override
+            { _compiled->toString(out); }
+            void toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const override
+            { _compiled->toTAPAALQuery(out, context); }
+            void toBinary(std::ostream& out) const override
+            { return _compiled->toBinary(out); }
+            Retval simplify(SimplificationContext& context) const override
+            { return _compiled->simplify(context); }
+            bool isReachability(uint32_t depth) const override
+            { return _compiled->isReachability(depth); }
+            Condition_ptr prepareForReachability(bool negated) const override
+            { return _compiled->prepareForReachability(negated); }
+            Condition_ptr pushNegation(negstat_t& neg, const EvaluationContext& context, bool nested, bool negated) override
+            { return _compiled->pushNegation(neg, context, nested, negated); }
+            void toXML(std::ostream& out, uint32_t tabs) const override
+            { _compiled->toXML(out, tabs); }
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const
+            { _compiled->findInteresting(generator, negated);}
+            Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
+            Path getPath() const override { return Path::pError; }
+            CTLType getQueryType() const override { return CTLType::EVAL; }
+            bool containsNext() const override { return false; }
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+            { return _compiled->encodeSat(net, context, uses, incremented); }
+        private:
+            std::vector<std::string> _places;
+            Condition_ptr _compiled;
+
+        };
+        
+        class UnfoldedUpperBoundsCondition : public Condition
         {
         public:
             struct place_t {
@@ -1022,11 +1070,11 @@ namespace PetriEngine {
                 }
             };
             
-            UpperBoundsCondition(const std::vector<std::string>& places)
+            UnfoldedUpperBoundsCondition(const std::vector<std::string>& places)
             {
                 for(auto& s : places) _places.push_back(s);
             }
-            UpperBoundsCondition(const std::vector<place_t>& places, size_t max)
+            UnfoldedUpperBoundsCondition(const std::vector<place_t>& places, size_t max)
                     : _places(places), _max(max) {
             };
             int formulaSize() const override{

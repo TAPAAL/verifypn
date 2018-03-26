@@ -57,7 +57,7 @@ namespace PetriEngine {
             {
                 bound = (*ef)[0].get();
             }
-            bound = dynamic_cast<PQL::UpperBoundsCondition*>(bound);
+            bound = dynamic_cast<PQL::UnfoldedUpperBoundsCondition*>(bound);
             
             if (retval == Unknown)
             {
@@ -65,7 +65,7 @@ namespace PetriEngine {
             }
             else if(bound)
             {
-                std::cout << ((PQL::UpperBoundsCondition*)bound)->bounds() << " " << techniques << std::endl;
+                std::cout << ((PQL::UnfoldedUpperBoundsCondition*)bound)->bounds() << " " << techniques << std::endl;
             }
             else if (retval == Satisfied) {
                 if(!options->statespaceexploration)
