@@ -492,28 +492,25 @@ namespace PetriEngine {
                 return;
             }
 
-            try {
-                auto& coloredContext = dynamic_cast<ColoredAnalysisContext&>(context);
-                if (!coloredContext.isColored()) {
-                    throw bad_cast();
-                }
-
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
+            if(coloredContext != nullptr && coloredContext->isColored())
+            {
                 std::unordered_map<uint32_t,std::string> names;
-                if (!coloredContext.resolvePlace(_name, names)) {
+                if (!coloredContext->resolvePlace(_name, names)) {
                     ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
-                    coloredContext.reportError(error);
+                    coloredContext->reportError(error);
                 }
 
                 if (names.size() == 1) {
-                    _compiled = generateUnfoldedIdentifierExpr(coloredContext, names, 0);
+                    _compiled = generateUnfoldedIdentifierExpr(*coloredContext, names, 0);
                 } else {
                     std::vector<Expr_ptr> identifiers;
                     for (auto& unfoldedName : names) {
-                        identifiers.push_back(generateUnfoldedIdentifierExpr(coloredContext,names,unfoldedName.first));
+                        identifiers.push_back(generateUnfoldedIdentifierExpr(*coloredContext,names,unfoldedName.first));
                     }
                     _compiled = std::make_shared<PQL::PlusExpr>(std::move(identifiers));
                 }
-            } catch (bad_cast&) {
+            } else {
                 _compiled = std::make_shared<UnfoldedIdentifierExpr>(_name, getPlace(context, _name));
             }
             _compiled->analyze(context);
@@ -588,16 +585,12 @@ namespace PetriEngine {
                 return;
             }
 
-            try {
-                auto& coloredContext = dynamic_cast<ColoredAnalysisContext&>(context);
-                if (!coloredContext.isColored()) {
-                    throw bad_cast();
-                }
-
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
+            if(coloredContext != nullptr && coloredContext->isColored()) {
                 std::vector<std::string> names;
-                if (!coloredContext.resolveTransition(_name, names)) {
+                if (!coloredContext->resolveTransition(_name, names)) {
                     ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
-                    coloredContext.reportError(error);
+                    coloredContext->reportError(error);
                 }
 
                 if (names.size() == 1) {
@@ -609,7 +602,7 @@ namespace PetriEngine {
                     }
                     _compiled = std::make_shared<OrCondition>(std::move(identifiers));
                 }
-            } catch (bad_cast&) {
+            } else {
                 _compiled = std::make_shared<UnfoldedFireableCondition>(_name);
             }
             _compiled->analyze(context);
