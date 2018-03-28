@@ -221,7 +221,8 @@ namespace PetriEngine {
             void toString(std::ostream& os) const override {
                 if(_compiled)
                     _compiled->toString(os);
-                os << _name;
+                else
+                    os << _name;
             }
             Expr::Types type() const override {
                 if(_compiled) return _compiled->type();

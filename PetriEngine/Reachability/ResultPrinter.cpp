@@ -25,9 +25,9 @@ namespace PetriEngine {
             if(options->cpnOverApprox)
             {
                 if (result == Satisfied)
-                    retval = query->isInvariant() ? Unknown : Satisfied;
+                    retval = query->isInvariant() ? Unknown : Unknown;
                 else if (result == NotSatisfied)
-                    retval = query->isInvariant() ? Satisfied : Unknown;                
+                    retval = query->isInvariant() ? Satisfied : NotSatisfied;                
                 if(retval == Unknown)
                 {
                     std::cout << "\nUnable to decide if " << querynames[index] << " is satisfied.\n\n";
