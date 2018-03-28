@@ -656,8 +656,16 @@ int main(int argc, char* argv[]) {
     options.print();
   
     ColoredPetriNetBuilder cpnBuilder;
-    if(parseModel(cpnBuilder, options) != ContinueCode) return ErrorCode;
-    if(options.cpnOverApprox && !cpnBuilder.isColored()) return ErrorCode;
+    if(parseModel(cpnBuilder, options) != ContinueCode) 
+    {
+        std::cerr << "Error parsing the model" << std::endl;
+        return ErrorCode;
+    }
+    if(options.cpnOverApprox && !cpnBuilder.isColored())
+    {
+        std::cerr << "CPN OverApproximation is only usable on colored models" << std::endl;
+        return UnknownCode;
+    }
     
     //----------------------- Parse Query -----------------------//
     std::vector<std::string> querynames;
@@ -714,7 +722,11 @@ int main(int argc, char* argv[]) {
     MarkVal* qm0 = qnet->makeInitialMarking();
     ResultPrinter p2(&b2, &options, querynames);
 
-    if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)  return ErrorCode;
+    if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
+    {
+        std::cerr << "Could not analyze the queries" << std::endl;
+        return ErrorCode;
+    }
 
     if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout == 0)
     { 
@@ -955,7 +967,11 @@ int main(int argc, char* argv[]) {
         PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
 
         // Assign indexes
-        if(queries.size() == 0 || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)  return ErrorCode;
+        if(queries.size() == 0 || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)
+        {
+            std::cerr << "An error occurred while assigning indexes" << std::endl;
+            return ErrorCode;
+        }
         if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
         v = CTLMain(net.get(),
             options.ctlalgorithm,
