@@ -699,7 +699,6 @@ int main(int argc, char* argv[]) {
     }
 
     if (options.cpnOverApprox) {
-        std::cout << "CTL APPROX" << std::endl;
         for (ssize_t qid = queries.size() - 1; qid >= 0; --qid) {
             auto& q = queries[qid];
             if (!q->isReachability() || q->isLoopSensitive() || q->getQuantifier() == UPPERBOUNDS) {

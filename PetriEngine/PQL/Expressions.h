@@ -586,7 +586,7 @@ namespace PetriEngine {
                 return _compiled->simplify(context); 
             }
             bool isReachability(uint32_t depth) const override
-            { return _compiled->isReachability(depth); }
+            { return true;}
             Condition_ptr prepareForReachability(bool negated) const override
             { return _compiled->prepareForReachability(negated); }
 
