@@ -667,14 +667,23 @@ int main(int argc, char* argv[]) {
             negstat_t stats;            
             EvaluationContext context(nullptr, nullptr);
             // see if we can turn the proposition into a reachability just by logical rewrites.
-            auto q = queries[qid]->pushNegation(stats, context, false, false, false)->prepareForReachability();
-            if (q == nullptr || q->isLoopSensitive()) {
+            queries[qid] = queries[qid]->pushNegation(stats, context, false, false, false)->prepareForReachability();
+            if (queries[qid] == nullptr || queries[qid]->isLoopSensitive()) {
                 std::cerr << "Warning: CPN OverApproximation is only available for Reachability queries without deadlock, skipping " << querynames[qid] << std::endl;
                 queries.erase(queries.begin() + qid);
                 querynames.erase(querynames.begin() + qid);
             }
         }
     }
+    else if(cpnBuilder.isColored())
+    {
+        negstat_t stats;            
+        EvaluationContext context(nullptr, nullptr);
+        for (auto qid = queries.size() - 1; qid >= 0; --qid) {
+            queries[qid] = queries[qid]->pushNegation(stats, context, false, false, false);
+        }
+    }
+    
     auto builder = options.cpnOverApprox ? cpnBuilder.stripColors() : cpnBuilder.unfold();
     printUnfoldingStats(cpnBuilder, options);
     builder.sort();
