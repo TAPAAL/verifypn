@@ -701,8 +701,8 @@ int main(int argc, char* argv[]) {
     if (options.cpnOverApprox) {
         for (ssize_t qid = queries.size() - 1; qid >= 0; --qid) {
             auto q = queries[qid]->prepareForReachability();
-            if (q == nullptr || q->isLoopSensitive()) {
-                std::cerr << "Warning: CPN OverApproximation is only available for Reachability queries without deadlock, skipping " << querynames[qid] << std::endl;
+            if (q == nullptr || q->isLoopSensitive() || q->getQuantifier() == UPPERBOUNDS) {
+                std::cerr << "Warning: CPN OverApproximation is only available for Reachability queries without deadlock and UpperBounds, skipping " << querynames[qid] << std::endl;
                 queries.erase(queries.begin() + qid);
                 querynames.erase(querynames.begin() + qid);
             }
