@@ -1168,30 +1168,41 @@ namespace PetriEngine {
                     ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers);
                 do{
                     changed = false;
-                    if(!next_safe) changed |= ReducebyRuleB(context.getQueryPlaceCount());
-                    if(!next_safe) changed |= ReducebyRuleA(context.getQueryPlaceCount());
-                                   changed |= ReducebyRuleE(context.getQueryPlaceCount());
-                    if(!next_safe) changed |= ReducebyRuleF(context.getQueryPlaceCount());
-                    if(!next_safe) changed |= ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers);
-                    if(!remove_loops && !next_safe) 
-                        changed |= ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers);
+                    if(!next_safe) {
+                        changed |= ReducebyRuleB(context.getQueryPlaceCount());
+                        changed |= ReducebyRuleA(context.getQueryPlaceCount());
+                    }
+                    changed |= ReducebyRuleE(context.getQueryPlaceCount());
+                    if(!next_safe) 
+                    {
+                        changed |= ReducebyRuleF(context.getQueryPlaceCount());
+                        changed |= ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers);
+                        if(!remove_loops) 
+                            changed |= ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers);
+                    }
                 } while(changed && !hasTimedout());
                 // RuleC and RuleD are expensive, so wait with those till nothing else changes
-                               changed |= ReducebyRuleC(context.getQueryPlaceCount());
-                if(!next_safe) changed |= ReducebyRuleD(context.getQueryPlaceCount());
+                changed |= ReducebyRuleC(context.getQueryPlaceCount());
+                if(!next_safe) 
+                {
+                    changed |= ReducebyRuleD(context.getQueryPlaceCount());
 
-                if(!changed && !next_safe)
-                    // Only try RuleH last. It can reduce applicability of other rules.
-                    changed |= ReducebyRuleH(context.getQueryPlaceCount());
+                    if(!changed)
+                        // Only try RuleH last. It can reduce applicability of other rules.
+                        changed |= ReducebyRuleH(context.getQueryPlaceCount());
+                }
             } while(!hasTimedout() && changed);
 
         } else if (enablereduction == 2) { // for k-boundedness checking only rules A, D and H are applicable
             bool changed = true;
             while (changed && !hasTimedout()) {
                 changed = false;
-                if(!next_safe) changed |= ReducebyRuleA(context.getQueryPlaceCount());
-                if(!next_safe) changed |= ReducebyRuleD(context.getQueryPlaceCount());
-                if(!next_safe) changed |= ReducebyRuleH(context.getQueryPlaceCount());
+                if(!next_safe)
+                {
+                    changed |= ReducebyRuleA(context.getQueryPlaceCount());
+                    changed |= ReducebyRuleD(context.getQueryPlaceCount());
+                    changed |= ReducebyRuleH(context.getQueryPlaceCount());
+                }
             }
         }
     }

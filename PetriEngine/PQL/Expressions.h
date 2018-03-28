@@ -1109,7 +1109,7 @@ namespace PetriEngine {
             { return _compiled->pushNegation(neg, context, nested, negated, initrw); }
             void toXML(std::ostream& out, uint32_t tabs) const override
             { _compiled->toXML(out, tabs); }
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override
             { _compiled->findInteresting(generator, negated);}
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
