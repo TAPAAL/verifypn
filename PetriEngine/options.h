@@ -37,7 +37,11 @@ struct options_t {
     
     std::string query_out_file;
     std::string model_out_file;
+
     
+    //CPN Specific options
+    bool cpnOverApprox = false;
+
     void print() {
         if (!printstatistics) {
             return;

@@ -15,7 +15,7 @@
 #include <chrono>
 
 namespace PetriEngine {
-    ColoredPetriNetBuilder::ColoredPetriNetBuilder() : _unfolded(false) {
+    ColoredPetriNetBuilder::ColoredPetriNetBuilder() {
     }
 
     ColoredPetriNetBuilder::ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig) {
@@ -23,13 +23,13 @@ namespace PetriEngine {
 
     ColoredPetriNetBuilder::~ColoredPetriNetBuilder() {
     }
-    
+
     void ColoredPetriNetBuilder::addPlace(const std::string& name, int tokens, double x, double y) {
         if (!_isColored) {
             _ptBuilder.addPlace(name, tokens, x, y);
         }
     }
-    
+
     void ColoredPetriNetBuilder::addPlace(const std::string& name, Colored::ColorType* type, Colored::Multiset tokens, double x, double y) {
         if(_placenames.count(name) == 0)
         {
@@ -38,13 +38,13 @@ namespace PetriEngine {
             _placenames[name] = next;
         }
     }
-    
+
     void ColoredPetriNetBuilder::addTransition(const std::string& name, double x, double y) {
         if (!_isColored) {
             _ptBuilder.addTransition(name, x, y);
         }
     }
-    
+
     void ColoredPetriNetBuilder::addTransition(const std::string& name, Colored::GuardExpression_ptr guard, double x, double y) {
         if(_transitionnames.count(name) == 0)
         {
@@ -53,27 +53,27 @@ namespace PetriEngine {
             _transitionnames[name] = next;
         }
     }
-    
+
     void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, bool inhibitor, int weight) {
         if (!_isColored) {
             _ptBuilder.addInputArc(place, transition, inhibitor, weight);
         }
     }
-    
+
     void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, Colored::ArcExpression_ptr expr) {
         addArc(place, transition, expr, true);
     }
-    
+
     void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, int weight) {
         if (!_isColored) {
             _ptBuilder.addOutputArc(transition, place, weight);
         }
     }
-    
+
     void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, Colored::ArcExpression_ptr expr) {
         addArc(place, transition, expr, false);
     }
-    
+
     void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, Colored::ArcExpression_ptr expr, bool input) {
         if(_transitionnames.count(transition) == 0)
         {
@@ -87,12 +87,12 @@ namespace PetriEngine {
         }
         uint32_t p = _placenames[place];
         uint32_t t = _transitionnames[transition];
-        
+
         assert(t < _transitions.size());
         assert(p < _places.size());
-        
+
         //std::set<Colored::Variable*> variables;
-        
+
         Colored::Arc arc;
         arc.place = p;
         arc.transition = t;
@@ -103,18 +103,19 @@ namespace PetriEngine {
         _arcs.push_back(arc);
 //        assert(_transitions[t].arcs.back() == &_arcs.back());
     }
-    
+
     void ColoredPetriNetBuilder::addColorType(const std::string& id, Colored::ColorType* type) {
         _colors[id] = type;
     }
-    
+
     void ColoredPetriNetBuilder::sort() {
-        
+
     }
-    
+
     PetriNetBuilder& ColoredPetriNetBuilder::unfold() {
-        auto start = std::chrono::high_resolution_clock::now();
+        if (_stripped) assert(false);
         if (_isColored && !_unfolded) {
+            auto start = std::chrono::high_resolution_clock::now();
             for (auto& place : _places) {
                 unfoldPlace(place);
             }
@@ -127,13 +128,13 @@ namespace PetriEngine {
                 unfoldArc(arc);
             }
             _unfolded = true;
+            auto end = std::chrono::high_resolution_clock::now();
+            _time = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
         }
-        auto end = std::chrono::high_resolution_clock::now();
-        _time = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
 
         return _ptBuilder;
     }
-    
+
     void ColoredPetriNetBuilder::unfoldPlace(Colored::Place& place) {
         //std::cout << place.name << std::endl;
         for (size_t i = 0; i < place.type->size(); ++i) {
@@ -146,7 +147,7 @@ namespace PetriEngine {
             ++_nptplaces;
         }
     }
-    
+
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         //std::cout << transition.name << std::endl;
         BindingGenerator gen(transition, _arcs, _colors);
@@ -163,7 +164,7 @@ namespace PetriEngine {
             ++_npttransitions;
         }
     }
-    
+
     void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc) {
         Colored::Transition& transition = _transitions[arc.transition];
         for (size_t i = 0; i < transition.bindings.size(); ++i) {
@@ -208,36 +209,61 @@ namespace PetriEngine {
             }
         }
     }
-    
+
+    PetriNetBuilder& ColoredPetriNetBuilder::stripColors() {
+        if (_unfolded) assert(false);
+        if (_isColored && !_stripped) {
+            for (auto& place : _places) {
+                _ptBuilder.addPlace(place.name, place.marking.size(), 0.0, 0.0);
+            }
+
+            for (auto& transition : _transitions) {
+                _ptBuilder.addTransition(transition.name, 0.0, 0.0);
+            }
+
+            for (auto& arc : _arcs) {
+                if (arc.input) {
+                    _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false, arc.expr->weight());
+                } else {
+                    _ptBuilder.addOutputArc(_transitions[arc.transition].name, _places[arc.place].name, arc.expr->weight());
+                }
+            }
+            _stripped = true;
+            _isColored = false;
+        }
+
+        return _ptBuilder;
+    }
+
     BindingGenerator::Iterator::Iterator(BindingGenerator* generator)
             : _generator(generator)
     {
     }
-            
+
     bool BindingGenerator::Iterator::operator==(Iterator& other) {
         return _generator == other._generator;
     }
-    
+
     bool BindingGenerator::Iterator::operator!=(Iterator& other) {
         return _generator != other._generator;
     }
-    
+
     BindingGenerator::Iterator& BindingGenerator::Iterator::operator++() {
         _generator->nextBinding();
         if (_generator->isInitial()) _generator = nullptr;
         return *this;
     }
-    
+
     std::vector<Colored::Binding> BindingGenerator::Iterator::operator++(int) {
         auto prev = _generator->currentBinding();
         ++*this;
         return prev;
     }
-    
+
     std::vector<Colored::Binding>& BindingGenerator::Iterator::operator*() {
         return _generator->currentBinding();
     }
-    
+
     BindingGenerator::BindingGenerator(Colored::Transition& transition,
             const std::vector<Colored::Arc>& arcs,
             ColoredPetriNetBuilder::ColorTypeMap& colorTypes)
@@ -263,11 +289,11 @@ namespace PetriEngine {
         if (!eval())
             nextBinding();
     }
-    
+
     bool BindingGenerator::eval() {
         if (_expr == nullptr)
             return true;
-        
+
         std::unordered_map<std::string, const Colored::Color*> binding;
         for (auto& elem : _bindings) {
             //printf("Evaluating var '%s' with color '%s'\n", elem.var->name.c_str(), elem.color->toString().c_str());
@@ -286,30 +312,30 @@ namespace PetriEngine {
                     break;
                 }
             }
-            
+
             if (isInitial())
                 break;
-            
+
             test = eval();
         }
         return _bindings;
     }
-    
+
     std::vector<Colored::Binding>& BindingGenerator::currentBinding() {
         return _bindings;
     }
-    
+
     bool BindingGenerator::isInitial() const {
         for (auto& b : _bindings) {
             if (b.color->getId() != 0) return false;
         }
         return true;
     }
-    
+
     BindingGenerator::Iterator BindingGenerator::begin() {
         return Iterator(this);
     }
-    
+
     BindingGenerator::Iterator BindingGenerator::end() {
         return Iterator(nullptr);
     }

@@ -46,10 +46,20 @@ namespace PetriEngine {
                 return retval;
             }
 
-            if (result == Satisfied)
-                retval = query->isInvariant() ? NotSatisfied : Satisfied;
-            else if (result == NotSatisfied)
-                retval = query->isInvariant() ? Satisfied : NotSatisfied;
+            if(options->cpnOverApprox)
+            {
+                if (result == Satisfied)
+                    retval = query->isInvariant() ? Unknown : Satisfied;
+                else if (result == NotSatisfied)
+                    retval = query->isInvariant() ? Satisfied : Unknown;                
+            }
+            else
+            {
+                if (result == Satisfied)
+                    retval = query->isInvariant() ? NotSatisfied : Satisfied;
+                else if (result == NotSatisfied)
+                    retval = query->isInvariant() ? Satisfied : NotSatisfied;
+            }
 
             //Print result
             auto bound = query;

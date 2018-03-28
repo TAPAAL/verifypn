@@ -392,6 +392,7 @@ namespace PetriEngine {
                 std::cout << "ArcExpression" << std::endl;
             }
 
+            virtual uint32_t weight() const = 0;
         };
 
         typedef std::shared_ptr<ArcExpression> ArcExpression_ptr;
@@ -408,6 +409,10 @@ namespace PetriEngine {
                     colors.push_back(&(*_sort)[i]);
                 }
                 return colors;
+            }
+
+            size_t size() const {
+                return  _sort->size();
             }
             
             AllExpression(ColorType* sort) : _sort(sort) 
@@ -448,7 +453,14 @@ namespace PetriEngine {
                     elem->getVariables(variables);
                 }
             }
-            
+
+            uint32_t weight() const override {
+                if (_all == nullptr)
+                    return _number * _color.size();
+                else
+                    return _number * _all->size();
+            }
+
             NumberOfExpression(std::vector<ColorExpression_ptr> color, uint32_t number = 1)
                     : _number(number), _color(color), _all(nullptr) {}
             NumberOfExpression(AllExpression_ptr all, uint32_t number = 1)
@@ -475,7 +487,15 @@ namespace PetriEngine {
                     elem->getVariables(variables);
                 }
             }
-            
+
+            uint32_t weight() const override {
+                uint32_t res = 0;
+                for (auto expr : _constituents) {
+                    res += expr->weight();
+                }
+                return res;
+            }
+
             AddExpression(std::vector<ArcExpression_ptr> constituents)
                     : _constituents(constituents) {}
         };
@@ -494,7 +514,11 @@ namespace PetriEngine {
                 _left->getVariables(variables);
                 _right->getVariables(variables);
             }
-            
+
+            uint32_t weight() const override {
+                return _left->weight() - _right->weight();
+            }
+
             SubtractExpression(ArcExpression_ptr left, ArcExpression_ptr right)
                     : _left(left), _right(right) {}
         };
@@ -512,7 +536,11 @@ namespace PetriEngine {
             void getVariables(std::set<Variable*>& variables) const override {
                 _expr->getVariables(variables);
             }
-            
+
+            uint32_t weight() const override {
+                return _scalar * _expr->weight();
+            }
+
             ScalarProductExpression(ArcExpression_ptr expr, uint32_t scalar)
                     : _scalar(scalar), _expr(expr) {}
         };

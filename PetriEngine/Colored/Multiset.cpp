@@ -181,6 +181,14 @@ namespace PetriEngine {
 
             return oss.str();
         }
+
+        size_t Multiset::size() const {
+            size_t res = 0;
+            for (auto item : _set) {
+                res += item.second;
+            }
+            return res;
+        }
     }
 }
 

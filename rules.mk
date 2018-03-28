@@ -10,6 +10,11 @@ $(TARGET): $(DEPS) $(OBJECTS)
 release: CFLAGS += -Wall -pedantic-errors -O2 -DNDEBUG
 release: LDFLAGS += -O2 -DNDEBUG -Wl,-Bstatic -lz3 -lgmp -Wl,-Bdynamic -lpthread 
 release: $(TARGET)
+
+mcc: CFLAGS += -Wall -pedantic-errors -O2 -DNDEBUG
+mcc: LDFLAGS += -O2 -DNDEBUG -Wl,-Bstatic -lz3 -lgmp -Wl,-Bdynamic -lpthread 
+mcc: $(TARGET)-mcc
+
 debug: CFLAGS += -g
 debug: LDFLAGS += -g -Wl,-Bstatic -lz3 -lgmp -Wl,-Bdynamic -lpthread 
 debug: $(TARGET)

@@ -64,6 +64,8 @@ namespace PetriEngine {
             size_t distinctSize() const {
                 return _set.size();
             }
+
+            size_t size() const;
             
             Iterator begin();
             Iterator end();

@@ -110,6 +110,7 @@ namespace PetriEngine {
         }
         
         PetriNetBuilder& unfold();
+        PetriNetBuilder& stripColors();
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
         std::unordered_map<std::string,uint32_t> _transitionnames;
@@ -124,7 +125,8 @@ namespace PetriEngine {
         std::vector<Colored::Arc> _arcs;
         ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
-        bool _unfolded;
+        bool _unfolded = false;
+        bool _stripped = false;
 
         double _time;
         

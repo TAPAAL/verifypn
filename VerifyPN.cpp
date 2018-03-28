@@ -267,6 +267,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
         } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
             options.gamemode = true;
+        } else if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--cpn-overapproximation") == 0) {
+            options.cpnOverApprox = true;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
                     "A tool for answering CTL and reachability queries of place cardinality\n" 
@@ -301,6 +303,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -ctl <type>                        Verify CTL properties\n"
                     "                                     - local     Liu and Smolka's on-the-fly algorithm\n"
                     "                                     - czero     local with certain zero extension (default)\n"
+                    "  -c, --cpn-overapproximation        Over approximate query on Colored Petri Nets (CPN only)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
                     "\n"
                     "Return Values:\n"
@@ -329,6 +332,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Samuel Pastva <daemontus@gmail.com>\n");
             printf("                        Jiri Srba <srba.jiri@gmail.com>,\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>,\n");
+            printf("                        Andreas Hairing Klostergaard <kloster92@me.com>,\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
         } else if (options.modelfile == NULL) {
@@ -631,12 +635,22 @@ int main(int argc, char* argv[]) {
   
     ColoredPetriNetBuilder cpnBuilder;
     if(parseModel(cpnBuilder, options) != ContinueCode) return ErrorCode;
+    if(options.cpnOverApprox && !cpnBuilder.isColored()) return ErrorCode;
     
     //----------------------- Parse Query -----------------------//
     std::vector<std::string> querynames;
     auto queries = readQueries(options, querynames);
-    
-    auto builder = cpnBuilder.unfold();
+    if (options.cpnOverApprox) {
+        for (auto qid = queries.size() - 1; qid >= 0; --qid) {
+            auto q = queries[qid]->prepareForReachability();
+            if (q == nullptr || q->isLoopSensitive()) {
+                std::cerr << "Warning: CPN OverApproximation is only available for Reachability queries without deadlock, skipping " << querynames[qid] << std::endl;
+                queries.erase(queries.begin() + qid);
+                querynames.erase(querynames.begin() + qid);
+            }
+        }
+    }
+    auto builder = options.cpnOverApprox ? cpnBuilder.stripColors() : cpnBuilder.unfold();
     printUnfoldingStats(cpnBuilder, options);
     builder.sort();
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
