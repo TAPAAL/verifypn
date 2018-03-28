@@ -8,7 +8,7 @@ $(TARGET): $(DEPS) $(OBJECTS)
 	$(CC) $^ $(LDFLAGS) -o $@
 
 release: CFLAGS += -Wall -pedantic-errors -O2 -DNDEBUG
-release: LDFLAGS += -O2 -DNDEBUG -static
+release: LDFLAGS += -O2 -DNDEBUG
 release: $(TARGET)
 
 mcc: CFLAGS += -Wall -pedantic-errors -O2 -DNDEBUG -DENABLE_MC_SIMPLIFICATION -DENABLE_TAR
