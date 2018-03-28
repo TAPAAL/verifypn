@@ -245,6 +245,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         {
             options.model_out_file = std::string(argv[++i]);
         }
+#ifdef ENABLE_MC_SIMPLIFICATION
         else if (strcmp(argv[i], "-z") == 0)
         {
             if (i == argc - 1) {
@@ -256,6 +257,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 return ErrorCode;
             }
         }
+#endif
         else if (strcmp(argv[i], "-ctl") == 0){
             if(argc > i + 1){
                 if(strcmp(argv[i + 1], "local") == 0){
@@ -312,6 +314,19 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - czero     local with certain zero extension (default)\n"
                     "  -c, --cpn-overapproximation        Over approximate query on Colored Petri Nets (CPN only)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
+#ifdef ENABLE_MC_SIMPLIFICATION
+                    "  -z <number of cores>               Number of cores to use (currently only query simplification)\n"
+#endif
+#ifdef ENABLE_TAR
+                    "  -tar                               Enables Trace Abstraction Refinement for reachability properties\n"
+#endif
+                    "  --write-simplified <filename>      Outputs the queries to the given file after simplification\n"
+                    "  --write-reduced <filename>         Outputs the model to the given file after structural reduction\n"
+                    "  --binary-query-io <0,1,2,3>        Determines the input/output format of the query-file\n"
+                    "                                     - 0 MCC XML format for Input and Output\n"
+                    "                                     - 1 Input is binary, output is XML\n"
+                    "                                     - 2 Output is binary, input is XML\n"
+                    "                                     - 3 Input and Output is binary\n"
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
