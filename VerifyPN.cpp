@@ -664,7 +664,10 @@ int main(int argc, char* argv[]) {
     auto queries = readQueries(options, querynames);
     if (options.cpnOverApprox) {
         for (auto qid = queries.size() - 1; qid >= 0; --qid) {
-            auto q = queries[qid]->prepareForReachability();
+            negstat_t stats;            
+            EvaluationContext context(nullptr, nullptr);
+            // see if we can turn the proposition into a reachability just by logical rewrites.
+            auto q = queries[qid]->pushNegation(stats, context, false, false, false)->prepareForReachability();
             if (q == nullptr || q->isLoopSensitive()) {
                 std::cerr << "Warning: CPN OverApproximation is only available for Reachability queries without deadlock, skipping " << querynames[qid] << std::endl;
                 queries.erase(queries.begin() + qid);
@@ -751,8 +754,8 @@ int main(int argc, char* argv[]) {
                     
                     int preSize=queries[i]->formulaSize(); 
                     bool isInvariant = queries[i].get()->isInvariant(); 
-                    queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false)
-                                            ->pushNegation(stats, context, false, false);
+                    queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false, true)
+                                            ->pushNegation(stats, context, false, false, true);
 
                     if(options.queryReductionTimeout > 0 && options.printstatistics)
                     {
@@ -767,7 +770,7 @@ int main(int argc, char* argv[]) {
                                 options.lpsolveTimeout, &cache);
                         try {
                             negstat_t stats;            
-                            queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false);
+                            queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false, true);
                             if(options.printstatistics)
                             {
                                 out << "RWSTATS POST:";

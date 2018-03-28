@@ -235,7 +235,7 @@ namespace PetriEngine {
             virtual bool isLoopSensitive() const { return _loop_sensitive; };
             /** Prepare reachability queries */
             virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
-            virtual std::shared_ptr<Condition> pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated = false) = 0;
+            virtual std::shared_ptr<Condition> pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated = false, bool initrw = true) = 0;
             
             /** Output the condition as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
@@ -280,7 +280,7 @@ namespace PetriEngine {
             virtual Quantifier getQuantifier() const = 0;
             virtual Path getPath() const = 0;
             static std::shared_ptr<Condition> 
-            initialMarkingRW(std::function<std::shared_ptr<Condition> ()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated);
+            initialMarkingRW(std::function<std::shared_ptr<Condition> ()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw);
             virtual bool containsNext() const = 0;   
         protected:
             //Value for checking if condition is trivially true or false.
