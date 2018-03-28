@@ -43,12 +43,16 @@
 #include <map>
 #include <memory>
 #include <utility>
+#ifdef ENABLE_MC_SIMPLIFICATION
 #include <thread>
+#endif
 
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/Reachability/ReachabilitySearch.h"
+#ifdef ENABLE_TAR
 #include "PetriEngine/Reachability/TARReachability.h"
+#endif
 #include "PetriEngine/Reducer.h"
 #include "PetriParse/QueryXMLParser.h"
 #include "PetriParse/QueryBinaryParser.h"
@@ -218,11 +222,14 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid siphon-depth count \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
-        } else if (strcmp(argv[i], "-tar") == 0)
+        } 
+#ifdef ENABLE_TAR
+        else if (strcmp(argv[i], "-tar") == 0)
         {
             options.tar = true;
             
         }
+#endif
         else if (strcmp(argv[i], "--write-simplified") == 0)
         {
             options.query_out_file = std::string(argv[++i]);
@@ -693,12 +700,19 @@ int main(int argc, char* argv[]) {
             if((to_handle <= options.cores || options.cores == 1) && to_handle > 0)
                 qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
             std::atomic<uint32_t> cnt(0);
+#ifdef ENABLE_MC_SIMPLIFICATION
+
             std::vector<std::thread> threads;
+#endif
             std::vector<std::stringstream> tstream(queries.size());
             uint32_t old = to_handle;
             for(size_t c = 0; c < std::min<uint32_t>(options.cores, old); ++c)
             {
+#ifdef ENABLE_MC_SIMPLIFICATION
                 threads.push_back(std::thread([&,c](){ 
+#else
+                auto simplify = [&,c](){ 
+#endif
                     auto& out = tstream[c];
                     auto& cache = caches[c];
                     while(true)
@@ -780,15 +794,26 @@ int main(int argc, char* argv[]) {
                         out << "Query size reduced from " << preSize << " to " << postSize << " nodes ( " << redPerc << " percent reduction).\n";
                     }
                     }
-                }));
+                }
+#ifdef ENABLE_MC_SIMPLIFICATION
+                ));
+#else
+                ;
+                simplify();
+#endif
             }
+#ifndef ENABLE_MC_SIMPLIFICATION
+            break;
+#else
             for(size_t i = 0; i < std::min<uint32_t>(options.cores, old); ++i)
             {
                 threads[i].join();
                 std::cout << tstream[i].str();
                 std::cout << std::endl;
             }
+#endif
             end = std::chrono::high_resolution_clock::now();
+
         } while(std::any_of(hadTo.begin(), hadTo.end(), [](auto a) { return a;}) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.queryReductionTimeout && to_handle > 0);
     } 
     
@@ -932,6 +957,7 @@ int main(int argc, char* argv[]) {
     // Change default place-holder to default strategy
     if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
     
+#ifdef ENABLE_TAR
     if(options.tar)
     {
         //Create reachability search strategy
@@ -947,6 +973,7 @@ int main(int argc, char* argv[]) {
                 options.trace);
     }
     else
+#endif
     {
         ReachabilitySearch strategy(printer, *net, options.kbound);
 

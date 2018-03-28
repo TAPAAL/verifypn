@@ -24,7 +24,10 @@
 #include <algorithm>
 #include <unordered_map>
 #include <memory>
+
+#ifdef ENABLE_TAR
 #include <z3++.h>
+#endif
 
 #include "../PetriNet.h"
 #include "../Structures/State.h"
@@ -110,7 +113,9 @@ namespace PetriEngine {
             /** Evaluate the expression given marking and assignment */
             virtual int evaluate(const EvaluationContext& context) = 0;
             int evalAndSet(const EvaluationContext& context);
+#ifdef ENABLE_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const = 0;
+#endif
             /** Generate LLVM intermediate code for this expr  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert expression to string */
@@ -210,7 +215,9 @@ namespace PetriEngine {
             virtual Result evaluate(const EvaluationContext& context) = 0;
             virtual Result evalAndSet(const EvaluationContext& context) = 0;
             
+#ifdef ENABLE_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const = 0;
+#endif
             
             /** Generate LLVM intermediate code for this condition  */
             //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;

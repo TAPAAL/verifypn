@@ -7,6 +7,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef ENABLE_TAR
 #ifndef RENAMER_H
 #define RENAMER_H
 
@@ -147,3 +148,4 @@ public:
 };
 #endif /* RENAMER_H */
 
+#endif

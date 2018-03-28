@@ -11,6 +11,8 @@
  * Created on January 2, 2018, 10:06 AM
  */
 
+#ifdef ENABLE_TAR
+
 #ifndef TARAUTOMATA_H
 #define TARAUTOMATA_H
 #include <cassert>
@@ -320,3 +322,4 @@ namespace PetriEngine {
 
 #endif /* TARAUTOMATA_H */
 
+#endif
