@@ -730,6 +730,10 @@ int main(int argc, char* argv[]) {
                         out << std::endl;
                     }
 
+#ifndef ENABLE_MC_SIMPLIFICATION
+                    qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);              
+#endif
+                    
                     int preSize=queries[i]->formulaSize(); 
                     bool isInvariant = queries[i].get()->isInvariant(); 
                     queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false)
