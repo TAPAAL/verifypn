@@ -662,25 +662,42 @@ int main(int argc, char* argv[]) {
     //----------------------- Parse Query -----------------------//
     std::vector<std::string> querynames;
     auto queries = readQueries(options, querynames);
+    
+    if(options.printstatistics && options.queryReductionTimeout > 0)
+    {
+        negstat_t stats;            
+        std::cout << "RWSTATS LEGEND:";
+        stats.printRules(std::cout);            
+        std::cout << std::endl;
+    }
+    
+    if(cpnBuilder.isColored())
+    {
+        negstat_t stats;            
+        EvaluationContext context(nullptr, nullptr);
+        for (ssize_t qid = queries.size() - 1; qid >= 0; --qid) {
+            queries[qid] = queries[qid]->pushNegation(stats, context, false, false, false);
+            if(options.printstatistics)
+            {
+                std::cout << "\nQuery before expansion and reduction: ";
+                queries[qid]->toString(std::cout);
+                std::cout << std::endl;
+
+                std::cout << "RWSTATS COLORED PRE:";
+                stats.print(std::cout);
+                std::cout << std::endl;
+            }
+        }
+    }
+
     if (options.cpnOverApprox) {
-        for (auto qid = queries.size() - 1; qid >= 0; --qid) {
-            negstat_t stats;            
-            EvaluationContext context(nullptr, nullptr);
-            // see if we can turn the proposition into a reachability just by logical rewrites.
-            queries[qid] = queries[qid]->pushNegation(stats, context, false, false, false)->prepareForReachability();
-            if (queries[qid] == nullptr || queries[qid]->isLoopSensitive()) {
+        for (ssize_t qid = queries.size() - 1; qid >= 0; --qid) {
+            auto q = queries[qid]->prepareForReachability();
+            if (q == nullptr || q->isLoopSensitive()) {
                 std::cerr << "Warning: CPN OverApproximation is only available for Reachability queries without deadlock, skipping " << querynames[qid] << std::endl;
                 queries.erase(queries.begin() + qid);
                 querynames.erase(querynames.begin() + qid);
             }
-        }
-    }
-    else if(cpnBuilder.isColored())
-    {
-        negstat_t stats;            
-        EvaluationContext context(nullptr, nullptr);
-        for (auto qid = queries.size() - 1; qid >= 0; --qid) {
-            queries[qid] = queries[qid]->pushNegation(stats, context, false, false, false);
         }
     }
     
@@ -714,13 +731,7 @@ int main(int argc, char* argv[]) {
         auto begin = std::chrono::high_resolution_clock::now();
         auto end = std::chrono::high_resolution_clock::now();
         std::vector<bool> hadTo(queries.size(), true);
-        if(options.printstatistics && options.queryReductionTimeout > 0)
-        {
-            negstat_t stats;            
-            std::cout << "RWSTATS LEGEND:";
-            stats.printRules(std::cout);            
-            std::cout << std::endl;
-        }
+        
         do
         {
             auto qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / ( 1 + (to_handle / options.cores));
@@ -834,6 +845,7 @@ int main(int argc, char* argv[]) {
 #endif
             }
 #ifndef ENABLE_MC_SIMPLIFICATION
+            std::cout << tstream[0].str() << std::endl;
             break;
 #else
             for(size_t i = 0; i < std::min<uint32_t>(options.cores, old); ++i)
@@ -873,12 +885,20 @@ int main(int argc, char* argv[]) {
         {
             if(queries[i]->isTriviallyTrue()){
                 results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
-                if (options.printstatistics) {
+                if(results[i] == ResultPrinter::Ignore && options.printstatistics)
+                {
+                    std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
+                }
+                else if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
             } else if (queries[i]->isTriviallyFalse()) {
                 results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
-                if (options.printstatistics) {
+                if(results[i] == ResultPrinter::Ignore &&  options.printstatistics)
+                {
+                    std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
+                }
+                else if (options.printstatistics) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
             } else if (options.strategy == PetriEngine::Reachability::OverApprox){

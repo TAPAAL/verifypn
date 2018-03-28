@@ -37,6 +37,7 @@ namespace PetriEngine {
         
         std::string generateTabs(uint32_t tabs);
         class CompareCondition;
+        class NotCondition;
         /******************** EXPRESSIONS ********************/
 
         /** Base class for all binary expressions */
@@ -218,10 +219,13 @@ namespace PetriEngine {
                 return _compiled->evaluate(context);
             }
             void toString(std::ostream& os) const override {
-                _compiled->toString(os);
+                if(_compiled)
+                    _compiled->toString(os);
+                os << _name;
             }
             Expr::Types type() const override {
-                return _compiled->type();
+                if(_compiled) return _compiled->type();
+                return Expr::IdentifierExpr;
             }
             void toXML(std::ostream& os, uint32_t tabs, bool tokencount = false) const override {
                 _compiled->toXML(os, tabs, tokencount);
@@ -233,10 +237,12 @@ namespace PetriEngine {
                 _compiled->decr(generator);
             }
             int formulaSize() const override {
-                return _compiled->formulaSize();
+                if(_compiled) return _compiled->formulaSize();
+                return 1;
             }
             virtual bool placeFree() const override {
-                return _compiled->placeFree();
+                if(_compiled) return _compiled->placeFree();
+                return false;
             }
 
             Member constraint(SimplificationContext& context) const override {
@@ -299,8 +305,48 @@ namespace PetriEngine {
             std::string _name;
         };
         
-        /******************** TEMPORAL OPERATORS ********************/
+        /* Not condition */
+        class NotCondition : public Condition {
+        public:
 
+            NotCondition(const Condition_ptr cond) {
+                _cond = cond;
+                _temporal = _cond->isTemporal();
+                _loop_sensitive = _cond->isLoopSensitive();
+            }
+            int formulaSize() const override{
+                return _cond->formulaSize() + 1;
+            }
+            void analyze(AnalysisContext& context) override;
+            Result evaluate(const EvaluationContext& context) override;
+            Result evalAndSet(const EvaluationContext& context) override;
+            uint32_t distance(DistanceContext& context) const override;
+            void toString(std::ostream&) const override;
+            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
+            Retval simplify(SimplificationContext& context) const override;
+            bool isReachability(uint32_t depth) const override;
+            Condition_ptr prepareForReachability(bool negated) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+            void toXML(std::ostream&, uint32_t tabs) const override;
+            void toBinary(std::ostream&) const override;
+            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+            Quantifier getQuantifier() const override { return Quantifier::NEG; }
+            Path getPath() const override { return Path::pError; }
+            CTLType getQueryType() const override { return CTLType::LOPERATOR; }
+            const Condition_ptr& operator[](size_t i) const { return _cond; };
+            virtual bool isTemporal() const override { return _temporal;}
+            bool containsNext() const override { return _cond->containsNext(); }
+#ifdef ENABLE_TAR
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
+#endif
+        private:
+            Condition_ptr _cond;
+            bool _temporal = false;
+        };
+        
+        
+        /******************** TEMPORAL OPERATORS ********************/        
+        
         class QuantifierCondition : public Condition
         {
         public:
@@ -525,7 +571,10 @@ namespace PetriEngine {
             uint32_t distance(DistanceContext& context) const override
             { return _compiled->distance(context); }
             void toString(std::ostream& ss) const override
-            { _compiled->toString(ss); } 
+            { 
+                if(_compiled) _compiled->toString(ss); 
+                ss << _name;
+            } 
             void toTAPAALQuery(std::ostream& s,TAPAALConditionExportContext& context) const override
             { _compiled->toTAPAALQuery(s, context); }
             void toBinary(std::ostream& out) const override
@@ -539,10 +588,7 @@ namespace PetriEngine {
             { return _compiled->isReachability(depth); }
             Condition_ptr prepareForReachability(bool negated) const override
             { return _compiled->prepareForReachability(negated); }
-            Condition_ptr pushNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated, bool initrw) override 
-            { 
-                return _compiled->pushNegation(stat, context, nested, negated, initrw); 
-            }
+
             void toXML(std::ostream& ss, uint32_t tabs) const override 
             { _compiled->toXML(ss, tabs);};
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override 
@@ -575,12 +621,30 @@ namespace PetriEngine {
         public:
             UnfoldedFireableCondition(const std::string& tname) : ExpandableCondition(tname) {};
             void analyze(AnalysisContext& context) override;
+            Condition_ptr pushNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated, bool initrw) override 
+            { 
+                if(_compiled)
+                    return _compiled->pushNegation(stat, context, nested, negated, initrw); 
+                if(negated)
+                    return std::make_shared<NotCondition>(std::make_shared<UnfoldedFireableCondition>(_name));
+                else
+                    return std::make_shared<UnfoldedFireableCondition>(_name);
+            }
         };
 
         class FireableCondition : public ExpandableCondition {
         public:
             FireableCondition(const std::string& tname) : ExpandableCondition(tname) {};
             void analyze(AnalysisContext& context) override;
+            Condition_ptr pushNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated, bool initrw) override 
+            { 
+                if(_compiled)
+                    return _compiled->pushNegation(stat, context, nested, negated, initrw); 
+                if(negated)
+                    return std::make_shared<NotCondition>(std::make_shared<FireableCondition>(_name));
+                else
+                    return std::make_shared<FireableCondition>(_name);
+            }
         };
 
         
@@ -932,45 +996,6 @@ namespace PetriEngine {
             std::string op() const override;
             std::string opTAPAAL() const override;
             std::string sopTAPAAL() const override;
-        };
-
-        /* Not condition */
-        class NotCondition : public Condition {
-        public:
-
-            NotCondition(const Condition_ptr cond) {
-                _cond = cond;
-                _temporal = _cond->isTemporal();
-                _loop_sensitive = _cond->isLoopSensitive();
-            }
-            int formulaSize() const override{
-                return _cond->formulaSize() + 1;
-            }
-            void analyze(AnalysisContext& context) override;
-            Result evaluate(const EvaluationContext& context) override;
-            Result evalAndSet(const EvaluationContext& context) override;
-            uint32_t distance(DistanceContext& context) const override;
-            void toString(std::ostream&) const override;
-            void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
-            Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
-            void toXML(std::ostream&, uint32_t tabs) const override;
-            void toBinary(std::ostream&) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
-            Quantifier getQuantifier() const override { return Quantifier::NEG; }
-            Path getPath() const override { return Path::pError; }
-            CTLType getQueryType() const override { return CTLType::LOPERATOR; }
-            const Condition_ptr& operator[](size_t i) const { return _cond; };
-            virtual bool isTemporal() const override { return _temporal;}
-            bool containsNext() const override { return _cond->containsNext(); }
-#ifdef ENABLE_TAR
-            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
-#endif
-        private:
-            Condition_ptr _cond;
-            bool _temporal = false;
         };
 
         /* Bool condition */

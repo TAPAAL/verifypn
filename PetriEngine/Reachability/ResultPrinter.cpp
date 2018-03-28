@@ -19,7 +19,22 @@ namespace PetriEngine {
                 size_t lastmarking)
         {
             if(result == Unknown) return Unknown;
+
             Result retval = result;
+            
+            if(options->cpnOverApprox)
+            {
+                if (result == Satisfied)
+                    retval = query->isInvariant() ? Unknown : Satisfied;
+                else if (result == NotSatisfied)
+                    retval = query->isInvariant() ? Satisfied : Unknown;                
+                if(retval == Unknown)
+                {
+                    std::cout << "\nUnable to decide if " << querynames[index] << " is satisfied.\n\n";
+                    std::cout << "Query is MAYBE satisfied.\n" << std::endl;
+                    return Ignore;
+                }
+            }
             std::cout << std::endl;    
             
             bool showTrace = (result == Satisfied);
@@ -46,20 +61,10 @@ namespace PetriEngine {
                 return retval;
             }
 
-            if(options->cpnOverApprox)
-            {
-                if (result == Satisfied)
-                    retval = query->isInvariant() ? Unknown : Satisfied;
-                else if (result == NotSatisfied)
-                    retval = query->isInvariant() ? Satisfied : Unknown;                
-            }
-            else
-            {
-                if (result == Satisfied)
-                    retval = query->isInvariant() ? NotSatisfied : Satisfied;
-                else if (result == NotSatisfied)
-                    retval = query->isInvariant() ? Satisfied : NotSatisfied;
-            }
+            if (result == Satisfied)
+                retval = query->isInvariant() ? NotSatisfied : Satisfied;
+            else if (result == NotSatisfied)
+                retval = query->isInvariant() ? Satisfied : NotSatisfied;           
 
             //Print result
             auto bound = query;
@@ -112,6 +117,9 @@ namespace PetriEngine {
             }
             std::cout << "satisfied." << std::endl;
             
+            if(options->cpnOverApprox)
+                std::cout << "\nSolved using CPN Approximation\n" << std::endl;
+            
             if(showTrace && options->trace)
             {
                 if(stateset == NULL)
@@ -151,6 +159,16 @@ namespace PetriEngine {
                     out += " CTL LOCAL";
                 }
             }
+            if(options->cpnOverApprox)
+            {
+                out += " CPN-APPROX";
+            }
+#ifdef ENABLE_TAR
+            if(options->tar)
+            {
+                out += " TAR SAT";
+            }
+#endif
             out += "\n";
             return out;
         }

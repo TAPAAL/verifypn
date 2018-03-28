@@ -49,7 +49,9 @@ namespace PetriEngine {
                 /** We're unable to say if the query can be satisfied */
                 Unknown,
                 /** The query should be verified using the CTL engine */
-                CTL
+                CTL,
+                /** Just ignore */
+                Ignore
             };
             
             const string techniques = "TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS";
