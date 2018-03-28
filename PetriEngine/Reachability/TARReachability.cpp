@@ -128,7 +128,6 @@ namespace PetriEngine {
                 }
             }
 
-            clock_t end = clock();
             fres.emplace_back(pred, astate);
             return std::make_pair(!found, astate);
         }
