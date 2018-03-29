@@ -679,11 +679,9 @@ int main(int argc, char* argv[]) {
         std::cout << std::endl;
     }
 
-    {    
-    negstat_t stats;            
     if(cpnBuilder.isColored())
     {
-
+        negstat_t stats;            
         EvaluationContext context(nullptr, nullptr);
         for (ssize_t qid = queries.size() - 1; qid >= 0; --qid) {
             queries[qid] = queries[qid]->pushNegation(stats, context, false, false, false);
@@ -702,14 +700,15 @@ int main(int argc, char* argv[]) {
 
     if (options.cpnOverApprox) {
         for (ssize_t qid = queries.size() - 1; qid >= 0; --qid) {
-            auto& q = queries[qid];
+            negstat_t stats;            
+            EvaluationContext context(nullptr, nullptr);
+            auto q = queries[qid]->pushNegation(stats, context, false, false, false);
             if (!q->isReachability() || q->isLoopSensitive() || q->prepareForReachability()->getQuantifier() == UPPERBOUNDS || stats.negated_fireability) {
                 std::cerr << "Warning: CPN OverApproximation is only available for Reachability queries without deadlock, negated fireability and UpperBounds, skipping " << querynames[qid] << std::endl;
                 queries.erase(queries.begin() + qid);
                 querynames.erase(querynames.begin() + qid);
             }
         }
-    }
     }
     
     auto builder = options.cpnOverApprox ? cpnBuilder.stripColors() : cpnBuilder.unfold();

@@ -595,7 +595,10 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override 
             { _compiled->findInteresting(generator, negated); }
             Quantifier getQuantifier() const override 
-            { return _compiled->getQuantifier(); }
+            { 
+                if(_compiled) return _compiled->getQuantifier(); 
+                else          return Quantifier::AND;
+            }
             Path getPath() const override 
             { return _compiled->getPath(); }
             CTLType getQueryType() const override 
