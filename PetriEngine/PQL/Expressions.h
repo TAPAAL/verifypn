@@ -587,8 +587,6 @@ namespace PetriEngine {
             }
             bool isReachability(uint32_t depth) const override
             { return true;}
-            Condition_ptr prepareForReachability(bool negated) const override
-            { return _compiled->prepareForReachability(negated); }
 
             void toXML(std::ostream& ss, uint32_t tabs) const override 
             { _compiled->toXML(ss, tabs);};
@@ -637,6 +635,13 @@ namespace PetriEngine {
                 else
                     return std::make_shared<UnfoldedFireableCondition>(_name);
             }
+
+            Condition_ptr prepareForReachability(bool negated) const override
+            { 
+                if(_compiled) return _compiled->prepareForReachability(negated); 
+                return std::make_shared<UnfoldedFireableCondition>(_name);
+            }
+
         };
 
         class FireableCondition : public ExpandableCondition {
@@ -654,6 +659,12 @@ namespace PetriEngine {
                 }
                 else
                     return std::make_shared<FireableCondition>(_name);
+            }
+
+            Condition_ptr prepareForReachability(bool negated) const override
+            { 
+                if(_compiled) return _compiled->prepareForReachability(negated); 
+                return std::make_shared<FireableCondition>(_name);
             }
         };
 
