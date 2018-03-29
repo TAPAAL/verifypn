@@ -627,7 +627,10 @@ namespace PetriEngine {
                 if(_compiled)
                     return _compiled->pushNegation(stat, context, nested, negated, initrw); 
                 if(negated)
+                {
+                    stat.negated_fireability = true;
                     return std::make_shared<NotCondition>(std::make_shared<UnfoldedFireableCondition>(_name));
+                }
                 else
                     return std::make_shared<UnfoldedFireableCondition>(_name);
             }
@@ -642,7 +645,10 @@ namespace PetriEngine {
                 if(_compiled)
                     return _compiled->pushNegation(stat, context, nested, negated, initrw); 
                 if(negated)
+                {
+                    stat.negated_fireability = true;
                     return std::make_shared<NotCondition>(std::make_shared<FireableCondition>(_name));
+                }
                 else
                     return std::make_shared<FireableCondition>(_name);
             }

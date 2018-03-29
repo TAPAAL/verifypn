@@ -195,6 +195,7 @@ namespace PetriEngine {
                 
             };
             int& operator[](size_t i) { return _used[i]; }
+            bool negated_fireability = false;
         };
         
         /** Base condition */
