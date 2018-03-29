@@ -574,7 +574,7 @@ namespace PetriEngine {
             void toString(std::ostream& ss) const override
             { 
                 if(_compiled) _compiled->toString(ss); 
-                ss << _name;
+                else ss << _name;
             } 
             void toTAPAALQuery(std::ostream& s,TAPAALConditionExportContext& context) const override
             { _compiled->toTAPAALQuery(s, context); }
@@ -1094,8 +1094,7 @@ namespace PetriEngine {
             { return _compiled->evalAndSet(context); }
             uint32_t distance(DistanceContext& context) const override
             { return _compiled->distance(context); }
-            void toString(std::ostream& out) const override
-            { _compiled->toString(out); }
+            void toString(std::ostream& out) const override;
             void toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const override
             { _compiled->toTAPAALQuery(out, context); }
             void toBinary(std::ostream& out) const override
@@ -1103,16 +1102,21 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const override
             { return _compiled->simplify(context); }
             bool isReachability(uint32_t depth) const override
-            { return _compiled->isReachability(depth); }
+            { return true; }
             Condition_ptr prepareForReachability(bool negated) const override
             { return _compiled->prepareForReachability(negated); }
             Condition_ptr pushNegation(negstat_t& neg, const EvaluationContext& context, bool nested, bool negated, bool initrw) override
-            { return _compiled->pushNegation(neg, context, nested, negated, initrw); }
+            { 
+                if(_compiled)
+                    return _compiled->pushNegation(neg, context, nested, negated, initrw); 
+                else
+                    return std::make_shared<UpperBoundsCondition>(_places);
+            }
             void toXML(std::ostream& out, uint32_t tabs) const override
             { _compiled->toXML(out, tabs); }
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override
             { _compiled->findInteresting(generator, negated);}
-            Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
+            Quantifier getQuantifier() const override { return Quantifier::UPPERBOUNDS; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }

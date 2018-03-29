@@ -275,6 +275,20 @@ namespace PetriEngine {
             out << "deadlock";
         }
         
+        void UpperBoundsCondition::toString(std::ostream& out) const {
+            if(_compiled) _compiled->toString(out);
+            else
+            {
+                out << "bounds (";
+                for(size_t i = 0; i < _places.size(); ++i)
+                {
+                    if(i != 0) out << ", ";
+                    out << _places[i];
+                }
+                out << ")";            
+            }
+        }
+        
         void UnfoldedUpperBoundsCondition::toString(std::ostream& out) const {
             out << "bounds (";
             for(size_t i = 0; i < _places.size(); ++i)
