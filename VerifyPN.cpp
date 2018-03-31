@@ -785,7 +785,9 @@ int main(int argc, char* argv[]) {
 #ifndef ENABLE_MC_SIMPLIFICATION
                     qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);              
 #endif
-                    
+                    // this is used later, we already know that this is a plain reachability (or AG)
+                    bool wasAGCPNApprox = dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
+                                       
                     int preSize=queries[i]->formulaSize(); 
                     bool isInvariant = queries[i].get()->isInvariant(); 
                     queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false, true)
@@ -841,6 +843,14 @@ int main(int argc, char* argv[]) {
                         out << "Skipping linear-programming (-q 0)" << std::endl;
                     }
                     queries[i].get()->setInvariant(isInvariant);
+                    
+                    if(options.cpnOverApprox && (queries[i]->isTriviallyFalse() || queries[i]->isTriviallyTrue()))
+                    {
+                        if(wasAGCPNApprox && queries[i]->isTriviallyFalse())
+                            results[i] = ResultPrinter::Ignore;
+                        else if(!wasAGCPNApprox &&  queries[i]->isTriviallyTrue())
+                            results[i] = ResultPrinter::Ignore;
+                    }
 
 
                     if(options.printstatistics)
@@ -898,7 +908,8 @@ int main(int argc, char* argv[]) {
         for(size_t i = 0; i < queries.size(); ++i)
         {
             if(queries[i]->isTriviallyTrue()){
-                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
+                if(results[i] != ResultPrinter::Ignore)
+                    results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
                 if(results[i] == ResultPrinter::Ignore && options.printstatistics)
                 {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
@@ -907,7 +918,8 @@ int main(int argc, char* argv[]) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
             } else if (queries[i]->isTriviallyFalse()) {
-                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
+                if(results[i] != ResultPrinter::Ignore)
+                   results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
                 if(results[i] == ResultPrinter::Ignore &&  options.printstatistics)
                 {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
@@ -916,7 +928,8 @@ int main(int argc, char* argv[]) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
             } else if (options.strategy == PetriEngine::Reachability::OverApprox){
-                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Unknown);
+                if(results[i] != ResultPrinter::Ignore)
+                    results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Unknown);
                 if (options.printstatistics) {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
                 }
