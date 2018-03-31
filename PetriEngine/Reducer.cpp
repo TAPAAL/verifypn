@@ -864,7 +864,7 @@ namespace PetriEngine {
 
                         for(auto pt : place.consumers)
                         {
-                            if(!tseen[pt] && (!remove_consumers || placeInQuery[pt] > 0))
+                            if(!tseen[pt] && (!remove_consumers || placeInQuery[arc.place] > 0))
                             {
                                 tseen[pt] = true;
                                 wtrans.push_back(pt);                                    
@@ -911,12 +911,12 @@ namespace PetriEngine {
 
                 ++_ruleI;
                 reduced = true;
-                skipPlace(p);
+
                 std::vector<uint32_t> torem;
                 for(auto& t : place.producers)
                 {
                     auto& trans = parent->_transitions[t];
-                    if(trans.post.size() != 0)
+                    if(trans.post.size() != 1) // place will be removed later
                         continue;
                     bool ok = true;
                     for(auto& a : trans.pre)
@@ -928,7 +928,7 @@ namespace PetriEngine {
                     }
                     if(ok) torem.push_back(t);
                 }
-
+                skipPlace(p);
                 for(auto t : torem)
                     skipTransition(t);
                 assert(consistent());
