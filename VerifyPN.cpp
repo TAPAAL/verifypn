@@ -787,7 +787,6 @@ int main(int argc, char* argv[]) {
 #endif
                     // this is used later, we already know that this is a plain reachability (or AG)
                     bool wasAGCPNApprox = dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
-                    
                     int preSize=queries[i]->formulaSize(); 
                     queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false, true)
                                             ->pushNegation(stats, context, false, false, true);
@@ -843,7 +842,6 @@ int main(int argc, char* argv[]) {
                     {
                         out << "Skipping linear-programming (-q 0)" << std::endl;
                     }
-                    
                     if(options.cpnOverApprox && wasAGCPNApprox)
                     {
                         if(queries[i]->isTriviallyTrue())
