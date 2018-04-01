@@ -785,11 +785,13 @@ int main(int argc, char* argv[]) {
 #ifndef ENABLE_MC_SIMPLIFICATION
                     qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);              
 #endif
+                    // this is used later, we already know that this is a plain reachability (or AG)
+                    bool wasAGCPNApprox = dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
                     
                     int preSize=queries[i]->formulaSize(); 
-                    bool isInvariant = queries[i].get()->isInvariant(); 
                     queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false, true)
                                             ->pushNegation(stats, context, false, false, true);
+                    wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
 
                     if(options.queryReductionTimeout > 0 && options.printstatistics)
                     {
@@ -805,13 +807,14 @@ int main(int argc, char* argv[]) {
                         try {
                             negstat_t stats;            
                             queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false, true);
+                            wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
                             if(options.printstatistics)
                             {
                                 out << "RWSTATS POST:";
                                 stats.print(out);
                                 out << std::endl;
                             }
-                            queries[i].get()->setInvariant(isInvariant);
+                            queries[i].get()->setInvariant(wasAGCPNApprox);
                         } catch (std::bad_alloc& ba){
                             std::cerr << "Query reduction failed." << std::endl;
                             std::cerr << "Exception information: " << ba.what() << std::endl;
@@ -840,7 +843,15 @@ int main(int argc, char* argv[]) {
                     {
                         out << "Skipping linear-programming (-q 0)" << std::endl;
                     }
-                    queries[i].get()->setInvariant(isInvariant);
+                    
+                    if(options.cpnOverApprox && wasAGCPNApprox)
+                    {
+                        if(queries[i]->isTriviallyTrue())
+                            queries[i] = BooleanCondition::FALSE_CONSTANT;
+                        else if(queries[i]->isTriviallyFalse())
+                            queries[i] = BooleanCondition::TRUE_CONSTANT;
+                        queries[i]->setInvariant(true);
+                    }
 
 
                     if(options.printstatistics)
