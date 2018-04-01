@@ -813,7 +813,6 @@ int main(int argc, char* argv[]) {
                                 stats.print(out);
                                 out << std::endl;
                             }
-                            queries[i].get()->setInvariant(wasAGCPNApprox);
                         } catch (std::bad_alloc& ba){
                             std::cerr << "Query reduction failed." << std::endl;
                             std::cerr << "Exception information: " << ba.what() << std::endl;
@@ -848,9 +847,9 @@ int main(int argc, char* argv[]) {
                             queries[i] = BooleanCondition::FALSE_CONSTANT;
                         else if(queries[i]->isTriviallyFalse())
                             queries[i] = BooleanCondition::TRUE_CONSTANT;
-                        queries[i]->setInvariant(true);
+                        queries[i]->setInvariant(wasAGCPNApprox);
                     }
-
+                   
 
                     if(options.printstatistics)
                     {
