@@ -2820,7 +2820,6 @@ namespace PetriEngine {
                 {
                     m += memberForPlace(_places[i]._place, context);
                 }
-
                 while(!context.timeout() && tmin != _max)
                 {
                     if(tmin > std::numeric_limits<uint8_t>::max() && tmax == std::numeric_limits<int16_t>::max()) 
@@ -2843,8 +2842,8 @@ namespace PetriEngine {
                     } else { // if no trivial case
                         int constant = m.constant() - c.constant();
                         c -= m;
-                        auto nlp = SingleProgram(context.cache(), std::move(c), constant, Simplification::OP_LE);
-                        if(nlp.satisfiable(context))
+                        auto nlp = SingleProgram(context.cache(), std::move(c), constant, Simplification::OP_GE);
+                        if(!nlp.satisfiable(context))
                         {
                             tmax = mid;
                         }
@@ -2852,7 +2851,7 @@ namespace PetriEngine {
                         {
                             tmin = mid;
                         }
-                   }
+                    }
                 }
             }
             else
