@@ -301,6 +301,10 @@ namespace PetriEngine {
                 {
                     return context.bool_val(true);
                 }
+                else if(g2.size() == 1)
+                {
+                    result = g2.as_expr();
+                }
                 else
                 {
                     result = result || g2.as_expr();
@@ -309,8 +313,8 @@ namespace PetriEngine {
 
             {
                 z3::goal g2(context);
-                g2.add(result);        
-                z3::apply_result res = (eqs & simplify & eqs).apply(g2);
+                g2.add(result || param_reach);        
+                z3::apply_result res = simplify.apply(g2);
                 result =  res[0].as_expr().simplify();    
             }
             return result;
@@ -319,7 +323,6 @@ namespace PetriEngine {
         
         std::pair<int,bool>  TARReachabilitySearch::isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, z3::expr& query, const std::vector<bool>& inq, z3::expr& param)
         {
-
             std::vector<z3::expr> encoded = {context.bool_val(true)};
             std::vector<uint32_t> uses(_net.numberOfPlaces(), 0);
             std::vector<bool> in_inhib(uses.size(), false);
@@ -789,10 +792,13 @@ namespace PetriEngine {
                 upper->evaluate(eval);
                 auto str = param.to_string();
                 size_t bound = 0;
-                if(str.compare("false") != 0)
+                size_t found = str.find("<= ~b ");
+                if (found!=std::string::npos)
                 {
-                    str[str.size() - 4] = 0;
-                    sscanf(&str[4], "%zu", &bound);
+                    auto last = found;
+                    while(str[last] != ')') ++last;
+                    str[last] = 0;
+                    sscanf(&str[found+6], "%zu", &bound);
                 }
                 upper->setUpperBound(bound);
             }
