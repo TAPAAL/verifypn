@@ -43,8 +43,10 @@
 #include <map>
 #include <memory>
 #include <utility>
+#include <functional>
 #ifdef ENABLE_MC_SIMPLIFICATION
 #include <thread>
+#include <iso646.h>
 #endif
 
 #include "PetriEngine/PQL/PQLParser.h"
@@ -202,7 +204,12 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid reduction timeout argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
-        } else if(strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--partial-order-reduction") == 0) {
+        } else if(strcmp(argv[i], "--seed-offset") == 0) {
+            if (sscanf(argv[++i], "%zd", &options.seed_offset) != 1) {
+                fprintf(stderr, "Argument Error: Invalid seed offset argument \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
+        }  else if(strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--partial-order-reduction") == 0) {
             options.stubbornreduction = false;
         } else if(strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--siphon-trap") == 0) {
             if (i == argc - 1) {
@@ -293,6 +300,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - DFS          Depth first search (CTL default)\n"
                     "                                     - RDFS         Random depth first search\n"
                     "                                     - OverApprox   Linear Over Approx\n"
+                    "  --seed-offset <number>             Extra noise to add to the seed of the random number generation\n"
                     "  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
                     "  -x, --xml-query <query index>      Parse XML query file and verify query of a given index\n"
                     "  -r, --reduction <type>             Change structural net reduction:\n"
@@ -648,13 +656,13 @@ void writeQueries(vector<std::shared_ptr<Condition>>& queries, vector<std::strin
 }
 
 int main(int argc, char* argv[]) {
-    srand (time(NULL));
+
     options_t options;
     
     ReturnValue v = parseOptions(argc, argv, options);
     if(v != ContinueCode) return v;
     options.print();
-  
+    srand (time(NULL) xor options.seed_offset);  
     ColoredPetriNetBuilder cpnBuilder;
     if(parseModel(cpnBuilder, options) != ContinueCode) 
     {

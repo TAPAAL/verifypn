@@ -43,6 +43,7 @@ struct options_t {
     
     //CPN Specific options
     bool cpnOverApprox = false;
+    ssize_t seed_offset = 0;
 
     void print() {
         if (!printstatistics) {
