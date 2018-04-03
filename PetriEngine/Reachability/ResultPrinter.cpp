@@ -81,16 +81,19 @@ namespace PetriEngine {
             else if(bound)
             {
                 std::cout << ((PQL::UnfoldedUpperBoundsCondition*)bound)->bounds() << " " << techniques << std::endl;
+                std::cout << "Query index " << index << " was solved" << std::endl;
             }
             else if (retval == Satisfied) {
                 if(!options->statespaceexploration)
                 {
                     std::cout << "TRUE " << techniques << std::endl;
+                    std::cout << "Query index " << index << " was solved" << std::endl;
                 }
             } else if (retval == NotSatisfied) {
                 if(!options->statespaceexploration)
                 {
                     std::cout << "FALSE " << techniques << std::endl;
+                    std::cout << "Query index " << index << " was solved" << std::endl;
                 }
             }
             

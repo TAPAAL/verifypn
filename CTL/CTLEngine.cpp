@@ -41,7 +41,7 @@ ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algori
     return ContinueCode;
 }
 
-void printResult(const std::string& qname, CTLResult& result, bool statisticslevel, bool mccouput, bool only_stats){
+void printResult(const std::string& qname, CTLResult& result, bool statisticslevel, bool mccouput, bool only_stats, size_t index){
     const static string techniques = "TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS";
 
     if(!only_stats)
@@ -52,7 +52,7 @@ void printResult(const std::string& qname, CTLResult& result, bool statisticslev
              << " " << (result.result ? "TRUE" : "FALSE") << " "
              << techniques
              << endl << endl;
-
+        std::cout << "Query index " << index << " was solved" << std::endl;
         cout << "Query is" << (result.result ? "" : " NOT") << " satisfied." << endl;
 
         cout << endl;
@@ -123,7 +123,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
         result.processedNegationEdges = alg ? alg->processedNegationEdges() : 0;
         result.exploredConfigurations = alg ? alg->exploredConfigurations() : 0;
         result.numberOfEdges = alg ? alg->numberOfEdges() : 0;
-        printResult(querynames[qnum], result, printstatistics, mccoutput, false);
+        printResult(querynames[qnum], result, printstatistics, mccoutput, false, qnum);
     }
     return SuccessCode;
 }
