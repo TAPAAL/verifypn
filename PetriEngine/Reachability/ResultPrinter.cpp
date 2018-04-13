@@ -162,7 +162,7 @@ namespace PetriEngine {
                 out += "EXPLICIT STATE_COMPRESSION ";
                 if(options->stubbornreduction)
                 {
-                    out += "STUBBORN_REDUCTION ";
+                    out += "STUBBORN_SETS ";
                 }
             }
 #ifdef ENABLE_TAR            
