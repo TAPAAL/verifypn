@@ -531,6 +531,7 @@ ReturnValue parseModel(AbstractPetriNetBuilder& builder, options_t& options)
     //Parse and build the petri net
     PNMLParser parser;
     parser.parse(mfile, &builder);
+    options.isCPN = builder.isColored();
 
     // Close the file
     mfile.close();
@@ -948,6 +949,8 @@ int main(int argc, char* argv[]) {
         if(alldone && options.model_out_file.size() == 0) return SuccessCode;
     }
     
+    options.queryReductionTimeout = 0;
+    
     //--------------------- Apply Net Reduction ---------------//
         
     if (options.enablereduction == 1 || options.enablereduction == 2) {
@@ -1000,7 +1003,8 @@ int main(int argc, char* argv[]) {
             options.stubbornreduction,
             querynames,
             queries,
-            ctl_ids);
+            ctl_ids,
+            options);
 
         if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
             return v;
@@ -1033,6 +1037,7 @@ int main(int argc, char* argv[]) {
             return SuccessCode;
         }
     }
+    options.siphontrapTimeout = 0;
     
     //----------------------- Reachability -----------------------//
 

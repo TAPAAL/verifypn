@@ -54,7 +54,7 @@ namespace PetriEngine {
                 Ignore
             };
             
-            const string techniques = "TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS";
+            const string techniques = "TECHNIQUES COLLATERAL_PROCESSING STRUCTURAL_REDUCTION QUERY_REDUCTION SAT_SMT ";
             const string techniquesStateSpace = "TECHNIQUES EXPLICIT STATE_COMPRESSION";
             
             ResultPrinter(PetriNetBuilder* b, options_t* o, std::vector<std::string>& querynames) 

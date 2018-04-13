@@ -80,19 +80,19 @@ namespace PetriEngine {
             }
             else if(bound)
             {
-                std::cout << ((PQL::UnfoldedUpperBoundsCondition*)bound)->bounds() << " " << techniques << std::endl;
+                std::cout << ((PQL::UnfoldedUpperBoundsCondition*)bound)->bounds() << " " << techniques << printTechniques() << std::endl;
                 std::cout << "Query index " << index << " was solved" << std::endl;
             }
             else if (retval == Satisfied) {
                 if(!options->statespaceexploration)
                 {
-                    std::cout << "TRUE " << techniques << std::endl;
+                    std::cout << "TRUE " << techniques << printTechniques() << std::endl;
                     std::cout << "Query index " << index << " was solved" << std::endl;
                 }
             } else if (retval == NotSatisfied) {
                 if(!options->statespaceexploration)
                 {
-                    std::cout << "FALSE " << techniques << std::endl;
+                    std::cout << "FALSE " << techniques << printTechniques() << std::endl;
                     std::cout << "Query index " << index << " was solved" << std::endl;
                 }
             }
@@ -141,38 +141,41 @@ namespace PetriEngine {
         
         std::string ResultPrinter::printTechniques() {
             std::string out;
-            
-            if (options->enablereduction > 0) {
-                out += " STRUCTURAL_REDUCTION STATE_COMPRESSION";
+                        
+            if(options->queryReductionTimeout > 0)
+            {
+                out += "LP_APPROX ";
             }
-            if (options->stubbornreduction) {
-                out += " STUBBORN_REDUCTION";
-            }
-            if (options->queryReductionTimeout > 0) {
-                out += " QUERY_REDUCTION";
-            }
-            if (options->siphontrapTimeout > 0) {
-                out += " SIPHON_TRAP_ANALYSIS";
-            }
-            if (options->isctl) {
-                if (options->ctlalgorithm == CTL::CZero) {
-                    out += " CTL CZERO";
-                }
-                else {
-                    out += " CTL LOCAL";
-                }
-            }
+
             if(options->cpnOverApprox)
             {
-                out += " CPN-APPROX";
+                out += "CPN_APPROX ";
             }
-#ifdef ENABLE_TAR
+            
+            if(options->isCPN && !options->cpnOverApprox)
+            {
+                out += "UNFOLDING_TO_PT ";
+            }
+            
+            if(options->queryReductionTimeout == 0 && !options->tar && options->siphontrapTimeout == 0)
+            {
+                out += "EXPLICIT STATE_COMPRESSION ";
+                if(options->stubbornreduction)
+                {
+                    out += "STUBBORN_REDUCTION ";
+                }
+            }
+#ifdef ENABLE_TAR            
             if(options->tar)
             {
-                out += " TAR SAT";
+                out += "TRACE_ABSTRACTION_REFINEMENT ";
             }
-#endif
-            out += "\n";
+#endif            
+            if(options->siphontrapTimeout > 0)
+            {
+                out += "TOPOLOGICAL SIPHON_TRAP ";
+            }
+            
             return out;
         }
         
