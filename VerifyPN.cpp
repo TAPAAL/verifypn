@@ -205,7 +205,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 return ErrorCode;
             }
         } else if(strcmp(argv[i], "--seed-offset") == 0) {
-            if (sscanf(argv[++i], "%zd", &options.seed_offset) != 1) {
+            if (sscanf(argv[++i], "%u", &options.seed_offset) != 1) {
                 fprintf(stderr, "Argument Error: Invalid seed offset argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
