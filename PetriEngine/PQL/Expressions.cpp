@@ -1641,7 +1641,7 @@ namespace PetriEngine {
         void BooleanCondition::toBinary(std::ostream& out) const
         {
             auto path = getPath();
-            auto quant = Quantifier::BOOLEAN;
+            auto quant = Quantifier::PN_BOOLEAN;
             out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
             out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
             out.write(reinterpret_cast<const char*>(&_value), sizeof(bool));

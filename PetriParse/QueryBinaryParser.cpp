@@ -74,7 +74,7 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
         {
             return DeadlockCondition::DEADLOCK;
         }
-        else if(q == Quantifier::BOOLEAN)
+        else if(q == Quantifier::PN_BOOLEAN)
         {
             bool val;
             binary.read(reinterpret_cast<char*>(&val), sizeof(bool));
