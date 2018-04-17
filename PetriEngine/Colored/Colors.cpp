@@ -134,13 +134,31 @@ namespace PetriEngine {
             _colors.push_back(Color(this, (uint32_t)_colors.size(), colors));
         }
         
-        const Color& ColorType::operator[] (const char* index) const {
+        const Color& ColorType::operator[] (const char* index) {
             for (size_t i = 0; i < _colors.size(); i++) {
-                if (strcmp(_colors[i].toString().c_str(), index) == 0)
-                    return _colors[i];
+                if (strcmp(operator[](i).toString().c_str(), index) == 0)
+                    return operator[](i);
             }
             throw "Index out of bounds";
         }
-        
+
+        const Color& ProductType::operator[](size_t index) {
+            if (cache.count(index) < 1) {
+                size_t mod = 1;
+                size_t div = 1;
+
+                std::vector<Color*> colors;
+                for (size_t i = 0; i < constituents.size(); ++i) {
+                    mod = constituents.size();
+                    colors.push_back((*constituents[i])[(index / div) % mod]);
+                    div *= mod;
+                }
+
+                cache.emplace(this, index, colors);
+            }
+
+            return cache.at(index);
+        }
+
     }
 }
