@@ -157,7 +157,11 @@ namespace PetriEngine {
                 out += "UNFOLDING_TO_PT ";
             }
             
-            if(options->queryReductionTimeout == 0 && !options->tar && options->siphontrapTimeout == 0)
+            if(options->queryReductionTimeout == 0 
+#ifdef ENABLE_TAR
+			    && !options->tar 
+#endif
+			    && options->siphontrapTimeout == 0)
             {
                 out += "EXPLICIT STATE_COMPRESSION ";
                 if(options->stubbornreduction)
