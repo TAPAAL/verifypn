@@ -430,7 +430,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
     auto initial = element->first_attribute("initialMarking");
     long long initialMarking = 0;
     PetriEngine::Colored::Multiset hlinitialMarking;
-    PetriEngine::Colored::ColorType* type;
+    PetriEngine::Colored::ColorType* type = nullptr;
     if(initial)
          initialMarking = atoll(initial->value());
 
@@ -464,7 +464,10 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
             std::cerr << "Place '" << id << "' is missing color type" << std::endl;
             exit(ErrorCode);
         }
-        builder->addPlace(id, type, hlinitialMarking, x, y);
+        else
+        {
+            builder->addPlace(id, type, hlinitialMarking, x, y);
+        }
     }
     //Map id to name
     NodeName nn;
