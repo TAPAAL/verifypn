@@ -12,7 +12,6 @@
 #include <queue>
 #include <set>
 #include <algorithm>
-#include <boost/rational.hpp>
 
 namespace PetriEngine {
 
@@ -463,7 +462,6 @@ namespace PetriEngine {
     }
 
     bool Reducer::ReducebyRuleC(uint32_t* placeInQuery) {
-        using namespace boost;
         // Rule C - Places with same input and output-transitions which a modulo each other
         bool continueReductions = false;
         
@@ -511,7 +509,7 @@ namespace PetriEngine {
                        place1.producers.size() > place2.producers.size())
                         break;
 
-                    rational<uint64_t> mult = 1;
+                    long double mult = 1;
 
                     // C8. Consumers must match with weights
                     int ok = 0;
@@ -530,14 +528,14 @@ namespace PetriEngine {
                         auto a2 = getInArc(p2, trans);
                         assert(a1 != trans.pre.end());
                         assert(a2 != trans.pre.end());
-                        mult = std::max(mult, rational<uint64_t>(a2->weight) / rational<uint64_t>(a1->weight));
+                        mult = std::max(mult, ((long double)a2->weight) / ((long double)a1->weight));
                     }
 
                     if(ok == 2) break;
 
                     // C6. We do not care about excess markings in p2.
-                    if(mult != std::numeric_limits<uint64_t>::max() &&
-                            (rational<uint64_t>(parent->initialMarking[p1]) * mult) > rational<uint64_t>(parent->initialMarking[p2]))
+                    if(mult != std::numeric_limits<long double>::max() &&
+                            (((long double)parent->initialMarking[p1]) * mult) > ((long double)parent->initialMarking[p2]))
                     {
                         continue;
                     }
@@ -560,7 +558,7 @@ namespace PetriEngine {
                         assert(a1 != trans.post.end());
                         assert(a2 != trans.post.end());
 
-                        if(rational<uint64_t>(a1->weight)*mult > rational<uint64_t>(a2->weight))
+                        if(((long double)a1->weight)*mult > ((long double)a2->weight))
                         {
                             ok = 1;
                             break;
