@@ -125,9 +125,9 @@ namespace PetriEngine {
 
             std::cout << "Unfolding transitions" << std::endl;
             for (size_t i = 0; i < _transitions.size(); ++i) {//auto& transition : _transitions) {
-                std::cout << _transitions[i].name << ": ";
-                std::cout << ((float)(i + 1) / (float)_transitions.size()) * 100 << "%\n";
-                std::cout.flush();
+                //std::cout << _transitions[i].name << ": ";
+                //std::cout << ((float)(i + 1) / (float)_transitions.size()) * 100 << "%\n";
+                //std::cout.flush();
                 unfoldTransition(_transitions[i]);
             }
 
@@ -159,9 +159,9 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         //std::cout << transition.name << std::endl;
         BindingGenerator gen(transition, _arcs, _colors);
-        size_t counter = 0;
+        //size_t counter = 0;
         for (auto& b : gen) {
-            std::cout << "Generating binding: " << counter++ << "\r";
+            //std::cout << "Generating binding: " << counter++ << "\r";
             std::cout.flush();
             size_t i = transition.bindings.size();
             std::unordered_map<std::string, const Colored::Color*> binding;
