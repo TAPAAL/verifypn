@@ -12,6 +12,24 @@
 #include <iterator>
 #include <cassert>
 
+//@{
+// From: https://stackoverflow.com/a/236803
+template<typename Out>
+void split(const std::string &s, char delim, Out result) {
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        *(result++) = item;
+    }
+}
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, std::back_inserter(elems));
+    return elems;
+}
+//}@
+
 namespace PetriEngine {
     namespace Colored {
         std::ostream& operator<<(std::ostream& stream, const Color& color) {
@@ -143,21 +161,66 @@ namespace PetriEngine {
         }
 
         const Color& ProductType::operator[](size_t index) {
+#ifdef USE_COLOR_CACHE
             if (cache.count(index) < 1) {
+#endif
                 size_t mod = 1;
                 size_t div = 1;
 
-                std::vector<Color*> colors;
+                std::vector<const Color*> colors;
                 for (size_t i = 0; i < constituents.size(); ++i) {
                     mod = constituents.size();
-                    colors.push_back((*constituents[i])[(index / div) % mod]);
+                    colors.push_back(&(*constituents[i])[(index / div) % mod]);
                     div *= mod;
                 }
 
-                cache.emplace(this, index, colors);
+#ifndef USE_COLOR_CACHE
+                static Color color(this, index, colors);
+                return color;
+#else
+                cache.emplace(index, Color(this, index, colors));
             }
 
             return cache.at(index);
+#endif
+        }
+
+        const Color* ProductType::getColor(const std::vector<const Color*> colors) {
+            size_t product = 1;
+            size_t sum = 0;
+
+            if (constituents.size() != colors.size()) return nullptr;
+
+            for (size_t i = 0; i < constituents.size(); ++i) {
+                if (!(*colors[i]->getColorType() == *constituents[i]))
+                    return nullptr;
+
+                sum += product * colors[i]->getId();
+                product *= constituents[i]->size();
+            }
+            return &operator[](sum);
+        }
+
+        const Color& ProductType::operator[](const char* index) {
+            return operator[](std::string(index));
+        }
+
+        const Color& ProductType::operator[](const std::string& index) {
+            std::string str(index.substr(1, index.size() - 2));
+            std::vector<std::string> parts = split(str, ',');
+
+            if (parts.size() != constituents.size()) {
+                throw "Index out of bounds";
+            }
+
+            size_t sum = 0;
+            size_t mult = 1;
+            for (size_t i = 0; i < parts.size(); ++i) {
+                sum += mult * (*constituents[i])[parts[i]].getId();
+                mult *= constituents[i]->size();
+            }
+
+            return operator[](sum);
         }
 
     }

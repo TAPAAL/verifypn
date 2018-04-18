@@ -37,7 +37,7 @@ namespace PetriEngine {
             const Color* findColor(const std::string& color) const {
                 if (color.compare("dot") == 0)
                     return DotConstant::dotConstant();
-                for (auto elem : colorTypes) {
+                for (auto& elem : colorTypes) {
                     //printf("Trying color type: %s\n", elem.first.c_str());
                     try {
                         return &(*elem.second)[color];
@@ -49,6 +49,16 @@ namespace PetriEngine {
                 }
                 printf("Could not find color: %s\nCANNOT_COMPUTE\n", color.c_str());
                 exit(-1);
+            }
+
+            ProductType* findProductColorType(const std::vector<const ColorType*>& types) const {
+                for (auto& elem : colorTypes) {
+                    auto* pt = dynamic_cast<ProductType*>(elem.second);
+                    if (pt && pt->containsTypes(types)) {
+                        return pt;
+                    }
+                }
+                return nullptr;
             }
         };
         
@@ -187,10 +197,14 @@ namespace PetriEngine {
         public:
             const Color* eval(ExpressionContext& context) const override {
                 std::vector<const Color*> colors;
+                std::vector<const ColorType*> types;
                 for (auto color : _colors) {
                     colors.push_back(color->eval(context));
+                    types.push_back(colors.back()->getColorType());
                 }
-                return context.findColor(Color::toString(colors));
+                ProductType* pt = context.findProductColorType(types);
+                //return context.findColor(Color::toString(colors));
+                return pt->getColor(colors);
             }
             
             void getVariables(std::set<Variable*>& variables) const override {

@@ -115,15 +115,23 @@ namespace PetriEngine {
     PetriNetBuilder& ColoredPetriNetBuilder::unfold() {
         if (_stripped) assert(false);
         if (_isColored && !_unfolded) {
+            std::cout << "Unfolding places" << std::endl;
             auto start = std::chrono::high_resolution_clock::now();
-            for (auto& place : _places) {
-                unfoldPlace(place);
+            for (size_t i = 0; i < _places.size(); ++i) {//auto& place : _places) {
+                unfoldPlace(_places[i]);
+                std::cout << ((float)(i + 1) / (float)_places.size()) * 100 << "%\r";
+                std::cout.flush();
             }
 
-            for (auto& transition : _transitions) {
-                unfoldTransition(transition);
+            std::cout << "Unfolding transitions" << std::endl;
+            for (size_t i = 0; i < _transitions.size(); ++i) {//auto& transition : _transitions) {
+                std::cout << _transitions[i].name << ": ";
+                std::cout << ((float)(i + 1) / (float)_transitions.size()) * 100 << "%\n";
+                std::cout.flush();
+                unfoldTransition(_transitions[i]);
             }
 
+            std::cout << "Unfolding arcs" << std::endl;
             for (auto& arc : _arcs) {
                 unfoldArc(arc);
             }
@@ -151,7 +159,10 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         //std::cout << transition.name << std::endl;
         BindingGenerator gen(transition, _arcs, _colors);
+        size_t counter = 0;
         for (auto& b : gen) {
+            std::cout << "Generating binding: " << counter++ << "\r";
+            std::cout.flush();
             size_t i = transition.bindings.size();
             std::unordered_map<std::string, const Colored::Color*> binding;
             for (auto& elem : b) {

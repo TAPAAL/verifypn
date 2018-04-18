@@ -39,6 +39,7 @@ namespace PetriEngine {
         public:
             Color(ColorType* colorType, uint32_t id, std::vector<const Color*>& colors);
             Color(ColorType* colorType, uint32_t id, const char* color);
+            ~Color() {}
             
             bool isTuple() const {
                 return _tuple.size() > 1;
@@ -105,13 +106,13 @@ namespace PetriEngine {
         
         class ColorType {
         public:
-            class const_iterator {
+            class iterator {
             private:
-                const ColorType& type;
+                ColorType& type;
                 size_t index;
 
             public:
-                const_iterator(const ColorType& type, size_t index) : type(type), index(index) {}
+                iterator(ColorType& type, size_t index) : type(type), index(index) {}
 
                 const Color& operator++() {
                     return type[++index];
@@ -136,11 +137,11 @@ namespace PetriEngine {
                     return &type[index];
                 }
 
-                bool operator==(const_iterator& other) {
+                bool operator==(iterator& other) {
                     return type == other.type && index == other.index;
                 }
 
-                bool operator!=(const_iterator& other) {
+                bool operator!=(iterator& other) {
                     return !(type == other.type) || index != other.index;
                 }
             };
@@ -182,7 +183,7 @@ namespace PetriEngine {
             
             virtual const Color& operator[] (const char* index);
             
-            virtual const Color& operator[] (std::string index) {
+            virtual const Color& operator[] (const std::string& index) {
                 return (*this)[index.c_str()];
             }
             
@@ -194,21 +195,21 @@ namespace PetriEngine {
                 return _id;
             }
             
-//            iterator begin() {
-//                return {*this, 0};
-//            }
-            
-            const_iterator begin() const {
+            iterator begin() {
                 return {*this, 0};
             }
             
-//            iterator end() {
+//            const_iterator begin() const {
 //                return {*this, 0};
 //            }
             
-            const_iterator end() const {
-                return {*this, size()};
+            iterator end() {
+                return {*this, 0};
             }
+            
+//            const_iterator end() const {
+//                return {*this, size()};
+//            }
         };
 
         class ProductType : public ColorType {
@@ -226,20 +227,37 @@ namespace PetriEngine {
             void addDot() override {}
 
             size_t size() const override {
-                size_t sum = 0;
+                size_t product = 1;
                 for (auto ct : constituents) {
-                    sum += ct->size();
+                    product *= ct->size();
                 }
-                return sum;
+                return product;
             }
 
-            const Color &operator[](size_t index) override;
-            const Color &operator[](int index) override {
+            bool containsTypes(const std::vector<const ColorType*>& types) const {
+                if (constituents.size() != types.size()) return false;
+
+                for (size_t i = 0; i < constituents.size(); ++i) {
+                    if (!(*constituents[i] == *types[i])) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            const Color* getColor(const std::vector<const Color*> colors);
+
+            const Color& operator[](size_t index) override;
+            const Color& operator[](int index) override {
                 return operator[]((size_t)index);
             }
             const Color &operator[](uint32_t index) override {
                 return operator[]((size_t)index);
             }
+
+            const Color& operator[](const char* index) override;
+            const Color& operator[](const std::string& index) override;
         };
         
         struct Variable {
