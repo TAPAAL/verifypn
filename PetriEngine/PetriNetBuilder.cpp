@@ -215,6 +215,7 @@ namespace PetriEngine {
                     assert(place_cons_count[pre.place] > 0);
                     --place_cons_count[pre.place];
                     ++freeinv;
+                    assert(false);
                 }
                 
                 net->_transitions[freetrans].outputs = freeinv;
@@ -302,8 +303,9 @@ namespace PetriEngine {
                 for(auto post : trans.post)
                 {
                     assert(freeinv < net->_ninvariants);
-                    net->_invariants[freeinv].place = post.place;
-                    net->_invariants[freeinv].tokens = post.weight;                    
+                    auto& post_inv = net->_invariants[freeinv];
+                    post_inv.place = post.place;
+                    post_inv.tokens = post.weight;    
                     --place_prod_count[post.place];
                     ++freeinv;
                 }
@@ -369,6 +371,63 @@ namespace PetriEngine {
                 --trindex;
             }
         }
+        net->sort();
+        
+        for(size_t t = 0; t < net->numberOfTransitions(); ++t)
+        {
+            {
+                auto tiv = std::make_pair(&net->_invariants[net->_transitions[t].inputs], &net->_invariants[net->_transitions[t].outputs]);
+                for(; tiv.first != tiv.second; ++tiv.first)
+                {
+                    tiv.first->direction = tiv.first->inhibitor ? 0 : -1;
+                    bool found = false;
+                    auto tov = std::make_pair(&net->_invariants[net->_transitions[t].outputs], &net->_invariants[net->_transitions[t + 1].inputs]);                    
+                    for(; tov.first != tov.second; ++tov.first)
+                    {
+                        if(tov.first->place == tiv.first->place)
+                        {
+                            found = true;
+                            if(tiv.first->inhibitor) 
+                                tiv.first->direction = tov.first->direction = 1;
+                            if(tiv.first->tokens < tov.first->tokens)
+                                tiv.first->direction = tov.first->direction = 1;
+                            if(tiv.first->tokens == tov.first->tokens)
+                                tiv.first->direction = tov.first->direction = 0;
+                            if(tiv.first->tokens > tov.first->tokens)
+                                tiv.first->direction = tov.first->direction = -1;
+                            break;
+                        }
+                    }
+                    if(!found) assert(tiv.first->direction < 0 || tiv.first->inhibitor);
+                }
+            }
+            {
+                auto tiv = std::make_pair(&net->_invariants[net->_transitions[t].outputs], &net->_invariants[net->_transitions[t + 1].inputs]);
+                for(; tiv.first != tiv.second; ++tiv.first)
+                {
+                    tiv.first->direction = 1;
+                    bool found = false;
+                    auto tov = std::make_pair(&net->_invariants[net->_transitions[t].inputs], &net->_invariants[net->_transitions[t].outputs]);
+                    for(; tov.first != tov.second; ++tov.first)
+                    {
+                        found = true;
+                        if(tov.first->place == tiv.first->place)
+                        {
+                            if(tov.first->inhibitor) 
+                                tiv.first->direction = tov.first->direction = 1;
+                            if(tiv.first->tokens > tov.first->tokens)
+                                tiv.first->direction = tov.first->direction = 1;
+                            if(tiv.first->tokens == tov.first->tokens)
+                                tiv.first->direction = tov.first->direction = 0;
+                            if(tiv.first->tokens < tov.first->tokens)
+                                tiv.first->direction = tov.first->direction = -1;
+                            break;
+                        }
+                    }
+                    if(!found) assert(tiv.first->direction > 0);
+                }
+            }
+        }
         
         return net;
     }
@@ -393,15 +452,21 @@ namespace PetriEngine {
                                     int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout)
     {
         QueryPlaceAnalysisContext placecontext(getPlaceNames(), getTransitionNames(), net);
+        bool all_reach = true;
+        bool remove_loops = true;
+        bool contains_next = false;
         for(uint32_t i = 0; i < queries.size(); ++i)
         {
             if(results[i] == Reachability::ResultPrinter::Unknown ||
                results[i] == Reachability::ResultPrinter::CTL )
             {
-                queries[i]->analyze(placecontext);        
+                queries[i]->analyze(placecontext);
+                all_reach &= (results[i] != Reachability::ResultPrinter::CTL);
+                remove_loops &= !queries[i]->isLoopSensitive();
+                contains_next |= queries[i]->containsNext();
             }
         }
-        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout);
+        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, contains_next);
     }
 
 

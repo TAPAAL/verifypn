@@ -26,11 +26,10 @@
 #include <sstream> 
 #include <set>
 
-#include "../PetriEngine/PQL/PQL.h"
+
 #include "PNMLParser.h"
 #include "rapidxml/rapidxml.hpp"
-
-using namespace std;
+#include "QueryParser.h"
 using namespace PetriEngine::PQL;
 
 class QueryXMLParser {
@@ -38,18 +37,7 @@ public:
     QueryXMLParser();
     ~QueryXMLParser();
 
-    struct QueryItem {
-        string id; // query name
-        Condition_ptr query;
-        std::vector<std::string> boundNames;
-
-        enum {
-            PARSING_OK,
-            UNSUPPORTED_QUERY,
-        } parsingResult;
-    };
-
-    vector<QueryItem>  queries;
+    std::vector<QueryItem>  queries;
 
     bool parse(std::ifstream& xml, const std::set<size_t>& );
     void printQueries();

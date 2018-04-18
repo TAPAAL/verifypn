@@ -26,13 +26,26 @@ struct options_t {
     int queryReductionTimeout = 30, lpsolveTimeout = 10;
     uint32_t siphontrapTimeout = 0;
     uint32_t siphonDepth = 0;
-    bool upperboundcheck = false;
+    uint32_t cores = 1;
 
     //CTL Specific options
     bool gamemode = false;
     bool isctl = false;
     CTL::CTLAlgorithmType ctlalgorithm = CTL::CZero;
+#ifdef ENABLE_TAR
+    bool tar = false;
+#endif
+    uint32_t binary_query_io = 0;
     
+    std::string query_out_file;
+    std::string model_out_file;
+
+    
+    //CPN Specific options
+    bool cpnOverApprox = false;
+    bool isCPN = false;
+    uint32_t seed_offset = 0;
+
     void print() {
         if (!printstatistics) {
             return;

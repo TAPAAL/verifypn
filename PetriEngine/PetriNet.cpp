@@ -131,6 +131,13 @@ namespace PetriEngine {
         return std::make_pair(&_invariants[first], &_invariants[last]);
     }
 
+    std::pair<const Invariant*, const Invariant*> PetriNet::postset(uint32_t id) const
+    {
+        uint32_t first = _transitions[id].outputs;
+        uint32_t last = _transitions[id+1].inputs;
+        return std::make_pair(&_invariants[first], &_invariants[last]);
+    }
+    
     bool PetriNet::fireable(const MarkVal *marking, int transitionIndex)
     {
         const TransPtr& transition = _transitions[transitionIndex];
@@ -151,6 +158,81 @@ namespace PetriEngine {
         MarkVal* marking = new MarkVal[_nplaces];
         memcpy(marking, _initialMarking, sizeof(MarkVal)*_nplaces);
         return marking;
+    }
+    
+    void PetriNet::sort()
+    {
+        for(size_t i = 0; i < _ntransitions; ++i)
+        {
+            TransPtr& t = _transitions[i];
+            std::sort(&_invariants[t.inputs], &_invariants[t.outputs], [](const auto& a, const auto& b) { return a.place < b.place; });
+            TransPtr& t2 = _transitions[i + 1];
+            std::sort(&_invariants[t.outputs], &_invariants[t2.inputs], [](const auto& a, const auto& b) { return a.place < b.place; });            
+        }
+    }
+    
+    void PetriNet::toXML(std::ostream& out)
+    {
+        out << "<?xml version=\"1.0\"?>\n"
+            << "<pnml xmlns=\"http://www.pnml.org/version-2009/grammar/pnml\">\n" 
+            << "<net id=\"ClientsAndServers-PT-N0500P0\" type=\"http://www.pnml.org/version-2009/grammar/ptnet\">\n";
+        out << "<page id=\"page0\">\n" 
+            << "<name>\n" 
+            << "<text>DefaultPage</text>" 
+            << "</name>";
+
+        for(size_t i = 0; i < _nplaces; ++i)
+        {
+            auto& p = _placenames[i];
+            out << "<place id=\"" << p << "\">\n"
+                << "<name><text>" << p << "</text></name>\n";
+            if(_initialMarking[i] > 0)
+            {
+                out << "<initialMarking><text>" << _initialMarking[i] << "</text></initialMarking>\n";
+            }
+            out << "</place>\n";
+        }
+        for(size_t i = 0; i < _ntransitions; ++i)
+        {
+            out << "<transition id=\"" << _transitionnames[i] << "\">\n"
+                << "<name><text>" << _transitionnames[i] << "</text></name>\n";
+            out << "</transition>\n";
+        }
+        size_t id = 0;
+        for(size_t t = 0; t < _ntransitions; ++t)
+        {
+            auto pre = preset(t);
+
+            for(; pre.first != pre.second; ++pre.first)
+            {
+                out << "<arc id=\"" << (id++) << "\" source=\""
+                    << _placenames[pre.first->place] << "\" target=\""
+                    << _transitionnames[t] << "\">\n";
+                
+                if(pre.first->tokens > 1)
+                {
+                    out << "<inscription><text>" << pre.first->tokens << "</text></inscription>\n";                    
+                }
+                
+                out << "</arc>\n";
+            }
+
+            auto post = postset(t);
+            for(; post.first != post.second; ++post.first)
+            {
+                out << "<arc id=\"" << (id++) << "\" source=\""
+                    << _transitionnames[t] << "\" target=\""
+                    << _placenames[post.first->place] << "\">\n";
+                
+                if(post.first->tokens > 1)
+                {
+                    out << "<inscription><text>" << post.first->tokens << "</text></inscription>\n";                    
+                }
+                
+                out << "</arc>\n";
+            }
+        }
+        out << "</page></net>\n</pnml>";
     }
     
 } // PetriEngine

@@ -10,7 +10,7 @@ namespace PetriEngine {
         _enabled = new bool[net._ntransitions];
         _stubborn = new bool[net._ntransitions];
         _dependency = new uint32_t[net._ntransitions];
-
+        _places_seen.reset(new uint8_t[_net.numberOfPlaces()]);
         reset();
         constructPrePost();
         constructDependency();
@@ -45,7 +45,7 @@ namespace PetriEngine {
     }
 
     void ReducingSuccessorGenerator::constructPrePost() {
-        std::vector<std::pair<std::vector<uint32_t>, std::vector < uint32_t>>> tmp_places(_net._nplaces);
+        std::vector<std::pair<std::vector<trans_t>, std::vector < trans_t>>> tmp_places(_net._nplaces);
                 
         for (uint32_t t = 0; t < _net._ntransitions; t++) {
             const TransPtr& ptr = _net._transitions[t];
@@ -56,14 +56,15 @@ namespace PetriEngine {
                     _inhibpost[_net._invariants[finv].place].push_back(t);
                     _netContainsInhibitorArcs=true;
                 } else {
-                    tmp_places[_net._invariants[finv].place].second.push_back(t);
+                    tmp_places[_net._invariants[finv].place].second.emplace_back(t, _net._invariants[finv].direction);
                 }
             }
 
             finv = linv;
             linv = _net._transitions[t + 1].inputs;
             for (; finv < linv; finv++) { // Pre set of places
-                tmp_places[_net._invariants[finv].place].first.push_back(t);
+                if(_net._invariants[finv].direction > 0)
+                    tmp_places[_net._invariants[finv].place].first.emplace_back(t, _net._invariants[finv].direction);
             }
         }
 
@@ -72,14 +73,14 @@ namespace PetriEngine {
         for (auto p : tmp_places) {
             ntrans += p.first.size() + p.second.size();
         }
-        _transitions.reset(new uint32_t[ntrans]);
+        _transitions.reset(new trans_t[ntrans]);
 
         _places.reset(new place_t[_net._nplaces + 1]);
         uint32_t offset = 0;
         uint32_t p = 0;
         for (; p < _net._nplaces; ++p) {
-            std::vector<uint32_t>& pre = tmp_places[p].first;
-            std::vector<uint32_t>& post = tmp_places[p].second;
+            auto& pre = tmp_places[p].first;
+            auto& post = tmp_places[p].second;
 
             // keep things nice for caches
             std::sort(pre.begin(), pre.end());
@@ -138,45 +139,64 @@ namespace PetriEngine {
             }
         }
     }
-    
-    void ReducingSuccessorGenerator::presetOf(uint32_t place) {
-        for (uint32_t t = _places.get()[place].pre; t < _places.get()[place].post; t++) {
-            uint32_t newstub = _transitions.get()[t];
-            if(!_stubborn[newstub]){
-                _stubborn[newstub] = true;
-                _unprocessed.push_back(newstub);
-            }
-        }
+
+    bool ReducingSuccessorGenerator::seenPre(uint32_t place) const
+    {
+        return (_places_seen.get()[place] & 1) != 0;
     }
     
-    void ReducingSuccessorGenerator::postsetOf(uint32_t place) {
+    bool ReducingSuccessorGenerator::seenPost(uint32_t place) const
+    {
+        return (_places_seen.get()[place] & 2) != 0;
+    }
+    
+    void ReducingSuccessorGenerator::presetOf(uint32_t place, bool make_closure) {
+        if((_places_seen.get()[place] & 1) != 0) return;
+        _places_seen.get()[place] = _places_seen.get()[place] | 1;
+        for (uint32_t t = _places.get()[place].pre; t < _places.get()[place].post; t++)
+        {
+            auto& tr = _transitions.get()[t];
+            addToStub(tr.index);
+        }
+        if(make_closure) closure();            
+    }
+    
+    void ReducingSuccessorGenerator::postsetOf(uint32_t place, bool make_closure) {       
+        if((_places_seen.get()[place] & 2) != 0) return;
+        _places_seen.get()[place] = _places_seen.get()[place] | 2;
         for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) {
-            uint32_t newstub = _transitions.get()[t];
-            if(!_stubborn[newstub]){
-                _stubborn[newstub] = true;
-                _unprocessed.push_back(newstub);
-            }
+            auto tr = _transitions.get()[t];
+            if(tr.direction < 0)
+                addToStub(tr.index);
+        }
+        if(make_closure) closure();
+    }
+    
+    void ReducingSuccessorGenerator::addToStub(uint32_t t)
+    {
+        if(!_stubborn[t])
+        {
+            _stubborn[t] = true;
+            _unprocessed.push_back(t);
         }
     }
     
     void ReducingSuccessorGenerator::inhibitorPostsetOf(uint32_t place){
-        for(uint32_t& newstub : _inhibpost[place]){
-            if(!_stubborn[newstub]){
-                _stubborn[newstub] = true;
-                _unprocessed.push_back(newstub);
-            }
-        }
+        if((_places_seen.get()[place] & 4) != 0) return;
+        _places_seen.get()[place] = _places_seen.get()[place] | 4;
+        for(uint32_t& newstub : _inhibpost[place])
+            addToStub(newstub);
     }
     
-    void ReducingSuccessorGenerator::postPresetOf(uint32_t t) {
+    void ReducingSuccessorGenerator::postPresetOf(uint32_t t, bool make_closure) {
         const TransPtr& ptr = _net._transitions[t];
         uint32_t finv = ptr.inputs;
         uint32_t linv = ptr.outputs;
         for (; finv < linv; finv++) { // pre-set of t
             if(_net._invariants[finv].inhibitor){ 
-                presetOf(_net._invariants[finv].place);
+                presetOf(_net._invariants[finv].place, make_closure);
             } else {
-                postsetOf(_net._invariants[finv].place); 
+                postsetOf(_net._invariants[finv].place, make_closure); 
             }
         }        
     }
@@ -184,6 +204,7 @@ namespace PetriEngine {
 
     void ReducingSuccessorGenerator::prepare(const Structures::State* state) {
         _parent = state;
+        memset(_places_seen.get(), 0, _net.numberOfPlaces());
         constructEnabled();
         if(_ordering.size() == 0) return;
         if(_ordering.size() == 1)
@@ -196,35 +217,66 @@ namespace PetriEngine {
             q->findInteresting(*this, false);
         }
         
+        closure();
+    }
+    
+    void ReducingSuccessorGenerator::closure()
+    {
         while (!_unprocessed.empty()) {
             uint32_t tr = _unprocessed.front();
             _unprocessed.pop_front();
             const TransPtr& ptr = _net._transitions[tr];
             uint32_t finv = ptr.inputs;
             uint32_t linv = ptr.outputs;
-            uint32_t next_finv = _net._transitions[tr+1].inputs;
-            if (_enabled[tr]) {
+            if(_enabled[tr]){
                 for (; finv < linv; finv++) {
-                    postsetOf(_net._invariants[finv].place);
+                    if(_net._invariants[finv].direction < 0)
+                    {
+                        auto place = _net._invariants[finv].place;
+                        for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) 
+                            addToStub(_transitions.get()[t].index);
+                    }
                 }
                 if(_netContainsInhibitorArcs){
-                    for (; linv < next_finv; linv++) {                    
-                        inhibitorPostsetOf(_net._invariants[finv].place);
+                    uint32_t next_finv = _net._transitions[tr+1].inputs;
+                    for (; linv < next_finv; linv++)
+                    {
+                        if(_net._invariants[linv].direction > 0)
+                            inhibitorPostsetOf(_net._invariants[finv].place);
                     }
                 }
             } else {
+                bool ok = false;
+                bool inhib = false;
+                uint32_t cand = std::numeric_limits<uint32_t>::max();
+               
+                // Lets try to see if we havent already added sufficient pre/post 
+                // for this transition.
                 for (; finv < linv; ++finv) {
                     const Invariant& inv = _net._invariants[finv];
-                    if ((*_parent).marking()[inv.place] < inv.tokens) {
-                        presetOf(inv.place);
-                        break;
+                    if ((*_parent).marking()[inv.place] < inv.tokens && !inv.inhibitor) {
+                        inhib = false;
+                        ok = (_places_seen.get()[inv.place] & 1) != 0;
+                        cand = inv.place;
                     } else if ((*_parent).marking()[inv.place] >= inv.tokens && inv.inhibitor) {
-                        postsetOf(inv.place);
-                        break;
+                        inhib = true;
+                        ok = (_places_seen.get()[inv.place] & 2) != 0;
+                        cand = inv.place;
                     }
+                    if(ok) break;
+
+                }
+                
+                // OK, we didnt have sufficient, we just pick whatever is left
+                // in cand.
+                assert(cand != std::numeric_limits<uint32_t>::max());
+                if(!ok && cand != std::numeric_limits<uint32_t>::max())
+                {
+                    if(!inhib) presetOf(cand);
+                    else       postsetOf(cand);
                 }
             }
-        }
+        }        
     }
 
     bool ReducingSuccessorGenerator::next(Structures::State& write) {
@@ -232,6 +284,7 @@ namespace PetriEngine {
             _current = _ordering.front();
             _ordering.pop_front();
             if (_stubborn[_current]) {
+                assert(_enabled[_current]);
                 memcpy(write.marking(), (*_parent).marking(), _net._nplaces*sizeof(MarkVal));
                 consumePreset(write, _current);
                 producePostset(write, _current);

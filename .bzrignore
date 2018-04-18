@@ -5,3 +5,7 @@
 verifypn-experimental-linux64
 *.user
 verifypn-linux64
+verifypn-osx64
+nbproject/
+cmake-build-*
+.idea/

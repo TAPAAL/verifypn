@@ -11,11 +11,12 @@
 #include <PetriParse/PNMLParser.h>
 #include <queue>
 #include <set>
+#include <algorithm>
 
 namespace PetriEngine {
 
     Reducer::Reducer(PetriNetBuilder* p) 
-    : _removedTransitions(0), _removedPlaces(0), _ruleA(0), _ruleB(0), _ruleC(0), _ruleD(0), _ruleE(0), _ruleF(0), parent(p) {
+    : parent(p) {
     }
 
     Reducer::~Reducer() {
@@ -94,10 +95,10 @@ namespace PetriEngine {
             return ait;
         }
         else 
-            {
+        {
             return trans.post.end();
-            }
         }
+    }
     
     ArcIter Reducer::getInArc(uint32_t place, Transition& trans)
     {
@@ -110,7 +111,7 @@ namespace PetriEngine {
         }
         else 
         {
-        return trans.pre.end();
+            return trans.pre.end();
         }
     }
     
@@ -483,6 +484,7 @@ namespace PetriEngine {
 
                 for(size_t swp = 0; swp < 2; ++swp)
                 {
+                    if(hasTimedout()) return false;
                     if( parent->_places[pinner].skip ||
                         parent->_places[pouter].skip) break;
                     
@@ -503,55 +505,48 @@ namespace PetriEngine {
                     Place& place2 = parent->_places[p2];
 
                     // C2, C3. Consumer and producer-sets must match
-                    if(place1.consumers.size() != place2.consumers.size() ||
-                       place1.producers.size() != place2.producers.size())
+                    if(place1.consumers.size() < place2.consumers.size() ||
+                       place1.producers.size() > place2.producers.size())
                         break;
 
-                    uint mult = std::numeric_limits<uint>::max();
+                    long double mult = 1;
 
                     // C8. Consumers must match with weights
                     int ok = 0;
-                    for(int i = place1.consumers.size() - 1; i >= 0; --i)
+                    size_t j = 0;
+                    for(size_t i = 0; i < place2.consumers.size(); ++i)
                     {
-                        if(place1.consumers[i] != place2.consumers[i])
+                        while(j < place1.consumers.size() && place1.consumers[j] < place2.consumers[i] ) ++j;
+                        if(place1.consumers.size() <= j || place1.consumers[j] != place2.consumers[i])
                         {
                             ok = 2;
                             break;
                         }
 
-                        Transition& trans = getTransition(place1.consumers[i]);
+                        Transition& trans = getTransition(place1.consumers[j]);
                         auto a1 = getInArc(p1, trans);
                         auto a2 = getInArc(p2, trans);
-                        if(a2 == trans.pre.end())
-                        {
-                            ok = 2;
-                            break;
-                        }
                         assert(a1 != trans.pre.end());
-
-                        if(mult == std::numeric_limits<uint>::max())
-                        {
-                            if(a2->weight < a1->weight || (a2->weight % a1->weight) != 0)
-                            {
-                                ok = 1;
-                                break;
-                            }
-                            mult = a2->weight / a1->weight;
-                        }
-                        else if(a1->weight*mult != a2->weight)
-                        {
-                            ok = 2;
-                            break;
-                        }
+                        assert(a2 != trans.pre.end());
+                        mult = std::max(mult, ((long double)a2->weight) / ((long double)a1->weight));
                     }
 
                     if(ok == 2) break;
-                    else if(ok == 1) continue;
 
-                    // C7. Producers must match with weights
-                    for(int i = place1.producers.size() - 1; i >= 0; --i)
+                    // C6. We do not care about excess markings in p2.
+                    if(mult != std::numeric_limits<long double>::max() &&
+                            (((long double)parent->initialMarking[p1]) * mult) > ((long double)parent->initialMarking[p2]))
                     {
-                        if(place1.producers[i] != place2.producers[i])
+                        continue;
+                    }
+
+                    
+                    // C7. Producers must match with weights
+                    j = 0;
+                    for(size_t i = 0; i < place1.producers.size(); ++i)
+                    {
+                        while(place2.producers[j] < place1.producers[i] && j < place2.producers.size()) ++j;
+                        if(place1.producers[i] != place2.producers[j])
                         {
                             ok = 2;
                             break;
@@ -560,35 +555,18 @@ namespace PetriEngine {
                         Transition& trans = getTransition(place1.producers[i]);
                         auto a1 = getOutArc(trans, p1);
                         auto a2 = getOutArc(trans, p2);
-                        if( a2 == trans.post.end())
-                        {
-                            ok = 2;
-                            break;
-                        }
                         assert(a1 != trans.post.end());
-                        if(mult == std::numeric_limits<uint>::max())
+                        assert(a2 != trans.post.end());
+
+                        if(((long double)a1->weight)*mult > ((long double)a2->weight))
                         {
-                            if(a2->weight < a1->weight || (a2->weight % a1->weight) != 0)
-                            {
-                                ok = 1;
-                                break;
-                            }
-                            mult = a2->weight / a1->weight;
-                        }
-                        else if(a1->weight*mult != a2->weight)
-                        {
-                            ok = 2;
+                            ok = 1;
                             break;
                         }
                     }
 
                     if(ok == 2) break;
                     else if(ok == 1) continue;
-
-                    // C6. We do not care about excess markings in p2.
-                    if(mult != std::numeric_limits<uint>::max() &&
-                            (parent->initialMarking[p1] * mult) > parent->initialMarking[p2])
-                        continue;
 
                     parent->initialMarking[p2] = 0;
 
@@ -628,7 +606,6 @@ namespace PetriEngine {
             if (tout.inhib) continue;
 
             for (uint32_t tinner = touter + 1; tinner < ntrans; ++tinner) {
-
                 Transition& tin = getTransition(tinner);
                 if (tin.skip || tout.skip) continue;
 
@@ -636,6 +613,7 @@ namespace PetriEngine {
                 if (tin.inhib) continue;
 
                 for (size_t swp = 0; swp < 2; ++swp) {
+                    if(hasTimedout()) return false;
 
                     if (tin.skip || tout.skip) break;
                     
@@ -726,18 +704,22 @@ namespace PetriEngine {
             Place& place = parent->_places[p];
             if(place.skip) continue;
             if(place.inhib) continue;
-            if(placeInQuery[p] > 0) continue;
             if(place.producers.size() > place.consumers.size()) continue;
             
             std::set<uint32_t> notenabled;
-            bool ok = true;            
+            bool ok = true;
             for(uint cons : place.consumers)
             {
                 Transition& t = getTransition(cons);
-                if(getInArc(p, t)->weight <= parent->initialMarking[p])
+                auto in = getInArc(p, t);
+                if(in->weight <= parent->initialMarking[p])
                 {
-                    ok = false;
-                    break;
+                    auto out = getOutArc(t, p);
+                    if(out == t.post.end() || out->place != p || out->weight >= in->weight)
+                    {
+                        ok = false;
+                        break;
+                    }
                 }               
                 else
                 {
@@ -745,7 +727,7 @@ namespace PetriEngine {
                 }
             }
             
-            if(!ok) continue;
+            if(!ok || notenabled.size() == 0) continue;
 
             for(uint prod : place.producers)
             {
@@ -772,7 +754,7 @@ namespace PetriEngine {
             
             parent->initialMarking[p] = 0;
             
-            bool skipplace = notenabled.size() == place.consumers.size();
+            bool skipplace = (notenabled.size() == place.consumers.size()) && (placeInQuery[p] == 0);
             for(uint cons : notenabled)
                 skipTransition(cons);
 
@@ -784,6 +766,170 @@ namespace PetriEngine {
         return continueReductions;
     }
    
+    bool Reducer::ReducebyRuleI(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers) {
+        bool reduced = false;
+        if(remove_loops)
+        {
+            std::vector<uint32_t> wtrans;
+            std::vector<bool> tseen(parent->numberOfTransitions(), false);
+
+            for(uint32_t p = 0; p < parent->numberOfPlaces(); ++p)
+            {
+                if(hasTimedout()) return false;
+                if(placeInQuery[p] > 0)
+                {
+                    const Place& place = parent->_places[p];
+                    for(auto t : place.consumers)
+                    {
+                        if(!tseen[t])
+                        {
+                            wtrans.push_back(t);
+                            tseen[t] = true;
+                        }
+                    }
+                    for(auto t : place.producers)
+                    {
+                        if(!tseen[t])
+                        {
+                            wtrans.push_back(t);
+                            tseen[t] = true;
+                        }
+                    }
+                }
+            }
+
+            std::vector<bool> pseen(parent->numberOfPlaces(), false);        
+            while(!wtrans.empty())
+            {
+                if(hasTimedout()) return false;
+                auto t = wtrans.back();
+                wtrans.pop_back();
+                const Transition& trans = parent->_transitions[t];
+                for(const Arc& arc : trans.pre)
+                {
+                    const Place& place = parent->_places[arc.place];
+                    if(arc.inhib)
+                    {
+                        for(auto pt : place.consumers)
+                        {
+                            if(!tseen[pt])
+                            {
+                                Transition& trans = parent->_transitions[pt];
+                                auto it = trans.post.begin();
+                                for(; it != trans.post.end(); ++it)
+                                    if(it->place >= arc.place) break;
+                                if(it != trans.pre.end() && it->place == arc.place)
+                                {
+                                    auto it2 = trans.pre.begin();
+                                    for(; it2 != trans.pre.end(); ++it2)
+                                        if(it2->place >= arc.place || it2->inhib) break;
+                                    if(it->weight <= it2->weight) continue;
+                                }
+                                tseen[pt] = true;
+                                wtrans.push_back(pt);                                    
+                            }
+                        }                        
+                    }
+                    else
+                    {
+                        for(auto pt : place.producers)
+                        {
+                            if(!tseen[pt])
+                            {                                    
+                                Transition& trans = parent->_transitions[pt];
+                                auto it = trans.pre.begin();
+                                for(; it != trans.pre.end(); ++it)
+                                    if(it->place >= arc.place) break;
+
+                                if(it != trans.pre.end() && it->place == arc.place && !it->inhib)
+                                {
+                                    auto it2 = trans.post.begin();
+                                    for(; it2 != trans.post.end(); ++it2)
+                                        if(it2->place >= arc.place) break;
+                                    if(it->weight >= it2->weight) continue;
+                                }
+
+                                tseen[pt] = true;
+                                wtrans.push_back(pt);
+                            }
+                        }
+
+                        for(auto pt : place.consumers)
+                        {
+                            if(!tseen[pt] && (!remove_consumers || placeInQuery[arc.place] > 0))
+                            {
+                                tseen[pt] = true;
+                                wtrans.push_back(pt);                                    
+                            }
+                        }
+                    }
+                    pseen[arc.place] = true;
+                }
+            }
+
+            for(size_t t = 0; t < parent->numberOfTransitions(); ++t)
+            {
+                if(!tseen[t] && !parent->_transitions[t].skip)
+                {
+                    skipTransition(t);
+                    reduced = true;
+                }
+            }
+
+            for(size_t p = 0; p < parent->numberOfPlaces(); ++p)
+            {
+                if(!pseen[p] && !parent->_places[p].skip && placeInQuery[p] == 0)
+                {
+                    assert(placeInQuery[p] == 0);
+                    skipPlace(p);
+                    reduced = true;
+                }
+            }
+            
+            if(reduced)
+                ++_ruleI;
+        }
+        else
+        {            
+            const size_t numberofplaces = parent->numberOfPlaces();
+            for(uint32_t p = 0; p < numberofplaces; ++p)
+            {
+                if(hasTimedout()) return false;
+                Place& place = parent->_places[p];
+                if(place.skip) continue;
+                if(place.inhib) continue;
+                if(placeInQuery[p] > 0) continue;
+                if(place.consumers.size() > 0) continue;
+
+                ++_ruleI;
+                reduced = true;
+
+                std::vector<uint32_t> torem;
+                for(auto& t : place.producers)
+                {
+                    auto& trans = parent->_transitions[t];
+                    if(trans.post.size() != 1) // place will be removed later
+                        continue;
+                    bool ok = true;
+                    for(auto& a : trans.pre)
+                    {
+                        if(placeInQuery[a.place] > 0)
+                        {
+                            ok = false;
+                        }
+                    }
+                    if(ok) torem.push_back(t);
+                }
+                skipPlace(p);
+                for(auto t : torem)
+                    skipTransition(t);
+                assert(consistent());
+            }
+        }
+        
+        return reduced;
+    }
+   
     bool Reducer::ReducebyRuleF(uint32_t* placeInQuery) {
         bool continueReductions = false;
         const size_t numberofplaces = parent->numberOfPlaces();
@@ -793,37 +939,215 @@ namespace PetriEngine {
             Place& place = parent->_places[p];
             if(place.skip) continue;
             if(place.inhib) continue;
-            if(placeInQuery[p] > 0) continue;
-            if(place.consumers.size() > 0) continue;
+            if(place.producers.size() < place.consumers.size()) continue;
+            if(placeInQuery[p] != 0) continue; 
             
-            ++_ruleF;
-            continueReductions = true;
-            skipPlace(p);
-            std::vector<uint32_t> torem;
-            for(auto& t : place.producers)
+            bool ok = true;
+            for(uint cons : place.consumers)
             {
-                auto& trans = parent->_transitions[t];
-                if(trans.post.size() != 0)
-                    continue;
-                bool ok = true;
-                for(auto& a : trans.pre)
+                Transition& t = getTransition(cons);
+                auto w = getInArc(p, t)->weight;
+                if(w > parent->initialMarking[p])
                 {
-                    if(placeInQuery[a.place] > 0)
+                    ok = false;
+                    break;
+                }               
+                else
+                {
+                    auto it = getOutArc(t, p);
+                    if(it == t.post.end() || 
+                       it->place != p     ||
+                       it->weight < w)
                     {
                         ok = false;
+                        break;
                     }
                 }
-                if(ok) torem.push_back(t);
             }
             
-            for(auto t : torem)
-                skipTransition(t);
-            assert(consistent());
+            if(!ok) continue;
+            
+            ++_ruleF;
+            
+            if((numberofplaces - _removedPlaces) > 1)
+            {
+                skipPlace(p);
+                continueReductions = true;
+            }
+            
         }
+        assert(consistent());
         return continueReductions;
     }
+    
+    
+    bool Reducer::ReducebyRuleG(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers) {
+        if(!remove_loops) return false;
+        bool continueReductions = false;
+        for(uint32_t t = 0; t < parent->numberOfTransitions(); ++t)
+        {
+            if(hasTimedout()) return false;
+            Transition& trans = parent->_transitions[t];
+            if(trans.skip) continue;
+            if(trans.inhib) continue;
+            if(trans.pre.size() < trans.post.size()) continue;
+            if(!remove_loops && trans.pre.size() == 0) continue;
+            
+            auto postit = trans.post.begin();
+            auto preit = trans.pre.begin();
+            
+            bool ok = true;
+            while(true)
+            {
+                if(preit == trans.pre.end() && postit == trans.post.end())
+                    break;
+                if(preit == trans.pre.end())
+                {
+                    ok = false;
+                    break;
+                }
+                if(preit->inhib)
+                {
+                    ok = false;
+                    break;
+                }
+                if(postit != trans.post.end() && preit->place == postit->place)
+                {
+                    if(!remove_consumers && preit->weight != postit->weight)
+                    {
+                        ok = false;
+                        break;
+                    }
+                    if((placeInQuery[preit->place] > 0 && preit->weight != postit->weight) ||
+                       (placeInQuery[preit->place] == 0 && preit->weight < postit->weight))
+                    {
+                        ok = false;
+                        break;
+                    }
+                    ++preit;
+                    ++postit;
+                }
+                else if(postit == trans.post.end() || preit->place < postit->place) 
+                {
+                    if(placeInQuery[preit->place] > 0 || !remove_consumers)
+                    {
+                        ok = false;
+                        break;
+                    }
+                    ++preit;
+                }
+                else
+                {
+                    // could not match a post with a pre
+                    ok = false;
+                    break;
+                }
+            }
+                        
+            if(!ok) continue;
+            ++_ruleG;
+            skipTransition(t);
+        }
+        assert(consistent());
+        return continueReductions;
+    }
+    
+    bool Reducer::ReducebyRuleH(uint32_t* placeInQuery)
+    {
+        bool continueReductions = false;
+        for(uint32_t t1 = 0; t1 < parent->numberOfTransitions(); ++t1)
+        {
+            auto& trans1 = parent->_transitions[t1];
+            if(trans1.skip) continue;
+            if(trans1.inhib) continue;
+            if(trans1.pre.size() != 1) continue;
+            if(trans1.post.size() != 1) continue;
+            auto p1 = trans1.pre[0].place;
+            auto p2 = trans1.post[0].place;
+            if(trans1.pre[0].weight != 1) continue;
+            if(trans1.post[0].weight != 1) continue;
+            if(p1 == p2) continue;
+            if(placeInQuery[p1] > 0) continue;
+            if(placeInQuery[p2] > 0) continue;
+            if(parent->_places[p1].inhib) continue;
+            if(parent->_places[p2].inhib) continue;
+            
+            for(uint32_t t2 = t1 + 1; t2 < parent->numberOfTransitions(); ++t2)
+            {
+                auto& trans2 = parent->_transitions[t2];
+                if(trans2.skip) continue;
+                if(trans2.inhib) continue;
+                if(trans2.pre.size() != 1) continue;
+                if(trans2.post.size() != 1) continue;
+                if(trans2.pre[0].weight != 1) continue;
+                if(trans2.post[0].weight != 1) continue;
+                if(trans2.pre[0].place != p2) continue;                
+                if(trans2.post[0].place != p1) continue;                
 
-    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout) {
+               ++_ruleH;
+                skipTransition(t2);
+
+                auto& place1 = parent->_places[p1];
+                auto& place2 = parent->_places[p2];
+
+                {
+
+                    for(auto p2it : place2.consumers)
+                    {
+                        auto& t = parent->_transitions[p2it];
+                        auto arc = getInArc(p2, t);
+                        assert(arc != t.pre.end());
+                        assert(arc->place == p2);
+                        auto a = *arc;
+                        a.place = p1;
+                        auto dest = std::lower_bound(t.pre.begin(), t.pre.end(), a);
+                        if(dest == t.pre.end() || dest->place != p1)
+                        {
+                            t.pre.insert(dest, a);
+                            auto lb = std::lower_bound(place1.consumers.begin(), place1.consumers.end(), p2it);
+                            place1.consumers.insert(lb, p2it);
+                        }
+                        else
+                        {
+                            dest->weight += a.weight;
+                        }
+                        consistent();
+                    }
+                }
+                
+                {
+                    auto p2it = place2.producers.begin();
+
+                    for(;p2it != place2.producers.end(); ++p2it)
+                    {
+                        auto& t = parent->_transitions[*p2it];
+                        Arc a = *getOutArc(t, p2);
+                        a.place = p1;
+                        auto dest = std::lower_bound(t.post.begin(), t.post.end(), a);
+                        if(dest == t.post.end() || dest->place != p1)
+                        {
+                            t.post.insert(dest, a);
+                            auto lb = std::lower_bound(place1.producers.begin(), place1.producers.end(), *p2it);
+                            place1.producers.insert(lb, *p2it);
+                        }
+                        else
+                        {
+                            dest->weight += a.weight;
+                        }
+                        consistent();
+                    }
+                }
+                
+                parent->initialMarking[p1] += parent->initialMarking[p2];
+                
+                skipPlace(p2);
+                continueReductions = true;
+            }
+        }   
+        return continueReductions;
+    }
+    
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
@@ -832,23 +1156,45 @@ namespace PetriEngine {
             bool changed = false;
             do
             {
+                if(remove_loops && !next_safe)
+                    ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers);
                 do{
                     changed = false;
-                    changed |= ReducebyRuleA(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleB(context.getQueryPlaceCount());
+                    if(!next_safe) {
+                        changed |= ReducebyRuleB(context.getQueryPlaceCount());
+                        changed |= ReducebyRuleA(context.getQueryPlaceCount());
+                    }
                     changed |= ReducebyRuleE(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleF(context.getQueryPlaceCount());
+                    if(!next_safe) 
+                    {
+                        changed |= ReducebyRuleF(context.getQueryPlaceCount());
+                        changed |= ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers);
+                        if(!remove_loops) 
+                            changed |= ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers);
+                    }
                 } while(changed && !hasTimedout());
                 // RuleC and RuleD are expensive, so wait with those till nothing else changes
-                changed |= ReducebyRuleD(context.getQueryPlaceCount());
                 changed |= ReducebyRuleC(context.getQueryPlaceCount());
+                if(!next_safe) 
+                {
+                    changed |= ReducebyRuleD(context.getQueryPlaceCount());
+
+                    if(!changed)
+                        // Only try RuleH last. It can reduce applicability of other rules.
+                        changed |= ReducebyRuleH(context.getQueryPlaceCount());
+                }
             } while(!hasTimedout() && changed);
 
-        } else if (enablereduction == 2) { // for k-boundedness checking only rules A and D are applicable
-            while ( (
-                        ReducebyRuleA(context.getQueryPlaceCount()) ||
-                        ReducebyRuleD(context.getQueryPlaceCount())
-                    ) && !hasTimedout()) {
+        } else if (enablereduction == 2) { // for k-boundedness checking only rules A, D and H are applicable
+            bool changed = true;
+            while (changed && !hasTimedout()) {
+                changed = false;
+                if(!next_safe)
+                {
+                    changed |= ReducebyRuleA(context.getQueryPlaceCount());
+                    changed |= ReducebyRuleD(context.getQueryPlaceCount());
+                    changed |= ReducebyRuleH(context.getQueryPlaceCount());
+                }
             }
         }
     }

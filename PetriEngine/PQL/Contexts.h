@@ -91,6 +91,49 @@ namespace PetriEngine {
             }
         };
 
+        class ColoredAnalysisContext : public AnalysisContext {
+        protected:
+            const std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>>& _coloredPlaceNames;
+            const std::unordered_map<std::string, std::vector<std::string>>& _coloredTransitionNames;
+
+            bool _colored;
+
+        public:
+            ColoredAnalysisContext(const std::unordered_map<std::string, uint32_t>& places,
+                                   const std::unordered_map<std::string, uint32_t>& tnames,
+                                   const PetriNet* net,
+                                   const std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>>& cplaces,
+                                   const std::unordered_map<std::string, std::vector<std::string>>& ctnames,
+                                   bool colored)
+                    : AnalysisContext(places, tnames, net),
+                      _coloredPlaceNames(cplaces),
+                      _coloredTransitionNames(ctnames),
+                      _colored(colored)
+            {}
+
+            bool resolvePlace(const std::string& place, std::unordered_map<uint32_t,std::string>& out) {
+                auto it = _coloredPlaceNames.find(place);
+                if (it != _coloredPlaceNames.end()) {
+                    out = it->second;
+                    return true;
+                }
+                return false;
+            }
+
+            bool resolveTransition(const std::string& transition, std::vector<std::string>& out) {
+                auto it = _coloredTransitionNames.find(transition);
+                if (it != _coloredTransitionNames.end()) {
+                    out = it->second;
+                    return true;
+                }
+                return false;
+            }
+
+            bool isColored() const {
+                return _colored;
+            }
+        };
+
         /** Context provided for evalation */
         class EvaluationContext {
         public:

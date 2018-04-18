@@ -48,6 +48,7 @@ namespace PetriEngine {
         uint32_t place;
         uint32_t tokens;
         bool inhibitor;
+        int8_t direction;
         // we can pack things here, but might give slowdown
     } /*__attribute__((packed))*/; 
     
@@ -65,7 +66,7 @@ namespace PetriEngine {
         bool deadlocked(const MarkVal* marking) const;
         bool fireable(const MarkVal* marking, int transitionIndex);
         std::pair<const Invariant*, const Invariant*> preset(uint32_t id) const;
-        
+        std::pair<const Invariant*, const Invariant*> postset(uint32_t id) const;
         uint32_t numberOfTransitions() const {
             return _ntransitions;
         }
@@ -97,6 +98,10 @@ namespace PetriEngine {
                 }
             }
         }
+        
+        void sort();
+        
+        void toXML(std::ostream& out);
 
     private:        
 

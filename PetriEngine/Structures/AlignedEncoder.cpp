@@ -112,17 +112,10 @@ uint32_t AlignedEncoder::writeTokens(size_t offset, const uint32_t* data)
 template<typename T>
 uint32_t AlignedEncoder::readTokens(uint32_t* destination, const unsigned char* source, uint32_t offset)
 {
-    if(sizeof(T) == sizeof(uint32_t))
+    for(size_t i = 0; i < _places; ++i)
     {
-        memcpy(destination, &(source[offset]), _places*sizeof(T));
-    }
-    else
-    {
-        for(size_t i = 0; i < _places; ++i)
-        {
-            T* src = (T*)(&source[offset + (i*sizeof(T))]);
-            destination[i] = *src;
-        }
+        T* src = (T*)(&source[offset + (i*sizeof(T))]);
+        destination[i] = *src;
     }
     return offset + _places*sizeof(T);
 }

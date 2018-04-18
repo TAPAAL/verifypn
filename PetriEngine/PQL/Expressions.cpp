@@ -29,6 +29,10 @@
 #include <cmath>
 #include <numeric>
 
+#ifdef ENABLE_TAR
+#include <z3++.h>
+#endif
+
 using namespace PetriEngine::Simplification;
 
 namespace PetriEngine {
@@ -64,8 +68,8 @@ namespace PetriEngine {
                 }
                 else
                 {
-                    if(! ((dynamic_cast<IdentifierExpr*>((*comp)[0].get()) && dynamic_cast<LiteralExpr*>((*comp)[1].get())) ||
-                          (dynamic_cast<IdentifierExpr*>((*comp)[1].get()) && dynamic_cast<LiteralExpr*>((*comp)[0].get()))))
+                    if(! ((dynamic_cast<UnfoldedIdentifierExpr*>((*comp)[0].get()) && dynamic_cast<LiteralExpr*>((*comp)[1].get())) ||
+                          (dynamic_cast<UnfoldedIdentifierExpr*>((*comp)[1].get()) && dynamic_cast<LiteralExpr*>((*comp)[0].get()))))
                     {
                         _conds.emplace_back(ptr);
                         return;
@@ -171,7 +175,7 @@ namespace PetriEngine {
             out << _value;
         }
 
-        void IdentifierExpr::toString(std::ostream& out) const {
+        void UnfoldedIdentifierExpr::toString(std::ostream& out) const {
             out << _name;
         }
 
@@ -195,6 +199,7 @@ namespace PetriEngine {
                 ss << " " << op() << " ";
                 e->toString(ss);
             }
+            ss << ")";
         }
 
 
@@ -269,7 +274,31 @@ namespace PetriEngine {
         void DeadlockCondition::toString(std::ostream& out) const {
             out << "deadlock";
         }
-
+        
+        void UpperBoundsCondition::toString(std::ostream& out) const {
+            if(_compiled) _compiled->toString(out);
+            else
+            {
+                out << "bounds (";
+                for(size_t i = 0; i < _places.size(); ++i)
+                {
+                    if(i != 0) out << ", ";
+                    out << _places[i];
+                }
+                out << ")";            
+            }
+        }
+        
+        void UnfoldedUpperBoundsCondition::toString(std::ostream& out) const {
+            out << "bounds (";
+            for(size_t i = 0; i < _places.size(); ++i)
+            {
+                if(i != 0) out << ", ";
+                out << _places[i]._name;
+            }
+            out << ")";
+        }
+ 
         /******************** To TAPAAL Query ********************/
 
         void SimpleQuantifierCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
@@ -358,6 +387,16 @@ namespace PetriEngine {
             out << "deadlock";
         }
 
+        void UnfoldedUpperBoundsCondition::toTAPAALQuery(std::ostream& out, TAPAALConditionExportContext&) const {
+            out << "bounds (";
+            for(size_t i = 0; i < _places.size(); ++i)
+            {
+                if(i != 0) out << ", ";
+                out << _places[i]._name;
+            }
+            out << ")";
+        }
+        
         /******************** opTAPAAL ********************/
 
         std::string EqualCondition::opTAPAAL() const {
@@ -430,8 +469,8 @@ namespace PetriEngine {
             std::sort(_ids.begin(), _ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
             std::sort(_exprs.begin(), _exprs.end(), [](auto& a, auto& b)
             {
-                auto ida = dynamic_pointer_cast<PQL::IdentifierExpr>(a);
-                auto idb = dynamic_pointer_cast<PQL::IdentifierExpr>(b);
+                auto ida = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(a);
+                auto idb = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(b);
                 if(ida == NULL) return false;
                 if(ida && !idb) return true;
                 return ida->offset() < idb->offset();
@@ -446,7 +485,55 @@ namespace PetriEngine {
             return;
         }
 
-        void IdentifierExpr::analyze(AnalysisContext& context) {
+        uint32_t getPlace(AnalysisContext& context, const std::string& name)
+        {
+            AnalysisContext::ResolutionResult result = context.resolve(name);
+            if (result.success) {
+                return result.offset;
+            } else {
+                ExprError error("Unable to resolve identifier \"" + name + "\"",
+                                name.length());
+                context.reportError(error);
+            }
+            return -1;
+        }
+
+        Expr_ptr generateUnfoldedIdentifierExpr(ColoredAnalysisContext& context, std::unordered_map<uint32_t,std::string>& names, uint32_t colorIndex) {
+            std::string& place = names[colorIndex];
+            return std::make_shared<UnfoldedIdentifierExpr>(place, getPlace(context, place));
+        }
+
+        void IdentifierExpr::analyze(AnalysisContext &context) {
+            if (_compiled) {
+                _compiled->analyze(context);
+                return;
+            }
+
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
+            if(coloredContext != nullptr && coloredContext->isColored())
+            {
+                std::unordered_map<uint32_t,std::string> names;
+                if (!coloredContext->resolvePlace(_name, names)) {
+                    ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
+                    coloredContext->reportError(error);
+                }
+
+                if (names.size() == 1) {
+                    _compiled = generateUnfoldedIdentifierExpr(*coloredContext, names, 0);
+                } else {
+                    std::vector<Expr_ptr> identifiers;
+                    for (auto& unfoldedName : names) {
+                        identifiers.push_back(generateUnfoldedIdentifierExpr(*coloredContext,names,unfoldedName.first));
+                    }
+                    _compiled = std::make_shared<PQL::PlusExpr>(std::move(identifiers));
+                }
+            } else {
+                _compiled = std::make_shared<UnfoldedIdentifierExpr>(_name, getPlace(context, _name));
+            }
+            _compiled->analyze(context);
+        }
+
+        void UnfoldedIdentifierExpr::analyze(AnalysisContext& context) {
             AnalysisContext::ResolutionResult result = context.resolve(_name);
             if (result.success) {
                 _offsetInMarking = result.offset;
@@ -469,21 +556,8 @@ namespace PetriEngine {
         void LogicalCondition::analyze(AnalysisContext& context) {
             for(auto& c : _conds) c->analyze(context);
         }
-
-        uint32_t getPlace(AnalysisContext& context, const std::string& name)
-        {
-            AnalysisContext::ResolutionResult result = context.resolve(name);
-            if (result.success) {
-                return result.offset;
-            } else {
-                ExprError error("Unable to resolve identifier \"" + name + "\"",
-                        name.length());
-                context.reportError(error);
-            }            
-            return -1;
-        }
         
-        void FireableCondition::analyze(AnalysisContext& context)
+        void UnfoldedFireableCondition::analyze(AnalysisContext& context)
         {
             if(_compiled)
             {
@@ -505,7 +579,7 @@ namespace PetriEngine {
             {
                 assert(preset.first->place != std::numeric_limits<uint32_t>::max());
                 assert(preset.first->place != -1);
-                auto id = std::make_shared<IdentifierExpr>(context.net()->placeNames()[preset.first->place], preset.first->place);
+                auto id = std::make_shared<UnfoldedIdentifierExpr>(context.net()->placeNames()[preset.first->place], preset.first->place);
                 auto lit = std::make_shared<LiteralExpr>(preset.first->tokens);
 
                 if(!preset.first->inhibitor)
@@ -521,7 +595,36 @@ namespace PetriEngine {
             else _compiled = std::make_shared<AndCondition>(conds);
             _compiled->analyze(context);
         }
-        
+
+        void FireableCondition::analyze(AnalysisContext &context) {
+            if (_compiled) {
+                _compiled->analyze(context);
+                return;
+            }
+
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
+            if(coloredContext != nullptr && coloredContext->isColored()) {
+                std::vector<std::string> names;
+                if (!coloredContext->resolveTransition(_name, names)) {
+                    ExprError error("Unable to resolve colored identifier \"" + _name + "\"", _name.length());
+                    coloredContext->reportError(error);
+                }
+
+                if (names.size() == 1) {
+                    _compiled = std::make_shared<UnfoldedFireableCondition>(names[0]);
+                } else {
+                    std::vector<Condition_ptr> identifiers;
+                    for (auto& unfoldedName : names) {
+                        identifiers.push_back(std::make_shared<UnfoldedFireableCondition>(unfoldedName));
+                    }
+                    _compiled = std::make_shared<OrCondition>(std::move(identifiers));
+                }
+            } else {
+                _compiled = std::make_shared<UnfoldedFireableCondition>(_name);
+            }
+            _compiled->analyze(context);
+        }
+
         void CompareConjunction::analyze(AnalysisContext& context) {
             for(auto& c : _constraints){
                 c._place = getPlace(context, c._name);
@@ -545,10 +648,57 @@ namespace PetriEngine {
         void DeadlockCondition::analyze(AnalysisContext& c) {
             c.setHasDeadlock();
         }
+        
+        void UpperBoundsCondition::analyze(AnalysisContext& context)
+        {
+            if (_compiled) {
+                _compiled->analyze(context);
+                return;
+            }
+
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
+            if(coloredContext != nullptr && coloredContext->isColored())
+            {
+                std::vector<std::string> uplaces;
+                for(auto& p : _places)
+                {
+                    std::unordered_map<uint32_t,std::string> names;
+                    if (!coloredContext->resolvePlace(p, names)) {
+                        ExprError error("Unable to resolve colored identifier \"" + p + "\"", p.length());
+                        coloredContext->reportError(error);
+                    }
+
+                    for(auto& id : names)
+                    {
+                        uplaces.push_back(names[id.first]);
+                    }
+                }
+                _compiled = std::make_shared<UnfoldedUpperBoundsCondition>(uplaces);
+            } else {
+                _compiled = std::make_shared<UnfoldedUpperBoundsCondition>(_places);
+            }
+            _compiled->analyze(context);
+        }
+        
+        void UnfoldedUpperBoundsCondition::analyze(AnalysisContext& c)
+        {
+            for(auto& p : _places)
+            {
+                AnalysisContext::ResolutionResult result = c.resolve(p._name);
+                if (result.success) {
+                    p._place = result.offset;
+                } else {
+                    ExprError error("Unable to resolve identifier \"" + p._name + "\"",
+                            p._name.length());
+                    c.reportError(error);
+                }
+            }
+            std::sort(_places.begin(), _places.end());
+        }
 
         /******************** Evaluation ********************/
 
-        int NaryExpr::evaluate(const EvaluationContext& context) const {
+        int NaryExpr::evaluate(const EvaluationContext& context) {
             int32_t r = preOp(context);
             for(size_t i = 1; i < _exprs.size(); ++i)
             {
@@ -568,51 +718,51 @@ namespace PetriEngine {
             return res;
         }
 
-        int CommutativeExpr::evaluate(const EvaluationContext& context) const {
+        int CommutativeExpr::evaluate(const EvaluationContext& context) {
             if(_exprs.size() == 0) return preOp(context);
             return NaryExpr::evaluate(context);
         }
         
-        int MinusExpr::evaluate(const EvaluationContext& context) const {
+        int MinusExpr::evaluate(const EvaluationContext& context) {
             return -(_expr->evaluate(context));
         }
 
-        int LiteralExpr::evaluate(const EvaluationContext&) const {
+        int LiteralExpr::evaluate(const EvaluationContext&) {
             return _value;
         }
 
-        int IdentifierExpr::evaluate(const EvaluationContext& context) const {
+        int UnfoldedIdentifierExpr::evaluate(const EvaluationContext& context) {
             assert(_offsetInMarking != -1);
             return context.marking()[_offsetInMarking];
         }
 
-        Condition::Result SimpleQuantifierCondition::evaluate(const EvaluationContext& context) const {
+        Condition::Result SimpleQuantifierCondition::evaluate(const EvaluationContext& context) {
 	    return RUNKNOWN;
         }
 
-        Condition::Result EGCondition::evaluate(const EvaluationContext& context) const {
+        Condition::Result EGCondition::evaluate(const EvaluationContext& context) {
             if(_cond->evaluate(context) == RFALSE) return RFALSE;
             return RUNKNOWN;
         }
 
-        Condition::Result AGCondition::evaluate(const EvaluationContext& context) const 
+        Condition::Result AGCondition::evaluate(const EvaluationContext& context) 
         {
             if(_cond->evaluate(context) == RFALSE) return RFALSE;
             return RUNKNOWN;
         }
 
-        Condition::Result EFCondition::evaluate(const EvaluationContext& context) const {
+        Condition::Result EFCondition::evaluate(const EvaluationContext& context) {
             if(_cond->evaluate(context) == RTRUE) return RTRUE;
             return RUNKNOWN;
         }
 
-        Condition::Result AFCondition::evaluate(const EvaluationContext& context) const {
+        Condition::Result AFCondition::evaluate(const EvaluationContext& context) {
             if(_cond->evaluate(context) == RTRUE) return RTRUE;
             return RUNKNOWN;
         }
 
         
-        Condition::Result UntilCondition::evaluate(const EvaluationContext& context) const {
+        Condition::Result UntilCondition::evaluate(const EvaluationContext& context) {
             auto r2 = _cond2->evaluate(context);
             if(r2 != RFALSE) return r2;
             auto r1 = _cond1->evaluate(context);
@@ -625,7 +775,7 @@ namespace PetriEngine {
         
 
         
-        Condition::Result AndCondition::evaluate(const EvaluationContext& context) const {
+        Condition::Result AndCondition::evaluate(const EvaluationContext& context) {
             auto res = RTRUE;            
             for(auto& c : _conds)
             {
@@ -636,7 +786,7 @@ namespace PetriEngine {
             return res;
         }
 
-        Condition::Result OrCondition::evaluate(const EvaluationContext& context) const {
+        Condition::Result OrCondition::evaluate(const EvaluationContext& context) {
             auto res = RFALSE;            
             for(auto& c : _conds)
             {
@@ -647,7 +797,7 @@ namespace PetriEngine {
             return res;
         }
         
-        Condition::Result CompareConjunction::evaluate(const EvaluationContext& context) const{
+        Condition::Result CompareConjunction::evaluate(const EvaluationContext& context){
 //            auto rres = _org->evaluate(context);
             bool res = true;
             for(auto& c : _constraints)
@@ -660,29 +810,39 @@ namespace PetriEngine {
             return _negated xor res ? RTRUE : RFALSE;
         }
         
-        Condition::Result CompareCondition::evaluate(const EvaluationContext& context) const {
+        Condition::Result CompareCondition::evaluate(const EvaluationContext& context) {
             int v1 = _expr1->evaluate(context);
             int v2 = _expr2->evaluate(context);
             return apply(v1, v2) ? RTRUE : RFALSE;
         }
 
-        Condition::Result NotCondition::evaluate(const EvaluationContext& context) const {
+        Condition::Result NotCondition::evaluate(const EvaluationContext& context) {
             auto res = _cond->evaluate(context);
             if(res != RUNKNOWN) return res == RFALSE ? RTRUE : RFALSE;
             return RUNKNOWN;
         }
 
-        Condition::Result BooleanCondition::evaluate(const EvaluationContext&) const {
+        Condition::Result BooleanCondition::evaluate(const EvaluationContext&) {
             return _value ? RTRUE : RFALSE;
         }
 
-        Condition::Result DeadlockCondition::evaluate(const EvaluationContext& context) const {
+        Condition::Result DeadlockCondition::evaluate(const EvaluationContext& context) {
             if (!context.net())
                 return RFALSE;
             if (!context.net()->deadlocked(context.marking())) {
                 return RFALSE;
             }
             return RTRUE;
+        }
+        
+        Condition::Result UnfoldedUpperBoundsCondition::evaluate(const EvaluationContext& context) {
+            size_t tmp = 0;
+            for(auto& p : _places)
+            {
+                tmp += context.marking()[p._place];
+            }
+            _bound = std::max(tmp, _bound);
+            return _bound < _max ? RUNKNOWN : RTRUE;
         }
         
         /******************** Evaluation - save result ********************/
@@ -804,6 +964,190 @@ namespace PetriEngine {
             return isSatisfied() ? RTRUE : RFALSE;
         }
         
+        Condition::Result UnfoldedUpperBoundsCondition::evalAndSet(const EvaluationContext& context)
+        {
+            auto res = evaluate(context);
+            setSatisfied(res);
+            return res;
+        }
+        
+        /******************** Encode as SAT  ********************/
+        
+#ifdef ENABLE_TAR
+        z3::expr OrCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            if(_conds.size() == 0) return context.bool_val(false);
+            auto res = _conds[0]->encodeSat(net, context, uses, incremented);
+            for(size_t i = 1 ; i < _conds.size(); ++i)
+            {
+                res = res || _conds[i]->encodeSat(net, context, uses, incremented);
+            }
+            return res;
+        }
+
+        z3::expr AndCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            if(_conds.size() == 0) return context.bool_val(true);
+            auto res = _conds[0]->encodeSat(net, context, uses, incremented);
+            for(size_t i = 1 ; i < _conds.size(); ++i)
+            {
+                res = res && _conds[i]->encodeSat(net, context, uses, incremented);
+            }
+            return res;
+        }
+        
+        
+        z3::expr CompareConjunction::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            if(_constraints.size() == 0) return context.bool_val(!_negated);
+            auto res = context.bool_val(true);
+            for(auto& c : _constraints)
+            {
+                string name = std::to_string(c._place) + "~i" + std::to_string(uses[c._place]);
+                incremented[c._place] = true;
+
+                auto var = context.int_const(name.c_str());
+                if(c._lower == c._upper)
+                    res = res && (var == context.int_val(c._lower));
+                else {
+                    if (c._lower != 0)
+                        res = res && (var >= context.int_val(c._lower));
+                    if (c._upper != std::numeric_limits<uint32_t>::max())
+                        res = res && (var <= context.int_val(c._upper));
+                }
+            }
+
+            return _negated ? ! res : res;
+        }
+
+        z3::expr NotCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            auto res = _cond->encodeSat(net, context, uses, incremented);
+            return ! res;
+        }
+
+        z3::expr NotEqualCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+        {
+            return  _expr1->encodeSat(net, context, uses, incremented) != 
+                    _expr2->encodeSat(net, context, uses, incremented);
+        }
+
+        z3::expr EqualCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+        {
+            return  _expr1->encodeSat(net, context, uses, incremented) == 
+                    _expr2->encodeSat(net, context, uses, incremented);
+        }
+        
+        z3::expr LessThanCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+        {
+            return  _expr1->encodeSat(net, context, uses, incremented) < 
+                    _expr2->encodeSat(net, context, uses, incremented);
+        }
+
+        z3::expr LessThanOrEqualCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+        {
+            return  _expr1->encodeSat(net, context, uses, incremented) <= 
+                    _expr2->encodeSat(net, context, uses, incremented);
+        }
+        
+        z3::expr GreaterThanCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+        {
+            return  _expr1->encodeSat(net, context, uses, incremented) > 
+                    _expr2->encodeSat(net, context, uses, incremented);
+        }        
+
+        z3::expr GreaterThanOrEqualCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+        {
+            return  _expr1->encodeSat(net, context, uses, incremented) >= 
+                    _expr2->encodeSat(net, context, uses, incremented);
+        }
+
+        z3::expr SubtractExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            auto res = context.int_val(0);
+            for(auto& e : _exprs)
+            {
+                res = res - e->encodeSat(net, context, uses, incremented);
+            }
+            return res;
+        }
+
+        z3::expr PlusExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            auto res = context.int_val(_constant);
+            for(auto& e : _exprs)
+            {
+                res = res + e->encodeSat(net, context, uses, incremented);
+            }
+            for(auto& i : _ids)
+            {
+                string name = std::to_string(i.first) + "~i" + std::to_string(uses[i.first]);
+                incremented[i.first] = true;
+
+                res = res + context.int_const(name.c_str());
+            }
+            return res;
+        }
+
+        z3::expr MultiplyExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            auto res = context.int_val(_constant);
+            for(auto& e : _exprs)
+            {
+                res = res * e->encodeSat(net, context, uses, incremented);
+            }
+            for(auto& i : _ids)
+            {
+                string name = std::to_string(i.first) + "~i" + std::to_string(uses[i.first]);
+                incremented[i.first] = true;
+
+                res = res * context.int_const(name.c_str());
+            }
+            return res;
+        }
+
+        z3::expr MinusExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            auto res = _expr->encodeSat(net, context, uses, incremented);
+            return context.int_val(0) - res;
+        }
+
+        z3::expr LiteralExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            return context.int_val(_value);
+        }
+
+        z3::expr UnfoldedIdentifierExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            string name = std::to_string(_offsetInMarking) + "~i" + std::to_string(uses[_offsetInMarking]);
+            incremented[_offsetInMarking] = true;
+
+            return context.int_const(name.c_str());
+        }
+
+        z3::expr DeadlockCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            auto res = context.bool_val(true);
+            for(size_t i = 0; i < net.numberOfTransitions(); ++i)
+            {
+                auto pre = net.preset(i);
+                auto trans = context.bool_val(false);
+                for(; pre.first != pre.second; ++pre.first)
+                {
+                    string name = std::to_string(pre.first->place) + "~i" + std::to_string(uses[pre.first->place]);
+                    incremented[pre.first->place] = true;
+                    if(pre.first->inhibitor)
+                        trans = trans || (context.int_const(name.c_str()) >= context.int_val(pre.first->tokens));
+                    else
+                        trans = trans || (context.int_const(name.c_str()) < context.int_val(pre.first->tokens));
+                }
+                res = res && trans;
+            }
+            return res;
+        }
+
+        z3::expr UnfoldedUpperBoundsCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
+            auto res = context.int_val(0);
+            
+            for(auto& p : _places)
+            {
+                string name = std::to_string(p._place) + "~i" + std::to_string(uses[p._place]);
+                incremented[p._place] = true;
+                res = res + context.int_const(name.c_str());
+            }
+            return res >= context.int_const("~b");
+        }
+#endif
+
         /******************** Apply (BinaryExpr subclasses) ********************/
 
         int PlusExpr::apply(int v1, int v2) const {
@@ -973,7 +1317,7 @@ namespace PetriEngine {
             return Expr::LiteralExpr;
         }
 
-        Expr::Types IdentifierExpr::type() const {
+        Expr::Types UnfoldedIdentifierExpr::type() const {
             return Expr::IdentifierExpr;
         }
 
@@ -1038,6 +1382,17 @@ namespace PetriEngine {
             return 0;
         }
 
+        uint32_t UnfoldedUpperBoundsCondition::distance(DistanceContext& context) const 
+        {
+            size_t tmp = 0;
+            for(auto& p : _places)
+            {
+                tmp += context.marking()[p._place];
+            }
+            
+            return _max - tmp;
+        }
+        
         uint32_t EFCondition::distance(DistanceContext& context) const {
             return _cond->distance(context);
         }
@@ -1171,13 +1526,156 @@ namespace PetriEngine {
             return _distance(context, delta<EqualCondition>);
         }
 
+        /******************** BIN output ********************/
+        
+        void LiteralExpr::toBinary(std::ostream& out) const {
+            out.write("l", sizeof(char));
+            out.write(reinterpret_cast<const char*>(&_value), sizeof(int));
+        }
+        
+        void UnfoldedIdentifierExpr::toBinary(std::ostream& out) const {
+            out.write("i", sizeof(char));
+            out.write(reinterpret_cast<const char*>(&_offsetInMarking), sizeof(int));            
+        }
+        
+        void MinusExpr::toBinary(std::ostream& out) const
+        {
+            auto e1 = std::make_shared<PQL::LiteralExpr>(0);
+            std::vector<Expr_ptr> exprs;
+            exprs.push_back(e1);
+            exprs.push_back(_expr);
+            PQL::SubtractExpr(std::move(exprs)).toBinary(out);
+        }
+        
+        void SubtractExpr::toBinary(std::ostream& out) const {
+            out.write("-", sizeof(char));
+            uint32_t size = _exprs.size();
+            out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+            for(auto& e : _exprs)
+                e->toBinary(out);
+        }
+
+        void CommutativeExpr::toBinary(std::ostream& out) const
+        {
+            auto sop = op();
+            out.write(&sop[0], sizeof(char));
+            out.write(reinterpret_cast<const char*>(&_constant), sizeof(int32_t));
+            uint32_t size = _ids.size();
+            out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+            size = _exprs.size();
+            out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+            for(auto& id : _ids)
+                out.write(reinterpret_cast<const char*>(&id.first), sizeof(uint32_t));
+            for(auto& e : _exprs)
+                e->toBinary(out);
+        }
+        
+        void SimpleQuantifierCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = getQuantifier();
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            _cond->toBinary(out);
+        }
+        
+        void UntilCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = getQuantifier();
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            _cond1->toBinary(out);
+            _cond2->toBinary(out);
+        }
+        
+        void LogicalCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = getQuantifier();
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            uint32_t size = _conds.size();
+            out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+            for(auto& c : _conds) c->toBinary(out);
+        }
+        
+        void CompareConjunction::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = Quantifier::COMPCONJ;
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            out.write(reinterpret_cast<const char*>(&_negated), sizeof(bool));
+            uint32_t size = _constraints.size();
+            out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+            for(auto& c : _constraints)
+            {
+                out.write(reinterpret_cast<const char*>(&c._place), sizeof(int32_t));                
+                out.write(reinterpret_cast<const char*>(&c._lower), sizeof(uint32_t));
+                out.write(reinterpret_cast<const char*>(&c._upper), sizeof(uint32_t));
+            }
+        }
+        
+        void CompareCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = getQuantifier();
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            std::string sop = op();
+            out.write(sop.data(), sop.size());
+            out.write("\0", sizeof(char));
+            _expr1->toBinary(out);
+            _expr2->toBinary(out);
+        }
+        
+        void DeadlockCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = Quantifier::DEADLOCK;
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+        }
+        
+        void BooleanCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = Quantifier::PN_BOOLEAN;
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            out.write(reinterpret_cast<const char*>(&_value), sizeof(bool));
+        }
+        
+        void UnfoldedUpperBoundsCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = Quantifier::UPPERBOUNDS;
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));            
+            uint32_t size = _places.size();
+            out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));                        
+            out.write(reinterpret_cast<const char*>(&_max), sizeof(size_t));     
+            for(auto& b : _places)
+                out.write(reinterpret_cast<const char*>(&b._place), sizeof(uint32_t));                        
+        }
+        
+        void NotCondition::toBinary(std::ostream& out) const
+        {
+            auto path = getPath();
+            auto quant = getQuantifier();
+            out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
+            out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
+            _cond->toBinary(out);
+        }
+        
         /******************** CTL Output ********************/ 
         
         void LiteralExpr::toXML(std::ostream& out,uint32_t tabs, bool tokencount) const {
             generateTabs(out,tabs) << "<integer-constant>" + std::to_string(_value) + "</integer-constant>\n";
         }
         
-        void IdentifierExpr::toXML(std::ostream& out,uint32_t tabs, bool tokencount) const {
+        void UnfoldedIdentifierExpr::toXML(std::ostream& out,uint32_t tabs, bool tokencount) const {
             if (tokencount) {
                 generateTabs(out,tabs) << "<place>" << _name << "</place>\n";
             }
@@ -1249,9 +1747,9 @@ namespace PetriEngine {
         }
         
         void EFCondition::toXML(std::ostream& out,uint32_t tabs) const {
-            generateTabs(out,tabs) << "<exist-path>\n" ; generateTabs(out,tabs+1) << "<finally>\n";
+            generateTabs(out,tabs) << "<exists-path>\n" ; generateTabs(out,tabs+1) << "<finally>\n";
             _cond->toXML(out,tabs+2);
-            generateTabs(out,tabs+1) << "</finally>\n" ; generateTabs(out,tabs) << "</exist-path>\n";
+            generateTabs(out,tabs+1) << "</finally>\n" ; generateTabs(out,tabs) << "</exists-path>\n";
         }
         
         void AFCondition::toXML(std::ostream& out,uint32_t tabs) const {
@@ -1261,9 +1759,9 @@ namespace PetriEngine {
         }
         
         void EGCondition::toXML(std::ostream& out,uint32_t tabs) const {            
-            generateTabs(out,tabs) << "<exist-path>\n" ; generateTabs(out,tabs+1) << "<globally>\n";
+            generateTabs(out,tabs) << "<exists-path>\n" ; generateTabs(out,tabs+1) << "<globally>\n";
             _cond->toXML(out,tabs+2);            
-            generateTabs(out,tabs+1) <<  "</globally>\n" ; generateTabs(out,tabs) << "</exist-path>\n";
+            generateTabs(out,tabs+1) <<  "</globally>\n" ; generateTabs(out,tabs) << "</exists-path>\n";
         }
         
         void AGCondition::toXML(std::ostream& out,uint32_t tabs) const {            
@@ -1273,11 +1771,11 @@ namespace PetriEngine {
         }
         
         void EUCondition::toXML(std::ostream& out,uint32_t tabs) const {
-            generateTabs(out,tabs) << "<exist-path>\n" ; generateTabs(out,tabs+1) << "<until>\n" ; generateTabs(out,tabs+2) << "<before>\n";
+            generateTabs(out,tabs) << "<exists-path>\n" ; generateTabs(out,tabs+1) << "<until>\n" ; generateTabs(out,tabs+2) << "<before>\n";
             _cond1->toXML(out,tabs+3);
             generateTabs(out,tabs+2) << "</before>\n" ; generateTabs(out,tabs+2) << "<reach>\n";
             _cond2->toXML(out,tabs+3);
-            generateTabs(out,tabs+2) << "</reach>\n" ; generateTabs(out,tabs+1) << "</until>\n" ; generateTabs(out,tabs) << "</exist-path>\n";
+            generateTabs(out,tabs+2) << "</reach>\n" ; generateTabs(out,tabs+1) << "</until>\n" ; generateTabs(out,tabs) << "</exists-path>\n";
         }
         
         void AUCondition::toXML(std::ostream& out,uint32_t tabs) const {
@@ -1358,23 +1856,36 @@ namespace PetriEngine {
             if(_constraints.size() == 0) BooleanCondition::TRUE_CONSTANT->toXML(out, tabs);
             else
             {
-                generateTabs(out,tabs) << "<conjunction>\n";
+                bool single = _constraints.size() == 1 && 
+                                (_constraints[0]._lower == 0 ||
+                                 _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
+                if(!single) 
+                    generateTabs(out,tabs) << "<conjunction>\n";
                 for(auto& c : _constraints)
                 {
-                    generateTabs(out,tabs+1) << "<integer-le>\n";
-                    generateTabs(out,tabs+2) << "<tokens-count>\n";
-                    generateTabs(out,tabs+2) << c._place << "\n";
-                    generateTabs(out,tabs+2) << "<tokens-count>\n";
-                    generateTabs(out,tabs+1) << "</integer-le>\n";  
-                    generateTabs(out,tabs+1) << "<integer-gt>\n";
-                    generateTabs(out,tabs+2) << "<tokens-count>\n";
-                    generateTabs(out,tabs+2) << c._place << "\n";
-                    generateTabs(out,tabs+2) << "<tokens-count>\n";
-                    generateTabs(out,tabs+1) << "</integer-gt>\n";                      
+                    if(c._lower != 0)
+                    {
+                        generateTabs(out,tabs+1) << "<integer-ge>\n";
+                        generateTabs(out,tabs+2) << "<tokens-count>\n";
+                        generateTabs(out,tabs+3) << "<place>" << c._name << "</place>\n";
+                        generateTabs(out,tabs+2) << "</tokens-count>\n";
+                        generateTabs(out,tabs+2) << "<integer-constant>" << c._lower << "</integer-constant>\n";
+                        generateTabs(out,tabs+1) << "</integer-ge>\n";  
+                    }
+                    if(c._upper != std::numeric_limits<uint32_t>::max())
+                    {
+                        generateTabs(out,tabs+1) << "<integer-le>\n";
+                        generateTabs(out,tabs+2) << "<tokens-count>\n";
+                        generateTabs(out,tabs+3) << "<place>" << c._name << "</place>\n";
+                        generateTabs(out,tabs+2) << "</tokens-count>\n";
+                        generateTabs(out,tabs+2) << "<integer-constant>" << c._upper << "</integer-constant>\n";
+                        generateTabs(out,tabs+1) << "</integer-le>\n";                      
+                    }
                 }
-                generateTabs(out,tabs) << "</conjunction>\n";
+                if(!single)
+                    generateTabs(out,tabs) << "</conjunction>\n";
             }
-            if(_negated) generateTabs(out,--tabs) << "<negation>";
+            if(_negated) generateTabs(out,--tabs) << "</negation>";
         }
 
         void EqualCondition::toXML(std::ostream& out,uint32_t tabs) const {
@@ -1437,6 +1948,13 @@ namespace PetriEngine {
             generateTabs(out,tabs) << "<deadlock/>\n"; 
         }
         
+        void UnfoldedUpperBoundsCondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out, tabs) << "<place-bound>\n";
+            for(auto& p : _places)
+                generateTabs(out, tabs + 1) << "<place>" << p._name << "</place>\n";
+            generateTabs(out, tabs) << "</place-bound>\n";
+        }
+        
         /******************** Query Simplification ********************/       
         
         Member LiteralExpr::constraint(SimplificationContext& context) const {
@@ -1453,7 +1971,7 @@ namespace PetriEngine {
             return Member(std::move(row), context.marking()[p]);            
         }
         
-        Member IdentifierExpr::constraint(SimplificationContext& context) const {
+        Member UnfoldedIdentifierExpr::constraint(SimplificationContext& context) const {
             return memberForPlace(_offsetInMarking, context);
         }
         
@@ -1959,7 +2477,7 @@ namespace PetriEngine {
                 if(nconstraints.size() == 1)
                 {
                     auto& c = nconstraints[0];
-                    auto id = std::make_shared<IdentifierExpr>(c._name, c._place);
+                    auto id = std::make_shared<UnfoldedIdentifierExpr>(c._name, c._place);
                     auto ll = std::make_shared<LiteralExpr>(c._lower);
                     auto lu = std::make_shared<LiteralExpr>(c._upper);
                     if     (c._lower == c._upper && !neg) return std::make_shared<EqualCondition>(id, lu);
@@ -2262,6 +2780,87 @@ namespace PetriEngine {
             }
         }
         
+        Retval UnfoldedUpperBoundsCondition::simplify(SimplificationContext& context) const 
+        {
+            std::vector<place_t> next;
+            for(auto& p : _places)
+            {
+                auto m2 = memberForPlace(p._place, context);
+                Member m1(1);
+                // test for trivial comparison
+                Trivial eval = m1 >= m2;
+                if(eval != Trivial::Indeterminate) {
+                    if(eval == Trivial::False)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        next.push_back(p);                        
+                    }
+                } else { // if no trivial case
+                    int constant = m2.constant() - m1.constant();
+                    m1 -= m2;
+                    auto nlp = SingleProgram(context.cache(), std::move(m1), constant, Simplification::OP_LE);
+                    if(nlp.satisfiable(context))
+                    {
+                        next.push_back(p);
+                    }
+               }
+            }            
+            
+            size_t tmin = 1;
+            size_t tmax = std::numeric_limits<int16_t>::max();
+            if(next.size() > 0)
+            {
+                // lets try to find an upper bound for the places so we can 
+                // terminate early if lucky.
+                auto m = memberForPlace(_places[0]._place, context);
+                for(size_t i = 1; i < _places.size(); ++i)
+                {
+                    m += memberForPlace(_places[i]._place, context);
+                }
+                while(!context.timeout() && tmin != _max)
+                {
+                    if(tmin > std::numeric_limits<uint8_t>::max() && tmax == std::numeric_limits<int16_t>::max()) 
+                    {
+                        tmax = std::numeric_limits<size_t>::max();
+                        break;
+                    }
+                    auto mid = (tmax / 2) + (tmin / 2); 
+                    Member c(mid);
+                    Trivial eval = c >= m;
+                    if(eval != Trivial::Indeterminate) {
+                        if(eval == Trivial::False)
+                        {
+                            tmax = mid;
+                        }
+                        else
+                        {
+                            tmin = mid;                     
+                        }
+                    } else { // if no trivial case
+                        int constant = m.constant() - c.constant();
+                        c -= m;
+                        auto nlp = SingleProgram(context.cache(), std::move(c), constant, Simplification::OP_GE);
+                        if(!nlp.satisfiable(context))
+                        {
+                            tmax = mid;
+                        }
+                        else
+                        {
+                            tmin = mid;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                tmax = 0;
+            }
+            return Retval(std::make_shared<UnfoldedUpperBoundsCondition>(next, tmax));
+        }
+        
         /******************** Check if query is a reachability query ********************/
         
         bool EXCondition::isReachability(uint32_t depth) const {
@@ -2319,47 +2918,10 @@ namespace PetriEngine {
             return depth > 0;
         }
         
-        /******************** Check if query is an upper bound query ********************/
-        
-        bool SimpleQuantifierCondition::isUpperBound() {
-            return _cond->isUpperBound();
+        bool UnfoldedUpperBoundsCondition::isReachability(uint32_t depth) const {
+            return depth > 0;
         }
-        
-        bool UntilCondition::isUpperBound() {
-            return false;
-        }
-        
-        bool LogicalCondition::isUpperBound() {
-            if (placeNameForBound().size() != 0) {
-                return true;
-            } else {
-                bool upper_bound = true;
-                for(auto& c : _conds)
-                {
-                    upper_bound = upper_bound && c->isUpperBound();
-                    if(!upper_bound) break;
-                }
-                return upper_bound;
-            }
-        }
-       
-        bool CompareCondition::isUpperBound() {
-            return placeNameForBound().size() > 0;
-        }
-        
-        bool NotCondition::isUpperBound() {
-            return false;
-        }
-        
-        bool BooleanCondition::isUpperBound() {
-            return false;
-        }
-        
-        bool DeadlockCondition::isUpperBound() {
-            return false;
-        }
-        
-        
+                
         /******************** Prepare Reachability Queries ********************/
         
         Condition_ptr EXCondition::prepareForReachability(bool negated) const {
@@ -2417,25 +2979,29 @@ namespace PetriEngine {
             return NULL;
         }
 
+        Condition_ptr UnfoldedUpperBoundsCondition::prepareForReachability(bool negated) const {
+            return NULL;
+        }
+        
 /******************** Prepare CTL Queries ********************/
         
-        Condition_ptr EGCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr EGCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             ++stats[0];
-            return AFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated);
+            return AFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
         }
 
-        Condition_ptr AGCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr AGCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             ++stats[1];
-            return EFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated);
+            return EFCondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
         }
         
-        Condition_ptr EXCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr EXCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            auto a = _cond->pushNegation(stats, context, true, negated);
+            auto a = _cond->pushNegation(stats, context, true, negated, initrw);
             if(negated)
             {
                 ++stats[2];
-                return AXCondition(a).pushNegation(stats, context, nested, false);
+                return AXCondition(a).pushNegation(stats, context, nested, false, initrw);
             }
             else
             {
@@ -2446,16 +3012,16 @@ namespace PetriEngine {
                 a = std::make_shared<EXCondition>(a);
             }
             return a;
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
 
-        Condition_ptr AXCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr AXCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            auto a = _cond->pushNegation(stats, context, true, negated);
+            auto a = _cond->pushNegation(stats, context, true, negated, initrw);
             if(negated)
             {
                 ++stats[5];
-                return EXCondition(a).pushNegation(stats, context, nested, false);
+                return EXCondition(a).pushNegation(stats, context, nested, false, initrw);
             }
             else
             {
@@ -2466,20 +3032,20 @@ namespace PetriEngine {
                 a = std::make_shared<AXCondition>(a);
             }
             return a;
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
 
         
-        Condition_ptr EFCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr EFCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            auto a = _cond->pushNegation(stats, context, true, false);
+            auto a = _cond->pushNegation(stats, context, true, false, initrw);
 
             if(auto cond = dynamic_cast<NotCondition*>(a.get()))
             {
                 if((*cond)[0] == DeadlockCondition::DEADLOCK)
                 {
                     ++stats[8];
-                    return a->pushNegation(stats, context, nested, negated);
+                    return a->pushNegation(stats, context, nested, negated, initrw);
                 }                
             }
 
@@ -2499,19 +3065,19 @@ namespace PetriEngine {
             else if(auto cond = dynamic_cast<AFCondition*>(a.get()))
             {
                 ++stats[10];
-                a = EFCondition((*cond)[0]).pushNegation(stats, context, nested, negated);
+                a = EFCondition((*cond)[0]).pushNegation(stats, context, nested, negated, initrw);
                 return a;
             }
             else if(auto cond = dynamic_cast<EUCondition*>(a.get()))
             {
                 ++stats[11];
-                a = EFCondition((*cond)[1]).pushNegation(stats, context, nested, negated);
+                a = EFCondition((*cond)[1]).pushNegation(stats, context, nested, negated, initrw);
                 return a;
             }
             else if(auto cond = dynamic_cast<AUCondition*>(a.get()))
             {
                 ++stats[12];
-                a = EFCondition((*cond)[1]).pushNegation(stats, context, nested, negated);
+                a = EFCondition((*cond)[1]).pushNegation(stats, context, nested, negated, initrw);
                 return a;
             }
             else if(auto cond = dynamic_cast<OrCondition*>(a.get()))
@@ -2528,7 +3094,7 @@ namespace PetriEngine {
                 {
                     pef.push_back(std::make_shared<EFCondition>(i));
                 }
-                a = makeOr(pef)->pushNegation(stats, context, nested, negated);
+                a = makeOr(pef)->pushNegation(stats, context, nested, negated, initrw);
                 return a;
             }
             else
@@ -2537,19 +3103,19 @@ namespace PetriEngine {
                 if(negated) b = std::make_shared<NotCondition>(b);
                 return b;
             }
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
 
 
-        Condition_ptr AFCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr AFCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            auto a = _cond->pushNegation(stats, context, true, false);
+            auto a = _cond->pushNegation(stats, context, true, false, initrw);
             if(auto cond = dynamic_cast<NotCondition*>(a.get()))
             {
                 if((*cond)[0] == DeadlockCondition::DEADLOCK)
                 {
                     ++stats[14];
-                    return a->pushNegation(stats, context, nested, negated);
+                    return a->pushNegation(stats, context, nested, negated, initrw);
                 }                
             }
             
@@ -2585,50 +3151,50 @@ namespace PetriEngine {
                 {
                     stats[17] += pef.size();
                     pef.push_back(std::make_shared<AFCondition>(makeOr(npef)));
-                    return makeOr(pef)->pushNegation(stats, context, nested, negated);
+                    return makeOr(pef)->pushNegation(stats, context, nested, negated, initrw);
                 }
             }
             else if(auto cond = dynamic_cast<AUCondition*>(a.get()))
             {
                 ++stats[18];
-                return AFCondition((*cond)[1]).pushNegation(stats, context, nested, negated);
+                return AFCondition((*cond)[1]).pushNegation(stats, context, nested, negated, initrw);
             }
             auto b = std::make_shared<AFCondition>(a);
             if(negated) return std::make_shared<NotCondition>(b);
             return b;
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
 
-        Condition_ptr AUCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr AUCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            auto b = _cond2->pushNegation(stats, context, true, false);
-            auto a = _cond1->pushNegation(stats, context, true, false);
+            auto b = _cond2->pushNegation(stats, context, true, false, initrw);
+            auto a = _cond1->pushNegation(stats, context, true, false, initrw);
             if(auto cond = dynamic_cast<NotCondition*>(b.get()))
             {
                 if((*cond)[0] == DeadlockCondition::DEADLOCK)
                 {
                     ++stats[19];
-                    return b->pushNegation(stats, context, nested, negated);
+                    return b->pushNegation(stats, context, nested, negated, initrw);
                 }
             }
             else if(a == DeadlockCondition::DEADLOCK)
             {
                 ++stats[20];
-                return b->pushNegation(stats, context, nested, negated);
+                return b->pushNegation(stats, context, nested, negated, initrw);
             }
             else if(auto cond = dynamic_cast<NotCondition*>(a.get()))
             {
                 if((*cond)[0] == DeadlockCondition::DEADLOCK)
                 {
                     ++stats[21];
-                    return AFCondition(b).pushNegation(stats, context, nested, negated);
+                    return AFCondition(b).pushNegation(stats, context, nested, negated, initrw);
                 }
             }
             
             if(auto cond = dynamic_cast<AFCondition*>(b.get()))
             {
                 ++stats[22];
-                return cond->pushNegation(stats, context, nested, negated);
+                return cond->pushNegation(stats, context, nested, negated, initrw);
             }
             else if(dynamic_cast<EFCondition*>(b.get()))
             {
@@ -2662,41 +3228,41 @@ namespace PetriEngine {
                         ++stats[23];
                         --stats[24];
                     }
-                    return makeOr(pef)->pushNegation(stats, context, nested, negated);
+                    return makeOr(pef)->pushNegation(stats, context, nested, negated, initrw);
                 }
             }
             
             auto c = std::make_shared<AUCondition>(a, b);
             if(negated) return std::make_shared<NotCondition>(c);
             return c;
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
 
 
-        Condition_ptr EUCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr EUCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            auto b = _cond2->pushNegation(stats, context, true, false);
-            auto a = _cond1->pushNegation(stats, context, true, false);
+            auto b = _cond2->pushNegation(stats, context, true, false, initrw);
+            auto a = _cond1->pushNegation(stats, context, true, false, initrw);
 
             if(auto cond = dynamic_cast<NotCondition*>(b.get()))
             {
                 if((*cond)[0] == DeadlockCondition::DEADLOCK)
                 {
                     ++stats[25];
-                    return b->pushNegation(stats, context, nested, negated);
+                    return b->pushNegation(stats, context, nested, negated, initrw);
                 }
             }
             else if(a == DeadlockCondition::DEADLOCK)
             {
                 ++stats[26];
-                return b->pushNegation(stats, context, nested, negated);
+                return b->pushNegation(stats, context, nested, negated, initrw);
             }
             else if(auto cond = dynamic_cast<NotCondition*>(a.get()))
             {
                 if((*cond)[0] == DeadlockCondition::DEADLOCK)
                 {
                     ++stats[27];
-                    return EFCondition(b).pushNegation(stats, context, nested, negated);
+                    return EFCondition(b).pushNegation(stats, context, nested, negated, initrw);
                 }
             }
             
@@ -2729,22 +3295,22 @@ namespace PetriEngine {
                         ++stats[28];
                         --stats[29];
                     }
-                    return makeOr(pef)->pushNegation(stats, context, nested, negated);
+                    return makeOr(pef)->pushNegation(stats, context, nested, negated, initrw);
                 }
             }
             auto c = std::make_shared<EUCondition>(a, b);
             if(negated) return std::make_shared<NotCondition>(c);
             return c;
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
 
         
-        Condition_ptr pushAnd(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children)
+        Condition_ptr pushAnd(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children, bool initrw)
         {
             std::vector<Condition_ptr> nef, other;            
             for(auto& c : _conds)
             {
-                auto n = c->pushNegation(stats, context, nested, negate_children);
+                auto n = c->pushNegation(stats, context, nested, negate_children, initrw);
                 if(n->isTriviallyFalse()) return n;
                 if(n->isTriviallyTrue()) continue;
                 if(auto neg = dynamic_cast<NotCondition*>(n.get()))
@@ -2779,12 +3345,12 @@ namespace PetriEngine {
             return res;
         }
         
-        Condition_ptr pushOr(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children)
+        Condition_ptr pushOr(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children, bool initrw)
         {
             std::vector<Condition_ptr> nef, other;       
             for(auto& c : _conds)
             {
-                auto n = c->pushNegation(stats, context, nested, negate_children);
+                auto n = c->pushNegation(stats, context, nested, negate_children, initrw);
                 if(n->isTriviallyTrue())
                 {
                     return n;
@@ -2808,34 +3374,34 @@ namespace PetriEngine {
             return makeOr(other);
         }
 
-        Condition_ptr OrCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr OrCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            return negated ? pushAnd(_conds, stats, context, nested, true) :
-                             pushOr (_conds, stats, context, nested, false);
-            }, stats, context, nested, negated);
+            return negated ? pushAnd(_conds, stats, context, nested, true, initrw) :
+                             pushOr (_conds, stats, context, nested, false, initrw);
+            }, stats, context, nested, negated, initrw);
         }
 
         
-        Condition_ptr AndCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr AndCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            return negated ? pushOr (_conds, stats, context, nested, true) :
-                             pushAnd(_conds, stats, context, nested, false);
+            return negated ? pushOr (_conds, stats, context, nested, true, initrw) :
+                             pushAnd(_conds, stats, context, nested, false, initrw);
 
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
         
-        Condition_ptr CompareConjunction::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr CompareConjunction::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
             return std::make_shared<CompareConjunction>(*this, negated);
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
 
         
-        Condition_ptr NotCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr NotCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(negated) ++stats[30];
-            return _cond->pushNegation(stats, context, nested, !negated);
-            }, stats, context, nested, negated);
+            return _cond->pushNegation(stats, context, nested, !negated, initrw);
+            }, stats, context, nested, negated, initrw);
         }
         
         bool CompareCondition::isTrivial() const
@@ -2873,82 +3439,91 @@ namespace PetriEngine {
             return _expr1->placeFree() && _expr2->placeFree();
         }        
         
-        Condition_ptr LessThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr LessThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
             if(negated) return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<LessThanCondition>(_expr1, _expr2);
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
 
         
-        Condition_ptr GreaterThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr GreaterThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
             if(negated) return std::make_shared<LessThanCondition>(_expr1, _expr2);
             else        return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
 
         
-        Condition_ptr LessThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr LessThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
             if(negated) return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
             else        return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
 
         
-        Condition_ptr GreaterThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr GreaterThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
             if(negated) return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
                 
-        Condition_ptr NotEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr NotEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
             if(negated) return std::make_shared<EqualCondition>(_expr1, _expr2);
             else        return std::make_shared<NotEqualCondition>(_expr1, _expr2);
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
 
         
-        Condition_ptr EqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr EqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
             if(negated) return std::make_shared<NotEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<EqualCondition>(_expr1, _expr2);
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
                 
-        Condition_ptr BooleanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr BooleanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(negated) return getShared(!_value);
             else        return getShared( _value);
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
         }
         
-        Condition_ptr DeadlockCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated) const {
+        Condition_ptr DeadlockCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(negated) return std::make_shared<NotCondition>(DEADLOCK);
             else        return DEADLOCK;
-            }, stats, context, nested, negated);
+            }, stats, context, nested, negated, initrw);
+        }
+        
+        Condition_ptr UnfoldedUpperBoundsCondition::pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
+            if(negated)
+            {
+                std::cout << "UPPER BOUNDS CANNOT BE NEGATED!" << std::endl;
+                exit(-1);
+            }
+            return std::make_shared<UnfoldedUpperBoundsCondition>(_places, _max);
         }
 
         
         /******************** Stubborn reduction interesting transitions ********************/
         
         void PlusExpr::incr(ReducingSuccessorGenerator& generator) const { 
-            for(auto& i : _ids) generator.presetOf(i.first);
+            for(auto& i : _ids) generator.presetOf(i.first, true);
             for(auto& e : _exprs) e->incr(generator);
         }
         
         void PlusExpr::decr(ReducingSuccessorGenerator& generator) const {
-            for(auto& i : _ids) generator.postsetOf(i.first);
+            for(auto& i : _ids) generator.postsetOf(i.first, true);
             for(auto& e : _exprs) e->decr(generator);
         }
         
@@ -2965,8 +3540,8 @@ namespace PetriEngine {
         void MultiplyExpr::incr(ReducingSuccessorGenerator& generator) const {
             for(auto& i : _ids)
             {
-                generator.presetOf(i.first);
-                generator.postsetOf(i.first);
+                generator.presetOf(i.first, true);
+                generator.postsetOf(i.first, true);
             }
             for(auto& e : _exprs)
             {
@@ -2995,12 +3570,12 @@ namespace PetriEngine {
             // Add nothing
         }
 
-        void IdentifierExpr::incr(ReducingSuccessorGenerator& generator) const {
-            generator.presetOf(_offsetInMarking);
+        void UnfoldedIdentifierExpr::incr(ReducingSuccessorGenerator& generator) const {
+            generator.presetOf(_offsetInMarking, true);
         }
         
-        void IdentifierExpr::decr(ReducingSuccessorGenerator& generator) const {
-             generator.postsetOf(_offsetInMarking);
+        void UnfoldedIdentifierExpr::decr(ReducingSuccessorGenerator& generator) const {
+             generator.postsetOf(_offsetInMarking, true);
         }
         
         void SimpleQuantifierCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
@@ -3046,7 +3621,8 @@ namespace PetriEngine {
         void CompareConjunction::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
              
             auto neg = negated != _negated;
-            
+            int32_t cand = std::numeric_limits<int32_t>::max();
+            bool pre = false;
             for(auto& c : _constraints)
             {
                 auto val = generator.parent()[c._place];
@@ -3055,16 +3631,18 @@ namespace PetriEngine {
                     if(neg)
                     {
                         if(val != c._lower) continue;
-                        generator.postsetOf(c._place);
-                        generator.presetOf(c._place);
+                        generator.postsetOf(c._place, true);
+                        generator.presetOf(c._place, true);
                     }
                     else
                     {
                         if(val == c._lower) continue;
                         if(val > c._lower) {
-                            generator.postsetOf(c._place);
+                            cand = c._place;
+                            pre = false;
                         } else {
-                            generator.presetOf(c._place);
+                            cand = c._place;
+                            pre = true;
                         }   
                     }
                 }
@@ -3075,27 +3653,47 @@ namespace PetriEngine {
                         if(val < c._lower && c._lower != 0)
                         {
                             assert(!neg);
-                            generator.presetOf(c._place);
+                            cand = c._place;
+                            pre = true;
                         }
                         
                         if(val > c._upper && c._upper != std::numeric_limits<uint32_t>::max())
                         {
                             assert(!neg);
-                            generator.postsetOf(c._place);
+                            cand = c._place;
+                            pre = false;
                         }
                     }
                     else
                     {
                         if(val >= c._lower && c._lower != 0)
                         {
-                            generator.postsetOf(c._place);
+                            generator.postsetOf(c._place, true);
                         }
                         
                         if(val <= c._upper && c._upper != std::numeric_limits<uint32_t>::max())
                         {
-                            generator.presetOf(c._place);
+                            generator.presetOf(c._place, true);
                         }
                     }
+                }
+                if(cand != std::numeric_limits<int32_t>::max())
+                {
+                    if(pre && generator.seenPre(cand))
+                        return;
+                    else if(!pre && generator.seenPost(cand))
+                        return;
+                }
+            }
+            if(cand != std::numeric_limits<int32_t>::max())
+            {
+                if(pre)
+                {
+                    generator.presetOf(cand, true);
+                }
+                else if(!pre)
+                {
+                    generator.postsetOf(cand, true);
                 }
             }
         }
@@ -3196,8 +3794,13 @@ namespace PetriEngine {
         
         void DeadlockCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!isSatisfied()){
-                generator.postPresetOf(generator.leastDependentEnabled());
+                generator.postPresetOf(generator.leastDependentEnabled(), true);
             } // else add nothing
+        }
+
+        void UnfoldedUpperBoundsCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
+            for(auto& p : _places)
+                generator.presetOf(p._place);
         }
         
         
@@ -3214,12 +3817,14 @@ namespace PetriEngine {
         AndCondition::AndCondition(std::vector<Condition_ptr>&& conds) {
             for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge<AndCondition>(_conds);
         }
         
         AndCondition::AndCondition(const std::vector<Condition_ptr>& conds) {
             for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
-            for (auto& c : conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge<AndCondition>(_conds);
         }
        
@@ -3227,18 +3832,21 @@ namespace PetriEngine {
             tryMerge<AndCondition>(_conds, left);
             tryMerge<AndCondition>(_conds, right);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge<AndCondition>(_conds);
         }
        
         OrCondition::OrCondition(std::vector<Condition_ptr>&& conds) {
             for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
-            for (auto& c : conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge<AndCondition>(_conds);
         }
        
         OrCondition::OrCondition(const std::vector<Condition_ptr>& conds) {
             for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
-            for (auto& c : conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge<AndCondition>(_conds);
         }
        
@@ -3246,6 +3854,7 @@ namespace PetriEngine {
             tryMerge<OrCondition>(_conds, left);
             tryMerge<OrCondition>(_conds, right);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
+            for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
             postMerge<AndCondition>(_conds);
         }
         
@@ -3316,12 +3925,12 @@ namespace PetriEngine {
             {
                 auto cmp = dynamic_cast<CompareCondition*>(c.get());
                 assert(cmp);
-                auto id = dynamic_cast<IdentifierExpr*>((*cmp)[0].get());
+                auto id = dynamic_cast<UnfoldedIdentifierExpr*>((*cmp)[0].get());
                 LiteralExpr* lit = nullptr;
                 bool inverted = false;
                 if(!id)
                 {
-                    id = dynamic_cast<IdentifierExpr*>((*cmp)[1].get());
+                    id = dynamic_cast<UnfoldedIdentifierExpr*>((*cmp)[1].get());
                     lit = dynamic_cast<LiteralExpr*>((*cmp)[0].get());
                     inverted = true;
                 }
@@ -3407,7 +4016,7 @@ namespace PetriEngine {
             for (auto& e : exprs) {
                 if (auto lit = dynamic_pointer_cast<PQL::LiteralExpr>(e))
                     _constant = apply(_constant, lit->value());
-                else if (auto id = dynamic_pointer_cast<PQL::IdentifierExpr>(e)) {
+                else if (auto id = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(e)) {
                     _ids.emplace_back(id->offset(), id->name());
                 } 
                 else if(auto c = dynamic_pointer_cast<CommutativeExpr>(e))

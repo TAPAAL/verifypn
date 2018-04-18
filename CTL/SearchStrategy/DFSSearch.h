@@ -1,9 +1,9 @@
 #ifndef DFSSEARCH_H
 #define DFSSEARCH_H
 
-#include <vector>
+#include <stack>
 #include "CTL/DependencyGraph/Edge.h"
-#include "iSearchStrategy.h"
+#include "SearchStrategy.h"
 
 namespace SearchStrategy {
 
@@ -12,26 +12,16 @@ namespace SearchStrategy {
 
 class DFSSearch : public SearchStrategy {
 
-public:
-    virtual ~DFSSearch(){}
-    DFSSearch() {}
-
-    bool empty() const;
-    void pushEdge(DependencyGraph::Edge *edge);
-    void pushDependency(DependencyGraph::Edge* edge);
-    void pushNegation(DependencyGraph::Edge *edge);
-    DependencyGraph::Edge* popEdge(bool saturate = false);
-    size_t size() const { return W.size() + N.size() + D.size();}
-
-    uint32_t maxDistance() const;
-    bool available() const;
-    void releaseNegationEdges(uint32_t );
-    bool trivialNegation();
 protected:
-    bool possibleTrivial = false;
-    std::vector<DependencyGraph::Edge*> W;
-    std::vector<DependencyGraph::Edge*> N;
-    std::vector<DependencyGraph::Edge*> D;
+    size_t Wsize() const { return W.size(); };
+    void pushToW(DependencyGraph::Edge* edge) { W.push(edge); };
+    DependencyGraph::Edge* popFromW() 
+    {
+        auto e = W.top();
+        W.pop();
+        return e;
+    };
+    std::stack<DependencyGraph::Edge*> W;
 };
 
 }   // end SearchStrategy

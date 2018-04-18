@@ -6,7 +6,7 @@ CUT				= cut
 
 # Compiler and linker flags
 CFLAGS			= -fPIC -flto -march=x86-64 -std=c++14  -m64 -I.
-LDFLAGS			= -flto=4 -march=x86-64 -std=c++14  -m64 lpsolve/liblpsolve55-linux64.a -static \
+LDFLAGS			= -flto=4 -march=x86-64 -std=c++14  -m64 -static lpsolve/liblpsolve55-linux64.a \
               -static-libgcc -static-libstdc++ 
 # -Wl,-Bstatic -ldl -lm -lc -Wl,-Bdynamic -lpthread 
 

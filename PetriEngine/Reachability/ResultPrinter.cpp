@@ -2,6 +2,7 @@
 #include "ReachabilityResult.h"
 #include "../PetriNetBuilder.h"
 #include "../options.h"
+#include "PetriEngine/PQL/Expressions.h"
 
 namespace PetriEngine {
     namespace Reachability {
@@ -18,7 +19,22 @@ namespace PetriEngine {
                 size_t lastmarking)
         {
             if(result == Unknown) return Unknown;
+
             Result retval = result;
+            
+            if(options->cpnOverApprox)
+            {
+                if (result == Satisfied)
+                    retval = query->isInvariant() ? Unknown : Unknown;
+                else if (result == NotSatisfied)
+                    retval = query->isInvariant() ? Satisfied : NotSatisfied;                
+                if(retval == Unknown)
+                {
+                    std::cout << "\nUnable to decide if " << querynames[index] << " is satisfied.\n\n";
+                    std::cout << "Query is MAYBE satisfied.\n" << std::endl;
+                    return Ignore;
+                }
+            }
             std::cout << std::endl;    
             
             bool showTrace = (result == Satisfied);
@@ -48,29 +64,36 @@ namespace PetriEngine {
             if (result == Satisfied)
                 retval = query->isInvariant() ? NotSatisfied : Satisfied;
             else if (result == NotSatisfied)
-                retval = query->isInvariant() ? Satisfied : NotSatisfied;
+                retval = query->isInvariant() ? Satisfied : NotSatisfied;           
 
             //Print result
+            auto bound = query;
+            if(auto ef = dynamic_cast<PQL::EFCondition*>(query))
+            {
+                bound = (*ef)[0].get();
+            }
+            bound = dynamic_cast<PQL::UnfoldedUpperBoundsCondition*>(bound);
+            
             if (retval == Unknown)
             {
                 std::cout << "\nUnable to decide if " << querynames[index] << " is satisfied.";
             }
+            else if(bound)
+            {
+                std::cout << ((PQL::UnfoldedUpperBoundsCondition*)bound)->bounds() << " " << techniques << printTechniques() << std::endl;
+                std::cout << "Query index " << index << " was solved" << std::endl;
+            }
             else if (retval == Satisfied) {
                 if(!options->statespaceexploration)
                 {
-                    std::cout << "TRUE " << techniques << std::endl;
+                    std::cout << "TRUE " << techniques << printTechniques() << std::endl;
+                    std::cout << "Query index " << index << " was solved" << std::endl;
                 }
             } else if (retval == NotSatisfied) {
-                if (!query->placeNameForBound().empty()) {
-                    // find index of the place for reporting place bound
-
-                    std::cout << query->getBound() << " " << techniquesStateSpace << std::endl;
-
-                } else {
-                    if(!options->statespaceexploration)
-                    {
-                        std::cout << "FALSE " << techniques << std::endl;
-                    }
+                if(!options->statespaceexploration)
+                {
+                    std::cout << "FALSE " << techniques << printTechniques() << std::endl;
+                    std::cout << "Query index " << index << " was solved" << std::endl;
                 }
             }
             
@@ -97,6 +120,9 @@ namespace PetriEngine {
             }
             std::cout << "satisfied." << std::endl;
             
+            if(options->cpnOverApprox)
+                std::cout << "\nSolved using CPN Approximation\n" << std::endl;
+            
             if(showTrace && options->trace)
             {
                 if(stateset == NULL)
@@ -115,28 +141,45 @@ namespace PetriEngine {
         
         std::string ResultPrinter::printTechniques() {
             std::string out;
+                        
+            if(options->queryReductionTimeout > 0)
+            {
+                out += "LP_APPROX ";
+            }
+
+            if(options->cpnOverApprox)
+            {
+                out += "CPN_APPROX ";
+            }
             
-            if (options->enablereduction > 0) {
-                out += " STRUCTURAL_REDUCTION STATE_COMPRESSION";
+            if(options->isCPN && !options->cpnOverApprox)
+            {
+                out += "UNFOLDING_TO_PT ";
             }
-            if (options->stubbornreduction) {
-                out += " STUBBORN_REDUCTION";
-            }
-            if (options->queryReductionTimeout > 0) {
-                out += " QUERY_REDUCTION";
-            }
-            if (options->siphontrapTimeout > 0) {
-                out += " SIPHON_TRAP_ANALYSIS";
-            }
-            if (options->isctl) {
-                if (options->ctlalgorithm == CTL::CZero) {
-                    out += " CTL CZERO";
-                }
-                else {
-                    out += " CTL LOCAL";
+            
+            if(options->queryReductionTimeout == 0 
+#ifdef ENABLE_TAR
+			    && !options->tar 
+#endif
+			    && options->siphontrapTimeout == 0)
+            {
+                out += "EXPLICIT STATE_COMPRESSION ";
+                if(options->stubbornreduction)
+                {
+                    out += "STUBBORN_SETS ";
                 }
             }
-            out += "\n";
+#ifdef ENABLE_TAR            
+            if(options->tar)
+            {
+                out += "TRACE_ABSTRACTION_REFINEMENT ";
+            }
+#endif            
+            if(options->siphontrapTimeout > 0)
+            {
+                out += "TOPOLOGICAL SIPHON_TRAP ";
+            }
+            
             return out;
         }
         

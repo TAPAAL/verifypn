@@ -29,18 +29,26 @@ struct Message {
 class SearchStrategy
 {
 public:
-    virtual bool empty() const = 0;
-    virtual void pushEdge(DependencyGraph::Edge *edge) = 0;
-    virtual void pushDependency(DependencyGraph::Edge* edge) = 0;
-    virtual void pushNegation(DependencyGraph::Edge *edge) = 0;
-    virtual DependencyGraph::Edge* popEdge(bool saturate = false) = 0;
-    virtual size_t size() const = 0;
+    bool empty() const;
+    void pushEdge(DependencyGraph::Edge *edge);
+    void pushDependency(DependencyGraph::Edge* edge);
+    void pushNegation(DependencyGraph::Edge *edge);
+    DependencyGraph::Edge* popEdge(bool saturate = false);
+    size_t size() const;
 //#ifdef VERIFYPNDIST
-    virtual uint32_t maxDistance() const = 0;
-    virtual bool available() const = 0;   
-    virtual void releaseNegationEdges(uint32_t ) = 0;
-    virtual bool trivialNegation() = 0;
+    uint32_t maxDistance() const;
+    bool available() const;
+    void releaseNegationEdges(uint32_t );
+    bool trivialNegation();
+    virtual void flush() {};
 //#endif
+protected:
+    virtual size_t Wsize() const = 0;
+    virtual void pushToW(DependencyGraph::Edge* edge) = 0;
+    virtual DependencyGraph::Edge* popFromW() = 0;
+    
+    std::vector<DependencyGraph::Edge*> N;
+    std::vector<DependencyGraph::Edge*> D;
 };
 
 }

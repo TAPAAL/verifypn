@@ -12,6 +12,8 @@
 #include "PetriEngine/PQL/PQL.h"
 
 #include "Stopwatch.h"
+#include "PetriEngine/options.h"
+#include "CTL/Algorithm/AlgorithmTypes.h"
 
 #include <iostream>
 #include <iomanip>
@@ -41,8 +43,8 @@ ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algori
     return ContinueCode;
 }
 
-void printResult(const std::string& qname, CTLResult& result, bool statisticslevel, bool mccouput, bool only_stats){
-    const static string techniques = "TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STRUCTURAL_REDUCTION STATE_COMPRESSION STUBBORN_SETS";
+void printResult(const std::string& qname, CTLResult& result, bool statisticslevel, bool mccouput, bool only_stats, size_t index, options_t& options){
+    const static string techniques = "TECHNIQUES COLLATERAL_PROCESSING EXPLICIT STATE_COMPRESSION SAT_SMT ";
 
     if(!only_stats)
     {
@@ -51,8 +53,12 @@ void printResult(const std::string& qname, CTLResult& result, bool statisticslev
              << qname
              << " " << (result.result ? "TRUE" : "FALSE") << " "
              << techniques
-             << endl << endl;
-
+             << (options.isCPN ? "UNFOLDING_TO_PT " : "")
+             << (options.stubbornreduction ? "STUBBORN_SETS " : "")
+             << (options.ctlalgorithm == CTL::CZero ? "CTL_CZERO " : "")
+             << (options.ctlalgorithm == CTL::Local ? "CTL_LOCAL " : "")
+                << endl << endl;
+        std::cout << "Query index " << index << " was solved" << std::endl;
         cout << "Query is" << (result.result ? "" : " NOT") << " satisfied." << endl;
 
         cout << endl;
@@ -79,14 +85,10 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
                     bool partial_order,
                     const std::vector<std::string>& querynames,
                     const std::vector<std::shared_ptr<Condition>>& queries,
-                    const std::vector<size_t>& querynumbers
+                    const std::vector<size_t>& querynumbers,
+                    options_t& options
         )
 {
-
-    if(strategytype != PetriEngine::Reachability::DFS){
-        std::cerr << "Error: Invalid CTL search strategy. Only DFS is supported by CTL engine." << std::endl;
-        return ErrorCode;
-    }
 
     for(auto qnum : querynumbers){
         CTLResult result(queries[qnum]);
@@ -128,7 +130,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
         result.processedNegationEdges = alg ? alg->processedNegationEdges() : 0;
         result.exploredConfigurations = alg ? alg->exploredConfigurations() : 0;
         result.numberOfEdges = alg ? alg->numberOfEdges() : 0;
-        printResult(querynames[qnum], result, printstatistics, mccoutput, false);
+        printResult(querynames[qnum], result, printstatistics, mccoutput, false, qnum, options);
     }
     return SuccessCode;
 }
