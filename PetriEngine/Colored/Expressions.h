@@ -204,7 +204,9 @@ namespace PetriEngine {
                 }
                 ProductType* pt = context.findProductColorType(types);
                 //return context.findColor(Color::toString(colors));
-                return pt->getColor(colors);
+                const Color* col = pt->getColor(colors);
+                assert(col != nullptr);
+                return col;
             }
             
             void getVariables(std::set<Variable*>& variables) const override {

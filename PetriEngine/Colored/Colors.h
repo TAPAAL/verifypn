@@ -218,6 +218,10 @@ namespace PetriEngine {
             std::unordered_map<size_t,Color> cache;
 
         public:
+            ~ProductType() {
+                cache.clear();
+            }
+
             void addType(ColorType* type) {
                 constituents.push_back(type);
             }

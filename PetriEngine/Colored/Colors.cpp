@@ -161,7 +161,7 @@ namespace PetriEngine {
         }
 
         const Color& ProductType::operator[](size_t index) {
-#ifdef USE_COLOR_CACHE
+#ifndef NUSE_COLOR_CACHE
             if (cache.count(index) < 1) {
 #endif
                 size_t mod = 1;
@@ -174,9 +174,9 @@ namespace PetriEngine {
                     div *= mod;
                 }
 
-#ifndef USE_COLOR_CACHE
-                static Color color(this, index, colors);
-                return color;
+#ifdef NUSE_COLOR_CACHE
+                static Color color(this, index, colors); // Do not use this!
+                return color;                            // Rather remove reference type.
 #else
                 cache.emplace(index, Color(this, index, colors));
             }
