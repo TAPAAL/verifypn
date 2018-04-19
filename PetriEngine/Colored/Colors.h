@@ -204,7 +204,7 @@ namespace PetriEngine {
 //            }
             
             iterator end() {
-                return {*this, 0};
+                return {*this, size()};
             }
             
 //            const_iterator end() const {
