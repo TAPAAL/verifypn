@@ -675,7 +675,10 @@ int main(int argc, char* argv[]) {
         std::cerr << "CPN OverApproximation is only usable on colored models" << std::endl;
         return UnknownCode;
     }
-    
+    if (options.printstatistics) {
+        std::cout << "Finished parsing model" << std::endl;
+    }
+
     //----------------------- Parse Query -----------------------//
     std::vector<std::string> querynames;
     auto queries = readQueries(options, querynames);

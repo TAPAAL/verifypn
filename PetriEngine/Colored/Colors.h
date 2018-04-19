@@ -19,6 +19,7 @@
 #include <string>
 #include <string.h>
 #include <vector>
+#include <unordered_map>
 
 namespace PetriEngine {
     namespace Colored {
@@ -38,6 +39,7 @@ namespace PetriEngine {
         public:
             Color(ColorType* colorType, uint32_t id, std::vector<const Color*>& colors);
             Color(ColorType* colorType, uint32_t id, const char* color);
+            ~Color() {}
             
             bool isTuple() const {
                 return _tuple.size() > 1;
@@ -104,8 +106,48 @@ namespace PetriEngine {
         
         class ColorType {
         public:
-            typedef std::vector<Color>::iterator iterator;
-            typedef std::vector<Color>::const_iterator const_iterator;
+            class iterator {
+            private:
+                ColorType& type;
+                size_t index;
+
+            public:
+                iterator(ColorType& type, size_t index) : type(type), index(index) {}
+
+                const Color& operator++() {
+                    return type[++index];
+                }
+
+                const Color& operator++(int) {
+                    return type[index++];
+                }
+
+                const Color& operator--() {
+                    return type[--index];
+                }
+                const Color& operator--(int) {
+                    return type[index--];
+                }
+
+                const Color& operator*() {
+                    return type[index];
+                }
+
+                const Color* operator->() {
+                    return &type[index];
+                }
+
+                bool operator==(iterator& other) {
+                    return type == other.type && index == other.index;
+                }
+
+                bool operator!=(iterator& other) {
+                    return !(type == other.type) || index != other.index;
+                }
+            };
+
+            //typedef std::vector<Color>::iterator iterator;
+            //typedef std::vector<Color>::const_iterator const_iterator;
             
         private:
             std::vector<Color> _colors;
@@ -117,31 +159,31 @@ namespace PetriEngine {
                 _id = (uintptr_t)this;
             }
             
-            void addColor(const char* colorName);
-            void addColor(std::vector<const Color*>& colors);
-            void addDot() {
+            virtual void addColor(const char* colorName);
+            virtual void addColor(std::vector<const Color*>& colors);
+            virtual void addDot() {
                 _colors.push_back(*DotConstant::dotConstant());
             }
             
-            size_t size() const {
+            virtual size_t size() const {
                 return _colors.size();
             }
             
-            const Color& operator[] (size_t index) const {
+            virtual const Color& operator[] (size_t index) {
                 return _colors[index];
             }
             
-            const Color& operator[] (int index) const {
+            virtual const Color& operator[] (int index) {
                 return _colors[index];
             }
             
-            const Color& operator[] (uint32_t index) const {
+            virtual const Color& operator[] (uint32_t index) {
                 return _colors[index];
             }
             
-            const Color& operator[] (const char* index) const;
+            virtual const Color& operator[] (const char* index);
             
-            const Color& operator[] (std::string index) const {
+            virtual const Color& operator[] (const std::string& index) {
                 return (*this)[index.c_str()];
             }
             
@@ -154,20 +196,72 @@ namespace PetriEngine {
             }
             
             iterator begin() {
-                return _colors.begin();
+                return {*this, 0};
             }
             
-            const_iterator begin() const {
-                return _colors.begin();
-            }
+//            const_iterator begin() const {
+//                return {*this, 0};
+//            }
             
             iterator end() {
-                return _colors.end();
+                return {*this, 0};
             }
             
-            const_iterator end() const {
-                return _colors.end();
+//            const_iterator end() const {
+//                return {*this, size()};
+//            }
+        };
+
+        class ProductType : public ColorType {
+        private:
+            std::vector<ColorType*> constituents;
+            std::unordered_map<size_t,Color> cache;
+
+        public:
+            ~ProductType() {
+                cache.clear();
             }
+
+            void addType(ColorType* type) {
+                constituents.push_back(type);
+            }
+
+            void addColor(const char* colorName) override {}
+            void addColor(std::vector<const Color*>& colors) override {}
+            void addDot() override {}
+
+            size_t size() const override {
+                size_t product = 1;
+                for (auto ct : constituents) {
+                    product *= ct->size();
+                }
+                return product;
+            }
+
+            bool containsTypes(const std::vector<const ColorType*>& types) const {
+                if (constituents.size() != types.size()) return false;
+
+                for (size_t i = 0; i < constituents.size(); ++i) {
+                    if (!(*constituents[i] == *types[i])) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            const Color* getColor(const std::vector<const Color*> colors);
+
+            const Color& operator[](size_t index) override;
+            const Color& operator[](int index) override {
+                return operator[]((size_t)index);
+            }
+            const Color &operator[](uint32_t index) override {
+                return operator[]((size_t)index);
+            }
+
+            const Color& operator[](const char* index) override;
+            const Color& operator[](const std::string& index) override;
         };
         
         struct Variable {
