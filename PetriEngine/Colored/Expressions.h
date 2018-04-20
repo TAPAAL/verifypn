@@ -38,14 +38,9 @@ namespace PetriEngine {
                 if (color.compare("dot") == 0)
                     return DotConstant::dotConstant();
                 for (auto& elem : colorTypes) {
-                    //printf("Trying color type: %s\n", elem.first.c_str());
                     try {
                         return &(*elem.second)[color];
-                    } catch (...) {
-//                        for (auto& col : *elem.second) {
-//                            //std::cout << col << std::endl;
-//                        }
-                    }
+                    } catch (...) {}
                 }
                 printf("Could not find color: %s\nCANNOT_COMPUTE\n", color.c_str());
                 exit(-1);
@@ -67,7 +62,6 @@ namespace PetriEngine {
             Expression() {}
             
             virtual void getVariables(std::set<Variable*>& variables) const {
-                //std::cout << "Calling unimplemented getVariables()" << std::endl;
             }
             
             virtual void expressionType() {
@@ -98,19 +92,15 @@ namespace PetriEngine {
             
         public:
             const Color* eval(ExpressionContext& context) const override {
-                //printf("Binding variable '%s' to color '%s'\n", _variable->name.c_str(), context.binding[_variable->name]->toString().c_str());
                 return context.binding[_variable->name];
             }
             
             void getVariables(std::set<Variable*>& variables) const override {
-                //printf("Getting variable: %s\n", _variable->name.c_str());
                 variables.insert(_variable);
             }
             
             VariableExpression(Variable* variable)
-                    : _variable(variable) {
-                //printf("Creating variable expression with var: %s\n", _variable->name.c_str());
-            }
+                    : _variable(variable) {}
         };
         
         class UserOperatorExpression : public ColorExpression {
@@ -203,7 +193,7 @@ namespace PetriEngine {
                     types.push_back(colors.back()->getColorType());
                 }
                 ProductType* pt = context.findProductColorType(types);
-                //return context.findColor(Color::toString(colors));
+                
                 const Color* col = pt->getColor(colors);
                 assert(col != nullptr);
                 return col;

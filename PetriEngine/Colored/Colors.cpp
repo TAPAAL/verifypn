@@ -96,7 +96,6 @@ namespace PetriEngine {
         }
         
         const Color& Color::operator-- () const {
-            //printf("Predecessor of %s\n", toString().c_str());
             if (_id <= 0) {
                 return (*_colorType)[_colorType->size() - 1];
             }
@@ -119,7 +118,6 @@ namespace PetriEngine {
                 oss << ")";
                 return oss.str();
             }
-            //printf("%s\n", color->_colorName);
             return std::string(color->_colorName);
         }
         

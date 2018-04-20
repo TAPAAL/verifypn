@@ -78,7 +78,6 @@ void PNMLParser::parse(ifstream& xml,
 
     //Add all the arcs
     for (ArcIter it = arcs.begin(); it != arcs.end(); it++) {
-        //std::set<Colored::Variable*> variables;
         auto a = *it;
         
         //Check that source id exists
@@ -106,11 +105,6 @@ void PNMLParser::parse(ifstream& xml,
                 builder->addInputArc(source.id, target.id, it->expr);
             }
 
-            // cout << "ARC: " << source.id << " to " << target.id << " weight " << it->weight << endl;
-//            auto cond = std::make_shared<GreaterThanOrEqualCondition>(
-//                            std::make_shared<IdentifierExpr>(source.id),
-//                            std::make_shared<LiteralExpr>(it->weight)
-//                        );
         } else if (!source.isPlace && target.isPlace) {
             if (!isColored) {
                 builder->addOutputArc(source.id, target.id, it->weight);
@@ -131,11 +125,6 @@ void PNMLParser::parse(ifstream& xml,
         NodeName target = id2name[inhibitor.target];
         if (source.isPlace && !target.isPlace) {
             builder->addInputArc(source.id, target.id, true, inhibitor.weight);
-            
-//            auto cond = std::make_shared<LessThanCondition>(
-//                            std::make_shared<IdentifierExpr>(source.id),
-//                            std::make_shared<LiteralExpr>(inhibitor.weight)
-//                        );
         }
         else
         {
@@ -187,39 +176,23 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
     auto ct = strcmp(type->name(), "productsort") == 0 ?
               new PetriEngine::Colored::ProductType() :
               new PetriEngine::Colored::ColorType();
-    //printf("Parsing color type: %s\n", element->first_attribute("id")->value());
     
     if (strcmp(type->name(), "dot") == 0) {
         ct->addDot();
     } else if (strcmp(type->name(), "productsort") == 0) {
-        //std::vector<PetriEngine::Colored::ColorType*> components;
         for (auto it = type->first_node(); it; it = it->next_sibling()) {
             if (strcmp(it->name(), "usersort") == 0) {
                 ((PetriEngine::Colored::ProductType*)ct)->addType(colorTypes[it->first_attribute("declaration")->value()]);
             }
         }
-//        std::vector<const PetriEngine::Colored::Color*> binding(components.size());
-//        for (size_t i = 0; i < components.size(); ++i) {
-//            binding[i] = &(*components[i])[0];
-//        }
-//        do {
-//            ct->addColor(binding);
-//            for (auto& c : binding) {
-//                c = &++*c;
-//                if (c->getId() != 0)
-//                    break;
-//            }
-//        } while (!isInitialBinding(binding));
     } else {
         for (auto it = type->first_node(); it; it = it->next_sibling()) {
-            //printf("%s\n", it->name());
             auto id = it->first_attribute("id");
             assert(id != 0);
-            //printf("%s\n", id->value());
             ct->addColor(id->value());
         }
     }
-    //printf("%s\n", type->name());
+
     std::string id = element->first_attribute("id")->value();
     colorTypes[id] = ct;
     builder->addColorType(id, ct);
@@ -305,8 +278,6 @@ PetriEngine::Colored::ColorExpression_ptr PNMLParser::parseColorExpression(rapid
     if (strcmp(element->name(), "dotconstant") == 0) {
         return std::make_shared<PetriEngine::Colored::DotConstantExpression>();
     } else if (strcmp(element->name(), "variable") == 0) {
-        //auto var = variables[element->first_attribute("refvariable")->value()];
-        //printf("Var Ref: %s, with var: %s\n", element->first_attribute("refvariable")->value(), var->name);
         return std::make_shared<PetriEngine::Colored::VariableExpression>(variables[element->first_attribute("refvariable")->value()]);
     } else if (strcmp(element->name(), "useroperator") == 0) {
         return std::make_shared<PetriEngine::Colored::UserOperatorExpression>(findColor(element->first_attribute("declaration")->value()));
@@ -329,12 +300,10 @@ PetriEngine::Colored::ColorExpression_ptr PNMLParser::parseColorExpression(rapid
 
 PetriEngine::Colored::AllExpression_ptr PNMLParser::parseAllExpression(rapidxml::xml_node<>* element) {
     if (strcmp(element->name(), "all") == 0) {
-        //printf("%s\n", element->first_node()->name());
         return std::make_shared<PetriEngine::Colored::AllExpression>(parseUserSort(element));
     } else if (strcmp(element->name(), "subterm") == 0) {
         return parseAllExpression(element->first_node());
     }
-    //printf("%s\n", element->name());
     
     return nullptr;
 }
@@ -371,7 +340,6 @@ PetriEngine::Colored::NumberOfExpression_ptr PNMLParser::parseNumberOfExpression
     } else {
         std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;
         for (auto it = first; it; it = it->next_sibling()) {
-            //printf("%s\n", it->name());
             colors.push_back(parseColorExpression(it));
         }
         return std::make_shared<PetriEngine::Colored::NumberOfExpression>(colors, number);
@@ -565,7 +533,6 @@ void PNMLParser::parseTransition(rapidxml::xml_node<>* element) {
         if (strcmp(it->name(), "graphics") == 0) {
             parsePosition(it, t.x, t.y);
         } else if (strcmp(it->name(), "condition") == 0) {
-            //printf("Adding expression '%s' to transition '%s'\n", it->first_node("structure")->first_node()->name(), t.id.c_str());
             t.expr = parseGuardExpression(it->first_node("structure"));
         } else if (strcmp(it->name(), "conditions") == 0) {
             std::cout << "conditions not supported" << std::endl;
@@ -619,11 +586,7 @@ const PetriEngine::Colored::Color* PNMLParser::findColor(const char* name) const
     for (auto elem : colorTypes) {
         try {
             return &(*elem.second)[name];
-        } catch (...) {
-//            for (auto& col : *elem.second) {
-//                std::cout << col << std::endl;
-//            }
-        }
+        } catch (...) {}
     }
     printf("Could not find color: %s\nCANNOT_COMPUTE\n", name);
     exit(-1);

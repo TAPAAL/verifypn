@@ -24,8 +24,7 @@
 namespace PetriEngine {
     namespace Colored {
         class ColorType;
-        
-        // Should make constructor protected, and make ColorType Friendly
+
         class Color {
         public:
             friend std::ostream& operator<< (std::ostream& stream, const Color& color);
@@ -145,9 +144,6 @@ namespace PetriEngine {
                     return !(type == other.type) || index != other.index;
                 }
             };
-
-            //typedef std::vector<Color>::iterator iterator;
-            //typedef std::vector<Color>::const_iterator const_iterator;
             
         private:
             std::vector<Color> _colors;
@@ -198,18 +194,10 @@ namespace PetriEngine {
             iterator begin() {
                 return {*this, 0};
             }
-            
-//            const_iterator begin() const {
-//                return {*this, 0};
-//            }
-            
+
             iterator end() {
                 return {*this, size()};
             }
-            
-//            const_iterator end() const {
-//                return {*this, size()};
-//            }
         };
 
         class ProductType : public ColorType {
