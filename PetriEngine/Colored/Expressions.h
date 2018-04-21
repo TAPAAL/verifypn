@@ -43,7 +43,7 @@ namespace PetriEngine {
                     } catch (...) {}
                 }
                 printf("Could not find color: %s\nCANNOT_COMPUTE\n", color.c_str());
-                exit(-1);
+                exit(ErrorCode);
             }
 
             ProductType* findProductColorType(const std::vector<const ColorType*>& types) const {
@@ -193,7 +193,7 @@ namespace PetriEngine {
                     types.push_back(colors.back()->getColorType());
                 }
                 ProductType* pt = context.findProductColorType(types);
-                
+
                 const Color* col = pt->getColor(colors);
                 assert(col != nullptr);
                 return col;

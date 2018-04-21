@@ -57,7 +57,7 @@ void PNMLParser::parse(ifstream& xml,
     if(strcmp(root->name(), "pnml") != 0)
     {
         std::cout << "expecting <pnml> tag as root-node in xml tree." << std::endl;
-        exit(-1);
+        exit(ErrorCode);
     }
     
     auto declarations = root->first_node("net")->first_node("declaration");
@@ -589,5 +589,5 @@ const PetriEngine::Colored::Color* PNMLParser::findColor(const char* name) const
         } catch (...) {}
     }
     printf("Could not find color: %s\nCANNOT_COMPUTE\n", name);
-    exit(-1);
+    exit(ErrorCode);
 }

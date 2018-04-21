@@ -145,7 +145,6 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         BindingGenerator gen(transition, _arcs, _colors);
         for (auto& b : gen) {
-            std::cout.flush();
             size_t i = transition.bindings.size();
             std::unordered_map<std::string, const Colored::Color*> binding;
             for (auto& elem : b) {
