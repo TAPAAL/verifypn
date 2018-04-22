@@ -150,12 +150,12 @@ namespace PetriEngine {
             _colors.push_back(Color(this, (uint32_t)_colors.size(), colors));
         }
         
-        const Color& ColorType::operator[] (const char* index) {
+        const Color* ColorType::operator[] (const char* index) {
             for (size_t i = 0; i < _colors.size(); i++) {
                 if (strcmp(operator[](i).toString().c_str(), index) == 0)
-                    return operator[](i);
+                    return &operator[](i);
             }
-            throw "Index out of bounds";
+            return nullptr;
         }
 
         const Color& ProductType::operator[](size_t index) {
@@ -192,26 +192,26 @@ namespace PetriEngine {
             return &operator[](sum);
         }
 
-        const Color& ProductType::operator[](const char* index) {
+        const Color* ProductType::operator[](const char* index) {
             return operator[](std::string(index));
         }
 
-        const Color& ProductType::operator[](const std::string& index) {
+        const Color* ProductType::operator[](const std::string& index) {
             std::string str(index.substr(1, index.size() - 2));
             std::vector<std::string> parts = split(str, ',');
 
             if (parts.size() != constituents.size()) {
-                throw "Index out of bounds";
+                return nullptr;
             }
 
             size_t sum = 0;
             size_t mult = 1;
             for (size_t i = 0; i < parts.size(); ++i) {
-                sum += mult * (*constituents[i])[parts[i]].getId();
+                sum += mult * (*constituents[i])[parts[i]]->getId();
                 mult *= constituents[i]->size();
             }
 
-            return operator[](sum);
+            return &operator[](sum);
         }
 
     }

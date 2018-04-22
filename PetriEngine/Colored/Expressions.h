@@ -25,6 +25,7 @@
 
 #include "Colors.h"
 #include "Multiset.h"
+#include "PetriEngine/errorcodes.h"
 
 namespace PetriEngine {
     class ColoredPetriNetBuilder;
@@ -38,9 +39,9 @@ namespace PetriEngine {
                 if (color.compare("dot") == 0)
                     return DotConstant::dotConstant();
                 for (auto& elem : colorTypes) {
-                    try {
-                        return &(*elem.second)[color];
-                    } catch (...) {}
+                    auto col = (*elem.second)[color];
+                    if (col)
+                        return col;
                 }
                 printf("Could not find color: %s\nCANNOT_COMPUTE\n", color.c_str());
                 exit(ErrorCode);

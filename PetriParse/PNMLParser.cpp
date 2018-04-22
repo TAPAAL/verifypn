@@ -584,9 +584,9 @@ void PNMLParser::parsePosition(rapidxml::xml_node<>* element, double& x, double&
 
 const PetriEngine::Colored::Color* PNMLParser::findColor(const char* name) const {
     for (auto elem : colorTypes) {
-        try {
-            return &(*elem.second)[name];
-        } catch (...) {}
+        auto col = (*elem.second)[name];
+        if (col)
+            return col;
     }
     printf("Could not find color: %s\nCANNOT_COMPUTE\n", name);
     exit(ErrorCode);

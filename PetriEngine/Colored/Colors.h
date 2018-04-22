@@ -177,9 +177,9 @@ namespace PetriEngine {
                 return _colors[index];
             }
             
-            virtual const Color& operator[] (const char* index);
+            virtual const Color* operator[] (const char* index);
             
-            virtual const Color& operator[] (const std::string& index) {
+            virtual const Color* operator[] (const std::string& index) {
                 return (*this)[index.c_str()];
             }
             
@@ -244,12 +244,12 @@ namespace PetriEngine {
             const Color& operator[](int index) override {
                 return operator[]((size_t)index);
             }
-            const Color &operator[](uint32_t index) override {
+            const Color& operator[](uint32_t index) override {
                 return operator[]((size_t)index);
             }
 
-            const Color& operator[](const char* index) override;
-            const Color& operator[](const std::string& index) override;
+            const Color* operator[](const char* index) override;
+            const Color* operator[](const std::string& index) override;
         };
         
         struct Variable {
