@@ -91,8 +91,6 @@ namespace PetriEngine {
         assert(t < _transitions.size());
         assert(p < _places.size());
 
-        //std::set<Colored::Variable*> variables;
-
         Colored::Arc arc;
         arc.place = p;
         arc.transition = t;
@@ -101,7 +99,6 @@ namespace PetriEngine {
         arc.input = input;
         _transitions[t].arcs.push_back(_arcs.size());
         _arcs.push_back(arc);
-//        assert(_transitions[t].arcs.back() == &_arcs.back());
     }
 
     void ColoredPetriNetBuilder::addColorType(const std::string& id, Colored::ColorType* type) {
@@ -136,12 +133,9 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldPlace(Colored::Place& place) {
-        //std::cout << place.name << std::endl;
         for (size_t i = 0; i < place.type->size(); ++i) {
-            //std::cout << c.toString() << std::endl;
             std::string name = place.name + ";" + std::to_string(i);
             const Colored::Color* color = &(*place.type)[i];
-            //std::cout << name << std::endl;
             _ptBuilder.addPlace(name, place.marking[color], 0.0, 0.0);
             _ptplacenames[place.name][color->getId()] = name;
             ++_nptplaces;
@@ -149,7 +143,6 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
-        //std::cout << transition.name << std::endl;
         BindingGenerator gen(transition, _arcs, _colors);
         for (auto& b : gen) {
             size_t i = transition.bindings.size();
@@ -168,38 +161,17 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc) {
         Colored::Transition& transition = _transitions[arc.transition];
         for (size_t i = 0; i < transition.bindings.size(); ++i) {
-//            for (auto& b : transition.bindings[i]) {
-//                printf("Binding var '%s'\n", b.first.c_str());
-//            }
             Colored::ExpressionContext context {transition.bindings[i], _colors};
             Colored::Multiset ms = arc.expr->eval(context);
-//            std::cout << "Before clean: " << ms.toString() << std::endl;
-//            ms.clean();
-//            std::cout << "After clean:  " << ms.toString() << std::endl;
-//            if (arc.input) {
-//                std::cout << "Arc from place '" << _places[arc.place].name << "' to transition '" << transition.name;
-//            } else {
-//                std::cout << "Arc from transition '" << transition.name << "' to place '" << _places[arc.place].name;
-//            }
-//            std::cout << "' under binding '" << i << "' has " << ms.distinctSize() << " distinct elements" << std::endl;
+
             for (auto color : ms) {
                 if (color.second == 0) {
                     continue;
                 }
+
                 std::string pName = _ptplacenames[_places[arc.place].name][color.first->getId()];
                 std::string tName = _pttransitionnames[transition.name][i];
-//                if (pName.empty()) {
-//                    std::cout << "place: " << _places[arc.place].name << " color: " << color.first->toString() << std::endl;
-//                    for (auto& col : _ptplacenames[_places[arc.place].name]) {
-//                        std::cout << "\tPossible color: " << col.first << std::endl;
-//                    }
-//                }
-//                if (arc.input) {
-//                    std::cout << "Arc from place '" << _places[arc.place].name << "' to transition '" << transition.name;
-//                } else {
-//                    std::cout << "Arc from transition '" << transition.name << "' to place '" << _places[arc.place].name;
-//                }
-//                std::cout << "' under binding '" << i << "' with color '" << color.first->toString() << "' with " << color.second << " tokens" << std::endl;
+
                 if (arc.input) {
                     _ptBuilder.addInputArc(pName, tName, false, color.second);
                 } else {
@@ -269,7 +241,6 @@ namespace PetriEngine {
             ColoredPetriNetBuilder::ColorTypeMap& colorTypes)
         : _colorTypes(colorTypes)
     {
-        //std::cout << "Generating bindings on: " << transition.name << std::endl;
         _expr = transition.guard;
         std::set<Colored::Variable*> variables;
         if (_expr != nullptr) {
@@ -277,12 +248,10 @@ namespace PetriEngine {
         }
         for (auto ai : transition.arcs) {
             auto& arc = arcs[ai];
-            //arc->expr->expressionType();
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
         }
         for (auto var : variables) {
-            //printf("BindingGen var: %s\n", var->name.c_str());
             _bindings.push_back(Colored::Binding {var, &(*var->colorType)[0]});
         }
         
@@ -296,7 +265,6 @@ namespace PetriEngine {
 
         std::unordered_map<std::string, const Colored::Color*> binding;
         for (auto& elem : _bindings) {
-            //printf("Evaluating var '%s' with color '%s'\n", elem.var->name.c_str(), elem.color->toString().c_str());
             binding[elem.var->name] = elem.color;
         }
         Colored::ExpressionContext context {binding, _colorTypes};

@@ -25,6 +25,7 @@
 
 #include "Colors.h"
 #include "Multiset.h"
+#include "PetriEngine/errorcodes.h"
 
 namespace PetriEngine {
     class ColoredPetriNetBuilder;
@@ -37,18 +38,23 @@ namespace PetriEngine {
             const Color* findColor(const std::string& color) const {
                 if (color.compare("dot") == 0)
                     return DotConstant::dotConstant();
-                for (auto elem : colorTypes) {
-                    //printf("Trying color type: %s\n", elem.first.c_str());
-                    try {
-                        return &(*elem.second)[color];
-                    } catch (...) {
-//                        for (auto& col : *elem.second) {
-//                            //std::cout << col << std::endl;
-//                        }
-                    }
+                for (auto& elem : colorTypes) {
+                    auto col = (*elem.second)[color];
+                    if (col)
+                        return col;
                 }
                 printf("Could not find color: %s\nCANNOT_COMPUTE\n", color.c_str());
-                exit(-1);
+                exit(ErrorCode);
+            }
+
+            ProductType* findProductColorType(const std::vector<const ColorType*>& types) const {
+                for (auto& elem : colorTypes) {
+                    auto* pt = dynamic_cast<ProductType*>(elem.second);
+                    if (pt && pt->containsTypes(types)) {
+                        return pt;
+                    }
+                }
+                return nullptr;
             }
         };
         
@@ -57,7 +63,6 @@ namespace PetriEngine {
             Expression() {}
             
             virtual void getVariables(std::set<Variable*>& variables) const {
-                //std::cout << "Calling unimplemented getVariables()" << std::endl;
             }
             
             virtual void expressionType() {
@@ -88,19 +93,15 @@ namespace PetriEngine {
             
         public:
             const Color* eval(ExpressionContext& context) const override {
-                //printf("Binding variable '%s' to color '%s'\n", _variable->name.c_str(), context.binding[_variable->name]->toString().c_str());
                 return context.binding[_variable->name];
             }
             
             void getVariables(std::set<Variable*>& variables) const override {
-                //printf("Getting variable: %s\n", _variable->name.c_str());
                 variables.insert(_variable);
             }
             
             VariableExpression(Variable* variable)
-                    : _variable(variable) {
-                //printf("Creating variable expression with var: %s\n", _variable->name.c_str());
-            }
+                    : _variable(variable) {}
         };
         
         class UserOperatorExpression : public ColorExpression {
@@ -187,10 +188,16 @@ namespace PetriEngine {
         public:
             const Color* eval(ExpressionContext& context) const override {
                 std::vector<const Color*> colors;
+                std::vector<const ColorType*> types;
                 for (auto color : _colors) {
                     colors.push_back(color->eval(context));
+                    types.push_back(colors.back()->getColorType());
                 }
-                return context.findColor(Color::toString(colors));
+                ProductType* pt = context.findProductColorType(types);
+
+                const Color* col = pt->getColor(colors);
+                assert(col != nullptr);
+                return col;
             }
             
             void getVariables(std::set<Variable*>& variables) const override {

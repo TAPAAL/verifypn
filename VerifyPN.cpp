@@ -351,18 +351,18 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Frederik Meyer Boenneland <sadpantz@gmail.com>\n");
             printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
             printf("                        Peter Fogh <peter.f1992@gmail.com>\n");
-            printf("                        Jonas Finnemann Jensen <jopsen@gmail.com>,\n");
+            printf("                        Jonas Finnemann Jensen <jopsen@gmail.com>\n");
             printf("                        Lasse Steen Jensen <lassjen88@gmail.com>\n");
             printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
             printf("                        Tobias Skovgaard Jepsen <tobiasj1991@gmail.com>\n");
             printf("                        Mads Johannsen <mads_johannsen@yahoo.com>\n");
             printf("                        Isabella Kaufmann <bellakaufmann93@gmail.com>\n");
+            printf("                        Andreas Hairing Klostergaard <kloster92@me.com>\n");
             printf("                        Søren Moss Nielsen <soren_moss@mac.com>\n");
-            printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>,\n");
+            printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>\n");
             printf("                        Samuel Pastva <daemontus@gmail.com>\n");
-            printf("                        Jiri Srba <srba.jiri@gmail.com>,\n");
-            printf("                        Lars Kærlund Østergaard <larsko@gmail.com>,\n");
-            printf("                        Andreas Hairing Klostergaard <kloster92@me.com>,\n");
+            printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
+            printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
         } else if (options.modelfile == NULL) {
@@ -675,7 +675,10 @@ int main(int argc, char* argv[]) {
         std::cerr << "CPN OverApproximation is only usable on colored models" << std::endl;
         return UnknownCode;
     }
-    
+    if (options.printstatistics) {
+        std::cout << "Finished parsing model" << std::endl;
+    }
+
     //----------------------- Parse Query -----------------------//
     std::vector<std::string> querynames;
     auto queries = readQueries(options, querynames);
