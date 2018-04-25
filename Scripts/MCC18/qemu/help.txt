@@ -1,0 +1,11 @@
+first execute:
+
+./run.sh
+
+and then
+
+./login.sh
+
+To finish, click on the qemu windows, and press
+
+ESC, 2, quit
