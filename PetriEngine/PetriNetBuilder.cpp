@@ -464,15 +464,9 @@ namespace PetriEngine {
                 queries[i]->analyze(placecontext);
                 all_reach &= (results[i] != Reachability::ResultPrinter::CTL);
                 remove_loops &= !queries[i]->isLoopSensitive();
-                contains_next |= queries[i]->containsNext();
-                if(results[i] != Reachability::ResultPrinter::CTL &&
-                   queries[i]->isLoopSensitive() &&
-                   queries[i]->prepareForReachability() != PQL::DeadlockCondition::DEADLOCK)
-                {
-                    // There is a deadlock somewhere, if it is not alone, we cannot reduce.
-                    // this has similar problems as nested next.
-                    contains_next = true;
-                }
+                // There is a deadlock somewhere, if it is not alone, we cannot reduce.
+                // this has similar problems as nested next.                        
+                contains_next |= queries[i]->containsNext() || queries[i]->nestedDeadlock();                        
             }
         }
         reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, contains_next);

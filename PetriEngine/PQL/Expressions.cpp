@@ -4046,6 +4046,22 @@ namespace PetriEngine {
             init(std::move(exprs));
         }
 
+        bool LogicalCondition::nestedDeadlock() const {
+            for(auto& c : _conds)
+            {
+                if(c->getQuantifier() == PQL::DEADLOCK ||
+                   c->nestedDeadlock() ||
+                    (c->getQuantifier() == PQL::NEG &&
+                     (*static_cast<NotCondition*>(c.get()))[0]->getQuantifier() == PQL::DEADLOCK
+                        ))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
     } // PQL
 } // PetriEngine
 

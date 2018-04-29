@@ -283,6 +283,7 @@ namespace PetriEngine {
             static std::shared_ptr<Condition> 
             initialMarkingRW(std::function<std::shared_ptr<Condition> ()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw);
             virtual bool containsNext() const = 0;   
+            virtual bool nestedDeadlock() const = 0;
         protected:
             //Value for checking if condition is trivially true or false.
             //0 is undecided (default), 1 is true, 2 is false.
