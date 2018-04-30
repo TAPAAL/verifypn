@@ -337,6 +337,7 @@ namespace PetriEngine {
             const Condition_ptr& operator[](size_t i) const { return _cond; };
             virtual bool isTemporal() const override { return _temporal;}
             bool containsNext() const override { return _cond->containsNext(); }
+            bool nestedDeadlock() const override { return _cond->nestedDeadlock(); }
 #ifdef ENABLE_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
 #endif
@@ -375,6 +376,7 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
             virtual bool containsNext() const override { return _cond->containsNext(); }
+            bool nestedDeadlock() const override { return _cond->nestedDeadlock(); }
 #ifdef ENABLE_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const
             {
@@ -525,6 +527,7 @@ namespace PetriEngine {
             Path getPath() const override             
             { return Path::U; }
             bool containsNext() const override { return _cond1->containsNext() || _cond2->containsNext(); }
+            bool nestedDeadlock() const override { return _cond1->nestedDeadlock() || _cond2->nestedDeadlock(); }
         private:
             virtual std::string op() const = 0; 
             
@@ -604,6 +607,8 @@ namespace PetriEngine {
             int formulaSize() const override
             { return _compiled->formulaSize(); }
             bool containsNext() const override
+            { return false; }
+            bool nestedDeadlock() const override
             { return false; }
 #ifdef ENABLE_TAR
             z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const override
@@ -704,6 +709,8 @@ namespace PetriEngine {
             bool singular() const { return _conds.size() == 1; }
             bool containsNext() const override 
             { return std::any_of(begin(), end(), [](auto& a){return a->containsNext();}); }
+            bool nestedDeadlock() const override;
+
         protected:
             LogicalCondition() {};
             Retval simplifyOr(SimplificationContext& context) const;
@@ -838,6 +845,7 @@ namespace PetriEngine {
                                      _constraints[0]._upper == std::numeric_limits<uint32_t>::max());
             };
             bool containsNext() const override { return false;}
+            bool nestedDeadlock() const override { return false; }
 #ifdef ENABLE_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
 #endif
@@ -875,6 +883,7 @@ namespace PetriEngine {
                 else return _expr2;
             }
             bool containsNext() const override { return false; }
+            bool nestedDeadlock() const override { return false; }
         protected:
             uint32_t _distance(DistanceContext& c, 
                     std::function<uint32_t(uint32_t, uint32_t, bool)> d) const
@@ -1053,6 +1062,7 @@ namespace PetriEngine {
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
+            bool nestedDeadlock() const override { return false; }
 #ifdef ENABLE_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const
             {
@@ -1087,10 +1097,11 @@ namespace PetriEngine {
             void toBinary(std::ostream&) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             static Condition_ptr DEADLOCK;
-            Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
+            Quantifier getQuantifier() const override { return Quantifier::DEADLOCK; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
+            bool nestedDeadlock() const override { return false; }
 #ifdef ENABLE_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
 #endif
@@ -1140,6 +1151,7 @@ namespace PetriEngine {
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
+            bool nestedDeadlock() const override { return false; }
 #ifdef ENABLE_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
             { return _compiled->encodeSat(net, context, uses, incremented); }
@@ -1192,6 +1204,7 @@ namespace PetriEngine {
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
+            bool nestedDeadlock() const override { return false; }
             size_t bounds() const { return _bound; }
 #ifdef ENABLE_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
