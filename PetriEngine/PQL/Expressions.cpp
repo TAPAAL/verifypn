@@ -3543,20 +3543,34 @@ namespace PetriEngine {
         }
         
         void MultiplyExpr::incr(ReducingSuccessorGenerator& generator) const {
-            for(auto& i : _ids)
+            if((_ids.size() + _exprs.size()) == 1)
             {
-                generator.presetOf(i.first, true);
-                generator.postsetOf(i.first, true);
+                for(auto& i : _ids) generator.presetOf(i.first, true);
+                for(auto& e : _exprs) e->incr(generator);                
             }
-            for(auto& e : _exprs)
+            else
             {
-                e->incr(generator);
-                e->decr(generator);
+                for(auto& i : _ids)
+                {
+                    generator.presetOf(i.first, true);
+                    generator.postsetOf(i.first, true);
+                }
+                for(auto& e : _exprs)
+                {
+                    e->incr(generator);
+                    e->decr(generator);
+                }
             }
         }
         
         void MultiplyExpr::decr(ReducingSuccessorGenerator& generator) const {
-            incr(generator);
+            if((_ids.size() + _exprs.size()) == 1)
+            {
+                for(auto& i : _ids) generator.postsetOf(i.first, true);
+                for(auto& e : _exprs) e->decr(generator);            
+            }
+            else
+                incr(generator);
         }
         
         void MinusExpr::incr(ReducingSuccessorGenerator& generator) const {
