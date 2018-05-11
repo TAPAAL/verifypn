@@ -751,8 +751,9 @@ namespace PetriEngine {
 
             _ruleE++;
             continueReductions = true;
-            
-            parent->initialMarking[p] = 0;
+          
+            if(placeInQuery[p] == 0) 
+                parent->initialMarking[p] = 0;
             
             bool skipplace = (notenabled.size() == place.consumers.size()) && (placeInQuery[p] == 0);
             for(uint cons : notenabled)
