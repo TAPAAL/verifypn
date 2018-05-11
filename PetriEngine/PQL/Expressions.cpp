@@ -1060,9 +1060,14 @@ namespace PetriEngine {
 
         z3::expr SubtractExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             auto res = context.int_val(0);
+            bool first = true;
             for(auto& e : _exprs)
             {
-                res = res - e->encodeSat(net, context, uses, incremented);
+                if(first)
+                    res = e->encodeSat(net, context, uses, incremented);
+                else
+                    res = res - e->encodeSat(net, context, uses, incremented);
+                first = false;
             }
             return res;
         }

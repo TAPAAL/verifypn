@@ -670,7 +670,10 @@ namespace PetriEngine {
                     }
                     else
                     {
-                        result = result || g2.as_expr();
+                        if(i == 0)
+                            result = g2.as_expr();
+                        else
+                            result = result || g2.as_expr();
                     }
                 }
                 Renamer renamer(solver_context);
