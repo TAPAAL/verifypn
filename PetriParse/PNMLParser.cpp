@@ -461,15 +461,33 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
         inhibitor = true;
     }
 
+    bool first = true;
     for (auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")) {
-            string text;
-            parseValue(it, text);
-            weight = atoi(text.c_str());
+        string text;
+        parseValue(it, text);
+        weight = atoi(text.c_str());
+        if(std::find_if(text.begin(), text.end(), [](char c) { return !std::isdigit(c) && !std::isblank(c); }) != text.end())
+        {
+            if(weight == 0) weight = 1;
+            std::cerr << "WARNING: Found non-integer-text in inscription-tag (weight) on arc from " << source << " to " << target << " with value \"" << text << "\". An integer was expected. Using " << weight << " as weight." << std::endl;
+        }
+        assert(weight > 0);
+        if(!first)
+        {
+            std::cerr << "WARNING: Multiple inscription tags in xml of a arc from " << source << " to " << target << ". Using last found value" << std::endl;
+        }
+        first = false;
     }
     
     PetriEngine::Colored::ArcExpression_ptr expr;
+    first = true;
     for (auto it = element->first_node("hlinscription"); it; it = it->next_sibling("hlinscription")) {
         expr = parseArcExpression(it->first_node("structure"));
+        if(!first)
+        {
+            std::cerr << "WARNING: Multiple hlinscription tags in xml of a arc from " << source << " to " << target << ". Using last found value" << std::endl;
+        }
+        first = false;
     }
     
     if (isColored)
@@ -479,19 +497,27 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
     arc.target = target;
     arc.weight = weight;
     arc.expr = expr;
+    assert(weight > 0);
     
     if (inhibitor && isColored) {
         std::cout << "inhibitor arcs are not supported in colored Petri nets" << std::endl;
         exit(-1);
     }
     
-    if(inhibitor)
+    if(weight != 0)
     {
-        inhibarcs.push_back(arc);   
+        if(inhibitor)
+        {
+            inhibarcs.push_back(arc);   
+        }
+        else
+        {
+            arcs.push_back(arc);
+        }
     }
     else
     {
-        arcs.push_back(arc);
+        std::cerr << "WARNING: Ignoring arc from " << source << " to " << target << " with weight 0." << std::endl;            
     }
 }
 
