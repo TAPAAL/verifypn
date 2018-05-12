@@ -11,9 +11,11 @@
  * Created on 30 March 2016, 19:50
  */
 
-#include <cassert>
 #include "SuccessorGenerator.h"
 #include "Structures/State.h"
+#include "PetriEngine/errorcodes.h"
+
+#include <cassert>
 namespace PetriEngine {
 
     SuccessorGenerator::SuccessorGenerator(const PetriNet& net)
@@ -78,7 +80,7 @@ namespace PetriEngine {
             n += _net._invariants[finv].tokens;
             if (n >= std::numeric_limits<uint32_t>::max()) {
                 std::cerr << "Exceeded 2**32 limit of tokens in a single place ("  << n << ")" << std::endl;
-                exit(-1);
+                exit(FailedCode);
             }
             write.marking()[_net._invariants[finv].place] = n;
         }

@@ -19,6 +19,7 @@
  */
 #include "Contexts.h"
 #include "Expressions.h"
+#include "PetriEngine/errorcodes.h"
 
 #include <sstream>
 #include <assert.h>
@@ -3513,8 +3514,8 @@ namespace PetriEngine {
         Condition_ptr UnfoldedUpperBoundsCondition::pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             if(negated)
             {
-                std::cout << "UPPER BOUNDS CANNOT BE NEGATED!" << std::endl;
-                exit(-1);
+                std::cerr << "UPPER BOUNDS CANNOT BE NEGATED!" << std::endl;
+                exit(ErrorCode);
             }
             return std::make_shared<UnfoldedUpperBoundsCondition>(_places, _max);
         }
@@ -3903,8 +3904,9 @@ namespace PetriEngine {
             auto neg = _negated != other._negated;
             if(neg && other._constraints.size() > 1)
             {
-                std::cout << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
+                std::cerr << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
                 assert(false);
+                exit(ErrorCode);
             }
             auto il = _constraints.begin();
             for(auto& c : other._constraints)
@@ -3927,8 +3929,9 @@ namespace PetriEngine {
                     }
                     else
                     {
-                        std::cout << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
+                        std::cerr << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
                         assert(false);
+                        exit(ErrorCode);
                     }
                     c2._place = c._place;
                     assert(c2._lower <= c2._upper);
@@ -4038,8 +4041,9 @@ namespace PetriEngine {
                 }
                 else
                 {
-                    std::cout << "UNKNOWN " << std::endl;
+                    std::cerr << "UNKNOWN " << std::endl;
                     assert(false);
+                    exit(ErrorCode);
                 }
             }            
         }

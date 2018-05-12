@@ -46,8 +46,8 @@ namespace PetriEngine {
                 double x = 0,
                 double y = 0)
         {
-            std::cout << "Colored places are not supported in standard P/T nets" << std::endl;
-            exit(-1);
+            std::cerr << "Colored places are not supported in standard P/T nets" << std::endl;
+            exit(ErrorCode);
         }
         /** Add a new transition with a unique name */
         virtual void addTransition(const std::string& name,
@@ -59,8 +59,8 @@ namespace PetriEngine {
                 double x = 0,
                 double y = 0)
         {
-            std::cout << "Colored transitions are not supported in standard P/T nets" << std::endl;
-            exit(-1);
+            std::cerr << "Colored transitions are not supported in standard P/T nets" << std::endl;
+            exit(ErrorCode);
         }
         /** Add input arc with given weight */
         virtual void addInputArc(const std::string& place,
@@ -72,8 +72,8 @@ namespace PetriEngine {
                 const std::string& transition,
                 Colored::ArcExpression_ptr expr)
         {
-            std::cout << "Colored input arcs are not supported in standard P/T nets" << std::endl;
-            exit(-1);
+            std::cerr << "Colored input arcs are not supported in standard P/T nets" << std::endl;
+            exit(ErrorCode);
         }
         /** Add output arc with given weight */
         virtual void addOutputArc(const std::string& transition,
@@ -84,15 +84,15 @@ namespace PetriEngine {
                 const std::string& place,
                 Colored::ArcExpression_ptr expr)
         {
-            std::cout << "Colored output arcs are not supported in standard P/T nets" << std::endl;
-            exit(-1);
+            std::cerr << "Colored output arcs are not supported in standard P/T nets" << std::endl;
+            exit(ErrorCode);
         }
         /** Add color types with id */
         virtual void addColorType(const std::string& id,
                 Colored::ColorType* type)
         {
-            std::cout << "Color types are not supported in standard P/T nets" << std::endl;
-            exit(-1);
+            std::cerr << "Color types are not supported in standard P/T nets" << std::endl;
+            exit(ErrorCode);
         }
         
         virtual void enableColors() {
