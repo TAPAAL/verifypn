@@ -3533,13 +3533,27 @@ namespace PetriEngine {
         }
         
         void SubtractExpr::incr(ReducingSuccessorGenerator& generator) const {
-            _exprs[0]->incr(generator);
-            _exprs[1]->decr(generator);
+            bool first = true;
+            for(auto& e : _exprs)
+            {
+                if(first)
+                    e->incr(generator);
+                else
+                    e->decr(generator);
+                first = false;
+            }
         }
         
         void SubtractExpr::decr(ReducingSuccessorGenerator& generator) const {
-            _exprs[0]->decr(generator);
-            _exprs[1]->incr(generator);
+            bool first = true;
+            for(auto& e : _exprs)
+            {
+                if(first)
+                    e->decr(generator);
+                else
+                    e->incr(generator);
+                first = false;
+            }
         }
         
         void MultiplyExpr::incr(ReducingSuccessorGenerator& generator) const {
