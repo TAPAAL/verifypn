@@ -216,7 +216,6 @@ namespace PetriEngine {
                     assert(place_cons_count[pre.place] > 0);
                     --place_cons_count[pre.place];
                     ++freeinv;
-                    assert(false);
                 }
                 
                 net->_transitions[freetrans].outputs = freeinv;
@@ -388,14 +387,10 @@ namespace PetriEngine {
                         if(tov.first->place == tiv.first->place)
                         {
                             found = true;
-                            if(tiv.first->inhibitor) 
-                                tiv.first->direction = tov.first->direction = 1;
-                            if(tiv.first->tokens < tov.first->tokens)
-                                tiv.first->direction = tov.first->direction = 1;
-                            if(tiv.first->tokens == tov.first->tokens)
-                                tiv.first->direction = tov.first->direction = 0;
-                            if(tiv.first->tokens > tov.first->tokens)
-                                tiv.first->direction = tov.first->direction = -1;
+                            if(tiv.first->inhibitor)                        tiv.first->direction = tov.first->direction = 1;
+                            else if(tiv.first->tokens < tov.first->tokens)  tiv.first->direction = tov.first->direction = 1;
+                            else if(tiv.first->tokens == tov.first->tokens) tiv.first->direction = tov.first->direction = 0;
+                            else if(tiv.first->tokens > tov.first->tokens)  tiv.first->direction = tov.first->direction = -1;
                             break;
                         }
                     }
@@ -414,14 +409,10 @@ namespace PetriEngine {
                         found = true;
                         if(tov.first->place == tiv.first->place)
                         {
-                            if(tov.first->inhibitor) 
-                                tiv.first->direction = tov.first->direction = 1;
-                            if(tiv.first->tokens > tov.first->tokens)
-                                tiv.first->direction = tov.first->direction = 1;
-                            if(tiv.first->tokens == tov.first->tokens)
-                                tiv.first->direction = tov.first->direction = 0;
-                            if(tiv.first->tokens < tov.first->tokens)
-                                tiv.first->direction = tov.first->direction = -1;
+                            if     (tov.first->inhibitor)                   tiv.first->direction = tov.first->direction = 1;
+                            else if(tiv.first->tokens > tov.first->tokens)  tiv.first->direction = tov.first->direction = 1;
+                            else if(tiv.first->tokens == tov.first->tokens) tiv.first->direction = tov.first->direction = 0;
+                            else if(tiv.first->tokens < tov.first->tokens)  tiv.first->direction = tov.first->direction = -1;
                             break;
                         }
                     }

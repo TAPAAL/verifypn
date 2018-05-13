@@ -19,6 +19,7 @@
  */
 #include "Contexts.h"
 #include "Expressions.h"
+#include "PetriEngine/errorcodes.h"
 
 #include <sstream>
 #include <assert.h>
@@ -1060,9 +1061,14 @@ namespace PetriEngine {
 
         z3::expr SubtractExpr::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             auto res = context.int_val(0);
+            bool first = true;
             for(auto& e : _exprs)
             {
-                res = res - e->encodeSat(net, context, uses, incremented);
+                if(first)
+                    res = e->encodeSat(net, context, uses, incremented);
+                else
+                    res = res - e->encodeSat(net, context, uses, incremented);
+                first = false;
             }
             return res;
         }
@@ -3508,8 +3514,8 @@ namespace PetriEngine {
         Condition_ptr UnfoldedUpperBoundsCondition::pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             if(negated)
             {
-                std::cout << "UPPER BOUNDS CANNOT BE NEGATED!" << std::endl;
-                exit(-1);
+                std::cerr << "UPPER BOUNDS CANNOT BE NEGATED!" << std::endl;
+                exit(ErrorCode);
             }
             return std::make_shared<UnfoldedUpperBoundsCondition>(_places, _max);
         }
@@ -3528,30 +3534,58 @@ namespace PetriEngine {
         }
         
         void SubtractExpr::incr(ReducingSuccessorGenerator& generator) const {
-            _exprs[0]->incr(generator);
-            _exprs[1]->decr(generator);
+            bool first = true;
+            for(auto& e : _exprs)
+            {
+                if(first)
+                    e->incr(generator);
+                else
+                    e->decr(generator);
+                first = false;
+            }
         }
         
         void SubtractExpr::decr(ReducingSuccessorGenerator& generator) const {
-            _exprs[0]->decr(generator);
-            _exprs[1]->incr(generator);
+            bool first = true;
+            for(auto& e : _exprs)
+            {
+                if(first)
+                    e->decr(generator);
+                else
+                    e->incr(generator);
+                first = false;
+            }
         }
         
         void MultiplyExpr::incr(ReducingSuccessorGenerator& generator) const {
-            for(auto& i : _ids)
+            if((_ids.size() + _exprs.size()) == 1)
             {
-                generator.presetOf(i.first, true);
-                generator.postsetOf(i.first, true);
+                for(auto& i : _ids) generator.presetOf(i.first, true);
+                for(auto& e : _exprs) e->incr(generator);                
             }
-            for(auto& e : _exprs)
+            else
             {
-                e->incr(generator);
-                e->decr(generator);
+                for(auto& i : _ids)
+                {
+                    generator.presetOf(i.first, true);
+                    generator.postsetOf(i.first, true);
+                }
+                for(auto& e : _exprs)
+                {
+                    e->incr(generator);
+                    e->decr(generator);
+                }
             }
         }
         
         void MultiplyExpr::decr(ReducingSuccessorGenerator& generator) const {
-            incr(generator);
+            if((_ids.size() + _exprs.size()) == 1)
+            {
+                for(auto& i : _ids) generator.postsetOf(i.first, true);
+                for(auto& e : _exprs) e->decr(generator);            
+            }
+            else
+                incr(generator);
         }
         
         void MinusExpr::incr(ReducingSuccessorGenerator& generator) const {
@@ -3870,8 +3904,9 @@ namespace PetriEngine {
             auto neg = _negated != other._negated;
             if(neg && other._constraints.size() > 1)
             {
-                std::cout << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
+                std::cerr << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
                 assert(false);
+                exit(ErrorCode);
             }
             auto il = _constraints.begin();
             for(auto& c : other._constraints)
@@ -3894,8 +3929,9 @@ namespace PetriEngine {
                     }
                     else
                     {
-                        std::cout << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
+                        std::cerr << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
                         assert(false);
+                        exit(ErrorCode);
                     }
                     c2._place = c._place;
                     assert(c2._lower <= c2._upper);
@@ -4005,8 +4041,9 @@ namespace PetriEngine {
                 }
                 else
                 {
-                    std::cout << "UNKNOWN " << std::endl;
+                    std::cerr << "UNKNOWN " << std::endl;
                     assert(false);
+                    exit(ErrorCode);
                 }
             }            
         }

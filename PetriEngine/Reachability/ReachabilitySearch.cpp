@@ -143,7 +143,8 @@ namespace PetriEngine {
                     TRYREACH(RDFSQueue)
                     break;
                 default:
-                    std::cout << "UNSUPPORTED SEARCH STRATEGY" << std::endl;
+                    std::cerr << "UNSUPPORTED SEARCH STRATEGY" << std::endl;
+                    exit(ErrorCode);
             }
         }
     }
