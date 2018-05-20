@@ -129,6 +129,8 @@ namespace PetriEngine {
         bool _stripped = false;
 
         double _time;
+
+        std::string arcToString(Colored::Arc& arc) const ;
         
         void addArc(const std::string& place,
                 const std::string& transition,

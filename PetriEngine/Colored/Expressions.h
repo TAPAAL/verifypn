@@ -57,6 +57,17 @@ namespace PetriEngine {
                 return nullptr;
             }
         };
+
+        class WeightException : public std::exception {
+        private:
+            std::string _message;
+        public:
+            explicit WeightException(std::string message) : _message(message) {}
+
+            const char* what() const noexcept override {
+                return ("Undefined weight: " + _message).c_str();
+            }
+        };
         
         class Expression {
         public:
@@ -67,6 +78,10 @@ namespace PetriEngine {
             
             virtual void expressionType() {
                 std::cout << "Expression" << std::endl;
+            }
+
+            virtual std::string toString() const {
+                return "Unsupported";
             }
         };
         
@@ -99,7 +114,11 @@ namespace PetriEngine {
             void getVariables(std::set<Variable*>& variables) const override {
                 variables.insert(_variable);
             }
-            
+
+            std::string toString() const override {
+                return _variable->name;
+            }
+
             VariableExpression(Variable* variable)
                     : _variable(variable) {}
         };
@@ -112,7 +131,11 @@ namespace PetriEngine {
             const Color* eval(ExpressionContext& context) const override {
                 return _userOperator;
             }
-            
+
+            std::string toString() const override {
+                return _userOperator->toString();
+            }
+
             UserOperatorExpression(const Color* userOperator)
                     : _userOperator(userOperator) {}
         };
@@ -125,7 +148,11 @@ namespace PetriEngine {
             ColorType* eval(ExpressionContext& context) const {
                 return _userSort;
             }
-            
+
+            std::string toString() const override {
+                return _userSort->getName();
+            }
+
             UserSortExpression(ColorType* userSort)
                     : _userSort(userSort) {}
         };
@@ -159,7 +186,11 @@ namespace PetriEngine {
             void getVariables(std::set<Variable*>& variables) const override {
                 _color->getVariables(variables);
             }
-            
+
+            std::string toString() const override {
+                return _color->toString() + "++";
+            }
+
             SuccessorExpression(ColorExpression_ptr color)
                     : _color(color) {}
         };
@@ -176,7 +207,11 @@ namespace PetriEngine {
             void getVariables(std::set<Variable*>& variables) const override {
                 _color->getVariables(variables);
             }
-            
+
+            std::string toString() const override {
+                return _color->toString() + "--";
+            }
+
             PredecessorExpression(ColorExpression_ptr color)
                     : _color(color) {}
         };
@@ -205,7 +240,16 @@ namespace PetriEngine {
                     elem->getVariables(variables);
                 }
             }
-            
+
+            std::string toString() const override {
+                std::string res = "(" + _colors[0]->toString();
+                for (uint32_t i = 1; i < _colors.size(); ++i) {
+                    res += "," + _colors[i]->toString();
+                }
+                res += ")";
+                return res;
+            }
+
             TupleExpression(std::vector<ColorExpression_ptr> colors)
                     : _colors(colors) {}
         };
@@ -421,7 +465,11 @@ namespace PetriEngine {
             size_t size() const {
                 return  _sort->size();
             }
-            
+
+            std::string toString() const override {
+                return _sort->getName() + ".all";
+            }
+
             AllExpression(ColorType* sort) : _sort(sort) 
             {
                 assert(sort != nullptr);
@@ -468,6 +516,29 @@ namespace PetriEngine {
                     return _number * _all->size();
             }
 
+            bool isAll() const {
+                return (bool)_all;
+            }
+
+            bool isSingleColor() const {
+                return !isAll() && _color.size() == 1;
+            }
+
+            uint32_t number() const {
+                return _number;
+            }
+
+            std::string toString() const override {
+                if (isAll())
+                    return std::to_string(_number) + "'(" + _all->toString() + ")";
+                std::string res = std::to_string(_number) + "'(" + _color[0]->toString() + ")";
+                for (uint32_t i = 1; i < _color.size(); ++i) {
+                    res += " + ";
+                    res += std::to_string(_number) + "'(" + _color[i]->toString() + ")";
+                }
+                return res;
+            }
+
             NumberOfExpression(std::vector<ColorExpression_ptr> color, uint32_t number = 1)
                     : _number(number), _color(color), _all(nullptr) {}
             NumberOfExpression(AllExpression_ptr all, uint32_t number = 1)
@@ -503,6 +574,14 @@ namespace PetriEngine {
                 return res;
             }
 
+            std::string toString() const override {
+                std::string res = _constituents[0]->toString();
+                for (uint32_t i = 1; i < _constituents.size(); ++i) {
+                    res += " + " + _constituents[i]->toString();
+                }
+                return res;
+            }
+
             AddExpression(std::vector<ArcExpression_ptr> constituents)
                     : _constituents(constituents) {}
         };
@@ -523,7 +602,21 @@ namespace PetriEngine {
             }
 
             uint32_t weight() const override {
-                return _left->weight() - _right->weight();
+                auto* left = dynamic_cast<NumberOfExpression*>(_left.get());
+                if (!left || !left->isAll()) {
+                    throw WeightException("Left constituent of subtract is not an all expression!");
+                }
+                auto* right = dynamic_cast<NumberOfExpression*>(_right.get());
+                if (!right || !right->isSingleColor()) {
+                    throw WeightException("Right constituent of subtract is not a single color number of expression!");
+                }
+
+                uint32_t val = std::min(left->number(), right->number());
+                return _left->weight() - val;
+            }
+
+            std::string toString() const override {
+                return _left->toString() + " - " + _right->toString();
             }
 
             SubtractExpression(ArcExpression_ptr left, ArcExpression_ptr right)
@@ -546,6 +639,10 @@ namespace PetriEngine {
 
             uint32_t weight() const override {
                 return _scalar * _expr->weight();
+            }
+
+            std::string toString() const override {
+                return _scalar + " * " + _expr->toString();
             }
 
             ScalarProductExpression(ArcExpression_ptr expr, uint32_t scalar)

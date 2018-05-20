@@ -194,10 +194,19 @@ namespace PetriEngine {
             }
 
             for (auto& arc : _arcs) {
-                if (arc.input) {
-                    _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false, arc.expr->weight());
-                } else {
-                    _ptBuilder.addOutputArc(_transitions[arc.transition].name, _places[arc.place].name, arc.expr->weight());
+                try {
+                    if (arc.input) {
+                        _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false,
+                                               arc.expr->weight());
+                    } else {
+                        _ptBuilder.addOutputArc(_transitions[arc.transition].name, _places[arc.place].name,
+                                                arc.expr->weight());
+                    }
+                } catch (Colored::WeightException e) {
+                    std::cerr << "Exception on arc: " << arcToString(arc) << std::endl;
+                    std::cerr << "In expression: " << arc.expr->toString() << std::endl;
+                    std::cerr << e.what() << std::endl;
+                    exit(ErrorCode);
                 }
             }
             _stripped = true;
@@ -205,6 +214,11 @@ namespace PetriEngine {
         }
 
         return _ptBuilder;
+    }
+
+    std::string ColoredPetriNetBuilder::arcToString(Colored::Arc& arc) const {
+        return !arc.input ? "(" + _transitions[arc.transition].name + ", " + _places[arc.place].name + ")" :
+               "(" + _places[arc.place].name + ", " + _transitions[arc.transition].name + ")";
     }
 
     BindingGenerator::Iterator::Iterator(BindingGenerator* generator)
