@@ -90,6 +90,10 @@ namespace PetriEngine {
     
     bool PetriNet::deadlocked(const MarkVal* m) const {
         //Check that we can take from the marking
+        if(_nplaces == 0)
+        {
+            return _ntransitions == 0;
+        }
         for (size_t i = 0; i < _nplaces; i++) {
             if(i == 0 || m[i] > 0) // orphans are currently under "place 0" as a special case
             {

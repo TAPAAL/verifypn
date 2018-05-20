@@ -56,7 +56,7 @@ void PNMLParser::parse(ifstream& xml,
     rapidxml::xml_node<>* root = doc.first_node();
     if(strcmp(root->name(), "pnml") != 0)
     {
-        std::cout << "expecting <pnml> tag as root-node in xml tree." << std::endl;
+        std::cerr << "expecting <pnml> tag as root-node in xml tree." << std::endl;
         exit(ErrorCode);
     }
     
@@ -362,16 +362,16 @@ void PNMLParser::parseElement(rapidxml::xml_node<>* element) {
         } else if (strcmp(it->name(),"inhibitorArc") == 0) {
             parseArc(it, true);
         } else if (strcmp(it->name(), "variable") == 0) {
-            std::cout << "variable not supported" << std::endl;
-            exit(-1);
+            std::cerr << "variable not supported" << std::endl;
+            exit(ErrorCode);
         } else if (strcmp(it->name(),"queries") == 0) {
             parseQueries(it);
         } else if (strcmp(it->name(), "k-bound") == 0) {
-            std::cout << "k-bound should be given as command line option -k" << std::endl;
-            exit(-1);
+            std::cerr << "k-bound should be given as command line option -k" << std::endl;
+            exit(ErrorCode);
         } else if (strcmp(it->name(),"query") == 0) {
-            std::cout << "query tag not supported, please use PQL or XML-style queries instead" << std::endl;
-            exit(-1);            
+            std::cerr << "query tag not supported, please use PQL or XML-style queries instead" << std::endl;
+            exit(ErrorCode);            
         }
         else
         {
@@ -453,23 +453,44 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
     auto type = element->first_attribute("type");
     if(type && strcmp(type->value(), "timed") == 0)
     {
-        std::cout << "timed arcs are not supported" << std::endl;
-        exit(-1);
+        std::cerr << "timed arcs are not supported" << std::endl;
+        exit(ErrorCode);
     }
     else if(type && strcmp(type->value(), "inhibitor") == 0)
     {
         inhibitor = true;
     }
 
+    bool first = true;
     for (auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")) {
-            string text;
-            parseValue(it, text);
-            weight = atoi(text.c_str());
+        string text;
+        parseValue(it, text);
+        weight = atoi(text.c_str());
+        if(std::find_if(text.begin(), text.end(), [](char c) { return !std::isdigit(c) && !std::isblank(c); }) != text.end())
+        {
+            if(weight == 0) weight = 1;
+            std::cerr << "ERROR: Found non-integer-text in inscription-tag (weight) on arc from " << source << " to " << target << " with value \"" << text << "\". An integer was expected." << std::endl;
+            exit(ErrorCode);
+        }
+        assert(weight > 0);
+        if(!first)
+        {
+            std::cerr << "ERROR: Multiple inscription tags in xml of a arc from " << source << " to " << target << "." << std::endl;
+            exit(ErrorCode);
+        }
+        first = false;
     }
     
     PetriEngine::Colored::ArcExpression_ptr expr;
+    first = true;
     for (auto it = element->first_node("hlinscription"); it; it = it->next_sibling("hlinscription")) {
         expr = parseArcExpression(it->first_node("structure"));
+        if(!first)
+        {
+            std::cerr << "ERROR: Multiple hlinscription tags in xml of a arc from " << source << " to " << target << "." << std::endl;
+            exit(ErrorCode);            
+        }
+        first = false;
     }
     
     if (isColored)
@@ -479,19 +500,28 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
     arc.target = target;
     arc.weight = weight;
     arc.expr = expr;
+    assert(weight > 0);
     
     if (inhibitor && isColored) {
-        std::cout << "inhibitor arcs are not supported in colored Petri nets" << std::endl;
-        exit(-1);
+        std::cerr << "inhibitor arcs are not supported in colored Petri nets" << std::endl;
+        exit(ErrorCode);
     }
     
-    if(inhibitor)
+    if(weight != 0)
     {
-        inhibarcs.push_back(arc);   
+        if(inhibitor)
+        {
+            inhibarcs.push_back(arc);   
+        }
+        else
+        {
+            arcs.push_back(arc);
+        }
     }
     else
     {
-        arcs.push_back(arc);
+        std::cerr << "ERROR: Arc from " << source << " to " << target << " has non-sensible weight 0." << std::endl;         
+        exit(ErrorCode);
     }
 }
 
@@ -535,11 +565,11 @@ void PNMLParser::parseTransition(rapidxml::xml_node<>* element) {
         } else if (strcmp(it->name(), "condition") == 0) {
             t.expr = parseGuardExpression(it->first_node("structure"));
         } else if (strcmp(it->name(), "conditions") == 0) {
-            std::cout << "conditions not supported" << std::endl;
-            exit(-1);
+            std::cerr << "conditions not supported" << std::endl;
+            exit(ErrorCode);
         } else if (strcmp(it->name(), "assignments") == 0) {
-            std::cout << "assignments not supported" << std::endl;
-            exit(-1);
+            std::cerr << "assignments not supported" << std::endl;
+            exit(ErrorCode);
         }
     }
     //Add transition to list

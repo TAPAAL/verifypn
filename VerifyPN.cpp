@@ -830,7 +830,7 @@ int main(int argc, char* argv[]) {
                             std::cerr << "Exception information: " << ba.what() << std::endl;
 
                             delete[] qm0;
-                            std::exit(3);
+                            std::exit(ErrorCode);
                         }
 
                         if(options.printstatistics)
