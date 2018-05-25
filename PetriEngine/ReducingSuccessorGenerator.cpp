@@ -242,7 +242,7 @@ namespace PetriEngine {
                     for (; linv < next_finv; linv++)
                     {
                         if(_net._invariants[linv].direction > 0)
-                            inhibitorPostsetOf(_net._invariants[finv].place);
+                            inhibitorPostsetOf(_net._invariants[linv].place);
                     }
                 }
             } else {
