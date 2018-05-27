@@ -211,7 +211,10 @@ namespace PetriEngine {
             {
                 out << "<arc id=\"" << (id++) << "\" source=\""
                     << _placenames[pre.first->place] << "\" target=\""
-                    << _transitionnames[t] << "\">\n";
+                    << _transitionnames[t]
+                    << "\" type=\""
+                    << (pre.first->inhibitor ? "inhibitor" : "normal")
+                    << "\">\n";
                 
                 if(pre.first->tokens > 1)
                 {
