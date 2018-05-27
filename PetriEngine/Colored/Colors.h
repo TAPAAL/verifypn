@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include <string>
 #include <string.h>
+#include <utility>
 #include <vector>
 #include <unordered_map>
 
@@ -148,10 +149,11 @@ namespace PetriEngine {
         private:
             std::vector<Color> _colors;
             uintptr_t _id;
+            std::string _name;
             
         public:
             ColorType(std::vector<ColorType*> elements);
-            ColorType() : _colors() {
+            ColorType(std::string name = "Undefined") : _colors(), _name(std::move(name)) {
                 _id = (uintptr_t)this;
             }
             
@@ -190,6 +192,10 @@ namespace PetriEngine {
             uintptr_t getId() {
                 return _id;
             }
+
+            const std::string& getName() const {
+                return _name;
+            }
             
             iterator begin() {
                 return {*this, 0};
@@ -206,6 +212,7 @@ namespace PetriEngine {
             std::unordered_map<size_t,Color> cache;
 
         public:
+            ProductType(const std::string& name = "Undefined") : ColorType(name) {}
             ~ProductType() {
                 cache.clear();
             }

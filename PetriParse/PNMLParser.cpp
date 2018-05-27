@@ -174,8 +174,8 @@ bool isInitialBinding(std::vector<const PetriEngine::Colored::Color*>& binding) 
 void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
     auto type = element->first_node();
     auto ct = strcmp(type->name(), "productsort") == 0 ?
-              new PetriEngine::Colored::ProductType() :
-              new PetriEngine::Colored::ColorType();
+              new PetriEngine::Colored::ProductType(std::string(element->first_attribute("id")->value())) :
+              new PetriEngine::Colored::ColorType(std::string(element->first_attribute("id")->value()));
     
     if (strcmp(type->name(), "dot") == 0) {
         ct->addDot();
