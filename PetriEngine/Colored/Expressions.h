@@ -642,7 +642,7 @@ namespace PetriEngine {
             }
 
             std::string toString() const override {
-                return _scalar + " * " + _expr->toString();
+                return std::to_string(_scalar) + " * " + _expr->toString();
             }
 
             ScalarProductExpression(ArcExpression_ptr expr, uint32_t scalar)
