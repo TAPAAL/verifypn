@@ -819,7 +819,7 @@ namespace PetriEngine {
                                 auto it = trans.post.begin();
                                 for(; it != trans.post.end(); ++it)
                                     if(it->place >= arc.place) break;
-                                if(it != trans.pre.end() && it->place == arc.place)
+                                if(it != trans.post.end() && it->place == arc.place)
                                 {
                                     auto it2 = trans.pre.begin();
                                     for(; it2 != trans.pre.end(); ++it2)
