@@ -90,6 +90,8 @@ function verifyparallel {
     SOLVED=$(echo "$TMP" | grep "FORMULA" | grep -oP "(?<=-)[0-9]+(?=( TRUE)|( FALSE)|( [0-9]))")
 
     for i in $SOLVED ; do 
+        i=$(echo $i | sed -e "s/0*//")
+        if [ -z "$i" ] ; then i="0"; fi
         echo "Solution found by stripping colors (step -1) for query index " $i
         unset QUERIES[$i]
         CNT=$(echo "$CNT+1" | bc)
