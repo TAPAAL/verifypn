@@ -139,7 +139,7 @@ namespace PetriEngine {
         
         void unfoldPlace(Colored::Place& place);
         void unfoldTransition(Colored::Transition& transition);
-        void unfoldArc(Colored::Arc& arc);
+        void unfoldArc(Colored::Arc& arc, std::unordered_map<std::string, const Colored::Color*> binding, std::string name);
     };
     
     class BindingGenerator {

@@ -118,12 +118,13 @@ namespace PetriEngine {
             }
 
             for (auto& transition : _transitions) {
+                std::cout << "Unfolding transition: " << transition.name << std::endl;
                 unfoldTransition(transition);
             }
 
-            for (auto& arc : _arcs) {
+            /*for (auto& arc : _arcs) {
                 unfoldArc(arc);
-            }
+            }*/
             _unfolded = true;
             auto end = std::chrono::high_resolution_clock::now();
             _time = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
@@ -144,33 +145,37 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         BindingGenerator gen(transition, _arcs, _colors);
+        size_t i = 0;
         for (auto& b : gen) {
-            size_t i = transition.bindings.size();
+            //size_t i = transition.bindings.size();
             std::unordered_map<std::string, const Colored::Color*> binding;
             for (auto& elem : b) {
                 binding[elem.var->name] = elem.color;
             }
-            transition.bindings.push_back(binding);
-            std::string name = transition.name + ";" + std::to_string(i);
+            //transition.bindings.push_back(binding);
+            std::string name = transition.name + ";" + std::to_string(i++);
             _ptBuilder.addTransition(name, 0.0, 0.0);
-            _pttransitionnames[transition.name].push_back(name);
+            //_pttransitionnames[transition.name].push_back(name);
             ++_npttransitions;
+            for (auto& arc : transition.arcs) {
+                unfoldArc(_arcs[arc], binding, name);
+            }
         }
     }
 
-    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc) {
-        Colored::Transition& transition = _transitions[arc.transition];
-        for (size_t i = 0; i < transition.bindings.size(); ++i) {
-            Colored::ExpressionContext context {transition.bindings[i], _colors};
+    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, std::unordered_map<std::string, const Colored::Color*> binding, std::string tName) {
+        //Colored::Transition& transition = _transitions[arc.transition];
+        //for (size_t i = 0; i < transition.bindings.size(); ++i) {
+            Colored::ExpressionContext context {binding, _colors};
             Colored::Multiset ms = arc.expr->eval(context);
 
-            for (auto color : ms) {
+            for (const auto& color : ms) {
                 if (color.second == 0) {
                     continue;
                 }
 
                 std::string pName = _ptplacenames[_places[arc.place].name][color.first->getId()];
-                std::string tName = _pttransitionnames[transition.name][i];
+                //std::string tName = _pttransitionnames[transition.name][i];
 
                 if (arc.input) {
                     _ptBuilder.addInputArc(pName, tName, false, color.second);
@@ -179,7 +184,7 @@ namespace PetriEngine {
                 }
                 ++_nptarcs;
             }
-        }
+        //}
     }
 
     PetriNetBuilder& ColoredPetriNetBuilder::stripColors() {
@@ -202,7 +207,7 @@ namespace PetriEngine {
                         _ptBuilder.addOutputArc(_transitions[arc.transition].name, _places[arc.place].name,
                                                 arc.expr->weight());
                     }
-                } catch (Colored::WeightException e) {
+                } catch (Colored::WeightException& e) {
                     std::cerr << "Exception on arc: " << arcToString(arc) << std::endl;
                     std::cerr << "In expression: " << arc.expr->toString() << std::endl;
                     std::cerr << e.what() << std::endl;
@@ -300,6 +305,15 @@ namespace PetriEngine {
 
             test = eval();
         }
+        size_t bindingNum = 0, bindingMax = 1, prevSize = 1;
+        for (auto& binding : _bindings) {
+            bindingNum += binding.color->getId() * prevSize;
+            prevSize = binding.color->getColorType()->size();
+            bindingMax *= prevSize;
+        }
+
+        std::cout << "Getting binding: " << bindingNum << "/" << bindingMax << "\r";
+        std::cout.flush();
         return _bindings;
     }
 
