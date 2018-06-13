@@ -1,10 +1,4 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
  * File:   ColoredPetriNetBuilder.cpp
  * Author: Klostergaard
  * 
@@ -305,14 +299,14 @@ namespace PetriEngine {
 
             test = eval();
         }
-        size_t bindingNum = 0, bindingMax = 1, prevSize = 1;
+        size_t bindingNum = 0, bindingMax = 1;
         for (auto& binding : _bindings) {
-            bindingNum += binding.color->getId() * prevSize;
-            prevSize = binding.color->getColorType()->size();
-            bindingMax *= prevSize;
+            std::cout << binding.color->getId() << "/" << binding.color->getColorType()->size() << " ";
+            bindingNum += binding.color->getId() * bindingMax;
+            bindingMax *= binding.color->getColorType()->size();
         }
 
-        std::cout << "Getting binding: " << bindingNum << "/" << bindingMax << "\r";
+        std::cout << "Getting binding: " << bindingNum << "/" << bindingMax << " (" << ((double)bindingNum / bindingMax) * 100.0 << "%)" << "\r";
         std::cout.flush();
         return _bindings;
     }
