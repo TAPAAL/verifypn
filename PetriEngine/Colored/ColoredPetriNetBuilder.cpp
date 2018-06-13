@@ -299,15 +299,6 @@ namespace PetriEngine {
 
             test = eval();
         }
-//        size_t bindingNum = 0, bindingMax = 1;
-//        for (auto& binding : _bindings) {
-//            std::cout << binding.color->getId() << "/" << binding.color->getColorType()->size() << " ";
-//            bindingNum += binding.color->getId() * bindingMax;
-//            bindingMax *= binding.color->getColorType()->size();
-//        }
-//
-//        std::cout << "Getting binding: " << bindingNum << "/" << bindingMax << " (" << ((double)bindingNum / bindingMax) * 100.0 << "%)" << "\r";
-//        std::cout.flush();
         return _bindings;
     }
 
