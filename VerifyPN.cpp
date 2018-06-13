@@ -191,9 +191,26 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
                 return ErrorCode;
             }
-            if (sscanf(argv[++i], "%d", &options.enablereduction) != 1 || options.enablereduction < 0 || options.enablereduction > 2) {
+            if (sscanf(argv[++i], "%d", &options.enablereduction) != 1 || options.enablereduction < 0 || options.enablereduction > 3) {
                 fprintf(stderr, "Argument Error: Invalid reduction argument \"%s\"\n", argv[i]);
                 return ErrorCode;
+            }
+            if(options.enablereduction == 3)
+            {
+                std::vector<std::string> q = explode(argv[++i]);
+                for(auto& qn : q)
+                {
+                    int32_t n;
+                    if(sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 8)
+                    {
+                        std::cerr << "Error in reduction rule choice : " << qn << std::endl;
+                        return ErrorCode;
+                    }
+                    else
+                    {
+                        options.reductions.push_back(n);
+                    }
+                }                
             }
         } else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--reduction-timeout") == 0) {
             if (i == argc - 1) {
@@ -307,6 +324,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - 0  disabled\n"
                     "                                     - 1  aggressive reduction (default)\n"
                     "                                     - 2  reduction preserving k-boundedness\n"
+                    "                                     - 3  user defined reduction sequence, eg -r 3 0,1,2,3 to use rules A,B,C,D only, and in that order\n"
                     "  -d, --reduction-timeout <timeout>  Timeout for structural reductions in seconds (default 60)\n"
                     "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
                     "                                     write -q 0 to disable query reduction\n"
@@ -956,10 +974,10 @@ int main(int argc, char* argv[]) {
     
     //--------------------- Apply Net Reduction ---------------//
         
-    if (options.enablereduction == 1 || options.enablereduction == 2) {
+    if (options.enablereduction > 0) {
         // Compute how many times each place appears in the query
         builder.startTimer();
-        builder.reduce(queries, results, options.enablereduction, options.trace, nullptr, options.reductionTimeout);
+        builder.reduce(queries, results, options.enablereduction, options.trace, nullptr, options.reductionTimeout, options.reductions);
         printer.setReducer(builder.getReducer());        
     }
     

@@ -15,12 +15,13 @@ struct options_t {
     int kbound = 0;
     char* modelfile = NULL;
     char* queryfile = NULL;
-    int enablereduction = 1; // 0 ... disabled,  1 ... aggresive (default), 2 ... k-boundedness preserving
+    int enablereduction = 1; // 0 ... disabled,  1 ... aggresive (default), 2 ... k-boundedness preserving, 3 ... selection
+    std::vector<uint32_t> reductions;
     int reductionTimeout = 60;
     bool stubbornreduction = true; 
     bool statespaceexploration = false;
     bool printstatistics = true;
-    std::set<size_t> querynumbers = std::set<size_t>();
+    std::set<size_t> querynumbers;
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::DEFAULT;
     bool trace = false;
     int queryReductionTimeout = 30, lpsolveTimeout = 10;

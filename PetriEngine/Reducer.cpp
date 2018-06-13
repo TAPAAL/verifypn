@@ -1159,7 +1159,7 @@ namespace PetriEngine {
         return continueReductions;
     }
     
-    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe) {
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reduction) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
@@ -1206,6 +1206,66 @@ namespace PetriEngine {
                     changed |= ReducebyRuleA(context.getQueryPlaceCount());
                     changed |= ReducebyRuleD(context.getQueryPlaceCount());
                     changed |= ReducebyRuleH(context.getQueryPlaceCount());
+                }
+            }
+        }
+        else if(enablereduction == 3)
+        {
+            for(int i = reduction.size() - 1; i > 0; --i)
+            {
+                const char* rnames = "ABCDEFGHI";
+                if(next_safe)
+                {
+                    if(i != 2 && i != 4)
+                    {
+                        std::cerr << "Skipping Rule" << rnames[i] << " due to NEXT operator in proposition" << std::endl;
+                        reduction.erase(reduction.begin() + i);
+                    }
+                }
+                if(!remove_loops && i == 5)
+                {
+                    std::cerr << "Skipping Rule" << rnames[i] << " as proposition is loop sensitive" << std::endl;
+                    reduction.erase(reduction.begin() + i);
+                }
+            }
+            bool changed = true;
+            while(changed && !hasTimedout())
+            {
+                changed = false;
+                for(auto r : reduction)
+                {
+                    switch(r)
+                    {
+                        case 0:
+                            while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
+                            break;
+                        case 1:
+                            while(ReducebyRuleB(context.getQueryPlaceCount())) changed = true;
+                            break;
+                        case 2:
+                            while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
+                            break;
+                        case 3:
+                            while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                            break;              
+                        case 4:
+                            while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
+                            break;              
+                        case 5:
+                            while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
+                            break;             
+                        case 6:
+                            while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                            break;             
+                        case 7:
+                            while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
+                            break;             
+                        case 8:
+                            while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                            break;                            
+                    }
+                    if(hasTimedout())
+                        break;
                 }
             }
         }
