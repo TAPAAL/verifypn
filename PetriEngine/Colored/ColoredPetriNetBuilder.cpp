@@ -89,10 +89,10 @@ namespace PetriEngine {
         arc.place = p;
         arc.transition = t;
         assert(expr != nullptr);
-        arc.expr = expr;
+        arc.expr = std::move(expr);
         arc.input = input;
-        _transitions[t].arcs.push_back(_arcs.size());
-        _arcs.push_back(arc);
+        _transitions[t].arcs.push_back(std::move(arc));
+        //_arcs.push_back(arc);
     }
 
     void ColoredPetriNetBuilder::addColorType(const std::string& id, Colored::ColorType* type) {
@@ -152,7 +152,7 @@ namespace PetriEngine {
             //_pttransitionnames[transition.name].push_back(name);
             ++_npttransitions;
             for (auto& arc : transition.arcs) {
-                unfoldArc(_arcs[arc], binding, name);
+                unfoldArc(arc, binding, name);
             }
         }
     }
@@ -259,8 +259,7 @@ namespace PetriEngine {
         if (_expr != nullptr) {
             _expr->getVariables(variables);
         }
-        for (auto ai : transition.arcs) {
-            auto& arc = arcs[ai];
+        for (auto arc : transition.arcs) {
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
         }
