@@ -148,12 +148,12 @@ namespace PetriEngine {
             bool operator==(Iterator& other);
             bool operator!=(Iterator& other);
             Iterator& operator++();
-            std::vector<Colored::Binding> operator++(int);
-            std::vector<Colored::Binding>& operator*();
+            const Colored::ExpressionContext::BindingMap operator++(int);
+            Colored::ExpressionContext::BindingMap& operator*();
         };
     private:
         Colored::GuardExpression_ptr _expr;
-        std::vector<Colored::Binding> _bindings;
+        Colored::ExpressionContext::BindingMap _bindings;
         ColoredPetriNetBuilder::ColorTypeMap& _colorTypes;
         
         bool eval();
@@ -162,9 +162,9 @@ namespace PetriEngine {
         BindingGenerator(Colored::Transition& transition,
                 const std::vector<Colored::Arc>& arcs,
                 ColoredPetriNetBuilder::ColorTypeMap& colorTypes);
-        
-        std::vector<Colored::Binding>& nextBinding();
-        std::vector<Colored::Binding>& currentBinding();
+
+        Colored::ExpressionContext::BindingMap& nextBinding();
+        Colored::ExpressionContext::BindingMap& currentBinding();
         bool isInitial() const;
         Iterator begin();
         Iterator end();

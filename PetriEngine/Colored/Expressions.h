@@ -32,7 +32,9 @@ namespace PetriEngine {
     
     namespace Colored {
         struct ExpressionContext {
-            std::unordered_map<std::string, const Color*>& binding;
+            typedef std::unordered_map<std::string, const Color*> BindingMap;
+
+            BindingMap& binding;
             std::unordered_map<std::string, ColorType*>& colorTypes;
             
             const Color* findColor(const std::string& color) const {

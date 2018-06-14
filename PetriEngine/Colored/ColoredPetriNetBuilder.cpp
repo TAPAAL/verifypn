@@ -112,7 +112,7 @@ namespace PetriEngine {
             }
 
             for (auto& transition : _transitions) {
-                std::cout << "Unfolding transition: " << transition.name << std::endl;
+                //std::cout << "Unfolding transition: " << transition.name << std::endl;
                 unfoldTransition(transition);
             }
 
@@ -141,18 +141,13 @@ namespace PetriEngine {
         BindingGenerator gen(transition, _arcs, _colors);
         size_t i = 0;
         for (auto& b : gen) {
-            //size_t i = transition.bindings.size();
-            std::unordered_map<std::string, const Colored::Color*> binding;
-            for (auto& elem : b) {
-                binding[elem.var->name] = elem.color;
-            }
             //transition.bindings.push_back(binding);
             std::string name = transition.name + ";" + std::to_string(i++);
             _ptBuilder.addTransition(name, 0.0, 0.0);
             //_pttransitionnames[transition.name].push_back(name);
             ++_npttransitions;
             for (auto& arc : transition.arcs) {
-                unfoldArc(arc, binding, name);
+                unfoldArc(arc, b, name);
             }
         }
     }
@@ -239,13 +234,13 @@ namespace PetriEngine {
         return *this;
     }
 
-    std::vector<Colored::Binding> BindingGenerator::Iterator::operator++(int) {
+    const Colored::ExpressionContext::BindingMap BindingGenerator::Iterator::operator++(int) {
         auto prev = _generator->currentBinding();
         ++*this;
         return prev;
     }
 
-    std::vector<Colored::Binding>& BindingGenerator::Iterator::operator*() {
+    Colored::ExpressionContext::BindingMap& BindingGenerator::Iterator::operator*() {
         return _generator->currentBinding();
     }
 
@@ -264,7 +259,7 @@ namespace PetriEngine {
             arc.expr->getVariables(variables);
         }
         for (auto var : variables) {
-            _bindings.push_back(Colored::Binding {var, &(*var->colorType)[0]});
+            _bindings[var->name] = &(*var->colorType)[0];
         }
         
         if (!eval())
@@ -275,20 +270,16 @@ namespace PetriEngine {
         if (_expr == nullptr)
             return true;
 
-        std::unordered_map<std::string, const Colored::Color*> binding;
-        for (auto& elem : _bindings) {
-            binding[elem.var->name] = elem.color;
-        }
-        Colored::ExpressionContext context {binding, _colorTypes};
+        Colored::ExpressionContext context {_bindings, _colorTypes};
         return _expr->eval(context);
     }
-    
-    std::vector<Colored::Binding>& BindingGenerator::nextBinding() {
+
+    Colored::ExpressionContext::BindingMap& BindingGenerator::nextBinding() {
         bool test = false;
         while (!test) {
-            for (size_t i = 0; i < _bindings.size(); ++i) {
-                _bindings[i].color = &++(*_bindings[i].color);
-                if (_bindings[i].color->getId() != 0) {
+            for (auto& _binding : _bindings) {
+                _binding.second = &++(*_binding.second);
+                if (_binding.second->getId() != 0) {
                     break;
                 }
             }
@@ -301,23 +292,23 @@ namespace PetriEngine {
         return _bindings;
     }
 
-    std::vector<Colored::Binding>& BindingGenerator::currentBinding() {
+    Colored::ExpressionContext::BindingMap& BindingGenerator::currentBinding() {
         return _bindings;
     }
 
     bool BindingGenerator::isInitial() const {
         for (auto& b : _bindings) {
-            if (b.color->getId() != 0) return false;
+            if (b.second->getId() != 0) return false;
         }
         return true;
     }
 
     BindingGenerator::Iterator BindingGenerator::begin() {
-        return Iterator(this);
+        return {this};
     }
 
     BindingGenerator::Iterator BindingGenerator::end() {
-        return Iterator(nullptr);
+        return {nullptr};
     }
 }
 
