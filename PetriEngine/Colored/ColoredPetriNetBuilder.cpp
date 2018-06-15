@@ -185,8 +185,25 @@ namespace PetriEngine {
 
             for (auto& transition : _transitions) {
                 _ptBuilder.addTransition(transition.name, 0.0, 0.0);
+                for (auto& arc : transition.arcs) {
+                    try {
+                        if (arc.input) {
+                            _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false,
+                                                   arc.expr->weight());
+                        } else {
+                            _ptBuilder.addOutputArc(_transitions[arc.transition].name, _places[arc.place].name,
+                                                    arc.expr->weight());
+                        }
+                    } catch (Colored::WeightException& e) {
+                        std::cerr << "Exception on arc: " << arcToString(arc) << std::endl;
+                        std::cerr << "In expression: " << arc.expr->toString() << std::endl;
+                        std::cerr << e.what() << std::endl;
+                        exit(ErrorCode);
+                    }
+                }
             }
 
+            /*
             for (auto& arc : _arcs) {
                 try {
                     if (arc.input) {
@@ -203,6 +220,7 @@ namespace PetriEngine {
                     exit(ErrorCode);
                 }
             }
+             */
             _stripped = true;
             _isColored = false;
         }
