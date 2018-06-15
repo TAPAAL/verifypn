@@ -130,7 +130,7 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::unfoldPlace(Colored::Place& place) {
         for (size_t i = 0; i < place.type->size(); ++i) {
             std::string name = place.name + ";" + std::to_string(i);
-            const Colored::Color* color = &(*place.type)[i];
+            const Colored::Color* color = &place.type->operator[](i);
             _ptBuilder.addPlace(name, place.marking[color], 0.0, 0.0);
             _ptplacenames[place.name][color->getId()] = name;
             ++_nptplaces;
@@ -152,7 +152,7 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, std::unordered_map<std::string, const Colored::Color*> binding, std::string tName) {
+    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, std::unordered_map<std::string, const Colored::Color*>& binding, std::string& tName) {
         //Colored::Transition& transition = _transitions[arc.transition];
         //for (size_t i = 0; i < transition.bindings.size(); ++i) {
             Colored::ExpressionContext context {binding, _colors};
@@ -277,7 +277,7 @@ namespace PetriEngine {
             arc.expr->getVariables(variables);
         }
         for (auto var : variables) {
-            _bindings[var->name] = &(*var->colorType)[0];
+            _bindings[var->name] = &var->colorType->operator[](0);
         }
         
         if (!eval())
@@ -296,7 +296,7 @@ namespace PetriEngine {
         bool test = false;
         while (!test) {
             for (auto& _binding : _bindings) {
-                _binding.second = &++(*_binding.second);
+                _binding.second = &_binding.second->operator++();
                 if (_binding.second->getId() != 0) {
                     break;
                 }
