@@ -75,7 +75,11 @@ namespace PetriEngine {
         }
 
         uint32_t getArcCount() const {
-            return _arcs.size();
+            uint32_t sum = 0;
+            for (auto& t : _transitions) {
+                sum += t.arcs.size();
+            }
+            return sum;
         }
 
         uint32_t getUnfoldedPlaceCount() const {

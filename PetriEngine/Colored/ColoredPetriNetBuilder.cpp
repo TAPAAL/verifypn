@@ -144,7 +144,7 @@ namespace PetriEngine {
             //transition.bindings.push_back(binding);
             std::string name = transition.name + ";" + std::to_string(i++);
             _ptBuilder.addTransition(name, 0.0, 0.0);
-            //_pttransitionnames[transition.name].push_back(name);
+            _pttransitionnames[transition.name].push_back(name);
             ++_npttransitions;
             for (auto& arc : transition.arcs) {
                 unfoldArc(arc, b, name);
