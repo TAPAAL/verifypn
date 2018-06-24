@@ -33,7 +33,6 @@ namespace PetriEngine {
         struct Transition {
             std::string name;
             GuardExpression_ptr guard;
-            //std::vector<std::unordered_map<std::string,const Color*>> bindings;
             std::vector<Arc> arcs;
         };
         
