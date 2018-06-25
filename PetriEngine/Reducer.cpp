@@ -347,34 +347,42 @@ namespace PetriEngine {
             Place& place = parent->_places[p];
             
             if(place.skip) continue;    // already removed    
-            
             // B5. dont mess up query
-            if(placeInQuery[p] > 0) continue;
+            if(placeInQuery[p] > 0)
+                continue;
                         
             // B2. Only one consumer/producer
             if( place.consumers.size() != 1 || 
-                place.producers.size() != 1) continue; // no orphan removal
+                place.producers.size() != 1)
+                continue; // no orphan removal
             
             int tOut = place.producers[0];
             int tIn = place.consumers[0];
             
             // B1. producer is not consumer
-            if (tOut == tIn) continue; // cannot remove this kind either
+            if (tOut == tIn) 
+                continue; // cannot remove this kind either
                         
             Transition& out = getTransition(tOut);
             Transition& in = getTransition(tIn);
+            
+            if(out.post.size() != 1 && in.pre.size() != 1)
+                continue; // at least one has to be singular for this to work
             
             auto inArc = getInArc(p, in);
             auto outArc = getOutArc(out, p);
             
             // B3. Output is a multiple of input and nonzero.
-            if(outArc->weight < inArc->weight) continue;            
-            if((outArc->weight % inArc->weight) != 0) continue;
+            if(outArc->weight < inArc->weight) 
+                continue;            
+            if((outArc->weight % inArc->weight) != 0)
+                continue;            
             
             size_t multiplier = outArc->weight / inArc->weight;
             
             // B4. Do inhibitor check, neither In, out or place can be involved with any inhibitor
-            if(place.inhib || in.inhib || out.inhib) continue;
+            if(place.inhib || in.inhib || out.inhib)
+                continue;
             
             // B6. also, none of the places in the post-set of consuming transition can be participating in inhibitors.
             // B7. nor can they appear in the query.
@@ -386,22 +394,23 @@ namespace PetriEngine {
                     post_ok |= placeInQuery[a.place];
                     if(post_ok) break;
                 }
-                if(post_ok) continue;
+                if(post_ok) 
+                    continue;
             }
 
-            bool ok = true;
-            // B2. Check that there is no other place than p that gives to tPost, 
+            bool ok = true;            
+            // B2.a Check that there is no other place than p that gives to tPost, 
             // tPre can give to other places
-            for (auto& arc : in.pre) {
+            auto& arcs = in.pre.size() < out.post.size() ? in.pre : out.post;
+            for (auto& arc : arcs) {
                 if (arc.weight > 0 && arc.place != p) {
                     ok = false;
                     break;
                 }
             }
             
-            if (!ok) {
+            if (!ok)
                 continue;
-            }
 
             // UB2. we need to remember initial marking
             uint initm = parent->initMarking()[p];
