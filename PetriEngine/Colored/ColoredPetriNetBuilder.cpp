@@ -24,11 +24,11 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addPlace(const std::string& name, Colored::ColorType* type, Colored::Multiset tokens, double x, double y) {
+    void ColoredPetriNetBuilder::addPlace(const std::string& name, Colored::ColorType* type, Colored::Multiset&& tokens, double x, double y) {
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
-            _places.push_back(Colored::Place {name, type, tokens});
+            _places.emplace_back(std::move(Colored::Place {name, type, tokens}));
             _placenames[name] = next;
         }
     }
@@ -39,11 +39,11 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addTransition(const std::string& name, Colored::GuardExpression_ptr guard, double x, double y) {
+    void ColoredPetriNetBuilder::addTransition(const std::string& name, const Colored::GuardExpression_ptr& guard, double x, double y) {
         if(_transitionnames.count(name) == 0)
         {
             uint32_t next = _transitionnames.size();
-            _transitions.push_back(Colored::Transition {name, guard});
+            _transitions.emplace_back(std::move(Colored::Transition {name, guard}));
             _transitionnames[name] = next;
         }
     }
@@ -54,7 +54,7 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, Colored::ArcExpression_ptr expr) {
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr) {
         addArc(place, transition, expr, true);
     }
 
@@ -64,11 +64,11 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, Colored::ArcExpression_ptr expr) {
+    void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) {
         addArc(place, transition, expr, false);
     }
 
-    void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, Colored::ArcExpression_ptr expr, bool input) {
+    void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input) {
         if(_transitionnames.count(transition) == 0)
         {
             std::cout << "Transition '" << transition << "' not found. Adding it." << std::endl;
@@ -127,7 +127,7 @@ namespace PetriEngine {
             std::string name = place.name + ";" + std::to_string(i);
             const Colored::Color* color = &place.type->operator[](i);
             _ptBuilder.addPlace(name, place.marking[color], 0.0, 0.0);
-            _ptplacenames[place.name][color->getId()] = name;
+            _ptplacenames[place.name][color->getId()] = std::move(name);
             ++_nptplaces;
         }
     }
@@ -148,13 +148,13 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName) {
         Colored::ExpressionContext context {binding, _colors};
-        Colored::Multiset ms = arc.expr->eval(context);
+        auto ms = arc.expr->eval(context);
 
         for (const auto& color : ms) {
             if (color.second == 0) {
                 continue;
             }
-            std::string pName = _ptplacenames[_places[arc.place].name][color.first->getId()];
+            const std::string& pName = _ptplacenames[_places[arc.place].name][color.first->getId()];
             if (arc.input) {
                 _ptBuilder.addInputArc(pName, tName, false, color.second);
             } else {

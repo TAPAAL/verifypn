@@ -33,14 +33,14 @@ namespace PetriEngine {
                 double y = 0) override ;
         void addPlace(const std::string& name,
                 Colored::ColorType* type,
-                Colored::Multiset tokens,
+                Colored::Multiset&& tokens,
                 double x = 0,
                 double y = 0) override;
         void addTransition(const std::string& name,
                 double x = 0,
                 double y = 0) override;
         void addTransition(const std::string& name,
-                Colored::GuardExpression_ptr guard,
+                const Colored::GuardExpression_ptr& guard,
                 double x = 0,
                 double y = 0) override;
         void addInputArc(const std::string& place,
@@ -49,13 +49,13 @@ namespace PetriEngine {
                 int) override;
         void addInputArc(const std::string& place,
                 const std::string& transition,
-                Colored::ArcExpression_ptr expr) override;
+                const Colored::ArcExpression_ptr& expr) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
                 int weight = 1) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
-                Colored::ArcExpression_ptr expr) override;
+                const Colored::ArcExpression_ptr& expr) override;
         void addColorType(const std::string& id,
                 Colored::ColorType* type) override;
 
@@ -132,7 +132,7 @@ namespace PetriEngine {
         
         void addArc(const std::string& place,
                 const std::string& transition,
-                Colored::ArcExpression_ptr expr,
+                const Colored::ArcExpression_ptr& expr,
                 bool input);
         
         void unfoldPlace(Colored::Place& place);
