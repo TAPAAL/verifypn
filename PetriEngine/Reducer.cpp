@@ -1177,6 +1177,14 @@ namespace PetriEngine {
             
             auto p1 = trans.pre[0].place;
             auto p2 = trans.post[0].place;
+            
+            // we actually do not need weights to be 1 here.
+            // there is a special case when the places are always "inputting"
+            // and "outputting" with a GCD that is equal to the weight of the
+            // specific transition.
+            // Ie, the place always have a number of tokens (disregarding
+            // initial tokens) that is dividable with the transition weight
+            
             if(trans.pre[0].weight != 1 ||
                trans.post[0].weight != 1 ||
                p1 == p2 ||
