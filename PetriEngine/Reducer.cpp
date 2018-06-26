@@ -401,6 +401,17 @@ namespace PetriEngine {
                 if(post_ok) 
                     continue;
             }
+            {
+                bool pre_ok = false;
+                for(const Arc& a : in.pre)
+                {
+                    pre_ok |= parent->_places[a.place].inhib;
+                    pre_ok |= placeInQuery[a.place];
+                    if(pre_ok) break;
+                }
+                if(pre_ok) 
+                    continue;
+            }
 
             bool ok = true;            
             // B2.a Check that there is no other place than p that gives to tPost, 
