@@ -154,6 +154,7 @@ namespace PetriEngine {
         std::vector<std::string> _initfire;
         std::unordered_map<std::string, std::vector<std::string>> _postfire;
         std::unordered_map<std::string, std::vector<ExpandedArc>> _extraconsume;
+        std::vector<uint8_t> _tflags;
     };
 
     

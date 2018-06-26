@@ -1109,38 +1109,52 @@ namespace PetriEngine {
     
     bool Reducer::ReducebyRuleH(uint32_t* placeInQuery)
     {
-        bool continueReductions = false;
-        for(uint32_t t1 = 0; t1 < parent->numberOfTransitions(); ++t1)
-        {
-            auto& trans1 = parent->_transitions[t1];
-            if(trans1.skip) continue;
-            if(trans1.inhib) continue;
-            if(trans1.pre.size() != 1) continue;
-            if(trans1.post.size() != 1) continue;
-            auto p1 = trans1.pre[0].place;
-            auto p2 = trans1.post[0].place;
-            if(trans1.pre[0].weight != 1) continue;
-            if(trans1.post[0].weight != 1) continue;
-            if(p1 == p2) continue;
-            if(placeInQuery[p1] > 0) continue;
-            if(placeInQuery[p2] > 0) continue;
-            if(parent->_places[p1].inhib) continue;
-            if(parent->_places[p2].inhib) continue;
-            
-            for(uint32_t t2 = t1 + 1; t2 < parent->numberOfTransitions(); ++t2)
+        return false;
+        auto transok = [this](uint32_t t) -> uint32_t {
+            auto& trans = parent->_transitions[t];
+            if(_tflags[t] != 0) 
+                return _tflags[t];
+            _tflags[t] = 1;
+            if(trans.inhib || 
+               trans.pre.size() != 1 ||
+               trans.post.size() != 1) 
             {
-                auto& trans2 = parent->_transitions[t2];
-                if(trans2.skip) continue;
-                if(trans2.inhib) continue;
-                if(trans2.pre.size() != 1) continue;
-                if(trans2.post.size() != 1) continue;
-                if(trans2.pre[0].weight != 1) continue;
-                if(trans2.post[0].weight != 1) continue;
-                if(trans2.pre[0].place != p2) continue;                
-                if(trans2.post[0].place != p1) continue;                
+                return 2;
+            }
+            
+            auto p1 = trans.pre[0].place;
+            auto p2 = trans.post[0].place;
+            if(trans.pre[0].weight != 1 ||
+               trans.post[0].weight != 1 ||
+               p1 == p2 ||
+               parent->_places[p1].inhib ||
+               parent->_places[p2].inhib)
+            {
+                return 2;
+            }
+            return 1;
+        };
+        
+        auto removeLoop = [this,placeInQuery](std::vector<uint32_t>& loop) -> bool {
+            size_t i = 0;
+            for(; i < loop.size(); ++i)
+                if(loop[i] == loop.back())
+                    break;
+            
+            assert(_tflags[loop.back() == 1]);
+            if(i == loop.size() - 1)
+                return false;
 
-               ++_ruleH;
-                skipTransition(t2);
+            auto p1 = parent->_transitions[loop[i]].pre[0].place;
+            bool removed = false;
+            for(size_t j = i + 1; j < loop.size() - 1; ++j)
+            {
+                auto p2 = parent->_transitions[loop[j]].pre[0].place;
+                if(placeInQuery[j] > 0)
+                    continue;
+                removed = true;
+                ++_ruleH;
+                skipTransition(loop[j]);
 
                 auto& place1 = parent->_places[p1];
                 auto& place2 = parent->_places[p2];
@@ -1195,8 +1209,67 @@ namespace PetriEngine {
                 
                 parent->initialMarking[p1] += parent->initialMarking[p2];
                 
-                skipPlace(p2);
-                continueReductions = true;
+                skipPlace(p2);                
+            }
+            return removed;
+        };
+        
+        bool continueReductions = false;
+        for(uint32_t t = 0; t < parent->numberOfTransitions(); ++t)
+        {
+            std::fill(_tflags.begin(), _tflags.end(), 0);
+            std::vector<uint32_t> stack;
+            {
+                if(_tflags[t] != 0) continue;
+                auto& trans = parent->_transitions[t];
+                if(trans.skip) continue;
+                _tflags[t] = transok(t);
+                if(_tflags[t] != 1) continue;
+                stack.push_back(t);
+            }
+            bool outer = true;
+            while(stack.size() > 0 && outer)
+            {
+                auto it = stack.back();
+                auto post = parent->_transitions[it].post[0].place;
+                bool found = false;
+                for(auto& nt : parent->_places[post].consumers)
+                {
+                    auto& nexttrans = parent->_transitions[nt];
+                    if(nt == it || nexttrans.skip) 
+                        continue; // handled elsewhere
+                    if(_tflags[nt] == 1 && stack.size() > 1) 
+                    {
+                        stack.push_back(nt);
+                        continueReductions |= removeLoop(stack);
+                        outer = false;
+                        break;
+                    }
+                    else if(_tflags[nt] == 0)
+                    {
+                        _tflags[nt] = transok(nt);
+                        if(_tflags[nt] == 2)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            assert(_tflags[nt] == 1);
+                            stack.push_back(nt);
+                            found = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                if(!found && outer)
+                {
+                    _tflags[it] = 2;
+                    stack.pop_back();
+                }
             }
         }   
         return continueReductions;
@@ -1207,6 +1280,7 @@ namespace PetriEngine {
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
         this->reconstructTrace = reconstructTrace;
+        _tflags.resize(parent->_transitions.size(), 0);
         if (enablereduction == 1) { // in the aggressive reduction all four rules are used as long as they remove something
             bool changed = false;
             do
