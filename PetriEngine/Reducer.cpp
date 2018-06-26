@@ -338,7 +338,8 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleB(uint32_t* placeInQuery) {
+    bool Reducer::ReducebyRuleB(uint32_t* placeInQuery, bool remove_deadlocks) {
+
         // Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
         bool continueReductions = false;
         const size_t numberofplaces = parent->numberOfPlaces();
@@ -368,6 +369,9 @@ namespace PetriEngine {
             
             if(out.post.size() != 1 && in.pre.size() != 1)
                 continue; // at least one has to be singular for this to work
+            
+            if(!remove_deadlocks && in.pre.size() != 1)
+                continue; // the buffer can mean deadlocks and other interesting things
             
             auto inArc = getInArc(p, in);
             auto outArc = getOutArc(out, p);
@@ -1201,7 +1205,7 @@ namespace PetriEngine {
                 do{
                     changed = false;
                     if(!next_safe) {
-                        changed |= ReducebyRuleB(context.getQueryPlaceCount());
+                        changed |= ReducebyRuleB(context.getQueryPlaceCount(), remove_loops);
                         changed |= ReducebyRuleA(context.getQueryPlaceCount());
                     }
                     changed |= ReducebyRuleE(context.getQueryPlaceCount());

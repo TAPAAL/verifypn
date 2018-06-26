@@ -125,7 +125,7 @@ namespace PetriEngine {
 
         // The reduction methods return true if they reduced something and reductions should continue with other rules
         bool ReducebyRuleA(uint32_t* placeInQuery);
-        bool ReducebyRuleB(uint32_t* placeInQuery);
+        bool ReducebyRuleB(uint32_t* placeInQuery, bool remove_deadlocks);
         bool ReducebyRuleC(uint32_t* placeInQuery);
         bool ReducebyRuleD(uint32_t* placeInQuery);
         bool ReducebyRuleE(uint32_t* placeInQuery);
