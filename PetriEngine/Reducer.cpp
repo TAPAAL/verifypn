@@ -373,6 +373,9 @@ namespace PetriEngine {
             if(!remove_deadlocks && in.pre.size() != 1)
                 continue; // the buffer can mean deadlocks and other interesting things
             
+            if(parent->initMarking()[p] > 0 && in.pre.size() != 1)
+                continue;
+            
             auto inArc = getInArc(p, in);
             auto outArc = getOutArc(out, p);
             
