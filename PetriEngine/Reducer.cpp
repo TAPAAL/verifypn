@@ -252,7 +252,18 @@ namespace PetriEngine {
             
             // A3. We have weight of more than one on input
             // and is empty on output (should not happen).
-            if(trans.pre[0].weight != 1) continue;
+            auto w = trans.pre[0].weight;
+            bool ok = true;
+            for(auto p : parent->_places[pPre].producers)
+            {
+                if((getOutArc(parent->_transitions[t], p)->weight % w) != 0)
+                {
+                    ok = false;
+                    break;
+                }
+            }
+            if(!ok)
+                continue;
                         
             // A4. Do inhibitor check, neither T, pPre or pPost can be involved with any inhibitor
             if(parent->_places[pPre].inhib|| trans.inhib) continue;
@@ -260,7 +271,6 @@ namespace PetriEngine {
             // A5. dont mess with query!
             if(placeInQuery[pPre] > 0) continue;
             // check A1, A4 and A5 for post
-            bool ok = true;
             for(auto& pPost : trans.post)
             {
                 if(parent->_places[pPost.place].inhib || pPre == pPost.place || placeInQuery[pPost.place] > 0)
@@ -284,7 +294,7 @@ namespace PetriEngine {
                     std::string prefire = getTransitionName(pp);
                     _postfire[prefire].push_back(tname);
                 }
-                _extraconsume[tname].emplace_back(getPlaceName(pPre), trans.pre[0].weight);
+                _extraconsume[tname].emplace_back(getPlaceName(pPre), w);
                 for(size_t i = 0; i < parent->initMarking()[pPre]; ++i)
                 {
                     _initfire.push_back(tname);
@@ -294,7 +304,7 @@ namespace PetriEngine {
             for(auto& pPost : trans.post)
             {
                 // UA2. move the token for the initial marking, makes things simpler.
-                parent->initialMarking[pPost.place] += (parent->initialMarking[pPre] * pPost.weight);
+                parent->initialMarking[pPost.place] += ((parent->initialMarking[pPre]/w) * pPost.weight);
             }
             parent->initialMarking[pPre] = 0;
 
@@ -314,7 +324,7 @@ namespace PetriEngine {
                 {
                     Arc a;
                     a.place = pPost.place;
-                    a.weight = source.weight * pPost.weight;
+                    a.weight = (source.weight/w) * pPost.weight;
                     assert(a.weight > 0);
                     a.inhib = false;
                     auto dest = std::lower_bound(src.post.begin(), src.post.end(), a);
@@ -327,7 +337,7 @@ namespace PetriEngine {
                     }
                     else
                     {
-                        dest->weight += (source.weight * pPost.weight);
+                        dest->weight += ((source.weight/w) * pPost.weight);
                     }
                     assert(dest->weight > 0);
                 }
