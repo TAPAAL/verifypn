@@ -463,6 +463,25 @@ namespace PetriEngine {
                               parent->_places[arc.place].producers.end());
                 }
             }
+            for (auto& arc : in.pre) { // remove tPost
+                auto _arc = getInArc(arc.place, out);
+                // UB2. Update initial marking
+                parent->initialMarking[arc.place] += initm*arc.weight;
+                if(_arc != out.pre.end())
+                {
+                    _arc->weight += arc.weight*multiplier;
+                }
+                else
+                {
+                    out.pre.push_back(arc);
+                    out.pre.back().weight *= multiplier;
+                    parent->_places[arc.place].consumers.push_back(tOut);
+                    
+                    std::sort(out.pre.begin(), out.pre.end());
+                    std::sort(parent->_places[arc.place].consumers.begin(),
+                              parent->_places[arc.place].consumers.end());
+                }
+            }
             // UB1. remove transition
             skipTransition(tIn);
         } // end of Rule B main for-loop
