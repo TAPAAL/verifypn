@@ -28,7 +28,7 @@ namespace PetriEngine {
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
-            _places.emplace_back(std::move(Colored::Place {name, type, tokens}));
+            _places.emplace_back(Colored::Place {name, type, tokens});
             _placenames[name] = next;
         }
     }
@@ -43,7 +43,7 @@ namespace PetriEngine {
         if(_transitionnames.count(name) == 0)
         {
             uint32_t next = _transitionnames.size();
-            _transitions.emplace_back(std::move(Colored::Transition {name, guard}));
+            _transitions.emplace_back(Colored::Transition {name, guard});
             _transitionnames[name] = next;
         }
     }
