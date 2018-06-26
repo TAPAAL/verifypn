@@ -1,10 +1,4 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
  * File:   ColoredPetriNetBuilder.h
  * Author: Klostergaard
  *
@@ -39,14 +33,14 @@ namespace PetriEngine {
                 double y = 0) override ;
         void addPlace(const std::string& name,
                 Colored::ColorType* type,
-                Colored::Multiset tokens,
+                Colored::Multiset&& tokens,
                 double x = 0,
                 double y = 0) override;
         void addTransition(const std::string& name,
                 double x = 0,
                 double y = 0) override;
         void addTransition(const std::string& name,
-                Colored::GuardExpression_ptr guard,
+                const Colored::GuardExpression_ptr& guard,
                 double x = 0,
                 double y = 0) override;
         void addInputArc(const std::string& place,
@@ -55,13 +49,13 @@ namespace PetriEngine {
                 int) override;
         void addInputArc(const std::string& place,
                 const std::string& transition,
-                Colored::ArcExpression_ptr expr) override;
+                const Colored::ArcExpression_ptr& expr) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
                 int weight = 1) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
-                Colored::ArcExpression_ptr expr) override;
+                const Colored::ArcExpression_ptr& expr) override;
         void addColorType(const std::string& id,
                 Colored::ColorType* type) override;
 
@@ -81,7 +75,11 @@ namespace PetriEngine {
         }
 
         uint32_t getArcCount() const {
-            return _arcs.size();
+            uint32_t sum = 0;
+            for (auto& t : _transitions) {
+                sum += t.arcs.size();
+            }
+            return sum;
         }
 
         uint32_t getUnfoldedPlaceCount() const {
@@ -134,12 +132,12 @@ namespace PetriEngine {
         
         void addArc(const std::string& place,
                 const std::string& transition,
-                Colored::ArcExpression_ptr expr,
+                const Colored::ArcExpression_ptr& expr,
                 bool input);
         
         void unfoldPlace(Colored::Place& place);
         void unfoldTransition(Colored::Transition& transition);
-        void unfoldArc(Colored::Arc& arc);
+        void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name);
     };
     
     class BindingGenerator {
@@ -154,12 +152,12 @@ namespace PetriEngine {
             bool operator==(Iterator& other);
             bool operator!=(Iterator& other);
             Iterator& operator++();
-            std::vector<Colored::Binding> operator++(int);
-            std::vector<Colored::Binding>& operator*();
+            const Colored::ExpressionContext::BindingMap operator++(int);
+            Colored::ExpressionContext::BindingMap& operator*();
         };
     private:
         Colored::GuardExpression_ptr _expr;
-        std::vector<Colored::Binding> _bindings;
+        Colored::ExpressionContext::BindingMap _bindings;
         ColoredPetriNetBuilder::ColorTypeMap& _colorTypes;
         
         bool eval();
@@ -168,9 +166,9 @@ namespace PetriEngine {
         BindingGenerator(Colored::Transition& transition,
                 const std::vector<Colored::Arc>& arcs,
                 ColoredPetriNetBuilder::ColorTypeMap& colorTypes);
-        
-        std::vector<Colored::Binding>& nextBinding();
-        std::vector<Colored::Binding>& currentBinding();
+
+        Colored::ExpressionContext::BindingMap& nextBinding();
+        Colored::ExpressionContext::BindingMap& currentBinding();
         bool isInitial() const;
         Iterator begin();
         Iterator end();

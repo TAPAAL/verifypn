@@ -32,7 +32,9 @@ namespace PetriEngine {
     
     namespace Colored {
         struct ExpressionContext {
-            std::unordered_map<std::string, const Color*>& binding;
+            typedef std::unordered_map<std::string, const Color*> BindingMap;
+
+            BindingMap& binding;
             std::unordered_map<std::string, ColorType*>& colorTypes;
             
             const Color* findColor(const std::string& color) const {
@@ -191,8 +193,8 @@ namespace PetriEngine {
                 return _color->toString() + "++";
             }
 
-            SuccessorExpression(ColorExpression_ptr color)
-                    : _color(color) {}
+            SuccessorExpression(ColorExpression_ptr&& color)
+                    : _color(std::move(color)) {}
         };
         
         class PredecessorExpression : public ColorExpression {
@@ -212,8 +214,8 @@ namespace PetriEngine {
                 return _color->toString() + "--";
             }
 
-            PredecessorExpression(ColorExpression_ptr color)
-                    : _color(color) {}
+            PredecessorExpression(ColorExpression_ptr&& color)
+                    : _color(std::move(color)) {}
         };
         
         class TupleExpression : public ColorExpression {
@@ -250,8 +252,8 @@ namespace PetriEngine {
                 return res;
             }
 
-            TupleExpression(std::vector<ColorExpression_ptr> colors)
-                    : _colors(colors) {}
+            TupleExpression(std::vector<ColorExpression_ptr>&& colors)
+                    : _colors(std::move(colors)) {}
         };
         
         class GuardExpression : public Expression {
@@ -279,8 +281,8 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
             
-            LessThanExpression(ColorExpression_ptr left, ColorExpression_ptr right)
-                    : _left(left), _right(right) {}
+            LessThanExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
+                    : _left(std::move(left)), _right(std::move(right)) {}
         };
         
         class GreaterThanExpression : public GuardExpression {
@@ -298,8 +300,8 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
             
-            GreaterThanExpression(ColorExpression_ptr left, ColorExpression_ptr right)
-                    : _left(left), _right(right) {}
+            GreaterThanExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
+                    : _left(std::move(left)), _right(std::move(right)) {}
         };
         
         class LessThanEqExpression : public GuardExpression {
@@ -317,8 +319,8 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
             
-            LessThanEqExpression(ColorExpression_ptr left, ColorExpression_ptr right)
-                    : _left(left), _right(right) {}
+            LessThanEqExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
+                    : _left(std::move(left)), _right(std::move(right)) {}
         };
         
         class GreaterThanEqExpression : public GuardExpression {
@@ -336,8 +338,8 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
             
-            GreaterThanEqExpression(ColorExpression_ptr left, ColorExpression_ptr right)
-                    : _left(left), _right(right) {}
+            GreaterThanEqExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
+                    : _left(std::move(left)), _right(std::move(right)) {}
         };
         
         class EqualityExpression : public GuardExpression {
@@ -355,8 +357,8 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
             
-            EqualityExpression(ColorExpression_ptr left, ColorExpression_ptr right)
-                    : _left(left), _right(right) {}
+            EqualityExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
+                    : _left(std::move(left)), _right(std::move(right)) {}
         };
         
         class InequalityExpression : public GuardExpression {
@@ -374,8 +376,8 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
             
-            InequalityExpression(ColorExpression_ptr left, ColorExpression_ptr right)
-                    : _left(left), _right(right) {}
+            InequalityExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
+                    : _left(std::move(left)), _right(std::move(right)) {}
         };
         
         class NotExpression : public GuardExpression {
@@ -391,7 +393,7 @@ namespace PetriEngine {
                 _expr->getVariables(variables);
             }
             
-            NotExpression(GuardExpression_ptr expr) : _expr(expr) {}
+            NotExpression(GuardExpression_ptr&& expr) : _expr(std::move(expr)) {}
         };
         
         class AndExpression : public GuardExpression {
@@ -409,7 +411,7 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
             
-            AndExpression(GuardExpression_ptr left, GuardExpression_ptr right)
+            AndExpression(GuardExpression_ptr&& left, GuardExpression_ptr&& right)
                     : _left(left), _right(right) {}
         };
         
@@ -428,8 +430,8 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
             
-            OrExpression(GuardExpression_ptr left, GuardExpression_ptr right)
-                    : _left(left), _right(right) {}
+            OrExpression(GuardExpression_ptr&& left, GuardExpression_ptr&& right)
+                    : _left(std::move(left)), _right(std::move(right)) {}
         };
         
         class ArcExpression : public Expression {
@@ -539,10 +541,10 @@ namespace PetriEngine {
                 return res;
             }
 
-            NumberOfExpression(std::vector<ColorExpression_ptr> color, uint32_t number = 1)
-                    : _number(number), _color(color), _all(nullptr) {}
-            NumberOfExpression(AllExpression_ptr all, uint32_t number = 1)
-                    : _number(number), _color(), _all(all) {}
+            NumberOfExpression(std::vector<ColorExpression_ptr>&& color, uint32_t number = 1)
+                    : _number(number), _color(std::move(color)), _all(nullptr) {}
+            NumberOfExpression(AllExpression_ptr&& all, uint32_t number = 1)
+                    : _number(number), _color(), _all(std::move(all)) {}
         };
 
         typedef std::shared_ptr<NumberOfExpression> NumberOfExpression_ptr;
@@ -582,8 +584,8 @@ namespace PetriEngine {
                 return res;
             }
 
-            AddExpression(std::vector<ArcExpression_ptr> constituents)
-                    : _constituents(constituents) {}
+            AddExpression(std::vector<ArcExpression_ptr>&& constituents)
+                    : _constituents(std::move(constituents)) {}
         };
         
         class SubtractExpression : public ArcExpression {
@@ -619,8 +621,8 @@ namespace PetriEngine {
                 return _left->toString() + " - " + _right->toString();
             }
 
-            SubtractExpression(ArcExpression_ptr left, ArcExpression_ptr right)
-                    : _left(left), _right(right) {}
+            SubtractExpression(ArcExpression_ptr&& left, ArcExpression_ptr&& right)
+                    : _left(std::move(left)), _right(std::move(right)) {}
         };
         
         class ScalarProductExpression : public ArcExpression {
@@ -645,8 +647,8 @@ namespace PetriEngine {
                 return std::to_string(_scalar) + " * " + _expr->toString();
             }
 
-            ScalarProductExpression(ArcExpression_ptr expr, uint32_t scalar)
-                    : _scalar(scalar), _expr(expr) {}
+            ScalarProductExpression(ArcExpression_ptr&& expr, uint32_t scalar)
+                    : _scalar(std::move(scalar)), _expr(expr) {}
         };
     }
 }

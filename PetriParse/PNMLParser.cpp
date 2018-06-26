@@ -206,7 +206,7 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml:
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
             constituents.push_back(parseArcExpression(it));
         }
-        return std::make_shared<PetriEngine::Colored::AddExpression>(constituents);
+        return std::make_shared<PetriEngine::Colored::AddExpression>(std::move(constituents));
     } else if (strcmp(element->name(), "subtract") == 0) {
         auto left = element->first_node();
         auto right = left->next_sibling();
@@ -290,7 +290,7 @@ PetriEngine::Colored::ColorExpression_ptr PNMLParser::parseColorExpression(rapid
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
             colors.push_back(parseColorExpression(it));
         }
-        return std::make_shared<PetriEngine::Colored::TupleExpression>(colors);
+        return std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors));
     } else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {
         return parseColorExpression(element->first_node());
     }
@@ -336,13 +336,13 @@ PetriEngine::Colored::NumberOfExpression_ptr PNMLParser::parseNumberOfExpression
     }
     auto allExpr = parseAllExpression(first);
     if (allExpr) {
-        return std::make_shared<PetriEngine::Colored::NumberOfExpression>(allExpr, number);
+        return std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(allExpr), number);
     } else {
         std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;
         for (auto it = first; it; it = it->next_sibling()) {
             colors.push_back(parseColorExpression(it));
         }
-        return std::make_shared<PetriEngine::Colored::NumberOfExpression>(colors, number);
+        return std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(colors), number);
     }
 }
 
@@ -436,7 +436,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
         }
         else
         {
-            builder->addPlace(id, type, hlinitialMarking, x, y);
+            builder->addPlace(id, type, std::move(hlinitialMarking), x, y);
         }
     }
     //Map id to name
