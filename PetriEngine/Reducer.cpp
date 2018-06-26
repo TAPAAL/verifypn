@@ -456,7 +456,6 @@ namespace PetriEngine {
             continueReductions = true;
             _ruleB++;
              // UB1. Remove place p
-            skipPlace(p);
             parent->initialMarking[p] = 0;
             // We need to remember that when tOut fires, tIn fires just after.
             // this should fix the trace
@@ -482,6 +481,8 @@ namespace PetriEngine {
                 }
             }
             for (auto& arc : in.pre) { // remove tPost
+                if(arc.place == p)
+                    continue;
                 auto _arc = getInArc(arc.place, out);
                 // UB2. Update initial marking
                 parent->initialMarking[arc.place] += initm*arc.weight;
@@ -500,8 +501,34 @@ namespace PetriEngine {
                               parent->_places[arc.place].consumers.end());
                 }
             }
+            bool fnd = false;
+            for(auto it = out.post.begin(); it != out.post.end(); ++it)
+            {
+                if(it->place == p)
+                {
+                    out.post.erase(it);
+                    fnd = true;
+                    break;
+                }
+            }
+            assert(fnd);
+            fnd = false;
+            for(auto it = place.producers.begin(); it != place.producers.end(); ++it)
+            {
+                if(*it == tOut)
+                {
+                    place.producers.erase(it);
+                    fnd = true;
+                    break;
+                }
+            }
+            assert(fnd);
             // UB1. remove transition
-            skipTransition(tIn);
+            if(place.producers.size() == 0)
+            {
+                skipPlace(p);
+                skipTransition(tIn);
+            }
         } // end of Rule B main for-loop
         assert(consistent());
         return continueReductions;
