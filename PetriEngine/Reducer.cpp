@@ -254,9 +254,9 @@ namespace PetriEngine {
             // and is empty on output (should not happen).
             auto w = trans.pre[0].weight;
             bool ok = true;
-            for(auto p : parent->_places[pPre].producers)
+            for(auto t : parent->_places[pPre].producers)
             {
-                if((getOutArc(parent->_transitions[t], p)->weight % w) != 0)
+                if((getOutArc(parent->_transitions[t], trans.pre[0].place)->weight % w) != 0)
                 {
                     ok = false;
                     break;
