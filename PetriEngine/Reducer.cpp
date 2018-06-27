@@ -1213,7 +1213,8 @@ namespace PetriEngine {
             for(size_t j = i + 1; j < loop.size() - 1; ++j)
             {
                 auto p2 = parent->_transitions[loop[j]].pre[0].place;
-                if(placeInQuery[p2] > 0)
+                if(placeInQuery[p2] > 0 ||
+                   (placeInQuery[p1] && parent->initialMarking[p2] > 0))
                 {
                     p1 = p2;
                     continue;
@@ -1221,7 +1222,6 @@ namespace PetriEngine {
                 removed = true;
                 ++_ruleH;
                 skipTransition(loop[j]);
-
                 auto& place1 = parent->_places[p1];
                 auto& place2 = parent->_places[p2];
 
@@ -1275,7 +1275,7 @@ namespace PetriEngine {
                 
                 parent->initialMarking[p1] += parent->initialMarking[p2];
                 assert(placeInQuery[p2] == 0);
-                skipPlace(p2);                
+                skipPlace(p2);   
             }
             return removed;
         };
