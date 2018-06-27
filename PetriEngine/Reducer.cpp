@@ -1165,7 +1165,6 @@ namespace PetriEngine {
     
     bool Reducer::ReducebyRuleH(uint32_t* placeInQuery)
     {
-        return false;
         auto transok = [this](uint32_t t) -> uint32_t {
             auto& trans = parent->_transitions[t];
             if(_tflags[t] != 0) 
@@ -1205,7 +1204,7 @@ namespace PetriEngine {
                 if(loop[i] == loop.back())
                     break;
             
-            assert(_tflags[loop.back() == 1]);
+            assert(_tflags[loop.back()]== 1);
             if(i == loop.size() - 1)
                 return false;
 
@@ -1214,8 +1213,11 @@ namespace PetriEngine {
             for(size_t j = i + 1; j < loop.size() - 1; ++j)
             {
                 auto p2 = parent->_transitions[loop[j]].pre[0].place;
-                if(placeInQuery[j] > 0)
+                if(placeInQuery[p2] > 0)
+                {
+                    p1 = p2;
                     continue;
+                }
                 removed = true;
                 ++_ruleH;
                 skipTransition(loop[j]);
@@ -1272,7 +1274,7 @@ namespace PetriEngine {
                 }
                 
                 parent->initialMarking[p1] += parent->initialMarking[p2];
-                
+                assert(placeInQuery[p2] == 0);
                 skipPlace(p2);                
             }
             return removed;
@@ -1305,9 +1307,18 @@ namespace PetriEngine {
                     if(_tflags[nt] == 1 && stack.size() > 1) 
                     {
                         stack.push_back(nt);
-                        continueReductions |= removeLoop(stack);
-                        outer = false;
-                        break;
+                        bool found = removeLoop(stack);
+                        continueReductions |= found;
+    
+                        if(found)
+                        {
+                            outer = false;
+                            break;
+                        }
+                        else
+                        {
+                            stack.pop_back();
+                        }
                     }
                     else if(_tflags[nt] == 0)
                     {
