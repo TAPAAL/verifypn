@@ -1212,6 +1212,8 @@ namespace PetriEngine {
             bool removed = false;
             for(size_t j = i + 1; j < loop.size() - 1; ++j)
             {
+                if(hasTimedout()) 
+                    return removed;
                 auto p2 = parent->_transitions[loop[j]].pre[0].place;
                 if(placeInQuery[p2] > 0 || placeInQuery[p1] > 0)
                 {
@@ -1281,6 +1283,8 @@ namespace PetriEngine {
         bool continueReductions = false;
         for(uint32_t t = 0; t < parent->numberOfTransitions(); ++t)
         {
+            if(hasTimedout())
+                return continueReductions;
             std::fill(_tflags.begin(), _tflags.end(), 0);
             std::vector<uint32_t> stack;
             {
@@ -1294,11 +1298,15 @@ namespace PetriEngine {
             bool outer = true;
             while(stack.size() > 0 && outer)
             {
+                if(hasTimedout())
+                    return continueReductions;
                 auto it = stack.back();
                 auto post = parent->_transitions[it].post[0].place;
                 bool found = false;
                 for(auto& nt : parent->_places[post].consumers)
                 {
+                    if(hasTimedout())
+                        return continueReductions;
                     auto& nexttrans = parent->_transitions[nt];
                     if(nt == it || nexttrans.skip) 
                         continue; // handled elsewhere
