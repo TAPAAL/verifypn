@@ -77,7 +77,8 @@ function verifyparallel {
     echo $MF
     local NUMBER=`cat $MODEL_PATH/$CATEGORY | grep "<property>" | wc -l`
     QUERIES=( $(seq 1 $NUMBER) )
-    MULTIQUERY_INPUT=$(sed -e "s/ /,/g" <<< ${QUERIES[@]})
+    #MULTIQUERY_INPUT=$(sed -e "s/ /,/g" <<< ${QUERIES[@]})
+    MULTIQUERY_INPUT=$(echo ${QUERIES[@]} | sed -e "s/ /,/g")
     time_left
 
     # Step -1: Colored Overapproximation
@@ -100,7 +101,8 @@ function verifyparallel {
 
     echo "$TMP"
     
-    MULTIQUERY_INPUT=$(sed -e "s/ /,/g" <<< ${QUERIES[@]})
+    #MULTIQUERY_INPUT=$(sed -e "s/ /,/g" <<< ${QUERIES[@]})
+    MULTIQUERY_INPUT=$(echo ${QUERIES[@]} | sed -e "s/ /,/g")
     time_left
 
     if [ -z "$MULTIQUERY_INPUT" ]; then echo "All queries are solved" ; time_left; rm $QF; rm $MF; exit; fi
@@ -230,7 +232,8 @@ function verifyparallel {
     echo "Time remaining: $SECONDS seconds of the initial $TIMEOUT_TOTAL seconds" 
     
     # Join remaining query indexes in comma separated string
-    MULTIQUERY_INPUT=$(sed -e "s/ /,/g" <<< ${QUERIES[@]})
+    #MULTIQUERY_INPUT=$(sed -e "s/ /,/g" <<< ${QUERIES[@]})
+    MULTIQUERY_INPUT=$(echo ${QUERIES[@]} | sed -e "s/ /,/g")
     
     RED=$(echo "$SECONDS/8" | bc)
     RUN_TIME=$(echo "$SECONDS*6/8" | bc)
