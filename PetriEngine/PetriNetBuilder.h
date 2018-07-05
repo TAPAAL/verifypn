@@ -80,7 +80,7 @@ namespace PetriEngine {
 
         void reduce(std::vector<std::shared_ptr<PQL::Condition> >& query, 
                     std::vector<Reachability::ResultPrinter::Result>& results, 
-                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout);
+                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout, std::vector<uint32_t>& reductions);
         
         size_t RemovedTransitions() const
         {

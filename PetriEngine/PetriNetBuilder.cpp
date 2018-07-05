@@ -441,7 +441,7 @@ namespace PetriEngine {
     
     void PetriNetBuilder::reduce(   std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                     std::vector<Reachability::ResultPrinter::Result>& results, 
-                                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout)
+                                    int reductiontype, bool reconstructTrace, const PetriNet* net, int timeout, std::vector<uint32_t>& reductions)
     {
         QueryPlaceAnalysisContext placecontext(getPlaceNames(), getTransitionNames(), net);
         bool all_reach = true;
@@ -460,7 +460,7 @@ namespace PetriEngine {
                 contains_next |= queries[i]->containsNext() || queries[i]->nestedDeadlock();                        
             }
         }
-        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, contains_next);
+        reducer.Reduce(placecontext, reductiontype, reconstructTrace, timeout, remove_loops, all_reach, contains_next, reductions);
     }
 
 
