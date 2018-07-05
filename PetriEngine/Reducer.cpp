@@ -252,7 +252,18 @@ namespace PetriEngine {
             
             // A3. We have weight of more than one on input
             // and is empty on output (should not happen).
-            if(trans.pre[0].weight != 1) continue;
+            auto w = trans.pre[0].weight;
+            bool ok = true;
+            for(auto t : parent->_places[pPre].producers)
+            {
+                if((getOutArc(parent->_transitions[t], trans.pre[0].place)->weight % w) != 0)
+                {
+                    ok = false;
+                    break;
+                }
+            }
+            if(!ok)
+                continue;
                         
             // A4. Do inhibitor check, neither T, pPre or pPost can be involved with any inhibitor
             if(parent->_places[pPre].inhib|| trans.inhib) continue;
@@ -260,7 +271,6 @@ namespace PetriEngine {
             // A5. dont mess with query!
             if(placeInQuery[pPre] > 0) continue;
             // check A1, A4 and A5 for post
-            bool ok = true;
             for(auto& pPost : trans.post)
             {
                 if(parent->_places[pPost.place].inhib || pPre == pPost.place || placeInQuery[pPost.place] > 0)
@@ -284,7 +294,7 @@ namespace PetriEngine {
                     std::string prefire = getTransitionName(pp);
                     _postfire[prefire].push_back(tname);
                 }
-                _extraconsume[tname].emplace_back(getPlaceName(pPre), trans.pre[0].weight);
+                _extraconsume[tname].emplace_back(getPlaceName(pPre), w);
                 for(size_t i = 0; i < parent->initMarking()[pPre]; ++i)
                 {
                     _initfire.push_back(tname);
@@ -294,7 +304,7 @@ namespace PetriEngine {
             for(auto& pPost : trans.post)
             {
                 // UA2. move the token for the initial marking, makes things simpler.
-                parent->initialMarking[pPost.place] += (parent->initialMarking[pPre] * pPost.weight);
+                parent->initialMarking[pPost.place] += ((parent->initialMarking[pPre]/w) * pPost.weight);
             }
             parent->initialMarking[pPre] = 0;
 
@@ -314,7 +324,7 @@ namespace PetriEngine {
                 {
                     Arc a;
                     a.place = pPost.place;
-                    a.weight = source.weight * pPost.weight;
+                    a.weight = (source.weight/w) * pPost.weight;
                     assert(a.weight > 0);
                     a.inhib = false;
                     auto dest = std::lower_bound(src.post.begin(), src.post.end(), a);
@@ -327,7 +337,7 @@ namespace PetriEngine {
                     }
                     else
                     {
-                        dest->weight += (source.weight * pPost.weight);
+                        dest->weight += ((source.weight/w) * pPost.weight);
                     }
                     assert(dest->weight > 0);
                 }
@@ -338,7 +348,8 @@ namespace PetriEngine {
         return continueReductions;
     }
 
-    bool Reducer::ReducebyRuleB(uint32_t* placeInQuery) {
+    bool Reducer::ReducebyRuleB(uint32_t* placeInQuery, bool remove_deadlocks, bool remove_consumers) {
+
         // Rule B - find place p that has exactly one transition in pre and exactly one in post and remove the place
         bool continueReductions = false;
         const size_t numberofplaces = parent->numberOfPlaces();
@@ -347,115 +358,203 @@ namespace PetriEngine {
             Place& place = parent->_places[p];
             
             if(place.skip) continue;    // already removed    
-            
             // B5. dont mess up query
-            if(placeInQuery[p] > 0) continue;
+            if(placeInQuery[p] > 0)
+                continue;
                         
             // B2. Only one consumer/producer
             if( place.consumers.size() != 1 || 
-                place.producers.size() != 1) continue; // no orphan removal
+                place.producers.size() < 1)
+                continue; // no orphan removal
             
-            int tOut = place.producers[0];
             int tIn = place.consumers[0];
             
             // B1. producer is not consumer
-            if (tOut == tIn) continue; // cannot remove this kind either
-                        
-            Transition& out = getTransition(tOut);
-            Transition& in = getTransition(tIn);
-            
-            auto inArc = getInArc(p, in);
-            auto outArc = getOutArc(out, p);
-            
-            // B3. Output is a multiple of input and nonzero.
-            if(outArc->weight < inArc->weight) continue;            
-            if((outArc->weight % inArc->weight) != 0) continue;
-            
-            size_t multiplier = outArc->weight / inArc->weight;
-            
-            // B4. Do inhibitor check, neither In, out or place can be involved with any inhibitor
-            if(place.inhib || in.inhib || out.inhib) continue;
-            
-            // B6. also, none of the places in the post-set of consuming transition can be participating in inhibitors.
-            // B7. nor can they appear in the query.
-            {
-                bool post_ok = false;
-                for(const Arc& a : in.post)
-                {
-                    post_ok |= parent->_places[a.place].inhib;
-                    post_ok |= placeInQuery[a.place];
-                    if(post_ok) break;
-                }
-                if(post_ok) continue;
-            }
-
             bool ok = true;
-            // B2. Check that there is no other place than p that gives to tPost, 
-            // tPre can give to other places
-            for (auto& arc : in.pre) {
-                if (arc.weight > 0 && arc.place != p) {
-                    ok = false;
-                    break;
-                }
-            }
-            
-            if (!ok) {
-                continue;
-            }
-
-            // UB2. we need to remember initial marking
-            uint initm = parent->initMarking()[p];
-            initm /= inArc->weight; // integer-devision is floor by default
-
-            if(reconstructTrace)
+            for(auto& tOut : place.producers)
             {
-                // remember reduction for recreation of trace
-                std::string toutname    = getTransitionName(tOut);
-                std::string tinname     = getTransitionName(tIn);
-                std::string pname       = getPlaceName(p);
-                Arc& a = *getInArc(p, in);
-                _extraconsume[tinname].emplace_back(pname, a.weight);
-                for(size_t i = 0; i < multiplier; ++i)
+                if (tOut == tIn) 
                 {
-                    _postfire[toutname].push_back(tinname);
-                }
-                
-                for(size_t i = 0; initm > 0 && i < initm / inArc->weight; ++i )
-                {
-                    _initfire.push_back(tinname);
+                    ok = false;
+                    continue; // cannot remove this kind either
                 }
             }
-            
-            continueReductions = true;
-            _ruleB++;
-             // UB1. Remove place p
-            skipPlace(p);
-            parent->initialMarking[p] = 0;
-            // We need to remember that when tOut fires, tIn fires just after.
-            // this should fix the trace
+            if(!ok)
+                continue;
+            auto prod = place.producers;
+            Transition& in = getTransition(tIn);
+            for(auto tOut : prod)
+            {
+                Transition& out = getTransition(tOut);
 
-            // UB3. move arcs from t' to t
-            for (auto& arc : in.post) { // remove tPost
-                auto _arc = getOutArc(out, arc.place);
-                // UB2. Update initial marking
-                parent->initialMarking[arc.place] += initm*arc.weight;
-                if(_arc != out.post.end())
+
+                if(out.post.size() != 1 && in.pre.size() != 1)
+                    continue; // at least one has to be singular for this to work
+
+                if((!remove_deadlocks || !remove_consumers) && in.pre.size() != 1)
+                    // the buffer can mean deadlocks and other interesting things
+                    // also we can "hide" tokens, so we need to make sure not
+                    // to remove consumers.
+                    continue;
+
+                if(parent->initMarking()[p] > 0 && in.pre.size() != 1)
+                    continue;
+
+                auto inArc = getInArc(p, in);
+                auto outArc = getOutArc(out, p);
+
+                // B3. Output is a multiple of input and nonzero.
+                if(outArc->weight < inArc->weight) 
+                    continue;            
+                if((outArc->weight % inArc->weight) != 0)
+                    continue;            
+
+                size_t multiplier = outArc->weight / inArc->weight;
+
+                // B4. Do inhibitor check, neither In, out or place can be involved with any inhibitor
+                if(place.inhib || in.inhib || out.inhib)
+                    continue;
+
+                // B6. also, none of the places in the post-set of consuming transition can be participating in inhibitors.
+                // B7. nor can they appear in the query.
                 {
-                    _arc->weight += arc.weight*multiplier;
+                    bool post_ok = false;
+                    for(const Arc& a : in.post)
+                    {
+                        post_ok |= parent->_places[a.place].inhib;
+                        post_ok |= placeInQuery[a.place];
+                        if(post_ok) break;
+                    }
+                    if(post_ok) 
+                        continue;
                 }
-                else
                 {
-                    out.post.push_back(arc);
-                    out.post.back().weight *= multiplier;
-                    parent->_places[arc.place].producers.push_back(tOut);
-                    
-                    std::sort(out.post.begin(), out.post.end());
-                    std::sort(parent->_places[arc.place].producers.begin(),
-                              parent->_places[arc.place].producers.end());
+                    bool pre_ok = false;
+                    for(const Arc& a : in.pre)
+                    {
+                        pre_ok |= parent->_places[a.place].inhib;
+                        pre_ok |= placeInQuery[a.place];
+                        if(pre_ok) break;
+                    }
+                    if(pre_ok) 
+                        continue;
                 }
+
+                bool ok = true;            
+                // B2.a Check that there is no other place than p that gives to tPost, 
+                // tPre can give to other places
+                auto& arcs = in.pre.size() < out.post.size() ? in.pre : out.post;
+                for (auto& arc : arcs) {
+                    if (arc.weight > 0 && arc.place != p) {
+                        ok = false;
+                        break;
+                    }
+                }
+
+                if (!ok)
+                    continue;
+
+                // UB2. we need to remember initial marking
+                uint initm = parent->initMarking()[p];
+                initm /= inArc->weight; // integer-devision is floor by default
+
+                if(reconstructTrace)
+                {
+                    // remember reduction for recreation of trace
+                    std::string toutname    = getTransitionName(tOut);
+                    std::string tinname     = getTransitionName(tIn);
+                    std::string pname       = getPlaceName(p);
+                    Arc& a = *getInArc(p, in);
+                    _extraconsume[tinname].emplace_back(pname, a.weight);
+                    for(size_t i = 0; i < multiplier; ++i)
+                    {
+                        _postfire[toutname].push_back(tinname);
+                    }
+
+                    for(size_t i = 0; initm > 0 && i < initm / inArc->weight; ++i )
+                    {
+                        _initfire.push_back(tinname);
+                    }
+                }
+
+                continueReductions = true;
+                _ruleB++;
+                 // UB1. Remove place p
+                parent->initialMarking[p] = 0;
+                // We need to remember that when tOut fires, tIn fires just after.
+                // this should fix the trace
+
+                // UB3. move arcs from t' to t
+                for (auto& arc : in.post) { // remove tPost
+                    auto _arc = getOutArc(out, arc.place);
+                    // UB2. Update initial marking
+                    parent->initialMarking[arc.place] += initm*arc.weight;
+                    if(_arc != out.post.end())
+                    {
+                        _arc->weight += arc.weight*multiplier;
+                    }
+                    else
+                    {
+                        out.post.push_back(arc);
+                        out.post.back().weight *= multiplier;
+                        parent->_places[arc.place].producers.push_back(tOut);
+
+                        std::sort(out.post.begin(), out.post.end());
+                        std::sort(parent->_places[arc.place].producers.begin(),
+                                  parent->_places[arc.place].producers.end());
+                    }
+                }
+                for (auto& arc : in.pre) { // remove tPost
+                    if(arc.place == p)
+                        continue;
+                    auto _arc = getInArc(arc.place, out);
+                    // UB2. Update initial marking
+                    parent->initialMarking[arc.place] += initm*arc.weight;
+                    if(_arc != out.pre.end())
+                    {
+                        _arc->weight += arc.weight*multiplier;
+                    }
+                    else
+                    {
+                        out.pre.push_back(arc);
+                        out.pre.back().weight *= multiplier;
+                        parent->_places[arc.place].consumers.push_back(tOut);
+
+                        std::sort(out.pre.begin(), out.pre.end());
+                        std::sort(parent->_places[arc.place].consumers.begin(),
+                                  parent->_places[arc.place].consumers.end());
+                    }
+                }
+
+                bool fnd = false;
+                for(auto it = out.post.begin(); it != out.post.end(); ++it)
+                {
+                    if(it->place == p)
+                    {
+                        out.post.erase(it);
+                        fnd = true;
+                        break;
+                    }
+                }
+                assert(fnd);
+                fnd = false;
+                for(auto it = place.producers.begin(); it != place.producers.end(); ++it)
+                {
+                    if(*it == tOut)
+                    {
+                        place.producers.erase(it);
+                        fnd = true;
+                        break;
+                    }
+                }
+                assert(fnd);
             }
             // UB1. remove transition
-            skipTransition(tIn);
+            if(place.producers.size() == 0)
+            {
+                skipPlace(p);
+                skipTransition(tIn);
+            }
         } // end of Rule B main for-loop
         assert(consistent());
         return continueReductions;
@@ -1066,39 +1165,69 @@ namespace PetriEngine {
     
     bool Reducer::ReducebyRuleH(uint32_t* placeInQuery)
     {
-        bool continueReductions = false;
-        for(uint32_t t1 = 0; t1 < parent->numberOfTransitions(); ++t1)
-        {
-            auto& trans1 = parent->_transitions[t1];
-            if(trans1.skip) continue;
-            if(trans1.inhib) continue;
-            if(trans1.pre.size() != 1) continue;
-            if(trans1.post.size() != 1) continue;
-            auto p1 = trans1.pre[0].place;
-            auto p2 = trans1.post[0].place;
-            if(trans1.pre[0].weight != 1) continue;
-            if(trans1.post[0].weight != 1) continue;
-            if(p1 == p2) continue;
-            if(placeInQuery[p1] > 0) continue;
-            if(placeInQuery[p2] > 0) continue;
-            if(parent->_places[p1].inhib) continue;
-            if(parent->_places[p2].inhib) continue;
-            
-            for(uint32_t t2 = t1 + 1; t2 < parent->numberOfTransitions(); ++t2)
+        auto transok = [this](uint32_t t) -> uint32_t {
+            auto& trans = parent->_transitions[t];
+            if(_tflags[t] != 0) 
+                return _tflags[t];
+            _tflags[t] = 1;
+            if(trans.inhib || 
+               trans.pre.size() != 1 ||
+               trans.post.size() != 1) 
             {
-                auto& trans2 = parent->_transitions[t2];
-                if(trans2.skip) continue;
-                if(trans2.inhib) continue;
-                if(trans2.pre.size() != 1) continue;
-                if(trans2.post.size() != 1) continue;
-                if(trans2.pre[0].weight != 1) continue;
-                if(trans2.post[0].weight != 1) continue;
-                if(trans2.pre[0].place != p2) continue;                
-                if(trans2.post[0].place != p1) continue;                
+                return 2;
+            }
+            
+            auto p1 = trans.pre[0].place;
+            auto p2 = trans.post[0].place;
+            
+            // we actually do not need weights to be 1 here.
+            // there is a special case when the places are always "inputting"
+            // and "outputting" with a GCD that is equal to the weight of the
+            // specific transition.
+            // Ie, the place always have a number of tokens (disregarding
+            // initial tokens) that is dividable with the transition weight
+            
+            if(trans.pre[0].weight != 1 ||
+               trans.post[0].weight != 1 ||
+               p1 == p2 ||
+               parent->_places[p1].inhib ||
+               parent->_places[p2].inhib)
+            {
+                return 2;
+            }
+            return 1;
+        };
+        
+        auto removeLoop = [this,placeInQuery](std::vector<uint32_t>& loop) -> bool {
+            size_t i = 0;
+            for(; i < loop.size(); ++i)
+                if(loop[i] == loop.back())
+                    break;
+            
+            assert(_tflags[loop.back()]== 1);
+            if(i == loop.size() - 1)
+                return false;
 
-               ++_ruleH;
-                skipTransition(t2);
-
+            auto p1 = parent->_transitions[loop[i]].pre[0].place;
+            bool removed = false;
+            
+            for(size_t j = i + 1; j < loop.size() - 1; ++j)
+            {
+                if(hasTimedout()) 
+                    return removed;
+                auto p2 = parent->_transitions[loop[j]].pre[0].place;
+                if(placeInQuery[p2] > 0 || placeInQuery[p1] > 0)
+                {
+                    p1 = p2;
+                    continue;
+                }
+                if(p1 == p2)
+                {
+                    continue;
+                }
+                removed = true;
+                ++_ruleH;
+                skipTransition(loop[j-1]);
                 auto& place1 = parent->_places[p1];
                 auto& place2 = parent->_places[p2];
 
@@ -1149,11 +1278,84 @@ namespace PetriEngine {
                         consistent();
                     }
                 }
-                
                 parent->initialMarking[p1] += parent->initialMarking[p2];
-                
                 skipPlace(p2);
-                continueReductions = true;
+                assert(placeInQuery[p2] == 0);
+            }
+            return removed;
+        };
+        
+        bool continueReductions = false;
+        for(uint32_t t = 0; t < parent->numberOfTransitions(); ++t)
+        {
+            if(hasTimedout())
+                return continueReductions;
+            std::fill(_tflags.begin(), _tflags.end(), 0);
+            std::vector<uint32_t> stack;
+            {
+                if(_tflags[t] != 0) continue;
+                auto& trans = parent->_transitions[t];
+                if(trans.skip) continue;
+                _tflags[t] = transok(t);
+                if(_tflags[t] != 1) continue;
+                stack.push_back(t);
+            }
+            bool outer = true;
+            while(stack.size() > 0 && outer)
+            {
+                if(hasTimedout())
+                    return continueReductions;
+                auto it = stack.back();
+                auto post = parent->_transitions[it].post[0].place;
+                bool found = false;
+                for(auto& nt : parent->_places[post].consumers)
+                {
+                    if(hasTimedout())
+                        return continueReductions;
+                    auto& nexttrans = parent->_transitions[nt];
+                    if(nt == it || nexttrans.skip) 
+                        continue; // handled elsewhere
+                    if(_tflags[nt] == 1 && stack.size() > 1) 
+                    {
+                        stack.push_back(nt);
+                        bool found = removeLoop(stack);
+                        continueReductions |= found;
+    
+                        if(found)
+                        {
+                            outer = false;
+                            break;
+                        }
+                        else
+                        {
+                            stack.pop_back();
+                        }
+                    }
+                    else if(_tflags[nt] == 0)
+                    {
+                        _tflags[nt] = transok(nt);
+                        if(_tflags[nt] == 2)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            assert(_tflags[nt] == 1);
+                            stack.push_back(nt);
+                            found = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                if(!found && outer)
+                {
+                    _tflags[it] = 2;
+                    stack.pop_back();
+                }
             }
         }   
         return continueReductions;
@@ -1164,6 +1366,7 @@ namespace PetriEngine {
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
         this->reconstructTrace = reconstructTrace;
+        _tflags.resize(parent->_transitions.size(), 0);
         if (enablereduction == 1) { // in the aggressive reduction all four rules are used as long as they remove something
             bool changed = false;
             do
@@ -1173,7 +1376,7 @@ namespace PetriEngine {
                 do{
                     changed = false;
                     if(!next_safe) {
-                        changed |= ReducebyRuleB(context.getQueryPlaceCount());
+                        changed |= ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers);
                         changed |= ReducebyRuleA(context.getQueryPlaceCount());
                     }
                     changed |= ReducebyRuleE(context.getQueryPlaceCount());
