@@ -1367,52 +1367,19 @@ namespace PetriEngine {
         assert(consistent());
         this->reconstructTrace = reconstructTrace;
         _tflags.resize(parent->_transitions.size(), 0);
-        if (enablereduction == 1) { // in the aggressive reduction all four rules are used as long as they remove something
-            bool changed = false;
-            do
-            {
-                if(remove_loops && !next_safe)
-                    ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers);
-                do{
-                    changed = false;
-                    if(!next_safe) {
-                        changed |= ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers);
-                        changed |= ReducebyRuleA(context.getQueryPlaceCount());
-                    }
-                    changed |= ReducebyRuleE(context.getQueryPlaceCount());
-                    if(!next_safe) 
-                    {
-                        changed |= ReducebyRuleF(context.getQueryPlaceCount());
-                        changed |= ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers);
-                        if(!remove_loops) 
-                            changed |= ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers);
-                    }
-                } while(changed && !hasTimedout());
-                // RuleC and RuleD are expensive, so wait with those till nothing else changes
-                changed |= ReducebyRuleC(context.getQueryPlaceCount());
-                if(!next_safe) 
-                {
-                    changed |= ReducebyRuleD(context.getQueryPlaceCount());
-
-                    if(!changed)
-                        // Only try RuleH last. It can reduce applicability of other rules.
-                        changed |= ReducebyRuleH(context.getQueryPlaceCount());
-                }
-            } while(!hasTimedout() && changed);
-
-        } else if (enablereduction == 2) { // for k-boundedness checking only rules A, D and H are applicable
+        if (enablereduction == 2) { // for k-boundedness checking only rules A, D and H are applicable
             bool changed = true;
             while (changed && !hasTimedout()) {
                 changed = false;
                 if(!next_safe)
                 {
-                    changed |= ReducebyRuleA(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleD(context.getQueryPlaceCount());
-                    changed |= ReducebyRuleH(context.getQueryPlaceCount());
+                    while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
+                    while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                    while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
                 }
             }
         }
-        else if(enablereduction == 3)
+        else
         {
             for(int i = reduction.size() - 1; i > 0; --i)
             {
@@ -1443,7 +1410,7 @@ namespace PetriEngine {
                             while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
                             break;
                         case 1:
-                            while(ReducebyRuleB(context.getQueryPlaceCount())) changed = true;
+                            while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                             break;
                         case 2:
                             while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;

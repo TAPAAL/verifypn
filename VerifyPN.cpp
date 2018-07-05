@@ -197,6 +197,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
             if(options.enablereduction == 3)
             {
+                options.reductions.clear();
                 std::vector<std::string> q = explode(argv[++i]);
                 for(auto& qn : q)
                 {
