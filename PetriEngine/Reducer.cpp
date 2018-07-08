@@ -153,6 +153,7 @@ namespace PetriEngine {
         trans.pre.clear();
         trans.skip = true;
         assert(consistent());
+        _skipped_trans.push_back(t);
     }
     
     void Reducer::skipPlace(uint32_t place)
@@ -539,28 +540,22 @@ namespace PetriEngine {
                     }
                 }
 
-                bool fnd = false;
                 for(auto it = out.post.begin(); it != out.post.end(); ++it)
                 {
                     if(it->place == p)
                     {
                         out.post.erase(it);
-                        fnd = true;
                         break;
                     }
                 }
-                assert(fnd);
-                fnd = false;
                 for(auto it = place.producers.begin(); it != place.producers.end(); ++it)
                 {
                     if(*it == tOut)
                     {
                         place.producers.erase(it);
-                        fnd = true;
                         break;
                     }
                 }
-                assert(fnd);
             }
             // UB1. remove transition
             if(place.producers.size() == 0)
@@ -657,8 +652,8 @@ namespace PetriEngine {
                     j = 0;
                     for(size_t i = 0; i < place1.producers.size(); ++i)
                     {
-                        while(place2.producers[j] < place1.producers[i] && j < place2.producers.size()) ++j;
-                        if(place1.producers[i] != place2.producers[j])
+                        while(j < place2.producers.size() && place2.producers[j] < place1.producers[i]) ++j;
+                        if(j == place2.producers.size() || place1.producers[i] != place2.producers[j])
                         {
                             ok = 2;
                             break;
@@ -1303,6 +1298,7 @@ namespace PetriEngine {
         {
             if(hasTimedout())
                 return continueReductions;
+            _tflags.resize(parent->_transitions.size(), 0);
             std::fill(_tflags.begin(), _tflags.end(), 0);
             std::vector<uint32_t> stack;
             {
@@ -1377,9 +1373,16 @@ namespace PetriEngine {
     bool Reducer::ReducebyRuleJ(uint32_t* placeInQuery)
     {
         bool continueReductions = false;
-        const size_t numberofplaces = parent->numberOfPlaces();
-        for(uint32_t p = 0; p < numberofplaces; ++p)
+        for(uint32_t t = 0; t < parent->numberOfTransitions(); ++t)
         {
+            if(hasTimedout())
+                return continueReductions;
+
+            if(parent->_transitions[t].skip ||
+               parent->_transitions[t].inhib ||
+               parent->_transitions[t].pre.size() != 1)
+                continue;
+            uint32_t p = parent->_transitions[t].pre[0].place;
             if(placeInQuery[p] > 0)
             {
                 continue; // can be relaxed
@@ -1391,12 +1394,12 @@ namespace PetriEngine {
             const Place& place = parent->_places[p];
             if(place.skip) continue;
             if(place.inhib) continue;
-            if(place.consumers.size() != 2) continue;
-            if(place.producers.size() != 2) continue;
+            if(place.consumers.size() < 2) continue;
+            if(place.producers.size() < 2) continue;
             
             // check that prod and cons are not overlapping
-            constexpr auto presize = 2; // can be relaxed >= 2
-            constexpr auto postsize = 2; // can be relaxed >= 2
+            const auto presize = place.producers.size(); // can be relaxed >= 2
+            const auto postsize = place.consumers.size(); // can be relaxed >= 2
             bool ok = true;
             for(size_t i = 0; i < postsize; ++i)
             {
@@ -1433,7 +1436,7 @@ namespace PetriEngine {
             }
             if(!ok) continue;
             // check that pre of producing do not mess with query or inhib
-            for(size_t i = 0; i < presize; ++i)
+            for(size_t i = 0; i < postsize; ++i)
             {
                 Transition& trans = parent->_transitions[place.consumers[i]];
                 for(const auto& arc : trans.post)
@@ -1457,7 +1460,7 @@ namespace PetriEngine {
             skipPlace(p);
             std::vector<std::vector<Arc>> posts;
             std::vector<Transition> pres;
-            std::vector<size_t> empty;
+            
             for(size_t i = 0; i < postsize; ++i)
                 posts.push_back(parent->_transitions[pp.consumers[i]].post);
             
@@ -1466,45 +1469,41 @@ namespace PetriEngine {
             
             // remove old transitions, we will create new ones
             for(size_t i = 0; i < postsize; ++i)
-            {
-                empty.push_back(pp.consumers[i]);
                 skipTransition(pp.consumers[i]);
-            }
             
             for(size_t i = 0; i < presize; ++i)
-            {
-                empty.push_back(pp.producers[i]);
                 skipTransition(pp.producers[i]);      
-            }
-            // compute all permutations
 
+            // compute all permutations
             for(auto& trans : pres)
             {
                 for(size_t pid = 0; pid < posts.size(); ++pid)
                 {
                     auto id = parent->_transitions.size();
-                    if(!empty.empty())
-                        id = empty.back();
+                    if(!_skipped_trans.empty())
+                        id = _skipped_trans.back();
                     else
+                    {
+                        continue;
                         parent->_transitions.emplace_back();
+                    }
                     parent->_transitions[id] = trans;
                     auto& target = parent->_transitions[id];
-                    assert(!empty.empty());
                     for(auto& arc : posts[pid])
                         target.addPostArc(arc);
 
                     // add to places
-                    if(empty.empty())
+                    if(_skipped_trans.empty())
                         parent->_transitionnames[newTransName()] = id;
                     
                     for(auto& arc : target.pre)
                         parent->_places[arc.place].addConsumer(id);
                     for(auto& arc : target.post)
                         parent->_places[arc.place].addProducer(id); 
-                    if(!empty.empty())
+                    if(!_skipped_trans.empty())
                     {
                         --_removedTransitions; // recycling
-                        empty.pop_back();
+                        _skipped_trans.pop_back();
                     }
                     parent->_transitions[id].skip = false;
                     consistent();
@@ -1520,7 +1519,6 @@ namespace PetriEngine {
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
         this->reconstructTrace = reconstructTrace;
-        _tflags.resize(parent->_transitions.size(), 0);
         if (enablereduction == 2) { // for k-boundedness checking only rules A, D and H are applicable
             bool changed = true;
             while (changed && !hasTimedout()) {
@@ -1535,9 +1533,10 @@ namespace PetriEngine {
         }
         else
         {
+
+            const char* rnames = "ABCDEFGHIJ";
             for(int i = reduction.size() - 1; i > 0; --i)
             {
-                const char* rnames = "ABCDEFGHIJ";
                 if(next_safe)
                 {
                     if(i != 2 && i != 4)
@@ -1558,6 +1557,11 @@ namespace PetriEngine {
                 changed = false;
                 for(auto r : reduction)
                 {
+#ifndef NDEBUG
+                    auto c = std::chrono::high_resolution_clock::now();
+                    auto op = _removedPlaces;
+                    auto ot = _removedTransitions;
+#endif
                     switch(r)
                     {
                         case 0:
@@ -1591,6 +1595,12 @@ namespace PetriEngine {
                             while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
                             break;
                     }
+#ifndef NDEBUG
+                    auto end = std::chrono::high_resolution_clock::now();
+                    auto diff = std::chrono::duration_cast<std::chrono::seconds>(end - c);
+                    std::cout << "SPEND " << diff.count()  << " ON " << rnames[r] << std::endl;
+                    std::cout << "REM " << ((int)_removedPlaces-(int)op) << " " << ((int)_removedTransitions-(int)ot) << std::endl;
+#endif
                     if(hasTimedout())
                         break;
                 }
