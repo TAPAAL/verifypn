@@ -1409,8 +1409,8 @@ namespace PetriEngine {
             const Place& place = parent->_places[p];
             if(place.skip) continue;
             if(place.inhib) continue;
-            if(place.consumers.size() < 2) continue;
-            if(place.producers.size() < 2) continue;
+            if(place.consumers.size() != 2) continue;
+            if(place.producers.size() != 2) continue;
             
             // check that prod and cons are not overlapping
             const auto presize = place.producers.size(); // can be relaxed >= 2
