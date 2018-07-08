@@ -70,6 +70,19 @@ namespace PetriEngine {
         return "";
     }
     
+    std::string Reducer::newTransName()
+    {
+        auto prefix = "CT";
+        auto tmp = prefix + std::to_string(_tnameid);
+        while(parent->_transitionnames.count(tmp) >= 1)
+        {
+            ++_tnameid;
+            tmp = prefix + std::to_string(_tnameid);
+        }
+        ++_tnameid;
+        return tmp;
+    }
+    
     std::string Reducer::getPlaceName(uint32_t place)
     {
         for(auto t : parent->_placenames)
@@ -1361,6 +1374,148 @@ namespace PetriEngine {
         return continueReductions;
     }
     
+    bool Reducer::ReducebyRuleJ(uint32_t* placeInQuery)
+    {
+        bool continueReductions = false;
+        const size_t numberofplaces = parent->numberOfPlaces();
+        for(uint32_t p = 0; p < numberofplaces; ++p)
+        {
+            if(placeInQuery[p] > 0)
+            {
+                continue; // can be relaxed
+            }
+            if(parent->initialMarking[p] > 0) 
+            {
+                continue; // can be relaxed
+            }
+            Place& place = parent->_places[p];
+            if(place.skip) continue;
+            if(place.inhib) continue;
+            if(place.consumers.size() != 2) continue;
+            if(place.producers.size() != 2) continue;
+            
+            // check that prod and cons are not overlapping
+            constexpr auto presize = 2; // can be relaxed >= 2
+            constexpr auto postsize = 2; // can be relaxed >= 2
+            bool ok = true;
+            for(size_t i = 0; i < postsize; ++i)
+            {
+                for(size_t j = 0; j < presize; ++j)
+                {
+                    ok &= place.consumers[i] != place.producers[j];                        
+                }
+            }
+            if(!ok) continue;
+            // check that post of consumer is not messing with query or inhib
+            for(size_t i = 0; i < postsize; ++i)
+            {
+                Transition& trans = parent->_transitions[place.consumers[i]];
+                if(trans.pre.size() == 1) // can be relaxed
+                {
+                    // check that weights match
+                    // can be relaxed
+                    ok &= trans.pre[0].weight == 1;
+                    ok &= !trans.pre[0].inhib;
+                }
+                else 
+                {
+                    ok = false;
+                    break;
+                }
+                for(auto& pp : trans.post)
+                {
+                    ok &= !parent->_places[pp.place].inhib;
+                    ok &= placeInQuery[pp.place] == 0;
+                    ok &= pp.weight == 1; // can be relaxed
+                }
+                if(!ok) 
+                    break;
+            }
+            if(!ok) continue;
+            // check that pre of producing do not mess with query or inhib
+            for(size_t i = 0; i < presize; ++i)
+            {
+                Transition& trans = parent->_transitions[place.consumers[i]];
+                for(const auto& arc : trans.post)
+                {
+                    ok &= placeInQuery[arc.place] == 0;
+                    ok &= !parent->_places[arc.place].inhib;
+                }
+            }
+            if(!ok) continue;
+            ++_ruleJ;
+            continueReductions = true;
+            // otherwise we can skip the place by merging up the two transitions
+            // constructing 4 new transitions, one for each combination.  
+            // In the binary case, we want to achieve the following four transitions
+            // post[n] = pre[n] + post[n]
+            // pre[0] = pre[0] + post[1]
+            // pre[1] = pre[1] + post[0]
+            
+            // start by copying out the post of each of the posts
+            Place pp = place;
+            skipPlace(p);
+            std::vector<std::vector<Arc>> posts;
+            std::vector<Transition> pres;
+            std::vector<size_t> empty;
+            for(size_t i = 0; i < postsize; ++i)
+                posts.push_back(parent->_transitions[pp.consumers[i]].post);
+            
+            for(size_t i = 0; i < presize; ++i)
+                pres.push_back(parent->_transitions[pp.producers[i]]);
+            
+            // remove old transitions, we will create new ones
+            for(size_t i = 0; i < postsize; ++i)
+            {
+                empty.push_back(pp.consumers[i]);
+                skipTransition(pp.consumers[i]);
+            }
+            
+            for(size_t i = 0; i < presize; ++i)
+            {
+                empty.push_back(pp.producers[i]);
+                skipTransition(pp.producers[i]);      
+            }
+            // compute all permutations
+
+            for(auto& trans : pres)
+            {
+                auto id = parent->_transitions.size();
+                if(!empty.empty())
+                    id = empty.back();
+                else
+                    parent->_transitions.emplace_back();
+                parent->_transitions[id] = trans;
+                for(size_t pid = 0; pid < posts.size(); ++pid)
+                {
+                    assert(!empty.empty());
+                    auto id = empty.back();
+                    auto& target = parent->_transitions[id];
+                    for(auto& arc : posts[pid])
+                        target.addPostArc(arc);
+
+                    // add to places
+                    if(empty.empty())
+                        parent->_transitionnames[newTransName()] = id;
+                    
+                    for(auto& arc : target.pre)
+                        parent->_places[arc.place].addConsumer(id);
+                    for(auto& arc : target.post)
+                        parent->_places[arc.place].addProducer(id); 
+                    if(!empty.empty())
+                    {
+                        --_removedTransitions; // recycling
+                        empty.pop_back();
+                    }
+                    parent->_transitions[id].skip = false;
+                    consistent();
+                }
+            }
+            consistent();
+        }
+        return continueReductions;
+    }
+        
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reduction) {
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
@@ -1383,7 +1538,7 @@ namespace PetriEngine {
         {
             for(int i = reduction.size() - 1; i > 0; --i)
             {
-                const char* rnames = "ABCDEFGHI";
+                const char* rnames = "ABCDEFGHIJ";
                 if(next_safe)
                 {
                     if(i != 2 && i != 4)
@@ -1433,6 +1588,9 @@ namespace PetriEngine {
                         case 8:
                             while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                             break;                            
+                        case 9:
+                            while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
+                            break;
                     }
                     if(hasTimedout())
                         break;
