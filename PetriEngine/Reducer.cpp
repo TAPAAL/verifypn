@@ -1380,6 +1380,8 @@ namespace PetriEngine {
         const size_t numberofplaces = parent->numberOfPlaces();
         for(uint32_t p = 0; p < numberofplaces; ++p)
         {
+            consistent();
+            if(_ruleJ > 0) return false;
             if(placeInQuery[p] > 0)
             {
                 continue; // can be relaxed
@@ -1388,7 +1390,7 @@ namespace PetriEngine {
             {
                 continue; // can be relaxed
             }
-            Place& place = parent->_places[p];
+            const Place& place = parent->_places[p];
             if(place.skip) continue;
             if(place.inhib) continue;
             if(place.consumers.size() != 2) continue;
@@ -1480,17 +1482,16 @@ namespace PetriEngine {
 
             for(auto& trans : pres)
             {
-                auto id = parent->_transitions.size();
-                if(!empty.empty())
-                    id = empty.back();
-                else
-                    parent->_transitions.emplace_back();
-                parent->_transitions[id] = trans;
                 for(size_t pid = 0; pid < posts.size(); ++pid)
                 {
-                    assert(!empty.empty());
-                    auto id = empty.back();
+                    auto id = parent->_transitions.size();
+                    if(!empty.empty())
+                        id = empty.back();
+                    else
+                        parent->_transitions.emplace_back();
+                    parent->_transitions[id] = trans;
                     auto& target = parent->_transitions[id];
+                    assert(!empty.empty());
                     for(auto& arc : posts[pid])
                         target.addPostArc(arc);
 
