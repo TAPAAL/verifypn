@@ -1380,8 +1380,6 @@ namespace PetriEngine {
         const size_t numberofplaces = parent->numberOfPlaces();
         for(uint32_t p = 0; p < numberofplaces; ++p)
         {
-            consistent();
-            if(_ruleJ > 0) return false;
             if(placeInQuery[p] > 0)
             {
                 continue; // can be relaxed
