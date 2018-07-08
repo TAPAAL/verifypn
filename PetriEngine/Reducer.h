@@ -161,6 +161,7 @@ namespace PetriEngine {
         std::unordered_map<std::string, std::vector<ExpandedArc>> _extraconsume;
         std::vector<uint8_t> _tflags;
         size_t _tnameid = 0;
+        std::vector<uint32_t> _skipped_trans;
     };
 
     
