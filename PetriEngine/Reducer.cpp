@@ -572,18 +572,24 @@ namespace PetriEngine {
         // Rule C - Places with same input and output-transitions which a modulo each other
         bool continueReductions = false;
         
-        const size_t numberofplaces = parent->numberOfPlaces();
+        _pflags.resize(parent->_places.size(), 0);
+        std::fill(_pflags.begin(), _pflags.end(), 0);
         
-        for(uint32_t pouter = 0; pouter < numberofplaces; ++pouter)
+        for(uint32_t touter = 0; touter < parent->numberOfTransitions(); ++touter)
+        for(size_t outer = 0; outer < parent->_transitions[touter].post.size(); ++outer)
         {                        
+            auto pouter = parent->_transitions[touter].post[outer].place;
+            if(_pflags[pouter] > 0) continue;
+            _pflags[pouter] = 1;
             if(hasTimedout()) return false;
             if(parent->_places[pouter].skip) continue;
             
             // C4. No inhib
             if(parent->_places[pouter].inhib) continue;
             
-            for (uint32_t pinner = pouter + 1; pinner < numberofplaces; ++pinner) 
+            for (size_t inner = outer + 1; inner < parent->_transitions[touter].post.size(); ++inner) 
             {
+                auto pinner = parent->_transitions[touter].post[inner].place;
                 if(parent->_places[pinner].skip) continue;
 
                 // C4. No inhib
@@ -691,6 +697,7 @@ namespace PetriEngine {
                     _ruleC++;
                     // UC1. Remove p2
                     skipPlace(p2);
+                    _pflags[pouter] = 0;
                     break;
                 }
             }
@@ -703,16 +710,23 @@ namespace PetriEngine {
         // Rule D - two transitions with the same pre and post and same inhibitor arcs 
         // This does not alter the trace.
         bool continueReductions = false;
-        const size_t ntrans = parent->numberOfTransitions();
-        for (uint32_t touter = 0; touter < ntrans; ++touter) {
+        _tflags.resize(parent->_transitions.size(), 0);
+        std::fill(_tflags.begin(), _tflags.end(), 0);
+        for(auto& op : parent->_places)
+        for(size_t outer = 0; outer < op.consumers.size(); ++outer)
+        {            
+            auto touter = op.consumers[outer];
             if(hasTimedout()) return false;
+            if(_tflags[touter] != 0) continue;
+            _tflags[touter] = 1;
             Transition& tout = getTransition(touter);
             if (tout.skip) continue;
 
             // D2. No inhibitors
             if (tout.inhib) continue;
 
-            for (uint32_t tinner = touter + 1; tinner < ntrans; ++tinner) {
+            for(size_t inner = outer + 1; inner < op.consumers.size(); ++inner) {
+                auto tinner = op.consumers[inner];
                 Transition& tin = getTransition(tinner);
                 if (tin.skip || tout.skip) continue;
 
@@ -794,6 +808,7 @@ namespace PetriEngine {
                     continueReductions = true;
                     _ruleD++;
                     skipTransition(t2);
+                    _tflags[touter] = 0;
                     break; // break the swap loop
                 }
             }
