@@ -381,7 +381,7 @@ namespace PetriEngine {
                 place.producers.size() < 1)
                 continue; // no orphan removal
             
-            int tIn = place.consumers[0];
+            auto tIn = place.consumers[0];
             
             // B1. producer is not consumer
             bool ok = true;
@@ -718,7 +718,11 @@ namespace PetriEngine {
             auto& trans = parent->_transitions[t];
             if(!trans.skip && trans.pre.size() == 0 && trans.post.size() == 0)
             {
-                if(has_empty_trans) skipTransition(t);
+                if(has_empty_trans)
+                {
+                    ++_ruleD;
+                    skipTransition(t);
+                }
                 has_empty_trans = true;
             }
             
@@ -1587,7 +1591,7 @@ namespace PetriEngine {
                 if(!next_safe && !changed)
                 {
                     // Only try RuleH last. It can reduce applicability of other rules.
-                    changed |= ReducebyRuleH(context.getQueryPlaceCount());
+                    while(ReducebyRuleH(context.getQueryPlaceCount())) changed = true;
                 }
             } while(!hasTimedout() && changed);
 
