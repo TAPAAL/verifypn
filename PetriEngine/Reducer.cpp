@@ -1397,7 +1397,7 @@ namespace PetriEngine {
                parent->_transitions[t].inhib ||
                parent->_transitions[t].pre.size() != 1)
                 continue;
-            uint32_t p = parent->_transitions[t].pre[0].place;
+            auto p = parent->_transitions[t].pre[0].place;
             if(placeInQuery[p] > 0)
             {
                 continue; // can be relaxed
@@ -1409,15 +1409,15 @@ namespace PetriEngine {
             const Place& place = parent->_places[p];
             if(place.skip) continue;
             if(place.inhib) continue;
-            if(place.consumers.size() != 2) continue;
-            if(place.producers.size() != 2) continue;
+            if(place.consumers.size() < 2) continue;
+            if(place.producers.size() < 2) continue;
             
             // check that prod and cons are not overlapping
             const auto presize = place.producers.size(); // can be relaxed >= 2
             const auto postsize = place.consumers.size(); // can be relaxed >= 2
             bool ok = true;
             for(size_t i = 0; i < postsize; ++i)
-            {
+            {   // this can be done smarter than a quadratic loop!
                 for(size_t j = 0; j < presize; ++j)
                 {
                     ok &= place.consumers[i] != place.producers[j];                        
@@ -1425,9 +1425,9 @@ namespace PetriEngine {
             }
             if(!ok) continue;
             // check that post of consumer is not messing with query or inhib
-            for(size_t i = 0; i < postsize; ++i)
+            for(auto t : place.consumers)
             {
-                Transition& trans = parent->_transitions[place.consumers[i]];
+                Transition& trans = parent->_transitions[t];
                 if(trans.pre.size() == 1) // can be relaxed
                 {
                     // check that weights match
@@ -1451,9 +1451,9 @@ namespace PetriEngine {
             }
             if(!ok) continue;
             // check that pre of producing do not mess with query or inhib
-            for(size_t i = 0; i < postsize; ++i)
+            for(auto& t : place.producers)
             {
-                Transition& trans = parent->_transitions[place.consumers[i]];
+                Transition& trans = parent->_transitions[t];
                 for(const auto& arc : trans.post)
                 {
                     ok &= placeInQuery[arc.place] == 0;
@@ -1476,23 +1476,23 @@ namespace PetriEngine {
             std::vector<std::vector<Arc>> posts;
             std::vector<Transition> pres;
             
-            for(size_t i = 0; i < postsize; ++i)
-                posts.push_back(parent->_transitions[pp.consumers[i]].post);
+            for(auto t : pp.consumers)
+                posts.push_back(parent->_transitions[t].post);
             
-            for(size_t i = 0; i < presize; ++i)
-                pres.push_back(parent->_transitions[pp.producers[i]]);
+            for(auto t : pp.producers)
+                pres.push_back(parent->_transitions[t]);
             
             // remove old transitions, we will create new ones
-            for(size_t i = 0; i < postsize; ++i)
-                skipTransition(pp.consumers[i]);
+            for(auto t : pp.consumers)
+                skipTransition(t);
             
-            for(size_t i = 0; i < presize; ++i)
-                skipTransition(pp.producers[i]);      
+            for(auto t : pp.producers)
+                skipTransition(t);      
 
             // compute all permutations
             for(auto& trans : pres)
             {
-                for(size_t pid = 0; pid < posts.size(); ++pid)
+                for(auto& postset : posts)
                 {
                     auto id = parent->_transitions.size();
                     if(!_skipped_trans.empty())
@@ -1504,7 +1504,7 @@ namespace PetriEngine {
                     }
                     parent->_transitions[id] = trans;
                     auto& target = parent->_transitions[id];
-                    for(auto& arc : posts[pid])
+                    for(auto& arc : postset)
                         target.addPostArc(arc);
 
                     // add to places
@@ -1521,6 +1521,7 @@ namespace PetriEngine {
                         _skipped_trans.pop_back();
                     }
                     parent->_transitions[id].skip = false;
+                    parent->_transitions[id].inhib = false;
                     consistent();
                 }
             }
