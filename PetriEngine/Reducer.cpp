@@ -1547,9 +1547,42 @@ namespace PetriEngine {
                 }
             }
         }
+        else if (enablereduction == 1) { // in the aggressive reduction all four rules are used as long as they remove something
+            bool changed = false;
+            do
+            {
+                if(remove_loops && !next_safe)
+                    while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                do{
+                    do { // start by rules that do not move tokens
+                        changed = false;
+                        while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
+                        while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
+                        if(!next_safe) 
+                        {
+                            while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
+                            while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                            if(!remove_loops) 
+                                while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                            while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                        }
+                    } while(changed && !hasTimedout());
+                    if(!next_safe) 
+                    { // then apply tokens moving rules
+                        while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
+                        while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
+                    }    
+                } while(changed && !hasTimedout());
+                if(!next_safe && !changed)
+                {
+                    // Only try RuleH last. It can reduce applicability of other rules.
+                    changed |= ReducebyRuleH(context.getQueryPlaceCount());
+                }
+            } while(!hasTimedout() && changed);
+
+        }
         else
         {
-
             const char* rnames = "ABCDEFGHIJ";
             for(int i = reduction.size() - 1; i > 0; --i)
             {
