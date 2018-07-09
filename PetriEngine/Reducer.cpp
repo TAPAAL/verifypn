@@ -712,6 +712,17 @@ namespace PetriEngine {
         bool continueReductions = false;
         _tflags.resize(parent->_transitions.size(), 0);
         std::fill(_tflags.begin(), _tflags.end(), 0);
+        bool has_empty_trans = false;
+        for(size_t t = 0; t < parent->_transitions.size(); ++t)
+        {
+            auto& trans = parent->_transitions[t];
+            if(!trans.skip && trans.pre.size() == 0 && trans.post.size() == 0)
+            {
+                if(has_empty_trans) skipTransition(t);
+                has_empty_trans = true;
+            }
+            
+        }
         for(auto& op : parent->_places)
         for(size_t outer = 0; outer < op.consumers.size(); ++outer)
         {            
