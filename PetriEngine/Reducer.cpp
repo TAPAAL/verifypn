@@ -1216,15 +1216,15 @@ namespace PetriEngine {
                 const char* rnames = "ABCDEFGHI";
                 if(next_safe)
                 {
-                    if(i != 2 && i != 4)
+                    if(reduction[i] != 2 && reduction[i] != 4)
                     {
-                        std::cerr << "Skipping Rule" << rnames[i] << " due to NEXT operator in proposition" << std::endl;
+                        std::cerr << "Skipping Rule" << rnames[reduction[i]] << " due to NEXT operator in proposition" << std::endl;
                         reduction.erase(reduction.begin() + i);
                     }
                 }
-                if(!remove_loops && i == 5)
+                if(!remove_loops && reduction[i] == 5)
                 {
-                    std::cerr << "Skipping Rule" << rnames[i] << " as proposition is loop sensitive" << std::endl;
+                    std::cerr << "Skipping Rule" << rnames[reduction[i]] << " as proposition is loop sensitive" << std::endl;
                     reduction.erase(reduction.begin() + i);
                 }
             }
