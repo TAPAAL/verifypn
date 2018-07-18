@@ -1220,12 +1220,14 @@ namespace PetriEngine {
                     {
                         std::cerr << "Skipping Rule" << rnames[reduction[i]] << " due to NEXT operator in proposition" << std::endl;
                         reduction.erase(reduction.begin() + i);
+			continue;
                     }
                 }
                 if(!remove_loops && reduction[i] == 5)
                 {
                     std::cerr << "Skipping Rule" << rnames[reduction[i]] << " as proposition is loop sensitive" << std::endl;
                     reduction.erase(reduction.begin() + i);
+		    continue;
                 }
             }
             bool changed = true;
