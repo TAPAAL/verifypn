@@ -1211,7 +1211,7 @@ namespace PetriEngine {
         }
         else if(enablereduction == 3)
         {
-            for(int i = reduction.size() - 1; i > 0; --i)
+            for(int i = reduction.size() - 1; i >= 0; --i)
             {
                 const char* rnames = "ABCDEFGHI";
                 if(next_safe)
