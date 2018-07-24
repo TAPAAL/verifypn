@@ -906,20 +906,23 @@ namespace PetriEngine {
                 reduced = true;
 
                 std::vector<uint32_t> torem;
-                for(auto& t : place.producers)
+                if(remove_consumers)
                 {
-                    auto& trans = parent->_transitions[t];
-                    if(trans.post.size() != 1) // place will be removed later
-                        continue;
-                    bool ok = true;
-                    for(auto& a : trans.pre)
+                    for(auto& t : place.producers)
                     {
-                        if(placeInQuery[a.place] > 0)
+                        auto& trans = parent->_transitions[t];
+                        if(trans.post.size() != 1) // place will be removed later
+                            continue;
+                        bool ok = true;
+                        for(auto& a : trans.pre)
                         {
-                            ok = false;
+                            if(placeInQuery[a.place] > 0)
+                            {
+                                ok = false;
+                            }
                         }
+                        if(ok) torem.push_back(t);
                     }
-                    if(ok) torem.push_back(t);
                 }
                 skipPlace(p);
                 for(auto t : torem)
@@ -1222,12 +1225,6 @@ namespace PetriEngine {
                         reduction.erase(reduction.begin() + i);
 			continue;
                     }
-                }
-                if(!remove_loops && reduction[i] == 5)
-                {
-                    std::cerr << "Skipping Rule" << rnames[reduction[i]] << " as proposition is loop sensitive" << std::endl;
-                    reduction.erase(reduction.begin() + i);
-		    continue;
                 }
             }
             bool changed = true;
