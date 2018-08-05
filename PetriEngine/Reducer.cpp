@@ -1440,6 +1440,8 @@ namespace PetriEngine {
             }
             if(!ok) continue;
             // check that post of consumer is not messing with query or inhib
+            // if either all pre or all post are query-free, we are ok.
+            bool inquery = false;
             for(auto t : place.consumers)
             {
                 Transition& trans = parent->_transitions[t];
@@ -1458,7 +1460,7 @@ namespace PetriEngine {
                 for(auto& pp : trans.post)
                 {
                     ok &= !parent->_places[pp.place].inhib;
-                    ok &= placeInQuery[pp.place] == 0;
+                    inquery |= placeInQuery[pp.place] > 0;
                     ok &= pp.weight == 1; // can be relaxed
                 }
                 if(!ok) 
@@ -1471,7 +1473,7 @@ namespace PetriEngine {
                 Transition& trans = parent->_transitions[t];
                 for(const auto& arc : trans.post)
                 {
-                    ok &= placeInQuery[arc.place] == 0;
+                    ok &= !inquery || placeInQuery[arc.place] == 0;
                     ok &= !parent->_places[arc.place].inhib;
                 }
             }
