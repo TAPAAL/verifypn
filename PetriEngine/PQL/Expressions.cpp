@@ -3921,11 +3921,11 @@ namespace PetriEngine {
                     }
                     else if (c._upper == std::numeric_limits<uint32_t>::max())
                     {
-                        c2._upper = c._lower + (other._negated ? -1 :  1);
+                        c2._upper = c._lower + (other._negated ? 1 :  -1);
                     }
                     else if(c._lower == 0)
                     {
-                        c2._lower = c._upper + (other._negated ?  1 : -1);
+                        c2._lower = c._upper + (other._negated ? -1 : 1);
                     }
                     else
                     {
