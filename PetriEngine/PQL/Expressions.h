@@ -791,6 +791,27 @@ namespace PetriEngine {
                 {
                     return _place < other._place;
                 }
+                
+                void invert()
+                {
+                    assert(_lower == 0 || _upper == std::numeric_limits<uint32_t>::max());
+                    if(_lower == 0)
+                    {
+                        _lower = _upper + 1;
+                        _upper = std::numeric_limits<uint32_t>::max();
+                    }
+                    else
+                    {
+                        _upper = _lower - 1;
+                        _lower = 0;
+                    }
+                }
+                
+                void intersect(const cons_t& other)
+                {
+                    _lower = std::max(_lower, other._lower);
+                    _upper = std::min(_upper, other._upper);
+                }
             };
 
             CompareConjunction(bool negated = false) 

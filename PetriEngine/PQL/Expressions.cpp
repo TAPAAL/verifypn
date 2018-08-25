@@ -807,8 +807,7 @@ namespace PetriEngine {
                              context.marking()[c._place] >= c._lower;
                 if(!res) break;
             }
-            
-            return _negated xor res ? RTRUE : RFALSE;
+            return (_negated xor res) ? RTRUE : RFALSE;
         }
         
         Condition::Result CompareCondition::evaluate(const EvaluationContext& context) {
@@ -3909,54 +3908,37 @@ namespace PetriEngine {
                 exit(ErrorCode);
             }
             auto il = _constraints.begin();
-            for(auto& c : other._constraints)
+            for(auto c : other._constraints)
             {
-                il = std::lower_bound(_constraints.begin(), _constraints.end(), c);
-                cons_t c2;
                 if(neg)
+                    c.invert();
+                                
+                if(c._upper == std::numeric_limits<uint32_t>::max() && c._lower == 0)
                 {
-                    if(c._upper == 0)
-                    {
-                        c2._lower = 1;
-                    }
-                    else if (c._upper == std::numeric_limits<uint32_t>::max())
-                    {
-                        c2._upper = c._lower + (other._negated ? 1 :  -1);
-                    }
-                    else if(c._lower == 0)
-                    {
-                        c2._lower = c._upper + (other._negated ? -1 : 1);
-                    }
-                    else
-                    {
-                        std::cerr << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
-                        assert(false);
-                        exit(ErrorCode);
-                    }
-                    c2._place = c._place;
-                    assert(c2._lower <= c2._upper);
+                    continue;
+                }
+                else if (c._upper != std::numeric_limits<uint32_t>::max() && c._lower != 0)
+                {
+                    std::cerr << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
+                    assert(false);
+                    exit(ErrorCode);
+                }
+                
+                il = std::lower_bound(_constraints.begin(), _constraints.end(), c);
+                if(il == _constraints.end() || il->_place != c._place)
+                {
+                    il = _constraints.insert(il, c);
                 }
                 else
                 {
-                    c2 = c;
-                }
-                            
-                if(il == _constraints.end() || il->_place != c2._place)
-                {
-                    c2._name = c._name;
-                    il = _constraints.insert(il, c2);
-                }
-                else
-                {
-                    il->_lower = std::max(il->_lower, c2._lower);
-                    il->_upper = std::min(il->_upper, c2._upper);
+                    il->_lower = std::max(il->_lower, c._lower);
+                    il->_upper = std::min(il->_upper, c._upper);
                 }
             }
         }
         
         void CompareConjunction::merge(const std::vector<Condition_ptr>& conditions, bool negated)
         {
-
             for(auto& c : conditions)
             {
                 auto cmp = dynamic_cast<CompareCondition*>(c.get());
@@ -3979,71 +3961,50 @@ namespace PetriEngine {
                 uint32_t val = lit->value();
                 cons_t next;
                 next._place = id->offset();
-                auto lb = std::lower_bound(std::begin(_constraints), std::end(_constraints), next);
-                if(lb == std::end(_constraints))
-                {
-                    next._name = id->name();
-                    lb = _constraints.insert(lb, next);
-                }  
-                else
-                {
-                    assert(id->name().compare(lb->_name) == 0);
-                }
 
                 if(dynamic_cast<LessThanOrEqualCondition*>(c.get()))
-                {
-                    if(!negated)
-                        if(inverted) lb->_lower = std::max(lb->_lower, val);
-                        else         lb->_upper = std::min(lb->_upper, val);
-                    else
-                        if(!inverted) lb->_lower = std::max(lb->_lower, val+1);
-                        else          lb->_upper = std::min(lb->_upper, val-1);                        
-                }
-                else if(dynamic_cast<GreaterThanOrEqualCondition*>(c.get()))
-                {
-                    if(!negated)
-                        if(!inverted) lb->_lower = std::max(lb->_lower, val);
-                        else          lb->_upper = std::min(lb->_upper, val);
-                    else
-                        if(inverted) lb->_lower = std::max(lb->_lower, val+1);
-                        else         lb->_upper = std::min(lb->_upper, val-1);                        
-                }
+                    if(inverted) next._lower = val;
+                    else         next._upper = val;
                 else if(dynamic_cast<LessThanCondition*>(c.get()))
-                {
-                    if(!negated)
-                        if(inverted) lb->_lower = std::max(lb->_lower, val+1);
-                        else         lb->_upper = std::min(lb->_upper, val-1);
-                    else
-                        if(!inverted) lb->_lower = std::max(lb->_lower, val);
-                        else          lb->_upper = std::min(lb->_upper, val);
-                        
-                }
+                    if(inverted) next._lower = val+1;
+                    else         next._upper = val-1;
+                else if(dynamic_cast<GreaterThanOrEqualCondition*>(c.get()))
+                    if(inverted) next._upper = val;
+                    else         next._lower = val;
                 else if(dynamic_cast<GreaterThanCondition*>(c.get()))
-                {
-                    if(!negated)
-                        if(!inverted) lb->_lower = std::max(lb->_lower, val+1);
-                        else          lb->_upper = std::min(lb->_upper, val-1);
-                    else
-                        if(inverted) lb->_lower = std::max(lb->_lower, val);
-                        else         lb->_upper = std::min(lb->_upper, val);                       
-                }
+                    if(inverted) next._upper = val-1;
+                    else         next._lower = val+1;
                 else if(dynamic_cast<EqualCondition*>(c.get()))
                 {
                     assert(!negated);
-                    lb->_lower = std::max(lb->_lower, val);
-                    lb->_upper = std::min(lb->_upper, val);
+                    next._lower = val;
+                    next._upper = val;
                 }
                 else if(dynamic_cast<NotEqualCondition*>(c.get()))
                 {
                     assert(negated);
-                    lb->_lower = std::max(lb->_lower, val);
-                    lb->_upper = std::min(lb->_upper, val);
+                    next._lower = val;
+                    next._upper = val;
                 }
                 else
                 {
                     std::cerr << "UNKNOWN " << std::endl;
                     assert(false);
                     exit(ErrorCode);
+                }
+                if(negated)
+                    next.invert();
+                
+                auto lb = std::lower_bound(std::begin(_constraints), std::end(_constraints), next);
+                if(lb == std::end(_constraints) || lb->_place != next._place)
+                {
+                    next._name = id->name();
+                    _constraints.insert(lb, next);
+                }  
+                else
+                {
+                    assert(id->name().compare(lb->_name) == 0);
+                    lb->intersect(next);
                 }
             }            
         }
