@@ -69,8 +69,8 @@ namespace PetriEngine {
                 }
                 else
                 {
-                    if(! ((dynamic_cast<UnfoldedIdentifierExpr*>((*comp)[0].get()) && dynamic_cast<LiteralExpr*>((*comp)[1].get())) ||
-                          (dynamic_cast<UnfoldedIdentifierExpr*>((*comp)[1].get()) && dynamic_cast<LiteralExpr*>((*comp)[0].get()))))
+                    if(! ((dynamic_cast<UnfoldedIdentifierExpr*>((*comp)[0].get()) && (*comp)[1]->placeFree()) ||
+                          (dynamic_cast<UnfoldedIdentifierExpr*>((*comp)[1].get()) && (*comp)[0]->placeFree())))
                     {
                         _conds.emplace_back(ptr);
                         return;
@@ -2485,8 +2485,15 @@ namespace PetriEngine {
                     auto id = std::make_shared<UnfoldedIdentifierExpr>(c._name, c._place);
                     auto ll = std::make_shared<LiteralExpr>(c._lower);
                     auto lu = std::make_shared<LiteralExpr>(c._upper);
-                    if     (c._lower == c._upper && !neg) return std::make_shared<EqualCondition>(id, lu);
-                    else if(c._lower == c._upper &&  neg) return std::make_shared<NotEqualCondition>(id, lu);
+                    if(c._lower == c._upper)
+                    {
+                        if(c._lower != 0)
+                            if(neg) return std::make_shared<NotEqualCondition>(id, lu);
+                            else    return std::make_shared<EqualCondition>(id, lu);
+                        else
+                            if(neg) return std::make_shared<GreaterThanCondition>(id, lu);
+                            else    return std::make_shared<LessThanOrEqualCondition>(id, lu);
+                    }
                     else
                     {
                         if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max())
@@ -3479,20 +3486,33 @@ namespace PetriEngine {
             }, stats, context, nested, negated, initrw);
         }
                 
+        Condition_ptr pushEqual(CompareCondition* org, bool negated, bool noteq, const EvaluationContext& context)
+        {
+            if(org->isTrivial()) return BooleanCondition::getShared(org->evaluate(context) xor negated);
+            if((*org)[0]->placeFree() && (*org)[0]->evaluate(context) == 0)
+            {
+                if(negated == noteq) return std::make_shared<LessThanOrEqualCondition>((*org)[1], std::make_shared<LiteralExpr>(0));
+                else                 return std::make_shared<GreaterThanOrEqualCondition>((*org)[1], std::make_shared<LiteralExpr>(1));
+            }
+            if((*org)[1]->placeFree() && (*org)[1]->evaluate(context) == 0)
+            {
+                if(negated == noteq) return std::make_shared<LessThanOrEqualCondition>((*org)[1], std::make_shared<LiteralExpr>(0));
+                else                 return std::make_shared<GreaterThanOrEqualCondition>((*org)[1], std::make_shared<LiteralExpr>(1));                
+            }
+            if(negated == noteq) return std::make_shared<EqualCondition>((*org)[0], (*org)[1]);
+            else                 return std::make_shared<NotEqualCondition>((*org)[0], (*org)[1]);            
+        }
+        
         Condition_ptr NotEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
-            if(negated) return std::make_shared<EqualCondition>(_expr1, _expr2);
-            else        return std::make_shared<NotEqualCondition>(_expr1, _expr2);
+                return pushEqual(this, negated, true, context);
             }, stats, context, nested, negated, initrw);
         }
 
         
         Condition_ptr EqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
-            if(negated) return std::make_shared<NotEqualCondition>(_expr1, _expr2);
-            else        return std::make_shared<EqualCondition>(_expr1, _expr2);
+                return pushEqual(this, negated, false, context);
             }, stats, context, nested, negated, initrw);
         }
                 
@@ -3944,21 +3964,20 @@ namespace PetriEngine {
                 auto cmp = dynamic_cast<CompareCondition*>(c.get());
                 assert(cmp);
                 auto id = dynamic_cast<UnfoldedIdentifierExpr*>((*cmp)[0].get());
-                LiteralExpr* lit = nullptr;
+                uint32_t val;
                 bool inverted = false;
+                EvaluationContext context;
                 if(!id)
                 {
                     id = dynamic_cast<UnfoldedIdentifierExpr*>((*cmp)[1].get());
-                    lit = dynamic_cast<LiteralExpr*>((*cmp)[0].get());
+                    val = (*cmp)[0]->evaluate(context);
                     inverted = true;
                 }
                 else
                 {
-                    lit = dynamic_cast<LiteralExpr*>((*cmp)[1].get());                
+                    val = (*cmp)[1]->evaluate(context);
                 }
-                assert(lit);
                 assert(id);
-                uint32_t val = lit->value();
                 cons_t next;
                 next._place = id->offset();
 
@@ -3985,6 +4004,7 @@ namespace PetriEngine {
                     assert(negated);
                     next._lower = val;
                     next._upper = val;
+                    negated = false; // we already handled negation here!
                 }
                 else
                 {
@@ -4012,8 +4032,11 @@ namespace PetriEngine {
         void CommutativeExpr::init(std::vector<Expr_ptr>&& exprs)
         {
             for (auto& e : exprs) {
-                if (auto lit = dynamic_pointer_cast<PQL::LiteralExpr>(e))
-                    _constant = apply(_constant, lit->value());
+                if (e->placeFree())
+                {
+                    EvaluationContext c;
+                    _constant = apply(_constant, e->evaluate(c));
+                }
                 else if (auto id = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(e)) {
                     _ids.emplace_back(id->offset(), id->name());
                 } 

@@ -905,13 +905,13 @@ namespace PetriEngine {
             }
             bool containsNext() const override { return false; }
             bool nestedDeadlock() const override { return false; }
+            bool isTrivial() const;
         protected:
             uint32_t _distance(DistanceContext& c, 
                     std::function<uint32_t(uint32_t, uint32_t, bool)> d) const
             {
                 return d(_expr1->evaluate(c), _expr2->evaluate(c), c.negated());
             }
-            bool isTrivial() const;
         private:
             virtual bool apply(int v1, int v2) const = 0;
             virtual std::string op() const = 0;
