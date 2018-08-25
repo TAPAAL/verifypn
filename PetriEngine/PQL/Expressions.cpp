@@ -3937,7 +3937,7 @@ namespace PetriEngine {
                 {
                     continue;
                 }
-                else if (c._upper != std::numeric_limits<uint32_t>::max() && c._lower != 0)
+                else if (c._upper != std::numeric_limits<uint32_t>::max() && c._lower != 0 && neg)
                 {
                     std::cerr << "MERGE OF CONJUNCT AND DISJUNCT NOT ALLOWED" << std::endl;
                     assert(false);

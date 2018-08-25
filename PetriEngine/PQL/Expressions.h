@@ -794,16 +794,22 @@ namespace PetriEngine {
                 
                 void invert()
                 {
+                    if(_lower == 0 && _upper == std::numeric_limits<uint32_t>::max())
+                        return;
                     assert(_lower == 0 || _upper == std::numeric_limits<uint32_t>::max());
                     if(_lower == 0)
                     {
                         _lower = _upper + 1;
                         _upper = std::numeric_limits<uint32_t>::max();
                     }
-                    else
+                    else if(_upper == std::numeric_limits<uint32_t>::max())
                     {
                         _upper = _lower - 1;
                         _lower = 0;
+                    }
+                    else
+                    {
+                        assert(false);
                     }
                 }
                 
