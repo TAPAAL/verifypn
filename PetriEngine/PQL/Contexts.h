@@ -144,6 +144,8 @@ namespace PetriEngine {
                 _marking = marking;
                 _net = net;
             }
+            
+            EvaluationContext() {};
 
             const MarkVal* marking() const {
                 return _marking;
@@ -157,8 +159,8 @@ namespace PetriEngine {
                 return _net;
             }
         private:
-            const MarkVal* _marking;
-            const PetriNet* _net;
+            const MarkVal* _marking = nullptr;
+            const PetriNet* _net = nullptr;
         };
 
         /** Context for distance computation */
