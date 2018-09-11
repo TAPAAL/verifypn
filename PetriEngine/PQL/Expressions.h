@@ -791,6 +791,33 @@ namespace PetriEngine {
                 {
                     return _place < other._place;
                 }
+                
+                void invert()
+                {
+                    if(_lower == 0 && _upper == std::numeric_limits<uint32_t>::max())
+                        return;
+                    assert(_lower == 0 || _upper == std::numeric_limits<uint32_t>::max());
+                    if(_lower == 0)
+                    {
+                        _lower = _upper + 1;
+                        _upper = std::numeric_limits<uint32_t>::max();
+                    }
+                    else if(_upper == std::numeric_limits<uint32_t>::max())
+                    {
+                        _upper = _lower - 1;
+                        _lower = 0;
+                    }
+                    else
+                    {
+                        assert(false);
+                    }
+                }
+                
+                void intersect(const cons_t& other)
+                {
+                    _lower = std::max(_lower, other._lower);
+                    _upper = std::min(_upper, other._upper);
+                }
             };
 
             CompareConjunction(bool negated = false) 
@@ -884,13 +911,13 @@ namespace PetriEngine {
             }
             bool containsNext() const override { return false; }
             bool nestedDeadlock() const override { return false; }
+            bool isTrivial() const;
         protected:
             uint32_t _distance(DistanceContext& c, 
                     std::function<uint32_t(uint32_t, uint32_t, bool)> d) const
             {
                 return d(_expr1->evaluate(c), _expr2->evaluate(c), c.negated());
             }
-            bool isTrivial() const;
         private:
             virtual bool apply(int v1, int v2) const = 0;
             virtual std::string op() const = 0;
