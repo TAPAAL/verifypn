@@ -229,17 +229,17 @@ namespace PetriEngine {
 
                 // Set objective
                 auto tmp_lp = copy_lp(base_lp);
-                set_obj_fn(base_lp, row.data());
+                set_obj_fn(tmp_lp, row.data());
 
                 // Maximize
-                set_maxim(base_lp);
+                set_maxim(tmp_lp);
 
                 for (size_t i = 0; i < nCol; i++){
                     set_int(tmp_lp, 1 + i, TRUE);
                 }
 
                 set_timeout(tmp_lp, timeout);
-                set_presolve(tmp_lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(base_lp));
+                set_presolve(tmp_lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(tmp_lp));
                 int res = solve(tmp_lp);
                 
                 if (res == TIMEOUT)
