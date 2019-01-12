@@ -166,9 +166,9 @@ namespace PetriEngine {
                 int rowno = 1;
 
                 // restrict all places to contain 0+ tokens
-                for (size_t p = 0; p < net->numberOfPlaces(); p++) {
+                for (size_t p = 0; p < net->numberOfPlaces(); ++p) {
                     memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
-                    for (size_t t = 0; t < nCol; t++) {
+                    for (size_t t = 0; t < nCol; ++t) {
                         row[1 + t] = net->outArc(t, p) - net->inArc(p, t);
                     }
                     set_row(base_lp, rowno, row.data());
@@ -187,14 +187,9 @@ namespace PetriEngine {
                     pi = places.size();
                 else
                     pi = it - 1;
-                if(pi == places.size() && places.size() == 1)
-                {
-                    result[0] = result[1];
-                    return result;
-                }
+
                 if(context.timeout())
                     return result;
-                            
                 // Create objective
                 memset(row.data(), 0, sizeof (REAL) * net->numberOfTransitions() + 1);
                 double p0 = 0;
@@ -265,6 +260,11 @@ namespace PetriEngine {
                 delete_lp(tmp_lp);
                 if(pi == places.size() && result[places.size()].first >= p0)
                     return result;
+                if(pi == places.size() && places.size() == 1)
+                {
+                    result[0] = result[1];
+                    return result;
+                }
             }
             return result;
         }
