@@ -2809,7 +2809,6 @@ namespace PetriEngine {
                 if(bounds[i] != 0)
                     next.emplace_back(_places[i], bounds[i]);
             }
-            std::cerr << "MAX " << bounds[places.size()] << std::endl;
             return Retval(std::make_shared<UnfoldedUpperBoundsCondition>(next, bounds[places.size()]));
         }
         

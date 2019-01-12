@@ -154,7 +154,30 @@ namespace PetriEngine {
             const uint32_t nCol = net->numberOfTransitions();
             const int nRow = net->numberOfPlaces();
             std::vector<REAL> row = std::vector<REAL>(nCol + 1);
+            lprec* base_lp;            
+            {
+                base_lp = make_lp(nRow, nCol);
+                assert(base_lp);
+                if (!base_lp) return result;
+                set_verbose(base_lp, IMPORTANT);
 
+                set_add_rowmode(base_lp, TRUE);
+
+                int rowno = 1;
+
+                // restrict all places to contain 0+ tokens
+                for (size_t p = 0; p < net->numberOfPlaces(); p++) {
+                    memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
+                    for (size_t t = 0; t < nCol; t++) {
+                        row[1 + t] = net->outArc(t, p) - net->inArc(p, t);
+                    }
+                    set_row(base_lp, rowno, row.data());
+                    set_constr_type(base_lp, rowno, GE);
+                    set_rh(base_lp, rowno++, (0 - (int)m0[p]));
+                }
+
+                set_add_rowmode(base_lp, FALSE);
+            }
             for(size_t it = 0; it <= places.size(); ++it)
             {
                 // we want to start with the overall bound, most important
@@ -171,67 +194,55 @@ namespace PetriEngine {
                 }
                 if(context.timeout())
                     return result;
-                
-                lprec* lp;            
-                lp = make_lp(nRow, nCol);
-                assert(lp);
-                if (!lp) return result;
-                set_verbose(lp, IMPORTANT);
-
-                set_add_rowmode(lp, TRUE);
-
-                int rowno = 1;
-
-                // restrict all places to contain 0+ tokens
-                for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-                    memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
-                    for (size_t t = 0; t < nCol; t++) {
-                        row[1 + t] = net->outArc(t, p) - net->inArc(p, t);
-                    }
-                    set_row(lp, rowno, row.data());
-                    set_constr_type(lp, rowno, GE);
-                    set_rh(lp, rowno++, (0 - (int)m0[p]));
-                }
-
-                set_add_rowmode(lp, FALSE);
-            
+                            
                 // Create objective
                 memset(row.data(), 0, sizeof (REAL) * net->numberOfTransitions() + 1);
                 double p0 = 0;
+                bool all_le_zero = true;
                 if(pi < places.size())
                 {
                     auto tp = places[pi];
                     p0 = m0[tp];
                     for (size_t t = 0; t < net->numberOfTransitions(); ++t)
-                        row[1 + t] = net->outArc(t, tp) - net->inArc(tp, t);
+                    {
+                        row[1 + t] = net->outArc(t, tp) - net->inArc(tp, t);                   
+                        all_le_zero &= row[1 + t] <= 0;
+                    }
                 }
                 else
                 {
                     for (size_t t = 0; t < net->numberOfTransitions(); ++t)
                     {
-                        row[1 + t] = 0;
                         for(auto tp : places)
-                        {
                             row[1 + t] += net->outArc(t, tp) - net->inArc(tp, t); 
-                            p0 += m0[tp];
-                        }
-
+                        all_le_zero &= row[1 + t] <= 0;
                     }
+                    for(auto tp : places)
+                        p0 += m0[tp];
+                }
+                if(all_le_zero)
+                {
+                    if(pi == places.size())
+                    result[pi] = p0;
+                    if(pi == places.size()) 
+                        return result;
+                    continue;
                 }
 
                 // Set objective
-                set_obj_fn(lp, row.data());
+                auto tmp_lp = copy_lp(base_lp);
+                set_obj_fn(base_lp, row.data());
 
                 // Maximize
-                set_maxim(lp);
+                set_maxim(base_lp);
 
                 for (size_t i = 0; i < nCol; i++){
-                    set_int(lp, 1 + i, TRUE);
+                    set_int(tmp_lp, 1 + i, TRUE);
                 }
 
-                set_timeout(lp, timeout);
-                set_presolve(lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(lp));
-                int res = solve(lp);
+                set_timeout(tmp_lp, timeout);
+                set_presolve(tmp_lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(base_lp));
+                int res = solve(tmp_lp);
                 
                 if (res == TIMEOUT)
                 {
@@ -244,9 +255,11 @@ namespace PetriEngine {
                 }
                 else
                 {
-                    result[pi] = p0 + get_objective(lp);
+                    result[pi] = p0 + get_objective(tmp_lp);
                 }
-                delete_lp(lp);
+                delete_lp(tmp_lp);
+                if(pi == places.size() && result[places.size()] >= p0)
+                    return result;
             }
             return result;
         }
