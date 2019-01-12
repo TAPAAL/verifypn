@@ -839,10 +839,12 @@ namespace PetriEngine {
             size_t tmp = 0;
             for(auto& p : _places)
             {
+                auto val = context.marking()[p._place];
+                p._maxed_out = (p._max <= val);
                 tmp += context.marking()[p._place];
             }
             _bound = std::max(tmp, _bound);
-            return _bound < _max ? RUNKNOWN : RTRUE;
+            return _max <= _bound ? RTRUE : RUNKNOWN;
         }
         
         /******************** Evaluation - save result ********************/
@@ -1660,9 +1662,12 @@ namespace PetriEngine {
             out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));            
             uint32_t size = _places.size();
             out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));                        
-            out.write(reinterpret_cast<const char*>(&_max), sizeof(size_t));     
+            out.write(reinterpret_cast<const char*>(&_max), sizeof(double));     
             for(auto& b : _places)
+            {
                 out.write(reinterpret_cast<const char*>(&b._place), sizeof(uint32_t));                        
+                out.write(reinterpret_cast<const char*>(&b._max), sizeof(double));
+            }
         }
         
         void NotCondition::toBinary(std::ostream& out) const
@@ -2795,82 +2800,17 @@ namespace PetriEngine {
         Retval UnfoldedUpperBoundsCondition::simplify(SimplificationContext& context) const 
         {
             std::vector<place_t> next;
+            std::vector<uint32_t> places;
             for(auto& p : _places)
+                places.push_back(p._place);
+            auto bounds = LinearProgram::bounds(context, context.getLpTimeout(), places);
+            for(size_t i = 0; i < _places.size(); ++i)
             {
-                auto m2 = memberForPlace(p._place, context);
-                Member m1(1);
-                // test for trivial comparison
-                Trivial eval = m1 >= m2;
-                if(eval != Trivial::Indeterminate) {
-                    if(eval == Trivial::False)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        next.push_back(p);                        
-                    }
-                } else { // if no trivial case
-                    int constant = m2.constant() - m1.constant();
-                    m1 -= m2;
-                    auto nlp = SingleProgram(context.cache(), std::move(m1), constant, Simplification::OP_LE);
-                    if(nlp.satisfiable(context))
-                    {
-                        next.push_back(p);
-                    }
-               }
-            }            
-            
-            size_t tmin = 1;
-            size_t tmax = std::numeric_limits<int16_t>::max();
-            if(next.size() > 0)
-            {
-                // lets try to find an upper bound for the places so we can 
-                // terminate early if lucky.
-                auto m = memberForPlace(_places[0]._place, context);
-                for(size_t i = 1; i < _places.size(); ++i)
-                {
-                    m += memberForPlace(_places[i]._place, context);
-                }
-                while(!context.timeout() && tmin != _max)
-                {
-                    if(tmin > std::numeric_limits<uint8_t>::max() && tmax == std::numeric_limits<int16_t>::max()) 
-                    {
-                        tmax = std::numeric_limits<size_t>::max();
-                        break;
-                    }
-                    auto mid = (tmax / 2) + (tmin / 2); 
-                    Member c(mid);
-                    Trivial eval = c >= m;
-                    if(eval != Trivial::Indeterminate) {
-                        if(eval == Trivial::False)
-                        {
-                            tmax = mid;
-                        }
-                        else
-                        {
-                            tmin = mid;                     
-                        }
-                    } else { // if no trivial case
-                        int constant = m.constant() - c.constant();
-                        c -= m;
-                        auto nlp = SingleProgram(context.cache(), std::move(c), constant, Simplification::OP_GE);
-                        if(!nlp.satisfiable(context))
-                        {
-                            tmax = mid;
-                        }
-                        else
-                        {
-                            tmin = mid;
-                        }
-                    }
-                }
+                if(bounds[i] != 0)
+                    next.emplace_back(_places[i], bounds[i]);
             }
-            else
-            {
-                tmax = 0;
-            }
-            return Retval(std::make_shared<UnfoldedUpperBoundsCondition>(next, tmax));
+            std::cerr << "MAX " << bounds[places.size()] << std::endl;
+            return Retval(std::make_shared<UnfoldedUpperBoundsCondition>(next, bounds[places.size()]));
         }
         
         /******************** Check if query is a reachability query ********************/
@@ -3853,7 +3793,8 @@ namespace PetriEngine {
 
         void UnfoldedUpperBoundsCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             for(auto& p : _places)
-                generator.presetOf(p._place);
+                if(!p._maxed_out)
+                    generator.presetOf(p._place);
         }
         
         

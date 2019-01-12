@@ -144,16 +144,18 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
         else if(q == Quantifier::UPPERBOUNDS)
         {
             uint32_t size;
-            size_t max;
+            double max;
             binary.read(reinterpret_cast<char*>(&size), sizeof(uint32_t));            
-            binary.read(reinterpret_cast<char*>(&max), sizeof(size_t));            
+            binary.read(reinterpret_cast<char*>(&max), sizeof(double));            
             std::vector<UnfoldedUpperBoundsCondition::place_t> places;
             for(size_t i = 0; i < size; ++i)
             {
                 uint32_t id;
                 binary.read(reinterpret_cast<char*>(&id), sizeof(uint32_t));
+                binary.read(reinterpret_cast<char*>(&max), sizeof(double));
                 places.emplace_back(names[id]);
                 places.back()._place = id;
+                places.back()._max = max;
             }
             return std::make_shared<UnfoldedUpperBoundsCondition>(places, max);
         }
