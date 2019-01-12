@@ -1216,8 +1216,8 @@ namespace PetriEngine {
             {
                 for(auto& s : places) _places.push_back(s);
             }
-            UnfoldedUpperBoundsCondition(const std::vector<place_t>& places, double max)
-                    : _places(places), _max(max) {
+            UnfoldedUpperBoundsCondition(const std::vector<place_t>& places, double max, double offset)
+                    : _places(places), _max(max), _offset(offset) {
             };
             int formulaSize() const override{
                 return _places.size();
@@ -1240,7 +1240,7 @@ namespace PetriEngine {
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
             bool nestedDeadlock() const override { return false; }
-            size_t bounds() const { return _bound; }
+            size_t bounds() const { return _bound + _offset; }
 #ifdef ENABLE_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
 #endif
@@ -1252,7 +1252,7 @@ namespace PetriEngine {
             std::vector<place_t> _places;
             size_t _bound = 0;
             double _max = std::numeric_limits<double>::infinity();
-
+            double _offset = 0;
         };
 
     }

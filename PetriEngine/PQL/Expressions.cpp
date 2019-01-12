@@ -1663,6 +1663,7 @@ namespace PetriEngine {
             uint32_t size = _places.size();
             out.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));                        
             out.write(reinterpret_cast<const char*>(&_max), sizeof(double));     
+            out.write(reinterpret_cast<const char*>(&_offset), sizeof(double));     
             for(auto& b : _places)
             {
                 out.write(reinterpret_cast<const char*>(&b._place), sizeof(uint32_t));                        
@@ -2803,13 +2804,22 @@ namespace PetriEngine {
             std::vector<uint32_t> places;
             for(auto& p : _places)
                 places.push_back(p._place);
-            auto bounds = LinearProgram::bounds(context, context.getLpTimeout(), places);
-            for(size_t i = 0; i < _places.size(); ++i)
+            const auto nplaces = _places.size();
+            const auto bounds = LinearProgram::bounds(context, context.getLpTimeout(), places);
+            double offset = 0;
+            for(size_t i = 0; i < nplaces; ++i)
             {
-                if(bounds[i] != 0)
-                    next.emplace_back(_places[i], bounds[i]);
+                if(bounds[i].first != 0 && !bounds[i].second)
+                    next.emplace_back(_places[i], bounds[i].first);
+                if(bounds[i].second)
+                    offset += bounds[i].first;
             }
-            return Retval(std::make_shared<UnfoldedUpperBoundsCondition>(next, bounds[places.size()]));
+            if(bounds[nplaces].second)
+            {
+                next.clear();
+                offset = bounds[nplaces].first;
+            }
+            return Retval(std::make_shared<UnfoldedUpperBoundsCondition>(next, bounds[nplaces].first-offset, offset));
         }
         
         /******************** Check if query is a reachability query ********************/
@@ -3475,7 +3485,7 @@ namespace PetriEngine {
                 std::cerr << "UPPER BOUNDS CANNOT BE NEGATED!" << std::endl;
                 exit(ErrorCode);
             }
-            return std::make_shared<UnfoldedUpperBoundsCondition>(_places, _max);
+            return std::make_shared<UnfoldedUpperBoundsCondition>(_places, _max, _offset);
         }
 
         

@@ -82,7 +82,7 @@ namespace PetriEngine {
                 ss << "### LP DONE";
                 return ss;
             }
-            static std::vector<double> bounds(const PQL::SimplificationContext& context, uint32_t solvetime, const std::vector<uint32_t>& places);
+            static std::vector<std::pair<double,bool>> bounds(const PQL::SimplificationContext& context, uint32_t solvetime, const std::vector<uint32_t>& places);
         };
     }   
 }

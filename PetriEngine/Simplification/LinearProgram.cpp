@@ -144,9 +144,9 @@ namespace PetriEngine {
            return _result == result_t::IMPOSSIBLE;
         }
 
-        std::vector<double> LinearProgram::bounds(const PQL::SimplificationContext& context, uint32_t solvetime, const std::vector<uint32_t>& places)
+        std::vector<std::pair<double,bool>> LinearProgram::bounds(const PQL::SimplificationContext& context, uint32_t solvetime, const std::vector<uint32_t>& places)
         {
-            std::vector<double> result(places.size() + 1, std::numeric_limits<double>::infinity());
+            std::vector<std::pair<double,bool>> result(places.size() + 1, std::make_pair(std::numeric_limits<double>::infinity(), false));
             auto net = context.net();
             auto m0 = context.marking();
             auto timeout = solvetime;
@@ -199,6 +199,7 @@ namespace PetriEngine {
                 memset(row.data(), 0, sizeof (REAL) * net->numberOfTransitions() + 1);
                 double p0 = 0;
                 bool all_le_zero = true;
+                bool all_zero = true;
                 if(pi < places.size())
                 {
                     auto tp = places[pi];
@@ -207,6 +208,7 @@ namespace PetriEngine {
                     {
                         row[1 + t] = net->outArc(t, tp) - net->inArc(tp, t);                   
                         all_le_zero &= row[1 + t] <= 0;
+                        all_zero &= row[1 + t] == 0;
                     }
                 }
                 else
@@ -220,10 +222,11 @@ namespace PetriEngine {
                     for(auto tp : places)
                         p0 += m0[tp];
                 }
+
                 if(all_le_zero)
                 {
-                    if(pi == places.size())
-                    result[pi] = p0;
+                    result[pi].first = p0;
+                    result[pi].second = all_zero;
                     if(pi == places.size()) 
                         return result;
                     continue;
@@ -246,19 +249,21 @@ namespace PetriEngine {
                 
                 if (res == TIMEOUT)
                 {
-                    result.push_back(std::numeric_limits<double>::quiet_NaN());
+                    result[pi].first = (std::numeric_limits<double>::quiet_NaN());
                     std::cout << "note: lpsolve timeout" << std::endl;
                 }
                 else if(res == INFEASIBLE)
                 {
-                    result[pi] = p0;
+                    result[pi].first = p0;
+                    result[pi].second = all_zero;
                 }
                 else
                 {
-                    result[pi] = p0 + get_objective(tmp_lp);
+                    result[pi].first = p0 + get_objective(tmp_lp);
+                    result[pi].second = all_zero;
                 }
                 delete_lp(tmp_lp);
-                if(pi == places.size() && result[places.size()] >= p0)
+                if(pi == places.size() && result[places.size()].first >= p0)
                     return result;
             }
             return result;
