@@ -210,8 +210,10 @@ namespace PetriEngine {
                 {
                     for (size_t t = 0; t < net->numberOfTransitions(); ++t)
                     {
+                        double cnt = 0;
                         for(auto tp : places)
-                            row[1 + t] += net->outArc(t, tp) - net->inArc(tp, t); 
+                            cnt += net->outArc(t, tp) - net->inArc(tp, t); 
+                        row[1 + t] = cnt;
                         all_le_zero &= row[1 + t] <= 0;
                     }
                     for(auto tp : places)
