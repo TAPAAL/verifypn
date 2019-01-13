@@ -1240,7 +1240,9 @@ namespace PetriEngine {
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
             bool nestedDeadlock() const override { return false; }
-            size_t bounds() const { return _bound + _offset; }
+            double bounds() const { 
+                return _offset + _bound; 
+            }
 #ifdef ENABLE_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const;
 #endif
