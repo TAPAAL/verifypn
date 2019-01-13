@@ -215,6 +215,7 @@ namespace PetriEngine {
                             cnt += net->outArc(t, tp) - net->inArc(tp, t); 
                         row[1 + t] = cnt;
                         all_le_zero &= row[1 + t] <= 0;
+                        all_zero &= row[1 + t] == 0;
                     }
                     for(auto tp : places)
                         p0 += m0[tp];
