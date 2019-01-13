@@ -2817,7 +2817,7 @@ namespace PetriEngine {
             if(bounds[nplaces].second)
             {
                 next.clear();
-                offset = bounds[nplaces].first;
+                return Retval(std::make_shared<UnfoldedUpperBoundsCondition>(next, 0, bounds[nplaces].first));
             }
             return Retval(std::make_shared<UnfoldedUpperBoundsCondition>(next, bounds[nplaces].first-offset, offset));
         }
