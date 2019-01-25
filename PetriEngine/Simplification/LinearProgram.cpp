@@ -250,7 +250,7 @@ namespace PetriEngine {
                     result[pi].first = (std::numeric_limits<double>::quiet_NaN());
                     std::cout << "note: lpsolve timeout" << std::endl;
                 }
-                else if(res == INFEASIBLE)
+                else if(res != OPTIMAL)
                 {
                     result[pi].first = p0;
                     result[pi].second = all_zero;
