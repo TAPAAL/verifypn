@@ -189,7 +189,10 @@ namespace PetriEngine {
                     pi = it - 1;
 
                 if(context.timeout())
+                {
+                    delete_lp(base_lp);
                     return result;
+                }
                 // Create objective
                 memset(row.data(), 0, sizeof (REAL) * net->numberOfTransitions() + 1);
                 double p0 = 0;
@@ -226,7 +229,10 @@ namespace PetriEngine {
                     result[pi].first = p0;
                     result[pi].second = all_zero;
                     if(pi == places.size()) 
+                    {
+                        delete_lp(base_lp);
                         return result;
+                    }
                     continue;
                 }
 
@@ -250,25 +256,30 @@ namespace PetriEngine {
                     result[pi].first = (std::numeric_limits<double>::quiet_NaN());
                     std::cout << "note: lpsolve timeout" << std::endl;
                 }
-                else if(res != OPTIMAL)
+                else if(res == INFEASIBLE)
                 {
                     result[pi].first = p0;
                     result[pi].second = all_zero;
                 }
-                else
+                else if(res == OPTIMAL)
                 {
                     result[pi].first = p0 + get_objective(tmp_lp);
                     result[pi].second = all_zero;
                 }
                 delete_lp(tmp_lp);
                 if(pi == places.size() && result[places.size()].first >= p0)
+                {
+                    delete_lp(base_lp);
                     return result;
+                }
                 if(pi == places.size() && places.size() == 1)
                 {
                     result[0] = result[1];
+                    delete_lp(base_lp);
                     return result;
                 }
             }
+            delete_lp(base_lp);
             return result;
         }
         
