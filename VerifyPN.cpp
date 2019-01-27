@@ -715,7 +715,7 @@ int main(int argc, char* argv[]) {
             negstat_t stats;            
             EvaluationContext context(nullptr, nullptr);
             auto q = queries[qid]->pushNegation(stats, context, false, false, false);
-            if (!q->isReachability() || q->isLoopSensitive() || q->prepareForReachability()->getQuantifier() == UPPERBOUNDS || stats.negated_fireability) {
+            if (!q->isReachability() || q->isLoopSensitive() || stats.negated_fireability) {
                 std::cerr << "Warning: CPN OverApproximation is only available for Reachability queries without deadlock, negated fireability and UpperBounds, skipping " << querynames[qid] << std::endl;
                 queries.erase(queries.begin() + qid);
                 querynames.erase(querynames.begin() + qid);

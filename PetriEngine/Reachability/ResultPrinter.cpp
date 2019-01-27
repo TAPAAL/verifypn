@@ -16,7 +16,8 @@ namespace PetriEngine {
                 const std::vector<size_t> enabledTransitionsCount,
                 int maxTokens,
                 const std::vector<uint32_t> maxPlaceBound, Structures::StateSetInterface* stateset,
-                size_t lastmarking)
+                size_t lastmarking,
+                const MarkVal* initialMarking)
         {
             if(result == Unknown) return Unknown;
 
@@ -24,7 +25,14 @@ namespace PetriEngine {
             
             if(options->cpnOverApprox)
             {
-                if (result == Satisfied)
+                if(query->getQuantifier() == PQL::Quantifier::UPPERBOUNDS)
+                {
+                    auto upq = ((PQL::UnfoldedUpperBoundsCondition*)query);
+                    auto bnd = upq->bounds();
+                    if(initialMarking == nullptr || bnd > upq->value(initialMarking))
+                        retval = Unknown;
+                }
+                else if (result == Satisfied)
                     retval = query->isInvariant() ? Unknown : Unknown;
                 else if (result == NotSatisfied)
                     retval = query->isInvariant() ? Satisfied : NotSatisfied;                

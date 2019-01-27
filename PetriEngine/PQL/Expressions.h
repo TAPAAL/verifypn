@@ -1223,6 +1223,7 @@ namespace PetriEngine {
                 return _places.size();
             }
             void analyze(AnalysisContext& context) override;
+            size_t value(const MarkVal*);
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             uint32_t distance(DistanceContext& context) const override;
@@ -1235,7 +1236,7 @@ namespace PetriEngine {
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
-            Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
+            Quantifier getQuantifier() const override { return Quantifier::UPPERBOUNDS; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }

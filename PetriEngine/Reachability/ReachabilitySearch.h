@@ -94,6 +94,7 @@ namespace PetriEngine {
             int _kbound;
             PetriNet& _net;
             size_t _satisfyingMarking = 0;
+            Structures::State _initial;
         };
         
         template<typename Q, typename W, typename G>
@@ -113,6 +114,7 @@ namespace PetriEngine {
             // set up working area
             Structures::State state;
             Structures::State working;
+            _initial.setMarking(_net.makeInitialMarking());
             state.setMarking(_net.makeInitialMarking());
             working.setMarking(_net.makeInitialMarking());
             

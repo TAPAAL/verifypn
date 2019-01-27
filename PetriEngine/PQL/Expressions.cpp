@@ -835,15 +835,20 @@ namespace PetriEngine {
             return RTRUE;
         }
         
-        Condition::Result UnfoldedUpperBoundsCondition::evaluate(const EvaluationContext& context) {
+        size_t UnfoldedUpperBoundsCondition::value(const MarkVal* marking)
+        {
             size_t tmp = 0;
             for(auto& p : _places)
             {
-                auto val = context.marking()[p._place];
+                auto val = marking[p._place];
                 p._maxed_out = (p._max <= val);
-                tmp += context.marking()[p._place];
+                tmp += val;
             }
-            _bound = std::max(tmp, _bound);
+            return tmp;
+        }
+        
+        Condition::Result UnfoldedUpperBoundsCondition::evaluate(const EvaluationContext& context) {
+            setUpperBound(value(context.marking()));
             return _max <= _bound ? RTRUE : RUNKNOWN;
         }
         

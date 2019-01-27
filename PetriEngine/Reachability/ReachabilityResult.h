@@ -73,7 +73,7 @@ namespace PetriEngine {
                 const std::vector<size_t> enabledTransitionsCount = std::vector<size_t>(),
                 int maxTokens = 0,
                 const std::vector<uint32_t> maxPlaceBound = std::vector<uint32_t>(),
-                Structures::StateSetInterface* stateset = NULL, size_t lastmarking = 0 );
+                Structures::StateSetInterface* stateset = NULL, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr);
             
             std::string printTechniques();
             

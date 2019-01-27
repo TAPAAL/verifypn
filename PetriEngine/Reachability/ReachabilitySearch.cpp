@@ -69,7 +69,7 @@ namespace PetriEngine {
             return printer.printResult(i, query.get(), r,
                             ss.expandedStates, ss.exploredStates, states->discovered(),
                             ss.enabledTransitionsCount, states->maxTokens(), 
-                            states->maxPlaceBound(), states, _satisfyingMarking);  
+                            states->maxPlaceBound(), states, _satisfyingMarking, _initial.marking());  
         }
         
         void ReachabilitySearch::printStats(searchstate_t& ss, Structures::StateSetInterface* states)
