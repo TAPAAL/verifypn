@@ -131,9 +131,11 @@ namespace PetriEngine {
             
             delete_lp(lp);
 
-            if (result == TIMEOUT) std::cout << "note: lpsolve timeout" << std::endl;
-            // Return true, if it was infeasible
-            if(result == INFEASIBLE)
+            if(get_accuracy(lp) >= 0.5) 
+                std::cout << "note: lpsolve had unacceptable accuracy" << std::endl;                    
+            else if (result == TIMEOUT) 
+                std::cout << "note: lpsolve timeout" << std::endl;
+            else if(result == INFEASIBLE)
             {
                 _result = result_t::IMPOSSIBLE;
             }
@@ -251,7 +253,12 @@ namespace PetriEngine {
                 set_presolve(tmp_lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(tmp_lp));
                 int res = solve(tmp_lp);
                 
-                if (res == TIMEOUT)
+                if(get_accuracy(tmp_lp) >= 0.5)
+                {
+                    result[pi].first = (std::numeric_limits<double>::quiet_NaN());
+                    std::cout << "note: lpsolve had unacceptable accuracy" << std::endl;                    
+                }
+                else if (res == TIMEOUT)
                 {
                     result[pi].first = (std::numeric_limits<double>::quiet_NaN());
                     std::cout << "note: lpsolve timeout" << std::endl;
