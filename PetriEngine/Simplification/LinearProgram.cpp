@@ -134,12 +134,12 @@ namespace PetriEngine {
             if(get_accuracy(lp) >= 0.5) 
             {
                 std::cout << "note: lpsolve had unacceptable accuracy" << std::endl;    
-                _result = result_t::IMPOSSIBLE;
+                _result = result_t::POSSIBLE;
             }                
             else if (result == TIMEOUT) 
             {
                 std::cout << "note: lpsolve timeout" << std::endl;
-                _result = result_t::IMPOSSIBLE;
+                _result = result_t::UKNOWN;
             }
             else if(result == INFEASIBLE)
             {
