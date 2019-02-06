@@ -111,7 +111,7 @@ namespace PetriEngine {
             // Create objective
             memset(row.data(), 0, sizeof (REAL) * net->numberOfTransitions() + 1);
             for (size_t t = 0; t < net->numberOfTransitions(); t++)
-                row[1 + t] = 0; // The sum the components in the firing vector
+                row[1 + t] = 1; // The sum the components in the firing vector
 
             // Set objective
             set_obj_fn(lp, row.data());
