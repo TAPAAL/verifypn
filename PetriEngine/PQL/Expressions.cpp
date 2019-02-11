@@ -2811,7 +2811,7 @@ namespace PetriEngine {
                 places.push_back(p._place);
             const auto nplaces = _places.size();
             const auto bounds = LinearProgram::bounds(context, context.getLpTimeout(), places);
-            double offset = 0;
+            double offset = _offset;
             for(size_t i = 0; i < nplaces; ++i)
             {
                 if(bounds[i].first != 0 && !bounds[i].second)
@@ -2822,7 +2822,7 @@ namespace PetriEngine {
             if(bounds[nplaces].second)
             {
                 next.clear();
-                return Retval(std::make_shared<UnfoldedUpperBoundsCondition>(next, 0, bounds[nplaces].first));
+                return Retval(std::make_shared<UnfoldedUpperBoundsCondition>(next, 0, bounds[nplaces].first + _offset));
             }
             return Retval(std::make_shared<UnfoldedUpperBoundsCondition>(next, bounds[nplaces].first-offset, offset));
         }

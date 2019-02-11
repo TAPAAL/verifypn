@@ -147,7 +147,7 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
             double max, offset;
             binary.read(reinterpret_cast<char*>(&size), sizeof(uint32_t));            
             binary.read(reinterpret_cast<char*>(&max), sizeof(double));            
-            binary.read(reinterpret_cast<char*>(&offset), sizeof(double));     
+            binary.read(reinterpret_cast<char*>(&offset), sizeof(double));   
             std::vector<UnfoldedUpperBoundsCondition::place_t> places;
             for(size_t i = 0; i < size; ++i)
             {
