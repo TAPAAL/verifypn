@@ -401,7 +401,6 @@ namespace PetriEngine {
             {
                 Transition& out = getTransition(tOut);
 
-
                 if(out.post.size() != 1 && in.pre.size() != 1)
                     continue; // at least one has to be singular for this to work
 
@@ -453,8 +452,14 @@ namespace PetriEngine {
                     if(pre_ok) 
                         continue;
                 }
+                
+                bool ok = true;  
+                if(in.pre.size() > 1)
+                    for(const Arc& arc : out.pre)
+                        ok &= placeInQuery[arc.place] == 0;
+                if(!ok)
+                    continue;
 
-                bool ok = true;            
                 // B2.a Check that there is no other place than p that gives to tPost, 
                 // tPre can give to other places
                 auto& arcs = in.pre.size() < out.post.size() ? in.pre : out.post;
