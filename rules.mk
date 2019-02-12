@@ -15,8 +15,8 @@ mcc: CFLAGS += -Wall -pedantic-errors -O2 -DNDEBUG -DENABLE_MC_SIMPLIFICATION -D
 mcc: LDFLAGS += -O2 -DNDEBUG -Wl,-Bstatic -lz3 -lgmp -Wl,-Bdynamic -lpthread -DENABLE_MC_SIMPLIFICATION -DENABLE_TAR
 mcc: $(TARGET)
 
-debug: CFLAGS += -g -DENABLE_MC_SIMPLIFICATION -DENABLE_TAR
-debug: LDFLAGS += -g -Wl,-Bstatic -lz3 -lgmp -Wl,-Bdynamic -lpthread -DENABLE_MC_SIMPLIFICATION -DENABLE_TAR
+debug: CFLAGS += -g -DENABLE_MC_SIMPLIFICATION -DENABLE_TAR -fsanitize=address
+debug: LDFLAGS += -g -Wl,-Bstatic -lz3 -lgmp -Wl,-Bdynamic -lpthread -DENABLE_MC_SIMPLIFICATION -DENABLE_TAR -fsanitize=address
 debug: $(TARGET)
 
 # Rules for updating lexer and parser

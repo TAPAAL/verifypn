@@ -8,8 +8,8 @@ CC				= llvm-gcc
 CUT				= cut
 
 # Compiler and linker flags
-CFLAGS			= -mmacosx-version-min=10.7 -std=c++14 -m64 -I. -stdlib=libc++
-LDFLAGS			= -dynamic -mmacosx-version-min=10.7 -std=c++14 -m64 lpsolve/liblpsolve55-osx64.a -stdlib=libc++ -lc++  
+CFLAGS			= -mmacosx-version-min=10.7 -std=c++17 -m64 -I. -stdlib=libc++
+LDFLAGS			= -dynamic -mmacosx-version-min=10.7 -std=c++17 -m64 lpsolve/liblpsolve55-osx64.a -stdlib=libc++ -lc++  
 
 # Input files
 FLEX_SOURCES	= $(shell find * -name "*.l")

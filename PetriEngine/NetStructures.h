@@ -42,6 +42,27 @@ namespace PetriEngine {
         std::vector<Arc> post;
         bool skip = false;
         bool inhib = false;
+        
+        void addPreArc(const Arc& arc)
+        {
+            auto lb = std::lower_bound(pre.begin(), pre.end(), arc);
+            if(lb != pre.end() && lb->place == arc.place)
+                lb->weight += arc.weight;
+            else
+                lb = pre.insert(lb, arc);
+            assert(lb->weight > 0);
+        }
+        
+        void addPostArc(const Arc& arc)
+        {
+            auto lb = std::lower_bound(post.begin(), post.end(), arc);
+            if(lb != post.end() && lb->place == arc.place)
+                lb->weight += arc.weight;
+            else
+                lb = post.insert(lb, arc);
+            assert(lb->weight > 0);
+            
+        }
     };
 
     struct Place {
@@ -49,6 +70,21 @@ namespace PetriEngine {
         std::vector<uint32_t> producers; // things producing
         bool skip = false;
         bool inhib = false;
+        
+        // should be replaced using concepts in c++20
+        void addConsumer(uint32_t id)
+        {
+            auto lb = std::lower_bound(consumers.begin(), consumers.end(), id);
+            if(lb == consumers.end() || *lb != id)
+                consumers.insert(lb, id);
+        }
+        
+        void addProducer(uint32_t id)
+        {
+            auto lb = std::lower_bound(producers.begin(), producers.end(), id);
+            if(lb == producers.end() || *lb != id)
+                producers.insert(lb, id);
+        }
     };
 }
 #endif /* NETSTRUCTURES_H */
