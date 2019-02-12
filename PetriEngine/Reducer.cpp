@@ -1589,7 +1589,7 @@ namespace PetriEngine {
                     } while(changed && !hasTimedout());
                     if(!next_safe) 
                     { // then apply tokens moving rules
-                        while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
+                        //while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleB(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                         while(ReducebyRuleA(context.getQueryPlaceCount())) changed = true;
                     }    
