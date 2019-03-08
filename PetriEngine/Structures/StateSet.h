@@ -41,6 +41,11 @@ namespace PetriEngine {
                 _maxPlaceBound = std::vector<uint32_t>(_net.numberOfPlaces(), 0);
                 _sp = binarywrapper_t(sizeof(uint32_t)*_net.numberOfPlaces()*8);
             }
+
+	    ~StateSetInterface()
+	    {
+		_sp.release();
+	    }
             
             virtual std::pair<bool, size_t> add(State& state) = 0;
             

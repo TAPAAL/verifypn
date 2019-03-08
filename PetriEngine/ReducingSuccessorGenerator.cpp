@@ -7,10 +7,10 @@ namespace PetriEngine {
 
     ReducingSuccessorGenerator::ReducingSuccessorGenerator(const PetriNet& net) : SuccessorGenerator(net), _inhibpost(net._nplaces){
         _current = 0;
-        _enabled = new bool[net._ntransitions];
-        _stubborn = new bool[net._ntransitions];
-        _dependency = new uint32_t[net._ntransitions];
-        _places_seen.reset(new uint8_t[_net.numberOfPlaces()]);
+        _enabled = std::make_unique<bool[]>(net._ntransitions);
+        _stubborn = std::make_unique<bool[]>(net._ntransitions);
+        _dependency = std::make_unique<uint32_t[]>(net._ntransitions);
+        _places_seen = std::make_unique<uint8_t[]>(_net.numberOfPlaces());
         reset();
         constructPrePost();
         constructDependency();
@@ -24,9 +24,6 @@ namespace PetriEngine {
     }
 
     ReducingSuccessorGenerator::~ReducingSuccessorGenerator() {
-        delete [] _enabled;
-        delete [] _stubborn;
-        delete [] _dependency;
     }
     
     void ReducingSuccessorGenerator::checkForInhibitor(){
@@ -105,7 +102,7 @@ namespace PetriEngine {
     }
 
     void ReducingSuccessorGenerator::constructDependency() {
-        memset(_dependency, 0, sizeof(uint32_t) * _net._ntransitions);
+        memset(_dependency.get(), 0, sizeof(uint32_t) * _net._ntransitions);
 
         for (uint32_t t = 0; t < _net._ntransitions; t++) {
             uint32_t finv = _net._transitions[t].inputs;
@@ -117,7 +114,7 @@ namespace PetriEngine {
                 uint32_t ntrans = (_places.get()[p + 1].pre - _places.get()[p].post);
 
                 for (uint32_t tIndex = 0; tIndex < ntrans; tIndex++) {
-                    _dependency[t]++;
+                    ++_dependency[t];
                 }
             }
         }
@@ -315,7 +312,7 @@ namespace PetriEngine {
 
     void ReducingSuccessorGenerator::reset() {
         SuccessorGenerator::reset();
-        memset(_enabled, false, sizeof(bool) * _net._ntransitions);
-        memset(_stubborn, false, sizeof(bool) * _net._ntransitions);
+        memset(_enabled.get(), false, sizeof(bool) * _net._ntransitions);
+        memset(_stubborn.get(), false, sizeof(bool) * _net._ntransitions);
     }
 }
