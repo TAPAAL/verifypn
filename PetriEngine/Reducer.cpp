@@ -972,6 +972,15 @@ namespace PetriEngine {
             
             if((numberofplaces - _removedPlaces) > 1)
             {
+                if(reconstructTrace)
+                {
+                    for(auto t : place.consumers)
+                    {
+                        std::string tname = getTransitionName(t);
+                        const ArcIter arc = getInArc(p, getTransition(t));
+                        _extraconsume[tname].emplace_back(getPlaceName(p), arc->weight);
+                    }
+                }
                 skipPlace(p);
                 continueReductions = true;
             }
@@ -1066,6 +1075,8 @@ namespace PetriEngine {
     
     bool Reducer::ReducebyRuleH(uint32_t* placeInQuery)
     {
+        if(reconstructTrace) 
+            return false; // we don't know where in the loop the tokens are needed
         bool continueReductions = false;
         for(uint32_t t1 = 0; t1 < parent->numberOfTransitions(); ++t1)
         {
