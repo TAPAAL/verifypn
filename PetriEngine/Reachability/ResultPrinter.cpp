@@ -127,7 +127,9 @@ namespace PetriEngine {
             {
                 if(stateset == NULL)
                 {
-                    std::cout << "No trace could be generated" << std::endl;
+                    // No trace was generated, printing the empty trace
+                    std::cerr << "Trace:\n<trace>\n";
+                    std::cerr << "</trace>\n" << std::endl;
                 }
                 else
                 {
