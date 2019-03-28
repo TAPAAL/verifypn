@@ -1176,7 +1176,7 @@ namespace PetriEngine {
         assert(consistent());
         this->reconstructTrace = reconstructTrace;
         if(reconstructTrace && enablereduction >= 1 && enablereduction <= 2)
-            std::cerr << "Rule H disabled when a trace is requested." << std::endl;
+            std::cout << "Rule H disabled when a trace is requested." << std::endl;
         if (enablereduction == 1) { // in the aggressive reduction all four rules are used as long as they remove something
             bool changed = false;
             do
