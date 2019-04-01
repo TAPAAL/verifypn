@@ -127,7 +127,16 @@ namespace PetriEngine {
             {
                 if(stateset == NULL)
                 {
-                    std::cout << "No trace could be generated" << std::endl;
+#ifdef ENABLE_TAR
+                    if(options->tar)
+                        std::cout << "No trace could be generated" << std::endl;
+                    else
+#endif
+                    {
+                        // No trace was generated, printing the empty trace
+                        std::cerr << "Trace:\n<trace>\n";
+                        std::cerr << "</trace>\n" << std::endl;
+                    }
                 }
                 else
                 {
