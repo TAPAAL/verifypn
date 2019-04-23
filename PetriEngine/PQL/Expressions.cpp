@@ -3489,18 +3489,16 @@ namespace PetriEngine {
         Condition_ptr pushEqual(CompareCondition* org, bool negated, bool noteq, const EvaluationContext& context)
         {
             if(org->isTrivial()) return BooleanCondition::getShared(org->evaluate(context) xor negated);
-            if((*org)[0]->placeFree() && (*org)[0]->evaluate(context) == 0)
+            for(auto i : {0,1})
             {
-                if(negated == noteq) return std::make_shared<LessThanOrEqualCondition>((*org)[1], std::make_shared<LiteralExpr>(0));
-                else                 return std::make_shared<GreaterThanOrEqualCondition>((*org)[1], std::make_shared<LiteralExpr>(1));
-            }
-            if((*org)[1]->placeFree() && (*org)[1]->evaluate(context) == 0)
-            {
-                if(negated == noteq) return std::make_shared<LessThanOrEqualCondition>((*org)[1], std::make_shared<LiteralExpr>(0));
-                else                 return std::make_shared<GreaterThanOrEqualCondition>((*org)[1], std::make_shared<LiteralExpr>(1));                
+                if((*org)[i]->placeFree() && (*org)[i]->evaluate(context) == 0)
+                {
+                    if(negated == noteq) return std::make_shared<LessThanOrEqualCondition>((*org)[(i + 1) % 2], std::make_shared<LiteralExpr>(0));
+                    else                 return std::make_shared<GreaterThanOrEqualCondition>((*org)[(i + 1) % 2], std::make_shared<LiteralExpr>(1));
+                }
             }
             if(negated == noteq) return std::make_shared<EqualCondition>((*org)[0], (*org)[1]);
-            else                 return std::make_shared<NotEqualCondition>((*org)[0], (*org)[1]);            
+            else                 return std::make_shared<NotEqualCondition>((*org)[0], (*org)[1]);
         }
         
         Condition_ptr NotEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
