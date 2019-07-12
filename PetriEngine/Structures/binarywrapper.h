@@ -27,17 +27,17 @@
 #include <assert.h>
 #include <limits>
 #include <stdlib.h>
+#include <malloc.h>
 #include <stdint.h>
 
 #ifndef BINARYWRAPPER_H
 #define	BINARYWRAPPER_H
 
-#define __BW_BSIZE__ sizeof(size_t) // SIZE OF POINTER!
 namespace ptrie
 {
     typedef unsigned int uint;
     typedef unsigned char uchar;
-    
+    constexpr auto __BW_BSIZE__ = sizeof(size_t); // SIZE OF POINTER!
     /**
      * Wrapper for binary data. This provides easy access to individual bits, 
      * heap allocation and comparison. Notice that one has to make sure to 
@@ -52,7 +52,7 @@ namespace ptrie
          * Empty constructor, no data is allocated
          */
         
-        binarywrapper_t() : _blob(NULL), _nbytes(0)
+        binarywrapper_t() : _blob(nullptr), _nbytes(0)
         {            
         }
         
@@ -60,7 +60,7 @@ namespace ptrie
          Allocates a room for at least size bits
          */
         
-        binarywrapper_t(size_t size);
+        binarywrapper_t(uint size);
         
         /**
          * Constructor for copying over data from latest the offset'th bit.
@@ -94,11 +94,11 @@ namespace ptrie
 	
 	/**
          * Assign (not copy) raw data to pointer. Set number of bytes to size
-         * @param raw: some memory to point to
+         * @param org: some memory to point to
          * @param size: number of bytes.
          */
         
-        binarywrapper_t(uchar* raw, uint size);
+        binarywrapper_t(uchar* org, uint size);
         
         /**
          * Empty destructor. Does NOT deallocate data - do this with explicit
@@ -130,11 +130,11 @@ namespace ptrie
         /**
          * Copy over size bytes form raw data. Assumes that current wrapper has
          * enough room.
-         * @param raw: source data
+         * @param org: source data
          * @param size: number of bytes to copy
          */
 
-        void copy(const uchar* raw, uint size);
+        void copy(const uchar* org, uint size);
 
         // accessors
         /**
@@ -169,7 +169,7 @@ namespace ptrie
          * @return 
          */
         
-        inline uchar* const_raw() const
+        inline const uchar* const_raw() const
         {
             if(_nbytes <= __BW_BSIZE__) return offset((uchar*)&_blob, _nbytes);
             else 
@@ -183,7 +183,7 @@ namespace ptrie
                
         inline uchar* raw()
         {
-            return const_raw();
+            return const_cast<uchar*>(const_raw());
         }
 
         /**
@@ -199,10 +199,10 @@ namespace ptrie
          * @return 
          */
         
-        static size_t overhead(size_t size);
+        static size_t overhead(uint size);
         
         
-        static size_t bytes(size_t size);
+        static size_t bytes(uint size);
         // modifiers
         /**
          * Change value of place'th bit 
@@ -210,15 +210,15 @@ namespace ptrie
          * @param value: desired value
          */
         
-        inline void set(const uint place, const bool value) const
+        inline void set(const uint place, const bool value)
         {
             assert(place < _nbytes*8);
             uint offset = place % 8;
             uint theplace = place / 8;
             if (value) {
-                const_raw()[theplace] |= _masks[offset];
+                raw()[theplace] |= _masks[offset];
             } else {
-                const_raw()[theplace] &= ~_masks[offset];
+                raw()[theplace] &= ~_masks[offset];
             }    
         }   
         
@@ -226,11 +226,11 @@ namespace ptrie
          * Sets all memory on heap to 0 
          */
         
-        inline void zero() const
+        inline void zero()
         {
-            if(_nbytes > 0 && _blob != NULL)
+            if(_nbytes > 0 && _blob != nullptr)
             {
-                memset(const_raw(), 0x0, _nbytes); 
+                memset(raw(), 0x0, _nbytes); 
             }
         }
         
@@ -242,7 +242,7 @@ namespace ptrie
         {
             if(_nbytes > __BW_BSIZE__)
                 dealloc(_blob);
-            _blob = NULL;
+            _blob = nullptr;
             _nbytes = 0;
         }
                 
@@ -252,7 +252,7 @@ namespace ptrie
          * @return 
          */
 
-        inline uchar operator[](size_t i) const
+        inline uchar operator[](int i) const
         {
             if (i >= _nbytes) {
                  return 0x0;
@@ -277,18 +277,78 @@ namespace ptrie
         }
             
         /**
-         * Compares wrappers bytes by bytes. If sizes do not match, they are not
-         * equal. If sizes match, compares byte by byte.
+         * If sizes differs, the comparison is done here.
+         * If sizes match, compares byte by byte.
          * @param enc1 
          * @param enc2
          * @return true if a match, false otherwise
-         */
-         friend bool operator==(  const binarywrapper_t &enc1, 
-                                        const binarywrapper_t &enc2) {
+         */        
+        friend bool operator==( const binarywrapper_t &enc1, 
+                                const binarywrapper_t &enc2) {
             return enc1.cmp(enc2) == 0;
         }
-         
-        const static uchar _masks[8];
+        
+        /**
+         * If sizes differs, the comparison is done here.
+         * If sizes match, compares byte by byte.
+         * @param enc1 
+         * @param enc2
+         * @return true if a match, false otherwise
+         */        
+        friend bool operator<(const binarywrapper_t &enc1, 
+                               const binarywrapper_t &enc2) {
+            return enc1.cmp(enc2) < 0;
+        }
+
+        /**
+         * If sizes differs, the comparison is done here.
+         * If sizes match, compares byte by byte.
+         * @param enc1 
+         * @param enc2
+         * @return true if a match, false otherwise
+         */        
+        friend bool operator!=(const binarywrapper_t &enc1, 
+                               const binarywrapper_t &enc2) {
+            return !(enc1 == enc2);
+        }
+
+        /**
+         * If sizes differs, the comparison is done here.
+         * If sizes match, compares byte by byte.
+         * @param enc1 
+         * @param enc2
+         * @return true if a match, false otherwise
+         */        
+        friend bool operator>=(const binarywrapper_t &enc1, 
+                               const binarywrapper_t &enc2) {
+            return !(enc1 < enc2);
+        }
+        
+        /**
+         * If sizes differs, the comparison is done here.
+         * If sizes match, compares byte by byte.
+         * @param enc1 
+         * @param enc2
+         * @return true if a match, false otherwise
+         */        
+        friend bool operator>(const binarywrapper_t &enc1, 
+                               const binarywrapper_t &enc2) {
+            return enc2 < enc1;
+        }
+
+        /**
+         * If sizes differs, the comparison is done here.
+         * If sizes match, compares byte by byte.
+         * @param enc1 
+         * @param enc2
+         * @return true if a match, false otherwise
+         */        
+        friend bool operator<=(const binarywrapper_t &enc1, 
+                               const binarywrapper_t &enc2) {
+            return enc2 <= enc1;
+        }
+        
+	const static uchar _masks[8];
     private:
          
         static inline uchar* allocate(size_t n)
@@ -324,7 +384,7 @@ namespace ptrie
             free(data);
         }
         
-        static inline uchar* offset(uchar* data, uint32_t size)
+        static inline uchar* offset(uchar* data, uint16_t size)
         {
 //            if((size % __BW_BSIZE__) == 0) return data;
 //            else return &data[(__BW_BSIZE__ - (size % __BW_BSIZE__))];
@@ -332,10 +392,10 @@ namespace ptrie
         }
         
         // blob of heap-allocated data
-        uchar* _blob;
+        uchar* _blob = nullptr;
             
         // number of bytes allocated on heap
-        uint32_t _nbytes;
+        uint16_t _nbytes = 0;
                
         // masks for single-bit access
      } __attribute__((packed));

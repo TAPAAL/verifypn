@@ -55,42 +55,42 @@ public:
     linked_bucket_t(size_t threads)
     : _tnext(threads) {
         for (size_t i = 0; i < threads; ++i) {
-            _tnext[i] = NULL;
+            _tnext[i] = nullptr;
         }
         _begin = new bucket_t;
         _begin->_count = 0;
         _begin->_offset = 0;
-        _begin->_nbucket = NULL;
+        _begin->_nbucket = nullptr;
         _tnext[0] = _begin;
 
         _index = new index_t;
-        _index->_next = NULL;
+        _index->_next = nullptr;
 
         memset(&_begin->_data, 0, sizeof(T)*C);        
         memset(&_index->_index, 0, sizeof(bucket_t*)*C);
         _index->_index[0] = _begin;
     }
 
-    virtual ~linked_bucket_t() {
+    ~linked_bucket_t() {
 
         do {
             bucket_t* n = _begin->_nbucket.load();
             delete _begin;
             _begin = n;
 
-        } while (_begin != NULL);
+        } while (_begin != nullptr);
 
         do {
             index_t* n = _index->_next.load();
             delete _index;
             _index = n;
 
-        } while (_index != NULL);
+        } while (_index != nullptr);
     }
 
     inline T& operator[](size_t i) {
         bucket_t* n = indexToBucket(i);
-        if(n != NULL)
+        if(n != nullptr)
         {
             return n->_data[i % C];
         }
@@ -100,8 +100,8 @@ public:
         while (b <= i) {
             b += C;
             n = n->_nbucket.load();
-            if(n == NULL) std::cerr << "FAILED FETCHING ID: " << i << std::endl;
-            assert(n != NULL);
+            if(n == nullptr) std::cerr << "FAILED FETCHING ID: " << i << std::endl;
+            assert(n != nullptr);
         }
 
         return n->_data[i % C];
@@ -110,7 +110,7 @@ public:
     inline const T& operator[](size_t i) const {
 
         bucket_t* n = indexToBucket(i);
-        if(n != NULL)
+        if(n != nullptr)
         {
             return n->_data[i % C];
         }
@@ -121,7 +121,7 @@ public:
         while (b <= i) {
             b += C;
             n = n->_nbucket.load();
-            assert(n != NULL);
+            assert(n != nullptr);
         }
 
         return n->_data[i % C];
@@ -130,7 +130,7 @@ public:
     size_t size() {
         bucket_t* n = _begin;
         size_t cnt = 0;
-        while (n != NULL) {
+        while (n != nullptr) {
             cnt += n->_count;
             n = n->_nbucket.load();
         }
@@ -138,25 +138,25 @@ public:
     }
 
     inline size_t next(size_t thread) {
-        if (_tnext[thread] == NULL || _tnext[thread]->_count == C) {
+        if (_tnext[thread] == nullptr || _tnext[thread]->_count == C) {
             bucket_t* next = new bucket_t;
             next->_count = 0;
-            next->_nbucket = NULL;
+            next->_nbucket = nullptr;
             next->_offset = 0;
             memset(&next->_data, 0, sizeof(T)*C);
             
             bucket_t* n = _tnext[thread];
-            if (n == NULL) {
+            if (n == nullptr) {
                 n = _begin;
             }
 
             next->_offset = n->_offset.load() + C; // beginning of next
 
-            bucket_t* tmp = NULL;
+            bucket_t* tmp = nullptr;
 
             while (!n->_nbucket.compare_exchange_weak(tmp, next)) {
-                if (tmp != NULL) {
-                    assert(tmp != NULL);
+                if (tmp != nullptr) {
+                    assert(tmp != nullptr);
                     n = tmp;
                     next->_offset += C;
                 }
@@ -171,6 +171,12 @@ public:
         // return old counter value, then increment
         return c->_offset + (c->_count++);
     }
+
+    inline void pop_back(size_t thread)
+    {
+        assert(_tnext[thread] != nullptr && _tnext[thread]->_count > 0);
+        --_tnext[thread]->_count;
+    }
     
     private:
         
@@ -181,7 +187,7 @@ public:
             {
                 index_t* old = tmp;
                 tmp = old->_next;
-                if(tmp == NULL)
+                if(tmp == nullptr)
                 {
                     // extend index if needed
                     index_t* nindex = new index_t;
@@ -209,7 +215,7 @@ public:
             while(id >= C*C)
             {
                 tmp = tmp->_next;
-                if(tmp == NULL) return NULL;
+                if(tmp == nullptr) return nullptr;
                 id -= C*C;
             }
             return tmp->_index[id/C];
