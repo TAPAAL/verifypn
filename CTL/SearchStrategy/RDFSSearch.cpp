@@ -8,6 +8,9 @@
 #include "RDFSSearch.h"
 #include "CTL/DependencyGraph/Configuration.h"
 
+#include <algorithm>
+#include <random>
+
 namespace SearchStrategy {
 size_t RDFSSearch::Wsize() const {
     return W.size();
@@ -25,15 +28,10 @@ void RDFSSearch::pushToW(DependencyGraph::Edge* edge) {
     W.push_back(edge);
 }
 
-
-size_t genrand(size_t i)
-{
-        return std::rand() % i;
-}
-
+auto rng = std::default_random_engine {};
 void RDFSSearch::flush() {
     last_parent = std::min(last_parent, W.size());
-    std::random_shuffle(W.begin() + last_parent, W.end(), genrand);
+    std::shuffle(W.begin() + last_parent, W.end(), rng);
     last_parent = W.size();
 }
 

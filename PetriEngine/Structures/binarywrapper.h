@@ -27,7 +27,9 @@
 #include <assert.h>
 #include <limits>
 #include <stdlib.h>
+#ifndef __clang__
 #include <malloc.h>
+#endif
 #include <stdint.h>
 
 #ifndef BINARYWRAPPER_H
@@ -345,7 +347,7 @@ namespace ptrie
          */        
         friend bool operator<=(const binarywrapper_t &enc1, 
                                const binarywrapper_t &enc2) {
-            return enc2 <= enc1;
+            return enc2 < enc1;
         }
         
 	const static uchar _masks[8];

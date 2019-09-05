@@ -139,7 +139,6 @@ namespace ptrie {
         struct fwdnode_t : public base_t {
             base_t* _children[256];
             fwdnode_t* _parent;
-
         } __attribute__((packed));
 
         std::shared_ptr<linked_bucket_t<entry_t, ALLOCSIZE>> _entries = nullptr;

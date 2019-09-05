@@ -18,6 +18,9 @@
 #include "Queue.h"
 #include "../PQL/Contexts.h"
 
+#include <algorithm>
+#include <random>
+
 namespace PetriEngine {
     namespace Structures {
         Queue::Queue(StateSetInterface* states) : _states(states) {} 
@@ -70,12 +73,8 @@ namespace PetriEngine {
         
         RDFSQueue::RDFSQueue(StateSetInterface* states) : Queue(states) {}
         RDFSQueue::~RDFSQueue(){}
-        
-	size_t genrand(size_t i)
-	{
-		return std::rand() % i;
-	}
-        
+       
+        auto rng = std::default_random_engine {};
         bool RDFSQueue::pop(Structures::State& state)
         {
             if(_cache.empty())
@@ -88,7 +87,7 @@ namespace PetriEngine {
             }
             else
             {
-                std::random_shuffle ( _cache.begin(), _cache.end(), genrand );
+                std::shuffle ( _cache.begin(), _cache.end(), rng );
 		uint32_t n = _cache.back();
                 _states->decode(state, n);
                 for(size_t i = 0; i < (_cache.size() - 1); ++i)
