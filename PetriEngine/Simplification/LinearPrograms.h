@@ -17,6 +17,7 @@ namespace PetriEngine {
                 virtual void satisfiableImpl(const PQL::SimplificationContext& context, uint32_t solvetime) = 0;
                 bool has_empty = false;
             public:
+                virtual ~AbstractProgramCollection() {};
                 bool empty() { return has_empty; }
                 
                 virtual bool satisfiable(const PQL::SimplificationContext& context, uint32_t solvetime = std::numeric_limits<uint32_t>::max())

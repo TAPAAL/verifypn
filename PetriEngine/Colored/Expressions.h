@@ -455,6 +455,7 @@ namespace PetriEngine {
             ColorType* _sort;
             
         public:
+            virtual ~AllExpression() {};
             std::vector<const Color*> eval(ExpressionContext& context) const {
                 std::vector<const Color*> colors;
                 assert(_sort != nullptr);

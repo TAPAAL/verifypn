@@ -29,6 +29,7 @@ struct Message {
 class SearchStrategy
 {
 public:
+    virtual ~SearchStrategy() {};
     bool empty() const;
     void pushEdge(DependencyGraph::Edge *edge);
     void pushDependency(DependencyGraph::Edge* edge);
