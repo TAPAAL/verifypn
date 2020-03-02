@@ -1,12 +1,12 @@
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+add_subdirectory(Algorithm)
+add_subdirectory(DependencyGraph)
+add_subdirectory(PetriNets)
+add_subdirectory(SearchStrategy)
 
 add_library(CTL ${HEADER_FILES}
-CTLEngine.cpp
-Algorithm/CertainZeroFPA.cpp
-Algorithm/FixedPointAlgorithm.cpp
-Algorithm/LocalFPA.cpp
-DependencyGraph/Configuration.cpp
-PetriNets/OnTheFlyDG.cpp
-SearchStrategy/HeuristicSearch.cpp
-SearchStrategy/RDFSSearch.cpp
-SearchStrategy/SearchStrategy.cpp)
+CTLEngine.cpp)
+
+target_link_libraries(CTL Algorithm DependencyGraph PetriNets SearchStrategy)
 
