@@ -137,17 +137,17 @@ namespace PetriEngine {
         }
         
         
-        DotConstant::DotConstant() : Color(0, 0, "dot")
+        DotConstant::DotConstant() : Color(nullptr, 0, "dot")
         {
         }
         
         
         void ColorType::addColor(const char* colorName) {
-            _colors.push_back(Color(this, _colors.size(), colorName));
+            _colors.emplace_back(this, _colors.size(), colorName);
         }
         
         void ColorType::addColor(std::vector<const Color*>& colors) {
-            _colors.push_back(Color(this, (uint32_t)_colors.size(), colors));
+            _colors.emplace_back(this, (uint32_t)_colors.size(), colors);
         }
         
         const Color* ColorType::operator[] (const char* index) {
@@ -164,9 +164,9 @@ namespace PetriEngine {
                 size_t div = 1;
 
                 std::vector<const Color*> colors;
-                for (size_t i = 0; i < constituents.size(); ++i) {
+                for (auto & constituent : constituents) {
                     mod = constituents.size();
-                    colors.push_back(&(*constituents[i])[(index / div) % mod]);
+                    colors.push_back(&(*constituent)[(index / div) % mod]);
                     div *= mod;
                 }
 
@@ -176,7 +176,7 @@ namespace PetriEngine {
             return cache.at(index);
         }
 
-        const Color* ProductType::getColor(const std::vector<const Color*> colors) {
+        const Color* ProductType::getColor(const std::vector<const Color*>& colors) {
             size_t product = 1;
             size_t sum = 0;
 

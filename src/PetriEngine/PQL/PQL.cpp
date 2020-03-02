@@ -23,8 +23,7 @@
 namespace PetriEngine {
     namespace PQL {
 
-        Expr::~Expr(){
-        }
+        Expr::~Expr()= default;
         
         bool Condition::isTriviallyTrue() {
             if (trivial == 1) {
@@ -42,11 +41,9 @@ namespace PetriEngine {
             return false;
         }
         
-        Condition::~Condition() {
+        Condition::~Condition() = default;
 
-        }
-
-        Condition_ptr Condition::initialMarkingRW(std::function<Condition_ptr()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw)
+        Condition_ptr Condition::initialMarkingRW(const std::function<Condition_ptr()>& func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw)
         {
             auto res = func();
             if(!nested && initrw)

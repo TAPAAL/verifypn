@@ -245,7 +245,7 @@ namespace PetriEngine {
                 return true;
             }
 
-            const Color* getColor(const std::vector<const Color*> colors);
+            const Color* getColor(const std::vector<const Color*>& colors);
 
             const Color& operator[](size_t index) override;
             const Color& operator[](int index) override {

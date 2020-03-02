@@ -2,23 +2,17 @@
 
 #include "CTL/PetriNets/OnTheFlyDG.h"
 #include "CTL/CTLResult.h"
-#include "CTL/DependencyGraph/Edge.h"
 
-#include "CTL/SearchStrategy/DFSSearch.h"
 
 #include "CTL/Algorithm/CertainZeroFPA.h"
 #include "CTL/Algorithm/LocalFPA.h"
 
-#include "PetriEngine/PQL/PQL.h"
 
 #include "CTL/Stopwatch.h"
 #include "PetriEngine/options.h"
-#include "CTL/Algorithm/AlgorithmTypes.h"
 
 #include <iostream>
 #include <iomanip>
-#include <fstream>
-#include <sstream>
 #include <vector>
 
 using namespace std;

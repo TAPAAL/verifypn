@@ -36,8 +36,7 @@ namespace PetriEngine {
             }
         }
 
-        Multiset::~Multiset() {
-        }
+        Multiset::~Multiset() = default;
 
         Multiset Multiset::operator +(const Multiset& other) const {
             Multiset ms(*this);
@@ -111,9 +110,9 @@ namespace PetriEngine {
             if (color->getColorType() != nullptr && type->getId() != color->getColorType()->getId()) {
                 throw "You cannot access a Multiset with a color from a different color type";
             }
-            for (size_t i = 0; i < _set.size(); ++i) {
-                if (_set[i].first == color->getId())
-                    return _set[i].second;
+            for (auto & i : _set) {
+                if (i.first == color->getId())
+                    return i.second;
             }
 
             _set.emplace_back(color->getId(), 0);

@@ -3,12 +3,10 @@
 #include <algorithm>
 #include <string.h>
 #include <iostream>
-#include <memory>
 #include <queue>
 #include <limits>
 
 #include "PetriEngine/SuccessorGenerator.h"
-#include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Expressions.h"
 #include "CTL/SearchStrategy/SearchStrategy.h"
 
@@ -341,7 +339,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                         if(res == Condition::RFALSE) return true;
                         if(res == Condition::RTRUE)
                         {
-                            for(auto s : succs){ --s->refcnt; release(s);};
+                            for(auto s : succs){ --s->refcnt; release(s);}
                             succs.clear();
                             succs.push_back(newEdge(*v, 0));    
                             if(right)
@@ -396,7 +394,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                                 if(res == Condition::RFALSE) return true;
                                 if(res == Condition::RTRUE)
                                 {
-                                    for(auto s : succs){ --s->refcnt; release(s);};
+                                    for(auto s : succs){ --s->refcnt; release(s);}
                                     succs.clear();
                                     succs.push_back(newEdge(*v, 0));
                                     if(subquery)
@@ -430,7 +428,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                             auto res = fastEval(query, &marking);
                             if(res == Condition::RTRUE)
                             {
-                                for(auto s : succs){ --s->refcnt; release(s);};
+                                for(auto s : succs){ --s->refcnt; release(s);}
                                 succs.clear();
                                 succs.push_back(newEdge(*v, 0));
                                 return false;

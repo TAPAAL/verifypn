@@ -20,28 +20,26 @@
 #include "PetriEngine/PQL/Expressions.h"
 
 #include <string>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
-#include <sstream> 
-#include <algorithm> 
+#include <algorithm>
 
 using namespace std;
 
 int getChildCount(rapidxml::xml_node<> *n)
 {
   int c = 0;
-  for (rapidxml::xml_node<> *child = n->first_node(); child != NULL; child = child->next_sibling())
+  for (rapidxml::xml_node<> *child = n->first_node(); child != nullptr; child = child->next_sibling())
   {
     c++;
   } 
   return c;
 } 
 
-QueryXMLParser::QueryXMLParser() {
-}
+QueryXMLParser::QueryXMLParser() = default;
 
-QueryXMLParser::~QueryXMLParser() { }
+QueryXMLParser::~QueryXMLParser() = default;
 
 bool QueryXMLParser::parse(std::ifstream& xml, const std::set<size_t>& parse_only) {
     //Parse the xml
@@ -69,11 +67,11 @@ bool QueryXMLParser::parsePropertySet(rapidxml::xml_node<>*  element, const std:
     
     size_t i = 0;
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
-        if(parse_only.size() == 0 || parse_only.count(i) > 0)
+        if(parse_only.empty() || parse_only.count(i) > 0)
         {
             if (!parseProperty(it)) {
                 return false;
-            };
+            }
         }
         else
         {
@@ -94,7 +92,7 @@ bool QueryXMLParser::parseProperty(rapidxml::xml_node<>*  element) {
     }
     string id;
     bool tagsOK = true;
-    rapidxml::xml_node<>* formulaPtr = NULL;
+    rapidxml::xml_node<>* formulaPtr = nullptr;
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
         if (strcmp(it->name(), "id") == 0) {
             id = it->value();
@@ -105,7 +103,7 @@ bool QueryXMLParser::parseProperty(rapidxml::xml_node<>*  element) {
         }
     }
 
-    if (id == "") {
+    if (id.empty()) {
         fprintf(stderr, "ERROR a query with empty id\n");
         return false;
     }
@@ -155,7 +153,7 @@ Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
                 return nullptr;
             }
             auto place = parsePlace(it);
-            if (place == "") 
+            if (place.empty())
             {             
                 assert(false);
                 return nullptr; // invalid place name
@@ -480,7 +478,7 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
                 return nullptr;
             }
             string placeName = parsePlace(it);
-            if (placeName == "")
+            if (placeName.empty())
             {
                 assert(false);
                 return nullptr; // invalid place name
@@ -489,7 +487,7 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
             ids.emplace_back(id);
         }
         
-        if (ids.size() == 0) 
+        if (ids.empty())
         {
             assert(false);
             return nullptr;       
@@ -524,7 +522,7 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
         return  isMult ? 
                 std::dynamic_pointer_cast<Expr>(std::make_shared<MultiplyExpr>(std::move(els))) :
                 std::dynamic_pointer_cast<Expr>(std::make_shared<PlusExpr>(std::move(els)));
-;
+
     } else if (elementName == "integer-difference") {
         auto children = element->first_node();
         std::vector<Expr_ptr> els;
@@ -540,7 +538,7 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
 }
 
 string QueryXMLParser::parsePlace(rapidxml::xml_node<>*  element) {
-    if (strcmp(element->name(), "place"))  return ""; // missing place tag
+    if (strcmp(element->name(), "place") != 0)  return ""; // missing place tag
     string placeName = element->value();
     placeName.erase(std::remove_if(placeName.begin(), placeName.end(), ::isspace), placeName.end());
     return placeName;

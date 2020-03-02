@@ -2,7 +2,6 @@
 #include "CTL/DependencyGraph/Configuration.h"
 #include "CTL/SearchStrategy/SearchStrategy.h"
 
-#include <algorithm>
 #include <iostream>
 #include <cassert>
 

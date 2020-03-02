@@ -19,17 +19,15 @@
  */
 
 #include <string>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <limits>
-#include <fstream>
-#include <string.h>
+#include <cstring>
 
 
 #include "PetriParse/PNMLParser.h"
 #include "PetriEngine/errorcodes.h"
-#include "PetriEngine/PQL/Expressions.h"
 
 using namespace PetriEngine;
 using namespace std;
@@ -69,47 +67,47 @@ void PNMLParser::parse(ifstream& xml,
     parseElement(root);
 
     //Add all the transition
-    for (TransitionIter it = transitions.begin(); it != transitions.end(); ++it)
+    for (auto & transition : transitions)
         if (!isColored) {
-            builder->addTransition(it->id, it->x, it->y);
+            builder->addTransition(transition.id, transition.x, transition.y);
         } else {
-            builder->addTransition(it->id, it->expr, it->x, it->y);
+            builder->addTransition(transition.id, transition.expr, transition.x, transition.y);
         }
 
     //Add all the arcs
-    for (ArcIter it = arcs.begin(); it != arcs.end(); it++) {
-        auto a = *it;
+    for (auto & arc : arcs) {
+        auto a = arc;
         
         //Check that source id exists
-        if (id2name.find(it->source) == id2name.end()) {
+        if (id2name.find(arc.source) == id2name.end()) {
             fprintf(stderr,
                     "XML Parsing error: Arc source with id=\"%s\" wasn't found!\n",
-                    it->source.c_str());
+                    arc.source.c_str());
             continue;
         }
         //Check that target id exists
-        if (id2name.find(it->target) == id2name.end()) {
+        if (id2name.find(arc.target) == id2name.end()) {
             fprintf(stderr,
                     "XML Parsing error: Arc target with id=\"%s\" wasn't found!\n",
-                    it->target.c_str());
+                    arc.target.c_str());
             continue;
         }
         //Find source and target
-        NodeName source = id2name[it->source];
-        NodeName target = id2name[it->target];
+        NodeName source = id2name[arc.source];
+        NodeName target = id2name[arc.target];
 
         if (source.isPlace && !target.isPlace) {
             if (!isColored) {
-                builder->addInputArc(source.id, target.id, false, it->weight);
+                builder->addInputArc(source.id, target.id, false, arc.weight);
             } else {
-                builder->addInputArc(source.id, target.id, it->expr);
+                builder->addInputArc(source.id, target.id, arc.expr);
             }
 
         } else if (!source.isPlace && target.isPlace) {
             if (!isColored) {
-                builder->addOutputArc(source.id, target.id, it->weight);
+                builder->addOutputArc(source.id, target.id, arc.weight);
             } else {
-                builder->addOutputArc(source.id, target.id, it->expr);
+                builder->addOutputArc(source.id, target.id, arc.expr);
             }
         } else {
             fprintf(stderr,
@@ -136,7 +134,7 @@ void PNMLParser::parse(ifstream& xml,
     }
     
     //Unset the builder
-    this->builder = NULL;
+    this->builder = nullptr;
 
     //Cleanup
     id2name.clear();
@@ -188,7 +186,7 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
     } else {
         for (auto it = type->first_node(); it; it = it->next_sibling()) {
             auto id = it->first_attribute("id");
-            assert(id != 0);
+            assert(id != nullptr);
             ct->addColor(id->value());
         }
     }
@@ -468,7 +466,7 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
         weight = atoi(text.c_str());
         if(std::find_if(text.begin(), text.end(), [](char c) { return !std::isdigit(c) && !std::isblank(c); }) != text.end())
         {
-            if(weight == 0) weight = 1;
+            if(weight == 0);
             std::cerr << "ERROR: Found non-integer-text in inscription-tag (weight) on arc from " << source << " to " << target << " with value \"" << text << "\". An integer was expected." << std::endl;
             exit(ErrorCode);
         }
@@ -613,7 +611,7 @@ void PNMLParser::parsePosition(rapidxml::xml_node<>* element, double& x, double&
 }
 
 const PetriEngine::Colored::Color* PNMLParser::findColor(const char* name) const {
-    for (auto elem : colorTypes) {
+    for (const auto& elem : colorTypes) {
         auto col = (*elem.second)[name];
         if (col)
             return col;

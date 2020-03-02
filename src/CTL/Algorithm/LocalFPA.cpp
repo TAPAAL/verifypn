@@ -2,7 +2,7 @@
 #include "CTL/DependencyGraph/Configuration.h"
 #include "CTL/DependencyGraph/Edge.h"
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 
 bool Algorithm::LocalFPA::search(DependencyGraph::BasicDependencyGraph &t_graph)
@@ -67,7 +67,7 @@ bool Algorithm::LocalFPA::search(DependencyGraph::BasicDependencyGraph &t_graph)
         }
     }
 
-    return (v->assignment == ONE) ? true : false;
+    return v->assignment == ONE;
 }
 
 void Algorithm::LocalFPA::finalAssign(DependencyGraph::Configuration *c, DependencyGraph::Assignment a)

@@ -281,7 +281,7 @@ namespace PetriEngine {
             virtual Quantifier getQuantifier() const = 0;
             virtual Path getPath() const = 0;
             static std::shared_ptr<Condition> 
-            initialMarkingRW(std::function<std::shared_ptr<Condition> ()> func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw);
+            initialMarkingRW(const std::function<std::shared_ptr<Condition> ()>& func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw);
             virtual bool containsNext() const = 0;   
             virtual bool nestedDeadlock() const = 0;
         protected:
