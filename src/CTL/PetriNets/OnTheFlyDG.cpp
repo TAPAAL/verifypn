@@ -564,7 +564,7 @@ size_t OnTheFlyDG::createMarking(Marking& t_marking){
     unsigned char type = encoder.getType(sum, active, allsame, val);
     size_t length = encoder.encode(t_marking.marking(), type);
     binarywrapper_t w = binarywrapper_t(encoder.scratchpad().raw(), length*8);
-    auto tit = trie.insert(w);
+    auto tit = trie.insert(w.raw(), w.size());
     if(tit.first){
         _markingCount++;
     }

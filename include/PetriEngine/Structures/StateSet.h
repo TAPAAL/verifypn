@@ -16,12 +16,12 @@
  */
 #ifndef STATESET_H
 #define STATESET_H
+#include <ptrie/ptrie_stable.h>
+#include <ptrie/ptrie_map.h>
 #include <unordered_map>
 #include <iostream>
 #include "State.h"
 #include "AlignedEncoder.h"
-#include "ptrie_stable.h"
-#include "ptrie_map.h"
 #include "binarywrapper.h"
 #include "../errorcodes.h"
 
@@ -106,7 +106,7 @@ namespace PetriEngine {
 
                 size_t length = _encoder.encode(state.marking(), type);
                 binarywrapper_t w = binarywrapper_t(_encoder.scratchpad().raw(), length*8);
-                auto tit = _trie.insert(w);
+                auto tit = _trie.insert(w.raw(), w.size());
             
                 
                 if(!tit.first)
@@ -172,7 +172,7 @@ namespace PetriEngine {
         class StateSet : public StateSetInterface {
         private:
             using wrapper_t = ptrie::binarywrapper_t;
-            using ptrie_t = ptrie::set_stable<>;
+            using ptrie_t = ptrie::set_stable<ptrie::uchar>;
             
         public:
             using StateSetInterface::StateSetInterface;
@@ -196,7 +196,7 @@ namespace PetriEngine {
                 return std::make_pair(0,0); 
             }
             
-        private:               
+        private:
             ptrie_t _trie;
         };
 
@@ -210,7 +210,7 @@ namespace PetriEngine {
             };
             
         private:
-            using ptrie_t = ptrie::map<traceable_t>;
+            using ptrie_t = ptrie::map<unsigned char,traceable_t>;
             
         public:
             using StateSetInterface::StateSetInterface;

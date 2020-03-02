@@ -2,6 +2,8 @@
 #define ONTHEFLYDG_H
 
 #include <functional>
+#include <stack>
+#include <ptrie/ptrie_map.h>
 
 #include "CTL/DependencyGraph/BasicDependencyGraph.h"
 #include "CTL/DependencyGraph/Configuration.h"
@@ -9,7 +11,6 @@
 #include "PetriConfig.h"
 #include "PetriParse/PNMLParser.h"
 #include "PetriEngine/PQL/PQL.h"
-#include "PetriEngine/Structures/ptrie_map.h"
 #include "PetriEngine/Structures/AlignedEncoder.h"
 #include "PetriEngine/Structures/linked_bucket.h"
 #include "PetriEngine/ReducingSuccessorGenerator.h"
@@ -98,7 +99,7 @@ protected:
     DependencyGraph::Edge* newEdge(DependencyGraph::Configuration &t_source, uint32_t weight);
 
     std::stack<DependencyGraph::Edge*> recycle;
-    ptrie::map<std::vector<PetriConfig*> > trie;
+    ptrie::map<ptrie::uchar, std::vector<PetriConfig*> > trie;
     linked_bucket_t<DependencyGraph::Edge,1024*10>* edge_alloc = nullptr;
 
     // Problem  with linked bucket and complex constructor
