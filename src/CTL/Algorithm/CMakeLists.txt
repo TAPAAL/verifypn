@@ -5,3 +5,5 @@ CertainZeroFPA.cpp
 FixedPointAlgorithm.cpp
 LocalFPA.cpp
 )
+
+add_dependencies(Algorithm ptrie-ext)
