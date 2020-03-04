@@ -30,7 +30,7 @@
 #include <cmath>
 #include <numeric>
 
-#ifdef ENABLE_TAR
+#ifdef VERIFYPN_TAR
 #include <z3++.h>
 #endif
 
@@ -980,7 +980,7 @@ namespace PetriEngine {
         
         /******************** Encode as SAT  ********************/
         
-#ifdef ENABLE_TAR
+#ifdef VERIFYPN_TAR
         z3::expr OrCondition::encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const {
             if(_conds.size() == 0) return context.bool_val(false);
             auto res = _conds[0]->encodeSat(net, context, uses, incremented);

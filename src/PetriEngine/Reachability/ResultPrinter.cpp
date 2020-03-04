@@ -166,7 +166,7 @@ namespace PetriEngine {
             }
             
             if(options->queryReductionTimeout == 0 
-#ifdef ENABLE_TAR
+#ifdef VERIFYPN_TAR
 			    && !options->tar 
 #endif
 			    && options->siphontrapTimeout == 0)
@@ -177,7 +177,7 @@ namespace PetriEngine {
                     out += "STUBBORN_SETS ";
                 }
             }
-#ifdef ENABLE_TAR            
+#ifdef VERIFYPN_TAR
             if(options->tar)
             {
                 out += "TRACE_ABSTRACTION_REFINEMENT ";

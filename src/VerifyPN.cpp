@@ -44,7 +44,7 @@
 #include <memory>
 #include <utility>
 #include <functional>
-#ifdef ENABLE_MC_SIMPLIFICATION
+#ifdef VERIFYPN_MC_Simplification
 #include <thread>
 #include <iso646.h>
 #endif
@@ -52,7 +52,7 @@
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/Reachability/ReachabilitySearch.h"
-#ifdef ENABLE_TAR
+#ifdef VERIFYPN_TAR
 #include "PetriEngine/Reachability/TARReachability.h"
 #endif
 #include "PetriEngine/Reducer.h"
@@ -248,7 +248,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 return ErrorCode;
             }
         } 
-#ifdef ENABLE_TAR
+#ifdef VERIFYPN_TAR
         else if (strcmp(argv[i], "-tar") == 0)
         {
             options.tar = true;
@@ -270,7 +270,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         {
             options.model_out_file = std::string(argv[++i]);
         }
-#ifdef ENABLE_MC_SIMPLIFICATION
+#ifdef VERIFYPN_MC_Simplification
         else if (strcmp(argv[i], "-z") == 0)
         {
             if (i == argc - 1) {
@@ -341,10 +341,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - czero     local with certain zero extension (default)\n"
                     "  -c, --cpn-overapproximation        Over approximate query on Colored Petri Nets (CPN only)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
-#ifdef ENABLE_MC_SIMPLIFICATION
+#ifdef VERIFYPN_MC_Simplification
                     "  -z <number of cores>               Number of cores to use (currently only query simplification)\n"
 #endif
-#ifdef ENABLE_TAR
+#ifdef VERIFYPN_TAR
                     "  -tar                               Enables Trace Abstraction Refinement for reachability properties\n"
 #endif
                     "  --write-simplified <filename>      Outputs the queries to the given file after simplification\n"
@@ -783,7 +783,7 @@ int main(int argc, char* argv[]) {
             if((to_handle <= options.cores || options.cores == 1) && to_handle > 0)
                 qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
             std::atomic<uint32_t> cnt(0);
-#ifdef ENABLE_MC_SIMPLIFICATION
+#ifdef VERIFYPN_MC_Simplification
 
             std::vector<std::thread> threads;
 #endif
@@ -791,7 +791,7 @@ int main(int argc, char* argv[]) {
             uint32_t old = to_handle;
             for(size_t c = 0; c < std::min<uint32_t>(options.cores, old); ++c)
             {
-#ifdef ENABLE_MC_SIMPLIFICATION
+#ifdef VERIFYPN_MC_Simplification
                 threads.push_back(std::thread([&,c](){ 
 #else
                 auto simplify = [&,c](){ 
@@ -813,7 +813,7 @@ int main(int argc, char* argv[]) {
                         out << std::endl;
                     }
 
-#ifndef ENABLE_MC_SIMPLIFICATION
+#ifndef VERIFYPN_MC_Simplification
                     qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);              
 #endif
                     // this is used later, we already know that this is a plain reachability (or AG)
@@ -890,14 +890,14 @@ int main(int argc, char* argv[]) {
                     }
                     }
                 }
-#ifdef ENABLE_MC_SIMPLIFICATION
+#ifdef VERIFYPN_MC_Simplification
                 ));
 #else
                 ;
                 simplify();
 #endif
             }
-#ifndef ENABLE_MC_SIMPLIFICATION
+#ifndef VERIFYPN_MC_Simplification
             std::cout << tstream[0].str() << std::endl;
             break;
 #else
@@ -1069,7 +1069,7 @@ int main(int argc, char* argv[]) {
     // Change default place-holder to default strategy
     if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
     
-#ifdef ENABLE_TAR
+#ifdef VERIFYPN_TAR
     if(options.tar)
     {
         //Create reachability search strategy

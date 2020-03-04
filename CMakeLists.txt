@@ -12,12 +12,19 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 project(verifypn VERSION 3.0.1 LANGUAGES CXX C)
 
 option(VERIFYPN_Static "Link libraries statically" OFF)
-option(VERIFYPN_MCC "Compile MCC-version, incompatible with static linking" ON)
+option(VERIFYPN_TAR "Enables TAR, incompatible with static linking" ON)
+option(VERIFYPN_MC_Simplification "Enables multicore simplification, incompatible with static linking" ON)
 option(VERIFYPN_GetDependencies "Fetch external dependencies from web." ON)
+
 
 if (VERIFYPN_Static)
     set(BUILD_SHARED_LIBS OFF)
-    set(Boost_USE_STATIC_LIBS ON)
+    if (VERIFYPN_TAR)
+        message( FATAL_ERROR "TAR is not compatible with static linking" )
+    endif()
+    if (VERIFYPN_MC_Simplification)
+        message( FATAL_ERROR "Multicore Simplification is not compatible with static linking" )
+    endif()
 else()
     if (NOT APPLE)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
@@ -52,7 +59,7 @@ if (VERIFYPN_GetDependencies)
 
     ExternalProject_add(ptrie-ext
         GIT_REPOSITORY https://github.com/petergjoel/ptrie
-        GIT_TAG 1a9aa90ab6c4aa3e6baa52599c4d8b40dc2ffef6
+        GIT_TAG 230b3640bfbe2ed5befdafbaf17bd3804231b50f
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DPTRIE_BuildTest=OFF -DCMAKE_BUILD_TYPE=Release
     )
     ExternalProject_add(rapidxml-ext
@@ -63,11 +70,17 @@ if (VERIFYPN_GetDependencies)
         INSTALL_COMMAND cd ../rapidxml-ext && ${CMAKE_COMMAND} -E copy rapidxml.hpp rapidxml_iterators.hpp rapidxml_print.hpp rapidxml_utils.hpp ${EXTERNAL_INSTALL_LOCATION}/include    
     )
 
-
+    if (VERIFYPN_TAR)
+        ExternalProject_add(z3-ext
+            URL https://github.com/Z3Prover/z3/releases/download/z3-4.7.1/z3-4.7.1.zip
+            URL_HASH SHA512=c1d1bd60ef7e41a6a5abc2b5e6a548c5e32573b76d958c244457db636b54adbd322b5d42a3bf85a08759c69860b9ce32e924e9c9135ef396cdc75df3944c516e
+            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DUSE_OPENMP=FALSE -DUSE_LIB_GMP=FALSE -DENABLE_EXAMPLE_TARGETS=FALSE -DLINK_TIME_OPTIMIZATION=TRUE -DBUILD_LIBZ3_SHARED=TRUE
+        )
+        link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
+    endif(VERIFYPN_TAR)
 
     # we can now include external libraries
     include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
-    link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 endif (VERIFYPN_GetDependencies)
 include_directories(include)
 

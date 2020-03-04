@@ -33,7 +33,7 @@ struct options_t {
     bool gamemode = false;
     bool isctl = false;
     CTL::CTLAlgorithmType ctlalgorithm = CTL::CZero;
-#ifdef ENABLE_TAR
+#ifdef VERIFYPN_TAR
     bool tar = false;
 #endif
     uint32_t binary_query_io = 0;
