@@ -6,4 +6,4 @@ FixedPointAlgorithm.cpp
 LocalFPA.cpp
 )
 
-add_dependencies()
+add_dependencies(Algorithm ptrie-ext)
