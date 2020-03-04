@@ -77,8 +77,6 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
-#define VERSION  "3.0.1"
-
 ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries)
 {
     //Context analysis
@@ -365,8 +363,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "TAPAAL project page: <http://www.tapaal.net>\n");
             return SuccessCode;
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
-            printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERSION);
-            printf("Copyright (C) 2011-2018\n");
+            printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERIFYPN_VERSION);
+            printf("Copyright (C) 2011-2020\n");
             printf("                        Frederik Meyer Boenneland <sadpantz@gmail.com>\n");
             printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
             printf("                        Peter Fogh <peter.f1992@gmail.com>\n");

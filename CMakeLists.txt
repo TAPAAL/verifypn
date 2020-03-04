@@ -9,10 +9,15 @@ endif (NOT CMAKE_BUILD_TYPE)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-project(verifypn VERSION 3.0.1 LANGUAGES CXX C)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+
+set(VERIFYPN_VERSION 3.0.1)
+add_compile_definitions(VERIFYPN_VERSION=\"${VERIFYPN_VERSION}\")
+
+project(verifypn VERSION ${VERIFYPN_VERSION} LANGUAGES CXX C)
 
 option(VERIFYPN_Static "Link libraries statically" OFF)
-option(VERIFYPN_TAR "Enables TAR, incompatible with static linking" ON)
+option(VERIFYPN_TAR "Enables TAR, incompatible with static linking" OFF)
 option(VERIFYPN_MC_Simplification "Enables multicore simplification, incompatible with static linking" ON)
 option(VERIFYPN_GetDependencies "Fetch external dependencies from web." ON)
 
@@ -30,6 +35,13 @@ else()
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
     endif()
 endif (VERIFYPN_Static)
+
+if (VERIFYPN_TAR)
+    add_compile_definitions(VERIFYPN_TAR)
+endif(VERIFYPN_TAR)
+if (VERIFYPN_MC_Simplification)
+    add_compile_definitions(VERIFYPN_MC_Simplification)
+endif(VERIFYPN_MC_Simplification)
 
 if (UNIX AND NOT APPLE)
     set(LPLIB "${CMAKE_SOURCE_DIR}/include/lpsolve/liblpsolve55-linux64.a")

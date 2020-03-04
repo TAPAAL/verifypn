@@ -1,5 +1,4 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-#everything in this folder is too co-dependent to become a singular library
 
 add_subdirectory(Colored)
 add_subdirectory(Structures)
