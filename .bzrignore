@@ -2,10 +2,12 @@
 *.creator
 *.files
 *.includes
-verifypn-experimental-linux64
 *.user
-verifypn-linux64
-verifypn-osx64
 nbproject/
 cmake-build-*
 .idea/
+src/PetriEngine/PQL/PQLQueryParser.parser.cpp
+src/PetriEngine/PQL/PQLQueryParser.parser.hpp
+src/PetriEngine/PQL/PQLQueryTokens.lexer.cpp
+build/
+
