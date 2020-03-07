@@ -77,18 +77,22 @@ namespace PetriEngine {
             int rowno = 1;
             // restrict all places to contain 0+ tokens
             for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-                memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
+                size_t l = 1;
                 for (size_t t = 0; t < nCol; t++) {
-                    row[1 + t] = net->outArc(t, p) - net->inArc(p, t);
+                    row[l] = net->outArc(t, p) - net->inArc(p, t);
+                    if(row[l] != 0){
+                        indir[l] = t+1;
+                        ++l;
+                    }
                 }
-                glp_set_mat_row(lp, rowno, nCol, indir.data(), row.data());
+                glp_set_mat_row(lp, rowno, l-1, indir.data(), row.data());
                 glp_set_row_bnds(lp, rowno, GLP_LO, (0.0 - (double)m0[p]), infty);
                 ++rowno;
             }
             for(const auto& eq : _equations){
-                eq.row->write(row);
+                auto l = eq.row->write_indir(row, indir);
                 assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));
-                glp_set_mat_row(lp, rowno, nCol, indir.data(), row.data());
+                glp_set_mat_row(lp, rowno, l-1, indir.data(), row.data());
                 if(!std::isinf(eq.lower) && !std::isinf(eq.upper))
                 {
                     if(eq.lower == eq.upper)

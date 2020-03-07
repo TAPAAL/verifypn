@@ -74,6 +74,21 @@ namespace PetriEngine {
                     dest[el.first + 1] = el.second;
                 }
             }
+
+            size_t write_indir(std::vector<double>& dest, std::vector<int32_t>& indir) const
+            {
+                size_t l = 1;
+                for(const std::pair<int,int>& el : _data)
+                {
+                    dest[l] = el.second;
+                    if(dest[l] != 0)
+                    {
+                        indir[l] = el.first + 1;
+                        ++l;
+                    }
+                }
+                return l;
+            }
             
             
         private:
