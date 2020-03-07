@@ -116,13 +116,13 @@ namespace PetriEngine {
 
             // Minimize the objective
             glp_set_obj_dir(lp, GLP_MIN);
-
-            glp_iocp settings;
-            glp_init_iocp(&settings);
+            auto stime = glp_time();
+            glp_smcp settings;
+            glp_init_smcp(&settings);
             settings.tm_lim = timeout*1000;
             settings.presolve = GLP_ON;
             settings.msg_lev = 1;
-            auto result = glp_intopt(lp, &settings);
+            auto result = glp_simplex(lp, &settings);
             if (result == GLP_ETMLIM)
             {
                 _result = result_t::UKNOWN;
@@ -135,8 +135,37 @@ namespace PetriEngine {
             else
             {
                 auto status = glp_get_status(lp);
-                if(status == GLP_OPT || status == GLP_FEAS || status == GLP_UNBND)
+                if(status == GLP_OPT) {
+                    glp_iocp iset;
+                    glp_init_iocp(&iset);
+                    iset.msg_lev = 1;
+                    iset.tm_lim = std::max<uint32_t>(timeout*1000-(stime - glp_time()), 1);
+                    iset.presolve = GLP_OFF;
+                    auto ires = glp_intopt(lp, &iset);
+                    if(ires == GLP_ETMLIM)
+                    {
+                        _result = result_t::UKNOWN;
+                        std::cerr << "glpk mip: timeout" << std::endl;
+                    }
+                    else if(ires == 0)
+                    {
+                        auto ist = glp_mip_status(lp);
+                        if(ist == GLP_OPT || ist == GLP_FEAS || ist == GLP_UNBND) {
+                            _result = result_t::POSSIBLE;
+                        }
+                        else
+                        {
+                            _result = result_t::IMPOSSIBLE;
+                        }
+
+                    }
+                    else
+                        _result = result_t::IMPOSSIBLE;
+                }
+                else if(status == GLP_FEAS || status == GLP_UNBND)
+                {
                     _result = result_t::POSSIBLE;
+                }
                 else
                     _result = result_t::IMPOSSIBLE;
             }
