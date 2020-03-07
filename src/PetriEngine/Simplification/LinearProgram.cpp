@@ -117,12 +117,12 @@ namespace PetriEngine {
             // Minimize the objective
             glp_set_obj_dir(lp, GLP_MIN);
 
-            glp_smcp settings;
-            glp_init_smcp(&settings);
+            glp_iocp settings;
+            glp_init_iocp(&settings);
             settings.tm_lim = timeout*1000;
             settings.presolve = GLP_ON;
             settings.msg_lev = 1;
-            auto result = glp_simplex(lp, &settings);
+            auto result = glp_intopt(lp, &settings);
             if (result == GLP_ETMLIM)
             {
                 _result = result_t::UKNOWN;
