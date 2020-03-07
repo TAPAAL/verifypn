@@ -1,16 +1,18 @@
-#include <assert.h>
-#include <numeric>
-#include "lpsolve/lp_lib.h"
+#include <cassert>
+#include <cmath>
+#include <glpk.h>
+#include <fstream>
+
 #include "PetriEngine/Simplification/LinearProgram.h"
 #include "PetriEngine/Simplification/LPCache.h"
 #include "PetriEngine/PQL/Contexts.h"
 
 namespace PetriEngine {
     namespace Simplification {
-
+        using REAL = double;
         LinearProgram::~LinearProgram() {
         }
-        
+
         LinearProgram::LinearProgram(Vector* vec, int constant, op_t op, LPCache* factory){
             // TODO fix memory-management here!
             equation_t c;
@@ -41,13 +43,15 @@ namespace PetriEngine {
             vec->inc();
             _equations.push_back(c);
         }
-        
+
+        constexpr auto infty = std::numeric_limits<REAL>::infinity();
+
         bool LinearProgram::isImpossible(const PQL::SimplificationContext& context, uint32_t solvetime) {
             bool use_ilp = true;
             auto net = context.net();
             auto m0 = context.marking();
             auto timeout = std::min(solvetime, context.getLpTimeout());
-            if(_result != result_t::UKNOWN) 
+            if(_result != result_t::UKNOWN)
             {
                 if(_result == result_t::IMPOSSIBLE)
                     return _result == result_t::IMPOSSIBLE;
@@ -56,100 +60,92 @@ namespace PetriEngine {
             if(_equations.size() == 0){
                 return false;
             }
-
-            
+            auto stime = glp_time();
             const uint32_t nCol = net->numberOfTransitions();
-            lprec* lp;
-            int nRow = net->numberOfPlaces() + (_equations.size() * 2);
-            
-            lp = make_lp(nRow, nCol);
+            auto lp = glp_create_prob();
+            int nRow = net->numberOfPlaces() + _equations.size();
+
+            glp_add_cols(lp, nCol+1);
+            glp_add_rows(lp, nRow+1);
             assert(lp);
             if (!lp) return false;
-            set_verbose(lp, IMPORTANT);
-
-            set_add_rowmode(lp, TRUE);
-            
             std::vector<REAL> row = std::vector<REAL>(nCol + 1);
-            REAL constant = 0;
-            int comparator = GE;
-            
+            std::vector<int32_t> indir(nCol + 1);
+            for(auto i = 0; i < nCol + 1; ++i)
+                indir[i] = i;
+
             int rowno = 1;
-            
             // restrict all places to contain 0+ tokens
             for (size_t p = 0; p < net->numberOfPlaces(); p++) {
                 memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
                 for (size_t t = 0; t < nCol; t++) {
                     row[1 + t] = net->outArc(t, p) - net->inArc(p, t);
                 }
-                set_row(lp, rowno, row.data());
-                set_constr_type(lp, rowno, GE);
-                set_rh(lp, rowno++, (0 - (int)m0[p]));
+                glp_set_mat_row(lp, rowno, nCol, indir.data(), row.data());
+                glp_set_row_bnds(lp, rowno, GLP_LO, (0.0 - (double)m0[p]), infty);
+                ++rowno;
             }
             for(const auto& eq : _equations){
-                eq.row->write(row);               
-
-                for(size_t mode : {0, 1})
+                eq.row->write(row);
+                assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));
+                glp_set_mat_row(lp, rowno, nCol, indir.data(), row.data());
+                if(!std::isinf(eq.lower) && !std::isinf(eq.upper))
                 {
-                    if(std::isinf(eq[mode])) continue;
-
-                    if(mode == 1 && eq.upper == eq.lower) continue;
-                    
-                    if(eq.upper == eq.lower) comparator = EQ;
-                    else if(mode == 0) comparator = GE;
-                    else /* mode == 1*/comparator = LE;
-
-                    constant = eq[mode];
-
-                    set_row(lp, rowno, row.data());
-                    set_constr_type(lp, rowno, comparator);
-                    set_rh(lp, rowno++, constant);
+                    if(eq.lower == eq.upper)
+                        glp_set_row_bnds(lp, rowno, GLP_FX, eq.lower, eq.upper);
+                    else
+                        glp_set_row_bnds(lp, rowno, GLP_DB, eq.lower, eq.upper);
                 }
+                else if(std::isinf(eq.lower))
+                    glp_set_row_bnds(lp, rowno, GLP_UP, eq.lower, eq.upper);
+                else
+                    glp_set_row_bnds(lp, rowno, GLP_LO, eq.lower, eq.upper);
+                ++rowno;
             }
 
-            set_add_rowmode(lp, FALSE);
-            
-            // Create objective
-            memset(row.data(), 0, sizeof (REAL) * net->numberOfTransitions() + 1);
-            for (size_t t = 0; t < net->numberOfTransitions(); t++)
-                row[1 + t] = 1; // The sum the components in the firing vector
-
-            // Set objective
-            set_obj_fn(lp, row.data());
+            // Set objective, kind and bounds
+            for(size_t i = 1; i <= nCol; i++) {
+                glp_set_obj_coef(lp, i, 1);
+                glp_set_col_kind(lp, i, use_ilp ? GLP_IV :GLP_CV);
+                glp_set_col_bnds(lp, i, GLP_LO, 0, infty);
+            }
 
             // Minimize the objective
-            set_minim(lp);
+            glp_set_obj_dir(lp, GLP_MIN);
 
-            for (size_t i = 0; i < nCol; i++){
-                set_int(lp, 1 + i, use_ilp ? TRUE : FALSE);
-            }
-            
-            set_timeout(lp, timeout);
-            set_break_at_first(lp, TRUE);
-            set_presolve(lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(lp));
-//            write_LP(lp, stdout);
-            int result = solve(lp);
-            
-            delete_lp(lp);
+            glp_smcp settings;
+            glp_init_smcp(&settings);
+            settings.tm_lim = timeout;
+            settings.presolve = GLP_ON;
+            settings.msg_lev = 1;
 
-            if(get_accuracy(lp) >= 0.5) 
+            glp_simplex(lp, &settings);
+            glp_iocp isettings;
+            glp_init_iocp(&isettings);
+            isettings.tm_lim = timeout - (glp_time() - stime);
+            isettings.msg_lev = 1;
+            isettings.presolve = GLP_ON;
+            auto result = glp_intopt(lp, &isettings);
+            if (result == GLP_ETMLIM)
             {
-                std::cout << "note: lpsolve had unacceptable accuracy" << std::endl;    
-                _result = result_t::POSSIBLE;
-            }                
-            else if (result == TIMEOUT) 
-            {
-                std::cout << "note: lpsolve timeout" << std::endl;
                 _result = result_t::UKNOWN;
+                std::cerr << "glpk: timeout" << std::endl;
             }
-            else if(result == INFEASIBLE)
+            else if(result != 0)
             {
                 _result = result_t::IMPOSSIBLE;
             }
             else
             {
-                _result = result_t::POSSIBLE;
+                auto status = glp_mip_status(lp);
+                if(status == GLP_OPT || status == GLP_FEAS || status == GLP_UNBND)
+                    _result = result_t::POSSIBLE;
+                else
+                    _result = result_t::IMPOSSIBLE;
             }
-           return _result == result_t::IMPOSSIBLE;
+            glp_delete_prob(lp);
+
+            return _result == result_t::IMPOSSIBLE;
         }
 
         std::vector<std::pair<double,bool>> LinearProgram::bounds(const PQL::SimplificationContext& context, uint32_t solvetime, const std::vector<uint32_t>& places)
@@ -158,18 +154,20 @@ namespace PetriEngine {
             auto net = context.net();
             auto m0 = context.marking();
             auto timeout = solvetime;
-            
+
             const uint32_t nCol = net->numberOfTransitions();
             const int nRow = net->numberOfPlaces();
             std::vector<REAL> row = std::vector<REAL>(nCol + 1);
-            lprec* base_lp;            
+            std::vector<int32_t> indir(nCol + 1);
+            for(auto i = 0; i < nCol + 1; ++i)
+                indir[i] = i;
+
+            auto* base_lp = glp_create_prob();
             {
-                base_lp = make_lp(nRow, nCol);
+                glp_add_cols(base_lp, nCol+1);
+                glp_add_rows(base_lp, nRow+1);
                 assert(base_lp);
                 if (!base_lp) return result;
-                set_verbose(base_lp, IMPORTANT);
-
-                set_add_rowmode(base_lp, TRUE);
 
                 int rowno = 1;
 
@@ -179,17 +177,26 @@ namespace PetriEngine {
                     for (size_t t = 0; t < nCol; ++t) {
                         row[1 + t] = net->outArc(t, p) - net->inArc(p, t);
                     }
-                    set_row(base_lp, rowno, row.data());
-                    set_constr_type(base_lp, rowno, GE);
-                    set_rh(base_lp, rowno++, (0 - (int)m0[p]));
+                    glp_set_mat_row(base_lp, rowno, nCol, indir.data(), row.data());
+                    glp_set_row_bnds(base_lp, rowno, GLP_LO, (0.0 - (double)m0[p]), infty);
+                    ++rowno;
                 }
-
-                set_add_rowmode(base_lp, FALSE);
             }
+
+            // Minimize the objective
+            glp_set_obj_dir(base_lp, GLP_MAX);
+
+            glp_smcp settings;
+            glp_init_smcp(&settings);
+            settings.tm_lim = timeout;
+            settings.presolve = GLP_ON;
+            settings.msg_lev = 1;
+
             for(size_t it = 0; it <= places.size(); ++it)
             {
                 // we want to start with the overall bound, most important
                 // Spend time on rest after
+                auto stime = glp_time();
                 size_t pi;
                 if(it == 0)
                     pi = places.size();
@@ -198,7 +205,7 @@ namespace PetriEngine {
 
                 if(context.timeout())
                 {
-                    delete_lp(base_lp);
+                    glp_delete_prob(base_lp);
                     return result;
                 }
                 // Create objective
@@ -212,7 +219,7 @@ namespace PetriEngine {
                     p0 = m0[tp];
                     for (size_t t = 0; t < net->numberOfTransitions(); ++t)
                     {
-                        row[1 + t] = net->outArc(t, tp) - net->inArc(tp, t);                   
+                        row[1 + t] = net->outArc(t, tp) - net->inArc(tp, t);
                         all_le_zero &= row[1 + t] <= 0;
                         all_zero &= row[1 + t] == 0;
                     }
@@ -223,7 +230,7 @@ namespace PetriEngine {
                     {
                         double cnt = 0;
                         for(auto tp : places)
-                            cnt += net->outArc(t, tp) - net->inArc(tp, t); 
+                            cnt += net->outArc(t, tp) - net->inArc(tp, t);
                         row[1 + t] = cnt;
                         all_le_zero &= row[1 + t] <= 0;
                         all_zero &= row[1 + t] == 0;
@@ -236,67 +243,64 @@ namespace PetriEngine {
                 {
                     result[pi].first = p0;
                     result[pi].second = all_zero;
-                    if(pi == places.size()) 
+                    if(pi == places.size())
                     {
-                        delete_lp(base_lp);
+                        glp_delete_prob(base_lp);
                         return result;
                     }
                     continue;
                 }
 
                 // Set objective
-                auto tmp_lp = copy_lp(base_lp);
-                set_obj_fn(tmp_lp, row.data());
 
-                // Maximize
-                set_maxim(tmp_lp);
+                auto* tmp_lp = glp_create_prob();
+                glp_copy_prob(base_lp, tmp_lp, GLP_OFF);
 
-                for (size_t i = 0; i < nCol; i++){
-                    set_int(tmp_lp, 1 + i, TRUE);
+                for(size_t i = 1; i <= nCol; i++) {
+                    glp_set_obj_coef(tmp_lp, i, row[i]);
+                    glp_set_col_kind(tmp_lp, i, GLP_IV);
+                    glp_set_col_bnds(tmp_lp, i, GLP_LO, 0, infty);
                 }
 
-                set_timeout(tmp_lp, timeout);
-                set_presolve(tmp_lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(tmp_lp));
-                int res = solve(tmp_lp);
-                
-                if(get_accuracy(tmp_lp) >= 0.5)
+                glp_simplex(tmp_lp, &settings);
+                glp_iocp isettings;
+                glp_init_iocp(&isettings);
+                isettings.tm_lim = timeout - (glp_time() - stime);
+                isettings.msg_lev = 1;
+                isettings.presolve = GLP_ON;
+                auto rs = glp_intopt(tmp_lp, &isettings);
+                if (rs == GLP_ETMLIM)
                 {
-                    result[pi].first = (std::numeric_limits<double>::quiet_NaN());
-                    std::cout << "note: lpsolve had unacceptable accuracy" << std::endl;                    
+                    std::cerr << "glpk: timeout" << std::endl;
                 }
-                else if (res == TIMEOUT)
-                {
-                    result[pi].first = (std::numeric_limits<double>::quiet_NaN());
-                    std::cout << "note: lpsolve timeout" << std::endl;
-                }
-                else if(res == INFEASIBLE)
+                else if(rs != 0 || glp_mip_status(tmp_lp) == GLP_NOFEAS)
                 {
                     result[pi].first = p0;
                     result[pi].second = all_zero;
                 }
-                else if(res == OPTIMAL)
+                else if(glp_mip_status(tmp_lp) == GLP_OPT)
                 {
-                    result[pi].first = p0 + get_objective(tmp_lp);
+                    result[pi].first = p0 + glp_mip_obj_val(tmp_lp);
                     result[pi].second = all_zero;
                 }
-                delete_lp(tmp_lp);
+                glp_erase_prob(tmp_lp);
                 if(pi == places.size() && result[places.size()].first >= p0)
                 {
-                    delete_lp(base_lp);
+                    glp_erase_prob(base_lp);
                     return result;
                 }
                 if(pi == places.size() && places.size() == 1)
                 {
                     result[0] = result[1];
-                    delete_lp(base_lp);
+                    glp_erase_prob(base_lp);
                     return result;
                 }
             }
-            delete_lp(base_lp);
+            glp_erase_prob(base_lp);
             return result;
         }
-        
-        
+
+
         void LinearProgram::make_union(const LinearProgram& other)
         {
             if(_result == IMPOSSIBLE || other._result == IMPOSSIBLE)
@@ -335,10 +339,10 @@ namespace PetriEngine {
                     }*/
                     ++it1;
                     ++it2;
-                }                    
+                }
             }
 
-            if(it2 != other._equations.end()) 
+            if(it2 != other._equations.end())
                 _equations.insert(_equations.end(), it2, other._equations.end());
         }
     }
