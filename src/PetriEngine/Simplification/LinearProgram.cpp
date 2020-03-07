@@ -51,7 +51,6 @@ namespace PetriEngine {
             auto net = context.net();
             auto m0 = context.marking();
             auto timeout = std::min(solvetime, context.getLpTimeout());
-            std::cerr << "SOLVE " << timeout << std::endl;
 
             if(_result != result_t::UKNOWN)
             {
@@ -62,7 +61,6 @@ namespace PetriEngine {
             if(_equations.size() == 0){
                 return false;
             }
-            auto stime = glp_time();
             const uint32_t nCol = net->numberOfTransitions();
             auto lp = glp_create_prob();
             int nRow = net->numberOfPlaces() + _equations.size();
