@@ -51,6 +51,8 @@ namespace PetriEngine {
             auto net = context.net();
             auto m0 = context.marking();
             auto timeout = std::min(solvetime, context.getLpTimeout());
+            std::cerr << "SOLVE " << timeout << std::endl;
+
             if(_result != result_t::UKNOWN)
             {
                 if(_result == result_t::IMPOSSIBLE)
@@ -105,7 +107,7 @@ namespace PetriEngine {
 
             // Set objective, kind and bounds
             for(size_t i = 1; i <= nCol; i++) {
-                glp_set_obj_coef(lp, i, 1);
+                glp_set_obj_coef(lp, i, 0);
                 glp_set_col_kind(lp, i, use_ilp ? GLP_IV :GLP_CV);
                 glp_set_col_bnds(lp, i, GLP_LO, 0, infty);
             }
@@ -115,17 +117,10 @@ namespace PetriEngine {
 
             glp_smcp settings;
             glp_init_smcp(&settings);
-            settings.tm_lim = timeout;
+            settings.tm_lim = timeout*1000;
             settings.presolve = GLP_ON;
             settings.msg_lev = 1;
-
-            glp_simplex(lp, &settings);
-            glp_iocp isettings;
-            glp_init_iocp(&isettings);
-            isettings.tm_lim = timeout - (glp_time() - stime);
-            isettings.msg_lev = 1;
-            isettings.presolve = GLP_ON;
-            auto result = glp_intopt(lp, &isettings);
+            auto result = glp_simplex(lp, &settings);
             if (result == GLP_ETMLIM)
             {
                 _result = result_t::UKNOWN;
@@ -137,7 +132,7 @@ namespace PetriEngine {
             }
             else
             {
-                auto status = glp_mip_status(lp);
+                auto status = glp_get_status(lp);
                 if(status == GLP_OPT || status == GLP_FEAS || status == GLP_UNBND)
                     _result = result_t::POSSIBLE;
                 else
@@ -188,7 +183,7 @@ namespace PetriEngine {
 
             glp_smcp settings;
             glp_init_smcp(&settings);
-            settings.tm_lim = timeout;
+            settings.tm_lim = timeout*1000;
             settings.presolve = GLP_ON;
             settings.msg_lev = 1;
 
@@ -265,7 +260,7 @@ namespace PetriEngine {
                 glp_simplex(tmp_lp, &settings);
                 glp_iocp isettings;
                 glp_init_iocp(&isettings);
-                isettings.tm_lim = timeout - (glp_time() - stime);
+                isettings.tm_lim = std::max<int>(((double)timeout*1000) - (glp_time() - stime), 1);
                 isettings.msg_lev = 1;
                 isettings.presolve = GLP_ON;
                 auto rs = glp_intopt(tmp_lp, &isettings);
