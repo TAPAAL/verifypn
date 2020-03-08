@@ -318,7 +318,8 @@ namespace PetriEngine {
                         } else if (rs == 0) {
                             auto status = glp_mip_status(tmp_lp);
                             if (status == GLP_OPT) {
-                                result[pi].first = std::floor(p0 + glp_mip_obj_val(tmp_lp));
+                                auto org = p0 + glp_mip_obj_val(tmp_lp);
+                                result[pi].first = std::round(org);
                                 result[pi].second = all_zero;
                             }
                             else if (status != GLP_UNBND && status != GLP_FEAS)
