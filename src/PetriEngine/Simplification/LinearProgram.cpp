@@ -98,12 +98,19 @@ namespace PetriEngine {
                     if(eq.lower == eq.upper)
                         glp_set_row_bnds(lp, rowno, GLP_FX, eq.lower, eq.upper);
                     else
+                    {
+                        if(eq.lower > eq.upper)
+                        {
+                            _result = result_t::IMPOSSIBLE;
+                            return true;
+                        }
                         glp_set_row_bnds(lp, rowno, GLP_DB, eq.lower, eq.upper);
+                    }
                 }
                 else if(std::isinf(eq.lower))
-                    glp_set_row_bnds(lp, rowno, GLP_UP, eq.lower, eq.upper);
+                    glp_set_row_bnds(lp, rowno, GLP_UP, -infty, eq.upper);
                 else
-                    glp_set_row_bnds(lp, rowno, GLP_LO, eq.lower, eq.upper);
+                    glp_set_row_bnds(lp, rowno, GLP_LO, eq.lower, -infty);
                 ++rowno;
             }
 
@@ -288,7 +295,6 @@ namespace PetriEngine {
                 }
 
                 auto rs = glp_simplex(tmp_lp, &settings);
-
                 if (rs == GLP_ETMLIM)
                 {
                     std::cerr << "glpk: timeout" << std::endl;
@@ -317,6 +323,11 @@ namespace PetriEngine {
                                 result[pi].second = all_zero;
                             }
                         }
+                    }
+                    else if (status == GLP_INFEAS || status == GLP_NOFEAS || GLP_UNDEF)
+                    {
+                        result[pi].first = p0;
+                        result[pi].second = all_zero;
                     }
                 }
                 glp_erase_prob(tmp_lp);

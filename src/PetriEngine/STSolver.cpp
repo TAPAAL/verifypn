@@ -18,8 +18,9 @@ namespace PetriEngine {
             _row[c+1] = constraint[c].value;
             _indir[c+1] = constraint[c].colno;
         }
-        auto rowno = 0;
-        glp_add_cols(_lp, 1);
+
+        glp_add_rows(_lp, 1);
+        auto rowno = glp_get_num_rows(_lp);
         glp_set_mat_row(_lp, rowno, constraint.size(), _indir.data(), _row.data());
         glp_set_row_bnds(_lp, rowno, constr_type, rh, rh);
     }
@@ -260,16 +261,25 @@ namespace PetriEngine {
                 timelimit = _timelimit-duration();
                 if(timelimit > _timelimit) { timelimit = 1; }
 
+                auto stime = glp_time();
                 glp_smcp settings;
                 glp_init_smcp(&settings);
                 settings.tm_lim = timelimit*1000;
-                settings.presolve = GLP_ON;
+                settings.presolve = GLP_OFF;
                 settings.msg_lev = 1;
                 auto result = glp_simplex(_lp, &settings);
-                _solved = result == 0;
-                if(_solved)
+                if(result == 0)
                 {
-                    _ret = glp_get_status(_lp);
+                    auto status = glp_get_status(_lp);
+                    if(status == GLP_OPT) {
+                        glp_iocp isettings;
+                        glp_init_iocp(&isettings);
+                        isettings.tm_lim = std::max<int>(((double) timelimit * 1000) - (glp_time() - stime), 1);
+                        isettings.msg_lev = 1;
+                        isettings.presolve = GLP_OFF;
+                        glp_intopt(_lp, &isettings);
+                        _ret = glp_mip_status(_lp);
+                    } else _ret = status;
                 }
             }
         }
