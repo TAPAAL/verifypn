@@ -324,7 +324,7 @@ namespace PetriEngine {
                             }
                         }
                     }
-                    else if (status == GLP_INFEAS || status == GLP_NOFEAS || GLP_UNDEF)
+                    else if (status == GLP_INFEAS || status == GLP_NOFEAS || status == GLP_UNDEF)
                     {
                         result[pi].first = p0;
                         result[pi].second = all_zero;
