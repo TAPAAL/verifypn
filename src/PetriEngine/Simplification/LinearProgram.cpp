@@ -184,7 +184,7 @@ namespace PetriEngine {
             std::vector<std::pair<double,bool>> result(places.size() + 1, std::make_pair(std::numeric_limits<double>::infinity(), false));
             auto net = context.net();
             auto m0 = context.marking();
-            auto timeout = solvetime;
+            auto timeout = std::min(solvetime, context.getLpTimeout());
 
             const uint32_t nCol = net->numberOfTransitions();
             const int nRow = net->numberOfPlaces();
@@ -318,7 +318,7 @@ namespace PetriEngine {
                         } else if (rs == 0) {
                             auto status = glp_mip_status(tmp_lp);
                             if (status == GLP_OPT) {
-                                result[pi].first = p0 + glp_mip_obj_val(tmp_lp);
+                                result[pi].first = std::floor(p0 + glp_mip_obj_val(tmp_lp));
                                 result[pi].second = all_zero;
                             }
                             else if (status != GLP_UNBND && status != GLP_FEAS)
