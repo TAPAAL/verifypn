@@ -14,7 +14,7 @@ namespace PetriEngine {
     void STSolver::MakeConstraint(std::vector<STVariable> constraint, int constr_type, REAL rh){
         _row.resize(constraint.size()+1);
         _indir.resize(constraint.size()+1);
-        for(int c = 0; c < constraint.size(); c++){
+        for(size_t c = 0; c < constraint.size(); ++c){
             _row[c+1] = constraint[c].value;
             _indir[c+1] = constraint[c].colno;
         }

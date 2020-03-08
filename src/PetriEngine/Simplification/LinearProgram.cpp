@@ -71,7 +71,7 @@ namespace PetriEngine {
             if (!lp) return false;
             std::vector<REAL> row = std::vector<REAL>(nCol + 1);
             std::vector<int32_t> indir(nCol + 1);
-            for(auto i = 0; i < nCol + 1; ++i)
+            for(size_t i = 0; i <= nCol; ++i)
                 indir[i] = i;
 
             int rowno = 1;
@@ -186,7 +186,7 @@ namespace PetriEngine {
             const int nRow = net->numberOfPlaces();
             std::vector<REAL> row = std::vector<REAL>(nCol + 1);
             std::vector<int32_t> indir(nCol + 1);
-            for(auto i = 0; i < nCol + 1; ++i)
+            for(size_t i = 0; i <= nCol; ++i)
                 indir[i] = i;
 
             auto* base_lp = glp_create_prob();
