@@ -1,14 +1,15 @@
 #ifndef STSOLVER_H
 #define STSOLVER_H
 #include "Structures/State.h"
-#include "../lpsolve/lp_lib.h"
 #include "Reachability/ReachabilityResult.h"
+
 #include <memory>
 #include <chrono>
+#include <glpk.h>
 
 namespace PetriEngine {
     class STSolver {
-    
+    using REAL = double;
     struct STVariable {
         STVariable(int c, REAL v){
             colno=c;
@@ -53,7 +54,9 @@ namespace PetriEngine {
         std::unique_ptr<uint32_t> _transitions;
         const PetriNet& _net;
         const MarkVal* _m0;
-        lprec* _lp;
+        glp_prob * _lp = nullptr;
+        std::vector<int32_t> _indir;
+        std::vector<REAL> _row;
         uint32_t _siphonDepth;
         uint32_t _nPlaceVariables;
         uint32_t _nCol;

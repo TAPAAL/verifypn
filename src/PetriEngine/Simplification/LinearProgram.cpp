@@ -200,10 +200,15 @@ namespace PetriEngine {
                 // restrict all places to contain 0+ tokens
                 for (size_t p = 0; p < net->numberOfPlaces(); ++p) {
                     memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
-                    for (size_t t = 0; t < nCol; ++t) {
-                        row[1 + t] = net->outArc(t, p) - net->inArc(p, t);
+                    size_t l = 1;
+                    for (size_t t = 0; t < nCol; t++) {
+                        row[l] = net->outArc(t, p) - net->inArc(p, t);
+                        if(row[l] != 0){
+                            indir[l] = t+1;
+                            ++l;
+                        }
                     }
-                    glp_set_mat_row(base_lp, rowno, nCol, indir.data(), row.data());
+                    glp_set_mat_row(base_lp, rowno, l-1, indir.data(), row.data());
                     glp_set_row_bnds(base_lp, rowno, GLP_LO, (0.0 - (double)m0[p]), infty);
                     ++rowno;
                 }
@@ -280,7 +285,7 @@ namespace PetriEngine {
                 // Set objective
 
                 auto* tmp_lp = glp_create_prob();
-                glp_copy_prob(base_lp, tmp_lp, GLP_OFF);
+                glp_copy_prob(tmp_lp, base_lp, GLP_OFF);
 
                 for(size_t i = 1; i <= nCol; i++) {
                     glp_set_obj_coef(tmp_lp, i, row[i]);
@@ -288,26 +293,42 @@ namespace PetriEngine {
                     glp_set_col_bnds(tmp_lp, i, GLP_LO, 0, infty);
                 }
 
-                glp_simplex(tmp_lp, &settings);
-                glp_iocp isettings;
-                glp_init_iocp(&isettings);
-                isettings.tm_lim = std::max<int>(((double)timeout*1000) - (glp_time() - stime), 1);
-                isettings.msg_lev = 1;
-                isettings.presolve = GLP_ON;
-                auto rs = glp_intopt(tmp_lp, &isettings);
+                auto rs = glp_simplex(tmp_lp, &settings);
+
                 if (rs == GLP_ETMLIM)
                 {
                     std::cerr << "glpk: timeout" << std::endl;
                 }
-                else if(rs != 0 || glp_mip_status(tmp_lp) == GLP_NOFEAS)
+                else if(rs != 0)
                 {
                     result[pi].first = p0;
                     result[pi].second = all_zero;
                 }
-                else if(glp_mip_status(tmp_lp) == GLP_OPT)
+                else
                 {
-                    result[pi].first = p0 + glp_mip_obj_val(tmp_lp);
-                    result[pi].second = all_zero;
+                    auto status = glp_get_status(tmp_lp);
+                    if(status == GLP_OPT) {
+                        glp_iocp isettings;
+                        glp_init_iocp(&isettings);
+                        isettings.tm_lim = std::max<int>(((double) timeout * 1000) - (glp_time() - stime), 1);
+                        isettings.msg_lev = 1;
+                        isettings.presolve = GLP_ON;
+                        auto rs = glp_intopt(tmp_lp, &isettings);
+                        if (rs == GLP_ETMLIM) {
+                            std::cerr << "glpk mip: timeout" << std::endl;
+                        } else if (rs == 0) {
+                            auto status = glp_mip_status(tmp_lp);
+                            if (status == GLP_OPT) {
+                                result[pi].first = p0 + glp_mip_obj_val(tmp_lp);
+                                result[pi].second = all_zero;
+                            }
+                            else if (status != GLP_UNBND && status != GLP_FEAS)
+                            {
+                                result[pi].first = p0;
+                                result[pi].second = all_zero;
+                            }
+                        }
+                    }
                 }
                 glp_erase_prob(tmp_lp);
                 if(pi == places.size() && result[places.size()].first >= p0)

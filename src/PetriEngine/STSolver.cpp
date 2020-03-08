@@ -1,5 +1,6 @@
 #include "PetriEngine/STSolver.h"
-#include "lpsolve/lp_lib.h"
+
+#include <glpk.h>
 #include <cassert>
 
 namespace PetriEngine {     
@@ -11,16 +12,16 @@ namespace PetriEngine {
     #define INHIBITORARCS            -7
 
     void STSolver::MakeConstraint(std::vector<STVariable> constraint, int constr_type, REAL rh){
-        int count = constraint.size();
-        REAL* row = new REAL[count];
-        int* col = new int[count];
-        for(int c = 0; c < count; c++){
-            row[c]=constraint[c].value;
-            col[c]=constraint[c].colno;
+        _row.resize(constraint.size()+1);
+        _indir.resize(constraint.size()+1);
+        for(int c = 0; c < constraint.size(); c++){
+            _row[c+1] = constraint[c].value;
+            _indir[c+1] = constraint[c].colno;
         }
-        add_constraintex(_lp, count, row, col, constr_type, rh);
-        delete[] row;
-        delete[] col;
+        auto rowno = 0;
+        glp_add_cols(_lp, 1);
+        glp_set_mat_row(_lp, rowno, constraint.size(), _indir.data(), _row.data());
+        glp_set_row_bnds(_lp, rowno, constr_type, rh, rh);
     }
     
     STSolver::STSolver(Reachability::ResultPrinter& printer, const PetriNet& net, PQL::Condition * query, uint32_t depth) : printer(printer), _query(query), _net(net){
@@ -43,7 +44,7 @@ namespace PetriEngine {
     }
 
     STSolver::~STSolver() {
-        if(_lp != NULL) delete_lp(_lp);
+        if(_lp != nullptr) glp_delete_prob(_lp);
     }
 
     /* 
@@ -57,28 +58,28 @@ namespace PetriEngine {
         // (SUM(p in P) p^0) >= 1
         std::vector<STVariable> variables;
         for(uint32_t p=0;p<_net._nplaces;p++){ 
-            if(timeout()){ return TIMEOUT; }
+            if(timeout()){ return GLP_ETMLIM; }
             variables.push_back(STVariable(VarPlace(p,0), 1));
         }  
-        MakeConstraint(variables, GE, 1);
+        MakeConstraint(variables, GLP_LO, 1);
         
         // for all (t in T) for all (p in post(t)) (-p^0 + SUM(q in pre(t)) q^0) GE 0
         for(uint32_t t=0; t<_net._ntransitions; t++){
-            if(timeout()){ return TIMEOUT; }
+            if(timeout()){ return GLP_ETMLIM; }
             uint32_t finv = _net._transitions[t].outputs;
             uint32_t linv = _net._transitions[t+1].inputs; 
             for (; finv < linv; finv++) { // for all p in post(t)
-                if(timeout()){ return TIMEOUT; }
+                if(timeout()){ return GLP_ETMLIM; }
                 std::vector<STVariable> variables2;
                 variables2.push_back(STVariable(VarPlace(_net._invariants[finv].place,0), -1)); // -p^0
                 
                 uint32_t finv2 = _net._transitions[t].inputs;
                 uint32_t linv2 = _net._transitions[t].outputs;
                 for(; finv2 < linv2; finv2++){ // SUM(q in pre(t))
-                    if(timeout()){ return TIMEOUT; }
+                    if(timeout()){ return GLP_ETMLIM; }
                     variables2.push_back(STVariable(VarPlace(_net._invariants[finv2].place,0), 1)); // q^0
                 }
-                MakeConstraint(variables2, GE, 0);
+                MakeConstraint(variables2, GLP_LO, 0);
             }
         }
         return 0;
@@ -103,20 +104,20 @@ namespace PetriEngine {
             
             // for all (t in post(p)) -p^i+1 + post_t^i GE 0
             for (uint32_t t = _places.get()[p].post; t < _places.get()[p + 1].pre; t++){ // for all t in post(p)
-                if(timeout()){ return TIMEOUT; }
+                if(timeout()){ return GLP_ETMLIM; }
                 variables1.push_back(STVariable(VarPostT(_transitions.get()[t],i), 1));  // post_t^i
                 std::vector<STVariable> variables3;
                 variables3.push_back(STVariable(VarPlace(p,(i+1)), -1));                 // -p^i+1
                 variables3.push_back(STVariable(VarPostT(_transitions.get()[t],i), 1));  // post_t^i
-                MakeConstraint(variables3, GE, 0);
+                MakeConstraint(variables3, GLP_LO, 0);
             }
-            MakeConstraint(variables1, LE, (_places.get()[p + 1].pre - _places.get()[p].post));        
+            MakeConstraint(variables1, GLP_UP, (_places.get()[p + 1].pre - _places.get()[p].post));
             
             // -p^i+1 + p^i GE 0
             std::vector<STVariable> variables2;
             variables2.push_back(STVariable(VarPlace(p,(i+1)), -1)); // -p^i+1
             variables2.push_back(STVariable(VarPlace(p,i), 1));      // p^i
-            MakeConstraint(variables2, GE, 0);
+            MakeConstraint(variables2, GLP_LO, 0);
         }
         return 0;
     }
@@ -130,7 +131,7 @@ namespace PetriEngine {
      */
     int STSolver::CreatePostVarDefinitions(uint32_t i){ 
         for(uint32_t t=0; t<_net._ntransitions; t++){
-            if(timeout()){ return TIMEOUT; }
+            if(timeout()){ return GLP_ETMLIM; }
             // -post_t^i + SUM(p in post(t)) p^i GE 0
             std::vector<STVariable> variables;
             variables.push_back(STVariable(VarPostT(t,i), -1)); // -post_t^i
@@ -138,20 +139,20 @@ namespace PetriEngine {
             uint32_t finv = _net._transitions[t].outputs;
             uint32_t linv = _net._transitions[t+1].inputs;
             for (; finv < linv; finv++) { // for all p in post(t)
-                if(timeout()){ return TIMEOUT; }
+                if(timeout()){ return GLP_ETMLIM; }
                 variables.push_back(STVariable(VarPlace(_net._invariants[finv].place,i), 1)); // p^i
             }
-            MakeConstraint(variables, GE, 0);
+            MakeConstraint(variables, GLP_LO, 0);
 
             // for all (p in post(t)) -post_t + p^i LE 0
             finv = _net._transitions[t].outputs;
             linv = _net._transitions[t+1].inputs;
             for (; finv < linv; finv++) {  // for all p in post(t)
-                if(timeout()){ return TIMEOUT; }
+                if(timeout()){ return GLP_ETMLIM; }
                 std::vector<STVariable> variables;
                 variables.push_back(STVariable(VarPostT(t,i), -1)); // -post_t^i
                 variables.push_back(STVariable(VarPlace(_net._invariants[finv].place,i), 1)); // p^i
-                MakeConstraint(variables, LE, 0);
+                MakeConstraint(variables, GLP_UP, 0);
             }   
         }
         return 0;
@@ -163,11 +164,11 @@ namespace PetriEngine {
         for(uint32_t p=0; p<_net._nplaces; p++){
             // for all p in P where M0(p) > 0: p^d - noTrap LE 0
             if(_m0[p] > 0){
-                if(timeout()){ return TIMEOUT; }               
+                if(timeout()){ return GLP_ETMLIM; }
                 std::vector<STVariable> variables2;
                 variables2.push_back(STVariable(VarPlace(p,(_siphonDepth)), 1)); // p^d
                 variables2.push_back(STVariable(_noTrap, -1)); // -noTrap
-                MakeConstraint(variables2, LE, 0);   
+                MakeConstraint(variables2, GLP_UP, 0);
             }
             
             // SUM(p in P) p^d + noTrap = SUM(p in P) p^d-1 
@@ -175,10 +176,11 @@ namespace PetriEngine {
             variables1.push_back(STVariable(VarPlace(p,(_siphonDepth-1)),-1)); // -p^d-1
         }
         variables1.push_back(STVariable(_noTrap, 1)); // +noTrap
-        MakeConstraint(variables1, EQ, 0);
+        MakeConstraint(variables1, GLP_FX, 0);
         return 0;
     }
-  
+
+    constexpr auto infty = std::numeric_limits<double>::infinity();
     int STSolver::CreateFormula(){
         _ret = 0;
         for(auto &i : _net._invariants){
@@ -202,8 +204,9 @@ namespace PetriEngine {
         
         
         if(_ret == 0){
-            _lp = make_lp(0, _nCol);
-            if(_lp == NULL) { std::cout<<"Could not construct new model ..."<<std::endl; return NUMFAILURE; }
+            _lp = glp_create_prob();
+            glp_add_cols(_lp, _nCol+1);
+            if(_lp == NULL) { std::cout<<"Could not construct new model ..."<<std::endl; return -1; }
         }
         if(_ret == 0){           
             
@@ -214,40 +217,34 @@ namespace PetriEngine {
                 //std::cout<<"name of col "<<c+1<<" is "<<VarName(c).c_str()<<std::endl;
             }       
 #endif
-            for (size_t i = 1; i <= _nCol-1; i++){ set_binary(_lp, i, TRUE); }
-            set_int(_lp, _noTrap, TRUE);
+            for (size_t i = 1; i <= _nCol-1; i++)
+            {
+                glp_set_col_kind(_lp, i, GLP_BV);
+            }
+            glp_set_col_kind(_lp, _noTrap, GLP_IV);
 
             // Create constraints
-            set_add_rowmode(_lp, TRUE);  
-
-            if(CreateSiphonConstraints() == TIMEOUT)          // define initial siphon
-                return TIMEOUT;
+            if(CreateSiphonConstraints() == GLP_ETMLIM)          // define initial siphon
+                return -2;
             for(uint32_t i=0; i<=_siphonDepth-1; i++){ 
-                if(CreateStepConstraints(i) == TIMEOUT)       // maximal trap
-                    return TIMEOUT;
-                if(CreatePostVarDefinitions(i) == TIMEOUT)    // define post_t 
-                    return TIMEOUT;
+                if(CreateStepConstraints(i) == GLP_ETMLIM)       // maximal trap
+                    return -2;
+                if(CreatePostVarDefinitions(i) == GLP_ETMLIM)    // define post_t
+                    return -2;
             }
-            if(CreateNoTrapConstraints() == TIMEOUT)          // unmarked or not a trap
-                return TIMEOUT;
+            if(CreateNoTrapConstraints() == GLP_ETMLIM)          // unmarked or not a trap
+                return -2;
 
-            set_add_rowmode(_lp, FALSE);      
+            // objective
+            for(size_t i = 1; i <= _nCol; i++) {
+                glp_set_obj_coef(_lp, i, 0);
+                glp_set_col_bnds(_lp, i, GLP_LO, 0, infty);
+            }
+
 
             // Bounds
-            set_bounds(_lp, _noTrap, 0, _net._nplaces);  
-
-            // Create objective
-            std::vector<REAL> row = std::vector<REAL>(_nCol + 1);
-            memset(row.data(), 0, sizeof (REAL) * _nCol + 1);
-            for (size_t p = 0; p < _nCol; p++)
-                row[1 + p] = 1;
-
-            // Set objective
-            set_obj_fn(_lp, row.data());
-
-            // Minimize the objective
-            set_minim(_lp);
-            
+            glp_set_col_bnds(_lp, _noTrap, GLP_LO, 0, _net._nplaces);
+            glp_set_obj_dir(_lp, GLP_MIN);
         }
         return _ret;
     }
@@ -259,42 +256,29 @@ namespace PetriEngine {
         if(_ret == 0){
             _lpBuilt=true;
             _buildTime=duration();
-            set_break_at_first(_lp, TRUE);
-            set_presolve(_lp, PRESOLVE_ROWS | PRESOLVE_COLS | PRESOLVE_LINDEP, get_presolveloops(_lp));
-#ifdef DEBUG            
-            write_LP(_lp, stdout);
-#endif    
             if(!timeout()){
                 timelimit = _timelimit-duration();
                 if(timelimit > _timelimit) { timelimit = 1; }
-                
-                set_verbose(_lp, IMPORTANT);
-                set_timeout(_lp, timelimit);
-                _ret = solve(_lp);
-                _solved=true;
+
+                glp_smcp settings;
+                glp_init_smcp(&settings);
+                settings.tm_lim = timelimit*1000;
+                settings.presolve = GLP_ON;
+                settings.msg_lev = 1;
+                auto result = glp_simplex(_lp, &settings);
+                _solved = result == 0;
+                if(_solved)
+                {
+                    _ret = glp_get_status(_lp);
+                }
             }
-#ifdef DEBUG
-            if(_ret == OPTIMAL) {
-                /* a solution is calculated, print results */
-
-                /* objective value */
-                printf("Objective value: %f\n", get_objective(_lp));
-
-                /* variable values */
-                std::vector<REAL> row = std::vector<REAL>(_nCol + 1);
-                get_variables(_lp, row.data());
-                for(uint32_t j = 0; j < _nCol; j++)
-                  printf("%s: %f\n", get_col_name(_lp, j + 1), row[j]);
-
-              }
-#endif
         }
         _analysisTime = duration();
         return _ret;
     }
     
     Reachability::ResultPrinter::Result STSolver::PrintResult(){
-        if(_ret == INFEASIBLE){
+        if(_ret == GLP_INFEAS || _ret == GLP_NOFEAS || _ret == GLP_UNDEF){
             return printer.printResult(0, _query, Reachability::ResultPrinter::NotSatisfied);
         } else {
             return Reachability::ResultPrinter::Unknown;
@@ -318,34 +302,20 @@ namespace PetriEngine {
         
         if(_lpBuilt){
             std::cout<<"LP was built in (seconds):   "<<_buildTime<<std::endl;
-            std::cout<<"Variables before presolve:   "<<get_Norig_columns(_lp)<<std::endl;
-            std::cout<<"Constraints before presolve: "<<get_Norig_rows(_lp)<<std::endl;
         }
-        if(_solved){
-            std::cout<<"Variables after presolve:    "<<get_Ncolumns(_lp)<<std::endl;
-            std::cout<<"Constraints after presolve:  "<<get_Nrows(_lp)<<std::endl;
-        }
-        
-        if(_ret == OPTIMAL) {
+
+        if(_ret == GLP_OPT) {
             std::cout<<"An optimal solution was obtained."<<std::endl;
-        } else if(_ret == SUBOPTIMAL) {
-            std::cout<<"The model is sub-optimal."<<std::endl;
-        } else if(_ret == PRESOLVED){
-            std::cout<<"The model could be solved by presolve."<<std::endl;
-        } else if(_ret == INFEASIBLE){
+        } else if(_ret == GLP_FEAS) {
+            std::cout<<"The model is feasible."<<std::endl;
+        } else if(_ret == GLP_UNDEF){
+            std::cout<<"The model was undefined."<<std::endl;
+        } else if(_ret == GLP_INFEAS){
             std::cout<<"The model is infeasible."<<std::endl;
-        } else if(_ret == NOMEMORY){
-            std::cout<<"Out of memory."<<std::endl;
-        } else if(_ret == UNBOUNDED){
+        } else if(_ret == GLP_NOFEAS){
+            std::cout<<"No feasible solution."<<std::endl;
+        } else if(_ret == GLP_UNBND){
             std::cout<<"The model is unbounded."<<std::endl;
-        } else if(_ret == DEGENERATE){
-            std::cout<<"The model is degenerative."<<std::endl;
-        } else if(_ret == NUMFAILURE){
-            std::cout<<"Numerical failure encountered."<<std::endl;
-        } else if(_ret == USERABORT){
-            std::cout<<"The abort routine returned TRUE."<<std::endl;
-        } else if(_ret == TIMEOUT){
-            std::cout<<"A timeout occurred."<<std::endl;
         } else if(_ret == WEIGHTEDARCS) {
             std::cout<<"The net has weighed arcs."<<std::endl;
         } else if(_ret == INHIBITORARCS) {
