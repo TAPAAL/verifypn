@@ -170,6 +170,10 @@ namespace PetriEngine {
                 else
                     _result = result_t::IMPOSSIBLE;
             }
+            else if (result == GLP_ENOPFS || result == GLP_ENODFS || result == GLP_ENOFEAS)
+            {
+                _result = result_t::IMPOSSIBLE;
+            }
             glp_delete_prob(lp);
 
             return _result == result_t::IMPOSSIBLE;
@@ -329,6 +333,11 @@ namespace PetriEngine {
                         result[pi].first = p0;
                         result[pi].second = all_zero;
                     }
+                }
+                else if (rs == GLP_ENOPFS || rs == GLP_ENODFS || rs == GLP_ENOFEAS)
+                {
+                    result[pi].first = p0;
+                    result[pi].second = all_zero;
                 }
                 glp_erase_prob(tmp_lp);
                 if(pi == places.size() && result[places.size()].first >= p0)
