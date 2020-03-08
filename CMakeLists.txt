@@ -46,13 +46,10 @@ if (VERIFYPN_MC_Simplification)
 endif(VERIFYPN_MC_Simplification)
 
 if (UNIX AND NOT APPLE)
-    set(LPLIB "${CMAKE_SOURCE_DIR}/include/lpsolve/liblpsolve55-linux64.a")
     set(ARCH_TYPE "linux64")
 elseif(APPLE)
-    set(LPLIB "${CMAKE_SOURCE_DIR}/include/lpsolve/liblpsolve55-osx64.a")
     set(ARCH_TYPE "osx64")
 else()
-    set(LPLIB "${CMAKE_SOURCE_DIR}/include/lpsolve/liblpsolve55-win64.dll")
     set(ARCH_TYPE "win64")
 endif ()
 

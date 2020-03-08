@@ -15,4 +15,4 @@ STSolver.cpp
 SuccessorGenerator.cpp
 )
 
-target_link_libraries(PetriEngine PRIVATE Colored Structures Simplification Reachability PQL ${LPLIB})
+target_link_libraries(PetriEngine PRIVATE Colored Structures Simplification Reachability PQL)
