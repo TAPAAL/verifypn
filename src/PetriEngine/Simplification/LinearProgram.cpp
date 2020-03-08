@@ -120,7 +120,7 @@ namespace PetriEngine {
             glp_smcp settings;
             glp_init_smcp(&settings);
             settings.tm_lim = timeout*1000;
-            settings.presolve = GLP_ON;
+            settings.presolve = GLP_OFF;
             settings.msg_lev = 1;
             auto result = glp_simplex(lp, &settings);
             if (result == GLP_ETMLIM)
@@ -128,11 +128,7 @@ namespace PetriEngine {
                 _result = result_t::UKNOWN;
                 std::cerr << "glpk: timeout" << std::endl;
             }
-            else if(result != 0)
-            {
-                _result = result_t::IMPOSSIBLE;
-            }
-            else
+            else if(result == 0)
             {
                 auto status = glp_get_status(lp);
                 if(status == GLP_OPT) {
@@ -159,8 +155,6 @@ namespace PetriEngine {
                         }
 
                     }
-                    else
-                        _result = result_t::IMPOSSIBLE;
                 }
                 else if(status == GLP_FEAS || status == GLP_UNBND)
                 {
@@ -220,7 +214,7 @@ namespace PetriEngine {
             glp_smcp settings;
             glp_init_smcp(&settings);
             settings.tm_lim = timeout*1000;
-            settings.presolve = GLP_ON;
+            settings.presolve = GLP_OFF;
             settings.msg_lev = 1;
 
             for(size_t it = 0; it <= places.size(); ++it)
@@ -299,12 +293,7 @@ namespace PetriEngine {
                 {
                     std::cerr << "glpk: timeout" << std::endl;
                 }
-                else if(rs != 0)
-                {
-                    result[pi].first = p0;
-                    result[pi].second = all_zero;
-                }
-                else
+                else if(rs == 0)
                 {
                     auto status = glp_get_status(tmp_lp);
                     if(status == GLP_OPT) {
@@ -312,7 +301,7 @@ namespace PetriEngine {
                         glp_init_iocp(&isettings);
                         isettings.tm_lim = std::max<int>(((double) timeout * 1000) - (glp_time() - stime), 1);
                         isettings.msg_lev = 1;
-                        isettings.presolve = GLP_ON;
+                        isettings.presolve = GLP_OFF;
                         auto rs = glp_intopt(tmp_lp, &isettings);
                         if (rs == GLP_ETMLIM) {
                             std::cerr << "glpk mip: timeout" << std::endl;
