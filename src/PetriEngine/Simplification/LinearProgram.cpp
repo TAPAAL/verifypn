@@ -128,7 +128,7 @@ namespace PetriEngine {
             glp_init_smcp(&settings);
             settings.tm_lim = timeout*1000;
             settings.presolve = GLP_OFF;
-            settings.msg_lev = 1;
+            settings.msg_lev = 0;
             auto result = glp_simplex(lp, &settings);
             if (result == GLP_ETMLIM)
             {
@@ -141,7 +141,7 @@ namespace PetriEngine {
                 if(status == GLP_OPT) {
                     glp_iocp iset;
                     glp_init_iocp(&iset);
-                    iset.msg_lev = 1;
+                    iset.msg_lev = 0;
                     iset.tm_lim = std::max<uint32_t>(timeout*1000-(stime - glp_time()), 1);
                     iset.presolve = GLP_OFF;
                     auto ires = glp_intopt(lp, &iset);
@@ -226,7 +226,7 @@ namespace PetriEngine {
             glp_init_smcp(&settings);
             settings.tm_lim = timeout*1000;
             settings.presolve = GLP_OFF;
-            settings.msg_lev = 1;
+            settings.msg_lev = 0;
 
             for(size_t it = 0; it <= places.size(); ++it)
             {
@@ -310,7 +310,7 @@ namespace PetriEngine {
                         glp_iocp isettings;
                         glp_init_iocp(&isettings);
                         isettings.tm_lim = std::max<int>(((double) timeout * 1000) - (glp_time() - stime), 1);
-                        isettings.msg_lev = 1;
+                        isettings.msg_lev = 0;
                         isettings.presolve = GLP_OFF;
                         auto rs = glp_intopt(tmp_lp, &isettings);
                         if (rs == GLP_ETMLIM) {

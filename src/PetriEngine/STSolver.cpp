@@ -266,7 +266,7 @@ namespace PetriEngine {
                 glp_init_smcp(&settings);
                 settings.tm_lim = timelimit*1000;
                 settings.presolve = GLP_OFF;
-                settings.msg_lev = 1;
+                settings.msg_lev = 0;
                 auto result = glp_simplex(_lp, &settings);
                 if(result == 0)
                 {
@@ -275,7 +275,7 @@ namespace PetriEngine {
                         glp_iocp isettings;
                         glp_init_iocp(&isettings);
                         isettings.tm_lim = std::max<int>(((double) timelimit * 1000) - (glp_time() - stime), 1);
-                        isettings.msg_lev = 1;
+                        isettings.msg_lev = 0;
                         isettings.presolve = GLP_OFF;
                         glp_intopt(_lp, &isettings);
                         _ret = glp_mip_status(_lp);
