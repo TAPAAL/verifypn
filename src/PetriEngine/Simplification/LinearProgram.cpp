@@ -50,7 +50,7 @@ namespace PetriEngine {
             bool use_ilp = true;
             auto net = context.net();
             auto m0 = context.marking();
-            auto timeout = std::min(solvetime, context.getLpTimeout());
+
 
             if(_result != result_t::UKNOWN)
             {
@@ -58,9 +58,10 @@ namespace PetriEngine {
                     return _result == result_t::IMPOSSIBLE;
             }
 
-            if(_equations.size() == 0){
+            if(_equations.size() == 0 || context.timeout()){
                 return false;
             }
+
             const uint32_t nCol = net->numberOfTransitions();
             auto lp = glp_create_prob();
             int nRow = net->numberOfPlaces() + _equations.size();
@@ -102,6 +103,7 @@ namespace PetriEngine {
                         if(eq.lower > eq.upper)
                         {
                             _result = result_t::IMPOSSIBLE;
+                            glp_delete_prob(lp);
                             return true;
                         }
                         glp_set_row_bnds(lp, rowno, GLP_DB, eq.lower, eq.upper);
@@ -113,6 +115,8 @@ namespace PetriEngine {
                     glp_set_row_bnds(lp, rowno, GLP_LO, eq.lower, -infty);
                 ++rowno;
             }
+            if(context.timeout())
+                return false;
 
             // Set objective, kind and bounds
             for(size_t i = 1; i <= nCol; i++) {
@@ -126,7 +130,8 @@ namespace PetriEngine {
             auto stime = glp_time();
             glp_smcp settings;
             glp_init_smcp(&settings);
-            settings.tm_lim = timeout*1000;
+            auto timeout = std::min(solvetime, context.getLpTimeout())*1000;
+            settings.tm_lim = timeout;
             settings.presolve = GLP_OFF;
             settings.msg_lev = 0;
             auto result = glp_simplex(lp, &settings);
@@ -142,7 +147,7 @@ namespace PetriEngine {
                     glp_iocp iset;
                     glp_init_iocp(&iset);
                     iset.msg_lev = 0;
-                    iset.tm_lim = std::max<uint32_t>(timeout*1000-(stime - glp_time()), 1);
+                    iset.tm_lim = std::max<uint32_t>(timeout-(stime - glp_time()), 1);
                     iset.presolve = GLP_OFF;
                     auto ires = glp_intopt(lp, &iset);
                     if(ires == GLP_ETMLIM)
