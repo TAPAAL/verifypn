@@ -172,7 +172,7 @@ namespace PetriEngine {
         class StateSet : public StateSetInterface {
         private:
             using wrapper_t = ptrie::binarywrapper_t;
-            using ptrie_t = ptrie::set_stable<ptrie::uchar>;
+            using ptrie_t = ptrie::set_stable<ptrie::uchar,17,128,4>;
             
         public:
             using StateSetInterface::StateSetInterface;
