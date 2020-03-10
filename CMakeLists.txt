@@ -82,14 +82,23 @@ if (VERIFYPN_GetDependencies)
         INSTALL_COMMAND cd ../rapidxml-ext && ${CMAKE_COMMAND} -E copy rapidxml.hpp rapidxml_iterators.hpp rapidxml_print.hpp rapidxml_utils.hpp ${EXTERNAL_INSTALL_LOCATION}/include    
     )
 
+    ExternalProject_add(glpk-ext
+        URL https://ftp.gnu.org/gnu/glpk/glpk-4.65.tar.gz
+        URL_HASH SHA512=997e8e599ff1718a08c66b86eadd0e01f4644899f1e95920f8ae91d66b4d8361021766b346845f4dcbcfe667b41ab72ea3d377017a0ebf85d7ece091cfd81375
+        CONFIGURE_COMMAND <SOURCE_DIR>/configure --enable-shared=no --prefix=${EXTERNAL_INSTALL_LOCATION}
+        BUILD_COMMAND make
+        INSTALL_COMMAND make install
+    )
+
+    link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
+    link_directories(${EXTERNAL_INSTALL_LOCATION}/lib64)
+
     if (VERIFYPN_TAR)
         ExternalProject_add(z3-ext
             URL https://github.com/Z3Prover/z3/releases/download/z3-4.7.1/z3-4.7.1.zip
             URL_HASH SHA512=c1d1bd60ef7e41a6a5abc2b5e6a548c5e32573b76d958c244457db636b54adbd322b5d42a3bf85a08759c69860b9ce32e924e9c9135ef396cdc75df3944c516e
             CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DUSE_OPENMP=FALSE -DUSE_LIB_GMP=TRUE -DENABLE_EXAMPLE_TARGETS=FALSE -DLINK_TIME_OPTIMIZATION=TRUE -DBUILD_LIBZ3_SHARED=TRUE
         )
-        link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
-        link_directories(${EXTERNAL_INSTALL_LOCATION}/lib64)
     endif(VERIFYPN_TAR)
 
     # we can now include external libraries
