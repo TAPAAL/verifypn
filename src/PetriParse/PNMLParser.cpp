@@ -466,7 +466,6 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
         weight = atoi(text.c_str());
         if(std::find_if(text.begin(), text.end(), [](char c) { return !std::isdigit(c) && !std::isblank(c); }) != text.end())
         {
-            if(weight == 0);
             std::cerr << "ERROR: Found non-integer-text in inscription-tag (weight) on arc from " << source << " to " << target << " with value \"" << text << "\". An integer was expected." << std::endl;
             exit(ErrorCode);
         }
