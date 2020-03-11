@@ -83,11 +83,14 @@ if (VERIFYPN_GetDependencies)
         INSTALL_COMMAND cd ../rapidxml-ext && ${CMAKE_COMMAND} -E copy rapidxml.hpp rapidxml_iterators.hpp rapidxml_print.hpp rapidxml_utils.hpp ${EXTERNAL_INSTALL_LOCATION}/include    
     )
 
+    if (WIN32) #If windows 32 or 64 
+      set(GLPK_CFLAGS CFLAGS="-D __WOE__ -g -O2" )
+    endif(WIN32)
     ExternalProject_add(glpk-ext
         URL https://ftp.gnu.org/gnu/glpk/glpk-4.65.tar.gz
         URL_HASH SHA512=997e8e599ff1718a08c66b86eadd0e01f4644899f1e95920f8ae91d66b4d8361021766b346845f4dcbcfe667b41ab72ea3d377017a0ebf85d7ece091cfd81375
-        CONFIGURE_COMMAND <SOURCE_DIR>/configure --enable-shared=no --prefix=${EXTERNAL_INSTALL_LOCATION}
-        BUILD_COMMAND make
+	CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --enable-shared=no --prefix=${EXTERNAL_INSTALL_LOCATION}  
+	BUILD_COMMAND make ${GLPK_CFLAGS}
         INSTALL_COMMAND make install
     )
 
