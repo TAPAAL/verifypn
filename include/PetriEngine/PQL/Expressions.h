@@ -886,10 +886,9 @@ namespace PetriEngine {
         class CompareCondition : public Condition {
         public:
 
-            CompareCondition(const Expr_ptr expr1, const Expr_ptr expr2) {
-                _expr1 = expr1;
-                _expr2 = expr2;
-            }
+            CompareCondition(const Expr_ptr expr1, const Expr_ptr expr2)
+            : _expr1(expr1), _expr2(expr2) {}
+
             int formulaSize() const override{
                 return _expr1->formulaSize() + _expr2->formulaSize() + 1;
             }
@@ -1134,61 +1133,133 @@ namespace PetriEngine {
 #endif
         };
 
-        class UpperBoundsCondition : public Condition
+        class ShallowCondition : public Condition
         {
-        public:
-            
-            UpperBoundsCondition(const std::vector<std::string>& places) : _places(places)
-            {
-            }
-
-            int formulaSize() const override{
-                return _places.size();
-            }
-            void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override
             { return _compiled->evaluate(context); }
             Result evalAndSet(const EvaluationContext& context) override
             { return _compiled->evalAndSet(context); }
             uint32_t distance(DistanceContext& context) const override
             { return _compiled->distance(context); }
-            void toString(std::ostream& out) const override;
             void toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const override
             { _compiled->toTAPAALQuery(out, context); }
             void toBinary(std::ostream& out) const override
             { return _compiled->toBinary(out); }
             Retval simplify(SimplificationContext& context) const override
             { return _compiled->simplify(context); }
-            bool isReachability(uint32_t depth) const override
-            { return true; }
             Condition_ptr prepareForReachability(bool negated) const override
             { return _compiled->prepareForReachability(negated); }
-            Condition_ptr pushNegation(negstat_t& neg, const EvaluationContext& context, bool nested, bool negated, bool initrw) override
-            { 
-                if(_compiled)
-                    return _compiled->pushNegation(neg, context, nested, negated, initrw); 
-                else
-                    return std::make_shared<UpperBoundsCondition>(_places);
-            }
+            bool isReachability(uint32_t depth) const override
+            { return _compiled->isReachability(depth); }
+
             void toXML(std::ostream& out, uint32_t tabs) const override
             { _compiled->toXML(out, tabs); }
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override
             { _compiled->findInteresting(generator, negated);}
-            Quantifier getQuantifier() const override { return Quantifier::UPPERBOUNDS; }
-            Path getPath() const override { return Path::pError; }
-            CTLType getQueryType() const override { return CTLType::EVAL; }
-            bool containsNext() const override { return false; }
-            bool nestedDeadlock() const override { return false; }
+            Quantifier getQuantifier() const override
+            { return _compiled->getQuantifier(); }
+            Path getPath() const override { return _compiled->getPath(); }
+            CTLType getQueryType() const override { return _compiled->getQueryType(); }
+            bool containsNext() const override { return _compiled->containsNext(); }
+            bool nestedDeadlock() const override { return _compiled->nestedDeadlock(); }
 #ifdef VERIFYPN_TAR
-            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const 
+            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const
             { return _compiled->encodeSat(net, context, uses, incremented); }
 #endif
+            int formulaSize() const override{
+                return _compiled->formulaSize();
+            }
+
+            Condition_ptr pushNegation(negstat_t& neg, const EvaluationContext& context, bool nested, bool negated, bool initrw) override
+            {
+                if(_compiled)
+                    return _compiled->pushNegation(neg, context, nested, negated, initrw);
+                else
+                    return clone();
+            }
+
+            void analyze(AnalysisContext& context) override
+            {
+                if (_compiled) _compiled->analyze(context);
+                else _analyze(context);
+            }
+            void toString(std::ostream &out) const {
+                if (_compiled) _compiled->toString(out);
+                else _toString(out);
+            }
+
+        protected:
+            virtual void _analyze(AnalysisContext& context) = 0;
+            virtual void _toString(std::ostream& out) const = 0;
+            virtual Condition_ptr clone() = 0;
+            Condition_ptr _compiled = nullptr;
+        };
+
+        class KSafeCondition : public ShallowCondition
+        {
+        public:
+            KSafeCondition(const Expr_ptr& expr1) : _bound(expr1)
+            {}
+
+        protected:
+            void _analyze(AnalysisContext& context) override;
+            void _toString(std::ostream& out) const override;
+            Condition_ptr clone() override
+            {
+                return std::make_shared<KSafeCondition>(_bound);
+            }
+        private:
+            Expr_ptr _bound = nullptr;
+        };
+
+        class LivenessCondition : public ShallowCondition
+        {
+        public:
+            LivenessCondition() {}
+        protected:
+            void _analyze(AnalysisContext& context) override;
+            void _toString(std::ostream& out) const override;
+            Condition_ptr clone() override { return std::make_shared<LivenessCondition>(); }
+        };
+
+        class QuasiLivenessCondition : public ShallowCondition
+        {
+        public:
+            QuasiLivenessCondition() {}
+        protected:
+            void _analyze(AnalysisContext& context) override;
+            void _toString(std::ostream& out) const override;
+            Condition_ptr clone() override { return std::make_shared<QuasiLivenessCondition>(); }
+        };
+
+        class StableMarkingCondition : public ShallowCondition
+        {
+        public:
+            StableMarkingCondition() {}
+        protected:
+            void _analyze(AnalysisContext& context) override;
+            void _toString(std::ostream& out) const override;
+            Condition_ptr clone() override { return std::make_shared<StableMarkingCondition>(); }
+        };
+
+        class UpperBoundsCondition : public ShallowCondition
+        {
+        public:
+            
+            UpperBoundsCondition(const std::vector<std::string>& places) : _places(places)
+            {}
+        protected:
+            void _toString(std::ostream& out) const override;
+            void _analyze(AnalysisContext& context) override;
+            Condition_ptr clone() override
+            {
+                return std::make_shared<UpperBoundsCondition>(_places);
+            }
+
         private:
             std::vector<std::string> _places;
-            Condition_ptr _compiled;
-
         };
-        
+
         class UnfoldedUpperBoundsCondition : public Condition
         {
         public:

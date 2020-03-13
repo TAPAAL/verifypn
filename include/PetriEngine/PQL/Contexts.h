@@ -89,6 +89,9 @@ namespace PetriEngine {
             const std::vector<ExprError>& errors() const {
                 return _errors;
             }
+            auto& allPlaceNames() const { return _placeNames; }
+            auto& allTransitionNames() const { return _transitionNames; }
+
         };
 
         class ColoredAnalysisContext : public AnalysisContext {
@@ -132,6 +135,8 @@ namespace PetriEngine {
             bool isColored() const {
                 return _colored;
             }
+            auto& allColoredPlaceNames() const { return _coloredPlaceNames; }
+            auto& allColoredTransitionNames() const { return _coloredTransitionNames; }
         };
 
         /** Context provided for evalation */
