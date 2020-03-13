@@ -486,10 +486,7 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
         }
         return std::make_shared<OrCondition>(conds);
     }
-    std::cerr << "An error occurred while parsing the query." << std::endl;
-    std::cerr << elementName << std::endl;
-    assert(false);
-    exit(ErrorCode);
+    fatal_error(elementName);
     return nullptr;
 }
 
