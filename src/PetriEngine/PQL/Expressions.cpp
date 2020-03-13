@@ -324,7 +324,15 @@ namespace PetriEngine {
             }
             out << ")";
         }
- 
+
+        void FireableCondition::_toString(std::ostream &out) const {
+            out << "is-fireable(" << _name << ")";
+        }
+
+        void UnfoldedFireableCondition::_toString(std::ostream &out) const {
+            out << "is-fireable(" << _name << ")";
+        }
+
         /******************** To TAPAAL Query ********************/
 
         void SimpleQuantifierCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
@@ -583,13 +591,8 @@ namespace PetriEngine {
             for(auto& c : _conds) c->analyze(context);
         }
         
-        void UnfoldedFireableCondition::analyze(AnalysisContext& context)
+        void UnfoldedFireableCondition::_analyze(AnalysisContext& context)
         {
-            if(_compiled)
-            {
-                _compiled->analyze(context);
-                return;
-            }
             std::vector<Condition_ptr> conds;
             AnalysisContext::ResolutionResult result = context.resolve(_name, false);
             if (!result.success)
@@ -622,11 +625,7 @@ namespace PetriEngine {
             _compiled->analyze(context);
         }
 
-        void FireableCondition::analyze(AnalysisContext &context) {
-            if (_compiled) {
-                _compiled->analyze(context);
-                return;
-            }
+        void FireableCondition::_analyze(AnalysisContext &context) {
 
             auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
             if(coloredContext != nullptr && coloredContext->isColored()) {
@@ -686,7 +685,7 @@ namespace PetriEngine {
             else
             {
                 for(auto& p : context.allPlaceNames())
-                    k_safe.emplace_back(std::make_shared<LessThanOrEqualCondition>(std::make_shared<IdentifierExpr>(p.first), _bound));
+                    k_safe.emplace_back(std::make_shared<LessThanOrEqualCondition>(std::make_shared<UnfoldedIdentifierExpr>(p.first), _bound));
             }
             _compiled = std::make_shared<AGCondition>(std::make_shared<AndCondition>(std::move(k_safe)));
             _compiled->analyze(context);
@@ -702,7 +701,7 @@ namespace PetriEngine {
                 {
                     std::vector<Condition_ptr> disj;
                     for(auto& tn : n.second)
-                        disj.emplace_back(std::make_shared<FireableCondition>(tn));
+                        disj.emplace_back(std::make_shared<UnfoldedFireableCondition>(tn));
                     quasi.emplace_back(std::make_shared<EFCondition>(std::make_shared<OrCondition>(std::move(disj))));
                 }
             }
@@ -710,7 +709,7 @@ namespace PetriEngine {
             {
                 for(auto& n : context.allTransitionNames())
                 {
-                    quasi.emplace_back(std::make_shared<EFCondition>(std::make_shared<FireableCondition>(n.first)));
+                    quasi.emplace_back(std::make_shared<EFCondition>(std::make_shared<UnfoldedFireableCondition>(n.first)));
                 }
             }
             _compiled = std::make_shared<AndCondition>(std::move(quasi));
@@ -727,7 +726,7 @@ namespace PetriEngine {
                 {
                     std::vector<Condition_ptr> disj;
                     for(auto& tn : n.second)
-                        disj.emplace_back(std::make_shared<FireableCondition>(tn));
+                        disj.emplace_back(std::make_shared<UnfoldedFireableCondition>(tn));
                     liveness.emplace_back(std::make_shared<AGCondition>(std::make_shared<EFCondition>(std::make_shared<OrCondition>(std::move(disj)))));
                 }
             }
@@ -735,7 +734,7 @@ namespace PetriEngine {
             {
                 for(auto& n : context.allTransitionNames())
                 {
-                    liveness.emplace_back(std::make_shared<AGCondition>(std::make_shared<EFCondition>(std::make_shared<FireableCondition>(n.first))));
+                    liveness.emplace_back(std::make_shared<AGCondition>(std::make_shared<EFCondition>(std::make_shared<UnfoldedFireableCondition>(n.first))));
                 }
             }
             _compiled = std::make_shared<AndCondition>(std::move(liveness));
@@ -760,7 +759,7 @@ namespace PetriEngine {
                         sum.emplace_back(std::move(id));
 
                     }
-                    stable_check.emplace_back(std::make_shared<AGCondition>(std::make_shared<LessThanOrEqualCondition>(
+                    stable_check.emplace_back(std::make_shared<AGCondition>(std::make_shared<EqualCondition>(
                             std::make_shared<PlusExpr>(std::move(sum)),
                             std::make_shared<LiteralExpr>(init_marking))));
                 }
@@ -3494,7 +3493,31 @@ namespace PetriEngine {
             return _cond->pushNegation(stats, context, nested, !negated, initrw);
             }, stats, context, nested, negated, initrw);
         }
-        
+
+        template<typename T>
+        Condition_ptr pushFireableNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated, bool initrw, const std::string& name, const Condition_ptr& compiled)
+        {
+            if(compiled)
+                return compiled->pushNegation(stat, context, nested, negated, initrw);
+            if(negated)
+            {
+                stat.negated_fireability = true;
+                return std::make_shared<NotCondition>(std::make_shared<T>(name));
+            }
+            else
+                return std::make_shared<T>(name);
+        }
+
+        Condition_ptr UnfoldedFireableCondition::pushNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated, bool initrw)
+        {
+            return pushFireableNegation<UnfoldedFireableCondition>(stat, context, nested, negated, initrw, _name, _compiled);
+        }
+
+        Condition_ptr FireableCondition::pushNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated, bool initrw)
+        {
+            return pushFireableNegation<FireableCondition>(stat, context, nested, negated, initrw, _name, _compiled);
+        }
+
         bool CompareCondition::isTrivial() const
         {
             auto remdup = [](auto& a, auto& b){
