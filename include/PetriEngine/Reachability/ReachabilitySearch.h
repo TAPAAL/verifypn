@@ -48,14 +48,13 @@ namespace PetriEngine {
         /** Implements reachability check in a BFS manner using a hash table */
         class ReachabilitySearch {
         private:
-            ResultPrinter& printer;
+            ResultPrinter* printer;
             
 
         public:
 
-            ReachabilitySearch(ResultPrinter& printer, PetriNet& net, int kbound = 0)
-            : printer(printer), _net(net) {
-                _kbound = kbound;
+            ReachabilitySearch(ResultPrinter* printer, PetriNet& net, int kbound = 0, bool early = false)
+            : printer(printer), _net(net), _kbound(kbound) {
             }
             
             ~ReachabilitySearch()
@@ -63,7 +62,7 @@ namespace PetriEngine {
             }
 
             /** Perform reachability check using BFS with hasing */
-            void reachable(                    
+            bool reachable(
                     std::vector<std::shared_ptr<PQL::Condition > >& queries,
                     std::vector<ResultPrinter::Result>& results,
                     Strategy strategy,
@@ -81,25 +80,25 @@ namespace PetriEngine {
             };
             
             template<typename Q, typename W = Structures::StateSet, typename G>
-            void tryReach(
+            bool tryReach(
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
                 bool usequeries,
                 bool printstats);
             void printStats(searchstate_t& s, Structures::StateSetInterface*);
             bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
-                                std::vector<ResultPrinter::Result>&,
-                                Structures::State&, searchstate_t&, Structures::StateSetInterface*);
+                                    std::vector<ResultPrinter::Result>&,
+                                    Structures::State&, searchstate_t&, Structures::StateSetInterface*);
             ResultPrinter::Result printQuery(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result, searchstate_t&, Structures::StateSetInterface*);
             
-            int _kbound;
             PetriNet& _net;
+            int _kbound;
             size_t _satisfyingMarking = 0;
             Structures::State _initial;
         };
         
         template<typename Q, typename W, typename G>
-        void ReachabilitySearch::tryReach(   std::vector<std::shared_ptr<PQL::Condition> >& queries, 
+        bool ReachabilitySearch::tryReach(   std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                         std::vector<ResultPrinter::Result>& results, bool usequeries,
                                         bool printstats)
         {
@@ -133,7 +132,7 @@ namespace PetriEngine {
                     if(checkQueries(queries, results, working, ss, &states))
                     {
                         if(printstats) printStats(ss, &states);
-                            return;
+                            return true;
                     }
                 }
                 // add initial to queue
@@ -159,7 +158,7 @@ namespace PetriEngine {
                             ss.exploredStates++;
                             if (checkQueries(queries, results, working, ss, &states)) {
                                 if(printstats) printStats(ss, &states);
-                                return;
+                                return true;
                             }
                         }
                     }
@@ -177,6 +176,7 @@ namespace PetriEngine {
             }            
 
             if(printstats) printStats(ss, &states);
+            return false;
         }
 
     }

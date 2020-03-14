@@ -45,8 +45,6 @@ namespace PetriEngine {
                     if(queries[i]->evaluate(ec) == Condition::RTRUE)
                     {
                         results[i] = printQuery(queries[i], i, ResultPrinter::Satisfied, ss, states);
-//                        std::cout << queries[i]->toString() << std::endl;
-//                        state.print(_net);
                     }
                     else
                     {
@@ -62,10 +60,12 @@ namespace PetriEngine {
         ResultPrinter::Result ReachabilitySearch::printQuery(std::shared_ptr<PQL::Condition>& query, size_t i,  ResultPrinter::Result r,
                                                                 searchstate_t& ss, Structures::StateSetInterface* states)
         {
-            return printer.printResult(i, query.get(), r,
+            if(printer)
+                return printer->printResult(i, query.get(), r,
                             ss.expandedStates, ss.exploredStates, states->discovered(),
                             ss.enabledTransitionsCount, states->maxTokens(), 
-                            states->maxPlaceBound(), states, _satisfyingMarking, _initial.marking());  
+                            states->maxPlaceBound(), states, _satisfyingMarking, _initial.marking());
+            return ResultPrinter::Satisfied;
         }
         
         void ReachabilitySearch::printStats(searchstate_t& ss, Structures::StateSetInterface* states)
@@ -104,13 +104,13 @@ namespace PetriEngine {
         }
         
 #define TRYREACHPAR    (queries, results, usequeries, printstats)
-#define TEMPPAR(X, Y)  if(keep_trace) tryReach<X, Structures::TracableStateSet, Y>TRYREACHPAR ; \
-                       else tryReach<X, Structures::StateSet, Y> TRYREACHPAR;
+#define TEMPPAR(X, Y)  if(keep_trace) return tryReach<X, Structures::TracableStateSet, Y>TRYREACHPAR ; \
+                       else return tryReach<X, Structures::StateSet, Y> TRYREACHPAR;
 #define TRYREACH(X)    if(stubbornreduction) TEMPPAR(X, ReducingSuccessorGenerator) \
                        else TEMPPAR(X, SuccessorGenerator)
         
 
-        void ReachabilitySearch::reachable(
+        bool ReachabilitySearch::reachable(
                     std::vector<std::shared_ptr<PQL::Condition > >& queries,
                     std::vector<ResultPrinter::Result>& results,
                     Strategy strategy,

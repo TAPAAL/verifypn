@@ -1085,7 +1085,7 @@ int main(int argc, char* argv[]) {
     else
 #endif
     {
-        ReachabilitySearch strategy(printer, *net, options.kbound);
+        ReachabilitySearch strategy(&printer, *net, options.kbound);
 
         // Change default place-holder to default strategy
         if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;

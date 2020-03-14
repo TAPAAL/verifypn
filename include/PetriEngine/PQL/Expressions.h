@@ -509,7 +509,7 @@ namespace PetriEngine {
         private:
             std::string op() const override;
         };
-        
+
         class AXCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;

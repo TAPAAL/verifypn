@@ -116,8 +116,6 @@ namespace PetriEngine {
 #ifdef VERIFYPN_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const = 0;
 #endif
-            /** Generate LLVM intermediate code for this expr  */
-            //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert expression to string */
             virtual void toString(std::ostream&) const = 0;
             /** Expression type */
@@ -219,9 +217,6 @@ namespace PetriEngine {
 #ifdef VERIFYPN_TAR
             virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const = 0;
 #endif
-            
-            /** Generate LLVM intermediate code for this condition  */
-            //virtual llvm::Value* codegen(CodeGenerationContext& context) const = 0;
             /** Convert condition to string */
             virtual void toString(std::ostream&) const = 0;
             /** Export condition to TAPAAL query (add EF manually!) */
