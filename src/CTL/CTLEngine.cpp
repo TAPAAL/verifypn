@@ -71,12 +71,12 @@ void printResult(const std::string& qname, CTLResult& result, bool statisticslev
     }
 }
 
-bool singleSolve(Condition* query, PetriEngine::PetriNet* net,
+bool singleSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
                  CTL::CTLAlgorithmType algorithmtype,
                  PetriEngine::Reachability::Strategy strategytype, bool partial_order, CTLResult& result)
 {
     PetriNets::OnTheFlyDG graph(net, partial_order);
-    graph.setQuery(result.query);
+    graph.setQuery(query);
     std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
     if(getAlgorithm(alg, algorithmtype,  strategytype) == ErrorCode)
     {
@@ -99,24 +99,24 @@ bool singleSolve(Condition* query, PetriEngine::PetriNet* net,
     return res;
 }
 
-bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
+bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
                     CTL::CTLAlgorithmType algorithmtype,
                     PetriEngine::Reachability::Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
 {
-    if(auto q = dynamic_cast<NotCondition*>(query))
+    if(auto q = dynamic_cast<NotCondition*>(query.get()))
     {
-        return !recursiveSolve((*q)[0].get(), net, algorithmtype, strategytype, partial_order, result, options);
+        return ! recursiveSolve((*q)[0], net, algorithmtype, strategytype, partial_order, result, options);
     }
-    else if(auto q = dynamic_cast<AndCondition*>(query))
+    else if(auto q = dynamic_cast<AndCondition*>(query.get()))
     {
         return std::all_of(q->begin(), q->end(), [&](auto& q){
-            return recursiveSolve(q.get(), net, algorithmtype, strategytype, partial_order, result, options);
+            return recursiveSolve(q, net, algorithmtype, strategytype, partial_order, result, options);
         });
     }
-    else if(auto q = dynamic_cast<OrCondition*>(query))
+    else if(auto q = dynamic_cast<OrCondition*>(query.get()))
     {
         return std::any_of(q->begin(), q->end(), [&](auto& q){
-            return recursiveSolve(q.get(), net, algorithmtype, strategytype, partial_order, result, options);
+            return recursiveSolve(q, net, algorithmtype, strategytype, partial_order, result, options);
         });
     }
     else if(query->isReachability())
@@ -131,7 +131,7 @@ bool recursiveSolve(Condition* query, PetriEngine::PetriNet* net,
                            false,
                            false,
                            false);
-        return  r;
+        return  r xor query->isInvariant();
     }
     else
     {
@@ -182,7 +182,7 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
         result.duration = 0;
         if(!solved)
         {
-            result.result = recursiveSolve(result.query.get(), net, algorithmtype, strategytype, partial_order, result, options);
+            result.result = recursiveSolve(result.query, net, algorithmtype, strategytype, partial_order, result, options);
         }
         printResult(querynames[qnum], result, printstatistics, mccoutput, false, qnum, options);
     }
