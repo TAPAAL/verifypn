@@ -124,7 +124,7 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriEngine::P
     {
         PetriEngine::Reachability::ReachabilitySearch strategy(*net, options.kbound, true);
         std::vector<PetriEngine::Reachability::ResultPrinter::Result> res(queries.size(), PetriEngine::Reachability::ResultPrinter::Unknown);
-        auto r = strategy.reachable(queries, res,
+        strategy.reachable(queries, res,
                                     options.strategy,
                                     options.stubbornreduction,
                                     false,
