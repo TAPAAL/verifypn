@@ -155,8 +155,10 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriEngine::P
         for(size_t i = 0; i < query->size(); ++i) {
             if (state[i] != 0)
             {
-                if (res[j] == PetriEngine::Reachability::ResultPrinter::Unknown)
+                if (res[j] == PetriEngine::Reachability::ResultPrinter::Unknown) {
+                    ++j;
                     continue;
+                }
                 auto bres = res[j] == ResultPrinter::Satisfied;
 
                 if(bres xor is_conj) {
