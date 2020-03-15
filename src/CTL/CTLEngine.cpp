@@ -113,7 +113,7 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriEngine::P
     {
         if((*query)[i]->isReachability())
         {
-            state[i] = dynamic_cast<NotCondition*>((*query)[i].get()) ? 1 : -1;
+            state[i] = dynamic_cast<NotCondition*>((*query)[i].get()) ? -1 : 1;
             queries.emplace_back((*query)[i]->prepareForReachability());
         }
     }
@@ -133,8 +133,9 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriEngine::P
             {
                 bool inv = state[i] < 0;
                 auto bres = (inv xor (res[j] == PetriEngine::Reachability::ResultPrinter::Satisfied));
-                if(bres xor is_conj)
+                if(bres xor is_conj) {
                     return !is_conj;
+                }
                 ++j;
             }
         }
