@@ -55,7 +55,12 @@ namespace PetriEngine {
                     }
                 }
                 if( i == ss.heurquery &&
-                    results[i] != ResultPrinter::Unknown) ++ss.heurquery;
+                    results[i] != ResultPrinter::Unknown)
+                {
+                    ++ss.heurquery;
+                    if(queries.size() >= 2)
+                        ss.heurquery %= queries.size();
+                }
             }  
             return alldone;
         }        

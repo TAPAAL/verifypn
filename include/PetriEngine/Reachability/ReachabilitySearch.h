@@ -118,7 +118,7 @@ namespace PetriEngine {
             ss.enabledTransitionsCount.resize(_net.numberOfTransitions(), 0);
             ss.expandedStates = 0;
             ss.exploredStates = 1;
-            ss.heurquery = queries.size() > 2 ? std::rand() % queries.size() : 0;
+            ss.heurquery = queries.size() >= 2 ? std::rand() % queries.size() : 0;
             ss.usequeries = usequeries;
 
             // set up working area
