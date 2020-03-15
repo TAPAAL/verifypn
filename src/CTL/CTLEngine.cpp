@@ -101,6 +101,59 @@ bool singleSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
 
 bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
                     CTL::CTLAlgorithmType algorithmtype,
+                    PetriEngine::Reachability::Strategy strategytype, bool partial_order, CTLResult& result, options_t& options);
+
+bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriEngine::PetriNet* net,
+                           CTL::CTLAlgorithmType algorithmtype,
+                           PetriEngine::Reachability::Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
+{
+    std::vector<int8_t> state(query->size(), 0);
+    std::vector<Condition_ptr> queries;
+    for(size_t i = 0; i < query->size(); ++i)
+    {
+        if((*query)[i]->isReachability())
+        {
+            state[i] = dynamic_cast<NotCondition*>((*query)[i].get()) ? 1 : -1;
+            queries.emplace_back((*query)[i]->prepareForReachability());
+        }
+    }
+
+    {
+        PetriEngine::Reachability::ReachabilitySearch strategy(nullptr, *net, options.kbound, true);
+        std::vector<PetriEngine::Reachability::ResultPrinter::Result> res(queries.size(), PetriEngine::Reachability::ResultPrinter::Unknown);
+        strategy.reachable(queries, res,
+                                    options.strategy,
+                                    options.stubbornreduction,
+                                    false,
+                                    false,
+                                    false);
+        size_t j = 0;
+        for(size_t i = 0; i < query->size(); ++i) {
+            if (state[i] != 0)
+            {
+                bool inv = state[i] < 0;
+                auto bres = (inv xor (res[j] == PetriEngine::Reachability::ResultPrinter::Satisfied));
+                if(bres xor is_conj)
+                    return !is_conj;
+                ++j;
+            }
+        }
+    }
+
+    for(size_t i = 0; i < query->size(); ++i) {
+        if (state[i] == 0)
+        {
+            if(recursiveSolve((*query)[0], net, algorithmtype, strategytype, partial_order, result, options) xor is_conj)
+            {
+                return !is_conj;
+            }
+        }
+    }
+    return is_conj;
+}
+
+bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
+                    CTL::CTLAlgorithmType algorithmtype,
                     PetriEngine::Reachability::Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
 {
     if(auto q = dynamic_cast<NotCondition*>(query.get()))
@@ -109,15 +162,11 @@ bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
     }
     else if(auto q = dynamic_cast<AndCondition*>(query.get()))
     {
-        return std::all_of(q->begin(), q->end(), [&](auto& q){
-            return recursiveSolve(q, net, algorithmtype, strategytype, partial_order, result, options);
-        });
+        return solveLogicalCondition(q, true, net, algorithmtype, strategytype, partial_order, result, options);
     }
     else if(auto q = dynamic_cast<OrCondition*>(query.get()))
     {
-        return std::any_of(q->begin(), q->end(), [&](auto& q){
-            return recursiveSolve(q, net, algorithmtype, strategytype, partial_order, result, options);
-        });
+        return solveLogicalCondition(q, false, net, algorithmtype, strategytype, partial_order, result, options);
     }
     else if(query->isReachability())
     {

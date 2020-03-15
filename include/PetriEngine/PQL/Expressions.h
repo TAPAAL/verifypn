@@ -688,6 +688,7 @@ namespace PetriEngine {
             auto end() const { return _conds.end(); }
             bool empty() const { return _conds.size() == 0; }
             bool singular() const { return _conds.size() == 1; }
+            size_t size() const { return _conds.size(); }
             bool containsNext() const override 
             { return std::any_of(begin(), end(), [](auto& a){return a->containsNext();}); }
             bool nestedDeadlock() const override;
