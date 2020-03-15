@@ -170,7 +170,7 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriEngine::P
     for(size_t i = 0; i < query->size(); ++i) {
         if (state[i] == 0)
         {
-            if(recursiveSolve((*query)[0], net, algorithmtype, strategytype, partial_order, result, options) xor is_conj)
+            if(recursiveSolve((*query)[i], net, algorithmtype, strategytype, partial_order, result, options) xor is_conj)
             {
                 return !is_conj;
             }
