@@ -16,8 +16,9 @@
 #include <vector>
 #include <PetriEngine/PQL/Expressions.h>
 
-using namespace std;
+using namespace PetriEngine;
 using namespace PetriEngine::PQL;
+using namespace PetriEngine::Reachability;
 
 
 ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algorithm,
@@ -108,6 +109,7 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriEngine::P
                            PetriEngine::Reachability::Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
 {
     std::vector<int8_t> state(query->size(), 0);
+    std::vector<int8_t> lstate;
     std::vector<Condition_ptr> queries;
     for(size_t i = 0; i < query->size(); ++i)
     {
@@ -115,24 +117,48 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriEngine::P
         {
             state[i] = dynamic_cast<NotCondition*>((*query)[i].get()) ? -1 : 1;
             queries.emplace_back((*query)[i]->prepareForReachability());
+            lstate.emplace_back(state[i]);
         }
     }
 
     {
-        PetriEngine::Reachability::ReachabilitySearch strategy(nullptr, *net, options.kbound, true);
+        PetriEngine::Reachability::ReachabilitySearch strategy(*net, options.kbound, true);
         std::vector<PetriEngine::Reachability::ResultPrinter::Result> res(queries.size(), PetriEngine::Reachability::ResultPrinter::Unknown);
-        strategy.reachable(queries, res,
+        auto r = strategy.reachable(queries, res,
                                     options.strategy,
                                     options.stubbornreduction,
                                     false,
                                     false,
-                                    false);
+                                    false, [&lstate, is_conj](size_t index,
+                                              Condition* query,
+                                              ResultPrinter::Result result,
+                                              size_t expandedStates,
+                                              size_t exploredStates,
+                                              size_t discoveredStates,
+                                              const std::vector<size_t> enabledTransitionsCount,
+                                              int maxTokens,
+                                              const std::vector<uint32_t> maxPlaceBound, Structures::StateSetInterface* stateset,
+                                              size_t lastmarking,
+                                              const MarkVal* initialMarking){
+            if(result == ResultPrinter::Satisfied)
+            {
+                result = lstate[index] < 0 ? ResultPrinter::NotSatisfied : ResultPrinter::Satisfied;
+            }
+            else if(result == ResultPrinter::NotSatisfied)
+            {
+                result = lstate[index] < 0 ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
+            }
+            bool terminate = is_conj ? (result == ResultPrinter::NotSatisfied) : (result == ResultPrinter::Satisfied);
+            return std::make_pair(result, terminate);
+        });
         size_t j = 0;
         for(size_t i = 0; i < query->size(); ++i) {
             if (state[i] != 0)
             {
-                bool inv = state[i] < 0;
-                auto bres = (inv xor (res[j] == PetriEngine::Reachability::ResultPrinter::Satisfied));
+                if (res[j] == PetriEngine::Reachability::ResultPrinter::Unknown)
+                    continue;
+                auto bres = res[j] == ResultPrinter::Satisfied;
+
                 if(bres xor is_conj) {
                     return !is_conj;
                 }
@@ -171,7 +197,7 @@ bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
     }
     else if(query->isReachability())
     {
-        PetriEngine::Reachability::ReachabilitySearch strategy(nullptr, *net, options.kbound, true);
+        PetriEngine::Reachability::ReachabilitySearch strategy(*net, options.kbound, true);
         std::vector<Condition_ptr> queries{query->prepareForReachability()};
         std::vector<PetriEngine::Reachability::ResultPrinter::Result> res;
         res.emplace_back(PetriEngine::Reachability::ResultPrinter::Unknown);
@@ -180,7 +206,20 @@ bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
                            options.stubbornreduction,
                            false,
                            false,
-                           false);
+                           false,
+                           [](size_t index,
+                                    Condition* query,
+                                    ResultPrinter::Result result,
+                                    size_t expandedStates,
+                                    size_t exploredStates,
+                                    size_t discoveredStates,
+                                    const std::vector<size_t> enabledTransitionsCount,
+                                    int maxTokens,
+                                    const std::vector<uint32_t> maxPlaceBound, Structures::StateSetInterface* stateset,
+                                    size_t lastmarking,
+                                    const MarkVal* initialMarking){
+                    return std::make_pair(result, false);
+                });
         return  r xor query->isInvariant();
     }
     else

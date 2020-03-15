@@ -32,7 +32,7 @@ namespace PetriEngine {
         bool ReachabilitySearch::checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >& queries,
                                                 std::vector<ResultPrinter::Result>& results,
                                                 State& state,
-                                                searchstate_t& ss, StateSetInterface* states)
+                                                searchstate_t& ss, StateSetInterface* states, callback_t& callback)
         {
             if(!ss.usequeries) return false;
             
@@ -44,7 +44,10 @@ namespace PetriEngine {
                     EvaluationContext ec(state.marking(), &_net);
                     if(queries[i]->evaluate(ec) == Condition::RTRUE)
                     {
-                        results[i] = printQuery(queries[i], i, ResultPrinter::Satisfied, ss, states);
+                        auto r = doCallback(queries[i], i, ResultPrinter::Satisfied, ss, states, callback);
+                        results[i] = r.first;
+                        if(r.second)
+                            return true;
                     }
                     else
                     {
@@ -57,15 +60,13 @@ namespace PetriEngine {
             return alldone;
         }        
         
-        ResultPrinter::Result ReachabilitySearch::printQuery(std::shared_ptr<PQL::Condition>& query, size_t i,  ResultPrinter::Result r,
-                                                                searchstate_t& ss, Structures::StateSetInterface* states)
+        std::pair<ResultPrinter::Result,bool> ReachabilitySearch::doCallback(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result r,
+                                                             searchstate_t& ss, Structures::StateSetInterface* states, callback_t& callback)
         {
-            if(printer)
-                return printer->printResult(i, query.get(), r,
-                            ss.expandedStates, ss.exploredStates, states->discovered(),
-                            ss.enabledTransitionsCount, states->maxTokens(), 
-                            states->maxPlaceBound(), states, _satisfyingMarking, _initial.marking());
-            return ResultPrinter::Satisfied;
+            return callback(i, query.get(), r,
+                        ss.expandedStates, ss.exploredStates, states->discovered(),
+                        ss.enabledTransitionsCount, states->maxTokens(),
+                        states->maxPlaceBound(), states, _satisfyingMarking, _initial.marking());
         }
         
         void ReachabilitySearch::printStats(searchstate_t& ss, Structures::StateSetInterface* states)
@@ -103,7 +104,7 @@ namespace PetriEngine {
             std::cout << std::endl << std::endl;
         }
         
-#define TRYREACHPAR    (queries, results, usequeries, printstats)
+#define TRYREACHPAR    (queries, results, usequeries, printstats, callback)
 #define TEMPPAR(X, Y)  if(keep_trace) return tryReach<X, Structures::TracableStateSet, Y>TRYREACHPAR ; \
                        else return tryReach<X, Structures::StateSet, Y> TRYREACHPAR;
 #define TRYREACH(X)    if(stubbornreduction) TEMPPAR(X, ReducingSuccessorGenerator) \
@@ -117,7 +118,8 @@ namespace PetriEngine {
                     bool stubbornreduction,
                     bool statespacesearch,
                     bool printstats,
-                    bool keep_trace)
+                    bool keep_trace,
+                    callback_t callback)
         {
             bool usequeries = !statespacesearch;
 
