@@ -37,7 +37,6 @@ public:
 
     void reset();
     
-protected:
     /**
      * Checks if the conditions are met for fireing t, if write != NULL,
      * then also consumes tokens from write while checking
@@ -60,6 +59,7 @@ protected:
      * @param t, a transition to fire
      */
     void producePostset(Structures::State& write, uint32_t t);
+
 private:
     const PetriNet& _net;
     const Structures::State* _parent;

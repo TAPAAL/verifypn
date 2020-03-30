@@ -1080,7 +1080,7 @@ int main(int argc, char* argv[]) {
         //Reachability search
         strategy.reachable(queries, results, 
                 options.printstatistics,
-                options.trace);
+                options.trace, builder);
     }
     else
 #endif

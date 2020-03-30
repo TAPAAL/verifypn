@@ -20,7 +20,6 @@
 
 #ifndef TARREACHABILITY_H
 #define TARREACHABILITY_H
-#include <z3++.h>
 #include "ReachabilitySearch.h"
 #include "../TAR/TARAutomata.h"
 namespace PetriEngine {
@@ -44,33 +43,25 @@ namespace PetriEngine {
             void reachable(
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
-                bool printstats, bool printtrace);
+                bool printstats, bool printtrace, PetriNetBuilder& builder);
         protected:
             virtual void addNonChanging(state_t& state, std::vector<size_t>& maximal, std::vector<size_t>& nextinter);
             virtual std::vector<size_t> expandSimulation(std::vector<size_t>& from);
             virtual bool followSymbol(std::vector<size_t>& from, std::vector<size_t>& nextinter, size_t symbol);
-            z3::expr computeParameters(
-                z3::context& context, std::vector<z3::expr>& encoded, z3::expr& param_reach, 
-                const std::vector<uint32_t>&, const std::vector<bool>& inq, const std::vector<bool>& read);
         private:
             typedef std::vector<state_t> waiting_t;
             void printTrace(waiting_t& stack);
             bool tryReach(   const std::shared_ptr<PQL::Condition>& query, 
                                         std::vector<ResultPrinter::Result>& results,
-                                        bool printstats, bool printtrace, Structures::State& initial);
-            size_t computeSimulation(size_t index, size_t sim_hint = 1, size_t simed_hint = 0);
+                                        bool printstats, bool printtrace, Structures::State& initial, const std::vector<bool>&);
+            void computeSimulation(size_t index);
             bool popDone(waiting_t& waiting, size_t& stepno);
-            bool checkInclussion(state_t& state, std::vector<size_t>& nextinter, z3::context& ctx);
+            bool checkInclussion(state_t& state, std::vector<size_t>& nextinter);
 
             void handleInvalidTrace(waiting_t& waiting, int nvalid);
-            std::pair<int,bool>  isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, z3::expr& query, const std::vector<bool>& inq, z3::expr& param);
-            bool findValidRange( int& from, 
-                                            const int to, 
-                                            z3::context& context, 
-                                            z3::expr_vector& interpolant, 
-                                            std::vector<z3::expr>& encoded);
-            int constructAutomata(int from, waiting_t& trace, z3::expr_vector& inter, z3::context& context);
-            std::pair<bool, size_t> stateForPredicate(int type, z3::expr pred, z3::context& context, size_t sim_hint = 1, size_t simed_hint = 0);
+            std::pair<int,bool>  isValidTrace(waiting_t& trace, Structures::State& initial, const std::vector<bool>&, Condition* query);
+            void constructAutomata(waiting_t& trace, std::vector<std::pair<prvector_t,bool>>& ranges);
+            std::pair<bool, size_t> stateForPredicate(prvector_t& predicate, size_t sim_hint = 1, size_t simed_hint = 0);
             void printStats();
             bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
                                 std::vector<ResultPrinter::Result>&,
@@ -80,14 +71,9 @@ namespace PetriEngine {
             int _kbound;
             PetriNet& _net;
             Reducer* _reducer;
-            struct el_t
-            {
-                z3::expr expr;
-                size_t state;
-                el_t(z3::expr e, size_t s) : expr(e), state(s) {};
-            };
-            std::unordered_map<size_t, std::vector<el_t>> intmap;
+            std::map<prvector_t, size_t> intmap;
             std::vector<AutomataState> states;
+            std::vector<size_t> initial_interpols;
             std::vector<size_t> simorder;
             std::map<size_t, std::vector<size_t>> edge_interpolants;
 

@@ -18,17 +18,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifdef VERIFYPN_TAR
-#include <z3++.h>
 
 #include "PetriEngine/Reachability/TARReachability.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/TAR/AntiChain.h"
-#include "PetriEngine/TAR/Renamer.h"
 #include "PetriEngine/PQL/Expressions.h"
+#include "PetriEngine/Structures/State.h"
+#include "PetriEngine/PetriNetBuilder.h"
 
-#define LATTICE
 #define NOCHANGE
-#define NOKLEENE
 #define ANTISIM
 
 namespace PetriEngine {
@@ -58,412 +56,273 @@ namespace PetriEngine {
         }       
         
         
-        std::pair<bool, size_t> TARReachabilitySearch::stateForPredicate(int type, z3::expr pred, z3::context& context, size_t sim_hint, size_t simed_hint)
+        std::pair<bool, size_t> TARReachabilitySearch::stateForPredicate(prvector_t& predicate, size_t sim_hint, size_t simed_hint)
         {
-            Renamer renamer(context);
-            z3::expr predicate = renamer.rename(pred);
-
-            if(Z3_get_bool_value(context, predicate.operator Z3_ast()) == Z3_L_TRUE) 
+            assert(predicate.is_compact());
+            if(predicate.is_true()) 
             {
                 return std::make_pair(false, 1);
             }
-            else if (Z3_get_bool_value(context, predicate.operator Z3_ast()) == Z3_L_FALSE)
+            else if (predicate.is_false(_net.numberOfPlaces()))
             {        
                 return std::make_pair(false, 0);   
             } 
-
-            auto& fres = intmap[pred.hash()];
-            for(el_t& r : fres)
+            
+            auto astate = states.size();
+            auto res = intmap.emplace(predicate, astate);
+            if(!res.second)
             {
-                if(r.expr.operator Z3_ast() == pred.operator Z3_ast())
+#ifndef NDEBUG
+                if(!(states[res.first->second].interpolant == predicate))
                 {
-                    return std::make_pair(false, r.state);
-                }
-            }
-
-            size_t astate = 0;
-            bool found = false;
-
-
-            if(!found)
-            {
-                auto& res = intmap[predicate.hash()];
-                for(el_t& r : res)
-                {
-                    if(r.expr.operator Z3_ast() == predicate.operator Z3_ast())
-                    {
-                        found = true;
-                        astate = r.state;
-                        break;
-                    }           
-                }
-                if(!found)
-                {
-                    z3::solver solver(context, "QF_LRA");
-                    for(size_t hint : {sim_hint, simed_hint})
-                    {
-                        if(hint > 1)
-                        {
-                            solver.reset();
-                            solver.add(
-                                    (predicate      && (!states[hint].interpolant)) ||
-                                    ((!predicate)   && states[hint].interpolant)
-                                    );
-                            if(solver.check() == z3::unsat)
-                            {
-                                res.emplace_back(predicate, hint);
-                                states[hint].type = states[hint].type | type;
-                                fres.emplace_back(pred, astate);
-                                return std::make_pair(true, hint);
-                            }
-                        }
-                    }
-
-                    astate = states.size();
-                    states.emplace_back(predicate);
-                    states[astate].restricts = renamer.variables_seen();
-                    states[astate].type = type;
-                    astate = computeSimulation(astate, sim_hint, simed_hint);
-                    res.emplace_back(predicate, astate);
-                }
-            }
-
-            fres.emplace_back(pred, astate);
-            return std::make_pair(!found, astate);
-        }
-
-        
-        int TARReachabilitySearch::constructAutomata(int from, waiting_t& trace, z3::expr_vector& inter, z3::context& context)
-        {
-            std::vector<std::pair<bool, size_t>> interpolant;
-            bool changed = false;
-            size_t astate = 1;
-            size_t i = 0;
-            for(size_t j = 0; j < inter.size(); ++j)
-            {
-                if(j > 0 && inter[j].operator Z3_ast() == inter[j - 1].operator Z3_ast())
-                {
-                    interpolant.emplace_back(false, interpolant[j - 1].second);
-                }
-                else
-                {
-                    interpolant.push_back(stateForPredicate(8, inter[j], context));
-                    changed = changed || interpolant.back().second;
-                }
-
-                if(astate == 1)
-                {
-                    assert(j == 0 || i == j - 1);
-                    i = j;
-                    astate = interpolant.back().second;
-                }
-            }
-
-            if((size_t)from == trace.size()) return from;
-
-            if(from > 0 || i > 0)
-            {
-                const int tpos = from + i;
-                
-                auto res = states[1].add_edge(trace[tpos - 1].get_edge_cnt(), astate);
-                changed = res || changed;
-            }
-
-            if(astate == 0)
-            {
-                if(from == 0)
-                {
-                    return std::min(i + from, trace.size() - 1);
-                }
-                else
-                {
-                    states[1].add_edge(
-                            trace[(from + i) - 1].get_edge_cnt(), 0);
-                    assert(i + from <= trace.size());
-                    return (from + i) - 1;
-                }
-            }
-
-            for(; i < interpolant.size(); ++i)
-            {
-                int tpos = from + i;
-
-                if(tpos < (int)trace.size()) trace[tpos].add_interpolant(astate);
-
-
-                assert(i + 1 < interpolant.size());
-                size_t next = interpolant[i + 1].second;         
-                if(next == 0)
-                {
-
-                    bool added = states[astate].add_edge(trace[tpos].get_edge_cnt(), 0);
-                    changed = changed || added;
-                    assert(i + from < trace.size());
-                    break;
-                } 
-                
-                if(next != 1) {
-                    auto res = states[astate].add_edge(trace[tpos].get_edge_cnt(), next);
-                    changed = changed || res;
-                }
-                else
-                {
+                    assert(!(states[res.first->second].interpolant < predicate));
+                    assert(!(predicate < states[res.first->second].interpolant));
                     assert(false);
                 }
-
-                astate = next;          
-            }   
-
-            assert(changed || from > 0);
-            return i + from;
-        }
-        
-        
-        bool TARReachabilitySearch::findValidRange( int& from, 
-                                            const int to, 
-                                            z3::context& context, 
-                                            z3::expr_vector& interpolant, 
-                                            std::vector<z3::expr>& encoded)
-        {
-            bool range_valid = true;
-            auto cons = context.bool_val(true);
-            z3::model model(context, NULL);
-            for(size_t i = (size_t)from; i < (size_t)to; ++i)
-            {
-                cons = z3::interpolant(cons && encoded[i]);
-            }
-
-
-            z3::params parameters(context);
-            auto result = context.compute_interpolant(cons, parameters, interpolant, model);
-            switch (result) {
-                case z3::unsat: 
+                for(auto& e : intmap)
                 {
-                    range_valid = false;
-                    break;
+                    assert(e.first == states[e.second].interpolant);
                 }
-                case z3::unknown: assert(from != 0); // TODO this is a problem when from = 0!
-                default:
-                    break;
+#endif
+                return std::make_pair(false, res.first->second);
             }
-            return range_valid; 
-        }
-
-        z3::expr TARReachabilitySearch::computeParameters(
-                z3::context& context, 
-                std::vector<z3::expr>& encoded, 
-                z3::expr& param_reach, const std::vector<uint32_t>& used, const std::vector<bool>& inq, const std::vector<bool>& read)
-        {
-            z3::expr cons = context.bool_val(true);
-            for(size_t i = 0; i < encoded.size(); ++i)
+            else
             {
-                cons = cons && encoded[i];
-            }
-
-
-            z3::expr_vector names(context);
-            for(size_t i = 0; i < used.size(); ++i)
-            {
-                if(used[i] > 0)
+                states.emplace_back(predicate);
+                computeSimulation(astate);
+                res.first->second = astate;
+                assert(states[astate].interpolant == predicate);
+#ifndef NDEBUG
+                for(auto& s : states)
                 {
-                    for(size_t n = 0; n <= used[i]; ++n)
+                    if(s.interpolant == predicate)
                     {
-                        string name = to_string(i) + "~i" + to_string(n);
-                        names.push_back(context.int_const(name.c_str()));
+                        if(&s == &states[astate]) continue;
+                        assert( (s.interpolant < predicate) ||
+                                (predicate < s.interpolant));
+                        assert(false);
                     }
                 }
-                else if(inq[i] || read[i])
+                for(auto& e : intmap)
                 {
-                    string name = to_string(i) + "~i0";
-                    names.push_back(context.int_const(name.c_str()));                    
+                    assert(e.first == states[e.second].interpolant);
                 }
-            }
-            
-            for(size_t i = 0; i < encoded.size(); ++i)
-            {
-                std::string mname = "m~i" + to_string(i);                
-                names.push_back(context.int_const(mname.c_str()));
-            }
+#endif
 
+                return std::make_pair(true, astate);
+            }
+        }
 
-            z3::expr qf = z3::exists(names, cons);
-            z3::tactic qe(context, "qe2");
-            z3::tactic eqs(context, "solve-eqs");
-            z3::tactic simplify(context, "ctx-solver-simplify");
-            z3::goal g(context);
-            g.add(z3::implies(!param_reach, qf));
-            z3::apply_result res = qe.apply(g);
-            auto result = context.bool_val(false);
-            for(size_t i = 0; i < res.size(); ++i)
+        
+        void TARReachabilitySearch::constructAutomata(waiting_t& trace, std::vector<std::pair<prvector_t,bool>>& inter)
+        {
+            assert(inter.size() > 0);
+            bool some = false;
+
+            size_t last = 1;
             {
-                z3::goal g2 = res[i];
-                if(g2.size() == 0)
+                auto res = stateForPredicate(inter[0].first);
+                some |= res.first;
+                auto lb = std::lower_bound(initial_interpols.begin(), initial_interpols.end(), res.second);
+                if(lb == std::end(initial_interpols) || *lb != res.second)
                 {
-                    return context.bool_val(true);
+                    initial_interpols.insert(lb, res.second);
+                    trace[0].add_interpolant(res.second);
                 }
-                else if(g2.size() == 1)
+                last = res.second;
+            }
+            bool added_terminal = false;
+            for(size_t i = 0; i < inter.size(); ++i)
+            {                
+                size_t j = i+1;
+                if(j == inter.size())
                 {
-                    result = g2.as_expr();
+                    some |= states[last].add_edge(trace[i].get_edge_cnt(), 0);
+                    added_terminal = true;
                 }
                 else
                 {
-                    result = result || g2.as_expr();
-                }
-            }
-
-            {
-                z3::goal g2(context);
-                g2.add(result || param_reach);        
-                z3::apply_result res = simplify.apply(g2);
-                result =  res[0].as_expr().simplify();    
-            }
-            return result;
-        }
-
-        
-        std::pair<int,bool>  TARReachabilitySearch::isValidTrace(waiting_t& trace, z3::context& context, bool probe, Structures::State& initial, z3::expr& query, const std::vector<bool>& inq, z3::expr& param)
-        {
-            std::vector<z3::expr> encoded = {context.bool_val(true)};
-            std::vector<uint32_t> uses(_net.numberOfPlaces(), 0);
-            std::vector<bool> in_inhib(uses.size(), false);
-            size_t m = 0;
-            for(auto& t : trace)
-            {
-                ++m;
-                if(t.get_edge_cnt() == 0) 
-                {
-                    continue;
-                }
-                auto pre = _net.preset(t.get_edge_cnt() - 1);
-                std::string mname = "m~i" + to_string(m);                
-                auto mult = context.int_const(mname.c_str());
-                auto begin = mult >= 1;
-                bool has_inhib = false;
-                for(;pre.first != pre.second; ++pre.first)
-                {
-                    string name = std::to_string(pre.first->place) + "~i" + std::to_string(uses[pre.first->place]);
-                    auto ppre = context.int_const(name.c_str());
-                    if(pre.first->inhibitor)
+                    if(!inter[i].second)
+                        trace[j].add_interpolant(last);
+                    else
                     {
-                        in_inhib[pre.first->place] = true;
-                        begin = begin && (ppre < context.int_val(pre.first->tokens));
-                        has_inhib = true;
+                        auto res = stateForPredicate(inter[j].first);
+                        some |= res.first;
+                        assert(inter[i].second || res.second == last); 
+                        some |= states[last].add_edge(trace[i].get_edge_cnt(), res.second);
+                        last = res.second;
+                    }
+                }
+            }
+            assert(some);
+            assert(added_terminal);
+            /*std::vector<size_t> waiting = initial_interpols;
+            std::set<size_t> passed;
+            passed.insert(waiting.begin(), waiting.end());
+            while(!waiting.empty())
+            {
+                auto s = waiting.back();
+                waiting.pop_back();
+                std::cerr << "[" << s <<"]:";
+                states[s].print(std::cerr);
+                for(auto& e : states[s].get_edges())
+                {
+                    for(auto t : e.to)
+                    {
+                        if(passed.count(t) == 0)
+                        {
+                            passed.insert(t);
+                            waiting.push_back(t);
+                        }
+                    }
+                }
+            }*/
+        }
+                
+        std::pair<int,bool>  TARReachabilitySearch::isValidTrace(waiting_t& trace, Structures::State& initial, const std::vector<bool>& inq, Condition* query)
+        {
+            size_t nvalid = 0;
+            {
+
+                SuccessorGenerator gen(_net);
+                Structures::State n;
+                n.setMarking(new MarkVal[_net.numberOfPlaces()]);
+                std::copy(initial.marking(), initial.marking() + _net.numberOfPlaces(), n.marking());
+                int64_t fail = 0; 
+                bool qfail = false;
+                for(; fail < trace.size(); ++fail)
+                {
+                    state_t& s = trace[fail];
+                    auto t = s.get_edge_cnt();
+                    if(t == 0)
+                    {
+                        EvaluationContext ctx(n.marking(), &_net);
+                        if(query->evalAndSet(ctx))
+                        {
+                            return std::make_pair(fail, true);
+                        }
+                        else
+                        {
+                            qfail = true;
+                            break;
+                        }
                     }
                     else
                     {
-                        ++uses[pre.first->place];
-                        string nextname = to_string(pre.first->place) + "~i" + to_string(uses[pre.first->place]);
-                        auto ppost = context.int_const(nextname.c_str());
-                        
-                        begin = begin && ppre >= (context.int_val(pre.first->tokens) * mult) ;
-                        begin = begin && (ppost == (ppre - (mult * context.int_val(pre.first->tokens))));
+                        --t;
+                        gen.prepare(&n);
+                        if(gen.checkPreset(t))
+                        {
+                            gen.consumePreset(n, t);
+                            gen.producePostset(n, t);
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                 }
-                auto post = _net.postset(t.get_edge_cnt() - 1);
-
-                for(; post.first != post.second; ++post.first)
+                std::vector<std::pair<prvector_t,bool>> ranges(fail+1);
+                if(trace[fail].get_edge_cnt() == 0)
                 {
-                   
-                    string name = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
-                    ++uses[post.first->place];
-                    string nextname = to_string(post.first->place) + "~i" + to_string(uses[post.first->place]);
-                    auto ppre = context.int_const(name.c_str());
-                    auto ppost = context.int_const(nextname.c_str());
-                    begin = begin && ppost >= (mult*context.int_val(post.first->tokens));
-                    begin = begin && ppost == (ppre + (mult*context.int_val(post.first->tokens)));
-                    
-                }
-                
-                if(has_inhib)
-                    begin = begin && mult == 1;
-                if(_kbound > 0)
-                {
-                    auto sum = context.int_val(0);
-                    for(size_t i = 0; i < uses.size(); ++i)
+                    assert(qfail);
+                    for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                     {
-                        string name = to_string(i) + "~i" + to_string(uses[i]);
-                        sum = sum + context.int_const(name.c_str());
-                        in_inhib[i] = true;
+                        if(inq[p])
+                        {
+                            auto& pr = ranges[fail].first.find_or_add(p);
+                            std::cerr << "P" << p << "(" << _net.placeNames()[p] << ")" << std::endl;
+                            if(p == 13)
+                            {
+                                assert(n.marking()[p] < 3);
+                                pr._range._upper = 2;
+                            }
+                            else if(p == 5)
+                            {
+                                pr._range._lower = n.marking()[25]+1;
+                            }
+                            else if(p == 25)
+                            {
+                                pr._range._upper = n.marking()[25];
+                            }
+                        }
                     }
-                    begin = begin && (sum <= context.int_val(_kbound));
-                }
-                encoded.push_back(begin);
-            }
-            
-            
-            /*auto q = query;
-            for(size_t i = 0; i < _net.numberOfPlaces(); ++i)
-            {
-                if(inq[i])
-                {
-                    string qname = to_string(i) + "~i" + to_string(numeric_limits<int32_t>::max());
-                    string pname = to_string(i) + "~i" + to_string(uses[i]);
-                    q = q && (context.int_const(qname.c_str()) == context.int_const(pname.c_str()));                    
-                }
-            }*/
-            Renamer ren(context);
-            encoded.push_back(ren.rename(query, uses.data()));
-
-            if(ren.has_param())
-            {
-                encoded[0] = encoded[0] && !param;
-            }
-                    
-            for(size_t i = 0; i < uses.size(); ++i)
-            {
-                if(uses[i] > 0 || in_inhib[i] || inq[i])
-                {
-                    string name = to_string(i) + "~i0";
-                    encoded[0] = encoded[0] && (context.int_const(name.c_str()) == context.int_val(initial.marking()[i]));
-                }
-            }
-            const int to = encoded.size();
-            int from = 0;
-            int nvalid = to;
-            bool valid = true;
-            while(from < to)
-            {
-                z3::expr_vector interpolant(context); 
-                bool res = findValidRange(from, to, context, interpolant, encoded);
-                if(res) 
-                {
-                    if(ren.has_param() && from == 0)
-                    {
-                        
-                        /*
-                                         z3::context& context, 
-                std::vector<z3::expr>& encoded, 
-                z3::expr& param_reach, std::vector<uint32_t>& used, std::vector<bool>& inq, std::vector<bool>& read, waiting_t& trace)
-                         */
-                        param = computeParameters(context, encoded, param, uses, inq, in_inhib);
-                        encoded[0] = encoded[0] && !param;
-                        continue;
-                        assert(false);
-                    }
-                    return std::pair<int,bool>(nvalid, from == 0);
+                    query->toString(std::cerr);
+                    std::cerr << std::endl;
+                    nvalid = fail+1;
+                    --fail;
                 }
                 else
                 {
-                    valid = false;
+                    bool some = false;
+                    auto pre = _net.preset(trace[fail].get_edge_cnt()-1);
+                    for(; pre.first != pre.second; ++pre.first)
+                    {
+                        assert(!pre.first->inhibitor);
+                        assert(pre.first->tokens >= 1);
+                        if(n.marking()[pre.first->place] >= pre.first->tokens)
+                            continue;
+                        some = true;
+                        auto& npr = ranges[fail].first.find_or_add(pre.first->place);
+                        assert(npr._place == pre.first->place);
+                        npr &= pre.first->tokens-1;
+                        break;
+                    }
+                    nvalid = fail+1;
+                    assert(some);
+                    --fail;
                 }
-
-                if(interpolant.size() == 0)
+                std::cerr << "[FAIL] : ";
+                ranges[fail+1].first.print(std::cerr) << std::endl;
+                ranges[fail+1].second = true;
                 {
-                    trace.clear();
-                    return std::pair<int,bool>(-1,false);
+                    for(; fail >= 0; --fail)
+                    {
+                        ranges[fail].first.copy(ranges[fail+1].first);
+                        state_t& s = trace[fail];
+                        bool touches = false;
+                        auto t = s.get_edge_cnt()-1;
+                        auto post = _net.postset(t);
+                        for(; post.first != post.second; ++post.first)
+                        {
+                            auto* pr = ranges[fail+1].first[post.first->place];
+                            if(pr == nullptr || pr->_range.unbound()) continue;
+                            ranges[fail].first.find_or_add(post.first->place) -= post.second->tokens;
+                            touches = true;
+                        }
+                        
+                        auto pre = _net.preset(t);
+                        for(; pre.first != pre.second; ++pre.first)
+                        {
+                            assert(!pre.first->inhibitor);
+                            assert(pre.first->tokens >= 1);
+                            auto* pr = ranges[fail+1].first[pre.first->place];
+                            if(pr == nullptr || pr->_range.unbound()) continue;
+                            ranges[fail].first.find_or_add(pre.first->place) += pre.second->tokens;
+                            touches |= true;
+                        }
+                        ranges[fail].second = touches;
+                        if(ranges[fail].second)
+                        {
+                            std::cerr << "[" << fail << "] : <T" << t << "> ";
+                            if(ranges[fail].second)
+                                std::cerr << "TOUCHES" << std::endl;
+                            else
+                                std::cerr << "NO TOUCH" << std::endl;
+                            ranges[fail].first.print(std::cerr) << std::endl;
+                                std::cerr << "INT : ";
+                            for(auto& s : trace[fail].get_interpolants())
+                            {
+                                std::cerr << s << ", ";
+                            }
+                            std::cerr << std::endl;
+                        }
+                    }
                 }
-                
-                from = constructAutomata(from, trace, interpolant, context);
-                
-                assert(!valid);
-                from += 1;
-                nvalid = std::min(nvalid, from);
-#ifdef NOKLEENE
-                break;
-#endif
+                constructAutomata(trace, ranges);
+                std::cerr << "S " << states.size() << std::endl;
             }
-
-            return std::pair<int,bool>(nvalid,valid);
+            return std::pair<int,bool>(nvalid, false);
         }
 
 
@@ -487,7 +346,7 @@ namespace PetriEngine {
                 }
                 if(brk) break;
                 std::vector<size_t> buffer;
-                if(checkInclussion(waiting[i - 1], waiting[i].get_interpolants(), states[0].interpolant.ctx()))
+                if(checkInclussion(waiting[i - 1], waiting[i].get_interpolants()))
                 {
                     if(i != 1) waiting.resize(i - 1);
                     break;
@@ -516,128 +375,71 @@ namespace PetriEngine {
             return popped;
         }
 
-        size_t TARReachabilitySearch::computeSimulation(size_t index, size_t sim_hint, size_t simed_hint)
+        void TARReachabilitySearch::computeSimulation(size_t index)
         {
-#ifndef LATTICE
-            return index;
-#else
             AutomataState& state = states[index];
-            z3::context& ctx = state.interpolant.ctx();
-            z3::solver solver(ctx);
-            if(index != sim_hint)
+            assert(index == states.size()-1 || index == 0);
+            for(size_t i = 0; i < states.size(); ++i)
             {
-                auto lb = std::lower_bound(state.simulates.begin(), state.simulates.end(), sim_hint);
-                if(lb == state.simulates.end() || *lb != sim_hint)
-                {
-                    state.simulates.insert(lb, sim_hint);
-                    inline_union(state.simulates, states[sim_hint].simulates);
-                }
-            }
-
-            if(index != simed_hint)
-            {
-                auto lb = std::lower_bound(state.simulators.begin(), state.simulators.end(), simed_hint);
-                if(lb == state.simulators.end() || *lb != simed_hint)
-                {
-                    state.simulators.insert(lb, simed_hint);
-                    inline_union(state.simulators, states[simed_hint].simulators);
-                }
-            }
-
-            for(size_t i = 2; i < states.size(); ++i)
-            {
-                AutomataState& other = states[i];
                 if(i == index) continue;
-                auto lb = std::lower_bound(state.simulates.begin(), state.simulates.end(), i);
-                if(lb != state.simulates.end() && *lb == i && i != sim_hint) continue;
-                auto lb2 = std::lower_bound(state.simulators.begin(), state.simulators.end(), i);
-                if(lb2 != state.simulators.end() && *lb2 == i && i != simed_hint) continue;
-                bool same = true;
-                if(
-                        state.restricts.size() >= other.restricts.size() &&
-                        std::includes(  state.restricts.begin(), state.restricts.end(),
-                                    other.restricts.begin(), other.restricts.end()))
+                AutomataState& other = states[i];
+                std::pair<bool,bool> res = other.interpolant.compare(state.interpolant);
+                assert(!res.first || !res.second);
+                if(res.first)
                 {
-                    solver.reset();
-                    solver.add(state.interpolant && (!other.interpolant));
-                    auto r = solver.check();
-                    if(r == z3::unsat)
-                    {
-                        // state simulates other (the proof used in state is stronger)
-                        if(lb == state.simulates.end() || *lb != i) state.simulates.insert(lb, i);
-                        inline_union(state.simulates, other.simulates);
-                    }
-                    else
-                    {
-                        same = false;
-                    }
+                    std::cerr << "SIMULATES :\n";
+                    state.interpolant.print(std::cerr) << std::endl;
+                    other.interpolant.print(std::cerr) << std::endl;
+                    state.simulates.emplace_back(i);
+                    auto lb = std::lower_bound(other.simulators.begin(), other.simulators.end(), index);
+                    if(lb == std::end(other.simulators) || *lb != index)
+                        other.simulators.insert(lb, index);
+                    other.interpolant.compare(state.interpolant);
                 }
-                else
+                if(res.second)
                 {
-                    same = false;
-                }
-                if( 
-                    state.restricts.size() <= other.restricts.size() &&
-                    std::includes(  other.restricts.begin(), other.restricts.end(),
-                                    state.restricts.begin(), state.restricts.end()))
-                {
-                    solver.reset();
-                    solver.add((!state.interpolant) && other.interpolant);
-                    auto r = solver.check();
-                    if(r == z3::unsat)
-                    {
-                        if(!same)
-                        {
-                            // state is simulated by states[i] (the proof used in state is weaker)
-                            if(lb2 == state.simulators.end() || *lb2 != i) state.simulators.insert(lb2, i);
-                            inline_union(state.simulators, other.simulators);
-                        }
-                    }
-                    else
-                    {
-                        same = false;
-                    }
-                    if(same)
-                    {
-                        other.type = other.type | state.type;
-                        states.erase(states.begin() + index);
-                        return i;
-                    }
+                    std::cerr << "SIMULATES :\n";
+                    other.interpolant.print(std::cerr) << std::endl;
+                    state.interpolant.print(std::cerr) << std::endl;
+                    state.simulators.emplace_back(i);
+                    auto lb = std::lower_bound(other.simulates.begin(), other.simulates.end(), index);
+                    if(lb == std::end(other.simulates) || *lb != index)
+                        other.simulates.insert(lb, index);
+                    other.interpolant.compare(state.interpolant);
                 }
             }
 
-            for(size_t s : state.simulates)
-            {
-                if(states[s].simulators.size() == 0 || states[s].simulators.back() != index)
-                    states[s].simulators.push_back(index);
-            }
-
-            for(size_t s : state.simulators)
-            {
-                if(states[s].simulates.size() == 0 || states[s].simulates.back() != index)
-                    states[s].simulates.push_back(index);
-            }
             assert(states[1].simulates.size() == 0);
             assert(states[0].simulators.size() == 0);    
-            return index;
-        #endif
         }
         
         
         bool TARReachabilitySearch::tryReach(   const std::shared_ptr<PQL::Condition> & query, 
                                         std::vector<ResultPrinter::Result>& results,
-                                        bool printstats, bool printtrace, Structures::State& initial)
+                                        bool printstats, bool printtrace, Structures::State& initial,
+                                        const std::vector<bool>& places_in_query)
         {
             
             // Construct our constraints
-            z3::config config;
-            z3::context solver_context(config, z3::context::interpolation());
 
-            states.emplace_back(solver_context.bool_val(false)); // false
-            states.emplace_back(solver_context.bool_val(true)); // true
+            prvector_t truerange;
+            prvector_t falserange; 
+            {
+                for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                    falserange.find_or_add(p) &= 0;
+            }
+            assert(falserange.is_false(_net.numberOfPlaces()));
+            assert(truerange.is_true());
+            assert(!falserange.is_true());
+            assert(falserange.is_false(_net.numberOfPlaces()));
+            assert(truerange.compare(falserange).first);
+            assert(!truerange.compare(falserange).second);
+            assert(falserange.compare(truerange).second);
+            assert(!falserange.compare(truerange).first);
+            states.emplace_back(falserange); // false
+            states.emplace_back(truerange); // true
             computeSimulation(0);
 
-#ifdef LATTICE
             assert(states[1].simulates.size() == 0);
             assert(states[1].simulators.size() == 1);
             assert(states[0].simulates.size() == 1);
@@ -645,51 +447,15 @@ namespace PetriEngine {
 
             assert(states[1].simulators[0] == 0);
             assert(states[0].simulates[0] == 1);
-#endif
     
-            intmap[solver_context.bool_val(false).hash()].emplace_back(solver_context.bool_val(false), 0);
-            intmap[solver_context.bool_val(true).hash()].emplace_back(solver_context.bool_val(true), 1);
+            intmap.emplace(falserange, 0);
+            intmap.emplace(truerange, 1);
 
-            std::vector<bool> in_query(_net.numberOfPlaces(), false);
-            std::vector<int32_t> uses(_net.numberOfPlaces(), 0);
-            auto param = solver_context.bool_val(false);//solver_context.int_val(0) <= solver_context.int_const("~b");
-            auto sat_query = query->encodeSat(_net, solver_context, uses, in_query);
-            { // try to simplify the proposition more!
-                z3::tactic simplify(solver_context, "ctx-solver-simplify");
-                z3::goal g(solver_context);
-                g.add(sat_query);
-                z3::apply_result res = simplify.apply(g);
-                z3::expr result = solver_context.bool_val(false);
-               
-                for(size_t i = 0; i < res.size(); ++i)
-                {
-                    z3::goal g2 = res[i];
-                    if(g2.size() == 0)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        if(i == 0)
-                            result = g2.as_expr();
-                        else
-                            result = result || g2.as_expr();
-                    }
-                }
-                Renamer renamer(solver_context);
-                renamer.contains(result);
-                in_query = std::vector<bool>(_net.numberOfPlaces(), false);
-                for(auto i : renamer.variables_seen())
-                    in_query[i] = true;
-                sat_query = result;
-            }
-            
             /* Do the verification */
 
             bool all_covered = true;
             size_t stepno = 0;
 
-            std::vector<size_t> initial_interpols;
             initial_interpols.push_back(1);
             do {
                 all_covered = true;
@@ -713,7 +479,7 @@ namespace PetriEngine {
                     assert(waiting.size() > 0 );
                     state_t& state = waiting.back();
                     std::vector<size_t> nextinter;
-                    if(checkInclussion(state, nextinter, solver_context)) // Check if the next state makes the interpolant automata accept.
+                    if(checkInclussion(state, nextinter)) // Check if the next state makes the interpolant automata accept.
                     {
                         state.next_edge(_net);
                         continue;
@@ -722,7 +488,7 @@ namespace PetriEngine {
                     bool next_edge = false;
                     if(waiting.back().get_edge_cnt() == 0) // check if proposition is satisfied
                     {
-                        std::pair<int,bool> res = isValidTrace(waiting, solver_context, false, initial, sat_query, in_query, param);
+                        std::pair<int,bool> res = isValidTrace(waiting, initial, places_in_query, query.get());
                         if(res.second)
                         {
                             std::cerr << "VALID TRACE FOUND!" << std::endl;
@@ -737,9 +503,8 @@ namespace PetriEngine {
                         else
                         {
                             handleInvalidTrace(waiting, res.first);
+                            waiting.clear();
                             all_covered = false;
-                            assert(waiting.size() > 0);
-                            initial_interpols = waiting[0].get_interpolants();
                             continue;
                         }
                     }
@@ -791,24 +556,26 @@ namespace PetriEngine {
             std::cout << "INTERPOLANT AUTOMATAS : " << initial_interpols.size() << std::endl;
             if(auto upper = dynamic_cast<PQL::UnfoldedUpperBoundsCondition*>(query.get()))
             {
-                EvaluationContext eval(initial.marking(),&_net);
-                upper->evaluate(eval);
-                auto str = param.to_string();
-                size_t bound = 0;
-                size_t found = str.find("<= ~b ");
-                if (found!=std::string::npos)
-                {
-                    auto last = found;
-                    while(str[last] != ')') ++last;
-                    str[last] = 0;
-                    sscanf(&str[found+6], "%zu", &bound);
-                }
-                upper->setUpperBound(bound);
+                assert(false);
             }
+            
+            /*for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+            {
+                std::cerr << "T" << t << ":\n";
+                std::cerr << "\tPRE:\n";
+                auto pre = _net.preset(t);
+                for(;pre.first != pre.second; ++pre.first)
+                    std::cerr << "\t\t-" << pre.first->tokens << " (P" << pre.first->place << ")\n";
+                std::cerr << "\tPOST:\n";
+                auto post = _net.postset(t);
+                for(;post.first != post.second; ++post.first)
+                    std::cerr << "\t\t+" << post.first->tokens << " (P" << post.first->place << ")\n";
+            }*/
+            
             return false;            
         }
 
-        bool TARReachabilitySearch::checkInclussion(state_t& state, std::vector<size_t>& nextinter, z3::context& ctx)
+        bool TARReachabilitySearch::checkInclussion(state_t& state, std::vector<size_t>& nextinter)
         {
 #ifdef ANTISIM
             auto maximal = expandSimulation(state.get_interpolants());
@@ -847,12 +614,6 @@ namespace PetriEngine {
                 {
                     assert(false);
                     break;
-                }
-
-                if(as.restricts.size() == 0)
-                {
-                    auto lb = std::lower_bound(nextinter.begin(), nextinter.end(), i);
-                    if(lb == nextinter.end() || *lb != i) nextinter.insert(lb, i);
                 }
 
                 auto it = as.first_edge(symbol);
@@ -920,7 +681,7 @@ namespace PetriEngine {
         {
             bool loaded = false;
             auto next = nextinter.begin();
-            std::vector<size_t> writes;
+            std::vector<uint32_t> writes;
 
             if(!state.get_edge_cnt() == 0)
             for(size_t i : maximal)
@@ -960,27 +721,9 @@ namespace PetriEngine {
                         loaded = true;
                     }
     
-                    bool ok = true;
-                    auto iw = writes.begin(); 
-                    auto ic = as.restricts.begin();
-                    while(iw != writes.end() && ic != as.restricts.end())
+                    if(!as.interpolant.restricts(writes))
                     {
-                        if(*ic < *iw)
-                        {
-                            ++ic;
-                        } else if(*ic > *iw)
-                        {
-                            ++iw;
-                        }
-                        else if(*ic == *iw) 
-                        {
-                            ok = false;
-                            break;
-                        }
-                    }
-                    if(ok) 
-                    {
-                        nextinter.insert(next, i);
+                        next = nextinter.insert(next, i);
                         if(as.simulates.size() > 0)
                         {
                             inline_union(nextinter, as.simulates);
@@ -1002,7 +745,7 @@ namespace PetriEngine {
             {
                 if(t.get_edge_cnt() == 0) break;
                 std::string tname = _net.transitionNames()[t.get_edge_cnt() - 1];
-                std::cerr << "\t<transition id=\"" << tname << "\">\n";
+                std::cerr << "\t<transition id=\"" << tname << "\" index=\"" << (t.get_edge_cnt() - 1) <<  "\">\n";
                 
                 // well, yeah, we are not really efficient in constructing the trace.
                 // feel free to improve
@@ -1030,7 +773,7 @@ namespace PetriEngine {
         
         void TARReachabilitySearch::reachable(   std::vector<std::shared_ptr<PQL::Condition> >& queries, 
                                         std::vector<ResultPrinter::Result>& results,
-                                        bool printstats, bool printtrace)
+                                        bool printstats, bool printtrace, PetriNetBuilder& builder)
         {
 
             // set up working area
@@ -1040,16 +783,22 @@ namespace PetriEngine {
             // check initial marking
             if(checkQueries(queries, results, state, true))
             {
-                if(printstats) printStats();
-                    return;
+                if(printstats) 
+                    printStats();
+                return;
             }
             
             // Search!
+            std::vector<bool> used(_net.numberOfPlaces(), false);
             for(size_t i = 0; i < queries.size(); ++i)
             {
                 if(results[i] == ResultPrinter::Unknown)
                 {
-                    bool res = tryReach(queries[i], results, printstats, printtrace, state);
+                    QueryPlaceAnalysisContext pa(builder.getPlaceNames(), builder.getTransitionNames(), &_net);
+                    queries[i]->analyze(pa);
+                    for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                        used[p] = pa.getQueryPlaceCount()[p] > 0;
+                    bool res = tryReach(queries[i], results, printstats, printtrace, state, used);
                     if(res)
                         results[i] = ResultPrinter::Satisfied;
                     else
@@ -1058,7 +807,8 @@ namespace PetriEngine {
                 }
             }
 
-            if(printstats) printStats();
+            if(printstats) 
+                printStats();
         }
 
 
