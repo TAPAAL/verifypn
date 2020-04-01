@@ -133,7 +133,9 @@ namespace PetriEngine {
                 }
                 last = res.second;
             }
+#ifndef NDEBUG
             bool added_terminal = false;
+#endif
             for(size_t i = 0; i < inter.size(); ++i)
             {
                 size_t j = i+1;
@@ -141,7 +143,9 @@ namespace PetriEngine {
                 if(j == inter.size())
                 {
                     some |= states[last].add_edge(trace[i].get_edge_cnt(), 0);
+#ifndef NDEBUG                    
                     added_terminal = true;
+#endif
                 }
                 else
                 {
@@ -199,18 +203,23 @@ namespace PetriEngine {
                 }
                     
                 int64_t fail = 0; 
+#ifndef NDEBUG
                 bool qfail = false;
+#endif
                 int64_t lastfail = -1;
                 int64_t place = 0;
-                bool double_fail = false;
+#ifdef VERBOSETAR
                 SuccessorGenerator gen(_net);
-                for(; fail < trace.size(); ++fail)
+#endif
+                for(; fail < (int64_t)trace.size(); ++fail)
                 {
                     state_t& s = trace[fail];
                     auto t = s.get_edge_cnt();
                     if(t == 0)
                     {
+#ifdef VERBOSETAR
                         std::cerr << "CHECKQ" << std::endl;
+#endif
                         bool ok = true;
                         place = -1;
                         for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
@@ -236,12 +245,14 @@ namespace PetriEngine {
                                 fail = lastfail;
                                 break;
                             }
+#ifndef NDEBUG
                             assert(!double_fail);
+#endif
                             for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                             {
                                 mark[p] = initial.marking()[p];
                             }
-                            
+#ifdef VERBOSETAR                            
                             for(auto& t : trace)
                             {
                                 Structures::State s;
@@ -261,11 +272,14 @@ namespace PetriEngine {
                                 }
                                 s.setMarking(nullptr);
                             }
+#endif
                             return std::make_pair(fail, true);
                         }
                         else
                         {
+#ifndef NDEBUG
                             qfail = true;
+#endif
                             break;
                         }
                     }
@@ -285,8 +299,10 @@ namespace PetriEngine {
                             {
                                 if(lastfailplace[pre.first->place] == -1)
                                     lastfailplace[pre.first->place] = fail;
+#ifndef NDEBUG
                                 else
                                     double_fail = true;
+#endif
 
                                 lastfail = fail;
                             }
@@ -304,6 +320,7 @@ namespace PetriEngine {
                                 lfpc[post.first->place] += 1;
                             }
                         }
+#ifdef VERBOSETAR
                         Structures::State s;
                         s.setMarking(mark.get());
                         gen.prepare(&s);
@@ -322,6 +339,7 @@ namespace PetriEngine {
                                 assert(mark[p] == m[p]);
                         }
                         s.setMarking(nullptr);
+#endif
                     }
                 }
                 std::vector<std::pair<prvector_t,bool>> ranges(fail+1);
@@ -332,14 +350,17 @@ namespace PetriEngine {
                     query->toString(std::cerr);
                     std::cerr << std::endl;
                     query->visit(ctx);
-
+#ifdef VERBOSETAR
                     ranges[fail].first.print(std::cerr) << std::endl;
+#endif
                     nvalid = fail+1;
                     --fail;
                 }
                 else
                 {
+#ifndef NDEBUG
                     bool some = false;
+#endif
                     auto pre = _net.preset(trace[fail].get_edge_cnt()-1);
                     for(; pre.first != pre.second; ++pre.first)
                     {
@@ -347,7 +368,9 @@ namespace PetriEngine {
                         assert(pre.first->tokens >= 1);
                         if(pre.first->place != place)
                             continue;
+#ifndef NDEBUG
                         some = true;
+#endif
                         auto& npr = ranges[fail].first.find_or_add(pre.first->place);
                         assert(npr._place == pre.first->place);
                         npr &= pre.first->tokens-1;
@@ -357,8 +380,10 @@ namespace PetriEngine {
                     assert(some);
                     --fail;
                 }
+#ifdef VERBOSETAR
                 std::cerr << "[FAIL] : ";
                 ranges[fail+1].first.print(std::cerr) << std::endl;
+#endif
                 ranges[fail+1].second = true;
                 {
                     for(; fail >= 0; --fail)
@@ -387,6 +412,7 @@ namespace PetriEngine {
                             touches |= true;
                         }
                         ranges[fail].second = touches;
+#ifdef VERBOSETAR
                         if(ranges[fail].second)
                         {
                             std::cerr << "[" << fail << "] : <T" << t << "> ";
@@ -402,10 +428,13 @@ namespace PetriEngine {
                             }
                             std::cerr << std::endl;
                         }
+#endif
                     }
                 }
                 constructAutomata(trace, ranges);
+#ifdef VERBOSETAR                
                 std::cerr << "S " << states.size() << std::endl;
+#endif
             }
             return std::pair<int,bool>(nvalid, false);
         }
@@ -588,8 +617,10 @@ namespace PetriEngine {
                     }
                     else
                     {
-                            std::cerr << "STEPS : " << stepno << std::endl;
-                            std::cerr << "INTERPOLANT AUTOMATAS : " << waiting[0].get_interpolants().size() << std::endl;
+#ifdef VERBOSETAR
+                        std::cerr << "STEPS : " << stepno << std::endl;
+                        std::cerr << "INTERPOLANT AUTOMATAS : " << waiting[0].get_interpolants().size() << std::endl;
+#endif
                         next_edge = true;
                     }
 
