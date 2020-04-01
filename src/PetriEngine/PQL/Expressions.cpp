@@ -20,6 +20,7 @@
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/errorcodes.h"
+#include "PetriEngine/Reachability/RangeContext.h"
 
 #include <sstream>
 #include <assert.h>
@@ -972,6 +973,177 @@ namespace PetriEngine {
             auto res = evaluate(context);
             setSatisfied(res);
             return res;
+        }
+
+        /******************** Range Contexts ********************/
+
+
+        void EGCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void EUCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+        
+        void EXCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+        
+        void EFCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void AUCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }        
+
+        void AXCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void AFCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        } 
+
+        void AGCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+        
+        void AndCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void OrCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void NotCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+        
+        void EqualCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void NotEqualCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void CompareConjunction::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+        
+        void GreaterThanOrEqualCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void LessThanOrEqualCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+        
+        void GreaterThanCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void LessThanCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+        
+        void BooleanCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+        
+        void DeadlockCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void FireableCondition::visit(RangeContext& ctx) const
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+        void UpperBoundsCondition::visit(RangeContext& ctx) const
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+        
+        void UnfoldedFireableCondition::visit(RangeContext& ctx) const
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+               
+        void UnfoldedUpperBoundsCondition::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+        
+        void LiteralExpr::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void IdentifierExpr::visit(RangeContext& ctx) const
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+        void UnfoldedIdentifierExpr::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void MinusExpr::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void SubtractExpr::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void PlusExpr::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void MultiplyExpr::visit(RangeContext& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
         }
 
         /******************** Apply (BinaryExpr subclasses) ********************/

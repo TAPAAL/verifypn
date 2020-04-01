@@ -19,12 +19,13 @@
  */
 #ifdef VERIFYPN_TAR
 
-#include "PetriEngine/Reachability/TARReachability.h"
 #include "PetriEngine/PQL/Contexts.h"
-#include "PetriEngine/TAR/AntiChain.h"
 #include "PetriEngine/PQL/Expressions.h"
+#include "PetriEngine/TAR/AntiChain.h"
 #include "PetriEngine/Structures/State.h"
 #include "PetriEngine/PetriNetBuilder.h"
+#include "PetriEngine/Reachability/TARReachability.h"
+#include "PetriEngine/Reachability/RangeContext.h"
 
 #define NOCHANGE
 #define ANTISIM
@@ -58,6 +59,7 @@ namespace PetriEngine {
         
         std::pair<bool, size_t> TARReachabilitySearch::stateForPredicate(prvector_t& predicate, size_t sim_hint, size_t simed_hint)
         {
+            predicate.compress();
             assert(predicate.is_compact());
             if(predicate.is_true()) 
             {
@@ -133,8 +135,9 @@ namespace PetriEngine {
             }
             bool added_terminal = false;
             for(size_t i = 0; i < inter.size(); ++i)
-            {                
+            {
                 size_t j = i+1;
+
                 if(j == inter.size())
                 {
                     some |= states[last].add_edge(trace[i].get_edge_cnt(), 0);
@@ -183,22 +186,81 @@ namespace PetriEngine {
         {
             size_t nvalid = 0;
             {
-
-                SuccessorGenerator gen(_net);
-                Structures::State n;
-                n.setMarking(new MarkVal[_net.numberOfPlaces()]);
-                std::copy(initial.marking(), initial.marking() + _net.numberOfPlaces(), n.marking());
+                std::unique_ptr<int64_t[]> lastfailplace = std::make_unique<int64_t[]>(_net.numberOfPlaces());
+                std::unique_ptr<int64_t[]> lfpc = std::make_unique<int64_t[]>(_net.numberOfPlaces());
+                std::unique_ptr<int64_t[]> m = std::make_unique<int64_t[]>(_net.numberOfPlaces());
+                std::unique_ptr<MarkVal[]> mark = std::make_unique<MarkVal[]>(_net.numberOfPlaces());
+                for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                {
+                    m[p] = initial.marking()[p];
+                    mark[p] = m[p];
+                    lastfailplace[p] = -1;
+                    lfpc[p] = 0;
+                }
+                    
                 int64_t fail = 0; 
                 bool qfail = false;
+                int64_t lastfail = -1;
+                int64_t place = 0;
+                bool double_fail = false;
+                SuccessorGenerator gen(_net);
                 for(; fail < trace.size(); ++fail)
                 {
                     state_t& s = trace[fail];
                     auto t = s.get_edge_cnt();
                     if(t == 0)
                     {
-                        EvaluationContext ctx(n.marking(), &_net);
-                        if(query->evalAndSet(ctx))
+                        std::cerr << "CHECKQ" << std::endl;
+                        bool ok = true;
+                        place = -1;
+                        for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                         {
+                            if(inq[p])
+                            {
+                                ok &= m[p] >= 0;
+                                ok &= m[p] <= std::numeric_limits<MarkVal>::max();
+                                mark[p] = std::min<int64_t>(std::max<int64_t>(0,m[p]), std::numeric_limits<MarkVal>::max());
+                            }
+                            if(lastfailplace[p] != -1 && place == -1)
+                            {
+                                lastfail = lastfailplace[p];
+                                place = p;
+                            }
+                        }
+
+                        EvaluationContext ctx(mark.get(), &_net);
+                        if(lastfail != -1 || query->evalAndSet(ctx))
+                        {
+                            if(lastfail != -1)
+                            {
+                                fail = lastfail;
+                                break;
+                            }
+                            assert(!double_fail);
+                            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                            {
+                                mark[p] = initial.marking()[p];
+                            }
+                            
+                            for(auto& t : trace)
+                            {
+                                Structures::State s;
+                                s.setMarking(mark.get());
+                                gen.prepare(&s);
+                                if(t.get_edge_cnt() == 0)
+                                    assert(query->evaluate(ctx));
+                                else if(gen.checkPreset(t.get_edge_cnt()-1))
+                                {
+
+                                    gen.consumePreset(s, t.get_edge_cnt()-1);
+                                    gen.producePostset(s, t.get_edge_cnt()-1);
+                                }
+                                else
+                                {
+                                    assert(false);
+                                }
+                                s.setMarking(nullptr);
+                            }
                             return std::make_pair(fail, true);
                         }
                         else
@@ -210,45 +272,68 @@ namespace PetriEngine {
                     else
                     {
                         --t;
-                        gen.prepare(&n);
-                        if(gen.checkPreset(t))
+                        auto pre = _net.preset(t);
+                        if(fail == -1)
                         {
-                            gen.consumePreset(n, t);
-                            gen.producePostset(n, t);
+                            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                                    assert(mark[p] == m[p]);
                         }
-                        else
+                        for(; pre.first != pre.second; ++pre.first)
                         {
-                            break;
+                            m[pre.first->place] -= pre.first->tokens;
+                            if(m[pre.first->place] < 0)
+                            {
+                                if(lastfailplace[pre.first->place] == -1)
+                                    lastfailplace[pre.first->place] = fail;
+                                else
+                                    double_fail = true;
+
+                                lastfail = fail;
+                            }
+                            else if(lastfailplace[pre.first->place] == -1)
+                            {
+                                lfpc[pre.first->place] += 1;
+                            }
                         }
+                        auto post = _net.postset(t);
+                        for(; post.first != post.second; ++post.first)
+                        {
+                            m[post.first->place] += post.first->tokens;
+                            if(lastfailplace[post.first->place] == -1)
+                            {
+                                lfpc[post.first->place] += 1;
+                            }
+                        }
+                        Structures::State s;
+                        s.setMarking(mark.get());
+                        gen.prepare(&s);
+                        if(lastfail == -1)
+                        {
+                            if(gen.checkPreset(t))
+                            {
+                                gen.consumePreset(s, t);
+                                gen.producePostset(s, t);
+                            }
+                            else
+                            {
+                                assert(false);
+                            }
+                            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                                assert(mark[p] == m[p]);
+                        }
+                        s.setMarking(nullptr);
                     }
                 }
                 std::vector<std::pair<prvector_t,bool>> ranges(fail+1);
                 if(trace[fail].get_edge_cnt() == 0)
                 {
                     assert(qfail);
-                    for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                    {
-                        if(inq[p])
-                        {
-                            auto& pr = ranges[fail].first.find_or_add(p);
-                            std::cerr << "P" << p << "(" << _net.placeNames()[p] << ")" << std::endl;
-                            if(p == 13)
-                            {
-                                assert(n.marking()[p] < 3);
-                                pr._range._upper = 2;
-                            }
-                            else if(p == 5)
-                            {
-                                pr._range._lower = n.marking()[25]+1;
-                            }
-                            else if(p == 25)
-                            {
-                                pr._range._upper = n.marking()[25];
-                            }
-                        }
-                    }
+                    RangeContext ctx(ranges[fail].first, mark.get(), _net);
                     query->toString(std::cerr);
                     std::cerr << std::endl;
+                    query->visit(ctx);
+
+                    ranges[fail].first.print(std::cerr) << std::endl;
                     nvalid = fail+1;
                     --fail;
                 }
@@ -260,7 +345,7 @@ namespace PetriEngine {
                     {
                         assert(!pre.first->inhibitor);
                         assert(pre.first->tokens >= 1);
-                        if(n.marking()[pre.first->place] >= pre.first->tokens)
+                        if(pre.first->place != place)
                             continue;
                         some = true;
                         auto& npr = ranges[fail].first.find_or_add(pre.first->place);
@@ -387,9 +472,6 @@ namespace PetriEngine {
                 assert(!res.first || !res.second);
                 if(res.first)
                 {
-                    std::cerr << "SIMULATES :\n";
-                    state.interpolant.print(std::cerr) << std::endl;
-                    other.interpolant.print(std::cerr) << std::endl;
                     state.simulates.emplace_back(i);
                     auto lb = std::lower_bound(other.simulators.begin(), other.simulators.end(), index);
                     if(lb == std::end(other.simulators) || *lb != index)
@@ -398,9 +480,6 @@ namespace PetriEngine {
                 }
                 if(res.second)
                 {
-                    std::cerr << "SIMULATES :\n";
-                    other.interpolant.print(std::cerr) << std::endl;
-                    state.interpolant.print(std::cerr) << std::endl;
                     state.simulators.emplace_back(i);
                     auto lb = std::lower_bound(other.simulates.begin(), other.simulates.end(), index);
                     if(lb == std::end(other.simulates) || *lb != index)
@@ -503,13 +582,14 @@ namespace PetriEngine {
                         else
                         {
                             handleInvalidTrace(waiting, res.first);
-                            waiting.clear();
                             all_covered = false;
                             continue;
                         }
                     }
                     else
                     {
+                            std::cerr << "STEPS : " << stepno << std::endl;
+                            std::cerr << "INTERPOLANT AUTOMATAS : " << waiting[0].get_interpolants().size() << std::endl;
                         next_edge = true;
                     }
 
