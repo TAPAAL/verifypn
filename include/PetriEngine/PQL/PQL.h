@@ -132,7 +132,7 @@ namespace PetriEngine {
                 _eval = eval;
             }
             
-            int getEval() {
+            int getEval() const {
                 return _eval;
             }
         };

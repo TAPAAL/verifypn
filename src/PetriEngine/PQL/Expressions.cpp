@@ -700,7 +700,7 @@ namespace PetriEngine {
             int32_t r = preOp(context);
             for(size_t i = 1; i < _exprs.size(); ++i)
             {
-                r = apply(r, _exprs[i]->evaluate(context));
+                r = apply(r, _exprs[i]->evalAndSet(context));
             }
             return r;
         }
@@ -712,7 +712,7 @@ namespace PetriEngine {
         int32_t CommutativeExpr::preOp(const EvaluationContext& context) const {
             int32_t res = _constant;
             for(auto& i : _ids) res = this->apply(res, context.marking()[i.first]);
-            if(_exprs.size() > 0) res = this->apply(res, _exprs[0]->evaluate(context));
+            if(_exprs.size() > 0) res = this->apply(res, _exprs[0]->evalAndSet(context));
             return res;
         }
 

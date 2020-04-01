@@ -245,9 +245,6 @@ namespace PetriEngine {
                                 fail = lastfail;
                                 break;
                             }
-#ifndef NDEBUG
-                            assert(!double_fail);
-#endif
                             for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                             {
                                 mark[p] = initial.marking()[p];
@@ -299,10 +296,6 @@ namespace PetriEngine {
                             {
                                 if(lastfailplace[pre.first->place] == -1)
                                     lastfailplace[pre.first->place] = fail;
-#ifndef NDEBUG
-                                else
-                                    double_fail = true;
-#endif
 
                                 lastfail = fail;
                             }
@@ -347,8 +340,6 @@ namespace PetriEngine {
                 {
                     assert(qfail);
                     RangeContext ctx(ranges[fail].first, mark.get(), _net);
-                    query->toString(std::cerr);
-                    std::cerr << std::endl;
                     query->visit(ctx);
 #ifdef VERBOSETAR
                     ranges[fail].first.print(std::cerr) << std::endl;

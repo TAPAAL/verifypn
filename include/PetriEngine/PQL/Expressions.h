@@ -82,6 +82,9 @@ namespace PetriEngine {
             }
             void toString(std::ostream&) const override;            
             bool placeFree() const override;
+            auto constant() const { return _constant; }
+            auto& places() const { return _ids; }
+            auto& expressions() const { return _exprs; }
         protected:
             CommutativeExpr(int constant): _constant(constant) {};
             void init(std::vector<Expr_ptr>&& exprs);
