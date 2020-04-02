@@ -236,7 +236,7 @@ namespace PetriEngine {
                                 std::cerr << "Q: P" << p << std::endl;
 #endif
                             }
-                            if(lastfailplace[p] != -1 && place == -1)
+                            if(lastfailplace[p] != -1 && (place == -1 || lastfailplace[p] < lastfailplace[place]))
                             {
                                 lastfail = lastfailplace[p];
                                 place = p;
