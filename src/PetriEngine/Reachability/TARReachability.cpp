@@ -29,6 +29,7 @@
 
 #define NOCHANGE
 #define ANTISIM
+//#define VERBOSETAR
 
 namespace PetriEngine {
     using namespace PQL;
@@ -219,6 +220,8 @@ namespace PetriEngine {
                     {
 #ifdef VERBOSETAR
                         std::cerr << "CHECKQ" << std::endl;
+                        query->toString(std::cerr);
+                        std::cerr << std::endl;
 #endif
                         bool ok = true;
                         place = -1;
@@ -229,6 +232,9 @@ namespace PetriEngine {
                                 ok &= m[p] >= 0;
                                 ok &= m[p] <= std::numeric_limits<MarkVal>::max();
                                 mark[p] = std::min<int64_t>(std::max<int64_t>(0,m[p]), std::numeric_limits<MarkVal>::max());
+#ifdef VERBOSETAR
+                                std::cerr << "Q: P" << p << std::endl;
+#endif
                             }
                             if(lastfailplace[p] != -1 && place == -1)
                             {
@@ -388,7 +394,7 @@ namespace PetriEngine {
                         {
                             auto* pr = ranges[fail+1].first[post.first->place];
                             if(pr == nullptr || pr->_range.unbound()) continue;
-                            ranges[fail].first.find_or_add(post.first->place) -= post.second->tokens;
+                            ranges[fail].first.find_or_add(post.first->place) -= post.first->tokens;
                             touches = true;
                         }
                         
@@ -399,7 +405,7 @@ namespace PetriEngine {
                             assert(pre.first->tokens >= 1);
                             auto* pr = ranges[fail+1].first[pre.first->place];
                             if(pr == nullptr || pr->_range.unbound()) continue;
-                            ranges[fail].first.find_or_add(pre.first->place) += pre.second->tokens;
+                            ranges[fail].first.find_or_add(pre.first->place) += pre.first->tokens;
                             touches |= true;
                         }
                         ranges[fail].second = touches;
@@ -609,8 +615,8 @@ namespace PetriEngine {
                     else
                     {
 #ifdef VERBOSETAR
-                        std::cerr << "STEPS : " << stepno << std::endl;
-                        std::cerr << "INTERPOLANT AUTOMATAS : " << waiting[0].get_interpolants().size() << std::endl;
+//                        std::cerr << "STEPS : " << stepno << std::endl;
+//                        std::cerr << "INTERPOLANT AUTOMATAS : " << waiting[0].get_interpolants().size() << std::endl;
 #endif
                         next_edge = true;
                     }
@@ -652,14 +658,6 @@ namespace PetriEngine {
                 }
             } while(!all_covered);
 
-            intmap.clear();
-            states.clear();
-            std::cout << "STEPS : " << stepno << std::endl;
-            std::cout << "INTERPOLANT AUTOMATAS : " << initial_interpols.size() << std::endl;
-            if(auto upper = dynamic_cast<PQL::UnfoldedUpperBoundsCondition*>(query.get()))
-            {
-                assert(false);
-            }
             
             /*for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
             {
@@ -673,6 +671,72 @@ namespace PetriEngine {
                 for(;post.first != post.second; ++post.first)
                     std::cerr << "\t\t+" << post.first->tokens << " (P" << post.first->place << ")\n";
             }*/
+#ifdef VERBOSETAR            
+            std::cerr << "digraph graphname {\n";
+            for(size_t i = 0; i < states.size(); ++i)
+            {
+                auto& s = states[i];
+                std::cerr << "\tS" << i << " [label=\"";
+                if(s.interpolant.is_true())
+                {
+                    std::cerr << "TRUE";
+                }
+                else if(s.interpolant.is_false(_net.numberOfPlaces()))
+                {
+                    std::cerr << "FALSE";
+                }
+                else
+                {
+                    s.interpolant.print(std::cerr);
+                }
+                std::cerr << "\"];\n";
+            }
+            for(size_t i = 0; i < states.size(); ++i)
+            {
+                auto& s = states[i];
+                for(auto& e : s.get_edges())
+                {
+                    std::cerr << "\tS" << i << "_" << e.edge << " [label=\"" << 
+                            (e.edge == 0 ? "Q" : std::to_string(e.edge-1))
+                            << "\"];\n";
+                    std::cerr << "\tS" << i << " -> S" << i << "_" << e.edge << ";\n";
+                    for(auto& t : e.to)
+                    {
+                        std::cerr << "\tS" << i << "_" << e.edge << " -> S" << t << ";\n";                        
+                    }
+                }
+            }
+            
+            std::cerr << "}\n";
+            for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+            {
+                auto pre = _net.preset(t);
+                std::cerr << "T" << t << "\n";
+                for(; pre.first != pre.second; ++pre.first)
+                {
+                    std::cerr << "\tP" << pre.first->place << " - " << pre.first->tokens << std::endl;
+                }
+                auto post = _net.postset(t);
+                for(; post.first != post.second; ++post.first)
+                {
+                    std::cerr << "\tP" << post.first->place << " + " << post.first->tokens << std::endl;
+                }
+            }
+            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+            {
+                if(initial.marking()[p] != 0)
+                    std::cerr << "P" << p << " (" << initial.marking()[p] << ")\n";
+            }
+#endif
+            intmap.clear();
+            states.clear();
+
+            std::cout << "STEPS : " << stepno << std::endl;
+            std::cout << "INTERPOLANT AUTOMATAS : " << initial_interpols.size() << std::endl;
+            if(auto upper = dynamic_cast<PQL::UnfoldedUpperBoundsCondition*>(query.get()))
+            {
+                assert(false);
+            }
             
             return false;            
         }
