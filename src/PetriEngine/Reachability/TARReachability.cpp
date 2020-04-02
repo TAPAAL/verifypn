@@ -236,7 +236,8 @@ namespace PetriEngine {
                                 std::cerr << "Q: P" << p << std::endl;
 #endif
                             }
-                            if(lastfailplace[p] != -1 && (place == -1 || lastfailplace[p] < lastfailplace[place]))
+                            if(lastfailplace[p] != -1 && (place == -1 || (lastfailplace[p] <= lastfailplace[place] &&
+                                                                          (lastfailplace[p] < lastfailplace[place] || inq[p] && !inq[place]))))
                             {
                                 lastfail = lastfailplace[p];
                                 place = p;
@@ -370,7 +371,7 @@ namespace PetriEngine {
 #endif
                         auto& npr = ranges[fail].first.find_or_add(pre.first->place);
                         assert(npr._place == pre.first->place);
-                        npr &= pre.first->tokens-1;
+                        npr._range._upper = pre.first->tokens-1;
                         break;
                     }
                     nvalid = fail+1;
@@ -378,8 +379,12 @@ namespace PetriEngine {
                     --fail;
                 }
 #ifdef VERBOSETAR
+                
                 std::cerr << "[FAIL] : ";
                 ranges[fail+1].first.print(std::cerr) << std::endl;
+                {
+                    std::cerr << "HELLO " << std::endl;
+                }
 #endif
                 ranges[fail+1].second = true;
                 {
@@ -689,7 +694,13 @@ namespace PetriEngine {
                 {
                     s.interpolant.print(std::cerr);
                 }
-                std::cerr << "\"];\n";
+                std::cerr << "\",shape=";
+                auto lb = std::lower_bound(initial_interpols.begin(), initial_interpols.end(), i);
+                if(lb != std::end(initial_interpols) && *lb == i)
+                    std::cerr << "box,color=green";
+                else
+                    std::cerr << "box";                    
+                std::cerr << "];\n";
             }
             for(size_t i = 0; i < states.size(); ++i)
             {
@@ -698,7 +709,7 @@ namespace PetriEngine {
                 {
                     std::cerr << "\tS" << i << "_" << e.edge << " [label=\"" << 
                             (e.edge == 0 ? "Q" : std::to_string(e.edge-1))
-                            << "\"];\n";
+                            << "\",shape=diamond,style=dashed];\n";
                     std::cerr << "\tS" << i << " -> S" << i << "_" << e.edge << ";\n";
                     for(auto& t : e.to)
                     {
