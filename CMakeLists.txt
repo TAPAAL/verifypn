@@ -19,7 +19,6 @@ add_compile_definitions(VERIFYPN_VERSION=\"${VERIFYPN_VERSION}\")
 project(verifypn VERSION ${VERIFYPN_VERSION} LANGUAGES CXX C)
 
 option(VERIFYPN_Static "Link libraries statically" ON)
-option(VERIFYPN_TAR "Enables TAR, incompatible with static linking" OFF)
 option(VERIFYPN_MC_Simplification "Enables multicore simplification, incompatible with static linking" OFF)
 option(VERIFYPN_GetDependencies "Fetch external dependencies from web." ON)
 
@@ -36,9 +35,6 @@ else(VERIFYPN_Static)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif (VERIFYPN_Static)
 
-if (VERIFYPN_TAR)
-    add_compile_definitions(VERIFYPN_TAR)
-endif(VERIFYPN_TAR)
 if (VERIFYPN_MC_Simplification)
     add_compile_definitions(VERIFYPN_MC_Simplification)
 endif(VERIFYPN_MC_Simplification)

@@ -46,8 +46,6 @@ namespace PetriEngine {
                     _query->toString(std::cerr);
                     std::cerr << std::endl;
 #endif
-                    bool ok = true;
-
                     EvaluationContext ctx(_mark.get(), &_net);
                     if(_query->evalAndSet(ctx))
                     {

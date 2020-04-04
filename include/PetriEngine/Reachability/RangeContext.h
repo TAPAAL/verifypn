@@ -133,7 +133,7 @@ namespace PetriEngine
     template<>
     inline void RangeContext::_accept(const PlusExpr* element)
     {
-        auto fdf = std::abs(_limit - element->getEval())/
+        //auto fdf = std::abs(_limit - element->getEval())/
             (element->places().size() + element->expressions().size());
         for(auto& p : element->places())
         {
