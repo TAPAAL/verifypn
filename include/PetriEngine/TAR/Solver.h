@@ -36,8 +36,6 @@ namespace PetriEngine {
             MarkVal* _initial;
             Condition* _query;
             std::vector<bool> _inq;
-            std::unique_ptr<int64_t[]> _lastfailplace;
-            std::unique_ptr<int64_t[]> _lfpc;
             std::unique_ptr<int64_t[]> _m;
             std::unique_ptr<MarkVal[]> _mark;
 #ifndef NDEBUG

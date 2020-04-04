@@ -208,7 +208,7 @@ namespace PetriEngine {
                 size_t trans = transitions.top();
                 transitions.pop();
                 std::string tname = ss->net().transitionNames()[trans];
-                std::cerr << "\t<transition id=\"" << tname << "\">\n";
+                std::cerr << "\t<transition id=\"" << tname << "\" index=\"" << trans << "\">\n";
                 
                 // well, yeah, we are not really efficient in constructing the trace.
                 // feel free to improve

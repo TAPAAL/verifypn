@@ -101,17 +101,18 @@ namespace PetriEngine {
                 return os;
             }
         };        
-
+        class TraceSet;
         struct AutomataState
         {
         private:
             std::vector<AutomataEdge> edges;
             bool accept = false;
+            std::vector<size_t> simulates;
+            std::vector<size_t> simulators;
+            friend class TraceSet;
         public:
             prvector_t interpolant;
             AutomataState(prvector_t interpol) : interpolant(interpol) {};
-            std::vector<size_t> simulates;
-            std::vector<size_t> simulators;
             inline bool is_accepting() const
             {
                 return accept;

@@ -51,7 +51,7 @@ namespace PetriEngine {
                     }
                 }
                 if(brk) break;
-                if(checkInclussion(waiting[i - 1], waiting[i].get_interpolants()))
+                if(doStep(waiting[i - 1], waiting[i].get_interpolants()))
                 {
                     if(i != 1) waiting.resize(i - 1);
                     break;
@@ -98,7 +98,7 @@ namespace PetriEngine {
             }            
         }
         
-        bool TARReachabilitySearch::runTAR( bool printtrace,
+        std::pair<bool,bool> TARReachabilitySearch::runTAR( bool printtrace,
                                             Solver& solver)
         {
             auto checked = AntiChain<uint32_t, size_t>();
@@ -122,7 +122,7 @@ namespace PetriEngine {
                 assert(waiting.size() > 0 );
                 state_t& state = waiting.back();
                 std::vector<size_t> nextinter;
-                if(checkInclussion(state, nextinter)) // Check if the next state makes the interpolant automata accept.
+                if(doStep(state, nextinter)) // Check if the next state makes the interpolant automata accept.
                 {
                     state.next_edge(_net);
                     continue;
@@ -130,20 +130,20 @@ namespace PetriEngine {
 
                 if(waiting.back().get_edge_cnt() == 0) // check if proposition is satisfied
                 {
-                    auto res = solver.check(waiting);
-                    if(res.first)
+                    auto [satisfied, interpolants] = solver.check(waiting);
+                    if(satisfied)
                     {
                         if(printtrace)
                             printTrace(waiting);
-                        return true;
+                        return std::make_pair(true, true);
                     }
                     else
                     {
-                        auto some = _traceset.addTrace(waiting, res.second);
+                        auto some = _traceset.addTrace(waiting, interpolants);
                         assert(some || !all_covered);
                         if(!some)
-                            return false;                        
-                        handleInvalidTrace(waiting, res.second.size());
+                            return std::make_pair(false, false);
+                        handleInvalidTrace(waiting, interpolants.size());
                         all_covered = false;
                         continue;
                     }
@@ -156,14 +156,18 @@ namespace PetriEngine {
                     nextEdge(checked, state, waiting, std::move(nextinter));
                 }
             }
-            return all_covered;
+            return std::make_pair(all_covered, false);
         }
         
         bool TARReachabilitySearch::tryReach(bool printtrace, Solver& solver)
         {            
             _traceset.removeEdges(0);
-            while(!runTAR(printtrace, solver)) 
-            {} // redo TAR until we have one complete run-through without interpolant traces.
+            do
+            {
+                auto [finished, satisfied] = runTAR(printtrace, solver);
+                if(finished)
+                    return satisfied;
+            } while(true);
 
 #ifdef VERBOSETAR
             _traceset.print(std::cerr);
@@ -187,12 +191,14 @@ namespace PetriEngine {
                     std::cerr << "P" << p << " (" << _net.initial()[p] << ")\n";
             }  
 #endif
+//            std::vector<size_t> trace{4,4,3,2,3,1,6};
+//            assert(validate(trace));
             if(printtrace)
                 _traceset.print(std::cerr);            
             return false;            
         }
 
-        bool TARReachabilitySearch::checkInclussion(state_t& state, std::vector<size_t>& nextinter)
+        bool TARReachabilitySearch::doStep(state_t& state, std::vector<size_t>& nextinter)
         {
             auto maximal = _traceset.maximize(state.get_interpolants());
             // if NFA accepts the trace after this instruction, abort.
@@ -208,7 +214,37 @@ namespace PetriEngine {
             nextinter = _traceset.maximize(nextinter);
             return false;
         }
-                
+         
+        bool TARReachabilitySearch::validate(const std::vector<size_t>& transitions)
+        {
+            AntiChain<uint32_t, size_t> chain;
+
+            state_t s;
+            s.set_interpolants(_traceset.minimize(_traceset.initial()));
+            std::vector<size_t> next;
+            uint32_t dummy = 1;
+            chain.insert(dummy, s.get_interpolants());
+            size_t n = 0;
+            for(; n < transitions.size(); ++n)
+            {
+                auto t = transitions[n];
+                s.get_edge_cnt() = t+1;
+                next.clear();
+                if(n == transitions.size()-1)
+                    dummy = 0;
+                if(doStep(s, next))
+                {
+                    return false;
+                }
+                s.set_interpolants(_traceset.minimize(next));
+                assert(chain.insert(dummy, s.get_interpolants()));
+            }
+            s.get_edge_cnt() = 0;
+            if(doStep(s, next))
+                return false;
+            return true;
+        }
+        
         void TARReachabilitySearch::addNonChanging(state_t& state, std::vector<size_t>& maximal, std::vector<size_t>& nextinter)
         {
             

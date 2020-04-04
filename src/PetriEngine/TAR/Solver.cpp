@@ -13,7 +13,7 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/Reachability/RangeContext.h"
-
+#include "PetriEngine/Reachability/ReachabilityResult.h"
 #include <memory>
 #include <vector>
 namespace PetriEngine {
@@ -25,8 +25,6 @@ namespace PetriEngine {
         , _gen(_net)
 #endif
         {
-                _lastfailplace = std::make_unique<int64_t[]>(_net.numberOfPlaces());
-                _lfpc = std::make_unique<int64_t[]>(_net.numberOfPlaces());
                 _m = std::make_unique<int64_t[]>(_net.numberOfPlaces());
                 _mark = std::make_unique<MarkVal[]>(_net.numberOfPlaces());    
         }
@@ -46,38 +44,44 @@ namespace PetriEngine {
                     _query->toString(std::cerr);
                     std::cerr << std::endl;
 #endif
-                    EvaluationContext ctx(_mark.get(), &_net);
-                    if(_query->evalAndSet(ctx))
+                    for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                     {
+                        _mark[p] = _m[p];
+                    }
+                    EvaluationContext ctx(_mark.get(), &_net);
+                    auto r = _query->evalAndSet(ctx);
 #ifndef NDEBUG 
-                        for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                    for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                    {
+                        _mark[p] = _initial[p];
+                    }
+                    for(auto& t : trace)
+                    {
+                        Structures::State s;
+                        s.setMarking(_mark.get());
+                        _gen.prepare(&s);
+                        if(t.get_edge_cnt() == 0)
+                            assert(_query->evaluate(ctx) == r);
+                        else if(_gen.checkPreset(t.get_edge_cnt()-1))
                         {
-                            _mark[p] = _initial[p];
+                            _gen.consumePreset(s, t.get_edge_cnt()-1);
+                            _gen.producePostset(s, t.get_edge_cnt()-1);
                         }
-                        for(auto& t : trace)
+                        else
                         {
-                            Structures::State s;
-                            s.setMarking(_mark.get());
-                            _gen.prepare(&s);
-                            if(t.get_edge_cnt() == 0)
-                                assert(_query->evaluate(ctx));
-                            else if(_gen.checkPreset(t.get_edge_cnt()-1))
-                            {
-
-                                _gen.consumePreset(s, t.get_edge_cnt()-1);
-                                _gen.producePostset(s, t.get_edge_cnt()-1);
-                            }
-                            else
-                            {
-                                assert(false);
-                            }
-                            s.setMarking(nullptr);
+                            assert(false);
                         }
+                        s.setMarking(nullptr);
+                    }
 #endif
+
+                    if(r == Condition::RTRUE)
+                    {
                         return std::make_pair(-1, std::numeric_limits<decltype(fail)>::max());
                     }
                     else
                     {
+                        assert(r == Condition::RFALSE);
                         return std::make_pair(-1, fail);
                     }
                 }
@@ -89,33 +93,16 @@ namespace PetriEngine {
                     for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                             assert(_mark[p] == _m[p]);
 #endif
-                    int64_t place = -1;
                     for(; pre.first != pre.second; ++pre.first)
                     {
                         _m[pre.first->place] -= pre.first->tokens;
                         if(_m[pre.first->place] < 0)
-                        {
-                            if(_lastfailplace[pre.first->place] == -1)
-                                _lastfailplace[pre.first->place] = fail;
-                            place = pre.first->place;
-                        }
-                        else if(_lastfailplace[pre.first->place] == -1)
-                        {
-                            _lfpc[pre.first->place] += 1;
-                        }
-                    }
-                    if(place != -1)
-                    {
-                        return std::make_pair(place, fail);                        
+                            return std::make_pair(pre.first->place, fail);
                     }
                     auto post = _net.postset(t);
                     for(; post.first != post.second; ++post.first)
                     {
                         _m[post.first->place] += post.first->tokens;
-                        if(_lastfailplace[post.first->place] == -1)
-                        {
-                            _lfpc[post.first->place] += 1;
-                        }
                     }
 #ifndef NDEBUG
                     Structures::State s;
@@ -147,12 +134,16 @@ namespace PetriEngine {
                 RangeContext ctx(last.first, _mark.get(), _net);
                 _query->visit(ctx);
 #ifdef VERBOSETAR
+                std::cerr << "TERMINAL IS Q" << std::endl;
                 last.first.print(std::cerr) << std::endl;
 #endif
             }
             else
             {
                 assert(place != -1);
+#ifdef VERBOSETAR
+                std::cerr << "TERMINAL IS T" << (end.get_edge_cnt()-1) << std::endl;
+#endif
 #ifndef NDEBUG
                 bool some = false;
 #endif
@@ -229,8 +220,6 @@ namespace PetriEngine {
             {
                 _m[p] = _initial[p];
                 _mark[p] = _m[p];
-                _lastfailplace[p] = -1;
-                _lfpc[p] = 0;
             }
             auto [place, fail] = findFailure(trace);
             interpolant_t ranges;
