@@ -166,9 +166,7 @@ namespace PetriEngine {
             }
             
             if(options->queryReductionTimeout == 0 
-#ifdef VERIFYPN_TAR
 			    && !options->tar 
-#endif
 			    && options->siphontrapTimeout == 0)
             {
                 out += "EXPLICIT STATE_COMPRESSION ";
@@ -177,12 +175,10 @@ namespace PetriEngine {
                     out += "STUBBORN_SETS ";
                 }
             }
-#ifdef VERIFYPN_TAR
             if(options->tar)
             {
                 out += "TRACE_ABSTRACTION_REFINEMENT ";
             }
-#endif            
             if(options->siphontrapTimeout > 0)
             {
                 out += "TOPOLOGICAL SIPHON_TRAP ";

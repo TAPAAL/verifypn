@@ -102,6 +102,10 @@ namespace PetriEngine {
         void sort();
         
         void toXML(std::ostream& out);
+        
+        const MarkVal* initial() const {
+            return _initialMarking;
+        }
 
     private:        
 

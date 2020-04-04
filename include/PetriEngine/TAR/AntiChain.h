@@ -7,7 +7,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef VERIFYPN_TAR
 #ifndef ANTICHAIN_H
 #define ANTICHAIN_H
 
@@ -91,5 +90,3 @@ class AntiChain
 
 
 #endif /* ANTICHAIN_H */
-
-#endif

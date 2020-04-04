@@ -52,9 +52,7 @@
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/Reachability/ReachabilitySearch.h"
-#ifdef VERIFYPN_TAR
 #include "PetriEngine/Reachability/TARReachability.h"
-#endif
 #include "PetriEngine/Reducer.h"
 #include "PetriParse/QueryXMLParser.h"
 #include "PetriParse/QueryBinaryParser.h"
@@ -246,13 +244,11 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 return ErrorCode;
             }
         } 
-#ifdef VERIFYPN_TAR
         else if (strcmp(argv[i], "-tar") == 0)
         {
             options.tar = true;
             
         }
-#endif
         else if (strcmp(argv[i], "--write-simplified") == 0)
         {
             options.query_out_file = std::string(argv[++i]);
@@ -342,9 +338,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 #ifdef VERIFYPN_MC_Simplification
                     "  -z <number of cores>               Number of cores to use (currently only query simplification)\n"
 #endif
-#ifdef VERIFYPN_TAR
                     "  -tar                               Enables Trace Abstraction Refinement for reachability properties\n"
-#endif
                     "  --write-simplified <filename>      Outputs the queries to the given file after simplification\n"
                     "  --write-reduced <filename>         Outputs the model to the given file after structural reduction\n"
                     "  --binary-query-io <0,1,2,3>        Determines the input/output format of the query-file\n"
@@ -1067,7 +1061,6 @@ int main(int argc, char* argv[]) {
     // Change default place-holder to default strategy
     if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
     
-#ifdef VERIFYPN_TAR
     if(options.tar)
     {
         //Create reachability search strategy
@@ -1083,7 +1076,6 @@ int main(int argc, char* argv[]) {
                 options.trace, builder);
     }
     else
-#endif
     {
         ReachabilitySearch strategy(printer, *net, options.kbound);
 

@@ -11,7 +11,6 @@
  * Created on January 2, 2018, 10:06 AM
  */
 
-#ifdef VERIFYPN_TAR
 
 #ifndef TARAUTOMATA_H
 #define TARAUTOMATA_H
@@ -22,9 +21,9 @@
 #include <set>
 
 #include "range.h"
+#include "PetriEngine/PetriNet.h"
 
 namespace PetriEngine {
-    using namespace PQL;
     namespace Reachability {
         class AutomataState;
 
@@ -52,9 +51,11 @@ namespace PetriEngine {
             AutomataEdge(size_t e)
                 : edge(e) {};
 
-            AutomataEdge(const AutomataEdge& other)
-                    : edge(other.edge), to(other.to){};
-
+            AutomataEdge(const AutomataEdge& other) = default;
+            AutomataEdge(AutomataEdge&&) = default;
+            AutomataEdge& operator=(const AutomataEdge& other) = default;
+            AutomataEdge& operator=(AutomataEdge&& other) = default;
+            
             bool has_to(size_t i)
             {
                 if(to.size() > 0 && to[0] == 0) return true;
@@ -166,7 +167,17 @@ namespace PetriEngine {
                 return res;
             }
 
-            inline bool remove_edge(size_t& e, size_t to)
+            inline bool remove_edge(size_t e)
+            {
+                AutomataEdge edge(e);
+                auto lb = std::lower_bound(edges.begin(), edges.end(), edge);
+                if(lb == edges.end() || *lb != edge)
+                    return false;
+                edges.erase(lb);
+                return true;
+            }
+            
+            inline bool remove_edge(size_t e, size_t to)
             {
                 AutomataEdge edge(e);
                 auto lb = std::lower_bound(edges.begin(), edges.end(), edge);
@@ -190,7 +201,7 @@ namespace PetriEngine {
                 return removed;
             }
 
-            inline auto first_edge(size_t& e)
+            inline auto first_edge(size_t& e) const
             {
                 AutomataEdge edge(e);
                 auto lb = std::lower_bound(edges.begin(), edges.end(), edge);        
@@ -202,7 +213,7 @@ namespace PetriEngine {
                 return edges.end();
             }
 
-            inline std::vector<AutomataEdge>& get_edges()
+            inline auto& get_edges() const
             {
                 return edges;
             }
@@ -238,7 +249,6 @@ namespace PetriEngine {
             size_t edgecnt; 
             std::vector<size_t> interpolant;
         public:
-//            key_t location = 0;
             bool operator == (const state_t& other)
             {
                 if((edgecnt == 0) != (other.edgecnt == 0)) return false;
@@ -268,16 +278,6 @@ namespace PetriEngine {
                 return false;
             }
 
-            /*bool operator < (const state_t& other)
-            {
-                if(location != other.location) return location < other.location;
-                if(edgecnt != other.edgecnt) return edgecnt < other.edgecnt;
-                if(interpolant.size() != other.interpolant.size()) return interpolant.size() < other.interpolant.size();
-
-            }*/
-
-
-
             size_t& get_edge_cnt()
             {
                 return edgecnt;
@@ -285,14 +285,7 @@ namespace PetriEngine {
 
             bool next_edge(const PetriNet& net)
             {
-//                std::string tname = "t0";
                 ++edgecnt;
-                /*std::set<std::string> names{"k56", "k31", "k33", "k57", "k34"};
-                while(edgecnt <= net.numberOfTransitions() && names.count(net.transitionNames()[edgecnt - 1]) == 0)
-                {
-                    ++edgecnt;
-                }*/
-
                 return edgecnt > net.numberOfTransitions();
             }
 
@@ -327,18 +320,18 @@ namespace PetriEngine {
                 return interpolant;
             }
 
-            inline void set_interpolants(std::vector<size_t> & interpolants)
+            inline void set_interpolants(std::vector<size_t>&& interpolants)
             {
                 assert(is_sorted(interpolants.begin(), interpolants.end()));
                 assert(interpolant.size() == 0 || interpolant[0] != 0);
-                interpolant = interpolants;
+                interpolant = std::move(interpolants);
                 assert(interpolant.size() == 0 || interpolant[0] != 0);
             }
         };
+        
+        typedef std::vector<state_t> trace_t;
     }
 }
 
 
 #endif /* TARAUTOMATA_H */
-
-#endif

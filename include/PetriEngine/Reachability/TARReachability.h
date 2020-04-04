@@ -22,8 +22,12 @@
 #define TARREACHABILITY_H
 #include "ReachabilitySearch.h"
 #include "../TAR/TARAutomata.h"
+#include "PetriEngine/TAR/TraceSet.h"
+#include "PetriEngine/TAR/AntiChain.h"
+
 namespace PetriEngine {
     namespace Reachability {
+        class Solver;
         class TARReachabilitySearch {
         private:
             ResultPrinter& printer;
@@ -32,7 +36,7 @@ namespace PetriEngine {
         public:
 
             TARReachabilitySearch(ResultPrinter& printer, PetriNet& net, Reducer* reducer, int kbound = 0)
-            : printer(printer), _net(net), _reducer(reducer) {
+            : printer(printer), _net(net), _reducer(reducer), _traceset(net.numberOfPlaces()) {
                 _kbound = kbound;
             }
             
@@ -44,24 +48,18 @@ namespace PetriEngine {
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
                 bool printstats, bool printtrace, PetriNetBuilder& builder);
-        protected:
-            virtual void addNonChanging(state_t& state, std::vector<size_t>& maximal, std::vector<size_t>& nextinter);
-            virtual std::vector<size_t> expandSimulation(std::vector<size_t>& from);
-            virtual bool followSymbol(std::vector<size_t>& from, std::vector<size_t>& nextinter, size_t symbol);
         private:
-            typedef std::vector<state_t> waiting_t;
-            void printTrace(waiting_t& stack);
-            bool tryReach(   const std::shared_ptr<PQL::Condition>& query, 
-                                        std::vector<ResultPrinter::Result>& results,
-                                        bool printstats, bool printtrace, Structures::State& initial, const std::vector<bool>&);
-            void computeSimulation(size_t index);
-            bool popDone(waiting_t& waiting, size_t& stepno);
-            bool checkInclussion(state_t& state, std::vector<size_t>& nextinter);
 
-            void handleInvalidTrace(waiting_t& waiting, int nvalid);
-            std::pair<int,bool>  isValidTrace(waiting_t& trace, Structures::State& initial, const std::vector<bool>&, Condition* query);
-            void constructAutomata(waiting_t& trace, std::vector<std::pair<prvector_t,bool>>& ranges);
-            std::pair<bool, size_t> stateForPredicate(prvector_t& predicate, size_t sim_hint = 1, size_t simed_hint = 0);
+            void printTrace(trace_t& stack);
+            void nextEdge(AntiChain<uint32_t, size_t>& checked, state_t& state, trace_t& waiting, std::vector<size_t>&& nextinter);
+            bool tryReach(  bool printtrace, Solver& solver);
+            bool runTAR(    bool printtrace, Solver& solver);
+            bool popDone(trace_t& waiting, size_t& stepno);
+            bool checkInclussion(state_t& state, std::vector<size_t>& nextinter);
+            void addNonChanging(state_t& state, std::vector<size_t>& maximal, std::vector<size_t>& nextinter);
+
+            void handleInvalidTrace(trace_t& waiting, int nvalid);
+            std::pair<int,bool>  isValidTrace(trace_t& trace, Structures::State& initial, const std::vector<bool>&, PQL::Condition* query);
             void printStats();
             bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
                                 std::vector<ResultPrinter::Result>&,
@@ -69,13 +67,10 @@ namespace PetriEngine {
             ResultPrinter::Result printQuery(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result);
             
             int _kbound;
+            size_t _stepno = 0;
             PetriNet& _net;
             Reducer* _reducer;
-            std::map<prvector_t, size_t> intmap;
-            std::vector<AutomataState> states;
-            std::vector<size_t> initial_interpols;
-            std::vector<size_t> simorder;
-            std::map<size_t, std::vector<size_t>> edge_interpolants;
+            TraceSet _traceset;
 
         };
         

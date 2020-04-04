@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifdef VERIFYPN_TAR
 
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/PQL/Expressions.h"
@@ -26,423 +25,14 @@
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriEngine/Reachability/TARReachability.h"
 #include "PetriEngine/Reachability/RangeContext.h"
+#include "PetriEngine/TAR/Solver.h"
 
-#define NOCHANGE
-#define ANTISIM
-//#define VERBOSETAR
 
 namespace PetriEngine {
     using namespace PQL;
     namespace Reachability {
 
-        void inline_union(std::vector<size_t>& into, const std::vector<size_t>& other)
-        {
-            into.reserve(into.size() + other.size());
-            auto iit = into.begin();
-            auto oit = other.begin();
-
-            while(oit != other.end())
-            {
-                while(iit != into.end() && *iit < *oit) ++iit;
-                if(iit == into.end())
-                {
-                    into.insert(iit, oit, other.end());
-                    break;
-                }
-                else if(*iit != *oit)
-                {
-                    iit = into.insert(iit, *oit);
-                }
-                ++oit;
-            }
-        }       
-        
-        
-        std::pair<bool, size_t> TARReachabilitySearch::stateForPredicate(prvector_t& predicate, size_t sim_hint, size_t simed_hint)
-        {
-            predicate.compress();
-            assert(predicate.is_compact());
-            if(predicate.is_true()) 
-            {
-                return std::make_pair(false, 1);
-            }
-            else if (predicate.is_false(_net.numberOfPlaces()))
-            {        
-                return std::make_pair(false, 0);   
-            } 
-            
-            auto astate = states.size();
-            auto res = intmap.emplace(predicate, astate);
-            if(!res.second)
-            {
-#ifndef NDEBUG
-                if(!(states[res.first->second].interpolant == predicate))
-                {
-                    assert(!(states[res.first->second].interpolant < predicate));
-                    assert(!(predicate < states[res.first->second].interpolant));
-                    assert(false);
-                }
-                for(auto& e : intmap)
-                {
-                    assert(e.first == states[e.second].interpolant);
-                }
-#endif
-                return std::make_pair(false, res.first->second);
-            }
-            else
-            {
-                states.emplace_back(predicate);
-                computeSimulation(astate);
-                res.first->second = astate;
-                assert(states[astate].interpolant == predicate);
-#ifndef NDEBUG
-                for(auto& s : states)
-                {
-                    if(s.interpolant == predicate)
-                    {
-                        if(&s == &states[astate]) continue;
-                        assert( (s.interpolant < predicate) ||
-                                (predicate < s.interpolant));
-                        assert(false);
-                    }
-                }
-                for(auto& e : intmap)
-                {
-                    assert(e.first == states[e.second].interpolant);
-                }
-#endif
-
-                return std::make_pair(true, astate);
-            }
-        }
-
-        
-        void TARReachabilitySearch::constructAutomata(waiting_t& trace, std::vector<std::pair<prvector_t,bool>>& inter)
-        {
-            assert(inter.size() > 0);
-            bool some = false;
-
-            size_t last = 1;
-            {
-                auto res = stateForPredicate(inter[0].first);
-                some |= res.first;
-                auto lb = std::lower_bound(initial_interpols.begin(), initial_interpols.end(), res.second);
-                if(lb == std::end(initial_interpols) || *lb != res.second)
-                {
-                    initial_interpols.insert(lb, res.second);
-                    trace[0].add_interpolant(res.second);
-                }
-                last = res.second;
-            }
-#ifndef NDEBUG
-            bool added_terminal = false;
-#endif
-            for(size_t i = 0; i < inter.size(); ++i)
-            {
-                size_t j = i+1;
-
-                if(j == inter.size())
-                {
-                    some |= states[last].add_edge(trace[i].get_edge_cnt(), 0);
-#ifndef NDEBUG                    
-                    added_terminal = true;
-#endif
-                }
-                else
-                {
-                    if(!inter[i].second)
-                        trace[j].add_interpolant(last);
-                    else
-                    {
-                        auto res = stateForPredicate(inter[j].first);
-                        some |= res.first;
-                        assert(inter[i].second || res.second == last); 
-                        some |= states[last].add_edge(trace[i].get_edge_cnt(), res.second);
-                        last = res.second;
-                    }
-                }
-            }
-            assert(some);
-            assert(added_terminal);
-            /*std::vector<size_t> waiting = initial_interpols;
-            std::set<size_t> passed;
-            passed.insert(waiting.begin(), waiting.end());
-            while(!waiting.empty())
-            {
-                auto s = waiting.back();
-                waiting.pop_back();
-                std::cerr << "[" << s <<"]:";
-                states[s].print(std::cerr);
-                for(auto& e : states[s].get_edges())
-                {
-                    for(auto t : e.to)
-                    {
-                        if(passed.count(t) == 0)
-                        {
-                            passed.insert(t);
-                            waiting.push_back(t);
-                        }
-                    }
-                }
-            }*/
-        }
-                
-        std::pair<int,bool>  TARReachabilitySearch::isValidTrace(waiting_t& trace, Structures::State& initial, const std::vector<bool>& inq, Condition* query)
-        {
-            size_t nvalid = 0;
-            {
-                std::unique_ptr<int64_t[]> lastfailplace = std::make_unique<int64_t[]>(_net.numberOfPlaces());
-                std::unique_ptr<int64_t[]> lfpc = std::make_unique<int64_t[]>(_net.numberOfPlaces());
-                std::unique_ptr<int64_t[]> m = std::make_unique<int64_t[]>(_net.numberOfPlaces());
-                std::unique_ptr<MarkVal[]> mark = std::make_unique<MarkVal[]>(_net.numberOfPlaces());
-                for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                {
-                    m[p] = initial.marking()[p];
-                    mark[p] = m[p];
-                    lastfailplace[p] = -1;
-                    lfpc[p] = 0;
-                }
-                    
-                int64_t fail = 0; 
-#ifndef NDEBUG
-                bool qfail = false;
-#endif
-                int64_t lastfail = -1;
-                int64_t place = 0;
-#ifdef VERBOSETAR
-                SuccessorGenerator gen(_net);
-#endif
-                for(; fail < (int64_t)trace.size(); ++fail)
-                {
-                    state_t& s = trace[fail];
-                    auto t = s.get_edge_cnt();
-                    if(t == 0)
-                    {
-#ifdef VERBOSETAR
-                        std::cerr << "CHECKQ" << std::endl;
-                        query->toString(std::cerr);
-                        std::cerr << std::endl;
-#endif
-                        bool ok = true;
-                        place = -1;
-                        for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                        {
-                            if(inq[p])
-                            {
-                                ok &= m[p] >= 0;
-                                ok &= m[p] <= std::numeric_limits<MarkVal>::max();
-                                mark[p] = std::min<int64_t>(std::max<int64_t>(0,m[p]), std::numeric_limits<MarkVal>::max());
-#ifdef VERBOSETAR
-                                std::cerr << "Q: P" << p << std::endl;
-#endif
-                            }
-                            if(lastfailplace[p] != -1 && (place == -1 || (lastfailplace[p] <= lastfailplace[place] &&
-                                                                          (lastfailplace[p] < lastfailplace[place] || inq[p] && !inq[place]))))
-                            {
-                                lastfail = lastfailplace[p];
-                                place = p;
-                            }
-                        }
-
-                        EvaluationContext ctx(mark.get(), &_net);
-                        if(lastfail != -1 || query->evalAndSet(ctx))
-                        {
-                            if(lastfail != -1)
-                            {
-                                fail = lastfail;
-                                break;
-                            }
-                            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                            {
-                                mark[p] = initial.marking()[p];
-                            }
-#ifdef VERBOSETAR                            
-                            for(auto& t : trace)
-                            {
-                                Structures::State s;
-                                s.setMarking(mark.get());
-                                gen.prepare(&s);
-                                if(t.get_edge_cnt() == 0)
-                                    assert(query->evaluate(ctx));
-                                else if(gen.checkPreset(t.get_edge_cnt()-1))
-                                {
-
-                                    gen.consumePreset(s, t.get_edge_cnt()-1);
-                                    gen.producePostset(s, t.get_edge_cnt()-1);
-                                }
-                                else
-                                {
-                                    assert(false);
-                                }
-                                s.setMarking(nullptr);
-                            }
-#endif
-                            return std::make_pair(fail, true);
-                        }
-                        else
-                        {
-#ifndef NDEBUG
-                            qfail = true;
-#endif
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        --t;
-                        auto pre = _net.preset(t);
-                        if(fail == -1)
-                        {
-                            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                                    assert(mark[p] == m[p]);
-                        }
-                        for(; pre.first != pre.second; ++pre.first)
-                        {
-                            m[pre.first->place] -= pre.first->tokens;
-                            if(m[pre.first->place] < 0)
-                            {
-                                if(lastfailplace[pre.first->place] == -1)
-                                    lastfailplace[pre.first->place] = fail;
-
-                                lastfail = fail;
-                            }
-                            else if(lastfailplace[pre.first->place] == -1)
-                            {
-                                lfpc[pre.first->place] += 1;
-                            }
-                        }
-                        auto post = _net.postset(t);
-                        for(; post.first != post.second; ++post.first)
-                        {
-                            m[post.first->place] += post.first->tokens;
-                            if(lastfailplace[post.first->place] == -1)
-                            {
-                                lfpc[post.first->place] += 1;
-                            }
-                        }
-#ifdef VERBOSETAR
-                        Structures::State s;
-                        s.setMarking(mark.get());
-                        gen.prepare(&s);
-                        if(lastfail == -1)
-                        {
-                            if(gen.checkPreset(t))
-                            {
-                                gen.consumePreset(s, t);
-                                gen.producePostset(s, t);
-                            }
-                            else
-                            {
-                                assert(false);
-                            }
-                            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                                assert(mark[p] == m[p]);
-                        }
-                        s.setMarking(nullptr);
-#endif
-                    }
-                }
-                std::vector<std::pair<prvector_t,bool>> ranges(fail+1);
-                if(trace[fail].get_edge_cnt() == 0)
-                {
-                    assert(qfail);
-                    RangeContext ctx(ranges[fail].first, mark.get(), _net);
-                    query->visit(ctx);
-#ifdef VERBOSETAR
-                    ranges[fail].first.print(std::cerr) << std::endl;
-#endif
-                    nvalid = fail+1;
-                    --fail;
-                }
-                else
-                {
-#ifndef NDEBUG
-                    bool some = false;
-#endif
-                    auto pre = _net.preset(trace[fail].get_edge_cnt()-1);
-                    for(; pre.first != pre.second; ++pre.first)
-                    {
-                        assert(!pre.first->inhibitor);
-                        assert(pre.first->tokens >= 1);
-                        if(pre.first->place != place)
-                            continue;
-#ifndef NDEBUG
-                        some = true;
-#endif
-                        auto& npr = ranges[fail].first.find_or_add(pre.first->place);
-                        assert(npr._place == pre.first->place);
-                        npr._range._upper = pre.first->tokens-1;
-                        break;
-                    }
-                    nvalid = fail+1;
-                    assert(some);
-                    --fail;
-                }
-#ifdef VERBOSETAR
-                
-                std::cerr << "[FAIL] : ";
-                ranges[fail+1].first.print(std::cerr) << std::endl;
-                {
-                    std::cerr << "HELLO " << std::endl;
-                }
-#endif
-                ranges[fail+1].second = true;
-                {
-                    for(; fail >= 0; --fail)
-                    {
-                        ranges[fail].first.copy(ranges[fail+1].first);
-                        state_t& s = trace[fail];
-                        bool touches = false;
-                        auto t = s.get_edge_cnt()-1;
-                        auto post = _net.postset(t);
-                        for(; post.first != post.second; ++post.first)
-                        {
-                            auto* pr = ranges[fail+1].first[post.first->place];
-                            if(pr == nullptr || pr->_range.unbound()) continue;
-                            ranges[fail].first.find_or_add(post.first->place) -= post.first->tokens;
-                            touches = true;
-                        }
-                        
-                        auto pre = _net.preset(t);
-                        for(; pre.first != pre.second; ++pre.first)
-                        {
-                            assert(!pre.first->inhibitor);
-                            assert(pre.first->tokens >= 1);
-                            auto* pr = ranges[fail+1].first[pre.first->place];
-                            if(pr == nullptr || pr->_range.unbound()) continue;
-                            ranges[fail].first.find_or_add(pre.first->place) += pre.first->tokens;
-                            touches |= true;
-                        }
-                        ranges[fail].second = touches;
-#ifdef VERBOSETAR
-                        if(ranges[fail].second)
-                        {
-                            std::cerr << "[" << fail << "] : <T" << t << "> ";
-                            if(ranges[fail].second)
-                                std::cerr << "TOUCHES" << std::endl;
-                            else
-                                std::cerr << "NO TOUCH" << std::endl;
-                            ranges[fail].first.print(std::cerr) << std::endl;
-                                std::cerr << "INT : ";
-                            for(auto& s : trace[fail].get_interpolants())
-                            {
-                                std::cerr << s << ", ";
-                            }
-                            std::cerr << std::endl;
-                        }
-#endif
-                    }
-                }
-                constructAutomata(trace, ranges);
-#ifdef VERBOSETAR                
-                std::cerr << "S " << states.size() << std::endl;
-#endif
-            }
-            return std::pair<int,bool>(nvalid, false);
-        }
-
-
-        void TARReachabilitySearch::handleInvalidTrace(waiting_t& waiting, int nvalid)
+        void TARReachabilitySearch::handleInvalidTrace(trace_t& waiting, int nvalid)
         {
             //sanity(waiting);
             assert(waiting.size() >= (size_t)nvalid);
@@ -461,7 +51,6 @@ namespace PetriEngine {
                     }
                 }
                 if(brk) break;
-                std::vector<size_t> buffer;
                 if(checkInclussion(waiting[i - 1], waiting[i].get_interpolants()))
                 {
                     if(i != 1) waiting.resize(i - 1);
@@ -469,11 +58,10 @@ namespace PetriEngine {
                 }
             }
             if(waiting.size() == 0) return;
-            waiting.back().reset_edges(_net);
         }
         
         
-        bool TARReachabilitySearch::popDone(waiting_t& waiting, size_t& stepno)
+        bool TARReachabilitySearch::popDone(trace_t& waiting, size_t& stepno)
         {
             bool popped = false;
             while(waiting.back().get_edge_cnt() > _net.numberOfTransitions()) // we have tried all transitions for this state-pair!
@@ -491,234 +79,94 @@ namespace PetriEngine {
             return popped;
         }
 
-        void TARReachabilitySearch::computeSimulation(size_t index)
+        void TARReachabilitySearch::nextEdge(AntiChain<uint32_t, size_t>& checked, state_t& state, trace_t& waiting, std::vector<size_t>&& nextinter)
         {
-            AutomataState& state = states[index];
-            assert(index == states.size()-1 || index == 0);
-            for(size_t i = 0; i < states.size(); ++i)
+            uint32_t dummy = state.get_edge_cnt() == 0 ? 0 : 1;
+            state_t next;
+            bool res = checked.subsumed(dummy, nextinter);
+            if(res)
             {
-                if(i == index) continue;
-                AutomataState& other = states[i];
-                std::pair<bool,bool> res = other.interpolant.compare(state.interpolant);
-                assert(!res.first || !res.second);
-                if(res.first)
-                {
-                    state.simulates.emplace_back(i);
-                    auto lb = std::lower_bound(other.simulators.begin(), other.simulators.end(), index);
-                    if(lb == std::end(other.simulators) || *lb != index)
-                        other.simulators.insert(lb, index);
-                    other.interpolant.compare(state.interpolant);
-                }
-                if(res.second)
-                {
-                    state.simulators.emplace_back(i);
-                    auto lb = std::lower_bound(other.simulates.begin(), other.simulates.end(), index);
-                    if(lb == std::end(other.simulates) || *lb != index)
-                        other.simulates.insert(lb, index);
-                    other.interpolant.compare(state.interpolant);
-                }
+                waiting.back().next_edge(_net);
             }
-
-            assert(states[1].simulates.size() == 0);
-            assert(states[0].simulators.size() == 0);    
+            else
+            {
+                std::vector<size_t> minimal = _traceset.minimize(nextinter);
+                checked.insert(dummy, minimal);
+                next.reset_edges(_net);
+                next.set_interpolants(std::move(minimal));
+                waiting.push_back(next);
+            }            
         }
         
-        
-        bool TARReachabilitySearch::tryReach(   const std::shared_ptr<PQL::Condition> & query, 
-                                        std::vector<ResultPrinter::Result>& results,
-                                        bool printstats, bool printtrace, Structures::State& initial,
-                                        const std::vector<bool>& places_in_query)
+        bool TARReachabilitySearch::runTAR( bool printtrace,
+                                            Solver& solver)
         {
-            
-            // Construct our constraints
-
-            prvector_t truerange;
-            prvector_t falserange; 
-            {
-                for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                    falserange.find_or_add(p) &= 0;
-            }
-            assert(falserange.is_false(_net.numberOfPlaces()));
-            assert(truerange.is_true());
-            assert(!falserange.is_true());
-            assert(falserange.is_false(_net.numberOfPlaces()));
-            assert(truerange.compare(falserange).first);
-            assert(!truerange.compare(falserange).second);
-            assert(falserange.compare(truerange).second);
-            assert(!falserange.compare(truerange).first);
-            states.emplace_back(falserange); // false
-            states.emplace_back(truerange); // true
-            computeSimulation(0);
-
-            assert(states[1].simulates.size() == 0);
-            assert(states[1].simulators.size() == 1);
-            assert(states[0].simulates.size() == 1);
-            assert(states[0].simulators.size() == 0);
-
-            assert(states[1].simulators[0] == 0);
-            assert(states[0].simulates[0] == 1);
-    
-            intmap.emplace(falserange, 0);
-            intmap.emplace(truerange, 1);
-
-            /* Do the verification */
-
+            auto checked = AntiChain<uint32_t, size_t>();
+            // waiting-list with levels
             bool all_covered = true;
-            size_t stepno = 0;
+            trace_t waiting;
+            // initialize
+            {
+                state_t state;
+                state.reset_edges(_net);
+                state.set_interpolants(_traceset.initial());
+                waiting.push_back(state);
+            }
+            while (!waiting.empty()) 
+            {
+                if(popDone(waiting, _stepno)) 
+                    continue;  // we have reached the end of the edge-iterator for this part of the trace
 
-            initial_interpols.push_back(1);
-            do {
-                all_covered = true;
-                auto checked = AntiChain<uint32_t, size_t>();
-                // waiting-list with levels
-                waiting_t waiting;
-                // initialize
+                ++_stepno;
+
+                assert(waiting.size() > 0 );
+                state_t& state = waiting.back();
+                std::vector<size_t> nextinter;
+                if(checkInclussion(state, nextinter)) // Check if the next state makes the interpolant automata accept.
                 {
-                    state_t state;
-                    state.reset_edges(_net);
-                    state.set_interpolants(initial_interpols);
-                    waiting.push_back(state);
+                    state.next_edge(_net);
+                    continue;
                 }
-                while (!waiting.empty()) 
+
+                if(waiting.back().get_edge_cnt() == 0) // check if proposition is satisfied
                 {
-                    if(popDone(waiting, stepno)) 
-                        continue;  // we have reached the end of the edge-iterator for this part of the trace
-
-                    ++stepno;
-
-                    assert(waiting.size() > 0 );
-                    state_t& state = waiting.back();
-                    std::vector<size_t> nextinter;
-                    if(checkInclussion(state, nextinter)) // Check if the next state makes the interpolant automata accept.
+                    auto res = solver.check(waiting);
+                    if(res.first)
                     {
-                        state.next_edge(_net);
-                        continue;
-                    }
-
-                    bool next_edge = false;
-                    if(waiting.back().get_edge_cnt() == 0) // check if proposition is satisfied
-                    {
-                        std::pair<int,bool> res = isValidTrace(waiting, initial, places_in_query, query.get());
-                        if(res.second)
-                        {
-                            std::cerr << "VALID TRACE FOUND!" << std::endl;
-                            std::cerr << "STEPS : " << stepno << std::endl;
-                            std::cerr << "INTERPOLANT AUTOMATAS : " << waiting[0].get_interpolants().size() << std::endl;
-                            intmap.clear();
-                            states.clear();
-                            if(printtrace)
-                                printTrace(waiting);
-                            return true;
-                        }
-                        else
-                        {
-                            handleInvalidTrace(waiting, res.first);
-                            all_covered = false;
-                            continue;
-                        }
+                        if(printtrace)
+                            printTrace(waiting);
+                        return true;
                     }
                     else
                     {
+                        auto some = _traceset.addTrace(waiting, res.second);
+                        assert(some || !all_covered);
+                        if(!some)
+                            return false;                        
+                        handleInvalidTrace(waiting, res.second.size());
+                        all_covered = false;
+                        continue;
+                    }
+                }
+                else
+                {
 #ifdef VERBOSETAR
-//                        std::cerr << "STEPS : " << stepno << std::endl;
-//                        std::cerr << "INTERPOLANT AUTOMATAS : " << waiting[0].get_interpolants().size() << std::endl;
+//                    printStats();
 #endif
-                        next_edge = true;
-                    }
-
-                    if(next_edge)
-                    {
-                        uint32_t dummy = state.get_edge_cnt() == 0 ? 0 : 1;
-                        state_t next;
-                        bool res = checked.subsumed(dummy, nextinter);
-                        if(res)
-                        {
-                            waiting.back().next_edge(_net);
-                        }
-                        else
-                        {
-                            std::vector<size_t> minimal = nextinter;
-#ifdef ANTISIM
-                            std::vector<size_t> buffer;
-                            size_t cur = 2;
-                            while(true)
-                            {
-                                buffer.clear();
-                                auto lb = std::lower_bound(minimal.begin(), minimal.end(), cur);
-                                if(lb == minimal.end()) break;
-                                cur = *lb;
-                                std::set_difference(minimal.begin(), minimal.end(), 
-                                                    states[cur].simulates.begin(), states[cur].simulates.end(),
-                                                    std::back_inserter(buffer));
-                                minimal.swap(buffer);
-                                ++cur;
-                            }
-#endif      
-                            checked.insert(dummy, minimal);
-                            next.reset_edges(_net);
-                            next.set_interpolants(minimal);  
-                            waiting.push_back(next);
-                        }
-                    }
-                }
-            } while(!all_covered);
-
-            
-            /*for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
-            {
-                std::cerr << "T" << t << ":\n";
-                std::cerr << "\tPRE:\n";
-                auto pre = _net.preset(t);
-                for(;pre.first != pre.second; ++pre.first)
-                    std::cerr << "\t\t-" << pre.first->tokens << " (P" << pre.first->place << ")\n";
-                std::cerr << "\tPOST:\n";
-                auto post = _net.postset(t);
-                for(;post.first != post.second; ++post.first)
-                    std::cerr << "\t\t+" << post.first->tokens << " (P" << post.first->place << ")\n";
-            }*/
-#ifdef VERBOSETAR            
-            std::cerr << "digraph graphname {\n";
-            for(size_t i = 0; i < states.size(); ++i)
-            {
-                auto& s = states[i];
-                std::cerr << "\tS" << i << " [label=\"";
-                if(s.interpolant.is_true())
-                {
-                    std::cerr << "TRUE";
-                }
-                else if(s.interpolant.is_false(_net.numberOfPlaces()))
-                {
-                    std::cerr << "FALSE";
-                }
-                else
-                {
-                    s.interpolant.print(std::cerr);
-                }
-                std::cerr << "\",shape=";
-                auto lb = std::lower_bound(initial_interpols.begin(), initial_interpols.end(), i);
-                if(lb != std::end(initial_interpols) && *lb == i)
-                    std::cerr << "box,color=green";
-                else
-                    std::cerr << "box";                    
-                std::cerr << "];\n";
-            }
-            for(size_t i = 0; i < states.size(); ++i)
-            {
-                auto& s = states[i];
-                for(auto& e : s.get_edges())
-                {
-                    std::cerr << "\tS" << i << "_" << e.edge << " [label=\"" << 
-                            (e.edge == 0 ? "Q" : std::to_string(e.edge-1))
-                            << "\",shape=diamond,style=dashed];\n";
-                    std::cerr << "\tS" << i << " -> S" << i << "_" << e.edge << ";\n";
-                    for(auto& t : e.to)
-                    {
-                        std::cerr << "\tS" << i << "_" << e.edge << " -> S" << t << ";\n";                        
-                    }
+                    nextEdge(checked, state, waiting, std::move(nextinter));
                 }
             }
-            
-            std::cerr << "}\n";
+            return all_covered;
+        }
+        
+        bool TARReachabilitySearch::tryReach(bool printtrace, Solver& solver)
+        {            
+            _traceset.removeEdges(0);
+            while(!runTAR(printtrace, solver)) 
+            {} // redo TAR until we have one complete run-through without interpolant traces.
+
+#ifdef VERBOSETAR
+            _traceset.print(std::cerr);
             for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
             {
                 auto pre = _net.preset(t);
@@ -735,183 +183,56 @@ namespace PetriEngine {
             }
             for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
             {
-                if(initial.marking()[p] != 0)
-                    std::cerr << "P" << p << " (" << initial.marking()[p] << ")\n";
-            }
+                if(_net.initial()[p] != 0)
+                    std::cerr << "P" << p << " (" << _net.initial()[p] << ")\n";
+            }  
 #endif
-            intmap.clear();
-            states.clear();
-
-            std::cout << "STEPS : " << stepno << std::endl;
-            std::cout << "INTERPOLANT AUTOMATAS : " << initial_interpols.size() << std::endl;
-            if(auto upper = dynamic_cast<PQL::UnfoldedUpperBoundsCondition*>(query.get()))
-            {
-                assert(false);
-            }
-            
+            if(printtrace)
+                _traceset.print(std::cerr);            
             return false;            
         }
 
         bool TARReachabilitySearch::checkInclussion(state_t& state, std::vector<size_t>& nextinter)
         {
-#ifdef ANTISIM
-            auto maximal = expandSimulation(state.get_interpolants());
-#else
-            auto maximal = state.get_interpolants();
-#endif
+            auto maximal = _traceset.maximize(state.get_interpolants());
             // if NFA accepts the trace after this instruction, abort.
-            if(followSymbol(maximal, nextinter, state.get_edge_cnt()))
+            if(_traceset.follow(maximal, nextinter, state.get_edge_cnt()))
             {
                 return true;
             }
 
-#ifdef NOCHANGE
+            if(state.get_edge_cnt() == 0)
+                return false;
             addNonChanging(state, maximal, nextinter);
-#endif
         
-#ifdef ANTISIM
-            nextinter = expandSimulation(nextinter);
-#endif
+            nextinter = _traceset.maximize(nextinter);
             return false;
         }
-        
-        bool TARReachabilitySearch::followSymbol(std::vector<size_t>& from, std::vector<size_t>& nextinter, size_t symbol)
-        {
-            if(nextinter.size() == 0 || nextinter[0] != 1) nextinter.insert(nextinter.begin(), 1);
-            assert(is_sorted(from.begin(), from.end()));
-            for(size_t i : from)
-            {
-                if(i == 0)
-                {
-                    assert(false);
-                    continue;
-                }
-                AutomataState& as = states[i];
-                if(as.is_accepting())
-                {
-                    assert(false);
-                    break;
-                }
-
-                auto it = as.first_edge(symbol);
-
-                while(it != as.get_edges().end())
-                {
-                    if(it->edge != symbol)    { break; }
-                    AutomataEdge& ae = *it;
-                    ++it;
-                    assert(ae.to.size() > 0);
-                    auto other = nextinter.begin();
-                    auto next = ae.to.begin();
-                    if(*next == 0) 
-                    {
-                        return true;
-                    }
-                    for(;next != ae.to.end(); ++next)
-                    {
-                        while(*other < *next && other != nextinter.end())
-                        {
-                            ++other;
-                        }
-                        if(other != nextinter.end() && *next == *other)
-                        {
-                            ++other;
-                        }
-                        else
-                        {
-                            other = nextinter.insert(other, *next);
-                            assert(*next < states.size());
-                            if(states[*next].simulates.size() > 0)
-                            {
-                                inline_union(nextinter, states[*next].simulates);
-                                other = std::lower_bound(nextinter.begin(), nextinter.end(), (*next) + 1);
-                            }
-                            else
-                            {
-                                ++other;
-                            }
-                        }
-                        assert(nextinter.size() == 0 || nextinter[0] != 0);
-                    }
-                }
-            }
-            return false;            
-        }
-        
-        std::vector<size_t> TARReachabilitySearch::expandSimulation(std::vector<size_t>& org)
-        {
-            std::vector<size_t> maximal = org;
-            assert(is_sorted(maximal.begin(), maximal.end()));
-            if(maximal.size() == 0 || maximal[0] != 1) maximal.insert(maximal.begin(), 1);
-
-            assert(maximal.size() == 0 || maximal[0] != 0);
-            assert(is_sorted(maximal.begin(), maximal.end()));
-            for(size_t i : org)
-            {
-                inline_union(maximal, states[i].simulates);
-            }            
-            return maximal;
-        }
-        
-        
+                
         void TARReachabilitySearch::addNonChanging(state_t& state, std::vector<size_t>& maximal, std::vector<size_t>& nextinter)
         {
-            bool loaded = false;
-            auto next = nextinter.begin();
-            std::vector<uint32_t> writes;
+            
+            std::vector<int64_t> changes;
+            auto pre = _net.preset(state.get_edge_cnt() - 1);
+            auto post = _net.postset(state.get_edge_cnt() - 1);
 
-            if(!state.get_edge_cnt() == 0)
-            for(size_t i : maximal)
+            for(; pre.first != pre.second; ++pre.first)
             {
-                if(i == 0)
-                {
-                    assert(false);
-                    continue;
-                }
-                AutomataState& as = states[i];
-                while(next != nextinter.end() && *next < i) { ++next; };
-                if(next == nextinter.end() || *next != i)
-                {
-                    // added non-interfering
-                    if(!loaded)
-                    {
-                        auto pre = _net.preset(state.get_edge_cnt() - 1);
-                        auto post = _net.postset(state.get_edge_cnt() - 1);
-                        auto lb = writes.begin();
-                        for(; pre.first != pre.second; ++pre.first)
-                        {
-                            if(pre.first->inhibitor) continue;
-                            while(lb != writes.end() && *lb < pre.first->place) ++lb;
-                            if(lb == writes.end() || *lb != pre.first->place)
-                                lb = writes.insert(lb, pre.first->place);
-                        }
-                        assert(std::is_sorted(writes.begin(), writes.end()));
-                        lb = writes.begin();
-                        for(; post.first != post.second; ++post.first)
-                        {
-                            while(lb != writes.end() && *lb < post.first->place) ++lb;
-                            if(lb == writes.end() || *lb != post.first->place)
-                                lb = writes.insert(lb, post.first->place);
-                        }
-                        assert(std::is_sorted(writes.begin(), writes.end()));
+                if(pre.first->inhibitor) { assert(false); continue;}
+                if(pre.first->direction < 0)
+                    changes.push_back(pre.first->place);
+            }
 
-                        loaded = true;
-                    }
-    
-                    if(!as.interpolant.restricts(writes))
-                    {
-                        next = nextinter.insert(next, i);
-                        if(as.simulates.size() > 0)
-                        {
-                            inline_union(nextinter, as.simulates);
-                            next = std::lower_bound(nextinter.begin(), nextinter.end(), i + 1);
-                        }
-                    }
-                }
-            }            
+            for(; post.first != post.second; ++post.first)
+            {
+                if(pre.first->direction > 0)
+                    changes.push_back(post.second->place);
+            }
+            std::sort(changes.begin(), changes.end());
+            _traceset.copyNonChanged(maximal, changes, nextinter);
         }
         
-        void TARReachabilitySearch::printTrace(waiting_t& stack)
+        void TARReachabilitySearch::printTrace(trace_t& stack)
         {
             std::cerr << "Trace:\n<trace>\n";
             
@@ -973,9 +294,11 @@ namespace PetriEngine {
                 {
                     QueryPlaceAnalysisContext pa(builder.getPlaceNames(), builder.getTransitionNames(), &_net);
                     queries[i]->analyze(pa);
+
                     for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                         used[p] = pa.getQueryPlaceCount()[p] > 0;
-                    bool res = tryReach(queries[i], results, printstats, printtrace, state, used);
+                    Solver solver(_net, state.marking(), queries[i].get(), used);
+                    bool res = tryReach(printtrace, solver);
                     if(res)
                         results[i] = ResultPrinter::Satisfied;
                     else
@@ -1020,10 +343,8 @@ namespace PetriEngine {
         
         void TARReachabilitySearch::printStats()
         {
-            // Stats
+            std::cerr << "STEPS : " << _stepno << std::endl;
+            std::cerr << "INTERPOLANT AUTOMATAS : " << _traceset.initial().size() << std::endl;
         }        
-        
     }
 }
-
-#endif
