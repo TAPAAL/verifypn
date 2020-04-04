@@ -226,7 +226,7 @@ namespace PetriEngine {
             for(; post.first != post.second; ++post.first)
             {
                 if(pre.first->direction > 0)
-                    changes.push_back(post.second->place);
+                    changes.push_back(post.first->place);
             }
             std::sort(changes.begin(), changes.end());
             _traceset.copyNonChanged(maximal, changes, nextinter);
