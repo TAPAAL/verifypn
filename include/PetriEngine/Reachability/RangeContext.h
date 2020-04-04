@@ -41,6 +41,8 @@ namespace PetriEngine
         void _accept(const T* element)
         {
             assert(false);
+            std::cerr << "UNSUPPORTED QUERY TYPE FOR TAR" << std::endl;
+            exit(-1);
         }
         
         void handle_compare(const Expr_ptr& left, const Expr_ptr& right, bool strict);
@@ -57,6 +59,8 @@ namespace PetriEngine
     inline void RangeContext::_accept(const NotCondition* element)
     {
         assert(false);
+        std::cerr << "UNSUPPORTED QUERY TYPE FOR TAR" << std::endl;
+        exit(-1);
     }
     
     template<>
@@ -147,6 +151,62 @@ namespace PetriEngine
         {
             _limit = e->getEval();
             e->visit(*this);
+        }
+    }
+    
+    template<>
+    inline void RangeContext::_accept(const DeadlockCondition* element)
+    {
+        assert(!element->isSatisfied());
+        for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+        {
+            auto pre = _net.preset(t);
+            bool ok = true;
+            for(; pre.first != pre.second; ++pre.first)
+            {
+                assert(!pre.first->inhibitor);
+                if(_base[pre.first->place] < pre.first->tokens)
+                {
+                    ok = false;
+                }
+            }
+            if(!ok) continue;
+            pre = _net.preset(t);
+            for(; pre.first != pre.second; ++pre.first)
+            {
+                auto& pr = _ranges.find_or_add(pre.first->place);
+                pr._range._lower = pre.first->tokens;
+            }
+            return;
+        }
+        assert(false);
+    }
+    
+    template<>
+    inline void RangeContext::_accept(const CompareConjunction* element)
+    {
+        assert(!element->isSatisfied());
+        bool disjunction = element->isNegated();
+        for(auto& c : element->constraints())
+        {
+            if(!disjunction)
+            {
+                if(c._lower > _base[c._place])
+                {
+                    _ranges.find_or_add(c._place)._range._upper = c._lower-1;
+                    return;
+                }
+                else if(c._upper < _base[c._place])
+                {
+                    _ranges.find_or_add(c._place)._range._lower = c._upper+1;
+                    return;
+                }
+            }
+            else
+            {
+                _ranges.find_or_add(c._place)._range._lower = c._lower;
+                _ranges.find_or_add(c._place)._range._upper = c._upper;
+            }
         }
     }
 }

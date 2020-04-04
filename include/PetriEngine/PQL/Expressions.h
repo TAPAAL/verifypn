@@ -842,6 +842,7 @@ namespace PetriEngine {
             };
             bool containsNext() const override { return false;}
             bool nestedDeadlock() const override { return false; }
+            const std::vector<cons_t>& constraints() const { return _constraints; }
         private:
             std::vector<cons_t> _constraints;
             bool _negated = false;
