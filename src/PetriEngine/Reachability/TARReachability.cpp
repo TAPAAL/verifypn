@@ -166,35 +166,41 @@ namespace PetriEngine {
             {
                 auto [finished, satisfied] = runTAR(printtrace, solver);
                 if(finished)
-                    return satisfied;
-            } while(true);
-
+                {
+                    if(!satisfied)
+                    {
 #ifdef VERBOSETAR
-            _traceset.print(std::cerr);
-            for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
-            {
-                auto pre = _net.preset(t);
-                std::cerr << "T" << t << "\n";
-                for(; pre.first != pre.second; ++pre.first)
-                {
-                    std::cerr << "\tP" << pre.first->place << " - " << pre.first->tokens << std::endl;
-                }
-                auto post = _net.postset(t);
-                for(; post.first != post.second; ++post.first)
-                {
-                    std::cerr << "\tP" << post.first->place << " + " << post.first->tokens << std::endl;
-                }
-            }
-            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-            {
-                if(_net.initial()[p] != 0)
-                    std::cerr << "P" << p << " (" << _net.initial()[p] << ")\n";
-            }  
+                        _traceset.print(std::cerr);
+                        for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+                        {
+                            auto pre = _net.preset(t);
+                            std::cerr << "T" << t << "\n";
+                            for(; pre.first != pre.second; ++pre.first)
+                            {
+                                std::cerr << "\tP" << pre.first->place << " - " << pre.first->tokens << std::endl;
+                            }
+                            auto post = _net.postset(t);
+                            for(; post.first != post.second; ++post.first)
+                            {
+                                std::cerr << "\tP" << post.first->place << " + " << post.first->tokens << std::endl;
+                            }
+                        }
+                        for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                        {
+                            if(_net.initial()[p] != 0)
+                                std::cerr << "P" << p << " (" << _net.initial()[p] << ")\n";
+                        }  
 #endif
-//            std::vector<size_t> trace{4,4,3,2,3,1,6};
-//            assert(validate(trace));
-            if(printtrace)
-                _traceset.print(std::cerr);            
+                        if(printtrace)
+                            _traceset.print(std::cerr);                        
+                        //std::vector<size_t> trace{149,123,122,97,157,79,71,24,26,138,3,38,144,143,8,134,6,47,127,11,140,40,27,122};
+                        //std::vector<size_t> trace{149,123,122,   157,79,71,24,26,    3,38,144,143,8,134,6,47,127,11,140,40,27,122};
+                        //assert(validate(trace));
+
+                    }
+                    return satisfied;
+                }
+            } while(true);
             return false;            
         }
 
@@ -237,7 +243,10 @@ namespace PetriEngine {
                     return false;
                 }
                 s.set_interpolants(_traceset.minimize(next));
-                assert(chain.insert(dummy, s.get_interpolants()));
+                if(!chain.insert(dummy, s.get_interpolants()))
+                {
+                    std::cerr << "FAIL AT [" << n << "] = T" << transitions[n] << std::endl;
+                }
             }
             s.get_edge_cnt() = 0;
             if(doStep(s, next))
@@ -255,14 +264,12 @@ namespace PetriEngine {
             for(; pre.first != pre.second; ++pre.first)
             {
                 if(pre.first->inhibitor) { assert(false); continue;}
-                if(pre.first->direction < 0)
-                    changes.push_back(pre.first->place);
+                changes.push_back(pre.first->place);
             }
 
             for(; post.first != post.second; ++post.first)
             {
-                if(pre.first->direction >= 0)
-                    changes.push_back(post.first->place);
+                changes.push_back(post.first->place);
             }
             std::sort(changes.begin(), changes.end());
             _traceset.copyNonChanged(maximal, changes, nextinter);

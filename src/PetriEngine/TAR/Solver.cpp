@@ -16,6 +16,7 @@
 #include "PetriEngine/Reachability/ReachabilityResult.h"
 #include <memory>
 #include <vector>
+
 namespace PetriEngine {
     namespace Reachability {
         using namespace PQL;
@@ -144,6 +145,7 @@ namespace PetriEngine {
 #ifdef VERBOSETAR
                 std::cerr << "TERMINAL IS T" << (end.get_edge_cnt()-1) << std::endl;
 #endif
+                
 #ifndef NDEBUG
                 bool some = false;
 #endif
@@ -156,6 +158,7 @@ namespace PetriEngine {
                         continue;
 #ifndef NDEBUG
                     some = true;
+                    assert(_mark[pre.first->place] < pre.first->tokens);
 #endif
                     auto& npr = last.first.find_or_add(pre.first->place);
                     assert(npr._place == pre.first->place);

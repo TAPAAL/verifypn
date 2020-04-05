@@ -82,17 +82,28 @@ namespace PetriEngine {
                 else
                     _lower -= val;
                 if(_upper != std::numeric_limits<uint32_t>::max())
+                {
+                    if(_upper < std::numeric_limits<uint32_t>::min()+val)
+                        assert(false);
                     _upper -= val;
+                }
                 return *this;
             }
 
             range_t& operator += (uint32_t val)
             {
                 if(_lower != std::numeric_limits<uint32_t>::min())
+                {
+                    if(_lower >= std::numeric_limits<uint32_t>::max()-val)
+                        assert(false);
                     _lower += val;
+                }
 
                 if(_upper >= std::numeric_limits<uint32_t>::max()-val)
+                {
+                    assert(false);
                     _upper = std::numeric_limits<uint32_t>::max();
+                }
                 else
                     _upper += val;
                 return *this;

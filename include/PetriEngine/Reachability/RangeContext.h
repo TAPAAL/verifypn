@@ -127,9 +127,9 @@ namespace PetriEngine
     {
         auto& pr = _ranges.find_or_add(element->offset());
         if(_lt)
-            pr._range._upper = _limit;
+            pr._range._upper = std::min<uint32_t>(pr._range._upper, _limit);
         else
-            pr._range._lower = _limit;
+            pr._range._lower = std::max<uint32_t>(pr._range._lower, _limit);
         assert(pr._range._lower <= _base[element->offset()]);
         assert(pr._range._upper >= _base[element->offset()]);
     }
@@ -138,14 +138,16 @@ namespace PetriEngine
     inline void RangeContext::_accept(const PlusExpr* element)
     {
         //auto fdf = std::abs(_limit - element->getEval())/
-            (element->places().size() + element->expressions().size());
+            //(element->places().size() + element->expressions().size());
         for(auto& p : element->places())
         {
             auto& pr = _ranges.find_or_add(p.first);
             if(_lt)
-                pr._range._upper = _base[p.first];
+                pr._range._upper = std::min(_base[p.first], pr._range._upper);
             else
-                pr._range._lower = _base[p.first];
+                pr._range._lower = std::max(_base[p.first], pr._range._lower);
+            assert(pr._range._lower <= _base[p.first]);
+            assert(pr._range._upper >= _base[p.first]);
         }
         for(auto& e : element->expressions())
         {
@@ -175,7 +177,9 @@ namespace PetriEngine
             for(; pre.first != pre.second; ++pre.first)
             {
                 auto& pr = _ranges.find_or_add(pre.first->place);
-                pr._range._lower = pre.first->tokens;
+                pr._range._lower = std::max(pre.first->tokens, pr._range._lower);
+                assert(pr._range._lower <= _base[pre.first->place]);
+                assert(pr._range._upper >= _base[pre.first->place]);
             }
             return;
         }
@@ -193,20 +197,29 @@ namespace PetriEngine
             {
                 if(c._lower > _base[c._place])
                 {
-                    _ranges.find_or_add(c._place)._range._upper = c._lower-1;
+                    auto& pr = _ranges.find_or_add(c._place);
+                    pr._range._upper = std::min(c._lower-1, pr._range._upper);
+                    assert(pr._range._lower <= _base[c._place]);
+                    assert(pr._range._upper >= _base[c._place]);
                     return;
                 }
                 else if(c._upper < _base[c._place])
                 {
-                    _ranges.find_or_add(c._place)._range._lower = c._upper+1;
+                    auto& pr = _ranges.find_or_add(c._place);
+                    pr._range._lower = std::max(c._upper+1, pr._range._lower);
+                    assert(pr._range._lower <= _base[c._place]);
+                    assert(pr._range._upper >= _base[c._place]);
                     return;
                 }
             }
             else
             {
-                _ranges.find_or_add(c._place)._range._lower = c._lower;
-                _ranges.find_or_add(c._place)._range._upper = c._upper;
-            }
+                auto& pr = _ranges.find_or_add(c._place);                
+                pr._range._lower = std::max(c._lower, pr._range._lower);
+                pr._range._upper = std::min(c._upper, pr._range._upper);
+                assert(pr._range._lower <= _base[c._place]);
+                assert(pr._range._upper >= _base[c._place]);
+            }            
         }
     }
 }
