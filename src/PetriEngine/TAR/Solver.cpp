@@ -163,22 +163,22 @@ namespace PetriEngine {
 #endif
                 auto pre = _net.preset(end.get_edge_cnt()-1);
                 uint64_t mx = 0;
+                placerange_t pr;
                 for(; pre.first != pre.second; ++pre.first)
                 {
                     assert(!pre.first->inhibitor);
                     assert(pre.first->tokens >= 1);
-                    if(_mark[pre.first->place] < pre.first->tokens && mx < _use_count[pre.first->place])
+                    if(_m[pre.first->place] < pre.first->tokens && mx < _use_count[pre.first->place])
                     {
 #ifndef NDEBUG
                         some = true;
                         assert(_mark[pre.first->place] < pre.first->tokens);
 #endif
-                        auto& npr = last.first.find_or_add(pre.first->place);
-                        assert(npr._place == pre.first->place);
-                        npr._range._upper = pre.first->tokens-1;
-                        break;
+                        pr._place = pre.first->place;
+                        pr._range._upper = pre.first->tokens-1;
                     }
                 }
+                last.first.find_or_add(pr._place) = pr;
                 assert(some);
             }
 #ifdef VERBOSETAR
