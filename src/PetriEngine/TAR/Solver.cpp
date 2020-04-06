@@ -28,6 +28,18 @@ namespace PetriEngine {
         {
                 _m = std::make_unique<int64_t[]>(_net.numberOfPlaces());
                 _mark = std::make_unique<MarkVal[]>(_net.numberOfPlaces());    
+                _use_count = std::make_unique<uint64_t[]>(_net.numberOfPlaces());
+                for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                    if(inq[p])
+                        ++_use_count[p];
+                for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+                {
+                    auto [it, end] = _net.preset(t);
+                    for(; it != end; ++it)
+                    {
+                        ++_use_count[it->place];
+                    }
+                }
         }
         
         
@@ -132,7 +144,7 @@ namespace PetriEngine {
         {
             if(end.get_edge_cnt() == 0)
             {
-                RangeContext ctx(last.first, _mark.get(), _net);
+                RangeContext ctx(last.first, _mark.get(), _net, _use_count.get());
                 _query->visit(ctx);
 #ifdef VERBOSETAR
                 std::cerr << "TERMINAL IS Q" << std::endl;
@@ -150,20 +162,22 @@ namespace PetriEngine {
                 bool some = false;
 #endif
                 auto pre = _net.preset(end.get_edge_cnt()-1);
+                uint64_t mx = 0;
                 for(; pre.first != pre.second; ++pre.first)
                 {
                     assert(!pre.first->inhibitor);
                     assert(pre.first->tokens >= 1);
-                    if(pre.first->place != place)
-                        continue;
+                    if(_mark[pre.first->place] < pre.first->tokens && mx < _use_count[pre.first->place])
+                    {
 #ifndef NDEBUG
-                    some = true;
-                    assert(_mark[pre.first->place] < pre.first->tokens);
+                        some = true;
+                        assert(_mark[pre.first->place] < pre.first->tokens);
 #endif
-                    auto& npr = last.first.find_or_add(pre.first->place);
-                    assert(npr._place == pre.first->place);
-                    npr._range._upper = pre.first->tokens-1;
-                    break;
+                        auto& npr = last.first.find_or_add(pre.first->place);
+                        assert(npr._place == pre.first->place);
+                        npr._range._upper = pre.first->tokens-1;
+                        break;
+                    }
                 }
                 assert(some);
             }

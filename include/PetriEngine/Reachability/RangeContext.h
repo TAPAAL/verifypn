@@ -25,8 +25,8 @@ namespace PetriEngine
     using namespace PQL;
     class RangeContext {
     public:
-        RangeContext(prvector_t& vector, MarkVal* base, const PetriNet& net)
-        : _ranges(vector), _base(base), _net(net) {}
+        RangeContext(prvector_t& vector, MarkVal* base, const PetriNet& net, const uint64_t* uses)
+        : _ranges(vector), _base(base), _net(net), _uses(uses) {}
         
         template<typename T>
         void accept(T element)
@@ -50,6 +50,7 @@ namespace PetriEngine
         prvector_t& _ranges;
         MarkVal* _base;
         const PetriNet& _net;
+        const uint64_t* _uses;
         int64_t _limit = 0;
         bool _lt = false;
     };
@@ -160,6 +161,8 @@ namespace PetriEngine
     inline void RangeContext::_accept(const DeadlockCondition* element)
     {
         assert(!element->isSatisfied());
+        uint64_t priority = 0;
+        size_t cand = 0;
         for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
         {
             auto pre = _net.preset(t);
@@ -174,6 +177,20 @@ namespace PetriEngine
             }
             if(!ok) continue;
             pre = _net.preset(t);
+            uint64_t sum = 0;
+            for(; pre.first != pre.second; ++pre.first)
+            {
+                sum += _uses[pre.first->place];
+            }
+            if(sum > priority)
+            {
+                priority = sum;
+                cand = t;
+            }
+        }
+        
+        if(priority != 0) {
+            auto pre = _net.preset(cand);
             for(; pre.first != pre.second; ++pre.first)
             {
                 auto& pr = _ranges.find_or_add(pre.first->place);
@@ -183,6 +200,7 @@ namespace PetriEngine
             }
             return;
         }
+        
         assert(false);
     }
     
@@ -191,35 +209,56 @@ namespace PetriEngine
     {
         assert(!element->isSatisfied());
         bool disjunction = element->isNegated();
+        placerange_t pr;
+        uint64_t priority = 0;
         for(auto& c : element->constraints())
         {
             if(!disjunction)
             {
                 if(c._lower > _base[c._place])
                 {
-                    auto& pr = _ranges.find_or_add(c._place);
-                    pr._range._upper = std::min(c._lower-1, pr._range._upper);
-                    assert(pr._range._lower <= _base[c._place]);
-                    assert(pr._range._upper >= _base[c._place]);
-                    return;
+                    auto& added = _ranges.find_or_add(c._place);
+                    if(added._range._upper <= c._lower-1)
+                        return;
+                    if(priority < _uses[c._place])
+                    {
+                        pr._place = c._place;
+                        pr._range._upper = c._lower-1;
+                        priority = _uses[c._place];
+                        assert(pr._range._lower <= _base[c._place]);
+                        assert(pr._range._upper >= _base[c._place]);
+                    }
                 }
                 else if(c._upper < _base[c._place])
                 {
-                    auto& pr = _ranges.find_or_add(c._place);
-                    pr._range._lower = std::max(c._upper+1, pr._range._lower);
-                    assert(pr._range._lower <= _base[c._place]);
-                    assert(pr._range._upper >= _base[c._place]);
-                    return;
+                    auto& added = _ranges.find_or_add(c._place);
+                    if(added._range._lower >= c._upper + 1)
+                        return;
+                    if(priority < _uses[c._place])
+                    {
+                        priority = _uses[c._place];
+                        pr._place = c._place;
+                        pr._range._lower = c._upper+1;
+                        pr._place = c._place;
+                        assert(pr._range._lower <= _base[c._place]);
+                        assert(pr._range._upper >= _base[c._place]);
+                    }
                 }
             }
             else
             {
-                auto& pr = _ranges.find_or_add(c._place);                
-                pr._range._lower = std::max(c._lower, pr._range._lower);
-                pr._range._upper = std::min(c._upper, pr._range._upper);
-                assert(pr._range._lower <= _base[c._place]);
-                assert(pr._range._upper >= _base[c._place]);
+                auto& added = _ranges.find_or_add(c._place);                
+                added._range._lower = std::max(c._lower, pr._range._lower);
+                added._range._upper = std::min(c._upper, pr._range._upper);
+                assert(added._range._lower <= _base[c._place]);
+                assert(added._range._upper >= _base[c._place]);
             }            
+        }
+        if(!disjunction)
+        {
+            assert(priority > 0);
+            _ranges.find_or_add(pr._place) = pr;
+            _ranges.compact();
         }
     }
 }
