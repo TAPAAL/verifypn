@@ -144,11 +144,11 @@ namespace PetriEngine {
         {
             if(end.get_edge_cnt() == 0)
             {
-                RangeContext ctx(last.first, _mark.get(), _net, _use_count.get());
+                RangeContext ctx(last.first, _mark.get(), _net, _use_count.get(), _mark.get());
                 _query->visit(ctx);
 #ifdef VERBOSETAR
                 std::cerr << "TERMINAL IS Q" << std::endl;
-                last.first.print(std::cerr) << std::endl;
+                //last.first.print(std::cerr) << std::endl;
 #endif
             }
             else

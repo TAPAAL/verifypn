@@ -25,8 +25,8 @@ namespace PetriEngine
     using namespace PQL;
     class RangeContext {
     public:
-        RangeContext(prvector_t& vector, MarkVal* base, const PetriNet& net, const uint64_t* uses)
-        : _ranges(vector), _base(base), _net(net), _uses(uses) {}
+        RangeContext(prvector_t& vector, MarkVal* base, const PetriNet& net, const uint64_t* uses, MarkVal* marking)
+        : _ranges(vector), _base(base), _net(net), _uses(uses), _marking(marking) {}
         
         template<typename T>
         void accept(T element)
@@ -53,6 +53,7 @@ namespace PetriEngine
         const uint64_t* _uses;
         int64_t _limit = 0;
         bool _lt = false;
+        MarkVal* _marking;
     };
 
     // for whatever reason, specialization is not picked up unless inlined here?!
@@ -68,23 +69,49 @@ namespace PetriEngine
     inline void RangeContext::_accept(const PetriEngine::PQL::AndCondition* element)
     {
         if(element->isSatisfied()) return;
+        EvaluationContext ctx(_marking, &_net);
+        prvector_t vect = _ranges;
+        prvector_t res;
+        size_t priority = std::numeric_limits<size_t>::max();
+        size_t sum = 0;
         for(auto& e : *element)
         {
-            if(!e->isSatisfied())
+            if(e->evalAndSet(ctx) == Condition::RFALSE)
             {
+                _ranges = vect;
                 e->visit(*this);
-                return;
+                if(_ranges._ranges.size() < priority)
+                {
+                    res = _ranges;
+                    priority = _ranges._ranges.size();
+                    sum = 0;
+                    for(auto& e : _ranges._ranges)
+                        sum += _uses[e._place];
+                }
+                else if (_ranges._ranges.size() == priority)
+                {
+                    size_t lsum = 0;
+                    for(auto& e : _ranges._ranges)
+                        lsum += _uses[e._place];
+                    if(lsum > sum)
+                    {
+                        res = _ranges;
+                        priority = _ranges._ranges.size();
+                        sum = lsum;                        
+                    }
+                }
             }
         }
+        _ranges = res;
     }
 
     template<>
     inline void RangeContext::_accept(const OrCondition* element)
     {
-        if(element->isSatisfied()) return;
+        // if(element->isSatisfied()) return;
         for(auto& e : *element)
         {
-            assert(!e->isSatisfied());
+            //assert(!e->isSatisfied());
             e->visit(*this);
         }
     }
