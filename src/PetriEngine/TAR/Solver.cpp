@@ -174,6 +174,7 @@ namespace PetriEngine {
                         some = true;
                         assert(_mark[pre.first->place] < pre.first->tokens);
 #endif
+                        pr = placerange_t();
                         pr._place = pre.first->place;
                         pr._range._upper = pre.first->tokens-1;
                     }

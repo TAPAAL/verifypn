@@ -222,6 +222,7 @@ namespace PetriEngine
                         return;
                     if(priority < _uses[c._place])
                     {
+                        pr = placerange_t();
                         pr._place = c._place;
                         pr._range._upper = c._lower-1;
                         priority = _uses[c._place];
@@ -236,6 +237,7 @@ namespace PetriEngine
                         return;
                     if(priority < _uses[c._place])
                     {
+                        pr = placerange_t();
                         priority = _uses[c._place];
                         pr._place = c._place;
                         pr._range._lower = c._upper+1;
