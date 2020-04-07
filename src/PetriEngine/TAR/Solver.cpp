@@ -133,6 +133,8 @@ namespace PetriEngine {
                                 first_fail = fail;
 //                                std::cerr << "FAIL " << fail << " : T" << t << std::endl;
                             }
+                            if(_inq[pre.first->place])
+                                return first_fail;
                         }
                     }
                     pre = _net.preset(t);
