@@ -43,9 +43,10 @@ namespace PetriEngine {
         }
         
         
-        std::pair<int64_t,int64_t> Solver::findFailure(trace_t& trace)
+        int64_t Solver::findFailure(trace_t& trace)
         {
             int64_t fail = 0;
+            int64_t first_fail = std::numeric_limits<decltype(first_fail)>::max();
             for(; fail < (int64_t)trace.size(); ++fail)
             {
                 state_t& s = trace[fail];
@@ -59,6 +60,8 @@ namespace PetriEngine {
 #endif
                     for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                     {
+                        if(_m[p] < 0)
+                            return first_fail;
                         _mark[p] = _m[p];
                     }
                     EvaluationContext ctx(_mark.get(), &_net);
@@ -90,12 +93,12 @@ namespace PetriEngine {
 
                     if(r == Condition::RTRUE)
                     {
-                        return std::make_pair(-1, std::numeric_limits<decltype(fail)>::max());
+                        return std::numeric_limits<decltype(fail)>::max();
                     }
                     else
                     {
                         assert(r == Condition::RFALSE);
-                        return std::make_pair(-1, fail);
+                        return fail;
                     }
                 }
                 else
@@ -103,14 +106,21 @@ namespace PetriEngine {
                     --t;
                     auto pre = _net.preset(t);
 #ifndef NDEBUG
-                    for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                            assert(_mark[p] == _m[p]);
+                    if(first_fail > fail)
+                    {
+                        for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                                assert(_mark[p] == _m[p]);
+                    }
 #endif
                     for(; pre.first != pre.second; ++pre.first)
                     {
                         _m[pre.first->place] -= pre.first->tokens;
                         if(_m[pre.first->place] < 0)
-                            return std::make_pair(pre.first->place, fail);
+                        {
+                            first_fail = std::min(fail, first_fail);
+                            if(_inq[pre.first->place])
+                                return fail;
+                        }
                     }
                     auto post = _net.postset(t);
                     for(; post.first != post.second; ++post.first)
@@ -118,29 +128,32 @@ namespace PetriEngine {
                         _m[post.first->place] += post.first->tokens;
                     }
 #ifndef NDEBUG
-                    Structures::State s;
-                    s.setMarking(_mark.get());
-                    _gen.prepare(&s);
-                    if(_gen.checkPreset(t))
+                    if(first_fail > fail)
                     {
-                        _gen.consumePreset(s, t);
-                        _gen.producePostset(s, t);
+                        Structures::State s;
+                        s.setMarking(_mark.get());
+                        _gen.prepare(&s);
+                        if(_gen.checkPreset(t))
+                        {
+                            _gen.consumePreset(s, t);
+                            _gen.producePostset(s, t);
+                        }
+                        else
+                        {
+                            assert(false);
+                        }
+                        for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                            assert(_mark[p] == _m[p]);
+                        s.setMarking(nullptr);
                     }
-                    else
-                    {
-                        assert(false);
-                    }
-                    for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                        assert(_mark[p] == _m[p]);
-                    s.setMarking(nullptr);
 #endif
                 }
             }
             assert(false);
-            return std::make_pair(-1, -1);
+            return -1;
         }
         
-        void Solver::computeTerminal(state_t& end, inter_t& last, int64_t place)
+        void Solver::computeTerminal(state_t& end, inter_t& last)
         {
             if(end.get_edge_cnt() == 0)
             {
@@ -153,7 +166,6 @@ namespace PetriEngine {
             }
             else
             {
-                assert(place != -1);
 #ifdef VERBOSETAR
                 std::cerr << "TERMINAL IS T" << (end.get_edge_cnt()-1) << std::endl;
 #endif
@@ -172,7 +184,6 @@ namespace PetriEngine {
                     {
 #ifndef NDEBUG
                         some = true;
-                        assert(_mark[pre.first->place] < pre.first->tokens);
 #endif
                         pr = placerange_t();
                         pr._place = pre.first->place;
@@ -198,15 +209,48 @@ namespace PetriEngine {
                 bool touches = false;
                 auto t = s.get_edge_cnt()-1;
                 auto post = _net.postset(t);
+                auto pre = _net.preset(t);
+//                std::cerr << "T" << t << "\n";
                 for(; post.first != post.second; ++post.first)
                 {
                     auto* pr = ranges[fail+1].first[post.first->place];
                     if(pr == nullptr || pr->_range.unbound()) continue;
-                    ranges[fail].first.find_or_add(post.first->place) -= post.first->tokens;
+                    for(; pre.first != pre.second; ++pre.first)
+                    {
+                        if(pre.first->place < post.first->place)
+                        {
+                            auto* prerange = ranges[fail+1].first[pre.first->place];
+                            if(prerange == nullptr || prerange->_range.unbound()) continue;
+                            ranges[fail].first.find_or_add(pre.first->place) += pre.first->tokens;
+                            touches = true;
+//                            std::cerr << "\tP" << pre.first->place << " -" << pre.first->tokens << std::endl;
+                        }
+                        else break;
+                    }
+                    if(pre.first == pre.second || pre.first->place != post.first->place)
+                    {
+//                        std::cerr << "\tP" << pre.first->place << " +" << post.first->tokens << std::endl;
+                        ranges[fail].first.find_or_add(post.first->place) -= post.first->tokens;   
+                    }
+                    else
+                    {
+                        if(pre.first->direction < 0)
+                        {
+                            assert(pre.first->tokens > post.first->tokens);
+                            ranges[fail].first.find_or_add(post.first->place) += (pre.first->tokens - post.first->tokens);
+//                            std::cerr << "\tP" << pre.first->place << " -" << (pre.first->tokens - post.first->tokens) << std::endl;
+                        }
+                        else
+                        {
+                            assert(pre.first->tokens <= post.first->tokens);
+                            ranges[fail].first.find_or_add(post.first->place) -= (post.first->tokens - pre.first->tokens);
+//                            std::cerr << "\tP" << pre.first->place << " +" << (pre.first->tokens - post.first->tokens) << std::endl;
+                        }
+                    }
                     touches = true;
                 }
 
-                auto pre = _net.preset(t);
+                // handles rest
                 for(; pre.first != pre.second; ++pre.first)
                 {
                     assert(!pre.first->inhibitor);
@@ -214,6 +258,7 @@ namespace PetriEngine {
                     auto* pr = ranges[fail+1].first[pre.first->place];
                     if(pr == nullptr || pr->_range.unbound()) continue;
                     ranges[fail].first.find_or_add(pre.first->place) += pre.first->tokens;
+//                    std::cerr << "\tP" << pre.first->place << " -" << pre.first->tokens << std::endl;
                     touches |= true;
                 }
                 ranges[fail].second = touches;
@@ -239,14 +284,14 @@ namespace PetriEngine {
                 _m[p] = _initial[p];
                 _mark[p] = _m[p];
             }
-            auto [place, fail] = findFailure(trace);
+            auto fail = findFailure(trace);
             interpolant_t ranges;
             if(fail == std::numeric_limits<decltype(fail)>::max())
             {
                 return std::make_pair(true, std::move(ranges));
             }
             ranges.resize(fail+1);
-            computeTerminal(trace[fail], ranges.back(), place);
+            computeTerminal(trace[fail], ranges.back());
             computeHoare(trace, ranges, fail-1);
             assert(!ranges.empty());
             return std::make_pair(false, std::move(ranges));
