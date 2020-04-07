@@ -84,8 +84,13 @@ namespace PetriEngine {
                 if(_upper != std::numeric_limits<uint32_t>::max())
                 {
                     if(_upper < std::numeric_limits<uint32_t>::min()+val)
+                    {
                         assert(false);
-                    _upper -= val;
+                    }
+                    else
+                    {
+                        _upper -= val;
+                    }
                 }
                 return *this;
             }

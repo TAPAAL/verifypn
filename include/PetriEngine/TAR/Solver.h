@@ -37,6 +37,7 @@ namespace PetriEngine {
             Condition* _query;
             std::vector<bool> _inq;
             std::unique_ptr<int64_t[]> _m;
+            std::unique_ptr<int64_t[]> _failm;
             std::unique_ptr<MarkVal[]> _mark;
             std::unique_ptr<uint64_t[]> _use_count;
 #ifndef NDEBUG
