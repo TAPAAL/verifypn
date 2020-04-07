@@ -141,7 +141,7 @@ namespace PetriEngine {
                     {
                         auto some = _traceset.addTrace(waiting, interpolants);
                         assert(some || !all_covered);
-                        if(!some)
+                        //if(!some)
                             return std::make_pair(false, false);
                         handleInvalidTrace(waiting, interpolants.size());
                         all_covered = false;

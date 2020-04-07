@@ -43,7 +43,7 @@ namespace PetriEngine {
             }
             
             // make total order
-            uint64_t mn = std::numeric_limits<decltype(mn)>::max();
+            /*uint64_t mn = std::numeric_limits<decltype(mn)>::max();
             for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
             {
                 mn = std::min(mn, _use_count[p]);
@@ -74,7 +74,7 @@ namespace PetriEngine {
                     }
                 }
                 mn = next;
-            }
+            }*/
         }
         
         
@@ -169,7 +169,7 @@ namespace PetriEngine {
                                 old_place = pre.first->place;
 //                                std::cerr << "FAIL " << fail << " : T" << t << std::endl;
                             }
-                            //if(_inq[pre.first->place])
+                            if(_inq[pre.first->place])
                                 return first_fail;
                         }
                     }
