@@ -64,7 +64,7 @@ namespace PetriEngine {
         bool TARReachabilitySearch::popDone(trace_t& waiting, size_t& stepno)
         {
             bool popped = false;
-            while(waiting.back().get_edge_cnt() > _net.numberOfTransitions()) // we have tried all transitions for this state-pair!
+            while(waiting.back().done(_net)) // we have tried all transitions for this state-pair!
             {
                 assert(waiting.size() > 0);
                 waiting.pop_back(); 
@@ -151,7 +151,7 @@ namespace PetriEngine {
                 else
                 {
 #ifdef VERBOSETAR
-//                    printStats();
+                    printStats();
 #endif
                     nextEdge(checked, state, waiting, std::move(nextinter));
                 }
@@ -234,7 +234,7 @@ namespace PetriEngine {
             for(; n < transitions.size(); ++n)
             {
                 auto t = transitions[n];
-                s.get_edge_cnt() = t+1;
+                s.set_edge(t+1);
                 next.clear();
                 if(n == transitions.size()-1)
                     dummy = 0;
@@ -248,7 +248,7 @@ namespace PetriEngine {
                     std::cerr << "FAIL AT [" << n << "] = T" << transitions[n] << std::endl;
                 }
             }
-            s.get_edge_cnt() = 0;
+            s.set_edge(0);
             if(doStep(s, next))
                 return false;
             return true;

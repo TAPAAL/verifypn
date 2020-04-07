@@ -247,12 +247,14 @@ namespace PetriEngine {
         {
 
         private:
+            size_t offset;
+            size_t size;
             size_t edgecnt; 
             std::vector<size_t> interpolant;
         public:
             bool operator == (const state_t& other)
             {
-                if((edgecnt == 0) != (other.edgecnt == 0)) return false;
+//                if((get_edge_cnt() == 0) != (other.get_edge_cnt() == 0)) return false;
                 if( interpolant.size() == other.interpolant.size() &&
                     std::equal( interpolant.begin(),        interpolant.end(), 
                                 other.interpolant.begin(),  other.interpolant.end()))
@@ -269,7 +271,7 @@ namespace PetriEngine {
 
             bool operator <= (const state_t& other)
             {
-                if((edgecnt == 0) != (other.edgecnt == 0)) return false;
+//                if((get_edge_cnt() == 0) != (other.get_edge_cnt() == 0)) return false;
                 if( interpolant.size() <= other.interpolant.size() &&
                     std::includes(other.interpolant.begin(), other.interpolant.end(),
                                   interpolant.begin(), interpolant.end()))
@@ -279,20 +281,35 @@ namespace PetriEngine {
                 return false;
             }
 
-            size_t& get_edge_cnt()
+            size_t get_edge_cnt()
             {
-                return edgecnt;
+                if(edgecnt == 0)
+                    return 0;
+                else
+                    return 1 + ((edgecnt + offset) % size);
             }
 
+            void set_edge(size_t edge)
+            {
+                edgecnt = edge;
+                offset = 0;
+            }
+            
             bool next_edge(const PetriNet& net)
             {
                 ++edgecnt;
+                return done(net);
+            }
+            
+            bool done(const PetriNet& net) const {
                 return edgecnt > net.numberOfTransitions();
             }
 
             bool reset_edges(const PetriNet& net)
             {
+                size = net.numberOfTransitions();
                 edgecnt = 0;
+                offset = std::rand() % (net.numberOfTransitions());
                 return edgecnt > net.numberOfTransitions();
             }
 

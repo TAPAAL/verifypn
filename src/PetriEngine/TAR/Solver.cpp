@@ -26,21 +26,55 @@ namespace PetriEngine {
         , _gen(_net)
 #endif
         {
-                _m = std::make_unique<int64_t[]>(_net.numberOfPlaces());
-                _failm = std::make_unique<int64_t[]>(_net.numberOfPlaces());
-                _mark = std::make_unique<MarkVal[]>(_net.numberOfPlaces());    
-                _use_count = std::make_unique<uint64_t[]>(_net.numberOfPlaces());
-                for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                    if(inq[p])
-                        ++_use_count[p];
-                for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+            _m = std::make_unique<int64_t[]>(_net.numberOfPlaces());
+            _failm = std::make_unique<int64_t[]>(_net.numberOfPlaces());
+            _mark = std::make_unique<MarkVal[]>(_net.numberOfPlaces());    
+            _use_count = std::make_unique<uint64_t[]>(_net.numberOfPlaces());
+            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                if(inq[p])
+                    ++_use_count[p];
+            for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+            {
+                auto [it, end] = _net.preset(t);
+                for(; it != end; ++it)
                 {
-                    auto [it, end] = _net.preset(t);
-                    for(; it != end; ++it)
+                    _use_count[it->place] += _net.numberOfTransitions();
+                }
+            }
+            
+            // make total order
+            uint64_t mn = std::numeric_limits<decltype(mn)>::max();
+            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+            {
+                mn = std::min(mn, _use_count[p]);
+            }
+            bool changed = true;
+            while(changed)
+            {
+                changed = false;
+                uint64_t next = std::numeric_limits<decltype(next)>::max();
+                bool found = false;
+                for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                {
+                    if(_use_count[p] > mn)
                     {
-                        ++_use_count[it->place];
+                        _use_count[p] += 2;
+                        next = std::min(_use_count[p], next);
+                        changed = true;
+                    }
+                    else if(_use_count[p] == mn)
+                    {
+                        if(found)
+                        {
+                            _use_count[p] += 1;
+                            next = _use_count[p];
+                            changed = true;
+                        }
+                        else found = true;
                     }
                 }
+                mn = next;
+            }
         }
         
         
@@ -48,6 +82,7 @@ namespace PetriEngine {
         {
             int64_t fail = 0;
             int64_t first_fail = std::numeric_limits<decltype(first_fail)>::max();
+            int64_t old_place = -1;
             for(; fail < (int64_t)trace.size(); ++fail)
             {
                 state_t& s = trace[fail];
@@ -122,18 +157,19 @@ namespace PetriEngine {
                             std::cerr << "P" << p << "<" << _m[p] << ">,";
                     }
                     std::cerr << std::endl;
- */
+*/ 
                     for(; pre.first != pre.second; ++pre.first)
                     {
                         if(_m[pre.first->place] < pre.first->tokens)
                         {
-                            if(fail < first_fail)
+                            if(fail < first_fail/* || _use_count[pre.first->place] > _use_count[old_place]*/)
                             {
                                 std::copy(_m.get(), _m.get() + _net.numberOfPlaces(), _failm.get());
                                 first_fail = fail;
+                                old_place = pre.first->place;
 //                                std::cerr << "FAIL " << fail << " : T" << t << std::endl;
                             }
-                            if(_inq[pre.first->place])
+                            //if(_inq[pre.first->place])
                                 return first_fail;
                         }
                     }
