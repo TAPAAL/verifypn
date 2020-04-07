@@ -81,7 +81,7 @@ namespace PetriEngine {
 
         void TARReachabilitySearch::nextEdge(AntiChain<uint32_t, size_t>& checked, state_t& state, trace_t& waiting, std::vector<size_t>&& nextinter)
         {
-            uint32_t dummy = state.get_edge_cnt() == 0 ? 0 : 1;
+            uint32_t dummy = state.get_edge_cnt() == 0 ? 0 : 0;
             state_t next;
             bool res = checked.subsumed(dummy, nextinter);
             if(res)
@@ -228,7 +228,7 @@ namespace PetriEngine {
             state_t s;
             s.set_interpolants(_traceset.minimize(_traceset.initial()));
             std::vector<size_t> next;
-            uint32_t dummy = 1;
+            uint32_t dummy = 0;
             chain.insert(dummy, s.get_interpolants());
             size_t n = 0;
             for(; n < transitions.size(); ++n)

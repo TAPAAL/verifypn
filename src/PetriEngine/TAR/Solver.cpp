@@ -94,6 +94,8 @@ namespace PetriEngine {
 
                     if(r == Condition::RTRUE)
                     {
+                        if(first_fail != std::numeric_limits<decltype(first_fail)>::max())
+                            return first_fail;
                         return std::numeric_limits<decltype(fail)>::max();
                     }
                     else
@@ -263,6 +265,7 @@ namespace PetriEngine {
                             ranges[fail].first.find_or_add(post.first->place) -= (post.first->tokens - pre.first->tokens);
 //                            std::cerr << "\t4P" << pre.first->place << " +" << (pre.first->tokens - post.first->tokens) << std::endl;
                         }
+                        ++pre.first;
                     }
                     touches = true;
                 }
