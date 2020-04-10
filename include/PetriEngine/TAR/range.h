@@ -106,7 +106,6 @@ namespace PetriEngine {
 
                 if(_upper >= std::numeric_limits<uint32_t>::max()-val)
                 {
-                    assert(false);
                     _upper = std::numeric_limits<uint32_t>::max();
                 }
                 else
@@ -184,6 +183,20 @@ namespace PetriEngine {
                     return &(*lb);
                 }
             }
+
+            placerange_t* operator[](uint32_t place)
+            {
+                auto lb = std::lower_bound(_ranges.begin(), _ranges.end(), place);
+                if(lb == _ranges.end() || lb->_place != place)
+                {
+                    return nullptr;
+                }
+                else
+                {
+                    return &(*lb);
+                }
+            }
+
             
             placerange_t& find_or_add(uint32_t place)
             {

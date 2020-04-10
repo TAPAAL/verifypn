@@ -76,6 +76,98 @@ namespace PetriEngine {
                 mn = next;
             }*/
         }
+
+        
+        void Solver::backwards(trace_t& trace)
+        {
+            auto working = _qvar;
+            std::cerr << "BACK" << std::endl;
+            for(int64_t step = trace.size()-1; step >= 0; --step)
+            {
+                state_t& s = trace[step];
+                auto t = s.get_edge_cnt();
+                if(t == 0) {
+                    // skip
+                } 
+                else
+                {
+                    --t;
+                    if(working.empty()) return;
+                    for(int64_t q = working.size()-1; q >= 0; --q)
+                    {
+                        auto& qv = working[q];
+                        auto pre = _net.preset(t);
+                        auto post = _net.postset(t);
+                        bool fail = false;
+                        for(; post.first != post.second; ++post.first)
+                        {
+                            while(pre.first != pre.second && pre.first->place < post.first->place)
+                            {
+                                auto it = qv[pre.first->place];
+                                if(it != nullptr) {
+                                    it->_range += pre.first->tokens;
+                                }
+                                ++pre.first;
+                            }
+                            if(pre.first == pre.second || pre.first->place != post.first->place)
+                            {
+                                auto it = qv[post.first->place];
+                                if(it == nullptr) continue;
+                                if(it->_range._upper < post.first->tokens)
+                                {
+                                    fail = true;
+                                    goto finish;
+                                }
+                                it->_range -= post.first->tokens;
+                            }
+                            else
+                            {
+                                assert(pre.first->place == post.first->place);
+                                auto it = qv[pre.first->place];
+                                if(it == nullptr) continue;
+                                if(pre.first->tokens >= post.first->tokens)
+                                {
+                                    it->_range += (pre.first->tokens - post.first->tokens);
+                                }
+                                else
+                                {
+                                    if(it->_range._upper < (post.first->tokens - pre.first->tokens))
+                                    {
+                                        fail = true;
+                                        goto finish;
+                                    }
+                                    it->_range -= (post.first->tokens - pre.first->tokens);
+                                }
+                            }
+                        }
+                        for(; pre.first != pre.second; ++pre.first)
+                        {
+                            auto it = qv[pre.first->place];
+                            if(it == nullptr) continue;
+                            it->_range += pre.first->tokens;                            
+                        }
+                        
+finish:
+                        if(fail)
+                        {
+                            working.erase(working.begin() + q);
+                        }
+                        else
+                        {
+                            qv.compact();
+                            if(qv.is_true())
+                            {
+                                std::cerr << "ERROR START AT T" << step << " " << trace.size() << std::endl;
+                                _qvar[q].print(std::cerr) << std::endl;
+                                std::cerr << "\t\tEURIKA! : " << q << std::endl;
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         
         
         int64_t Solver::findFailure(trace_t& trace)
@@ -103,34 +195,40 @@ namespace PetriEngine {
                     EvaluationContext ctx(_mark.get(), &_net);
                     auto r = _query->evalAndSet(ctx);
 #ifndef NDEBUG 
-                    for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                    if(first_fail == std::numeric_limits<decltype(first_fail)>::max())
                     {
-                        _mark[p] = _initial[p];
-                    }
-                    for(auto& t : trace)
-                    {
-                        Structures::State s;
-                        s.setMarking(_mark.get());
-                        _gen.prepare(&s);
-                        if(t.get_edge_cnt() == 0)
-                            assert(_query->evaluate(ctx) == r);
-                        else if(_gen.checkPreset(t.get_edge_cnt()-1))
+                        for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                         {
-                            _gen.consumePreset(s, t.get_edge_cnt()-1);
-                            _gen.producePostset(s, t.get_edge_cnt()-1);
+                            _mark[p] = _initial[p];
                         }
-                        else
+                        for(auto& t : trace)
                         {
-                            assert(false);
+                            Structures::State s;
+                            s.setMarking(_mark.get());
+                            _gen.prepare(&s);
+                            if(t.get_edge_cnt() == 0)
+                                assert(_query->evaluate(ctx) == r);
+                            else if(_gen.checkPreset(t.get_edge_cnt()-1))
+                            {
+                                _gen.consumePreset(s, t.get_edge_cnt()-1);
+                                _gen.producePostset(s, t.get_edge_cnt()-1);
+                            }
+                            else
+                            {
+                                assert(false);
+                            }
+                            s.setMarking(nullptr);
                         }
-                        s.setMarking(nullptr);
                     }
 #endif
 
                     if(r == Condition::RTRUE)
                     {
                         if(first_fail != std::numeric_limits<decltype(first_fail)>::max())
+                        {
+                            std::cerr << "## TRUE" << std::endl;
                             return first_fail;
+                        }
                         return std::numeric_limits<decltype(fail)>::max();
                     }
                     else
@@ -170,7 +268,12 @@ namespace PetriEngine {
 //                                std::cerr << "FAIL " << fail << " : T" << t << std::endl;
                             }
                             if(_inq[pre.first->place])
+                            {
+                                std::cerr << "## INQ" << std::endl;
+                                backwards(trace);
+                                
                                 return first_fail;
+                            }
                         }
                     }
                     pre = _net.preset(t);
@@ -219,6 +322,20 @@ namespace PetriEngine {
                 std::cerr << "TERMINAL IS Q" << std::endl;
                 //last.first.print(std::cerr) << std::endl;
 #endif
+                bool found = false;
+                for(auto& qv : _qvar)
+                {
+                    if(qv == last.first) {
+                        found = true;
+                        break;
+                    }
+                }
+                if(!found)
+                {
+                    std::cerr << "NEW : ";
+                    last.first.print(std::cerr) << std::endl;
+                    _qvar.push_back(last.first);
+                }
             }
             else
             {
@@ -334,9 +451,10 @@ namespace PetriEngine {
 #endif
             }            
         }
-        
+        size_t cnt = 0;
         std::pair<bool,Solver::interpolant_t> Solver::check(trace_t& trace)
         {
+            std::cerr << "SOLVE! " << (++cnt) << std::endl;
             for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
             {
                 _m[p] = _initial[p];

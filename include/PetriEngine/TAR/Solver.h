@@ -30,6 +30,7 @@ namespace PetriEngine {
             std::pair<bool,interpolant_t>  check(trace_t& trace);
         private:
             int64_t findFailure(trace_t& trace);
+            void backwards(trace_t& trace);
             void computeHoare(trace_t& trace, interpolant_t& ranges, int64_t fail);
             void computeTerminal(state_t& end, inter_t& last);
             PetriNet& _net;
@@ -40,6 +41,7 @@ namespace PetriEngine {
             std::unique_ptr<int64_t[]> _failm;
             std::unique_ptr<MarkVal[]> _mark;
             std::unique_ptr<uint64_t[]> _use_count;
+            std::vector<prvector_t> _qvar;
 #ifndef NDEBUG
             SuccessorGenerator _gen;
 #endif
