@@ -266,7 +266,7 @@ namespace PetriEngine
             // TODO back color here to remove non-accepting end-components.
         }
         
-        bool TraceSet::addTrace(trace_t& trace, std::vector<std::pair<prvector_t, bool>>&inter)
+        bool TraceSet::addTrace(std::vector<std::pair<prvector_t, size_t>>& inter)
         {
             assert(inter.size() > 0);
             bool some = false;
@@ -279,31 +279,34 @@ namespace PetriEngine
                 if (lb == std::end(_initial) || *lb != res.second) {
                     _initial.insert(lb, res.second);
                     some = true;
-                    trace[0].add_interpolant(res.second);
-                    assert(_initial == trace[0].get_interpolants());
+//                    trace[0].add_interpolant(res.second);
+//                    assert(_initial == trace[0].get_interpolants());
                 }
                 last = res.second;
+                inter[0].first.print(std::cerr) << std::endl;
             }
 #ifndef NDEBUG
             bool added_terminal = false;
 #endif
             for (size_t i = 0; i < inter.size(); ++i) {
                 size_t j = i + 1;
-
+                std::cerr << " >> T" << inter[i].second << " <<" << std::endl;
                 if (j == inter.size()) {
-                    some |= _states[last].add_edge(trace[i].get_edge_cnt(), 0);
+                    some |= _states[last].add_edge(inter[i].second, 0);
 #ifndef NDEBUG                    
                     added_terminal = true;
 #endif
+                    std::cerr << "FALSE" << std::endl;
                 }
                 else {
-                    if (!inter[i].second)
+                    inter[j].first.print(std::cerr) << std::endl;
+                    /*if (!inter[i].second)
                         trace[j].add_interpolant(last);
-                    else {
+                    else*/ {
                         auto res = stateForPredicate(inter[j].first);
                         some |= res.first;
                         assert(inter[i].second || res.second == last);
-                        some |= _states[last].add_edge(trace[i].get_edge_cnt(), res.second);
+                        some |= _states[last].add_edge(inter[i].second, res.second);
                         last = res.second;
                     }
                 }

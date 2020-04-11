@@ -314,14 +314,16 @@ finish:
         
         void Solver::computeTerminal(state_t& end, inter_t& last)
         {
+            last.second = end.get_edge_cnt();
             if(end.get_edge_cnt() == 0)
             {
                 RangeContext ctx(last.first, _mark.get(), _net, _use_count.get(), _mark.get());
                 _query->visit(ctx);
-#ifdef VERBOSETAR
+                last.first.compact();
+//#ifdef VERBOSETAR
                 std::cerr << "TERMINAL IS Q" << std::endl;
                 //last.first.print(std::cerr) << std::endl;
-#endif
+//#endif
                 bool found = false;
                 for(auto& qv : _qvar)
                 {
@@ -339,9 +341,9 @@ finish:
             }
             else
             {
-#ifdef VERBOSETAR
+//#ifdef VERBOSETAR
                 std::cerr << "TERMINAL IS T" << (end.get_edge_cnt()-1) << std::endl;
-#endif
+//#endif
                 
 #ifndef NDEBUG
                 bool some = false;
@@ -370,7 +372,6 @@ finish:
             std::cerr << "[FAIL] : ";
             last.first.print(std::cerr) << std::endl;
 #endif
-            last.second = true;
         }
 
         void Solver::computeHoare(trace_t& trace, interpolant_t& ranges, int64_t fail)
@@ -436,7 +437,7 @@ finish:
 //                    std::cerr << "\t5P" << pre.first->place << " -" << pre.first->tokens << std::endl;
                     touches |= true;
                 }
-                ranges[fail].second = touches;
+                ranges[fail].second = s.get_edge_cnt();
 #ifdef VERBOSETAR
                 if(ranges[fail].second)
                 {

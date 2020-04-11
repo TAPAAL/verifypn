@@ -25,7 +25,7 @@ namespace PetriEngine {
         class TraceSet {
         public:
             TraceSet(size_t max_vars);
-            bool addTrace(trace_t& trace, std::vector<std::pair<prvector_t,bool>>& inter);
+            bool addTrace(std::vector<std::pair<prvector_t,size_t>>& inter);
             void copyNonChanged(const std::vector<size_t>& from, const std::vector<int64_t>& modifiers, std::vector<size_t>& to) const;
             bool follow(const std::vector<size_t>& from, std::vector<size_t>& nextinter, size_t symbol);
             std::vector<size_t> maximize(const std::vector<size_t>& from);

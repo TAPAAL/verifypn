@@ -139,7 +139,7 @@ namespace PetriEngine {
                     }
                     else
                     {
-                        auto some = _traceset.addTrace(waiting, interpolants);
+                        auto some = _traceset.addTrace(interpolants);
                         assert(some || !all_covered);
                         //if(!some)
                             return std::make_pair(false, false);

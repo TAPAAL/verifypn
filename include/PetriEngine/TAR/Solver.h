@@ -24,7 +24,7 @@ namespace PetriEngine {
         using namespace PQL;
         class Solver {
         public:
-            using inter_t = std::pair<prvector_t, bool>;
+            using inter_t = std::pair<prvector_t, size_t>;
             using interpolant_t = std::vector<inter_t>;
             Solver(PetriNet& net, MarkVal* initial, Condition* query, std::vector<bool>& inq);
             std::pair<bool,interpolant_t>  check(trace_t& trace);
