@@ -10,9 +10,11 @@
  */
 
 #include "PetriEngine/TAR/Solver.h"
+#include "PetriEngine/TAR/RangeContext.h"
+#include "PetriEngine/TAR/RangeEvalContext.h"
+
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Contexts.h"
-#include "PetriEngine/Reachability/RangeContext.h"
 #include "PetriEngine/Reachability/ReachabilityResult.h"
 #include <memory>
 #include <vector>
@@ -77,98 +79,137 @@ namespace PetriEngine {
             }*/
         }
 
-        
-        void Solver::backwards(trace_t& trace)
+        Solver::interpolant_t Solver::findFree(trace_t& trace)
         {
-            auto working = _qvar;
-            std::cerr << "BACK" << std::endl;
-            for(int64_t step = trace.size()-1; step >= 0; --step)
+            assert(trace.back().get_edge_cnt() == 0);
+            for(int64_t step = ((int64_t)trace.size())-2; step >= 0; --step)
             {
-                state_t& s = trace[step];
-                auto t = s.get_edge_cnt();
-                if(t == 0) {
-                    // skip
-                } 
-                else
+                interpolant_t inter(2);
                 {
-                    --t;
-                    if(working.empty()) return;
-                    for(int64_t q = working.size()-1; q >= 0; --q)
+                    state_t& s = trace[step];
+                    inter[0].second = s.get_edge_cnt();
+                    auto t = s.get_edge_cnt() - 1;
+                    auto post = _net.postset(t);
+                    for(; post.first != post.second; ++post.first)
                     {
-                        auto& qv = working[q];
-                        auto pre = _net.preset(t);
-                        auto post = _net.postset(t);
-                        bool fail = false;
-                        for(; post.first != post.second; ++post.first)
+                        if(_inq[post.first->place])
                         {
-                            while(pre.first != pre.second && pre.first->place < post.first->place)
+                            auto& pr = inter.back().first.find_or_add(post.first->place);
+                            pr._range._lower = post.first->tokens;
+                        }
+                    }
+                    inter.back().first.compact();
+                    if(inter.back().first.is_true()) continue;
+                }
+
+                // OK, lets try to forward approximate result from here
+                {
+                    for(size_t f = step+1; f < trace.size(); ++f)
+                    {
+                        state_t& s = trace[f];
+                        auto t = s.get_edge_cnt();
+                        if(t == 0)
+                        {
+                            inter.back().second = 0;
+/*                            std::cerr << "BACK " << std::endl;
+                            // got check the query with the set!
+                            for(auto& in : inter)
                             {
-                                auto it = qv[pre.first->place];
-                                if(it != nullptr) {
-                                    it->_range += pre.first->tokens;
-                                }
-                                ++pre.first;
-                            }
-                            if(pre.first == pre.second || pre.first->place != post.first->place)
-                            {
-                                auto it = qv[post.first->place];
-                                if(it == nullptr) continue;
-                                if(it->_range._upper < post.first->tokens)
-                                {
-                                    fail = true;
-                                    goto finish;
-                                }
-                                it->_range -= post.first->tokens;
-                            }
-                            else
-                            {
-                                assert(pre.first->place == post.first->place);
-                                auto it = qv[pre.first->place];
-                                if(it == nullptr) continue;
-                                if(pre.first->tokens >= post.first->tokens)
-                                {
-                                    it->_range += (pre.first->tokens - post.first->tokens);
-                                }
+                                in.first.print(std::cerr) << std::endl;
+                                auto t = in.second;
+                                if( t == 0)
+                                    std::cerr << ">> Q << " << std::endl;
                                 else
+                                    std::cerr << ">> T" << (t-1) << " << " << std::endl;
+                            }*/
+                            RangeEvalContext ctx(inter.back().first, _net);
+                            inter.back().first.print(std::cerr) << std::endl;
+                            _query->visit(ctx);
+                            if(!ctx.satisfied())
+                            {
+                                std::cerr << "\n IS INVALID IN " << std::endl;
+                                // flush non-used
+                                for(auto& i : inter)
                                 {
-                                    if(it->_range._upper < (post.first->tokens - pre.first->tokens))
+                                    for(auto& r : i.first._ranges)
                                     {
-                                        fail = true;
-                                        goto finish;
+                                        if(!ctx.used_places()[r._place])
+                                        {
+                                            r._range.free();
+                                        }
+                                        assert(r._range.no_upper());
                                     }
-                                    it->_range -= (post.first->tokens - pre.first->tokens);
+                                    i.first.compact();
                                 }
+/*
+                                for(auto& in : inter)
+                                {
+                                    in.first.print(std::cerr) << std::endl;
+                                    auto t = in.second;
+                                    if( t == 0)
+                                        std::cerr << ">> Q << " << std::endl;
+                                    else
+                                        std::cerr << ">> T" << (t-1) << " << " << std::endl;
+                                }
+ */
+                                assert(!ctx.satisfied());
+                                return inter;
                             }
-                        }
-                        for(; pre.first != pre.second; ++pre.first)
-                        {
-                            auto it = qv[pre.first->place];
-                            if(it == nullptr) continue;
-                            it->_range += pre.first->tokens;                            
-                        }
-                        
-finish:
-                        if(fail)
-                        {
-                            working.erase(working.begin() + q);
+                            break;
                         }
                         else
                         {
-                            qv.compact();
-                            if(qv.is_true())
+                            inter.emplace_back();
+                            inter[inter.size()-2].second = t;
+                            inter.back().first = inter[inter.size()-2].first;
+                            auto& range = inter.back().first;
+                            --t;
+                            auto pre = _net.preset(t);
+                            for(; pre.first != pre.second; ++pre.first)
                             {
-                                std::cerr << "ERROR START AT T" << step << " " << trace.size() << std::endl;
-                                _qvar[q].print(std::cerr) << std::endl;
-                                std::cerr << "\t\tEURIKA! : " << q << std::endl;
-                                return;
+                                if(_inq[pre.first->place])
+                                {
+                                    auto it = range[pre.first->place];
+                                    if(it == nullptr) continue;
+                                    if(it->_range._lower <= pre.first->tokens)
+                                    {
+                                        // free backwards
+                                        for(auto& tmp : inter)
+                                        {
+                                            auto it = tmp.first[pre.first->place];
+                                            if(it)
+                                            {
+                                                it->_range._lower = 0;
+                                                tmp.first.compact();
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        it->_range._lower -= pre.first->tokens;
+                                    }
+                                }
+                            }
+                            
+                            auto post = _net.postset(t);
+                            for(; post.first != post.second; ++post.first)
+                            {
+                                if(_inq[post.first->place])
+                                {
+                                    auto& pr = range.find_or_add(post.first->place);
+                                    if(pr._range._lower == 0)
+                                        pr._range._lower = post.first->tokens;
+                                    else
+                                        pr._range._lower += post.first->tokens;
+                                }
                             }
                         }
+                        inter.back().first.compact();
                     }
                 }
             }
+            return {};
         }
-
-        
         
         int64_t Solver::findFailure(trace_t& trace)
         {
@@ -226,7 +267,6 @@ finish:
                     {
                         if(first_fail != std::numeric_limits<decltype(first_fail)>::max())
                         {
-                            std::cerr << "## TRUE" << std::endl;
                             return first_fail;
                         }
                         return std::numeric_limits<decltype(fail)>::max();
@@ -270,8 +310,6 @@ finish:
                             if(_inq[pre.first->place])
                             {
                                 std::cerr << "## INQ" << std::endl;
-                                backwards(trace);
-                                
                                 return first_fail;
                             }
                         }
@@ -456,6 +494,13 @@ finish:
         std::pair<bool,Solver::interpolant_t> Solver::check(trace_t& trace)
         {
             std::cerr << "SOLVE! " << (++cnt) << std::endl;
+            auto back_inter = findFree(trace);
+#ifdef NDEBUG
+            if(!back_inter.empty())
+            {
+                return std::make_pair(false, std::move(back_inter));
+            }
+#endif
             for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
             {
                 _m[p] = _initial[p];
@@ -465,12 +510,20 @@ finish:
             interpolant_t ranges;
             if(fail == std::numeric_limits<decltype(fail)>::max())
             {
+                assert(back_inter.empty());
                 return std::make_pair(true, std::move(ranges));
             }
             ranges.resize(fail+1);
             computeTerminal(trace[fail], ranges.back());
             computeHoare(trace, ranges, fail-1);
             assert(!ranges.empty());
+#ifndef NDEBUG
+            if(!back_inter.empty())
+            {
+                std::cerr << "BACKWARDS SOLVED" << std::endl;
+                return std::make_pair(false, std::move(back_inter));
+            }
+#endif
             return std::make_pair(false, std::move(ranges));
         }
     }

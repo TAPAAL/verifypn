@@ -20,10 +20,12 @@
 
 #ifndef TARREACHABILITY_H
 #define TARREACHABILITY_H
-#include "ReachabilitySearch.h"
-#include "../TAR/TARAutomata.h"
-#include "PetriEngine/TAR/TraceSet.h"
-#include "PetriEngine/TAR/AntiChain.h"
+#include "TARAutomata.h"
+#include "TraceSet.h"
+#include "AntiChain.h"
+
+#include "PetriEngine/Reachability/ReachabilitySearch.h"
+
 
 namespace PetriEngine {
     namespace Reachability {

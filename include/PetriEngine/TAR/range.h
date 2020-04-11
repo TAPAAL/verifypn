@@ -41,9 +41,16 @@ namespace PetriEngine {
             bool unbound() const {
                 return no_lower() && no_upper();
             }
+            
+            void free() 
+            {
+                _upper = std::numeric_limits<uint32_t>::max();
+                _lower = std::numeric_limits<uint32_t>::min();
+            }
+            
             std::ostream& print(std::ostream& os) const {
                 if(no_lower())
-                    os << "[-inf";
+                    os << "[0";
                 else
                     os << "[" << _lower;
                 os << ", ";

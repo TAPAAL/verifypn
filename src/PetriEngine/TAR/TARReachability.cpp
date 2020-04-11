@@ -23,8 +23,8 @@
 #include "PetriEngine/TAR/AntiChain.h"
 #include "PetriEngine/Structures/State.h"
 #include "PetriEngine/PetriNetBuilder.h"
-#include "PetriEngine/Reachability/TARReachability.h"
-#include "PetriEngine/Reachability/RangeContext.h"
+#include "PetriEngine/TAR/TARReachability.h"
+#include "PetriEngine/TAR/RangeContext.h"
 #include "PetriEngine/TAR/Solver.h"
 
 

@@ -52,7 +52,7 @@
 #include "PetriEngine/PQL/PQLParser.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/Reachability/ReachabilitySearch.h"
-#include "PetriEngine/Reachability/TARReachability.h"
+#include "PetriEngine/TAR/TARReachability.h"
 #include "PetriEngine/Reducer.h"
 #include "PetriParse/QueryXMLParser.h"
 #include "PetriParse/QueryBinaryParser.h"

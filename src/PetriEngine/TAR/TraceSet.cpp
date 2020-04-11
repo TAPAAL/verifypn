@@ -283,23 +283,23 @@ namespace PetriEngine
 //                    assert(_initial == trace[0].get_interpolants());
                 }
                 last = res.second;
-                inter[0].first.print(std::cerr) << std::endl;
+//                inter[0].first.print(std::cerr) << std::endl;
             }
 #ifndef NDEBUG
             bool added_terminal = false;
 #endif
             for (size_t i = 0; i < inter.size(); ++i) {
                 size_t j = i + 1;
-                std::cerr << " >> T" << inter[i].second << " <<" << std::endl;
+//                std::cerr << " >> T" << inter[i].second << " <<" << std::endl;
                 if (j == inter.size()) {
                     some |= _states[last].add_edge(inter[i].second, 0);
 #ifndef NDEBUG                    
                     added_terminal = true;
 #endif
-                    std::cerr << "FALSE" << std::endl;
+//                    std::cerr << "FALSE" << std::endl;
                 }
                 else {
-                    inter[j].first.print(std::cerr) << std::endl;
+//                    inter[j].first.print(std::cerr) << std::endl;
                     /*if (!inter[i].second)
                         trace[j].add_interpolant(last);
                     else*/ {

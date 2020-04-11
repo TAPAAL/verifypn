@@ -37,8 +37,8 @@ namespace PetriEngine {
         class Member;
         struct Retval;
     }
-    class RangeContext;
     namespace PQL {
+        class Visitor;
         
         enum CTLType {PATHQEURY = 1, LOPERATOR = 2, EVAL = 3, TYPE_ERROR = -1};
         enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, COMPCONJ = 6, DEADLOCK = 7, UPPERBOUNDS = 8, PN_BOOLEAN = 9, EMPTY = -1 };
@@ -110,7 +110,7 @@ namespace PetriEngine {
             /** Evaluate the expression given marking and assignment */
             virtual int evaluate(const EvaluationContext& context) = 0;
             int evalAndSet(const EvaluationContext& context);
-            virtual void visit(RangeContext& visitor) const = 0;
+            virtual void visit(Visitor& visitor) const = 0;
             /** Convert expression to string */
             virtual void toString(std::ostream&) const = 0;
             /** Expression type */
@@ -208,7 +208,7 @@ namespace PetriEngine {
             /** Evaluate condition */
             virtual Result evaluate(const EvaluationContext& context) = 0;
             virtual Result evalAndSet(const EvaluationContext& context) = 0;
-            virtual void visit(RangeContext& visitor) const = 0;
+            virtual void visit(Visitor& visitor) const = 0;
             
             /** Convert condition to string */
             virtual void toString(std::ostream&) const = 0;

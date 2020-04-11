@@ -20,7 +20,7 @@
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/errorcodes.h"
-#include "PetriEngine/Reachability/RangeContext.h"
+#include "PetriEngine/PQL/Visitor.h"
 
 #include <sstream>
 #include <assert.h>
@@ -978,107 +978,107 @@ namespace PetriEngine {
         /******************** Range Contexts ********************/
 
 
-        void EGCondition::visit(RangeContext& ctx) const
+        void EGCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void EUCondition::visit(RangeContext& ctx) const
+        void EUCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
         
-        void EXCondition::visit(RangeContext& ctx) const
+        void EXCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
         
-        void EFCondition::visit(RangeContext& ctx) const
+        void EFCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void AUCondition::visit(RangeContext& ctx) const
+        void AUCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }        
 
-        void AXCondition::visit(RangeContext& ctx) const
+        void AXCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void AFCondition::visit(RangeContext& ctx) const
+        void AFCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         } 
 
-        void AGCondition::visit(RangeContext& ctx) const
+        void AGCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
         
-        void AndCondition::visit(RangeContext& ctx) const
+        void AndCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void OrCondition::visit(RangeContext& ctx) const
+        void OrCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void NotCondition::visit(RangeContext& ctx) const
+        void NotCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
         
-        void EqualCondition::visit(RangeContext& ctx) const
+        void EqualCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void NotEqualCondition::visit(RangeContext& ctx) const
+        void NotEqualCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void CompareConjunction::visit(RangeContext& ctx) const
+        void CompareConjunction::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
         
-        void GreaterThanOrEqualCondition::visit(RangeContext& ctx) const
+        void GreaterThanOrEqualCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void LessThanOrEqualCondition::visit(RangeContext& ctx) const
+        void LessThanOrEqualCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
         
-        void GreaterThanCondition::visit(RangeContext& ctx) const
+        void GreaterThanCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void LessThanCondition::visit(RangeContext& ctx) const
+        void LessThanCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
         
-        void BooleanCondition::visit(RangeContext& ctx) const
+        void BooleanCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
         
-        void DeadlockCondition::visit(RangeContext& ctx) const
+        void DeadlockCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void FireableCondition::visit(RangeContext& ctx) const
+        void FireableCondition::visit(Visitor& ctx) const
         {
             if(_compiled)
                 _compiled->visit(ctx);
@@ -1086,7 +1086,7 @@ namespace PetriEngine {
                 ctx.accept<decltype(this)>(this);
         }
 
-        void UpperBoundsCondition::visit(RangeContext& ctx) const
+        void UpperBoundsCondition::visit(Visitor& ctx) const
         {
             if(_compiled)
                 _compiled->visit(ctx);
@@ -1094,7 +1094,7 @@ namespace PetriEngine {
                 ctx.accept<decltype(this)>(this);
         }
         
-        void UnfoldedFireableCondition::visit(RangeContext& ctx) const
+        void UnfoldedFireableCondition::visit(Visitor& ctx) const
         {
             if(_compiled)
                 _compiled->visit(ctx);
@@ -1103,17 +1103,17 @@ namespace PetriEngine {
         }
 
                
-        void UnfoldedUpperBoundsCondition::visit(RangeContext& ctx) const
+        void UnfoldedUpperBoundsCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
         
-        void LiteralExpr::visit(RangeContext& ctx) const
+        void LiteralExpr::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void IdentifierExpr::visit(RangeContext& ctx) const
+        void IdentifierExpr::visit(Visitor& ctx) const
         {
             if(_compiled)
                 _compiled->visit(ctx);
@@ -1121,27 +1121,27 @@ namespace PetriEngine {
                 ctx.accept<decltype(this)>(this);
         }
 
-        void UnfoldedIdentifierExpr::visit(RangeContext& ctx) const
+        void UnfoldedIdentifierExpr::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void MinusExpr::visit(RangeContext& ctx) const
+        void MinusExpr::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void SubtractExpr::visit(RangeContext& ctx) const
+        void SubtractExpr::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void PlusExpr::visit(RangeContext& ctx) const
+        void PlusExpr::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
 
-        void MultiplyExpr::visit(RangeContext& ctx) const
+        void MultiplyExpr::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
