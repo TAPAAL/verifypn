@@ -108,7 +108,8 @@ namespace PetriEngine
         }
         else
         {
-            assert(false);
+            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                _sufficient &= placerange_t(p, 0, 0);
         }
     }
     
@@ -217,9 +218,11 @@ namespace PetriEngine
     
     void RangeEvalContext::_accept(const PlusExpr* element)
     {
-        int64_t _low_sum = 0;
-        int64_t _high_sum = 0;
-        assert(false);
+        for(auto& e : element->expressions())
+            e->visit(*this);
+        _literal += element->constant();
+        for(auto p :  element->places())
+            _places.push_back(p.first);
     }    
 }
 

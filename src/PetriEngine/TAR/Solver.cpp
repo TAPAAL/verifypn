@@ -125,8 +125,9 @@ namespace PetriEngine {
                             RangeEvalContext ctx(inter.back().first, _net, _use_count.get());
                             //inter.back().first.print(std::cerr) << std::endl;
                             _query->visit(ctx);
-                            if(!ctx.satisfied())
+                            if(!ctx.satisfied() && !ctx.constraint().is_false(_net.numberOfPlaces()))
                             {
+                                
 /*                                std::cerr << "\n\nBETTER\n";
                                 ctx.constraint().print(std::cerr) << std::endl;
                                 inter.back().first.print(std::cerr) << std::endl;                              
