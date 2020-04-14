@@ -169,7 +169,25 @@ namespace PetriEngine
                     assert(e.first == _states[e.second].interpolant);
                 }
 #endif
+                bool ok = true;
+                for(auto& r : predicate._ranges)
+                {
 
+                    if(_net.initial()[r._place] > r._range._upper ||
+                       _net.initial()[r._place] < r._range._lower)
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+                if(ok)
+                {
+                    auto lb = std::lower_bound(_initial.begin(), _initial.end(), astate);
+                    if (lb == std::end(_initial) || *lb != res.second)
+                    {
+                        _initial.insert(lb, astate);
+                    }
+                }
                 return std::make_pair(true, astate);
             }
         }
@@ -275,13 +293,6 @@ namespace PetriEngine
             {
                 auto res = stateForPredicate(inter[0].first);
                 some |= res.first;
-                auto lb = std::lower_bound(_initial.begin(), _initial.end(), res.second);
-                if (lb == std::end(_initial) || *lb != res.second) {
-                    _initial.insert(lb, res.second);
-                    some = true;
-//                    trace[0].add_interpolant(res.second);
-//                    assert(_initial == trace[0].get_interpolants());
-                }
                 last = res.second;
 //                inter[0].first.print(std::cerr) << std::endl;
             }
@@ -304,20 +315,6 @@ namespace PetriEngine
                         trace[j].add_interpolant(last);
                     else*/ {
                         auto res = stateForPredicate(inter[j].first);
-                        if(res.first)
-                        {
-                            // check if initial
-                            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                            {
-                                if(_net.initial()[p] <= inter[j].first.upper(p) &&
-                                   _net.initial()[p] >= inter[j].first.lower(p))
-                                {
-                                    auto lb = std::lower_bound(_initial.begin(), _initial.end(), res.second);
-                                    if (lb == std::end(_initial) || *lb != res.second)
-                                        _initial.insert(lb, res.second);
-                                }
-                            }
-                        }
                         some |= res.first;
                         assert(inter[i].second || res.second == last);
                         some |= _states[last].add_edge(inter[i].second, res.second);

@@ -167,7 +167,6 @@ namespace PetriEngine {
                     if(!satisfied)
                     {
 #ifdef VERBOSETAR
-                        _traceset.print(std::cerr);
                         for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
                         {
                             auto pre = _net.preset(t);
@@ -189,9 +188,12 @@ namespace PetriEngine {
                         }  
 #endif
                         if(printtrace)
-                            _traceset.print(std::cerr);                        
+                            _traceset.print(std::cerr);
+                        
+                        
+                        
                         //std::vector<size_t> trace{149,123,122,97,157,79,71,24,26,138,3,38,144,143,8,134,6,47,127,11,140,40,27,122};
-                        //std::vector<size_t> trace{149,123,122,   157,79,71,24,26,    3,38,144,143,8,134,6,47,127,11,140,40,27,122};
+                        //std::vector<size_t> trace{17,17,17,17,17,52,52,52,52,52,56,56,53,55,51,6,53,19,23,54,30,34,36,59,59,57,61,56,53,55,52,30,34,36,59,57,61,53,55,52,30,34,36,57,29,24,60,0,40,2,57,23,30,60,0,2,57,61,34,36,57,29,24,60,0,40,2,57,23,30,60,0,2,57,61,34,36,57,29,24,60,0,40,2,22,27,43};
                         //assert(validate(trace));
 
                     }
@@ -237,6 +239,7 @@ namespace PetriEngine {
                     dummy = 0;
                 if(doStep(s, next))
                 {
+                    std::cerr << "FAIL AT [" << n << "] = T" << transitions[n] << std::endl;
                     return false;
                 }
                 s.set_interpolants(_traceset.minimize(next));
@@ -247,7 +250,10 @@ namespace PetriEngine {
             }
             s.set_edge(0);
             if(doStep(s, next))
+            {
+                std::cerr << "FAIL AT [" << n << "] = T" << transitions[n] << std::endl;
                 return false;
+            }
             return true;
         }
         
