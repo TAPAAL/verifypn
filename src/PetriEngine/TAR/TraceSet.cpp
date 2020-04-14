@@ -36,19 +36,19 @@ namespace PetriEngine
             }
         }
 
-        TraceSet::TraceSet(size_t max_vars)
-        : _max_vars(max_vars)
+        TraceSet::TraceSet(const PetriNet& net)
+        : _net(net)
         {
             prvector_t truerange;
             prvector_t falserange;
             {
-                for (size_t v = 0; v < max_vars; ++v)
+                for (size_t v = 0; v < _net.numberOfPlaces(); ++v)
                     falserange.find_or_add(v) &= 0;
             }
-            assert(falserange.is_false(max_vars));
+            assert(falserange.is_false(_net.numberOfPlaces()));
             assert(truerange.is_true());
             assert(!falserange.is_true());
-            assert(falserange.is_false(max_vars));
+            assert(falserange.is_false(_net.numberOfPlaces()));
             assert(truerange.compare(falserange).first);
             assert(!truerange.compare(falserange).second);
             assert(falserange.compare(truerange).second);
@@ -132,7 +132,7 @@ namespace PetriEngine
             if (predicate.is_true()) {
                 return std::make_pair(false, 1);
             }
-            else if (predicate.is_false(_max_vars)) {
+            else if (predicate.is_false(_net.numberOfPlaces())) {
                 return std::make_pair(false, 0);
             }
 
@@ -304,6 +304,20 @@ namespace PetriEngine
                         trace[j].add_interpolant(last);
                     else*/ {
                         auto res = stateForPredicate(inter[j].first);
+                        if(res.first)
+                        {
+                            // check if initial
+                            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                            {
+                                if(_net.initial()[p] <= inter[j].first.upper(p) &&
+                                   _net.initial()[p] >= inter[j].first.lower(p))
+                                {
+                                    auto lb = std::lower_bound(_initial.begin(), _initial.end(), res.second);
+                                    if (lb == std::end(_initial) || *lb != res.second)
+                                        _initial.insert(lb, res.second);
+                                }
+                            }
+                        }
                         some |= res.first;
                         assert(inter[i].second || res.second == last);
                         some |= _states[last].add_edge(inter[i].second, res.second);
@@ -324,7 +338,7 @@ namespace PetriEngine
                 if (s.interpolant.is_true()) {
                     out << "TRUE";
                 }
-                else if (s.interpolant.is_false(_max_vars)) {
+                else if (s.interpolant.is_false(_net.numberOfPlaces())) {
                     out << "FALSE";
                 }
                 else {

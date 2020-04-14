@@ -14,6 +14,7 @@
 
 #include "range.h"
 #include "TARAutomata.h"
+#include "PetriEngine/PetriNet.h"
 
 #include <cinttypes>
 #include <vector>
@@ -24,7 +25,7 @@ namespace PetriEngine {
         void inline_union(std::vector<size_t>& into, const std::vector<size_t>& other);
         class TraceSet {
         public:
-            TraceSet(size_t max_vars);
+            TraceSet(const PetriNet& net);
             bool addTrace(std::vector<std::pair<prvector_t,size_t>>& inter);
             void copyNonChanged(const std::vector<size_t>& from, const std::vector<int64_t>& modifiers, std::vector<size_t>& to) const;
             bool follow(const std::vector<size_t>& from, std::vector<size_t>& nextinter, size_t symbol);
@@ -39,7 +40,7 @@ namespace PetriEngine {
             std::map<prvector_t, size_t> _intmap;
             std::vector<AutomataState> _states;
             std::vector<size_t> _initial;
-            const size_t _max_vars;
+            const PetriNet& _net;
         };
 
     }

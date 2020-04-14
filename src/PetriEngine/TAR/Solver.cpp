@@ -82,7 +82,7 @@ namespace PetriEngine {
         Solver::interpolant_t Solver::findFree(trace_t& trace)
         {
             assert(trace.back().get_edge_cnt() == 0);
-            for(int64_t step = ((int64_t)trace.size())-2; step >= 0; --step)
+            for(int64_t step = ((int64_t)trace.size())-2; step >= 1; --step)
             {
                 interpolant_t inter(2);
                 {
@@ -122,27 +122,57 @@ namespace PetriEngine {
                                 else
                                     std::cerr << ">> T" << (t-1) << " << " << std::endl;
                             }*/
-                            RangeEvalContext ctx(inter.back().first, _net);
-                            inter.back().first.print(std::cerr) << std::endl;
+                            RangeEvalContext ctx(inter.back().first, _net, _use_count.get());
+                            //inter.back().first.print(std::cerr) << std::endl;
                             _query->visit(ctx);
                             if(!ctx.satisfied())
                             {
-                                std::cerr << "\n IS INVALID IN " << std::endl;
+/*                                std::cerr << "\n\nBETTER\n";
+                                ctx.constraint().print(std::cerr) << std::endl;
+                                inter.back().first.print(std::cerr) << std::endl;                              
+                                std::cerr << "\n IS INVALID IN " << std::endl;*/
+                                /*{
+                                    RangeEvalContext ctx(inter.back().first, _net, _use_count.get());
+                                    _query->visit(ctx);
+                                }*/
+                                inter.back().first = ctx.constraint();
+                                inter.back().first.compact();
+                                assert(inter.back().first.is_compact());
                                 // flush non-used
-                                for(auto& i : inter)
+                                for(int64_t i = inter.size()-2; i >= 0; --i)
                                 {
-                                    for(auto& r : i.first._ranges)
+                                    auto j = i+1;
+                                    auto t = inter[i].second;
+                                    inter[i].first = inter[j].first;
+                                    assert(t > 0);
+                                    --t;
+                                    auto post = _net.postset(t);
+                                    for(; post.first != post.second; ++post.first)
                                     {
-                                        if(!ctx.used_places()[r._place])
-                                        {
-                                            r._range.free();
-                                        }
-                                        assert(r._range.no_upper());
+                                        auto it = inter[i].first[post.first->place];
+                                        if(it == nullptr) continue;
+                                        it->_range -= post.first->tokens;
                                     }
-                                    i.first.compact();
+                                    inter[i].first.compact();
+/*                                    inter[i].first.print(std::cerr) << std::endl;
+                                    assert(inter[i].first.is_compact());
+                                    inter[i].first.print(std::cerr) << std::endl;*/
+                                    if(inter[i].first.is_true())
+                                    {
+                                        inter.erase(inter.begin(), inter.begin());
+                                        assert(inter.front().first.is_true());
+                                        break;
+                                    }
+                                    auto pre = _net.preset(t);
+                                    for(; pre.first != pre.second; ++pre.first)
+                                    {
+                                        auto it = inter[i].first[pre.first->place];
+                                        if(it == nullptr) continue;
+                                        it->_range += pre.first->tokens;
+                                    }
+                                    assert(inter[i].first.is_compact());
                                 }
-/*
-                                for(auto& in : inter)
+/*                                for(auto& in : inter)
                                 {
                                     in.first.print(std::cerr) << std::endl;
                                     auto t = in.second;
@@ -150,9 +180,11 @@ namespace PetriEngine {
                                         std::cerr << ">> Q << " << std::endl;
                                     else
                                         std::cerr << ">> T" << (t-1) << " << " << std::endl;
-                                }
- */
+                                    assert(in.first.is_compact());
+                                }*/
                                 assert(!ctx.satisfied());
+                                if(!inter.front().first.is_true())
+                                    break;
                                 return inter;
                             }
                             break;
@@ -309,7 +341,7 @@ namespace PetriEngine {
                             }
                             if(_inq[pre.first->place])
                             {
-                                std::cerr << "## INQ" << std::endl;
+//                                std::cerr << "## INQ" << std::endl;
                                 return first_fail;
                             }
                         }
@@ -358,30 +390,16 @@ namespace PetriEngine {
                 RangeContext ctx(last.first, _mark.get(), _net, _use_count.get(), _mark.get());
                 _query->visit(ctx);
                 last.first.compact();
-//#ifdef VERBOSETAR
+#ifdef VERBOSETAR
                 std::cerr << "TERMINAL IS Q" << std::endl;
                 //last.first.print(std::cerr) << std::endl;
-//#endif
-                bool found = false;
-                for(auto& qv : _qvar)
-                {
-                    if(qv == last.first) {
-                        found = true;
-                        break;
-                    }
-                }
-                if(!found)
-                {
-                    std::cerr << "NEW : ";
-                    last.first.print(std::cerr) << std::endl;
-                    _qvar.push_back(last.first);
-                }
+#endif
             }
             else
             {
-//#ifdef VERBOSETAR
+#ifdef VERBOSETAR
                 std::cerr << "TERMINAL IS T" << (end.get_edge_cnt()-1) << std::endl;
-//#endif
+#endif
                 
 #ifndef NDEBUG
                 bool some = false;
@@ -490,17 +508,13 @@ namespace PetriEngine {
 #endif
             }            
         }
-        size_t cnt = 0;
-        std::pair<bool,Solver::interpolant_t> Solver::check(trace_t& trace)
+
+        bool Solver::check(trace_t& trace, TraceSet& interpolants)
         {
-            std::cerr << "SOLVE! " << (++cnt) << std::endl;
+//            std::cerr << "SOLVE! " << (++cnt) << std::endl;
             auto back_inter = findFree(trace);
-#ifdef NDEBUG
-            if(!back_inter.empty())
-            {
-                return std::make_pair(false, std::move(back_inter));
-            }
-#endif
+            if(back_inter.size() > 0)
+                interpolants.addTrace(back_inter);
             for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
             {
                 _m[p] = _initial[p];
@@ -511,20 +525,18 @@ namespace PetriEngine {
             if(fail == std::numeric_limits<decltype(fail)>::max())
             {
                 assert(back_inter.empty());
-                return std::make_pair(true, std::move(ranges));
+                return true;
             }
             ranges.resize(fail+1);
             computeTerminal(trace[fail], ranges.back());
             computeHoare(trace, ranges, fail-1);
+            interpolants.addTrace(ranges);
             assert(!ranges.empty());
-#ifndef NDEBUG
+/*#ifndef NDEBUG
             if(!back_inter.empty())
-            {
                 std::cerr << "BACKWARDS SOLVED" << std::endl;
-                return std::make_pair(false, std::move(back_inter));
-            }
-#endif
-            return std::make_pair(false, std::move(ranges));
+#endif*/
+            return false;
         }
     }
 }

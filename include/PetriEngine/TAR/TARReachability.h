@@ -38,7 +38,7 @@ namespace PetriEngine {
         public:
 
             TARReachabilitySearch(ResultPrinter& printer, PetriNet& net, Reducer* reducer, int kbound = 0)
-            : printer(printer), _net(net), _reducer(reducer), _traceset(net.numberOfPlaces()) {
+            : printer(printer), _net(net), _reducer(reducer), _traceset(net) {
                 _kbound = kbound;
             }
             

@@ -15,8 +15,8 @@
 namespace PetriEngine
 {
 
-    RangeEvalContext::RangeEvalContext(const prvector_t& vector, const PetriNet& net)
-    : _ranges(vector), _net(net), _in_use(_net.numberOfPlaces())
+    RangeEvalContext::RangeEvalContext(const prvector_t& vector, const PetriNet& net, const uint64_t* use_count)
+    : _ranges(vector), _net(net), _use_count(use_count)
     {
 
     }
@@ -24,38 +24,42 @@ namespace PetriEngine
     void RangeEvalContext::_accept(const NotCondition* element) { assert(false); }
     void RangeEvalContext::_accept(const AndCondition* element) 
     {
-        std::vector<bool> in_use(_net.numberOfPlaces());
-        _in_use.swap(in_use);
+        prvector_t sufficient;
+        sufficient = _sufficient;
+        auto best = _sufficient;
+        bool found = false;
         for(auto& c : *element)
         {
             c->visit(*this);
             if(!_bool_result)
             {
-                for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                    _in_use[p] = (in_use[p] | _in_use[p]);
-                return; // leave false on TOS (_bool_result)
+                c->visit(*this);
+                if(!found || _sufficient._ranges.size() < best._ranges.size())
+                    best = _sufficient;
+                _sufficient = sufficient;
+                found = true;
             }
         }
-        _in_use.swap(in_use);
-        _bool_result = true; // true on TOS
+        if(found)
+            _sufficient = best;
+        else
+            _sufficient = sufficient;
+        _bool_result = !found; // true on TOS
     }
     
     void RangeEvalContext::_accept(const OrCondition* element)
     {
-        std::vector<bool> in_use(_net.numberOfPlaces());
-        _in_use.swap(in_use);
+        prvector_t sufficient = _sufficient;
         for(auto& c : *element)
         {
             c->visit(*this);
             if(_bool_result)
             {
-                _in_use.swap(in_use);
+                _sufficient = sufficient;
                 return; // leave true on TOS
             }
         }
         _bool_result = false;
-        for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-            _in_use[p] = (in_use[p] | _in_use[p]);
     }
 
     void RangeEvalContext::_accept(const IdentifierExpr* element)
@@ -71,6 +75,8 @@ namespace PetriEngine
     
     void RangeEvalContext::_accept(const CompareConjunction* element)
     {
+        placerange_t tmp;
+        bool found = false;
         for(const CompareConjunction::cons_t& c : *element)
         {
             auto it = _ranges[c._place];
@@ -89,7 +95,7 @@ namespace PetriEngine
                     _bool_result = true;
                     return;
                 }
-                _in_use[c._place] = true;
+                _sufficient &= placerange_t(c._place, c._lower, c._upper);
             }
             else
             {
@@ -98,12 +104,42 @@ namespace PetriEngine
                      c._lower <= it->_range._upper))
                 {
                     _bool_result = false;
-                    _in_use[c._place] = true;
-                    return;
+                    if(it->_range._upper < c._lower)
+                    {
+                        if(_sufficient.upper(c._place) < c._lower)
+                        {
+                            _bool_result = false;
+                            return;
+                        }
+                        if(!found || (_use_count[c._place] > _use_count[tmp._place] && !tmp._range.no_upper()))
+                            tmp = placerange_t(c._place, 0, c._lower-1);
+                        found = true;
+                    }
+                    else
+                    {
+                        if(_sufficient.lower(c._place) > c._lower)
+                        {
+                            _bool_result = false;
+                            return;
+                        }
+                        if(!found || _use_count[c._place] > _use_count[tmp._place] || !tmp._range.no_upper())
+                            tmp = placerange_t(c._place, c._upper+1, range_t::max());
+                        found = true;
+                    }
                 }
             }
         }
         // negated = disj = "nothing is true at this point", otherwise conj = "everything is true"
+        if(!element->isNegated())
+        {
+            if(found)
+            {
+                _sufficient &= tmp;
+                //tmp.print(std::cerr) << std::endl;
+            }
+            _bool_result = !found;
+            return;
+        }
         _bool_result = !element->isNegated(); 
     }
     
@@ -125,7 +161,6 @@ namespace PetriEngine
             _upper_result = std::numeric_limits<decltype(_lower_result)>::max();
         else
             _upper_result = it->_range._lower;
-        _in_use[element->offset()] = true;
     }
     
     void RangeEvalContext::_accept(const PlusExpr* element)

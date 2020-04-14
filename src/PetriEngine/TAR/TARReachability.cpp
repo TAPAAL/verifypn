@@ -130,7 +130,7 @@ namespace PetriEngine {
 
                 if(waiting.back().get_edge_cnt() == 0) // check if proposition is satisfied
                 {
-                    auto [satisfied, interpolants] = solver.check(waiting);
+                    auto satisfied = solver.check(waiting, _traceset);
                     if(satisfied)
                     {
                         if(printtrace)
@@ -139,13 +139,10 @@ namespace PetriEngine {
                     }
                     else
                     {
-                        auto some = _traceset.addTrace(interpolants);
-                        assert(some || !all_covered);
-                        //if(!some)
-                            return std::make_pair(false, false);
-                        handleInvalidTrace(waiting, interpolants.size());
+                        return std::make_pair(false, false);
+/*                        handleInvalidTrace(waiting, interpolants.size());
                         all_covered = false;
-                        continue;
+                        continue;*/
                     }
                 }
                 else
