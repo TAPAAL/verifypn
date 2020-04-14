@@ -67,10 +67,71 @@ namespace PetriEngine
         assert(false);
     }
     
-    void RangeEvalContext::_accept(const LessThanCondition* element){ assert(false); }
-    void RangeEvalContext::_accept(const LessThanOrEqualCondition* element){ assert(false); }
-    void RangeEvalContext::_accept(const GreaterThanCondition* element){ assert(false); }
-    void RangeEvalContext::_accept(const GreaterThanOrEqualCondition* element){ assert(false); }
+    void RangeEvalContext::handle_compare(const Expr_ptr& left, const Expr_ptr& right, bool strict)
+    {
+        auto vl = left->getEval();
+        auto vr = right->getEval();
+        _places.clear();
+        // left < right (if strict is set, otherwise <= )
+        if(right->placeFree())
+        {
+            //_limit = vr + (strict ? 0 : 1);
+            //_lt = false;
+            right->visit(*this);
+            auto cnst = _literal;
+            _literal = 0;
+            left->visit(*this);
+            cnst -= _literal;
+            assert(cnst >= 0);
+            // p < const
+            // p <= const
+            for(auto p : _places)
+            {
+                _sufficient &= placerange_t(p, cnst + (strict ? 0 : 1), range_t::max());
+            }
+        } 
+        else if(left->placeFree())
+        {
+            //_limit = vl - (strict ? 0 : 1);
+            //_lt = true;
+            left->visit(*this);
+            auto cnst = _literal;
+            _literal = 0;
+            cnst -= _literal;
+            right->visit(*this);
+            // const < p
+            // const <= p
+            for(auto p : _places)
+            {
+                _sufficient &= placerange_t(p, range_t::min(), cnst + (strict ? 1 : 0));
+            }
+        }
+        else
+        {
+            assert(false);
+        }
+    }
+    
+    void RangeEvalContext::_accept(const LessThanCondition* element)
+    {
+        handle_compare((*element)[0], (*element)[1], true);
+    }
+   
+    void RangeEvalContext::_accept(const LessThanOrEqualCondition* element)
+    {
+        handle_compare((*element)[0], (*element)[1], false);
+    }
+
+    void RangeEvalContext::_accept(const GreaterThanCondition* element)
+    {
+        handle_compare((*element)[1], (*element)[0], true);
+    }
+    
+    void RangeEvalContext::_accept(const GreaterThanOrEqualCondition* element)
+    {
+        handle_compare((*element)[1], (*element)[0], false);
+    }
+    
     void RangeEvalContext::_accept(const DeadlockCondition* element){ assert(false); }
     
     void RangeEvalContext::_accept(const CompareConjunction* element)
@@ -146,21 +207,12 @@ namespace PetriEngine
     
     void RangeEvalContext::_accept(const LiteralExpr* element)
     {
-        _lower_result = _upper_result = element->value();
+        _literal = element->value();
     }
     
     void RangeEvalContext::_accept(const UnfoldedIdentifierExpr* element)
     {
-        auto it = _ranges[element->offset()];
-        if(it == nullptr || it->_range.no_lower())
-            _lower_result = 0;
-        else
-            _lower_result = it->_range._lower;
-
-        if(it == nullptr || it->_range.no_upper())
-            _upper_result = std::numeric_limits<decltype(_lower_result)>::max();
-        else
-            _upper_result = it->_range._lower;
+        _places.emplace_back(element->offset());
     }
     
     void RangeEvalContext::_accept(const PlusExpr* element)

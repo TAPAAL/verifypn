@@ -34,10 +34,10 @@ namespace PetriEngine {
         const prvector_t& _ranges;
         const PetriNet& _net;
         const uint64_t* _use_count;
-        int64_t _upper_result;
-        int64_t _lower_result;
+        int64_t _literal;
         bool _bool_result;
         prvector_t _sufficient;
+        std::vector<uint32_t> _places;
     protected:
 
         virtual void _accept(const NotCondition* element) override;
