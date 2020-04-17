@@ -188,6 +188,69 @@ namespace PetriEngine
                         _initial.insert(lb, astate);
                     }
                 }
+                
+                // check which edges actually change the predicate, add rest to automata
+                for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+                {
+                    auto pre = _net.preset(t);
+                    bool ok = true;
+                    bool changes = false;
+                    for(; pre.first != pre.second; ++pre.first)
+                    {
+                        auto it = predicate[pre.first->place];
+                        if(it)
+                        {
+                            changes = true;
+                            auto post = _net.preset(t);
+                            int64_t change = pre.first->tokens;
+                            change *= -1;
+                            for(; post.first != post.second; ++post.first)
+                            {
+                                if(post.first->place == pre.first->place)
+                                {
+                                    change += post.first->tokens;
+                                    break;
+                                }
+                            }
+                            if(change < 0 && !it->_range.no_lower())
+                                ok = false;
+                            else if(change > 0 && !it->_range.no_upper())
+                                ok = false;
+                        }
+                        if(!ok) break;
+                    }
+                    
+                    auto post = _net.preset(t);
+                    for(; post.first != post.second; ++post.first)
+                    {
+                        auto it = predicate[post.first->place];
+                        if(it)
+                        {
+                            changes = true;
+                            auto pre = _net.preset(t);
+                            int64_t change = post.first->tokens;
+                            for(; pre.first != pre.second; ++pre.first)
+                            {
+                                if(pre.first->place == post.first->place)
+                                {
+                                    change -= pre.first->tokens;
+                                    break;
+                                }
+                            }
+                            if(change < 0 && !it->_range.no_lower())
+                                ok = false;
+                            else if(change > 0 && !it->_range.no_upper())
+                                ok = false;
+                        }
+                        if(!ok) break;
+                    }
+                    
+                    if(changes && ok)
+                    {
+                        _states[astate].add_edge(t+1, astate);
+                    }
+                }
+                
                 return std::make_pair(true, astate);
             }
         }
@@ -294,7 +357,7 @@ namespace PetriEngine
                 auto res = stateForPredicate(inter[0].first);
                 some |= res.first;
                 last = res.second;
-//                inter[0].first.print(std::cerr) << std::endl;
+                //inter[0].first.print(std::cerr) << std::endl;
             }
 #ifndef NDEBUG
             bool added_terminal = false;
