@@ -188,9 +188,8 @@ namespace PetriEngine
                         _initial.insert(lb, astate);
                     }
                 }
-                
                 // check which edges actually change the predicate, add rest to automata
-                for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+                if(false) for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
                 {
                     auto pre = _net.preset(t);
                     bool ok = true;
@@ -250,6 +249,7 @@ namespace PetriEngine
                         _states[astate].add_edge(t+1, astate);
                     }
                 }
+                
                 
                 return std::make_pair(true, astate);
             }

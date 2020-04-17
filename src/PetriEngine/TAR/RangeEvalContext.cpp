@@ -87,7 +87,13 @@ namespace PetriEngine
             // p <= const
             for(auto p : _places)
             {
-                _sufficient &= placerange_t(p, cnst + (strict ? 0 : 1), range_t::max());
+                auto val = cnst + (strict ? 0 : 1);
+                if(val > _sufficient.upper(p))
+                {
+                    _bool_result = true;
+                    return;
+                }
+                _sufficient &= placerange_t(p, val, range_t::max());
             }
         } 
         else if(left->placeFree())
@@ -103,13 +109,21 @@ namespace PetriEngine
             // const <= p
             for(auto p : _places)
             {
-                _sufficient &= placerange_t(p, range_t::min(), cnst + (strict ? 1 : 0));
+                auto val = cnst + (strict ? 1 : 0);
+                if(val < _sufficient.lower(p))
+                {
+                    _bool_result = true;
+                    return;
+                }
+                _sufficient &= placerange_t(p, range_t::min(), val);
             }
         }
         else
         {
-            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                _sufficient &= placerange_t(p, 0, 0);
+            _bool_result = true;
+            return;
+/*            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                _sufficient &= placerange_t(p, 0, 0);*/
         }
     }
     

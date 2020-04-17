@@ -125,18 +125,25 @@ namespace PetriEngine {
                             RangeEvalContext ctx(inter.back().first, _net, _use_count.get());
                             //inter.back().first.print(std::cerr) << std::endl;
                             _query->visit(ctx);
+/*                            _query->toString(std::cerr);
+                            std::cerr << std::endl;
+                            std::cerr << "AFTER QUERY" << std::endl;
+                            inter.back().first.print(std::cerr) << std::endl;*/
                             if(!ctx.satisfied() && !ctx.constraint().is_false(_net.numberOfPlaces()))
                             {
                                 
-/*                                std::cerr << "\n\nBETTER\n";
+                                /*std::cerr << "\n\nBETTER\n";
                                 ctx.constraint().print(std::cerr) << std::endl;
                                 inter.back().first.print(std::cerr) << std::endl;                              
-                                std::cerr << "\n IS INVALID IN " << std::endl;*/
-                                /*{
+                                std::cerr << "\n IS INVALID IN " << std::endl;
+                                if(ctx.constraint().is_true()){
                                     RangeEvalContext ctx(inter.back().first, _net, _use_count.get());
                                     _query->visit(ctx);
-                                }*/
+                                }
+                                */
+
                                 inter.back().first = ctx.constraint();
+                                assert(!ctx.constraint().is_true());
                                 inter.back().first.compact();
                                 assert(inter.back().first.is_compact());
                                 // flush non-used
@@ -148,10 +155,16 @@ namespace PetriEngine {
                                     assert(t > 0);
                                     --t;
                                     auto post = _net.postset(t);
+                                    //std::cerr << "REDUCE " ;
+                                    //inter[i].first.print(std::cerr) << std::endl;
                                     for(; post.first != post.second; ++post.first)
                                     {
                                         auto it = inter[i].first[post.first->place];
                                         if(it == nullptr) continue;
+                                        if(it->_range._upper < post.first->tokens)
+                                        {
+                                            break;
+                                        }
                                         it->_range -= post.first->tokens;
                                     }
                                     inter[i].first.compact();
@@ -173,7 +186,7 @@ namespace PetriEngine {
                                     }
                                     assert(inter[i].first.is_compact());
                                 }
-/*                                for(auto& in : inter)
+                                /*for(auto& in : inter)
                                 {
                                     in.first.print(std::cerr) << std::endl;
                                     auto t = in.second;
