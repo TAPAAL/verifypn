@@ -189,7 +189,7 @@ namespace PetriEngine
                     }
                 }
                 // check which edges actually change the predicate, add rest to automata
-                if(false) for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+                 for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
                 {
                     auto pre = _net.preset(t);
                     bool ok = true;
@@ -200,8 +200,10 @@ namespace PetriEngine
                         if(it)
                         {
                             changes = true;
-                            auto post = _net.preset(t);
+                            auto post = _net.postset(t);
                             int64_t change = pre.first->tokens;
+                            if(pre.first->tokens > it->_range._upper)
+                                _states[astate].add_edge(t+1, 0);
                             change *= -1;
                             for(; post.first != post.second; ++post.first)
                             {
@@ -219,7 +221,7 @@ namespace PetriEngine
                         if(!ok) break;
                     }
                     
-                    auto post = _net.preset(t);
+                    auto post = _net.postset(t);
                     for(; post.first != post.second; ++post.first)
                     {
                         auto it = predicate[post.first->place];
