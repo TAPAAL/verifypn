@@ -64,29 +64,62 @@ namespace PetriEngine {
 
             const uint32_t nCol = net->numberOfTransitions();
             auto lp = glp_create_prob();
-            int nRow = net->numberOfPlaces() + _equations.size();
+            const uint32_t nRow = net->numberOfPlaces() + _equations.size();
 
             glp_add_cols(lp, nCol+1);
             glp_add_rows(lp, nRow+1);
             assert(lp);
             if (!lp) return false;
             std::vector<REAL> row = std::vector<REAL>(nCol + 1);
-            std::vector<int32_t> indir(nCol + 1);
+            std::vector<int32_t> indir(std::max(nCol, nRow) + 1);
             for(size_t i = 0; i <= nCol; ++i)
                 indir[i] = i;
 
-            int rowno = 1;
             // restrict all places to contain 0+ tokens
-            for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-                size_t l = 1;
-                for (size_t t = 0; t < nCol; t++) {
-                    row[l] = net->outArc(t, p) - net->inArc(p, t);
-                    if(row[l] != 0){
-                        indir[l] = t+1;
+            {
+                std::vector<REAL> col = std::vector<REAL>(nRow+1);
+                for(size_t t = 0; t < net->numberOfTransitions(); ++t)
+                {
+                    auto pre = net->preset(t);
+                    auto post = net->postset(t);
+                    size_t l = 1;
+                    while(pre.first != pre.second ||
+                          post.first != post.second)
+                    {
+                        if(pre.first == pre.second || (post.first != post.second && post.first->place < pre.first->place))
+                        {
+                            col[l] = post.first->tokens;
+                            indir[l] = post.first->place+1;
+                            ++post.first;
+                        }
+                        else if(post.first == post.second || (pre.first != pre.second && pre.first->place < post.first->place))
+                        {
+                            col[l] = -pre.first->tokens;
+                            indir[l] = pre.first->place+1;
+                            ++pre.first;                        
+                        }
+                        else
+                        {
+                            assert(pre.first->place == post.first->place);
+                            col[l] = (REAL)post.first->tokens - (REAL)pre.second->tokens;
+                            indir[l] = pre.first->place+1;
+                            ++pre.first;
+                            ++post.first;
+                        }
                         ++l;
                     }
+                    glp_set_mat_col(lp, t+1, l-1, indir.data(), col.data());
+                    if(context.timeout())
+                    {
+                        std::cerr << "glpk: construction timeout" << std::endl;
+                        glp_delete_prob(lp);
+                        return false;
+                    }
                 }
-                glp_set_mat_row(lp, rowno, l-1, indir.data(), row.data());
+            }
+            int rowno = 1;
+
+            for (size_t p = 0; p < net->numberOfPlaces(); p++) {
                 glp_set_row_bnds(lp, rowno, GLP_LO, (0.0 - (double)m0[p]), infty);
                 ++rowno;
                 if(context.timeout())
