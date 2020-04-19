@@ -69,8 +69,6 @@ namespace PetriEngine
     
     void RangeEvalContext::handle_compare(const Expr_ptr& left, const Expr_ptr& right, bool strict)
     {
-        auto vl = left->getEval();
-        auto vr = right->getEval();
         _places.clear();
         // left < right (if strict is set, otherwise <= )
         if(right->placeFree())
