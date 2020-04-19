@@ -89,6 +89,12 @@ namespace PetriEngine {
                 glp_set_mat_row(lp, rowno, l-1, indir.data(), row.data());
                 glp_set_row_bnds(lp, rowno, GLP_LO, (0.0 - (double)m0[p]), infty);
                 ++rowno;
+                if(context.timeout())
+                {
+                    std::cerr << "glpk: construction timeout" << std::endl;
+                    glp_delete_prob(lp);
+                    return false;
+                }
             }
             for(const auto& eq : _equations){
                 auto l = eq.row->write_indir(row, indir);
@@ -114,9 +120,14 @@ namespace PetriEngine {
                 else
                     glp_set_row_bnds(lp, rowno, GLP_LO, eq.lower, -infty);
                 ++rowno;
+
+                if(context.timeout())
+                {
+                    std::cerr << "glpk: construction timeout" << std::endl;
+                    glp_delete_prob(lp);
+                    return false;
+                }
             }
-            if(context.timeout())
-                return false;
 
             // Set objective, kind and bounds
             for(size_t i = 1; i <= nCol; i++) {
