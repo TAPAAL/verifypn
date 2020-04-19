@@ -94,7 +94,7 @@ namespace PetriEngine {
                         }
                         else if(post.first == post.second || (pre.first != pre.second && pre.first->place < post.first->place))
                         {
-                            col[l] = -pre.first->tokens;
+                            col[l] = -(double)pre.first->tokens;
                             indir[l] = pre.first->place+1;
                             ++pre.first;                        
                         }
@@ -114,11 +114,10 @@ namespace PetriEngine {
                         std::cerr << "glpk: construction timeout" << std::endl;
                         glp_delete_prob(lp);
                         return false;
-                    }
                 }
+                }                
             }
             int rowno = 1;
-
             for (size_t p = 0; p < net->numberOfPlaces(); p++) {
                 glp_set_row_bnds(lp, rowno, GLP_LO, (0.0 - (double)m0[p]), infty);
                 ++rowno;
@@ -129,6 +128,7 @@ namespace PetriEngine {
                     return false;
                 }
             }
+
             for(const auto& eq : _equations){
                 auto l = eq.row->write_indir(row, indir);
                 assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));
