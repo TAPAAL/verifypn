@@ -101,7 +101,7 @@ namespace PetriEngine {
                         else
                         {
                             assert(pre.first->place == post.first->place);
-                            col[l] = (REAL)post.first->tokens - (REAL)pre.second->tokens;
+                            col[l] = (REAL)post.first->tokens - (REAL)pre.first->tokens;
                             indir[l] = pre.first->place+1;
                             ++pre.first;
                             ++post.first;
@@ -114,7 +114,7 @@ namespace PetriEngine {
                         std::cerr << "glpk: construction timeout" << std::endl;
                         glp_delete_prob(lp);
                         return false;
-                }
+                    }
                 }                
             }
             int rowno = 1;
@@ -128,7 +128,7 @@ namespace PetriEngine {
                     return false;
                 }
             }
-
+            
             for(const auto& eq : _equations){
                 auto l = eq.row->write_indir(row, indir);
                 assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));
@@ -161,7 +161,7 @@ namespace PetriEngine {
                     return false;
                 }
             }
-
+            
             // Set objective, kind and bounds
             for(size_t i = 1; i <= nCol; i++) {
                 glp_set_obj_coef(lp, i, 0);
