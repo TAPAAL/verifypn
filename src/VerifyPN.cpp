@@ -1061,7 +1061,7 @@ int main(int argc, char* argv[]) {
     // Change default place-holder to default strategy
     if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
     
-    if(options.tar)
+    if(options.tar && net->numberOfPlaces() > 0)
     {
         //Create reachability search strategy
         TARReachabilitySearch strategy(printer, *net, builder.getReducer(), options.kbound);

@@ -475,7 +475,7 @@ namespace PetriEngine {
                     if(pre.first == pre.second || pre.first->place != post.first->place)
                     {
 //                        std::cerr << "\t2P" << post.first->place << " +" << post.first->tokens << std::endl;
-                        auto r = ranges[fail].first.find_or_add(post.first->place);
+                        auto& r = ranges[fail].first.find_or_add(post.first->place);
                         if(r._range._upper < post.first->tokens)
                             return false;
                         r -= post.first->tokens;   
@@ -491,7 +491,7 @@ namespace PetriEngine {
                         else
                         {
                             assert(pre.first->tokens <= post.first->tokens);
-                            auto r = ranges[fail].first.find_or_add(post.first->place);
+                            auto& r = ranges[fail].first.find_or_add(post.first->place);
                             if(r._range._upper < (post.first->tokens - pre.first->tokens))
                                 return false;
                             ranges[fail].first.find_or_add(post.first->place) -= (post.first->tokens - pre.first->tokens);
