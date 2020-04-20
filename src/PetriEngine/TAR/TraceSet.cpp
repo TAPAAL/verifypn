@@ -381,7 +381,7 @@ namespace PetriEngine
                     else*/ {
                         auto res = stateForPredicate(inter[j].first);
                         some |= res.first;
-                        assert(inter[i].second || res.second == last);
+//                        assert(inter[i].second || res.second == last);
                         some |= _states[last].add_edge(inter[i].second, res.second);
                         last = res.second;
                     }

@@ -277,8 +277,11 @@ namespace PetriEngine {
                     for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                     {
                         if(_m[p] < 0)
-                            return first_fail;
-                        _mark[p] = _m[p];
+                        {
+                            _dirty[p] = true;
+                            _mark[p] = 0;
+                        }
+                        else _mark[p] = _m[p];
                     }
                     EvaluationContext ctx(_mark.get(), &_net);
                     auto r = _query->evalAndSet(ctx);
@@ -328,13 +331,6 @@ namespace PetriEngine {
                 {
                     --t;
                     auto pre = _net.preset(t);
-#ifndef NDEBUG
-                    if(first_fail > fail)
-                    {
-                        for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                                assert(_mark[p] == _m[p]);
-                    }
-#endif
 /*                    std::cerr << "F" << fail << " (T" << t << ") " << " : ";
                     for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                     {
@@ -371,39 +367,21 @@ namespace PetriEngine {
                     {
                         _m[post.first->place] += post.first->tokens;
                     }
-#ifndef NDEBUG
-                    if(first_fail > fail)
-                    {
-                        Structures::State s;
-                        s.setMarking(_mark.get());
-                        _gen.prepare(&s);
-                        if(_gen.checkPreset(t))
-                        {
-                            _gen.consumePreset(s, t);
-                            _gen.producePostset(s, t);
-                        }
-                        else
-                        {
-                            assert(false);
-                        }
-                        for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                            assert(_mark[p] == _m[p]);
-                        s.setMarking(nullptr);
-                    }
-#endif
                 }
             }
             assert(false);
             return -1;
         }
         
-        void Solver::computeTerminal(state_t& end, inter_t& last)
+        bool Solver::computeTerminal(state_t& end, inter_t& last)
         {
             last.second = end.get_edge_cnt();
             if(end.get_edge_cnt() == 0)
             {
-                RangeContext ctx(last.first, _mark.get(), _net, _use_count.get(), _mark.get());
+                RangeContext ctx(last.first, _mark.get(), _net, _use_count.get(), _mark.get(), _dirty);
                 _query->visit(ctx);
+                if(ctx.is_dirty())
+                    return false;
                 last.first.compact();
 #ifdef VERBOSETAR
                 std::cerr << "TERMINAL IS Q" << std::endl;
@@ -443,6 +421,7 @@ namespace PetriEngine {
             std::cerr << "[FAIL] : ";
             last.first.print(std::cerr) << std::endl;
 #endif
+            return true;
         }
 
         bool Solver::computeHoare(trace_t& trace, interpolant_t& ranges, int64_t fail)
@@ -557,16 +536,49 @@ namespace PetriEngine {
                 return true;
             }
             ranges.resize(fail+1);
-            computeTerminal(trace[fail], ranges.back());
-            if(!computeHoare(trace, ranges, fail-1))
+            bool ok = computeTerminal(trace[fail], ranges.back());
+            if(ok)
             {
-                fail = findFailure(trace, false);
+                if(computeHoare(trace, ranges, fail-1))
+                    interpolants.addTrace(ranges);
+            }
+            do {
+                fail = findFailure(trace, true);
                 ranges.clear();
                 ranges.resize(fail+1);
-                computeTerminal(trace[fail], ranges.back());
-                computeHoare(trace, ranges, fail-1);
-            }
-            interpolants.addTrace(ranges);
+                if(!ok)
+                    break;
+                ok = computeTerminal(trace[fail], ranges.back());
+                if(ok)
+                {
+                    if(computeHoare(trace, ranges, fail-1))
+                    {
+                        interpolants.addTrace(ranges);                        
+                        if(fail != trace.size() - 1)
+                            break;
+                    }
+                    bool some = false;
+                    for(auto& r : ranges.back().first._ranges)
+                    {
+                        some |= !_dirty[r._place];
+                        _dirty[r._place] = true;
+                    }
+                    if(!some) goto NXT;
+                    assert(some);
+                }
+                else
+                {
+                    NXT:
+                    fail = findFailure(trace, false);
+                    ranges.clear();
+                    ranges.resize(fail+1);
+                    std::fill(_dirty.begin(), _dirty.end(), false);
+                    computeTerminal(trace[fail], ranges.back());
+                    computeHoare(trace, ranges, fail-1);
+                    interpolants.addTrace(ranges);
+                    break;
+                }
+            } while(true);
             assert(!ranges.empty());
 /*#ifndef NDEBUG
             if(!back_inter.empty())

@@ -33,7 +33,7 @@ namespace PetriEngine {
             int64_t findFailure(trace_t& trace, bool to_end);
             interpolant_t findFree(trace_t& trace);
             bool computeHoare(trace_t& trace, interpolant_t& ranges, int64_t fail);
-            void computeTerminal(state_t& end, inter_t& last);
+            bool computeTerminal(state_t& end, inter_t& last);
             PetriNet& _net;
             MarkVal* _initial;
             Condition* _query;

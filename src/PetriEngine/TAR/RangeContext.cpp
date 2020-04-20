@@ -14,8 +14,8 @@
 namespace PetriEngine {
     using namespace PQL;
    
-    RangeContext::RangeContext(prvector_t& vector, MarkVal* base, const PetriNet& net, const uint64_t* uses, MarkVal* marking)
-    : _ranges(vector), _base(base), _net(net), _uses(uses), _marking(marking)
+    RangeContext::RangeContext(prvector_t& vector, MarkVal* base, const PetriNet& net, const uint64_t* uses, MarkVal* marking, const std::vector<bool>& dirty)
+    : _ranges(vector), _base(base), _net(net), _uses(uses), _marking(marking), _dirty(dirty)
     {
     }
     
@@ -62,21 +62,35 @@ namespace PetriEngine {
         prvector_t res;
         size_t priority = std::numeric_limits<size_t>::max();
         size_t sum = 0;
+        bool dirty = false;
+        assert(!_is_dirty);
         for (auto& e : *element) {
             if (e->evalAndSet(ctx) == Condition::RFALSE) {
                 _ranges = vect;
                 e->visit(*this);
+                dirty |= _is_dirty;
+                if(_is_dirty)
+                {
+                    _is_dirty = false;
+                    continue;
+                }
                 if (_ranges._ranges.size() < priority) {
                     res = _ranges;
                     priority = _ranges._ranges.size();
                     sum = 0;
                     for (auto& e : _ranges._ranges)
+                    {
                         sum += _uses[e._place];
+                        assert(!_dirty[e._place]);
+                    }
                 }
                 else if (_ranges._ranges.size() == priority) {
                     size_t lsum = 0;
                     for (auto& e : _ranges._ranges)
+                    {
                         lsum += _uses[e._place];
+                        assert(!_dirty[e._place]);
+                    }
                     if (lsum > sum) {
                         res = _ranges;
                         priority = _ranges._ranges.size();
@@ -85,7 +99,15 @@ namespace PetriEngine {
                 }
             }
         }
-        _ranges = res;
+        if(priority != std::numeric_limits<size_t>::max())
+        {
+            _ranges = res;
+        }
+        else
+        {
+            assert(dirty);
+            _is_dirty = true;
+        }
     }
     
     void RangeContext::_accept(const OrCondition* element)
@@ -94,6 +116,8 @@ namespace PetriEngine {
         for (auto& e : *element) {
             //assert(!e->isSatisfied());
             e->visit(*this);
+            if(_is_dirty)
+                return;
         }
     }
     
@@ -129,6 +153,11 @@ namespace PetriEngine {
     
     void RangeContext::_accept(const UnfoldedIdentifierExpr* element)
     {
+        if(_dirty[element->offset()])
+        {
+            _is_dirty = true;
+            return;
+        }
         auto& pr = _ranges.find_or_add(element->offset());
         if (_lt)
             pr._range._upper = std::min<uint32_t>(pr._range._upper, _limit);
@@ -143,6 +172,11 @@ namespace PetriEngine {
         //auto fdf = std::abs(_limit - element->getEval())/
         //(element->places().size() + element->expressions().size());
         for (auto& p : element->places()) {
+            if(_dirty[p.first])
+            {
+                _is_dirty = true;
+                return;
+            }
             auto& pr = _ranges.find_or_add(p.first);
             if (_lt)
                 pr._range._upper = std::min(_base[p.first], pr._range._upper);
@@ -154,6 +188,7 @@ namespace PetriEngine {
         for (auto& e : element->expressions()) {
             _limit = e->getEval();
             e->visit(*this);
+            if(_is_dirty) return;
         }
     }
    
@@ -162,12 +197,18 @@ namespace PetriEngine {
         assert(!element->isSatisfied());
         uint64_t priority = 0;
         size_t cand = 0;
+        bool dirty = false;
         for (size_t t = 0; t < _net.numberOfTransitions(); ++t) {
             auto pre = _net.preset(t);
             bool ok = true;
             for (; pre.first != pre.second; ++pre.first) {
                 assert(!pre.first->inhibitor);
                 if (_base[pre.first->place] < pre.first->tokens) {
+                    ok = false;
+                } 
+                if(_dirty[pre.first->place])
+                {
+                    dirty = true;
                     ok = false;
                 }
             }
@@ -176,6 +217,7 @@ namespace PetriEngine {
             uint64_t sum = 0;
             for (; pre.first != pre.second; ++pre.first) {
                 sum += _uses[pre.first->place];
+                assert(!_dirty[pre.first->place]);
             }
             if (sum > priority) {
                 priority = sum;
@@ -193,6 +235,11 @@ namespace PetriEngine {
             }
             return;
         }
+        if(dirty)
+        {
+            _is_dirty = true;
+            return;
+        }
 
         assert(false);
     }
@@ -203,13 +250,16 @@ namespace PetriEngine {
         bool disjunction = element->isNegated();
         placerange_t pr;
         uint64_t priority = 0;
+        bool dirty = false;
         for (auto& c : element->constraints()) {
             if (!disjunction) {
                 if (c._lower > _base[c._place]) {
                     auto& added = _ranges.find_or_add(c._place);
                     if (added._range._upper <= c._lower - 1)
                         return;
-                    if (priority < _uses[c._place]) {
+                    if(_dirty[c._place])
+                        dirty = true;
+                    else if (priority < _uses[c._place]) {
                         pr = placerange_t();
                         pr._place = c._place;
                         pr._range._upper = c._lower - 1;
@@ -222,7 +272,9 @@ namespace PetriEngine {
                     auto& added = _ranges.find_or_add(c._place);
                     if (added._range._lower >= c._upper + 1)
                         return;
-                    if (priority < _uses[c._place]) {
+                    if(_dirty[c._place])
+                        dirty = true;
+                    else if (priority < _uses[c._place]) {
                         pr = placerange_t();
                         priority = _uses[c._place];
                         pr._place = c._place;
@@ -239,9 +291,20 @@ namespace PetriEngine {
                 added._range._upper = std::min(c._upper, pr._range._upper);
                 assert(added._range._lower <= _base[c._place]);
                 assert(added._range._upper >= _base[c._place]);
+                if(_dirty[c._place])
+                {
+                    _is_dirty = true;
+                    return;
+                }
             }
         }
         if (!disjunction) {
+            if(priority == 0)
+            {
+                assert(dirty);
+                _is_dirty = true;
+                return;
+            }
             assert(priority > 0);
             _ranges.find_or_add(pr._place) = pr;
             _ranges.compact();
