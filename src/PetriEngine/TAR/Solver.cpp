@@ -28,6 +28,7 @@ namespace PetriEngine {
         , _gen(_net)
 #endif
         {
+            _dirty.resize(_net.numberOfPlaces());
             _m = std::make_unique<int64_t[]>(_net.numberOfPlaces());
             _failm = std::make_unique<int64_t[]>(_net.numberOfPlaces());
             _mark = std::make_unique<MarkVal[]>(_net.numberOfPlaces());    
@@ -477,7 +478,10 @@ namespace PetriEngine {
 //                        std::cerr << "\t2P" << post.first->place << " +" << post.first->tokens << std::endl;
                         auto& r = ranges[fail].first.find_or_add(post.first->place);
                         if(r._range._upper < post.first->tokens)
+                        {
+                            _dirty[post.first->place] = true;
                             return false;
+                        }
                         r -= post.first->tokens;   
                     }
                     else
@@ -493,7 +497,10 @@ namespace PetriEngine {
                             assert(pre.first->tokens <= post.first->tokens);
                             auto& r = ranges[fail].first.find_or_add(post.first->place);
                             if(r._range._upper < (post.first->tokens - pre.first->tokens))
+                            {
+                                _dirty[post.first->place] = true;
                                 return false;
+                            }
                             ranges[fail].first.find_or_add(post.first->place) -= (post.first->tokens - pre.first->tokens);
 //                            std::cerr << "\t4P" << pre.first->place << " +" << (pre.first->tokens - post.first->tokens) << std::endl;
                         }
@@ -532,6 +539,7 @@ namespace PetriEngine {
 
         bool Solver::check(trace_t& trace, TraceSet& interpolants)
         {
+            std::fill(_dirty.begin(), _dirty.end(), false);
 //            std::cerr << "SOLVE! " << (++cnt) << std::endl;
             auto back_inter = findFree(trace);
             if(back_inter.size() > 0)
@@ -556,6 +564,7 @@ namespace PetriEngine {
                 ranges.clear();
                 ranges.resize(fail+1);
                 computeTerminal(trace[fail], ranges.back());
+                computeHoare(trace, ranges, fail-1);
             }
             interpolants.addTrace(ranges);
             assert(!ranges.empty());
