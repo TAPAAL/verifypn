@@ -30,9 +30,9 @@ namespace PetriEngine {
             Solver(PetriNet& net, MarkVal* initial, Condition* query, std::vector<bool>& inq);
             bool check(trace_t& trace, TraceSet& interpolants);
         private:
-            int64_t findFailure(trace_t& trace);
+            int64_t findFailure(trace_t& trace, bool to_end);
             interpolant_t findFree(trace_t& trace);
-            void computeHoare(trace_t& trace, interpolant_t& ranges, int64_t fail);
+            bool computeHoare(trace_t& trace, interpolant_t& ranges, int64_t fail);
             void computeTerminal(state_t& end, inter_t& last);
             PetriNet& _net;
             MarkVal* _initial;

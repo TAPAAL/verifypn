@@ -55,6 +55,7 @@ namespace PetriEngine
             virtual void _accept(const PlusExpr* element) = 0;
             virtual void _accept(const DeadlockCondition* element) = 0;
             virtual void _accept(const CompareConjunction* element) = 0;
+            virtual void _accept(const UnfoldedUpperBoundsCondition* element) = 0;
         }; 
     }
 }

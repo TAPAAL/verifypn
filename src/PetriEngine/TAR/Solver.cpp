@@ -257,7 +257,7 @@ namespace PetriEngine {
             return {};
         }
         
-        int64_t Solver::findFailure(trace_t& trace)
+        int64_t Solver::findFailure(trace_t& trace, bool to_end)
         {
             int64_t fail = 0;
             int64_t first_fail = std::numeric_limits<decltype(first_fail)>::max();
@@ -353,7 +353,7 @@ namespace PetriEngine {
                                 old_place = pre.first->place;
 //                                std::cerr << "FAIL " << fail << " : T" << t << std::endl;
                             }
-                            if(_inq[pre.first->place])
+                            if(_inq[pre.first->place] && !to_end)
                             {
 //                                std::cerr << "## INQ" << std::endl;
                                 return first_fail;
@@ -444,7 +444,7 @@ namespace PetriEngine {
 #endif
         }
 
-        void Solver::computeHoare(trace_t& trace, interpolant_t& ranges, int64_t fail)
+        bool Solver::computeHoare(trace_t& trace, interpolant_t& ranges, int64_t fail)
         {
             for(; fail >= 0; --fail)
             {
@@ -475,7 +475,10 @@ namespace PetriEngine {
                     if(pre.first == pre.second || pre.first->place != post.first->place)
                     {
 //                        std::cerr << "\t2P" << post.first->place << " +" << post.first->tokens << std::endl;
-                        ranges[fail].first.find_or_add(post.first->place) -= post.first->tokens;   
+                        auto r = ranges[fail].first.find_or_add(post.first->place);
+                        if(r._range._upper < post.first->tokens)
+                            return false;
+                        r -= post.first->tokens;   
                     }
                     else
                     {
@@ -488,6 +491,9 @@ namespace PetriEngine {
                         else
                         {
                             assert(pre.first->tokens <= post.first->tokens);
+                            auto r = ranges[fail].first.find_or_add(post.first->place);
+                            if(r._range._upper < (post.first->tokens - pre.first->tokens))
+                                return false;
                             ranges[fail].first.find_or_add(post.first->place) -= (post.first->tokens - pre.first->tokens);
 //                            std::cerr << "\t4P" << pre.first->place << " +" << (pre.first->tokens - post.first->tokens) << std::endl;
                         }
@@ -520,7 +526,8 @@ namespace PetriEngine {
                     std::cerr << std::endl;
                 }
 #endif
-            }            
+            }
+            return true;
         }
 
         bool Solver::check(trace_t& trace, TraceSet& interpolants)
@@ -534,7 +541,7 @@ namespace PetriEngine {
                 _m[p] = _initial[p];
                 _mark[p] = _m[p];
             }
-            auto fail = findFailure(trace);
+            auto fail = findFailure(trace, true);
             interpolant_t ranges;
             if(fail == std::numeric_limits<decltype(fail)>::max())
             {
@@ -543,7 +550,13 @@ namespace PetriEngine {
             }
             ranges.resize(fail+1);
             computeTerminal(trace[fail], ranges.back());
-            computeHoare(trace, ranges, fail-1);
+            if(!computeHoare(trace, ranges, fail-1))
+            {
+                fail = findFailure(trace, false);
+                ranges.clear();
+                ranges.resize(fail+1);
+                computeTerminal(trace[fail], ranges.back());
+            }
             interpolants.addTrace(ranges);
             assert(!ranges.empty());
 /*#ifndef NDEBUG

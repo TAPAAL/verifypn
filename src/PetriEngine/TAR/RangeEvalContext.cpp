@@ -235,6 +235,12 @@ namespace PetriEngine
         _literal += element->constant();
         for(auto p :  element->places())
             _places.push_back(p.first);
-    }    
+    }
+    
+    void RangeEvalContext::_accept(const UnfoldedUpperBoundsCondition* element)
+    {
+        _bool_result = true;
+    }
+    
 }
 

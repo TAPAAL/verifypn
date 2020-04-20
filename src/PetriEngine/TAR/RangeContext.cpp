@@ -247,4 +247,9 @@ namespace PetriEngine {
             _ranges.compact();
         }
     }
+    
+    void RangeContext::_accept(const UnfoldedUpperBoundsCondition* element)
+    {
+        assert(false);
+    }
 }
