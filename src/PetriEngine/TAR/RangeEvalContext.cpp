@@ -145,7 +145,10 @@ namespace PetriEngine
         handle_compare((*element)[1], (*element)[0], false);
     }
     
-    void RangeEvalContext::_accept(const DeadlockCondition* element){ assert(false); }
+    void RangeEvalContext::_accept(const DeadlockCondition* element)
+    {
+        _bool_result = true;
+    }
     
     void RangeEvalContext::_accept(const CompareConjunction* element)
     {

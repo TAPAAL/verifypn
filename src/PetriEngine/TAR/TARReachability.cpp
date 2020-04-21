@@ -26,6 +26,7 @@
 #include "PetriEngine/TAR/TARReachability.h"
 #include "PetriEngine/TAR/RangeContext.h"
 #include "PetriEngine/TAR/Solver.h"
+#include "PetriEngine/TAR/ContainsVisitor.h"
 
 
 namespace PetriEngine {
@@ -171,7 +172,6 @@ namespace PetriEngine {
             {
                 auto np = use_place;
                 bool update = false;
-                bool some = false;
                 for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
                 {
                     auto pre = _net.preset(t);
@@ -393,9 +393,10 @@ namespace PetriEngine {
                 {
                     QueryPlaceAnalysisContext pa(builder.getPlaceNames(), builder.getTransitionNames(), &_net);
                     queries[i]->analyze(pa);
-
+                    ContainsVisitor<DeadlockCondition> dlvisitor;
+                    queries[i]->visit(dlvisitor);
                     for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                        used[p] = pa.getQueryPlaceCount()[p] > 0;
+                        used[p] = pa.getQueryPlaceCount()[p] > 0 || dlvisitor.does_contain();
                     Solver solver(_net, state.marking(), queries[i].get(), used);
                     bool res = tryReach(printtrace, solver);
                     if(res)

@@ -250,16 +250,13 @@ namespace PetriEngine {
         bool disjunction = element->isNegated();
         placerange_t pr;
         uint64_t priority = 0;
-        bool dirty = false;
         for (auto& c : element->constraints()) {
             if (!disjunction) {
                 if (c._lower > _base[c._place]) {
                     auto& added = _ranges.find_or_add(c._place);
                     if (added._range._upper <= c._lower - 1)
                         return;
-                    if(_dirty[c._place])
-                        dirty = true;
-                    else if (priority < _uses[c._place]) {
+                    if (!_dirty[c._place] && priority < _uses[c._place]) {
                         pr = placerange_t();
                         pr._place = c._place;
                         pr._range._upper = c._lower - 1;
@@ -272,9 +269,7 @@ namespace PetriEngine {
                     auto& added = _ranges.find_or_add(c._place);
                     if (added._range._lower >= c._upper + 1)
                         return;
-                    if(_dirty[c._place])
-                        dirty = true;
-                    else if (priority < _uses[c._place]) {
+                    if (!_dirty[c._place] && priority < _uses[c._place]) {
                         pr = placerange_t();
                         priority = _uses[c._place];
                         pr._place = c._place;
@@ -313,6 +308,9 @@ namespace PetriEngine {
     
     void RangeContext::_accept(const UnfoldedUpperBoundsCondition* element)
     {
-        assert(false);
+        for(auto& pb : element->places())
+        {
+            _ranges.find_or_add(pb._place)._range._upper = std::min<double>(pb._max, _marking[pb._place]);
+        }
     }
 }

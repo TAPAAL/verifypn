@@ -262,7 +262,6 @@ namespace PetriEngine {
         {
             int64_t fail = 0;
             int64_t first_fail = std::numeric_limits<decltype(first_fail)>::max();
-            int64_t old_place = -1;
             for(; fail < (int64_t)trace.size(); ++fail)
             {
                 state_t& s = trace[fail];
@@ -283,48 +282,69 @@ namespace PetriEngine {
                         }
                         else _mark[p] = _m[p];
                     }
-                    EvaluationContext ctx(_mark.get(), &_net);
-                    auto r = _query->evalAndSet(ctx);
+                    if(_query->getQuantifier() != Quantifier::UPPERBOUNDS)
+                    {                        
+                        EvaluationContext ctx(_mark.get(), &_net);
+                        auto r = _query->evalAndSet(ctx);
 #ifndef NDEBUG 
-                    if(first_fail == std::numeric_limits<decltype(first_fail)>::max())
-                    {
-                        for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                        if(first_fail == std::numeric_limits<decltype(first_fail)>::max())
                         {
-                            _mark[p] = _initial[p];
-                        }
-                        for(auto& t : trace)
-                        {
-                            Structures::State s;
-                            s.setMarking(_mark.get());
-                            _gen.prepare(&s);
-                            if(t.get_edge_cnt() == 0)
-                                assert(_query->evaluate(ctx) == r);
-                            else if(_gen.checkPreset(t.get_edge_cnt()-1))
+                            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
                             {
-                                _gen.consumePreset(s, t.get_edge_cnt()-1);
-                                _gen.producePostset(s, t.get_edge_cnt()-1);
+                                _mark[p] = _initial[p];
                             }
-                            else
+                            for(auto& t : trace)
                             {
-                                assert(false);
+                                Structures::State s;
+                                s.setMarking(_mark.get());
+                                _gen.prepare(&s);
+                                if(t.get_edge_cnt() == 0)
+                                    assert(_query->evaluate(ctx) == r);
+                                else if(_gen.checkPreset(t.get_edge_cnt()-1))
+                                {
+                                    _gen.consumePreset(s, t.get_edge_cnt()-1);
+                                    _gen.producePostset(s, t.get_edge_cnt()-1);
+                                }
+                                else
+                                {
+                                    assert(false);
+                                }
+                                s.setMarking(nullptr);
                             }
-                            s.setMarking(nullptr);
                         }
-                    }
 #endif
 
-                    if(r == Condition::RTRUE)
-                    {
-                        if(first_fail != std::numeric_limits<decltype(first_fail)>::max())
+                        if(r == Condition::RTRUE)
                         {
-                            return first_fail;
+                            if(first_fail != std::numeric_limits<decltype(first_fail)>::max())
+                            {
+                                return first_fail;
+                            }
+                            return std::numeric_limits<decltype(fail)>::max();
                         }
-                        return std::numeric_limits<decltype(fail)>::max();
+                        else
+                        {
+                            assert(r == Condition::RFALSE);
+                            return fail;
+                        }
                     }
                     else
                     {
-                        assert(r == Condition::RFALSE);
-                        return fail;
+                        UnfoldedUpperBoundsCondition* ub = static_cast<UnfoldedUpperBoundsCondition*>(_query);
+                        if(first_fail != std::numeric_limits<decltype(first_fail)>::max())
+                        {
+                            auto value = ub->value(_mark.get());
+                            if(value <= ub->bounds(false))
+                                return fail;
+                            else
+                                return first_fail;
+                        }
+                        else
+                        {
+                            EvaluationContext ctx(_mark.get(), &_net);
+                            _query->evalAndSet(ctx);
+                            return fail;
+                        }
                     }
                 }
                 else
@@ -347,7 +367,6 @@ namespace PetriEngine {
                             {
                                 std::copy(_m.get(), _m.get() + _net.numberOfPlaces(), _failm.get());
                                 first_fail = fail;
-                                old_place = pre.first->place;
 //                                std::cerr << "FAIL " << fail << " : T" << t << std::endl;
                             }
                             if(_inq[pre.first->place] && !to_end)

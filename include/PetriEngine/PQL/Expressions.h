@@ -1189,13 +1189,18 @@ namespace PetriEngine {
             CTLType getQueryType() const override { return CTLType::EVAL; }
             bool containsNext() const override { return false; }
             bool nestedDeadlock() const override { return false; }
-            double bounds() const { 
-                return _offset + _bound; 
+            
+            double bounds(bool add_offset = true) const { 
+                return (add_offset ? _offset : 0 ) + _bound; 
             }
+            
             virtual void setUpperBound(size_t bound)
             {
                 _bound = std::max(_bound, bound);
             }
+            
+            const std::vector<place_t>& places() const { return _places; }
+            
         private:
             std::vector<place_t> _places;
             size_t _bound = 0;
