@@ -247,9 +247,9 @@ namespace PetriEngine {
         {
 
         private:
-            size_t offset;
-            size_t size;
-            size_t edgecnt; 
+            size_t offset = 0;
+            size_t size = std::numeric_limits<size_t>::max();
+            size_t edgecnt = 0; 
             std::vector<size_t> interpolant;
         public:
             bool operator == (const state_t& other)
@@ -286,7 +286,7 @@ namespace PetriEngine {
                 if(edgecnt == 0)
                     return 0;
                 else
-                    return 1 + ((edgecnt + offset) % size);
+                    return 1 + (((edgecnt-1) + offset) % size);
             }
 
             void set_edge(size_t edge)

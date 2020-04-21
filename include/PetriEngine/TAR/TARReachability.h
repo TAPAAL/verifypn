@@ -55,7 +55,7 @@ namespace PetriEngine {
             void printTrace(trace_t& stack);
             void nextEdge(AntiChain<uint32_t, size_t>& checked, state_t& state, trace_t& waiting, std::vector<size_t>&& nextinter);
             bool tryReach(  bool printtrace, Solver& solver);
-            std::pair<bool,bool> runTAR(    bool printtrace, Solver& solver);
+            std::pair<bool,bool> runTAR(    bool printtrace, Solver& solver, std::vector<bool>& use_trans);
             bool popDone(trace_t& waiting, size_t& stepno);
             bool doStep(state_t& state, std::vector<size_t>& nextinter);
             void addNonChanging(state_t& state, std::vector<size_t>& maximal, std::vector<size_t>& nextinter);

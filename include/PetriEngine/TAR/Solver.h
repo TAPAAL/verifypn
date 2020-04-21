@@ -29,6 +29,7 @@ namespace PetriEngine {
             using interpolant_t = std::vector<inter_t>;
             Solver(PetriNet& net, MarkVal* initial, Condition* query, std::vector<bool>& inq);
             bool check(trace_t& trace, TraceSet& interpolants);
+            const std::vector<bool>& in_query() const { return _inq; }
         private:
             int64_t findFailure(trace_t& trace, bool to_end);
             interpolant_t findFree(trace_t& trace);

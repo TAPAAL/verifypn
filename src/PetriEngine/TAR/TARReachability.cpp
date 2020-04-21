@@ -99,7 +99,7 @@ namespace PetriEngine {
         }
         
         std::pair<bool,bool> TARReachabilitySearch::runTAR( bool printtrace,
-                                            Solver& solver)
+                                            Solver& solver, std::vector<bool>& use_trans)
         {
             auto checked = AntiChain<uint32_t, size_t>();
             // waiting-list with levels
@@ -122,6 +122,11 @@ namespace PetriEngine {
                 assert(waiting.size() > 0 );
                 state_t& state = waiting.back();
                 std::vector<size_t> nextinter;
+                if(!use_trans[state.get_edge_cnt()])
+                {
+                    state.next_edge(_net);
+                    continue;                    
+                }
                 if(doStep(state, nextinter)) // Check if the next state makes the interpolant automata accept.
                 {
                     state.next_edge(_net);
@@ -159,13 +164,37 @@ namespace PetriEngine {
         bool TARReachabilitySearch::tryReach(bool printtrace, Solver& solver)
         {            
             _traceset.removeEdges(0);
+            std::vector<bool> use_trans(_net.numberOfTransitions()+1);
+            use_trans[0] = true;
+            for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+            {
+                auto pre = _net.preset(t);
+                auto post = _net.postset(t);
+                for(;pre.first != pre.second; ++pre.first)
+                    if(solver.in_query()[pre.first->place])
+                        use_trans[t+1] = true;
+                for(;post.first != post.second; ++post.first)
+                    if(solver.in_query()[post.first->place])
+                        use_trans[t+1] = true;
+            }
             do
             {
-                auto [finished, satisfied] = runTAR(printtrace, solver);
+                auto [finished, satisfied] = runTAR(printtrace, solver, use_trans);
                 if(finished)
                 {
                     if(!satisfied)
                     {
+                        bool found = false;
+                        for(size_t t = 0; t <= _net.numberOfTransitions(); ++t)
+                        {
+                            if(!use_trans[t])
+                            {
+                                use_trans[t] = true;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if(found) continue;
 #ifdef VERBOSETAR
                         for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
                         {
@@ -193,8 +222,11 @@ namespace PetriEngine {
                         
                         
                         //std::vector<size_t> trace{149,123,122,97,157,79,71,24,26,138,3,38,144,143,8,134,6,47,127,11,140,40,27,122};
-                        //std::vector<size_t> trace{17,17,17,17,17,52,52,52,52,52,56,56,53,55,51,6,53,19,23,54,30,34,36,59,59,57,61,56,53,55,52,30,34,36,59,57,61,53,55,52,30,34,36,57,29,24,60,0,40,2,57,23,30,60,0,2,57,61,34,36,57,29,24,60,0,40,2,57,23,30,60,0,2,57,61,34,36,57,29,24,60,0,40,2,22,27,43};
-                        //assert(validate(trace));
+//                        std::vector<size_t> trace{
+//                            17,17,17,17,17,56,56,56,56,56,51,6,51,19,24,6,51,40,23,19,24,6,51,40,23,19,24,6,51,40,23,19,24,6,29,24,29,24,29,24,19,23,59,30,36,57,59,30,35,41,56,41,41,59,45,47,40,23,40,23,59,45,47,29,24,29,24,59,45,47,3,5,56,3,5,34,36,57,59,30,35,41,56,41,41,59,45,47,40,23,40,23,59,45,47,40,23,3,5,56,29,24,29,24,29,24,59,45,47,3,5,56
+//                        };
+//                        assert(validate(trace));
+//                        auto [finished, satisfied] = runTAR(printtrace, solver, use_trans);
 
                     }
                     return satisfied;
@@ -226,6 +258,11 @@ namespace PetriEngine {
 
             state_t s;
             s.set_interpolants(_traceset.minimize(_traceset.initial()));
+            std::cerr << "I ";
+            for(auto& i : s.get_interpolants())
+                std::cerr << i << ", ";
+            
+            std::cerr << std::endl;
             std::vector<size_t> next;
             uint32_t dummy = 0;
             chain.insert(dummy, s.get_interpolants());
@@ -239,19 +276,19 @@ namespace PetriEngine {
                     dummy = 0;
                 if(doStep(s, next))
                 {
-                    std::cerr << "FAIL AT [" << n << "] = T" << transitions[n] << std::endl;
+                    std::cerr << "RFAIL AT [" << n << "] = T" << transitions[n] << std::endl;
                     return false;
                 }
                 s.set_interpolants(_traceset.minimize(next));
                 if(!chain.insert(dummy, s.get_interpolants()))
                 {
-                    std::cerr << "FAIL AT [" << n << "] = T" << transitions[n] << std::endl;
+                    std::cerr << "CFAIL AT [" << n << "] = T" << transitions[n] << std::endl;
                 }
             }
             s.set_edge(0);
             if(doStep(s, next))
             {
-                std::cerr << "FAIL AT [" << n << "] = T" << transitions[n] << std::endl;
+                std::cerr << "FFAIL AT [" << n << "] = T" << transitions[n] << std::endl;
                 return false;
             }
             return true;
