@@ -165,18 +165,44 @@ namespace PetriEngine {
         {            
             _traceset.removeEdges(0);
             std::vector<bool> use_trans(_net.numberOfTransitions()+1);
+            std::vector<bool> use_place = solver.in_query();
             use_trans[0] = true;
-            for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+            auto update_use = [&use_trans, &use_place, this](bool any)
             {
-                auto pre = _net.preset(t);
-                auto post = _net.postset(t);
-                for(;pre.first != pre.second; ++pre.first)
-                    if(solver.in_query()[pre.first->place])
-                        use_trans[t+1] = true;
-                for(;post.first != post.second; ++post.first)
-                    if(solver.in_query()[post.first->place])
-                        use_trans[t+1] = true;
-            }
+                auto np = use_place;
+                bool update = false;
+                bool some = false;
+                for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+                {
+                    auto pre = _net.preset(t);
+                    auto post = _net.postset(t);
+                    if(use_trans[t+1]) continue;
+                    {
+                        for(;pre.first != pre.second; ++pre.first)
+                            if(use_place[pre.first->place])
+                                use_trans[t+1] = true;
+                        for(;post.first != post.second; ++post.first)
+                            if(use_place[post.first->place])
+                                use_trans[t+1] = true;
+                    }
+                    if(use_trans[t+1])
+                    {
+                        update = true;
+                        auto pre = _net.preset(t);
+                        for(;pre.first != pre.second; ++pre.first)
+                            np[pre.first->place] = true;
+                        if(any)
+                        {
+                            std::swap(np, use_place);
+                            return true;
+                        }
+                    }
+                }
+                std::swap(np, use_place);
+                return update;
+            };
+            
+            update_use(false);
             do
             {
                 auto [finished, satisfied] = runTAR(printtrace, solver, use_trans);
@@ -184,17 +210,7 @@ namespace PetriEngine {
                 {
                     if(!satisfied)
                     {
-                        bool found = false;
-                        for(size_t t = 0; t <= _net.numberOfTransitions(); ++t)
-                        {
-                            if(!use_trans[t])
-                            {
-                                use_trans[t] = true;
-                                found = true;
-                                break;
-                            }
-                        }
-                        if(found) continue;
+                        if(update_use(false)) continue;
 #ifdef VERBOSETAR
                         for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
                         {
