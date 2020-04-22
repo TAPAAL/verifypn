@@ -184,6 +184,13 @@ namespace PetriEngine {
                 _start = std::chrono::high_resolution_clock::now();
                 _cache = cache;
             }
+                    
+            virtual ~SimplificationContext() {
+                if(_base_lp != nullptr)
+                    glp_delete_prob(_base_lp);
+                _base_lp = nullptr;
+            }
+
 
             const MarkVal* marking() const {
                 return _marking;
