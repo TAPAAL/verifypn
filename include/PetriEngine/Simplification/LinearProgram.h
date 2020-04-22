@@ -35,7 +35,6 @@ namespace PetriEngine {
             enum result_t { UKNOWN, IMPOSSIBLE, POSSIBLE };
             result_t _result = result_t::UKNOWN;
             std::vector<equation_t> _equations;
-            static glp_prob* buildBase(const PQL::SimplificationContext& context, size_t nCol, size_t nRow, int32_t* indir);
         public:
             void swap(LinearProgram& other)
             {

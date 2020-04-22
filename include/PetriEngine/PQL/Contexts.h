@@ -20,17 +20,17 @@
 #ifndef CONTEXTS_H
 #define CONTEXTS_H
 
+#include "../PetriNet.h"
+#include "../Simplification/LPCache.h"
+#include "PQL.h"
+#include "../NetStructures.h"
 
 #include <string>
 #include <vector>
 #include <list>
 #include <map>
 #include <chrono>
-
-#include "../PetriNet.h"
-#include "../Simplification/LPCache.h"
-#include "PQL.h"
-#include "../NetStructures.h"
+#include <glpk.h>
 
 namespace PetriEngine {
     namespace PQL {
@@ -65,20 +65,7 @@ namespace PetriEngine {
             }
             
             /** Resolve an identifier */
-            virtual ResolutionResult resolve(const std::string& identifier, bool place = true) {
-                ResolutionResult result;
-                result.offset = -1;
-                result.success = false;
-                auto& map = place ? _placeNames : _transitionNames;
-                auto it = map.find(identifier);
-                if(it != map.end())
-                {
-                    result.offset = (int)it->second;
-                    result.success = true;
-                    return result;
-                }                
-                return result;
-            }
+            virtual ResolutionResult resolve(const std::string& identifier, bool place = true);
 
             /** Report error */
             void reportError(const ExprError& error) {
@@ -114,23 +101,9 @@ namespace PetriEngine {
                       _colored(colored)
             {}
 
-            bool resolvePlace(const std::string& place, std::unordered_map<uint32_t,std::string>& out) {
-                auto it = _coloredPlaceNames.find(place);
-                if (it != _coloredPlaceNames.end()) {
-                    out = it->second;
-                    return true;
-                }
-                return false;
-            }
+            bool resolvePlace(const std::string& place, std::unordered_map<uint32_t,std::string>& out);
 
-            bool resolveTransition(const std::string& transition, std::vector<std::string>& out) {
-                auto it = _coloredTransitionNames.find(transition);
-                if (it != _coloredTransitionNames.end()) {
-                    out = it->second;
-                    return true;
-                }
-                return false;
-            }
+            bool resolveTransition(const std::string& transition, std::vector<std::string>& out);
 
             bool isColored() const {
                 return _colored;
@@ -232,11 +205,7 @@ namespace PetriEngine {
                 _negated = b;
             }
             
-            double getReductionTime(){
-                // duration in seconds
-                auto end = std::chrono::high_resolution_clock::now();
-                return (std::chrono::duration_cast<std::chrono::microseconds>(end - _start).count())*0.000001;
-            }
+            double getReductionTime();
             
             bool timeout() const {
                 auto end = std::chrono::high_resolution_clock::now();
@@ -244,14 +213,15 @@ namespace PetriEngine {
                 return (diff.count() >= _queryTimeout);
             }
             
-            uint32_t getLpTimeout() const {
-                return _lpTimeout;
-            }
+            uint32_t getLpTimeout() const;
             
             LPCache* cache() const
             {
                 return _cache;
             }
+            
+            
+            glp_prob* makeBaseLP() const;
 
         private:
             bool _negated;
@@ -260,6 +230,10 @@ namespace PetriEngine {
             uint32_t _queryTimeout, _lpTimeout;
             std::chrono::high_resolution_clock::time_point _start;
             LPCache* _cache;
+            mutable glp_prob* _base_lp = nullptr;
+
+            glp_prob* buildBase() const;
+
         };
 
     } // PQL

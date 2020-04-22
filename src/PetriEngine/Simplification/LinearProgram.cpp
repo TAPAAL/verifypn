@@ -45,72 +45,6 @@ namespace PetriEngine {
         }
 
         constexpr auto infty = std::numeric_limits<REAL>::infinity();
-
-        
-        glp_prob* LinearProgram::buildBase( const PQL::SimplificationContext& context, size_t nCol, size_t nRow, int32_t* indir)
-        {
-            // restrict all places to contain 0+ tokens
-            auto* lp = glp_create_prob();
-            if(lp == nullptr)
-                return lp;
-            glp_add_cols(lp, nCol+1);
-            glp_add_rows(lp, nRow+1);
-            auto net = context.net();
-            auto m0 = context.marking();
-            {
-                std::vector<REAL> col = std::vector<REAL>(nRow+1);
-                for(size_t t = 0; t < net->numberOfTransitions(); ++t)
-                {
-                    auto pre = net->preset(t);
-                    auto post = net->postset(t);
-                    size_t l = 1;
-                    while(pre.first != pre.second ||
-                          post.first != post.second)
-                    {
-                        if(pre.first == pre.second || (post.first != post.second && post.first->place < pre.first->place))
-                        {
-                            col[l] = post.first->tokens;
-                            indir[l] = post.first->place+1;
-                            ++post.first;
-                        }
-                        else if(post.first == post.second || (pre.first != pre.second && pre.first->place < post.first->place))
-                        {
-                            col[l] = -(double)pre.first->tokens;
-                            indir[l] = pre.first->place+1;
-                            ++pre.first;                        
-                        }
-                        else
-                        {
-                            assert(pre.first->place == post.first->place);
-                            col[l] = (REAL)post.first->tokens - (REAL)pre.first->tokens;
-                            indir[l] = pre.first->place+1;
-                            ++pre.first;
-                            ++post.first;
-                        }
-                        ++l;
-                    }
-                    glp_set_mat_col(lp, t+1, l-1, indir, col.data());
-                    if(context.timeout())
-                    {
-                        std::cerr << "glpk: construction timeout" << std::endl;
-                        glp_delete_prob(lp);
-                        return nullptr;
-                    }
-                }                
-            }
-            int rowno = 1;
-            for (size_t p = 0; p < net->numberOfPlaces(); p++) {
-                glp_set_row_bnds(lp, rowno, GLP_LO, (0.0 - (double)m0[p]), infty);
-                ++rowno;
-                if(context.timeout())
-                {
-                    std::cerr << "glpk: construction timeout" << std::endl;
-                    glp_delete_prob(lp);
-                    return nullptr;
-                }
-            }       
-            return lp;
-        }
         
         bool LinearProgram::isImpossible(const PQL::SimplificationContext& context, uint32_t solvetime) {
             bool use_ilp = true;
@@ -135,15 +69,15 @@ namespace PetriEngine {
             for(size_t i = 0; i <= nCol; ++i)
                 indir[i] = i;
 
-            auto lp = buildBase(context, nCol, nRow, indir.data());
+            auto lp = context.makeBaseLP();
             if(lp == nullptr)
                 return false;
             
             int rowno = 1 + net->numberOfPlaces();
-            
+            glp_add_rows(lp, _equations.size());
             for(const auto& eq : _equations){
                 auto l = eq.row->write_indir(row, indir);
-                assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));
+                assert(!(std::isinf(eq.upper) && std::isinf(eq.lower)));                
                 glp_set_mat_row(lp, rowno, l-1, indir.data(), row.data());
                 if(!std::isinf(eq.lower) && !std::isinf(eq.upper))
                 {
@@ -248,17 +182,12 @@ namespace PetriEngine {
             auto timeout = std::min(solvetime, context.getLpTimeout());
 
             const uint32_t nCol = net->numberOfTransitions();
-            const int nRow = net->numberOfPlaces();
             std::vector<REAL> row = std::vector<REAL>(nCol + 1);
-            std::vector<int32_t> indir(nCol + 1);
-            for(size_t i = 0; i <= nCol; ++i)
-                indir[i] = i;
 
-            auto base_lp = buildBase(context, nCol, nRow, indir.data());
+            auto base_lp = context.makeBaseLP();
             if(base_lp == nullptr)
                 return result;
             
-            int rowno = 1 + net->numberOfPlaces();
             // Minimize the objective
             glp_set_obj_dir(base_lp, GLP_MAX);
 
