@@ -46,36 +46,17 @@ namespace PetriEngine {
 
         constexpr auto infty = std::numeric_limits<REAL>::infinity();
 
-        bool LinearProgram::isImpossible(const PQL::SimplificationContext& context, uint32_t solvetime) {
-            bool use_ilp = true;
-            auto net = context.net();
-            auto m0 = context.marking();
-
-
-            if(_result != result_t::UKNOWN)
-            {
-                if(_result == result_t::IMPOSSIBLE)
-                    return _result == result_t::IMPOSSIBLE;
-            }
-
-            if(_equations.size() == 0 || context.timeout()){
-                return false;
-            }
-
-            const uint32_t nCol = net->numberOfTransitions();
-            auto lp = glp_create_prob();
-            const uint32_t nRow = net->numberOfPlaces() + _equations.size();
-
+        
+        glp_prob* LinearProgram::buildBase( const PQL::SimplificationContext& context, size_t nCol, size_t nRow, int32_t* indir)
+        {
+            // restrict all places to contain 0+ tokens
+            auto* lp = glp_create_prob();
+            if(lp == nullptr)
+                return lp;
             glp_add_cols(lp, nCol+1);
             glp_add_rows(lp, nRow+1);
-            assert(lp);
-            if (!lp) return false;
-            std::vector<REAL> row = std::vector<REAL>(nCol + 1);
-            std::vector<int32_t> indir(std::max(nCol, nRow) + 1);
-            for(size_t i = 0; i <= nCol; ++i)
-                indir[i] = i;
-
-            // restrict all places to contain 0+ tokens
+            auto net = context.net();
+            auto m0 = context.marking();
             {
                 std::vector<REAL> col = std::vector<REAL>(nRow+1);
                 for(size_t t = 0; t < net->numberOfTransitions(); ++t)
@@ -108,12 +89,12 @@ namespace PetriEngine {
                         }
                         ++l;
                     }
-                    glp_set_mat_col(lp, t+1, l-1, indir.data(), col.data());
+                    glp_set_mat_col(lp, t+1, l-1, indir, col.data());
                     if(context.timeout())
                     {
                         std::cerr << "glpk: construction timeout" << std::endl;
                         glp_delete_prob(lp);
-                        return false;
+                        return nullptr;
                     }
                 }                
             }
@@ -125,9 +106,40 @@ namespace PetriEngine {
                 {
                     std::cerr << "glpk: construction timeout" << std::endl;
                     glp_delete_prob(lp);
-                    return false;
+                    return nullptr;
                 }
+            }       
+            return lp;
+        }
+        
+        bool LinearProgram::isImpossible(const PQL::SimplificationContext& context, uint32_t solvetime) {
+            bool use_ilp = true;
+            auto net = context.net();
+
+
+            if(_result != result_t::UKNOWN)
+            {
+                if(_result == result_t::IMPOSSIBLE)
+                    return _result == result_t::IMPOSSIBLE;
             }
+
+            if(_equations.size() == 0 || context.timeout()){
+                return false;
+            }
+
+            const uint32_t nCol = net->numberOfTransitions();
+            const uint32_t nRow = net->numberOfPlaces() + _equations.size();
+
+            std::vector<REAL> row = std::vector<REAL>(nCol + 1);
+            std::vector<int32_t> indir(std::max(nCol, nRow) + 1);
+            for(size_t i = 0; i <= nCol; ++i)
+                indir[i] = i;
+
+            auto lp = buildBase(context, nCol, nRow, indir.data());
+            if(lp == nullptr)
+                return false;
+            
+            int rowno = 1 + net->numberOfPlaces();
             
             for(const auto& eq : _equations){
                 auto l = eq.row->write_indir(row, indir);
@@ -242,32 +254,11 @@ namespace PetriEngine {
             for(size_t i = 0; i <= nCol; ++i)
                 indir[i] = i;
 
-            auto* base_lp = glp_create_prob();
-            {
-                glp_add_cols(base_lp, nCol+1);
-                glp_add_rows(base_lp, nRow+1);
-                assert(base_lp);
-                if (!base_lp) return result;
-
-                int rowno = 1;
-
-                // restrict all places to contain 0+ tokens
-                for (size_t p = 0; p < net->numberOfPlaces(); ++p) {
-                    memset(row.data(), 0, sizeof (REAL) * (nCol + 1));
-                    size_t l = 1;
-                    for (size_t t = 0; t < nCol; t++) {
-                        row[l] = net->outArc(t, p) - net->inArc(p, t);
-                        if(row[l] != 0){
-                            indir[l] = t+1;
-                            ++l;
-                        }
-                    }
-                    glp_set_mat_row(base_lp, rowno, l-1, indir.data(), row.data());
-                    glp_set_row_bnds(base_lp, rowno, GLP_LO, (0.0 - (double)m0[p]), infty);
-                    ++rowno;
-                }
-            }
-
+            auto base_lp = buildBase(context, nCol, nRow, indir.data());
+            if(base_lp == nullptr)
+                return result;
+            
+            int rowno = 1 + net->numberOfPlaces();
             // Minimize the objective
             glp_set_obj_dir(base_lp, GLP_MAX);
 

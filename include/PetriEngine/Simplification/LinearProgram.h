@@ -1,12 +1,15 @@
 #ifndef LINEARPROGRAM_H
 #define LINEARPROGRAM_H
-#include <algorithm>
-#include <unordered_set>
-#include <memory>
+
 #include "../PetriNet.h"
 #include "Member.h"
 #include "Vector.h"
 #include "../PQL/Contexts.h"
+
+#include <algorithm>
+#include <unordered_set>
+#include <memory>
+#include <glpk.h>
     
 namespace PetriEngine {
     namespace Simplification {
@@ -32,6 +35,7 @@ namespace PetriEngine {
             enum result_t { UKNOWN, IMPOSSIBLE, POSSIBLE };
             result_t _result = result_t::UKNOWN;
             std::vector<equation_t> _equations;
+            static glp_prob* buildBase(const PQL::SimplificationContext& context, size_t nCol, size_t nRow, int32_t* indir);
         public:
             void swap(LinearProgram& other)
             {
