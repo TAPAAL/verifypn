@@ -1077,18 +1077,34 @@ int main(int argc, char* argv[]) {
     }
     else
     {
-        ReachabilitySearch strategy(printer, *net, options.kbound);
+        ReachabilitySearch strategy(*net, options.kbound);
 
         // Change default place-holder to default strategy
         if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
 
         //Reachability search
-        strategy.reachable(queries, results, 
-                options.strategy,
-                options.stubbornreduction,
-                options.statespaceexploration,
-                options.printstatistics, 
-                options.trace);
+        strategy.reachable(queries, results,
+                           options.strategy,
+                           options.stubbornreduction,
+                           options.statespaceexploration,
+                           options.printstatistics,
+                           options.trace,
+                           [&printer](size_t index,
+                                      Condition *query,
+                                      ResultPrinter::Result result,
+                                      size_t expandedStates,
+                                      size_t exploredStates,
+                                      size_t discoveredStates,
+                                      const std::vector<size_t> enabledTransitionsCount,
+                                      int maxTokens,
+                                      const std::vector<uint32_t> maxPlaceBound,
+                                      Structures::StateSetInterface *stateset,
+                                      size_t lastmarking,
+                                      const MarkVal *initialMarking) {
+                               return std::make_pair(
+                                       printer.printResult(index, query, result, expandedStates, exploredStates, discoveredStates, enabledTransitionsCount, maxTokens, maxPlaceBound, stateset, lastmarking, initialMarking),
+                                       false);
+                           });
     }
        
     return SuccessCode;

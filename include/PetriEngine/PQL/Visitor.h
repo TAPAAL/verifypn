@@ -26,8 +26,6 @@ namespace PetriEngine
             template<typename T>
             void accept(T element)
             {
-                typedef typename std::remove_pointer<T>::type T1;
-                typedef typename std::remove_cv<T1>::type T2;
                 _accept(element);
             }
 

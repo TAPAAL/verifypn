@@ -14,9 +14,11 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <PetriEngine/PQL/Expressions.h>
 
-using namespace std;
+using namespace PetriEngine;
 using namespace PetriEngine::PQL;
+using namespace PetriEngine::Reachability;
 
 
 ReturnValue getAlgorithm(std::shared_ptr<Algorithm::FixedPointAlgorithm>& algorithm,
@@ -70,6 +72,165 @@ void printResult(const std::string& qname, CTLResult& result, bool statisticslev
     }
 }
 
+bool singleSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
+                 CTL::CTLAlgorithmType algorithmtype,
+                 PetriEngine::Reachability::Strategy strategytype, bool partial_order, CTLResult& result)
+{
+    PetriNets::OnTheFlyDG graph(net, partial_order);
+    graph.setQuery(query);
+    std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
+    if(getAlgorithm(alg, algorithmtype,  strategytype) == ErrorCode)
+    {
+        assert(false);
+        throw std::exception();
+    }
+
+    stopwatch timer;
+    timer.start();
+    auto res = alg->search(graph);
+    timer.stop();
+
+    result.duration += timer.duration();
+    result.numberOfConfigurations += graph.configurationCount();
+    result.numberOfMarkings += graph.markingCount();
+    result.processedEdges += alg->processedEdges();
+    result.processedNegationEdges += alg->processedNegationEdges();
+    result.exploredConfigurations += alg->exploredConfigurations();
+    result.numberOfEdges += alg->numberOfEdges();
+    return res;
+}
+
+bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
+                    CTL::CTLAlgorithmType algorithmtype,
+                    PetriEngine::Reachability::Strategy strategytype, bool partial_order, CTLResult& result, options_t& options);
+
+bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriEngine::PetriNet* net,
+                           CTL::CTLAlgorithmType algorithmtype,
+                           PetriEngine::Reachability::Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
+{
+    std::vector<int8_t> state(query->size(), 0);
+    std::vector<int8_t> lstate;
+    std::vector<Condition_ptr> queries;
+    for(size_t i = 0; i < query->size(); ++i)
+    {
+        if((*query)[i]->isReachability())
+        {
+            state[i] = dynamic_cast<NotCondition*>((*query)[i].get()) ? -1 : 1;
+            queries.emplace_back((*query)[i]->prepareForReachability());
+            lstate.emplace_back(state[i]);
+        }
+    }
+
+    {
+        PetriEngine::Reachability::ReachabilitySearch strategy(*net, options.kbound, true);
+        std::vector<PetriEngine::Reachability::ResultPrinter::Result> res(queries.size(), PetriEngine::Reachability::ResultPrinter::Unknown);
+        strategy.reachable(queries, res,
+                                    options.strategy,
+                                    options.stubbornreduction,
+                                    false,
+                                    false,
+                                    false, [&lstate, is_conj](size_t index,
+                                              Condition* query,
+                                              ResultPrinter::Result result,
+                                              size_t expandedStates,
+                                              size_t exploredStates,
+                                              size_t discoveredStates,
+                                              const std::vector<size_t> enabledTransitionsCount,
+                                              int maxTokens,
+                                              const std::vector<uint32_t> maxPlaceBound, Structures::StateSetInterface* stateset,
+                                              size_t lastmarking,
+                                              const MarkVal* initialMarking){
+            if(result == ResultPrinter::Satisfied)
+            {
+                result = lstate[index] < 0 ? ResultPrinter::NotSatisfied : ResultPrinter::Satisfied;
+            }
+            else if(result == ResultPrinter::NotSatisfied)
+            {
+                result = lstate[index] < 0 ? ResultPrinter::Satisfied : ResultPrinter::NotSatisfied;
+            }
+            bool terminate = is_conj ? (result == ResultPrinter::NotSatisfied) : (result == ResultPrinter::Satisfied);
+            return std::make_pair(result, terminate);
+        });
+        size_t j = 0;
+        for(size_t i = 0; i < query->size(); ++i) {
+            if (state[i] != 0)
+            {
+                if (res[j] == PetriEngine::Reachability::ResultPrinter::Unknown) {
+                    ++j;
+                    continue;
+                }
+                auto bres = res[j] == ResultPrinter::Satisfied;
+
+                if(bres xor is_conj) {
+                    return !is_conj;
+                }
+                ++j;
+            }
+        }
+    }
+
+    for(size_t i = 0; i < query->size(); ++i) {
+        if (state[i] == 0)
+        {
+            if(recursiveSolve((*query)[i], net, algorithmtype, strategytype, partial_order, result, options) xor is_conj)
+            {
+                return !is_conj;
+            }
+        }
+    }
+    return is_conj;
+}
+
+bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
+                    CTL::CTLAlgorithmType algorithmtype,
+                    PetriEngine::Reachability::Strategy strategytype, bool partial_order, CTLResult& result, options_t& options)
+{
+    if(auto q = dynamic_cast<NotCondition*>(query.get()))
+    {
+        return ! recursiveSolve((*q)[0], net, algorithmtype, strategytype, partial_order, result, options);
+    }
+    else if(auto q = dynamic_cast<AndCondition*>(query.get()))
+    {
+        return solveLogicalCondition(q, true, net, algorithmtype, strategytype, partial_order, result, options);
+    }
+    else if(auto q = dynamic_cast<OrCondition*>(query.get()))
+    {
+        return solveLogicalCondition(q, false, net, algorithmtype, strategytype, partial_order, result, options);
+    }
+    else if(query->isReachability())
+    {
+        PetriEngine::Reachability::ReachabilitySearch strategy(*net, options.kbound, true);
+        std::vector<Condition_ptr> queries{query->prepareForReachability()};
+        std::vector<PetriEngine::Reachability::ResultPrinter::Result> res;
+        res.emplace_back(PetriEngine::Reachability::ResultPrinter::Unknown);
+        auto r = strategy.reachable(queries, res,
+                           options.strategy,
+                           options.stubbornreduction,
+                           false,
+                           false,
+                           false,
+                           [](size_t index,
+                                    Condition* query,
+                                    ResultPrinter::Result result,
+                                    size_t expandedStates,
+                                    size_t exploredStates,
+                                    size_t discoveredStates,
+                                    const std::vector<size_t> enabledTransitionsCount,
+                                    int maxTokens,
+                                    const std::vector<uint32_t> maxPlaceBound, Structures::StateSetInterface* stateset,
+                                    size_t lastmarking,
+                                    const MarkVal* initialMarking){
+                    return std::make_pair(result, false);
+                });
+        return  r xor query->isInvariant();
+    }
+    else
+    {
+        return singleSolve(query, net, algorithmtype, strategytype, partial_order, result);
+    }
+}
+
+
 ReturnValue CTLMain(PetriEngine::PetriNet* net,
                     CTL::CTLAlgorithmType algorithmtype,
                     PetriEngine::Reachability::Strategy strategytype,
@@ -83,48 +244,39 @@ ReturnValue CTLMain(PetriEngine::PetriNet* net,
                     options_t& options
         )
 {
-
     for(auto qnum : querynumbers){
         CTLResult result(queries[qnum]);
-        PetriNets::OnTheFlyDG graph(net, partial_order); 
-        graph.setQuery(result.query);
-        std::shared_ptr<Algorithm::FixedPointAlgorithm> alg = nullptr;
         bool solved = false;
-        switch(graph.initialEval())
+
         {
-            case Condition::Result::RFALSE:
-                result.result = false;
-                solved = true;
-                break;
-            case Condition::Result::RTRUE:
-                result.result = true;
-                solved = true;
-                break;
-            default:
-                break;
-        }
-        
-        if(!solved)
-        {            
-            if(getAlgorithm(alg, algorithmtype,  strategytype) == ErrorCode)
-            {
-                return ErrorCode;
+            PetriNets::OnTheFlyDG graph(net, partial_order);
+            graph.setQuery(result.query);
+            switch (graph.initialEval()) {
+                case Condition::Result::RFALSE:
+                    result.result = false;
+                    solved = true;
+                    break;
+                case Condition::Result::RTRUE:
+                    result.result = true;
+                    solved = true;
+                    break;
+                default:
+                    break;
             }
-
-            stopwatch timer;
-            timer.start();
-            result.result = alg->search(graph);
-            timer.stop();
-
-            result.duration = timer.duration();
         }
-        result.numberOfConfigurations = graph.configurationCount();
-        result.numberOfMarkings = graph.markingCount();
-        result.processedEdges = alg ? alg->processedEdges() : 0;
-        result.processedNegationEdges = alg ? alg->processedNegationEdges() : 0;
-        result.exploredConfigurations = alg ? alg->exploredConfigurations() : 0;
-        result.numberOfEdges = alg ? alg->numberOfEdges() : 0;
+        result.numberOfConfigurations = 0;
+        result.numberOfMarkings = 0;
+        result.processedEdges = 0;
+        result.processedNegationEdges = 0;
+        result.exploredConfigurations = 0;
+        result.numberOfEdges = 0;
+        result.duration = 0;
+        if(!solved)
+        {
+            result.result = recursiveSolve(result.query, net, algorithmtype, strategytype, partial_order, result, options);
+        }
         printResult(querynames[qnum], result, printstatistics, mccoutput, false, qnum, options);
     }
     return SuccessCode;
 }
+

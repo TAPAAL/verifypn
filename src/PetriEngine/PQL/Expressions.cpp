@@ -272,8 +272,33 @@ namespace PetriEngine {
         void DeadlockCondition::toString(std::ostream& out) const {
             out << "deadlock";
         }
-        
-        void UpperBoundsCondition::toString(std::ostream& out) const {
+
+        void StableMarkingCondition::_toString(std::ostream &out) const {
+            if(_compiled) _compiled->toString(out);
+            else out << "stable-marking";
+        }
+
+        void LivenessCondition::_toString(std::ostream &out) const {
+            if(_compiled) _compiled->toString(out);
+            else out << "liveness";
+        }
+
+        void QuasiLivenessCondition::_toString(std::ostream &out) const {
+            if(_compiled) _compiled->toString(out);
+            else out << "liveness";
+        }
+
+        void KSafeCondition::_toString(std::ostream &out) const {
+            if(_compiled) _compiled->toString(out);
+            else
+            {
+                out << "k-safe(";
+                _bound->toString(out);
+                out << ")";
+            }
+        }
+
+        void UpperBoundsCondition::_toString(std::ostream& out) const {
             if(_compiled) _compiled->toString(out);
             else
             {
@@ -296,7 +321,15 @@ namespace PetriEngine {
             }
             out << ")";
         }
- 
+
+        void FireableCondition::_toString(std::ostream &out) const {
+            out << "is-fireable(" << _name << ")";
+        }
+
+        void UnfoldedFireableCondition::_toString(std::ostream &out) const {
+            out << "is-fireable(" << _name << ")";
+        }
+
         /******************** To TAPAAL Query ********************/
 
         void SimpleQuantifierCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
@@ -555,13 +588,8 @@ namespace PetriEngine {
             for(auto& c : _conds) c->analyze(context);
         }
         
-        void UnfoldedFireableCondition::analyze(AnalysisContext& context)
+        void UnfoldedFireableCondition::_analyze(AnalysisContext& context)
         {
-            if(_compiled)
-            {
-                _compiled->analyze(context);
-                return;
-            }
             std::vector<Condition_ptr> conds;
             AnalysisContext::ResolutionResult result = context.resolve(_name, false);
             if (!result.success)
@@ -594,11 +622,7 @@ namespace PetriEngine {
             _compiled->analyze(context);
         }
 
-        void FireableCondition::analyze(AnalysisContext &context) {
-            if (_compiled) {
-                _compiled->analyze(context);
-                return;
-            }
+        void FireableCondition::_analyze(AnalysisContext &context) {
 
             auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
             if(coloredContext != nullptr && coloredContext->isColored()) {
@@ -646,14 +670,114 @@ namespace PetriEngine {
         void DeadlockCondition::analyze(AnalysisContext& c) {
             c.setHasDeadlock();
         }
-        
-        void UpperBoundsCondition::analyze(AnalysisContext& context)
-        {
-            if (_compiled) {
-                _compiled->analyze(context);
-                return;
-            }
 
+        void KSafeCondition::_analyze(AnalysisContext &context) {
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
+            std::vector<Condition_ptr> k_safe;
+            if(coloredContext != nullptr && coloredContext->isColored())
+            {
+                for(auto& p : coloredContext->allColoredPlaceNames())
+                    k_safe.emplace_back(std::make_shared<LessThanOrEqualCondition>(std::make_shared<IdentifierExpr>(p.first), _bound));
+            }
+            else
+            {
+                for(auto& p : context.allPlaceNames())
+                    k_safe.emplace_back(std::make_shared<LessThanOrEqualCondition>(std::make_shared<UnfoldedIdentifierExpr>(p.first), _bound));
+            }
+            _compiled = std::make_shared<AGCondition>(std::make_shared<AndCondition>(std::move(k_safe)));
+            _compiled->analyze(context);
+        }
+
+        void QuasiLivenessCondition::_analyze(AnalysisContext &context)
+        {
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
+            std::vector<Condition_ptr> quasi;
+            if(coloredContext != nullptr && coloredContext->isColored())
+            {
+                for(auto& n : coloredContext->allColoredTransitionNames())
+                {
+                    std::vector<Condition_ptr> disj;
+                    for(auto& tn : n.second)
+                        disj.emplace_back(std::make_shared<UnfoldedFireableCondition>(tn));
+                    quasi.emplace_back(std::make_shared<EFCondition>(std::make_shared<OrCondition>(std::move(disj))));
+                }
+            }
+            else
+            {
+                for(auto& n : context.allTransitionNames())
+                {
+                    quasi.emplace_back(std::make_shared<EFCondition>(std::make_shared<UnfoldedFireableCondition>(n.first)));
+                }
+            }
+            _compiled = std::make_shared<AndCondition>(std::move(quasi));
+            _compiled->analyze(context);
+        }
+
+        void LivenessCondition::_analyze(AnalysisContext &context)
+        {
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
+            std::vector<Condition_ptr> liveness;
+            if(coloredContext != nullptr && coloredContext->isColored())
+            {
+                for(auto& n : coloredContext->allColoredTransitionNames())
+                {
+                    std::vector<Condition_ptr> disj;
+                    for(auto& tn : n.second)
+                        disj.emplace_back(std::make_shared<UnfoldedFireableCondition>(tn));
+                    liveness.emplace_back(std::make_shared<AGCondition>(std::make_shared<EFCondition>(std::make_shared<OrCondition>(std::move(disj)))));
+                }
+            }
+            else
+            {
+                for(auto& n : context.allTransitionNames())
+                {
+                    liveness.emplace_back(std::make_shared<AGCondition>(std::make_shared<EFCondition>(std::make_shared<UnfoldedFireableCondition>(n.first))));
+                }
+            }
+            _compiled = std::make_shared<AndCondition>(std::move(liveness));
+            _compiled->analyze(context);
+        }
+
+        void StableMarkingCondition::_analyze(AnalysisContext &context)
+        {
+            auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
+            std::vector<Condition_ptr> stable_check;
+            if(coloredContext != nullptr && coloredContext->isColored())
+            {
+                for(auto& cpn : coloredContext->allColoredPlaceNames())
+                {
+                    std::vector<Expr_ptr> sum;
+                    MarkVal init_marking = 0;
+                    for(auto& pn : cpn.second)
+                    {
+                        auto id = std::make_shared<UnfoldedIdentifierExpr>(pn.second);
+                        id->analyze(context);
+                        init_marking += context.net()->initial(id->offset());
+                        sum.emplace_back(std::move(id));
+
+                    }
+                    stable_check.emplace_back(std::make_shared<AGCondition>(std::make_shared<EqualCondition>(
+                            std::make_shared<PlusExpr>(std::move(sum)),
+                            std::make_shared<LiteralExpr>(init_marking))));
+                }
+            }
+            else
+            {
+                size_t i = 0;
+                for(auto& p : context.net()->placeNames())
+                {
+                    stable_check.emplace_back(std::make_shared<AGCondition>(std::make_shared<EqualCondition>(
+                            std::make_shared<UnfoldedIdentifierExpr>(p, i),
+                            std::make_shared<LiteralExpr>(context.net()->initial(i)))));
+                    ++i;
+                }
+            }
+            _compiled = std::make_shared<OrCondition>(std::move(stable_check));
+            _compiled->analyze(context);
+        }
+
+        void UpperBoundsCondition::_analyze(AnalysisContext& context)
+        {
             auto coloredContext = dynamic_cast<ColoredAnalysisContext*>(&context);
             if(coloredContext != nullptr && coloredContext->isColored())
             {
@@ -1076,6 +1200,38 @@ namespace PetriEngine {
         void DeadlockCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
+        }
+
+        void StableMarkingCondition::visit(Visitor& ctx) const
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+        void QuasiLivenessCondition::visit(Visitor& ctx) const
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+        void KSafeCondition::visit(Visitor& ctx) const
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+        void LivenessCondition::visit(Visitor& ctx) const
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
         }
 
         void FireableCondition::visit(Visitor& ctx) const
@@ -3355,7 +3511,31 @@ namespace PetriEngine {
             return _cond->pushNegation(stats, context, nested, !negated, initrw);
             }, stats, context, nested, negated, initrw);
         }
-        
+
+        template<typename T>
+        Condition_ptr pushFireableNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated, bool initrw, const std::string& name, const Condition_ptr& compiled)
+        {
+            if(compiled)
+                return compiled->pushNegation(stat, context, nested, negated, initrw);
+            if(negated)
+            {
+                stat.negated_fireability = true;
+                return std::make_shared<NotCondition>(std::make_shared<T>(name));
+            }
+            else
+                return std::make_shared<T>(name);
+        }
+
+        Condition_ptr UnfoldedFireableCondition::pushNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated, bool initrw)
+        {
+            return pushFireableNegation<UnfoldedFireableCondition>(stat, context, nested, negated, initrw, _name, _compiled);
+        }
+
+        Condition_ptr FireableCondition::pushNegation(negstat_t& stat, const EvaluationContext& context, bool nested, bool negated, bool initrw)
+        {
+            return pushFireableNegation<FireableCondition>(stat, context, nested, negated, initrw, _name, _compiled);
+        }
+
         bool CompareCondition::isTrivial() const
         {
             auto remdup = [](auto& a, auto& b){

@@ -51,6 +51,7 @@ private:
     Condition_ptr parseBooleanFormula(rapidxml::xml_node<>*  element);
     Expr_ptr parseIntegerExpression(rapidxml::xml_node<>*  element);
     string parsePlace(rapidxml::xml_node<>*  element);
+    void fatal_error(const std::string& token);
 };
 
 #endif /* QUERYXMLPARSER_H */

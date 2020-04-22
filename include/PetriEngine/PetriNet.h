@@ -60,8 +60,9 @@ namespace PetriEngine {
         PetriNet(uint32_t transitions, uint32_t invariants, uint32_t places);
     public:
         ~PetriNet();
-        
-        MarkVal* makeInitialMarking();
+
+        uint32_t initial(size_t id) const;
+        MarkVal* makeInitialMarking() const;
         /** Fire transition if possible and store result in result */
         bool deadlocked(const MarkVal* marking) const;
         bool fireable(const MarkVal* marking, int transitionIndex);
@@ -128,7 +129,6 @@ namespace PetriEngine {
         friend class SuccessorGenerator;
         friend class ReducingSuccessorGenerator;
         friend class STSolver;
-        friend class Filter;
     };
 
 } // PetriEngine

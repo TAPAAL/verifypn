@@ -155,12 +155,15 @@ namespace PetriEngine {
         }
         return true;
     }
-    
 
-    MarkVal* PetriNet::makeInitialMarking()
+    MarkVal PetriNet::initial(size_t id) const {
+        return _initialMarking[id];
+    }
+
+    MarkVal* PetriNet::makeInitialMarking() const
     {
         MarkVal* marking = new MarkVal[_nplaces];
-        memcpy(marking, _initialMarking, sizeof(MarkVal)*_nplaces);
+        std::copy(_initialMarking, _initialMarking+_nplaces, marking);
         return marking;
     }
     

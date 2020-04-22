@@ -133,6 +133,13 @@ bool QueryXMLParser::parseTags(rapidxml::xml_node<>*  element) {
     return true;
 }
 
+void QueryXMLParser::fatal_error(const std::string &token) {
+    std::cerr << "An error occurred while parsing the query." << std::endl;
+    std::cerr << token << std::endl;
+    assert(false);
+    exit(ErrorCode);
+}
+
 Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
     if (getChildCount(element) != 1) 
     {
@@ -143,8 +150,36 @@ Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
     string childName = child->name();
     Condition_ptr cond = nullptr;
     
-    // Formula is either a place-bound or CTL/reachability formula
-    if (childName == "place-bound") {
+    // Formula is either CTL/Reachability, UpperBounds or one of the global properties
+    // - k-safe (contains integer bound) : for all p. it holds that AG p <= bound
+    // - quasi-liveness : for all t. EF is-fireable(t)
+    // - stable-marking : exists p. and x. s.t. AG p == x (i.e. the initial marking)
+    // - liveness : for all t. AG EF is-fireable(t)
+    // we unfold global properties here to avoid introducing special-cases in the AST.
+    if (childName == "k-safe")
+    {
+        Expr_ptr bound = nullptr;
+        for (auto it = child->first_node(); it ; it = it->next_sibling()) {
+            if(bound != nullptr) fatal_error(childName);
+            bound = parseIntegerExpression(child->first_node());
+            if(bound == nullptr) fatal_error(childName);
+        }
+        if(bound == nullptr) fatal_error(childName);
+        return std::make_shared<KSafeCondition>(bound);
+    }
+    else if(childName == "quasi-liveness")
+    {
+        return std::make_shared<QuasiLivenessCondition>();
+    }
+    else if(childName == "stable-marking")
+    {
+        return std::make_shared<StableMarkingCondition>();
+    }
+    else if(childName == "liveness")
+    {
+        return std::make_shared<LivenessCondition>();
+    }
+    else if (childName == "place-bound") {
         std::vector<std::string> places;
         for (auto it = child->first_node(); it ; it = it->next_sibling()) {
             if (strcmp(it->name(), "place") != 0) 
@@ -451,10 +486,7 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
         }
         return std::make_shared<OrCondition>(conds);
     }
-    std::cerr << "An error occurred while parsing the query." << std::endl;
-    std::cerr << elementName << std::endl;
-    assert(false);
-    exit(ErrorCode);
+    fatal_error(elementName);
     return nullptr;
 }
 
