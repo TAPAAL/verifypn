@@ -1073,7 +1073,7 @@ int main(int argc, char* argv[]) {
         //Reachability search
         strategy.reachable(queries, results, 
                 options.printstatistics,
-                options.trace, builder);
+                options.trace);
     }
     else
     {

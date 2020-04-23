@@ -26,6 +26,7 @@ namespace PetriEngine {
         class TraceSet {
         public:
             TraceSet(const PetriNet& net);
+            void clear();
             bool addTrace(std::vector<std::pair<prvector_t,size_t>>& inter);
             void copyNonChanged(const std::vector<size_t>& from, const std::vector<int64_t>& modifiers, std::vector<size_t>& to) const;
             bool follow(const std::vector<size_t>& from, std::vector<size_t>& nextinter, size_t symbol);
@@ -35,6 +36,7 @@ namespace PetriEngine {
             std::ostream& print(std::ostream& out) const;
             void removeEdges(size_t edge);
         private:
+            void init();
             std::pair<bool, size_t> stateForPredicate(prvector_t& predicate);
             void computeSimulation(size_t index);
             std::map<prvector_t, size_t> _intmap;

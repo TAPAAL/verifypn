@@ -47,6 +47,8 @@ namespace PetriEngine
             virtual void _accept(const LessThanOrEqualCondition* element) = 0;
             virtual void _accept(const GreaterThanCondition* element) = 0;
             virtual void _accept(const GreaterThanOrEqualCondition* element) = 0;
+            virtual void _accept(const EqualCondition* element) = 0;
+            virtual void _accept(const NotEqualCondition* element) = 0;
             virtual void _accept(const IdentifierExpr* element) = 0;
             virtual void _accept(const LiteralExpr* element) = 0;
             virtual void _accept(const UnfoldedIdentifierExpr* element) = 0;

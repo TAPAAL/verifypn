@@ -125,6 +125,16 @@ namespace PetriEngine
         }
     }
     
+    void RangeEvalContext::_accept(const EqualCondition* element)
+    {
+        _bool_result = true; // TODO handle better
+    }
+    
+    void RangeEvalContext::_accept(const NotEqualCondition* element)
+    {
+        _bool_result = true; // TODO handle better
+    }
+
     void RangeEvalContext::_accept(const LessThanCondition* element)
     {
         handle_compare((*element)[0], (*element)[1], true);

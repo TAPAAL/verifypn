@@ -27,6 +27,7 @@
 #include "PetriEngine/TAR/RangeContext.h"
 #include "PetriEngine/TAR/Solver.h"
 #include "PetriEngine/TAR/ContainsVisitor.h"
+#include "PetriEngine/TAR/PlaceUseVisitor.h"
 
 
 namespace PetriEngine {
@@ -370,7 +371,7 @@ namespace PetriEngine {
         
         void TARReachabilitySearch::reachable(   std::vector<std::shared_ptr<PQL::Condition> >& queries, 
                                         std::vector<ResultPrinter::Result>& results,
-                                        bool printstats, bool printtrace, PetriNetBuilder& builder)
+                                        bool printstats, bool printtrace)
         {
 
             // set up working area
@@ -386,24 +387,31 @@ namespace PetriEngine {
             }
             
             // Search!
-            std::vector<bool> used(_net.numberOfPlaces(), false);
             for(size_t i = 0; i < queries.size(); ++i)
             {
+                _traceset.clear();
                 if(results[i] == ResultPrinter::Unknown)
                 {
-                    QueryPlaceAnalysisContext pa(builder.getPlaceNames(), builder.getTransitionNames(), &_net);
-                    queries[i]->analyze(pa);
+                    PlaceUseVisitor visitor(_net.numberOfPlaces());
+                    queries[i]->visit(visitor);
                     ContainsVisitor<DeadlockCondition> dlvisitor;
                     queries[i]->visit(dlvisitor);
-                    for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-                        used[p] = pa.getQueryPlaceCount()[p] > 0 || dlvisitor.does_contain();
+                    auto used = visitor.in_use();
+                    if(dlvisitor.does_contain())
+                    {
+                        for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+                            used[p] = true;
+                    }
                     Solver solver(_net, state.marking(), queries[i].get(), used);
                     bool res = tryReach(printtrace, solver);
                     if(res)
                         results[i] = ResultPrinter::Satisfied;
                     else
                         results[i] = ResultPrinter::NotSatisfied;
-                    results[i] = printQuery(queries[i], i, results[i]);  
+                    auto ret = _printer.handle(i, queries[i].get(), results[i]);
+                    results[i] = ret.first;
+                    if(res && ret.second)
+                        return;
                 }
             }
 
@@ -425,18 +433,18 @@ namespace PetriEngine {
                 {
                     EvaluationContext ec(state.marking(), &_net);
                     if(queries[i]->evaluate(ec) == Condition::RTRUE)
-                        results[i] = printQuery(queries[i], i, ResultPrinter::Satisfied);
+                    {
+                        auto ret = _printer.handle(i, queries[i].get(), ResultPrinter::Satisfied);
+                        results[i] = ret.first;
+                        if(ret.second)
+                            return true;
+                    }
                     else
                         alldone = false;
                 }
             }  
             return alldone;
         }        
-        
-        ResultPrinter::Result TARReachabilitySearch::printQuery(std::shared_ptr<PQL::Condition>& query, size_t i,  ResultPrinter::Result r)
-        {
-            return printer.handle(i, query.get(), r).first;  
-        }
         
         void TARReachabilitySearch::printStats()
         {

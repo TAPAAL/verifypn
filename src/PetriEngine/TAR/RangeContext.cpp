@@ -121,6 +121,16 @@ namespace PetriEngine {
         }
     }
     
+    void RangeContext::_accept(const NotEqualCondition* element)    
+    {
+        _is_dirty = true; // TODO improve        
+    }
+    
+    void RangeContext::_accept(const EqualCondition* element)
+    {
+        _is_dirty = true; // TODO improve
+    }
+    
     void RangeContext::_accept(const LessThanCondition* element)
     {
         handle_compare((*element)[0], (*element)[1], true);

@@ -11,6 +11,7 @@
 #include "CTL/Stopwatch.h"
 #include "PetriEngine/options.h"
 #include "PetriEngine/Reachability/ReachabilityResult.h"
+#include "PetriEngine/TAR/TARReachability.h"
 
 #include <iostream>
 #include <iomanip>
@@ -158,14 +159,22 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
 
     {
         ResultHandler handler(is_conj, lstate);
-        ReachabilitySearch strategy(*net, handler, options.kbound, true);
         std::vector<AbstractHandler::Result> res(queries.size(), AbstractHandler::Unknown);
-        strategy.reachable(queries, res,
-                                    options.strategy,
-                                    options.stubbornreduction,
-                                    false,
-                                    false,
-                                    false);
+        if(!options.tar)
+        {
+            ReachabilitySearch strategy(*net, handler, options.kbound, true);
+            strategy.reachable(queries, res,
+                                        options.strategy,
+                                        options.stubbornreduction,
+                                        false,
+                                        false,
+                                        false);
+        }
+        else
+        {
+            TARReachabilitySearch tar(handler, *net, nullptr, options.kbound);
+            tar.reachable(queries, res, false, false);
+        }
         size_t j = 0;
         for(size_t i = 0; i < query->size(); ++i) {
             if (state[i] != 0)
@@ -232,17 +241,25 @@ bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
     else if(query->isReachability())
     {
         SimpleResultHandler handler;
-        ReachabilitySearch strategy(*net, handler, options.kbound, true);
         std::vector<Condition_ptr> queries{query->prepareForReachability()};
         std::vector<AbstractHandler::Result> res;
         res.emplace_back(AbstractHandler::Unknown);
-        auto r = strategy.reachable(queries, res,
+        if(options.tar)
+        {
+            TARReachabilitySearch tar(handler, *net, nullptr, options.kbound);
+            tar.reachable(queries, res, false, false);
+        }
+        else
+        {
+            ReachabilitySearch strategy(*net, handler, options.kbound, true);
+            strategy.reachable(queries, res,
                            options.strategy,
                            options.stubbornreduction,
                            false,
                            false,
                            false);
-        return r xor query->isInvariant();
+        }
+        return (res.back() == AbstractHandler::Satisfied) xor query->isInvariant();
     }
     else
     {

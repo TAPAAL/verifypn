@@ -39,6 +39,11 @@ namespace PetriEngine
         TraceSet::TraceSet(const PetriNet& net)
         : _net(net)
         {
+            init();
+        }
+
+        void TraceSet::init()
+        {
             prvector_t truerange;
             prvector_t falserange;
             {
@@ -71,6 +76,15 @@ namespace PetriEngine
             _initial.push_back(1);
         }
 
+        void TraceSet::clear()
+        {
+            _initial.clear();
+            _intmap.clear();
+            _states.clear();
+            init();
+        }
+
+        
         std::vector<size_t> TraceSet::minimize(const std::vector<size_t>& org)
         {
             std::vector<size_t> buffer;

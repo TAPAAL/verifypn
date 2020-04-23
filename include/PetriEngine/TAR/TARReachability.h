@@ -32,13 +32,13 @@ namespace PetriEngine {
         class Solver;
         class TARReachabilitySearch {
         private:
-            ResultPrinter& printer;
+            AbstractHandler& _printer;
             
 
         public:
 
-            TARReachabilitySearch(ResultPrinter& printer, PetriNet& net, Reducer* reducer, int kbound = 0)
-            : printer(printer), _net(net), _reducer(reducer), _traceset(net) {
+            TARReachabilitySearch(AbstractHandler& printer, PetriNet& net, Reducer* reducer, int kbound = 0)
+            : _printer(printer), _net(net), _reducer(reducer), _traceset(net) {
                 _kbound = kbound;
             }
             
@@ -49,7 +49,7 @@ namespace PetriEngine {
             void reachable(
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
-                bool printstats, bool printtrace, PetriNetBuilder& builder);
+                bool printstats, bool printtrace);
         private:
 
             void printTrace(trace_t& stack);
@@ -67,7 +67,6 @@ namespace PetriEngine {
             bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
                                 std::vector<ResultPrinter::Result>&,
                                 Structures::State&, bool);
-            ResultPrinter::Result printQuery(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result);
             
             int _kbound;
             size_t _stepno = 0;

@@ -89,7 +89,23 @@ namespace PetriEngine
             if(_value) return;
             (*element)[1]->visit(*this);
         }
+        
+        virtual void _accept(const NotEqualCondition* element) override
+        { 
+            if constexpr (std::is_same<const T*,decltype(element)>::value) { _value = true; return; }
+            (*element)[0]->visit(*this);
+            if(_value) return;
+            (*element)[1]->visit(*this);
+        }
 
+        virtual void _accept(const EqualCondition* element) override
+        { 
+            if constexpr (std::is_same<const T*,decltype(element)>::value) { _value = true; return; }
+            (*element)[0]->visit(*this);
+            if(_value) return;
+            (*element)[1]->visit(*this);
+        }        
+        
         virtual void _accept(const IdentifierExpr* element) override
         { 
             if constexpr (std::is_same<const T*,decltype(element)>::value) { _value = true; return; }
