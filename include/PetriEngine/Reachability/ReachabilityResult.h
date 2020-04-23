@@ -33,14 +33,8 @@ namespace PetriEngine {
 
         /** Result of a reachability search */
 
-        class ResultPrinter {
-        protected:
-            PetriNetBuilder* builder;
-            options_t* options;
-            std::vector<std::string>& querynames;
-            Reducer* reducer;
+        class AbstractHandler {
         public:
-                        /** Types of results */
             enum Result {
                 /** The query was satisfied */
                 Satisfied,
@@ -53,7 +47,25 @@ namespace PetriEngine {
                 /** Just ignore */
                 Ignore
             };
-            
+            virtual std::pair<Result, bool> handle(
+                size_t index,
+                PQL::Condition* query, 
+                Result result,
+                const std::vector<uint32_t>* maxPlaceBound = nullptr,
+                size_t expandedStates = 0,
+                size_t exploredStates = 0,
+                size_t discoveredStates = 0,
+                int maxTokens = 0,                
+                Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr) = 0;
+        };
+        
+        class ResultPrinter : public AbstractHandler {
+        protected:
+            PetriNetBuilder* builder;
+            options_t* options;
+            std::vector<std::string>& querynames;
+            Reducer* reducer;
+        public:
             const string techniques = "TECHNIQUES COLLATERAL_PROCESSING STRUCTURAL_REDUCTION QUERY_REDUCTION SAT_SMT ";
             const string techniquesStateSpace = "TECHNIQUES EXPLICIT STATE_COMPRESSION";
             
@@ -63,17 +75,16 @@ namespace PetriEngine {
             
             void setReducer(Reducer* r) { this->reducer = r; }
             
-            Result printResult(
+            std::pair<Result, bool> handle(
                 size_t index,
                 PQL::Condition* query, 
-                ResultPrinter::Result result = Unknown,
+                Result result,
+                const std::vector<uint32_t>* maxPlaceBound = nullptr,
                 size_t expandedStates = 0,
                 size_t exploredStates = 0,
                 size_t discoveredStates = 0,
-                const std::vector<size_t> enabledTransitionsCount = std::vector<size_t>(),
-                int maxTokens = 0,
-                const std::vector<uint32_t> maxPlaceBound = std::vector<uint32_t>(),
-                Structures::StateSetInterface* stateset = NULL, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr);
+                int maxTokens = 0,                
+                Structures::StateSetInterface* stateset = nullptr, size_t lastmarking = 0, const MarkVal* initialMarking = nullptr) override;
             
             std::string printTechniques();
             

@@ -142,7 +142,7 @@ namespace PetriEngine {
                 return _maxTokens;
             }
             
-            std::vector<MarkVal> maxPlaceBound() const {
+            const std::vector<MarkVal>& maxPlaceBound() const {
                 return _maxPlaceBound;
             }
             

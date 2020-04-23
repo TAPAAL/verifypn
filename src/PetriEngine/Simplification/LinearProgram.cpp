@@ -184,12 +184,6 @@ namespace PetriEngine {
             const uint32_t nCol = net->numberOfTransitions();
             std::vector<REAL> row = std::vector<REAL>(nCol + 1);
 
-            auto base_lp = context.makeBaseLP();
-            if(base_lp == nullptr)
-                return result;
-            
-            // Minimize the objective
-            glp_set_obj_dir(base_lp, GLP_MAX);
 
             glp_smcp settings;
             glp_init_smcp(&settings);
@@ -210,7 +204,6 @@ namespace PetriEngine {
 
                 if(context.timeout())
                 {
-                    glp_delete_prob(base_lp);
                     return result;
                 }
                 // Create objective
@@ -250,7 +243,6 @@ namespace PetriEngine {
                     result[pi].second = all_zero;
                     if(pi == places.size())
                     {
-                        glp_delete_prob(base_lp);
                         return result;
                     }
                     continue;
@@ -258,8 +250,12 @@ namespace PetriEngine {
 
                 // Set objective
 
-                auto* tmp_lp = glp_create_prob();
-                glp_copy_prob(tmp_lp, base_lp, GLP_OFF);
+                auto tmp_lp = context.makeBaseLP();
+                if(tmp_lp == nullptr)
+                    return result;
+            
+                // Max the objective
+                glp_set_obj_dir(tmp_lp, GLP_MAX);
 
                 for(size_t i = 1; i <= nCol; i++) {
                     glp_set_obj_coef(tmp_lp, i, row[i]);
@@ -312,17 +308,14 @@ namespace PetriEngine {
                 glp_erase_prob(tmp_lp);
                 if(pi == places.size() && result[places.size()].first >= p0)
                 {
-                    glp_erase_prob(base_lp);
                     return result;
                 }
                 if(pi == places.size() && places.size() == 1)
                 {
                     result[0] = result[1];
-                    glp_erase_prob(base_lp);
                     return result;
                 }
             }
-            glp_erase_prob(base_lp);
             return result;
         }
 

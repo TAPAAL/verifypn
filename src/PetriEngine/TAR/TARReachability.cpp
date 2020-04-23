@@ -435,10 +435,7 @@ namespace PetriEngine {
         
         ResultPrinter::Result TARReachabilitySearch::printQuery(std::shared_ptr<PQL::Condition>& query, size_t i,  ResultPrinter::Result r)
         {
-            return printer.printResult(i, query.get(), r,
-                            0, 0, 0,
-                            {}, 0, 
-                            {}, nullptr, 0);  
+            return printer.handle(i, query.get(), r).first;  
         }
         
         void TARReachabilitySearch::printStats()

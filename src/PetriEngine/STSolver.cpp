@@ -289,7 +289,7 @@ namespace PetriEngine {
     
     Reachability::ResultPrinter::Result STSolver::PrintResult(){
         if(_ret == GLP_INFEAS || _ret == GLP_NOFEAS || _ret == GLP_UNDEF){
-            return printer.printResult(0, _query, Reachability::ResultPrinter::NotSatisfied);
+            return printer.handle(0, _query, Reachability::ResultPrinter::NotSatisfied).first;
         } else {
             return Reachability::ResultPrinter::Unknown;
         }

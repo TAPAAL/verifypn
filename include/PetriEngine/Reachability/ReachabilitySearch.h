@@ -48,22 +48,9 @@ namespace PetriEngine {
         /** Implements reachability check in a BFS manner using a hash table */
         class ReachabilitySearch {
         public:
-            using callback_t = std::function<std::pair<ResultPrinter::Result, bool>(size_t index,
-                                                              PQL::Condition* query,
-                                                              ResultPrinter::Result result,
-                                                              size_t expandedStates,
-                                                              size_t exploredStates,
-                                                              size_t discoveredStates,
-                                                              const std::vector<size_t> enabledTransitionsCount,
-                                                              int maxTokens,
-                                                              const std::vector<uint32_t> maxPlaceBound,
-                                                              Structures::StateSetInterface* stateset,
-                                                              size_t lastmarking,
-                                                              const MarkVal* initialMarking)>;
-        public:
 
-            ReachabilitySearch(PetriNet& net, int kbound = 0, bool early = false)
-            : _net(net), _kbound(kbound) {
+            ReachabilitySearch(PetriNet& net, AbstractHandler& callback, int kbound = 0, bool early = false)
+            : _net(net), _kbound(kbound), _callback(callback) {
             }
             
             ~ReachabilitySearch()
@@ -78,8 +65,7 @@ namespace PetriEngine {
                     bool usestubborn,
                     bool statespacesearch,
                     bool printstats,
-                    bool keep_trace,
-                    callback_t callback);
+                    bool keep_trace);
         private:
             struct searchstate_t {
                 size_t expandedStates = 0;
@@ -94,23 +80,24 @@ namespace PetriEngine {
                 std::vector<std::shared_ptr<PQL::Condition > >& queries,
                 std::vector<ResultPrinter::Result>& results,
                 bool usequeries,
-                bool printstats,  callback_t& callback);
+                bool printstats);
             void printStats(searchstate_t& s, Structures::StateSetInterface*);
             bool checkQueries(  std::vector<std::shared_ptr<PQL::Condition > >&,
                                     std::vector<ResultPrinter::Result>&,
-                                    Structures::State&, searchstate_t&, Structures::StateSetInterface*, callback_t& callback);
-            std::pair<ResultPrinter::Result,bool> doCallback(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result r, searchstate_t &ss, Structures::StateSetInterface *states, callback_t& callback);
+                                    Structures::State&, searchstate_t&, Structures::StateSetInterface*);
+            std::pair<ResultPrinter::Result,bool> doCallback(std::shared_ptr<PQL::Condition>& query, size_t i, ResultPrinter::Result r, searchstate_t &ss, Structures::StateSetInterface *states);
             
             PetriNet& _net;
             int _kbound;
             size_t _satisfyingMarking = 0;
             Structures::State _initial;
+            AbstractHandler& _callback;
         };
         
         template<typename Q, typename W, typename G>
         bool ReachabilitySearch::tryReach(   std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                         std::vector<ResultPrinter::Result>& results, bool usequeries,
-                                        bool printstats, callback_t& callback)
+                                        bool printstats)
         {
 
             // set up state
@@ -139,7 +126,7 @@ namespace PetriEngine {
                 // check initial marking
                 if(ss.usequeries) 
                 {
-                    if(checkQueries(queries, results, working, ss, &states, callback))
+                    if(checkQueries(queries, results, working, ss, &states))
                     {
                         if(printstats) printStats(ss, &states);
                             return true;
@@ -166,7 +153,7 @@ namespace PetriEngine {
                             states.setHistory(res.second, generator.fired());
                             _satisfyingMarking = res.second;
                             ss.exploredStates++;
-                            if (checkQueries(queries, results, working, ss, &states, callback)) {
+                            if (checkQueries(queries, results, working, ss, &states)) {
                                 if(printstats) printStats(ss, &states);
                                 return true;
                             }
@@ -181,7 +168,7 @@ namespace PetriEngine {
             {
                 if(results[i] == ResultPrinter::Unknown)
                 {
-                    results[i] = doCallback(queries[i], i, ResultPrinter::NotSatisfied, ss, &states, callback).first;
+                    results[i] = doCallback(queries[i], i, ResultPrinter::NotSatisfied, ss, &states).first;
                 }
             }            
 

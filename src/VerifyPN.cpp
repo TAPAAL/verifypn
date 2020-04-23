@@ -929,7 +929,7 @@ int main(int argc, char* argv[]) {
         for(size_t i = 0; i < queries.size(); ++i)
         {
             if(queries[i]->isTriviallyTrue()){
-                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Satisfied);
+                results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Satisfied).first;
                 if(results[i] == ResultPrinter::Ignore && options.printstatistics)
                 {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
@@ -938,7 +938,7 @@ int main(int argc, char* argv[]) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
             } else if (queries[i]->isTriviallyFalse()) {
-                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::NotSatisfied);
+                results[i] = p2.handle(i, queries[i].get(), ResultPrinter::NotSatisfied).first;
                 if(results[i] == ResultPrinter::Ignore &&  options.printstatistics)
                 {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
@@ -947,7 +947,7 @@ int main(int argc, char* argv[]) {
                     std::cout << "Query solved by Query Simplification." << std::endl << std::endl;
                 }
             } else if (options.strategy == PetriEngine::Reachability::OverApprox){
-                results[i] = p2.printResult(i, queries[i].get(), ResultPrinter::Unknown);
+                results[i] = p2.handle(i, queries[i].get(), ResultPrinter::Unknown).first;
                 if (options.printstatistics) {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
                 }
@@ -1077,7 +1077,7 @@ int main(int argc, char* argv[]) {
     }
     else
     {
-        ReachabilitySearch strategy(*net, options.kbound);
+        ReachabilitySearch strategy(*net, printer, options.kbound);
 
         // Change default place-holder to default strategy
         if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
@@ -1088,23 +1088,7 @@ int main(int argc, char* argv[]) {
                            options.stubbornreduction,
                            options.statespaceexploration,
                            options.printstatistics,
-                           options.trace,
-                           [&printer](size_t index,
-                                      Condition *query,
-                                      ResultPrinter::Result result,
-                                      size_t expandedStates,
-                                      size_t exploredStates,
-                                      size_t discoveredStates,
-                                      const std::vector<size_t> enabledTransitionsCount,
-                                      int maxTokens,
-                                      const std::vector<uint32_t> maxPlaceBound,
-                                      Structures::StateSetInterface *stateset,
-                                      size_t lastmarking,
-                                      const MarkVal *initialMarking) {
-                               return std::make_pair(
-                                       printer.printResult(index, query, result, expandedStates, exploredStates, discoveredStates, enabledTransitionsCount, maxTokens, maxPlaceBound, stateset, lastmarking, initialMarking),
-                                       false);
-                           });
+                           options.trace);
     }
        
     return SuccessCode;

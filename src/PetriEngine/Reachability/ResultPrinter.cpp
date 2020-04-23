@@ -6,20 +6,18 @@
 
 namespace PetriEngine {
     namespace Reachability {
-        ResultPrinter::Result ResultPrinter::printResult(
+        std::pair<AbstractHandler::Result, bool> ResultPrinter::handle(
                 size_t index,
                 PQL::Condition* query, 
-                ResultPrinter::Result result,
+                Result result,
+                const std::vector<uint32_t>* maxPlaceBound,
                 size_t expandedStates,
                 size_t exploredStates,
                 size_t discoveredStates,
-                const std::vector<size_t> enabledTransitionsCount,
-                int maxTokens,
-                const std::vector<uint32_t> maxPlaceBound, Structures::StateSetInterface* stateset,
-                size_t lastmarking,
-                const MarkVal* initialMarking)
+                int maxTokens,                
+                Structures::StateSetInterface* stateset, size_t lastmarking, const MarkVal* initialMarking)
         {
-            if(result == Unknown) return Unknown;
+            if(result == Unknown) return std::make_pair(Unknown,false);
 
             Result retval = result;
             
@@ -40,7 +38,7 @@ namespace PetriEngine {
                 {
                     std::cout << "\nUnable to decide if " << querynames[index] << " is satisfied.\n\n";
                     std::cout << "Query is MAYBE satisfied.\n" << std::endl;
-                    return Ignore;
+                    return std::make_pair(Ignore,false);
                 }
             }
             std::cout << std::endl;    
@@ -54,8 +52,11 @@ namespace PetriEngine {
             else {
                 retval = Satisfied;
                 uint32_t placeBound = 0;
-                for (size_t p = 0; p < maxPlaceBound.size(); p++) {
-                    placeBound = std::max<uint32_t>(placeBound, maxPlaceBound[p]);
+                if(maxPlaceBound != nullptr)
+                {
+                    for (size_t p = 0; p < maxPlaceBound->size(); p++) {
+                        placeBound = std::max<uint32_t>(placeBound, (*maxPlaceBound)[p]);
+                    }
                 }
                 // fprintf(stdout,"STATE_SPACE %lli -1 %d %d TECHNIQUES EXPLICIT\n", result.exploredStates(), result.maxTokens(), placeBound);
                 std::cout   << "STATE_SPACE STATES "<< exploredStates           << " " << techniquesStateSpace
@@ -66,7 +67,7 @@ namespace PetriEngine {
                             << std::endl
                             << "STATE_SPACE MAX_TOKEN_IN_PLACE "<< placeBound   << " " << techniquesStateSpace 
                             << std::endl;
-                return retval;
+                return std::make_pair(retval,false);
             }
 
             if (result == Satisfied)
@@ -133,7 +134,7 @@ namespace PetriEngine {
             
             if(showTrace && options->trace)
             {
-                if(stateset == NULL)
+                if(stateset == nullptr)
                 {
                     std::cout << "No trace could be generated" << std::endl;
                 }
@@ -144,7 +145,7 @@ namespace PetriEngine {
             }
             
             std::cout << std::endl;
-            return retval;
+            return std::make_pair(retval, false);
         }
         
         std::string ResultPrinter::printTechniques() {
