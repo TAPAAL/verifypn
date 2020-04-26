@@ -6,7 +6,11 @@
 #UNCOMMENT FOR THE VIRTUAL MACHINE AND COMMENT OUT NEXT TWO LINES
 MODEL_PATH=.
 VERIFYPN=/home/mcc/BenchKit/bin/verifypn
-TIMEOUT_TOTAL=$(echo "$BK_TIME_CONFINEMENT-10" | bc) 
+
+if [ -z "$BC_TIME_CONFINEMENT" ] ; then
+	BC_TIME_CONFINEMENT=3600
+fi
+TIMEOUT_TOTAL=$(echo "$BC_TIME_CONFINEMENT-10" | bc) 
 TEMPDIR="/home/mcc/tmp"
 # DIR=$(dirname "${VERIFYPN}")
 
@@ -22,7 +26,12 @@ START_TIME=$(date +"%s")
 SECONDS=0
 
 #Allowed memory in kB
-MEM="15000000"
+if [ -z "$BK_MEMORY_CONFINEMENT" ] ; then
+	BK_MEMORY_CONFINEMENT="16000"
+fi
+MEM=$(echo "$BK_MEMORY_CONFINEMENT-500" | bc)
+MEM=$(echo "$MEM*1024" | bc)
+echo "Limiting to $MEM kB"
 ulimit -v $MEM
 
 PAR_CMD=parallel
