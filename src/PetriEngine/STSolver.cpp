@@ -78,7 +78,12 @@ namespace PetriEngine {
                 uint32_t linv2 = _net._transitions[t].outputs;
                 for(; finv2 < linv2; finv2++){ // SUM(q in pre(t))
                     if(timeout()){ return GLP_ETMLIM; }
-                    variables2.push_back(STVariable(VarPlace(_net._invariants[finv2].place,0), 1)); // q^0
+                    if(_net._invariants[finv].place == _net._invariants[finv2].place)
+                        variables2[0].value += 1;
+                    else
+                    {
+                        variables2.push_back(STVariable(VarPlace(_net._invariants[finv2].place,0), 1)); // q^0
+                    }
                 }
                 MakeConstraint(variables2, GLP_LO, 0);
             }
