@@ -7,10 +7,10 @@
 MODEL_PATH=.
 VERIFYPN=/home/mcc/BenchKit/bin/verifypn
 
-if [ -z "$BC_TIME_CONFINEMENT" ] ; then
-	BC_TIME_CONFINEMENT=3600
+if [ -z "$BK_TIME_CONFINEMENT" ] ; then
+	BK_TIME_CONFINEMENT=3600
 fi
-TIMEOUT_TOTAL=$(echo "$BC_TIME_CONFINEMENT-10" | bc) 
+TIMEOUT_TOTAL=$(echo "$BK_TIME_CONFINEMENT-10" | bc) 
 TEMPDIR="/home/mcc/tmp"
 # DIR=$(dirname "${VERIFYPN}")
 
