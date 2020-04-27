@@ -57,9 +57,15 @@ namespace PetriEngine {
                 if( i == ss.heurquery &&
                     results[i] != ResultPrinter::Unknown)
                 {
-                    ++ss.heurquery;
                     if(queries.size() >= 2)
-                        ss.heurquery %= queries.size();
+                    {
+                        for(size_t n = 1; n < queries.size(); ++n)
+                        {
+                            ss.heurquery = (ss.heurquery + n) % queries.size();
+                            if(results[i] == ResultPrinter::Unknown)
+                                break;
+                        }                        
+                    }
                 }
             }  
             return alldone;
