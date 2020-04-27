@@ -181,6 +181,7 @@ namespace PetriEngine {
                 _negated = false;
                 _marking = marking;
                 _net = net;
+                _base_lp = buildBase();
                 _start = std::chrono::high_resolution_clock::now();
                 _cache = cache;
             }
