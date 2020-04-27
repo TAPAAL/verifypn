@@ -85,6 +85,7 @@ if (VERIFYPN_GetDependencies)
 	CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --enable-shared=no --prefix=${EXTERNAL_INSTALL_LOCATION}  
 	BUILD_COMMAND make ${GLPK_CFLAGS}
         INSTALL_COMMAND make install
+        PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/glpk-warning.patch
     )
 
     link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
