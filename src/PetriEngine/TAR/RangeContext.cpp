@@ -306,7 +306,6 @@ namespace PetriEngine {
         if (!disjunction) {
             if(priority == 0)
             {
-                assert(dirty);
                 _is_dirty = true;
                 return;
             }
