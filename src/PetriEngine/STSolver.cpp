@@ -47,11 +47,12 @@ namespace PetriEngine {
         {
             std::vector<size_t> siphon{p};
             if(!siphonTrap(siphon))
-                return 0;
+            {
+                return false;
+            }
         }
-        
-        
-        return GLP_INFEAS;
+        _siphonPropperty = true;
+        return true;
     }
     
     std::vector<size_t> STSolver::computeTrap(std::vector<size_t>& siphon)
@@ -68,7 +69,6 @@ namespace PetriEngine {
                                         preset.begin(), preset.end(), diff.begin());
         if(eit == diff.begin())
         {
-            std::cerr << "SIPHON!" << std::endl;
             return siphon;
         }
         else
@@ -132,7 +132,6 @@ namespace PetriEngine {
                     sit = siphon.erase(sit);
             }
         }
-        _siphonPropperty = true;
         return true;
     }
     
