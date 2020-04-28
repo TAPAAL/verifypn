@@ -21,7 +21,8 @@ namespace PetriEngine {
     }
 
     bool STSolver::solve(uint32_t timelimit){
-        _timelimit=timelimit;
+        if(_net.numberOfPlaces() == 0) return false;
+        _timelimit = timelimit;
         _start = std::chrono::high_resolution_clock::now();
         for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
         {
