@@ -1036,13 +1036,10 @@ int main(int argc, char* argv[]) {
  
             if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {    
                 STSolver stSolver(printer, *net, queries[i].get(), options.siphonDepth);
-                stSolver.Solve(options.siphontrapTimeout);
-                results[i] = stSolver.PrintResult();
+                stSolver.solve(options.siphontrapTimeout);
+                results[i] = stSolver.printResult();
                 if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics) {
                     std::cout << "Query solved by Siphon-Trap Analysis." << std::endl << std::endl;
-                }
-                if(options.printstatistics){
-                    stSolver.PrintStatistics();
                 }
             }
         }
