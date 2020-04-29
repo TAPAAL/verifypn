@@ -323,9 +323,9 @@ namespace PetriEngine {
                 return interpolant;
             }
 
-            inline void set_interpolants(std::set<size_t>&& interpolants)
+            inline void set_interpolants(const std::set<size_t>& interpolants)
             {
-                interpolant = std::move(interpolants);
+                interpolant = interpolants;
             }
         };
         

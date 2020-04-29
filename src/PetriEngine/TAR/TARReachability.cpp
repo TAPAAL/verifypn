@@ -82,7 +82,7 @@ namespace PetriEngine {
             return popped;
         }
 
-        void TARReachabilitySearch::nextEdge(AntiChain<uint32_t, size_t>& checked, state_t& state, trace_t& waiting, std::set<size_t>&& nextinter)
+        void TARReachabilitySearch::nextEdge(AntiChain<uint32_t, size_t>& checked, state_t& state, trace_t& waiting, std::set<size_t>& nextinter)
         {
             uint32_t dummy = state.get_edge_cnt() == 0 ? 0 : 0;
             bool res = checked.subsumed(dummy, nextinter);
@@ -96,7 +96,7 @@ namespace PetriEngine {
                 checked.insert(dummy, minimal);
                 state_t next;
                 next.reset_edges(_net);
-                next.set_interpolants(std::move(minimal));
+                next.set_interpolants(std::move(nextinter));
                 waiting.push_back(next);
             }            
         }
@@ -114,7 +114,7 @@ namespace PetriEngine {
             {
                 state_t state;
                 state.reset_edges(_net);
-                state.set_interpolants(_traceset.initial());
+                state.set_interpolants(_traceset.maximize(_traceset.initial()));
                 waiting.push_back(state);
             }
             while (!waiting.empty()) 
@@ -190,7 +190,7 @@ namespace PetriEngine {
                     stopwatch ne;
                     ne.start();
 #endif
-                    nextEdge(checked, state, waiting, std::move(nextinter));
+                    nextEdge(checked, state, waiting, nextinter);
 #ifdef TAR_TIMING
                     ne.stop();
                     _next_time += ne.duration();
@@ -315,13 +315,12 @@ namespace PetriEngine {
 
         bool TARReachabilitySearch::doStep(state_t& state, std::set<size_t>& nextinter)
         {
-            auto maximal = _traceset.maximize(state.get_interpolants());
             // if NFA accepts the trace after this instruction, abort.
 #ifdef TAR_TIMING
             stopwatch flw;
             flw.start();
 #endif
-            if(_traceset.follow(maximal, nextinter, state.get_edge_cnt()))
+            if(_traceset.follow(state.get_interpolants(), nextinter, state.get_edge_cnt()))
             {
 #ifdef TAR_TIMING
                 flw.stop();
@@ -339,7 +338,7 @@ namespace PetriEngine {
             stopwatch nc;
             nc.start();
 #endif
-            addNonChanging(state, maximal, nextinter);
+            addNonChanging(state, state.get_interpolants(), nextinter);
 #ifdef TAR_TIMING
             nc.stop();
             _non_change_time += nc.duration();
@@ -353,7 +352,7 @@ namespace PetriEngine {
             AntiChain<uint32_t, size_t> chain;
 
             state_t s;
-            s.set_interpolants(_traceset.minimize(_traceset.initial()));
+            s.set_interpolants(_traceset.initial());
             std::cerr << "I ";
             for(auto& i : s.get_interpolants())
                 std::cerr << i << ", ";
@@ -361,7 +360,7 @@ namespace PetriEngine {
             std::cerr << std::endl;
             std::set<size_t> next;
             uint32_t dummy = 0;
-            chain.insert(dummy, s.get_interpolants());
+            chain.insert(dummy, _traceset.minimize(s.get_interpolants()));
             size_t n = 0;
             for(; n < transitions.size(); ++n)
             {
@@ -375,8 +374,8 @@ namespace PetriEngine {
                     std::cerr << "RFAIL AT [" << n << "] = T" << transitions[n] << std::endl;
                     return false;
                 }
-                s.set_interpolants(_traceset.minimize(next));
-                if(!chain.insert(dummy, s.get_interpolants()))
+                s.set_interpolants(next);
+                if(!chain.insert(dummy, _traceset.minimize(next)))
                 {
                     std::cerr << "CFAIL AT [" << n << "] = T" << transitions[n] << std::endl;
                 }

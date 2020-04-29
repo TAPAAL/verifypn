@@ -53,7 +53,7 @@ namespace PetriEngine {
         private:
 
             void printTrace(trace_t& stack);
-            void nextEdge(AntiChain<uint32_t, size_t>& checked, state_t& state, trace_t& waiting, std::set<size_t>&& nextinter);
+            void nextEdge(AntiChain<uint32_t, size_t>& checked, state_t& state, trace_t& waiting, std::set<size_t>& nextinter);
             bool tryReach(  bool printtrace, Solver& solver);
             std::pair<bool,bool> runTAR(    bool printtrace, Solver& solver, std::vector<bool>& use_trans);
             bool popDone(trace_t& waiting, size_t& stepno);
