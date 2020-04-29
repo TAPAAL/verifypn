@@ -55,7 +55,13 @@ namespace PetriEngine {
             std::set<size_t> preset, postset;
             extend(p, preset, postset);
             if(!siphonTrap(siphon, has_st, preset, postset))
+            {
+                if(timeout())
+                {
+                    std::cout << "TIMEOUT OF SIPHON" << std::endl;
+                }
                 return false;
+            }
             has_st[p] = true;
         }
         _siphonPropperty = true;
@@ -65,7 +71,6 @@ namespace PetriEngine {
     size_t STSolver::computeTrap(std::vector<size_t>& trap, const std::set<size_t>& preset, const std::set<size_t>& postset, size_t marked_count)
     {
         if(trap.empty()) return 0;
-                    
         // compute DIFF = T* \ *T
         auto eit = std::set_difference( postset.begin(), postset.end(), 
                                         preset.begin(), preset.end(), _diff.begin());
@@ -130,6 +135,11 @@ namespace PetriEngine {
     {
         if(timeout())
             return false;
+
+        size_t dummy = 0;
+        if(_antichain.subsumed(dummy, siphon))
+            return true;
+
         auto eit = std::set_difference(preset.begin(), preset.end(), 
                                  postset.begin(), postset.end(), _diff.begin()); 
         if(eit == _diff.begin())
@@ -169,6 +179,7 @@ namespace PetriEngine {
                     sit = siphon.erase(sit);
             }
         }
+        _antichain.insert(dummy, siphon);
         return true;
     }
     

@@ -2,6 +2,7 @@
 #define STSOLVER_H
 #include "Structures/State.h"
 #include "Reachability/ReachabilityResult.h"
+#include "TAR/AntiChain.h"
 
 #include <memory>
 #include <chrono>
@@ -48,6 +49,7 @@ namespace PetriEngine {
         uint32_t _timelimit;
         uint32_t _analysisTime;
         std::chrono::high_resolution_clock::time_point _start;
+        AntiChain<size_t, size_t> _antichain;
     };
 }
 #endif /* STSOLVER_H */
