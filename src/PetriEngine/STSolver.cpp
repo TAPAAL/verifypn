@@ -85,11 +85,12 @@ namespace PetriEngine {
                 if(_m0[*it] == 0 || marked_count > 1)
                 {
                     // try to compute a random smaller trap
+                    auto rm = (_m0[*it] > 0 ? 1 : 0);
                     trap.erase(it);
                     std::set<size_t> npreset, npostset;
                     for(auto p : trap)
                         extend(p, npreset, npostset);
-                    computeTrap(trap, npreset, npostset, marked_count-1);
+                    computeTrap(trap, npreset, npostset, marked_count - rm);
                 }
             }
             return marked_count;
