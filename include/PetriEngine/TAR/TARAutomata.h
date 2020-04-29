@@ -250,7 +250,7 @@ namespace PetriEngine {
             size_t offset = 0;
             size_t size = std::numeric_limits<size_t>::max();
             size_t edgecnt = 0; 
-            std::vector<size_t> interpolant;
+            std::set<size_t> interpolant;
         public:
             bool operator == (const state_t& other)
             {
@@ -315,35 +315,17 @@ namespace PetriEngine {
 
             inline void add_interpolant(size_t ninter)
             {
-                assert(is_sorted(interpolant.begin(), interpolant.end()));
-                assert(ninter != 0);
-                if(interpolant.size() == 0 || interpolant.back() < ninter)
-                {
-                    assert(interpolant.size() == 0 || interpolant.back() != ninter);
-                    interpolant.push_back(ninter);
-                }
-                else
-                {
-                    auto lb = std::lower_bound(interpolant.begin(), interpolant.end(), ninter);
-                    if(lb != interpolant.end() && *lb == ninter) { return; }
-                    interpolant.insert(lb, ninter);
-                }
-                assert(is_sorted(interpolant.begin(), interpolant.end()));
+                interpolant.insert(ninter);
             }
 
-            inline std::vector<size_t>& get_interpolants()
+            inline std::set<size_t>& get_interpolants()
             {
-                assert(interpolant.size() == 0 || interpolant[0] != 0);
-                assert(is_sorted(interpolant.begin(), interpolant.end()));
                 return interpolant;
             }
 
-            inline void set_interpolants(std::vector<size_t>&& interpolants)
+            inline void set_interpolants(std::set<size_t>&& interpolants)
             {
-                assert(is_sorted(interpolants.begin(), interpolants.end()));
-                assert(interpolant.size() == 0 || interpolant[0] != 0);
                 interpolant = std::move(interpolants);
-                assert(interpolant.size() == 0 || interpolant[0] != 0);
             }
         };
         

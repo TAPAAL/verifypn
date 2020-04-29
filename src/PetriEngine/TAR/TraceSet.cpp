@@ -73,7 +73,7 @@ namespace PetriEngine
             _intmap.emplace(falserange, 0);
             _intmap.emplace(truerange, 1);
 
-            _initial.push_back(1);
+            _initial.insert(1);
         }
 
         void TraceSet::clear()
@@ -85,57 +85,28 @@ namespace PetriEngine
         }
 
         
-        std::vector<size_t> TraceSet::minimize(const std::vector<size_t>& org)
+        std::set<size_t> TraceSet::minimize(const std::set<size_t>& org) const
         {
-            std::vector<size_t> buffer;
-            std::vector<size_t> minimal = org;
-            size_t cur = 2;
-            while (true) {
-                buffer.clear();
-                auto lb = std::lower_bound(minimal.begin(), minimal.end(), cur);
-                if (lb == minimal.end()) break;
-                cur = *lb;
-                assert(!std::any_of(_states[cur].simulates.begin(), _states[cur].simulates.end(), [cur](auto a) { return cur == a; }));
-                std::set_difference(minimal.begin(), minimal.end(),
-                                    _states[cur].simulates.begin(), _states[cur].simulates.end(),
-                                    std::back_inserter(buffer));
-                minimal.swap(buffer);
-                ++cur;
-            }
+            std::set<size_t> minimal = org;
+            for(size_t i : org)
+                for(auto e : _states[i].simulates)
+                    minimal.erase(e);
             return minimal;
         }
 
-        void TraceSet::copyNonChanged(const std::vector<size_t>& from, const std::vector<int64_t>& modifiers, std::vector<size_t>& to) const
+        void TraceSet::copyNonChanged(const std::set<size_t>& from, const std::vector<int64_t>& modifiers, std::set<size_t>& to) const
         {
-            std::vector<size_t> move;
-            for (auto p : from) {
-                if (!_states[p].interpolant.restricts(modifiers)) {
-                    move.push_back(p);
-                }
-            }
-            inline_union(to, move);
+            for (auto p : from)
+                if (!_states[p].interpolant.restricts(modifiers))
+                    to.insert(p);
         }
 
-        std::vector<size_t> TraceSet::maximize(const std::vector<size_t>& org)
+        std::set<size_t> TraceSet::maximize(const std::set<size_t>& org) const
         {
-            std::vector<size_t> maximal = org;
-            assert(is_sorted(maximal.begin(), maximal.end()));
-
-            if (maximal.size() == 0 || maximal[0] != 1)
-                maximal.insert(maximal.begin(), 1);
-
-            assert(maximal.size() == 0 || maximal[0] != 0);
-            assert(is_sorted(maximal.begin(), maximal.end()));
-            for (size_t i : org) {
-                inline_union(maximal, _states[i].simulates);
-            }
-#ifndef NDEBUG
-            auto tmp = maximal;
-            for (size_t i : maximal) {
-                inline_union(tmp, _states[i].simulates);
-            }
-            assert(maximal == tmp);
-#endif
+            auto maximal = org;
+            maximal.insert(1);
+            for (size_t i : org) 
+                maximal.insert(_states[i].simulates.begin(), _states[i].simulates.end());
             return maximal;
         }
 
@@ -300,10 +271,9 @@ namespace PetriEngine
             assert(_states[0].simulators.size() == 0);
         }
 
-        bool TraceSet::follow(const std::vector<size_t>& from, std::vector<size_t>& nextinter, size_t symbol)
+        bool TraceSet::follow(const std::set<size_t>& from, std::set<size_t>& nextinter, size_t symbol)
         {
-            if (nextinter.size() == 0 || nextinter[0] != 1) nextinter.insert(nextinter.begin(), 1);
-            assert(is_sorted(from.begin(), from.end()));
+            nextinter.insert(1);
             for (size_t i : from) {
                 if (i == 0) {
                     assert(false);
@@ -324,31 +294,9 @@ namespace PetriEngine
                     auto& ae = *it;
                     ++it;
                     assert(ae.to.size() > 0);
-                    auto other = nextinter.begin();
-                    auto next = ae.to.begin();
-                    if (*next == 0) {
+                    if (ae.to.front() == 0) 
                         return true;
-                    }
-                    for (; next != ae.to.end(); ++next) {
-                        while (*other < *next && other != nextinter.end()) {
-                            ++other;
-                        }
-                        if (other != nextinter.end() && *next == *other) {
-                            ++other;
-                        }
-                        else {
-                            other = nextinter.insert(other, *next);
-                            assert(*next < _states.size());
-                            if (_states[*next].simulates.size() > 0) {
-                                inline_union(nextinter, _states[*next].simulates);
-                                other = std::lower_bound(nextinter.begin(), nextinter.end(), (*next) + 1);
-                            }
-                            else {
-                                ++other;
-                            }
-                        }
-                        assert(nextinter.size() == 0 || nextinter[0] != 0);
-                    }
+                    nextinter.insert(ae.to.begin(), ae.to.end());
                 }
             }
             return false;

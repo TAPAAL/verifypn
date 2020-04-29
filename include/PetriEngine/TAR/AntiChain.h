@@ -21,6 +21,7 @@
 template<typename T, typename U>
 class AntiChain 
 {
+    using set_t     = std::set<U>;
     using sset_t    = std::vector<U>;
     using smap_t    = std::vector<std::vector<sset_t>>;
     
@@ -38,8 +39,9 @@ class AntiChain
         {
             map.clear();
         }
-        
-        bool subsumed(T& el, sset_t& set)
+
+        template<typename S>
+        bool subsumed(T& el, const S& set)
         {
             bool exists = false;
             if(map.size() > (size_t)el)
@@ -59,7 +61,8 @@ class AntiChain
             return exists;
         }
         
-        bool insert(T& el, sset_t& set)
+        template<typename S>
+        bool insert(T& el, const S& set)
         {
             bool inserted = false;
             if(map.size() <= (size_t)el) map.resize(el + 1);
@@ -76,7 +79,7 @@ class AntiChain
                         chains.erase(chains.begin() + i);
                     }
                 }
-                chains.push_back(set);                
+                chains.emplace_back(sset_t{set.begin(), set.end()});                
                 inserted = true;
             }
             else

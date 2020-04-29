@@ -81,10 +81,9 @@ namespace PetriEngine {
             return popped;
         }
 
-        void TARReachabilitySearch::nextEdge(AntiChain<uint32_t, size_t>& checked, state_t& state, trace_t& waiting, std::vector<size_t>&& nextinter)
+        void TARReachabilitySearch::nextEdge(AntiChain<uint32_t, size_t>& checked, state_t& state, trace_t& waiting, std::set<size_t>&& nextinter)
         {
             uint32_t dummy = state.get_edge_cnt() == 0 ? 0 : 0;
-            state_t next;
             bool res = checked.subsumed(dummy, nextinter);
             if(res)
             {
@@ -92,8 +91,9 @@ namespace PetriEngine {
             }
             else
             {
-                std::vector<size_t> minimal = _traceset.minimize(nextinter);
+                auto minimal = _traceset.minimize(nextinter);
                 checked.insert(dummy, minimal);
+                state_t next;
                 next.reset_edges(_net);
                 next.set_interpolants(std::move(minimal));
                 waiting.push_back(next);
@@ -123,7 +123,7 @@ namespace PetriEngine {
 
                 assert(waiting.size() > 0 );
                 state_t& state = waiting.back();
-                std::vector<size_t> nextinter;
+                std::set<size_t> nextinter;
                 if(!use_trans[state.get_edge_cnt()])
                 {
                     state.next_edge(_net);
@@ -252,7 +252,7 @@ namespace PetriEngine {
             return false;            
         }
 
-        bool TARReachabilitySearch::doStep(state_t& state, std::vector<size_t>& nextinter)
+        bool TARReachabilitySearch::doStep(state_t& state, std::set<size_t>& nextinter)
         {
             auto maximal = _traceset.maximize(state.get_interpolants());
             // if NFA accepts the trace after this instruction, abort.
@@ -280,7 +280,7 @@ namespace PetriEngine {
                 std::cerr << i << ", ";
             
             std::cerr << std::endl;
-            std::vector<size_t> next;
+            std::set<size_t> next;
             uint32_t dummy = 0;
             chain.insert(dummy, s.get_interpolants());
             size_t n = 0;
@@ -311,7 +311,7 @@ namespace PetriEngine {
             return true;
         }
         
-        void TARReachabilitySearch::addNonChanging(state_t& state, std::vector<size_t>& maximal, std::vector<size_t>& nextinter)
+        void TARReachabilitySearch::addNonChanging(state_t& state, std::set<size_t>& maximal, std::set<size_t>& nextinter)
         {
             
             std::vector<int64_t> changes;

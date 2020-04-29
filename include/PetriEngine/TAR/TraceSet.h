@@ -28,11 +28,11 @@ namespace PetriEngine {
             TraceSet(const PetriNet& net);
             void clear();
             bool addTrace(std::vector<std::pair<prvector_t,size_t>>& inter);
-            void copyNonChanged(const std::vector<size_t>& from, const std::vector<int64_t>& modifiers, std::vector<size_t>& to) const;
-            bool follow(const std::vector<size_t>& from, std::vector<size_t>& nextinter, size_t symbol);
-            std::vector<size_t> maximize(const std::vector<size_t>& from);
-            std::vector<size_t> minimize(const std::vector<size_t>& from);
-            std::vector<size_t> initial() const { return _initial; }   
+            void copyNonChanged(const std::set<size_t>& from, const std::vector<int64_t>& modifiers, std::set<size_t>& to) const;
+            bool follow(const std::set<size_t>& from, std::set<size_t>& nextinter, size_t symbol);
+            std::set<size_t> maximize(const std::set<size_t>& from) const;
+            std::set<size_t> minimize(const std::set<size_t>& from) const;
+            std::set<size_t> initial() const { return _initial; }   
             std::ostream& print(std::ostream& out) const;
             void removeEdges(size_t edge);
         private:
@@ -41,7 +41,7 @@ namespace PetriEngine {
             void computeSimulation(size_t index);
             std::map<prvector_t, size_t> _intmap;
             std::vector<AutomataState> _states;
-            std::vector<size_t> _initial;
+            std::set<size_t> _initial;
             const PetriNet& _net;
         };
 
