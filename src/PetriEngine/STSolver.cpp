@@ -77,6 +77,21 @@ namespace PetriEngine {
         if(eit == _diff.begin())
         {
             // DIFF = empty
+            if(marked_count > 0)
+            {
+                size_t dummy = 0;
+                _antichain.insert(dummy, trap);
+                auto it = trap.begin() + (std::rand() % trap.size());
+                if(_m0[*it] == 0 || marked_count > 1)
+                {
+                    // try to compute a random smaller trap
+                    trap.erase(it);
+                    std::set<size_t> npreset, npostset;
+                    for(auto p : trap)
+                        extend(p, npreset, npostset);
+                    computeTrap(trap, npreset, npostset, marked_count-1);
+                }
+            }
             return marked_count;
         }
         else
@@ -111,7 +126,7 @@ namespace PetriEngine {
             {
                 // no trap
                 assert(marked_count == 0);
-                return marked_count;
+                return 0;
             }
             else 
             {
