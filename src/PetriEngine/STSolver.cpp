@@ -136,6 +136,8 @@ namespace PetriEngine {
         if(timeout())
             return false;
 
+        // we can use an inclussion-check to avoid recomputation 
+        // (we abuse the antichain structure here)
         size_t dummy = 0;
         if(_antichain.subsumed(dummy, siphon))
             return true;
@@ -167,6 +169,7 @@ namespace PetriEngine {
                     // in pre.first->place have the st property, so by transitivity
                     // any fixpoint containing pre.first->place will also have
                     // this property
+                    // this is quicker than the antichain check.
                     continue;
                 }
                 sit = siphon.insert(sit, pre.first->place);
@@ -179,6 +182,8 @@ namespace PetriEngine {
                     sit = siphon.erase(sit);
             }
         }
+        
+        // Any super-siphon has a marked trap, insert into antichain.
         _antichain.insert(dummy, siphon);
         return true;
     }
