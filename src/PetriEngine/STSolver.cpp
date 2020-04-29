@@ -13,7 +13,8 @@ namespace PetriEngine {
         }
         
         _m0 = _net._initialMarking;
-        _analysisTime=0;
+        _analysisTime = 0;
+        _diff.resize(_net.numberOfTransitions());
         constructPrePost(); // TODO: Refactor this out...
     }
 
@@ -24,6 +25,8 @@ namespace PetriEngine {
         if(_net.numberOfPlaces() == 0) return false;
         _timelimit = timelimit;
         _start = std::chrono::high_resolution_clock::now();
+        
+        // check that constraints on net are valid
         for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
         {
             // Check that net is un-weighted and non-inhibited
@@ -44,90 +47,123 @@ namespace PetriEngine {
             }
         }
         
+        // construct the siphon starting at each place
+        std::vector<bool> has_st(_net.numberOfPlaces());
         for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
         {
             std::vector<size_t> siphon{p};
-            if(!siphonTrap(siphon))
-            {
+            std::set<size_t> preset, postset;
+            extend(p, preset, postset);
+            if(!siphonTrap(siphon, has_st, preset, postset))
                 return false;
-            }
+            has_st[p] = true;
         }
         _siphonPropperty = true;
         return true;
     }
     
-    std::vector<size_t> STSolver::computeTrap(std::vector<size_t>& siphon)
+    size_t STSolver::computeTrap(std::vector<size_t>& trap, const std::set<size_t>& preset, const std::set<size_t>& postset, size_t marked_count)
     {
-        if(siphon.empty()) return siphon;
-        std::set<size_t> preset, postset;
-        for(auto p : siphon)
-        {
-            preset.insert(_transitions.get() + _places[p].pre, _transitions.get() + _places[p].post);
-            postset.insert(_transitions.get() + _places[p].post, _transitions.get() + _places[p+1].pre);
-        }
-        std::vector<size_t> diff(std::max(postset.size(), preset.size()));
+        if(trap.empty()) return 0;
+                    
+        // compute DIFF = T* \ *T
         auto eit = std::set_difference( postset.begin(), postset.end(), 
-                                        preset.begin(), preset.end(), diff.begin());
-        if(eit == diff.begin())
+                                        preset.begin(), preset.end(), _diff.begin());
+        if(eit == _diff.begin())
         {
-            return siphon;
+            // DIFF = empty
+            return marked_count;
         }
         else
         {
-            for(auto t : diff)
+            // run through every transition in DIFF (as it cannot be in trap)
+            // and remove preset (i.e. T'=T \ *DIFF)
+            for(auto it = _diff.begin(); it != eit; ++it)
             {
+                auto t = *it;
                 auto pre = _net.preset(t);
-                auto sit = siphon.begin();
+                auto sit = trap.begin();
                 for(; pre.first != pre.second; ++pre.first)
                 {
-                    while(sit != std::end(siphon) && *sit < pre.first->place) ++sit;
-                    if(sit == std::end(siphon)) 
+                    while(sit != std::end(trap) && *sit < pre.first->place) ++sit;
+                    if(sit == std::end(trap)) 
                         break;
                     if(*sit == pre.first->place)
-                        sit = siphon.erase(sit);
+                    {
+                        
+                        sit = trap.erase(sit);
+                        if(_m0[pre.first->place] != 0)
+                        {
+                            assert(marked_count > 0);
+                            --marked_count;
+                            if(marked_count == 0)
+                                return 0;
+                        }
+                    }
                 }
             }
-            if(siphon.empty())
-                return siphon;
+            if(trap.empty() || marked_count == 0)
+            {
+                // no trap
+                assert(marked_count == 0);
+                return marked_count;
+            }
             else 
-                return computeTrap(siphon);
+            {
+                // rebuild pre and postset, then try to compute new fixpoint
+                // i.e. build trap with smaller set.
+                std::set<size_t> npreset, npostset;
+                for(auto p : trap)
+                    extend(p, npreset, npostset);
+                return computeTrap(trap, npreset, npostset, marked_count);
+            }
         }
     }
     
-    bool STSolver::siphonTrap(std::vector<size_t> siphon)
+    void STSolver::extend(size_t place, std::set<size_t>& pre, std::set<size_t>& post)
+    {
+        pre.insert(_transitions.get() + _places[place].pre, _transitions.get() + _places[place].post);
+        post.insert(_transitions.get() + _places[place].post, _transitions.get() + _places[place+1].pre);
+    }
+    
+    bool STSolver::siphonTrap(std::vector<size_t> siphon, const std::vector<bool>& has_st, const std::set<size_t>& preset, const std::set<size_t>& postset)
     {
         if(timeout())
             return false;
-        std::set<size_t> preset, postset;
-        for(auto p : siphon)
-        {
-            preset.insert(_transitions.get() + _places[p].pre, _transitions.get() + _places[p].post);
-            postset.insert(_transitions.get() + _places[p].post, _transitions.get() + _places[p+1].pre);
-        }
-        std::vector<size_t> diff(std::max(postset.size(), preset.size()));
         auto eit = std::set_difference(preset.begin(), preset.end(), 
-                                 postset.begin(), postset.end(), diff.begin()); 
-        if(eit == diff.begin())
+                                 postset.begin(), postset.end(), _diff.begin()); 
+        if(eit == _diff.begin())
         {
-            bool ok = false;
-            auto trap = computeTrap(siphon);
-            for(auto p : trap)
-            {
-                if(_m0[p] != 0) { ok = true; break; }
-            }
-            if(!ok) return false;
+            size_t marked_count = 0;
+            for(auto p : siphon)
+                if(_m0[p] != 0) ++marked_count;
+            if(marked_count == 0) return false;
+            marked_count = computeTrap(siphon, preset, postset, marked_count);
+            if(marked_count == 0) return false;
+            else return true;
         }
-        else if(diff.size())
+        else
         {
-            auto t = diff.front();
+            auto t = _diff.front();
             auto pre = _net.preset(t);
             auto sit = siphon.begin();
             for(; pre.first != pre.second; ++pre.first)
             {
                 while(sit != siphon.end() && *sit < pre.first->place) ++sit;
                 if(sit != siphon.end() && *sit == pre.first->place) continue;
+                if(has_st[pre.first->place])
+                {
+                    // we know that all siphons generated as fixpoints starting
+                    // in pre.first->place have the st property, so by transitivity
+                    // any fixpoint containing pre.first->place will also have
+                    // this property
+                    continue;
+                }
                 sit = siphon.insert(sit, pre.first->place);
-                if(!siphonTrap(siphon))
+                auto npre = preset;
+                auto npost = postset;
+                extend(pre.first->place, npre, npost);
+                if(!siphonTrap(siphon, has_st, npre, npost))
                     return false;
                 else
                     sit = siphon.erase(sit);
