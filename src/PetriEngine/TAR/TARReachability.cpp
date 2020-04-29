@@ -28,6 +28,7 @@
 #include "PetriEngine/TAR/Solver.h"
 #include "PetriEngine/TAR/ContainsVisitor.h"
 #include "PetriEngine/TAR/PlaceUseVisitor.h"
+#include "CTL/Stopwatch.h"
 
 
 namespace PetriEngine {
@@ -103,6 +104,8 @@ namespace PetriEngine {
         std::pair<bool,bool> TARReachabilitySearch::runTAR( bool printtrace,
                                             Solver& solver, std::vector<bool>& use_trans)
         {
+            stopwatch tt;
+            tt.start();
             auto checked = AntiChain<uint32_t, size_t>();
             // waiting-list with levels
             bool all_covered = true;
@@ -129,15 +132,41 @@ namespace PetriEngine {
                     state.next_edge(_net);
                     continue;                    
                 }
+#ifdef TAR_TIMING
+                stopwatch ds;
+                ds.start();
+#endif
                 if(doStep(state, nextinter)) // Check if the next state makes the interpolant automata accept.
                 {
+#ifdef TAR_TIMING
+                    stopwatch dsn;
+                    dsn.start();
+#endif
                     state.next_edge(_net);
+#ifdef TAR_TIMING
+                    dsn.stop();
+                    _do_step_next += dsn.duration();
+                    ds.stop();
+                    _do_step += ds.duration();
+#endif
                     continue;
                 }
+#ifdef TAR_TIMING
+                ds.stop();
+                _do_step += ds.duration();
+#endif
 
                 if(waiting.back().get_edge_cnt() == 0) // check if proposition is satisfied
                 {
+#ifdef TAR_TIMING
+                    stopwatch ct;
+                    ct.start();
+#endif
                     auto satisfied = solver.check(waiting, _traceset);
+#ifdef TAR_TIMING
+                    ct.stop();
+                    _check_time += ct.duration();
+#endif
                     if(satisfied)
                     {
                         if(printtrace)
@@ -157,7 +186,15 @@ namespace PetriEngine {
 #ifdef VERBOSETAR
                     printStats();
 #endif
+#ifdef TAR_TIMING
+                    stopwatch ne;
+                    ne.start();
+#endif
                     nextEdge(checked, state, waiting, std::move(nextinter));
+#ifdef TAR_TIMING
+                    ne.stop();
+                    _next_time += ne.duration();
+#endif
                 }
             }
             return std::make_pair(all_covered, false);
@@ -204,6 +241,10 @@ namespace PetriEngine {
             };
             
             update_use(false);
+#ifdef TAR_TIMING
+            stopwatch rt;
+            rt.start();
+#endif
             do
             {
                 auto [finished, satisfied] = runTAR(printtrace, solver, use_trans);
@@ -246,9 +287,29 @@ namespace PetriEngine {
 //                        auto [finished, satisfied] = runTAR(printtrace, solver, use_trans);
 
                     }
+#ifdef TAR_TIMING
+                    rt.stop();
+                    std::cerr << "TOT : " << rt.duration() << 
+                            "\n\tSOLVE : " << (_check_time/rt.duration()) << 
+                            "\n\tSTEP : " << (_do_step/rt.duration()) <<
+                            "\n\tSTEP NEXT : " << (_do_step_next/rt.duration()) <<
+                            "\n\tFOLLOW : " << (_follow_time/rt.duration()) <<
+                            "\n\tNON CHANGE : " << (_non_change_time/rt.duration()) <<                            
+                            "\n\tNEXT : " << (_next_time/rt.duration()) << std::endl;
+#endif
                     return satisfied;
                 }
             } while(true);
+#ifdef TAR_TIMING
+            rt.stop();
+            std::cerr << "TOT : " << rt.duration() << 
+                    "\n\tSOLVE : " << (_check_time/rt.duration()) << 
+                    "\n\tSTEP : " << (_do_step/rt.duration()) <<
+                    "\n\tSTEP NEXT : " << (_do_step_next/rt.duration()) <<
+                    "\n\tFOLLOW : " << (_follow_time/rt.duration()) <<
+                    "\n\tNON CHANGE : " << (_non_change_time/rt.duration()) <<
+                    "\n\tNEXT : " << (_next_time/rt.duration()) << std::endl;
+#endif
             return false;            
         }
 
@@ -256,15 +317,33 @@ namespace PetriEngine {
         {
             auto maximal = _traceset.maximize(state.get_interpolants());
             // if NFA accepts the trace after this instruction, abort.
+#ifdef TAR_TIMING
+            stopwatch flw;
+            flw.start();
+#endif
             if(_traceset.follow(maximal, nextinter, state.get_edge_cnt()))
             {
+#ifdef TAR_TIMING
+                flw.stop();
+                _follow_time += flw.duration();
+#endif
                 return true;
             }
-
+#ifdef TAR_TIMING
+            flw.stop();
+            _follow_time += flw.duration();
+#endif
             if(state.get_edge_cnt() == 0)
                 return false;
+#ifdef TAR_TIMING
+            stopwatch nc;
+            nc.start();
+#endif
             addNonChanging(state, maximal, nextinter);
-        
+#ifdef TAR_TIMING
+            nc.stop();
+            _non_change_time += nc.duration();
+#endif
             nextinter = _traceset.maximize(nextinter);
             return false;
         }

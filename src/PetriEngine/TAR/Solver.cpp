@@ -260,6 +260,11 @@ namespace PetriEngine {
         
         int64_t Solver::findFailure(trace_t& trace, bool to_end)
         {
+            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
+            {
+                _m[p] = _initial[p];
+                _mark[p] = _m[p];
+            }
             int64_t fail = 0;
             int64_t first_fail = std::numeric_limits<decltype(first_fail)>::max();
             for(; fail < (int64_t)trace.size(); ++fail)
@@ -299,10 +304,15 @@ namespace PetriEngine {
                                 s.setMarking(_mark.get());
                                 _gen.prepare(&s);
                                 if(t.get_edge_cnt() == 0)
-                                    assert(_query->evaluate(ctx) == r);
+                                {
+                                    EvaluationContext ctx(_mark.get(), &_net);
+                                    auto otherr = _query->evalAndSet(ctx);
+                                    assert(otherr == r);
+                                }
                                 else if(_gen.checkPreset(t.get_edge_cnt()-1))
                                 {
                                     _gen.consumePreset(s, t.get_edge_cnt()-1);
+                                    
                                     _gen.producePostset(s, t.get_edge_cnt()-1);
                                 }
                                 else
@@ -542,11 +552,7 @@ namespace PetriEngine {
             auto back_inter = findFree(trace);
             if(back_inter.size() > 0)
                 interpolants.addTrace(back_inter);
-            for(size_t p = 0; p < _net.numberOfPlaces(); ++p)
-            {
-                _m[p] = _initial[p];
-                _mark[p] = _m[p];
-            }
+
             auto fail = findFailure(trace, true);
             interpolant_t ranges;
             if(fail == std::numeric_limits<decltype(fail)>::max())
@@ -563,6 +569,7 @@ namespace PetriEngine {
             }
             do {
                 fail = findFailure(trace, true);
+                assert(fail != std::numeric_limits<decltype(fail)>::max());
                 ranges.clear();
                 ranges.resize(fail+1);
                 if(!ok)

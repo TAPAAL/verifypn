@@ -309,7 +309,7 @@ namespace PetriEngine {
             {
                 size = net.numberOfTransitions();
                 edgecnt = 0;
-                offset = std::rand() % (net.numberOfTransitions());
+                offset = std::rand();// % (net.numberOfTransitions());
                 return edgecnt > net.numberOfTransitions();
             }
 

@@ -74,6 +74,14 @@ namespace PetriEngine {
             Reducer* _reducer;
             TraceSet _traceset;
 
+#ifdef TAR_TIMING
+            double _check_time = 0;
+            double _next_time = 0;
+            double _do_step = 0;
+            double _do_step_next = 0;
+            double _non_change_time = 0;
+            double _follow_time = 0;
+#endif
         };
         
     }
