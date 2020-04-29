@@ -80,6 +80,8 @@ namespace PetriEngine {
             if(marked_count > 0)
             {                
                 auto it = trap.begin() + (std::rand() % trap.size());
+                size_t dummy = 0;
+                _antichain.insert(dummy, trap);
                 if(_m0[*it] == 0 || marked_count > 1)
                 {
                     // try to compute a random smaller trap
@@ -88,16 +90,7 @@ namespace PetriEngine {
                     std::set<size_t> npreset, npostset;
                     for(auto p : trap)
                         extend(p, npreset, npostset);
-                    if(computeTrap(trap, npreset, npostset, marked_count - rm) == 0)
-                    {
-                        size_t dummy = 0;
-                        _antichain.insert(dummy, trap);
-                    }
-                }
-                else
-                {
-                    size_t dummy = 0;
-                    _antichain.insert(dummy, trap);                    
+                    computeTrap(trap, npreset, npostset, marked_count - rm);
                 }
             }
             return marked_count;
