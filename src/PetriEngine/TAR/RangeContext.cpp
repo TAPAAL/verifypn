@@ -151,11 +151,6 @@ namespace PetriEngine {
         handle_compare((*element)[1], (*element)[0], false);
     }
    
-    void RangeContext::_accept(const IdentifierExpr* element)
-    {
-        assert(false);
-    }
-    
     void RangeContext::_accept(const LiteralExpr* element)
     {
     }

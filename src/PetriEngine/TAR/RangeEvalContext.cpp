@@ -62,11 +62,6 @@ namespace PetriEngine
         _bool_result = false;
     }
 
-    void RangeEvalContext::_accept(const IdentifierExpr* element)
-    {
-        assert(false);
-    }
-    
     void RangeEvalContext::handle_compare(const Expr_ptr& left, const Expr_ptr& right, bool strict)
     {
         _places.clear();

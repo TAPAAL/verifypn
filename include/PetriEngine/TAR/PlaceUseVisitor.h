@@ -38,7 +38,6 @@ namespace PQL {
         virtual void _accept(const GreaterThanOrEqualCondition* element) override;
         virtual void _accept(const EqualCondition* element) override;
         virtual void _accept(const NotEqualCondition* element) override;
-        virtual void _accept(const IdentifierExpr* element) override;
         virtual void _accept(const LiteralExpr* element) override;
         virtual void _accept(const UnfoldedIdentifierExpr* element) override;
         virtual void _accept(const PlusExpr* element) override;

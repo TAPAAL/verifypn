@@ -73,11 +73,6 @@ namespace PQL {
             (*element)[i]->visit(*this);
     }
     
-    void PlaceUseVisitor::_accept(const IdentifierExpr* element)
-    {
-        assert(false);
-    }
-    
     void PlaceUseVisitor::_accept(const CompareConjunction* element)
     {
         for(auto& e : *element)
