@@ -57,7 +57,7 @@ namespace PetriEngine {
             }
             void toString(std::ostream&) const override;
             bool placeFree() const override;
-
+            auto& expressions() const { return _exprs; }
         protected:
             virtual int apply(int v1, int v2) const = 0;
             virtual std::string op() const = 0;
@@ -84,7 +84,6 @@ namespace PetriEngine {
             bool placeFree() const override;
             auto constant() const { return _constant; }
             auto& places() const { return _ids; }
-            auto& expressions() const { return _exprs; }
         protected:
             CommutativeExpr(int constant): _constant(constant) {};
             void init(std::vector<Expr_ptr>&& exprs);
@@ -171,6 +170,7 @@ namespace PetriEngine {
                 return _expr->formulaSize() + 1;
             }
             bool placeFree() const override;
+            const Expr_ptr& operator[](size_t i) const { return _expr; };
         private:
             Expr_ptr _expr;
         };

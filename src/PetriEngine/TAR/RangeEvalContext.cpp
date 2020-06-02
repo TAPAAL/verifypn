@@ -250,5 +250,19 @@ namespace PetriEngine
         _bool_result = true;
     }
     
+    void RangeEvalContext::_accept(const MultiplyExpr*)
+    {
+        _bool_result = true;        
+    }
+
+    void RangeEvalContext::_accept(const MinusExpr*)
+    {
+        _bool_result = true;        
+    }
+    
+    void RangeEvalContext::_accept(const SubtractExpr*)
+    {
+        _bool_result = true;        
+    }
 }
 

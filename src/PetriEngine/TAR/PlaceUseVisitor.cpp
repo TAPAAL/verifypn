@@ -79,12 +79,33 @@ namespace PQL {
             _in_use[e._place] = true;
     }
     
-    void PlaceUseVisitor::_accept(const PlusExpr* element)
+    void PlaceUseVisitor::visitCommutativeExpr(const CommutativeExpr* element)
     {
         for(auto& p : element->places())
             _in_use[p.first] = true;
         for(auto& e : element->expressions())
+            e->visit(*this);     
+    }
+    
+    void PlaceUseVisitor::_accept(const PlusExpr* element)
+    {
+        visitCommutativeExpr(element);
+    }
+    
+    void PlaceUseVisitor::_accept(const SubtractExpr* element)
+    {
+        for(auto& e : element->expressions())
             e->visit(*this);
+    }
+
+    void PlaceUseVisitor::_accept(const MultiplyExpr* element)
+    {
+        visitCommutativeExpr(element);
+    }
+    
+    void PlaceUseVisitor::_accept(const MinusExpr* element)
+    {
+        (*element)[0]->visit(*this);
     }
     
     void PlaceUseVisitor::_accept(const UnfoldedIdentifierExpr* element) 
@@ -98,8 +119,26 @@ namespace PQL {
             _in_use[p._place] = true;
     }
     
-    
-    
+    void PlaceUseVisitor::_accept(const EUCondition* el)
+    {   
+        (*el)[0]->visit(*this);
+        (*el)[1]->visit(*this);
+    }
+
+    void PlaceUseVisitor::_accept(const AUCondition* el)
+    {   
+        (*el)[0]->visit(*this);
+        (*el)[1]->visit(*this);
+    }
+
+    void PlaceUseVisitor::_accept(const EFCondition* el) { (*el)[0]->visit(*this); }
+    void PlaceUseVisitor::_accept(const EGCondition* el) { (*el)[0]->visit(*this); }
+    void PlaceUseVisitor::_accept(const AGCondition* el) { (*el)[0]->visit(*this); }
+    void PlaceUseVisitor::_accept(const AFCondition* el) { (*el)[0]->visit(*this); }
+    void PlaceUseVisitor::_accept(const EXCondition* el) { (*el)[0]->visit(*this); }
+    void PlaceUseVisitor::_accept(const AXCondition* el) { (*el)[0]->visit(*this); }
+
+    // shallow elements, neither of these should exist in a compiled expression    
     void PlaceUseVisitor::_accept(const LiteralExpr* element) {}
     void PlaceUseVisitor::_accept(const DeadlockCondition*) {}
 

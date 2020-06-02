@@ -86,9 +86,9 @@ namespace PetriEngine
             virtual void _accept(const UnfoldedIdentifierExpr* element) = 0;
             virtual void _accept(const LiteralExpr* element) = 0;
             virtual void _accept(const PlusExpr* element) = 0;
-            virtual void _accept(const MultiplyExpr* element) {};
-            virtual void _accept(const MinusExpr* element) {};
-            virtual void _accept(const SubtractExpr* element) {};
+            virtual void _accept(const MultiplyExpr* element) = 0;
+            virtual void _accept(const MinusExpr* element) = 0;
+            virtual void _accept(const SubtractExpr* element) = 0;
             
             // shallow expression, default to error
             virtual void _accept(const IdentifierExpr* element)

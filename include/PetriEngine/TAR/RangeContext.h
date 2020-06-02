@@ -56,6 +56,9 @@ namespace PetriEngine
         virtual void _accept(const LiteralExpr* element) override;
         virtual void _accept(const UnfoldedIdentifierExpr* element) override;
         virtual void _accept(const PlusExpr* element) override;
+        virtual void _accept(const MinusExpr* element) override;
+        virtual void _accept(const SubtractExpr* element) override;
+        virtual void _accept(const MultiplyExpr* element) override;
         virtual void _accept(const DeadlockCondition* element) override;
         virtual void _accept(const CompareConjunction* element) override;
         virtual void _accept(const UnfoldedUpperBoundsCondition* element) override;

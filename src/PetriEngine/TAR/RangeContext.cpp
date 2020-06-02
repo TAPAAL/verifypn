@@ -130,7 +130,7 @@ namespace PetriEngine {
     {
         _is_dirty = true; // TODO improve
     }
-    
+     
     void RangeContext::_accept(const LessThanCondition* element)
     {
         handle_compare((*element)[0], (*element)[1], true);
@@ -196,7 +196,23 @@ namespace PetriEngine {
             if(_is_dirty) return;
         }
     }
-   
+
+    void RangeContext::_accept(const MultiplyExpr*)
+    {
+        _is_dirty = true; // TODO improve
+    }
+
+    void RangeContext::_accept(const MinusExpr*)
+    {
+        _is_dirty = true; // TODO improve
+    }
+    
+    void RangeContext::_accept(const SubtractExpr*)
+    {
+        _is_dirty = true; // TODO improve
+    }
+    
+    
     void RangeContext::_accept(const DeadlockCondition* element)
     {
         assert(!element->isSatisfied());
