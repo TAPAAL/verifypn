@@ -3618,7 +3618,7 @@ namespace PetriEngine {
                 }
             }
             if(negated == noteq) return std::make_shared<EqualCondition>((*org)[0], (*org)[1]);
-            else                 return std::make_shared<NotEqualCondition>((*org)[0], (*org)[1]);            
+            else                 return std::make_shared<NotEqualCondition>((*org)[0], (*org)[1]);
         }
         
         Condition_ptr NotEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
