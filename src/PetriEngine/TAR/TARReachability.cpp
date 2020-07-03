@@ -451,7 +451,20 @@ namespace PetriEngine {
                                         std::vector<ResultPrinter::Result>& results,
                                         bool printstats, bool printtrace)
         {
-
+            // inhibitors are not supported yet
+            for(size_t t = 0; t < _net.numberOfTransitions(); ++t)
+            {
+                auto in = _net.preset(t);
+                for(; in.first != in.second; ++in.first)
+                {
+                    if(in.first->inhibitor)
+                    {
+                        std::cerr << "Trace Abstraction Refinement Error : Inhibitor Arcs are not yet supported by the TAR engine" << std::endl;
+                        std::exit(ErrorCode);
+                    }
+                }
+            }
+            
             // set up working area
             Structures::State state;
             state.setMarking(_net.makeInitialMarking());
