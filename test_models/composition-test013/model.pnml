@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_sharedPlace">
+                <graphics>
+                    <position x="630" y="30"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_sharedPlace</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN1_Goal1">
+                <graphics>
+                    <position x="525" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_Goal1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN1_P1">
+                <graphics>
+                    <position x="105" y="165"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_P1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN1_P2">
+                <graphics>
+                    <position x="330" y="45"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN1_Goal2">
+                <graphics>
+                    <position x="405" y="330"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_Goal2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN2_P1">
+                <graphics>
+                    <position x="1035" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Shared_sharedTransition">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_sharedTransition</text>
+                </name>
+                <graphics>
+                    <position x="330" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN1_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_T1</text>
+                </name>
+                <graphics>
+                    <position x="510" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN1_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_T2</text>
+                </name>
+                <graphics>
+                    <position x="480" y="45"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN2_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_T1</text>
+                </name>
+                <graphics>
+                    <position x="1155" y="180"/>
+                </graphics>
+            </transition>
+            <arc id="TAPN1_P1_to_Shared_sharedTransition" source="TAPN1_P1" target="Shared_sharedTransition" type="normal"/>
+            <arc id="TAPN1_Goal1_to_TAPN1_T1" source="TAPN1_Goal1" target="TAPN1_T1" type="normal"/>
+            <arc id="Shared_sharedPlace_to_TAPN1_T2" source="Shared_sharedPlace" target="TAPN1_T2" type="normal"/>
+            <arc id="TAPN2_P1_to_TAPN2_T1" source="TAPN2_P1" target="TAPN2_T1" type="normal"/>
+            <arc id="Shared_sharedTransition_to_TAPN1_Goal1" source="Shared_sharedTransition" target="TAPN1_Goal1" type="normal"/>
+            <arc id="TAPN1_T1_to_TAPN1_Goal2" source="TAPN1_T1" target="TAPN1_Goal2" type="normal"/>
+            <arc id="TAPN1_T2_to_TAPN1_P2" source="TAPN1_T2" target="TAPN1_P2" type="normal"/>
+            <arc id="Shared_sharedTransition_to_TAPN2_P1" source="Shared_sharedTransition" target="TAPN2_P1" type="normal"/>
+            <arc id="TAPN2_T1_to_Shared_sharedPlace" source="TAPN2_T1" target="Shared_sharedPlace" type="normal"/>
+            <arc id="TAPN1_P2_to_Shared_sharedTransition" source="TAPN1_P2" target="Shared_sharedTransition" type="inhibitor"/>
+            <arc id="TAPN1_P2_to_TAPN1_T1" source="TAPN1_P2" target="TAPN1_T1" type="inhibitor"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

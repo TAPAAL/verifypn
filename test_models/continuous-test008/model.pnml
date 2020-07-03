@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="in">
+                <graphics>
+                    <position x="135" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="26" y="-23"/>
+                    </graphics>
+                    <text>in</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="out">
+                <graphics>
+                    <position x="705" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="59" y="7"/>
+                    </graphics>
+                    <text>out</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="waiting">
+                <graphics>
+                    <position x="315" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="26" y="-16"/>
+                    </graphics>
+                    <text>waiting</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="deadline">
+                <graphics>
+                    <position x="330" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="14" y="44"/>
+                    </graphics>
+                    <text>deadline</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="finished">
+                <graphics>
+                    <position x="540" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="29" y="-9"/>
+                    </graphics>
+                    <text>finished</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="init">
+                <name>
+                    <graphics>
+                        <offset x="17" y="-5"/>
+                    </graphics>
+                    <text>init</text>
+                </name>
+                <graphics>
+                    <position x="225" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="service">
+                <name>
+                    <graphics>
+                        <offset x="36" y="-11"/>
+                    </graphics>
+                    <text>service</text>
+                </name>
+                <graphics>
+                    <position x="420" y="195"/>
+                </graphics>
+            </transition>
+            <transition id="late">
+                <name>
+                    <graphics>
+                        <offset x="25" y="38"/>
+                    </graphics>
+                    <text>late</text>
+                </name>
+                <graphics>
+                    <position x="540" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="early">
+                <name>
+                    <graphics>
+                        <offset x="33" y="47"/>
+                    </graphics>
+                    <text>early</text>
+                </name>
+                <graphics>
+                    <position x="630" y="345"/>
+                </graphics>
+            </transition>
+            <arc id="in_to_init" source="in" target="init" type="normal"/>
+            <arc id="waiting_to_service" source="waiting" target="service" type="normal"/>
+            <arc id="finished_to_late" source="finished" target="late" type="normal"/>
+            <arc id="deadline_to_late" source="deadline" target="late" type="normal"/>
+            <arc id="deadline_to_early" source="deadline" target="early" type="normal"/>
+            <arc id="finished_to_early" source="finished" target="early" type="normal">
+                <graphics>
+                    <position x="643" y="208"/>
+                </graphics>
+            </arc>
+            <arc id="init_to_waiting" source="init" target="waiting" type="normal"/>
+            <arc id="init_to_deadline" source="init" target="deadline" type="normal"/>
+            <arc id="service_to_finished" source="service" target="finished" type="normal"/>
+            <arc id="late_to_out" source="late" target="out" type="normal"/>
+            <arc id="early_to_out" source="early" target="out" type="normal">
+                <graphics>
+                    <position x="718" y="358"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

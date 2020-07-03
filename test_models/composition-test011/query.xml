@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>composition-test011.FALSE-1</id>
+    <description>composition-test011.FALSE-1</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <conjunction>
+            <integer-ge>
+              <tokens-count>
+                <place>Train_Crossing</place>
+              </tokens-count>
+              <integer-constant>1</integer-constant>
+            </integer-ge>
+            <integer-ge>
+              <tokens-count>
+                <place>TragicLight_Green</place>
+              </tokens-count>
+              <integer-constant>1</integer-constant>
+            </integer-ge>
+          </conjunction>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

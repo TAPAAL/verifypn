@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>subsetsum-test004.TRUE-1</id>
+    <description>subsetsum-test004.TRUE-1</description>
+    <formula>
+      <all-paths>
+        <globally>
+          <integer-le>
+            <tokens-count>
+              <place>Solution</place>
+            </tokens-count>
+            <integer-constant>0</integer-constant>
+          </integer-le>
+        </globally>
+      </all-paths>
+    </formula>
+  </property>
+</property-set>

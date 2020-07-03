@@ -1,0 +1,2314 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_bloodTransfusionWorkflow_START">
+                <graphics>
+                    <position x="45" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="154" y="-34"/>
+                    </graphics>
+                    <text>Shared_bloodTransfusionWorkflow_START</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_bloodTransfusionWorkflow_END">
+                <graphics>
+                    <position x="765" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="118" y="-22"/>
+                    </graphics>
+                    <text>Shared_bloodTransfusionWorkflow_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_patientInfo_START">
+                <graphics>
+                    <position x="135" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="13" y="-10"/>
+                    </graphics>
+                    <text>Shared_patientInfo_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_patientInfo_END">
+                <graphics>
+                    <position x="285" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="20" y="-9"/>
+                    </graphics>
+                    <text>Shared_patientInfo_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_prepareTransfusion_START">
+                <graphics>
+                    <position x="30" y="60"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="120" y="-26"/>
+                    </graphics>
+                    <text>Shared_prepareTransfusion_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_prepareTransfusion_END">
+                <graphics>
+                    <position x="705" y="60"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="46" y="-20"/>
+                    </graphics>
+                    <text>Shared_prepareTransfusion_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_EX_reactionSuspected">
+                <graphics>
+                    <position x="795" y="510"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="86" y="58"/>
+                    </graphics>
+                    <text>Shared_EX_reactionSuspected</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_EX_consentDisagree">
+                <graphics>
+                    <position x="555" y="510"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="36" y="56"/>
+                    </graphics>
+                    <text>Shared_EX_consentDisagree</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_EX_orderIncomplete">
+                <graphics>
+                    <position x="675" y="510"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="61" y="56"/>
+                    </graphics>
+                    <text>Shared_EX_orderIncomplete</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_completeDoctorOrder_START">
+                <graphics>
+                    <position x="90" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="88" y="-11"/>
+                    </graphics>
+                    <text>Shared_completeDoctorOrder_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_completeDoctorOrder_END">
+                <graphics>
+                    <position x="195" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="85" y="65"/>
+                    </graphics>
+                    <text>Shared_completeDoctorOrder_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_preTransfusijonChecks_START">
+                <graphics>
+                    <position x="285" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="110" y="-14"/>
+                    </graphics>
+                    <text>Shared_preTransfusijonChecks_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_preTransfusijonChecks_END">
+                <graphics>
+                    <position x="390" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="92" y="58"/>
+                    </graphics>
+                    <text>Shared_preTransfusijonChecks_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_performTransfusion_START">
+                <graphics>
+                    <position x="495" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="89" y="-14"/>
+                    </graphics>
+                    <text>Shared_performTransfusion_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_performTransfusion_END">
+                <graphics>
+                    <position x="615" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="74" y="58"/>
+                    </graphics>
+                    <text>Shared_performTransfusion_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_obtainBloodProduct_START">
+                <graphics>
+                    <position x="195" y="435"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="74" y="52"/>
+                    </graphics>
+                    <text>Shared_obtainBloodProduct_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_obtainBloodProduct_END">
+                <graphics>
+                    <position x="345" y="435"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="95" y="50"/>
+                    </graphics>
+                    <text>Shared_obtainBloodProduct_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_checkForTypeAndScreen_START">
+                <graphics>
+                    <position x="210" y="285"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="42" y="56"/>
+                    </graphics>
+                    <text>Shared_checkForTypeAndScreen_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_checkForTypeAndScreen_END">
+                <graphics>
+                    <position x="360" y="285"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="121" y="63"/>
+                    </graphics>
+                    <text>Shared_checkForTypeAndScreen_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_iterateAssessPatient_START">
+                <graphics>
+                    <position x="60" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="99" y="-21"/>
+                    </graphics>
+                    <text>Shared_iterateAssessPatient_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_iterateAssessPatient_END">
+                <graphics>
+                    <position x="705" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="73" y="-16"/>
+                    </graphics>
+                    <text>Shared_iterateAssessPatient_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_assessPatient_START">
+                <graphics>
+                    <position x="555" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="65" y="-10"/>
+                    </graphics>
+                    <text>Shared_assessPatient_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_assessPatient_END">
+                <graphics>
+                    <position x="540" y="300"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="56" y="52"/>
+                    </graphics>
+                    <text>Shared_assessPatient_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_handleTransfusionReaction_START">
+                <graphics>
+                    <position x="75" y="135"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="125" y="-21"/>
+                    </graphics>
+                    <text>Shared_handleTransfusionReaction_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_handleTransfusionReaction_END">
+                <graphics>
+                    <position x="540" y="135"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="102" y="-25"/>
+                    </graphics>
+                    <text>Shared_handleTransfusionReaction_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_interrupTransfusion_START">
+                <graphics>
+                    <position x="495" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="104" y="-10"/>
+                    </graphics>
+                    <text>Shared_interrupTransfusion_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_interrupTransfusion_END">
+                <graphics>
+                    <position x="645" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="102" y="58"/>
+                    </graphics>
+                    <text>Shared_interrupTransfusion_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="bloodTransfusionWorkflow_01_startCheckout">
+                <graphics>
+                    <position x="765" y="375"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="5"/>
+                    </graphics>
+                    <text>bloodTransfusionWorkflow_01_startCheckout</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="bloodTransfusionWorkflow_01_done">
+                <graphics>
+                    <position x="765" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>bloodTransfusionWorkflow_01_done</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="patientInfo_02_firstPatientInfo_START">
+                <graphics>
+                    <position x="1005" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="35" y="42"/>
+                    </graphics>
+                    <text>patientInfo_02_firstPatientInfo_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="patientInfo_02_firstPatientInfo_END">
+                <graphics>
+                    <position x="1170" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="75" y="44"/>
+                    </graphics>
+                    <text>patientInfo_02_firstPatientInfo_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="patientInfo_02_checkConsent_START">
+                <graphics>
+                    <position x="1020" y="420"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>patientInfo_02_checkConsent_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="patientInfo_02_checkConsent_END">
+                <graphics>
+                    <position x="1665" y="435"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-7" y="15"/>
+                    </graphics>
+                    <text>patientInfo_02_checkConsent_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="patientInfo_02_patientDisagree_START">
+                <graphics>
+                    <position x="1200" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="81" y="-8"/>
+                    </graphics>
+                    <text>patientInfo_02_patientDisagree_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="patientInfo_02_patientAgree_START">
+                <graphics>
+                    <position x="1200" y="510"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="76" y="48"/>
+                    </graphics>
+                    <text>patientInfo_02_patientAgree_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="patientInfo_02_patientAgree_END">
+                <graphics>
+                    <position x="1395" y="510"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="57" y="50"/>
+                    </graphics>
+                    <text>patientInfo_02_patientAgree_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="completeOrderDoctor_04_orderComplete_START">
+                <graphics>
+                    <position x="1185" y="675"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="87" y="-22"/>
+                    </graphics>
+                    <text>completeOrderDoctor_04_orderComplete_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="completeOrderDoctor_04_orderIncomplete_START">
+                <graphics>
+                    <position x="1185" y="855"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="66" y="54"/>
+                    </graphics>
+                    <text>completeOrderDoctor_04_orderIncomplete_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="completeOrderDoctor_04_orderComplete_END">
+                <graphics>
+                    <position x="1395" y="675"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="74" y="-16"/>
+                    </graphics>
+                    <text>completeOrderDoctor_04_orderComplete_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="preTransfusionChecks_05_aquireRoom_START">
+                <graphics>
+                    <position x="195" y="1395"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="44" y="0"/>
+                    </graphics>
+                    <text>preTransfusionChecks_05_aquireRoom_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="preTransfusionChecks_05_aquireRoom_END">
+                <graphics>
+                    <position x="345" y="1395"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="62" y="-8"/>
+                    </graphics>
+                    <text>preTransfusionChecks_05_aquireRoom_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="preTransfusionChecks_05_done2">
+                <graphics>
+                    <position x="540" y="1395"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>preTransfusionChecks_05_done2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="preTransfusionChecks_05_done1">
+                <graphics>
+                    <position x="540" y="1575"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>preTransfusionChecks_05_done1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="obtainBloodProduct_06_releaseBloodProduct_START">
+                <graphics>
+                    <position x="1365" y="1425"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="75" y="-5"/>
+                    </graphics>
+                    <text>obtainBloodProduct_06_releaseBloodProduct_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="obtainBloodProduct_06_releaseBloodProduct_END">
+                <graphics>
+                    <position x="1530" y="1425"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="139" y="40"/>
+                    </graphics>
+                    <text>obtainBloodProduct_06_releaseBloodProduct_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="checkForTypeAndScreen_07_typeAndScreenAvailable_START">
+                <graphics>
+                    <position x="135" y="1905"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="46" y="41"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_typeAndScreenAvailable_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="checkForTypeAndScreen_07_typeAndScreenAvailable_END">
+                <graphics>
+                    <position x="330" y="1905"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="101" y="45"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_typeAndScreenAvailable_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="checkForTypeAndScreen_07_fail1">
+                <graphics>
+                    <position x="330" y="1995"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="26" y="47"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_fail1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="checkForTypeAndScreen_07_obtainTypeAndScreen_START">
+                <graphics>
+                    <position x="165" y="2160"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_obtainTypeAndScreen_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="checkForTypeAndScreen_07_obtainTypeAndScreen_END">
+                <graphics>
+                    <position x="690" y="2160"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="153" y="45"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_obtainTypeAndScreen_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_START">
+                <graphics>
+                    <position x="195" y="2280"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="90" y="-11"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_END">
+                <graphics>
+                    <position x="345" y="2280"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="177" y="53"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="checkForTypeAndScreen_07_getValidation_START">
+                <graphics>
+                    <position x="450" y="2280"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="78" y="-18"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_getValidation_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="checkForTypeAndScreen_07_getValidation_END">
+                <graphics>
+                    <position x="585" y="2280"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="125" y="38"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_getValidation_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="performTransfusion_08_beginInfusionOfBloodProduct_START">
+                <graphics>
+                    <position x="915" y="1965"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="154" y="-9"/>
+                    </graphics>
+                    <text>performTransfusion_08_beginInfusionOfBloodProduct_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="performTransfusion_08_beginInfusionOfBloodProduct_END">
+                <graphics>
+                    <position x="1065" y="1965"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="141" y="53"/>
+                    </graphics>
+                    <text>performTransfusion_08_beginInfusionOfBloodProduct_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="performTransfusion_08_releaseRoom_START">
+                <graphics>
+                    <position x="1305" y="1965"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="73" y="52"/>
+                    </graphics>
+                    <text>performTransfusion_08_releaseRoom_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="performTransfusion_08_releaseRoom_END">
+                <graphics>
+                    <position x="1440" y="1965"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="58" y="48"/>
+                    </graphics>
+                    <text>performTransfusion_08_releaseRoom_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="performTransfusion_08_checkoutPatientSuccess_START">
+                <graphics>
+                    <position x="1560" y="2040"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>performTransfusion_08_checkoutPatientSuccess_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="performTransfusion_08_checkoutPatientSuccess_END">
+                <graphics>
+                    <position x="1695" y="2040"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="53" y="58"/>
+                    </graphics>
+                    <text>performTransfusion_08_checkoutPatientSuccess_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="iterateAssessPatient_08A_P3">
+                <graphics>
+                    <position x="285" y="2490"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="36"/>
+                    </graphics>
+                    <text>iterateAssessPatient_08A_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="iterateAssessPatient_08A_P5">
+                <graphics>
+                    <position x="465" y="2490"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="52" y="-24"/>
+                    </graphics>
+                    <text>iterateAssessPatient_08A_P5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="iterateAssessPatient_08A_stopTransfusion_START">
+                <graphics>
+                    <position x="585" y="2775"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="19" y="42"/>
+                    </graphics>
+                    <text>iterateAssessPatient_08A_stopTransfusion_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="iterateAssessPatient_08A_stopTransfusion_END">
+                <graphics>
+                    <position x="705" y="2775"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="138" y="46"/>
+                    </graphics>
+                    <text>iterateAssessPatient_08A_stopTransfusion_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="iterateAssessPatient_08A_timer">
+                <graphics>
+                    <position x="165" y="2370"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>iterateAssessPatient_08A_timer</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="assessPatient_09_evaluatePatientClinicallyOK_START">
+                <graphics>
+                    <position x="1065" y="2520"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-7" y="20"/>
+                    </graphics>
+                    <text>assessPatient_09_evaluatePatientClinicallyOK_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="assessPatient_09_evaluatePatientClinicallyOK_END">
+                <graphics>
+                    <position x="1305" y="2520"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="153" y="-17"/>
+                    </graphics>
+                    <text>assessPatient_09_evaluatePatientClinicallyOK_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="assessPatient_09_fail_patientNOK">
+                <graphics>
+                    <position x="1305" y="2640"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>assessPatient_09_fail_patientNOK</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="handleTransfusionReaction_10_adjustIVaccess_START">
+                <graphics>
+                    <position x="165" y="3120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="54" y="43"/>
+                    </graphics>
+                    <text>handleTransfusionReaction_10_adjustIVaccess_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="handleTransfusionReaction_10_adjustIVaccess_END">
+                <graphics>
+                    <position x="375" y="3120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="67" y="49"/>
+                    </graphics>
+                    <text>handleTransfusionReaction_10_adjustIVaccess_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="handleTransfusionReaction_10_fail_adjustIVaccess">
+                <graphics>
+                    <position x="375" y="3240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="80" y="55"/>
+                    </graphics>
+                    <text>handleTransfusionReaction_10_fail_adjustIVaccess</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="interruptTransfusion_11_stopInfusion_START">
+                <graphics>
+                    <position x="945" y="3090"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="58" y="47"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_stopInfusion_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="interruptTransfusion_11_stopInfusion_END">
+                <graphics>
+                    <position x="1095" y="3090"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="61" y="43"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_stopInfusion_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="interruptTransfusion_11_informDoctor_START">
+                <graphics>
+                    <position x="1200" y="3090"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="95" y="44"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_informDoctor_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="interruptTransfusion_11_informDoctor_END">
+                <graphics>
+                    <position x="1320" y="3090"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="89" y="49"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_informDoctor_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="interruptTransfusion_11_releaseRoom_START">
+                <graphics>
+                    <position x="1425" y="3090"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="50" y="0"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_releaseRoom_START</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="interruptTransfusion_11_releaseRoom_END">
+                <graphics>
+                    <position x="1575" y="3090"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="80" y="-16"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_releaseRoom_END</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="interruptTransfusion_11_exceptionAlwaysRaised">
+                <graphics>
+                    <position x="1575" y="3000"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_exceptionAlwaysRaised</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="interruptTransfusion_11_P0">
+                <graphics>
+                    <position x="1575" y="3210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_P0</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="transfusionRoom_available">
+                <graphics>
+                    <position x="240" y="3510"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="92" y="22"/>
+                    </graphics>
+                    <text>transfusionRoom_available</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="transfusionRoom_notReady">
+                <graphics>
+                    <position x="240" y="3690"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="91" y="27"/>
+                    </graphics>
+                    <text>transfusionRoom_notReady</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="bloodTransfusionWorkflow_01_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>bloodTransfusionWorkflow_01_T0</text>
+                </name>
+                <graphics>
+                    <position x="150" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="bloodTransfusionWorkflow_01_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>bloodTransfusionWorkflow_01_T1</text>
+                </name>
+                <graphics>
+                    <position x="345" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="bloodTransfusionWorkflow_01_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>bloodTransfusionWorkflow_01_T2</text>
+                </name>
+                <graphics>
+                    <position x="540" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_checkoutPatientWithoutTreatment">
+                <name>
+                    <graphics>
+                        <offset x="5" y="36"/>
+                    </graphics>
+                    <text>Shared_checkoutPatientWithoutTreatment</text>
+                </name>
+                <graphics>
+                    <position x="765" y="285"/>
+                </graphics>
+            </transition>
+            <transition id="bloodTransfusionWorkflow_01_exception1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>bloodTransfusionWorkflow_01_exception1</text>
+                </name>
+                <graphics>
+                    <position x="585" y="435"/>
+                </graphics>
+            </transition>
+            <transition id="bloodTransfusionWorkflow_01_exception2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>bloodTransfusionWorkflow_01_exception2</text>
+                </name>
+                <graphics>
+                    <position x="690" y="435"/>
+                </graphics>
+            </transition>
+            <transition id="bloodTransfusionWorkflow_01_exception3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>bloodTransfusionWorkflow_01_exception3</text>
+                </name>
+                <graphics>
+                    <position x="795" y="435"/>
+                </graphics>
+            </transition>
+            <transition id="bloodTransfusionWorkflow_01_finishWorkflowException">
+                <name>
+                    <graphics>
+                        <offset x="-11" y="21"/>
+                    </graphics>
+                    <text>bloodTransfusionWorkflow_01_finishWorkflowException</text>
+                </name>
+                <graphics>
+                    <position x="765" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="patientInfo_02_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>patientInfo_02_T0</text>
+                </name>
+                <graphics>
+                    <position x="1005" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="patientInfo_02_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>patientInfo_02_T1</text>
+                </name>
+                <graphics>
+                    <position x="1230" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="patientInfo_02_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>patientInfo_02_T2</text>
+                </name>
+                <graphics>
+                    <position x="1515" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_checkID">
+                <name>
+                    <graphics>
+                        <offset x="38" y="-9"/>
+                    </graphics>
+                    <text>Shared_checkID</text>
+                </name>
+                <graphics>
+                    <position x="1080" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="patientInfo_02_fork1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>patientInfo_02_fork1</text>
+                </name>
+                <graphics>
+                    <position x="1110" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="patientInfo_02_fork2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>patientInfo_02_fork2</text>
+                </name>
+                <graphics>
+                    <position x="1110" y="510"/>
+                </graphics>
+            </transition>
+            <transition id="patientInfo_02_patientDisagree">
+                <name>
+                    <graphics>
+                        <offset x="119" y="6"/>
+                    </graphics>
+                    <text>patientInfo_02_patientDisagree</text>
+                </name>
+                <graphics>
+                    <position x="1350" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="patientInfo_02_join2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>patientInfo_02_join2</text>
+                </name>
+                <graphics>
+                    <position x="1515" y="510"/>
+                </graphics>
+            </transition>
+            <transition id="patientInfo_02_patientAgree">
+                <name>
+                    <graphics>
+                        <offset x="52" y="-11"/>
+                    </graphics>
+                    <text>patientInfo_02_patientAgree</text>
+                </name>
+                <graphics>
+                    <position x="1290" y="510"/>
+                </graphics>
+            </transition>
+            <transition id="prepareTransfusion_03_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>prepareTransfusion_03_T0</text>
+                </name>
+                <graphics>
+                    <position x="90" y="630"/>
+                </graphics>
+            </transition>
+            <transition id="prepareTransfusion_03_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>prepareTransfusion_03_T1</text>
+                </name>
+                <graphics>
+                    <position x="240" y="630"/>
+                </graphics>
+            </transition>
+            <transition id="prepareTransfusion_03_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>prepareTransfusion_03_T2</text>
+                </name>
+                <graphics>
+                    <position x="435" y="630"/>
+                </graphics>
+            </transition>
+            <transition id="prepareTransfusion_03_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>prepareTransfusion_03_T3</text>
+                </name>
+                <graphics>
+                    <position x="615" y="630"/>
+                </graphics>
+            </transition>
+            <transition id="completeOrderDoctor_04_fork1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>completeOrderDoctor_04_fork1</text>
+                </name>
+                <graphics>
+                    <position x="1080" y="675"/>
+                </graphics>
+            </transition>
+            <transition id="completeOrderDoctor_04_fork2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>completeOrderDoctor_04_fork2</text>
+                </name>
+                <graphics>
+                    <position x="1080" y="855"/>
+                </graphics>
+            </transition>
+            <transition id="completeOrderDoctor_04_orderComplete">
+                <name>
+                    <graphics>
+                        <offset x="55" y="-4"/>
+                    </graphics>
+                    <text>completeOrderDoctor_04_orderComplete</text>
+                </name>
+                <graphics>
+                    <position x="1290" y="675"/>
+                </graphics>
+            </transition>
+            <transition id="completeOrderDoctor_04_join1">
+                <name>
+                    <graphics>
+                        <offset x="30" y="-10"/>
+                    </graphics>
+                    <text>completeOrderDoctor_04_join1</text>
+                </name>
+                <graphics>
+                    <position x="1530" y="675"/>
+                </graphics>
+            </transition>
+            <transition id="completeOrderDoctor_04_orderIncomplete">
+                <name>
+                    <graphics>
+                        <offset x="100" y="-13"/>
+                    </graphics>
+                    <text>completeOrderDoctor_04_orderIncomplete</text>
+                </name>
+                <graphics>
+                    <position x="1290" y="855"/>
+                </graphics>
+            </transition>
+            <transition id="preTransfusionChecks_05_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>preTransfusionChecks_05_T0</text>
+                </name>
+                <graphics>
+                    <position x="135" y="1485"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_aquireRoom">
+                <name>
+                    <graphics>
+                        <offset x="44" y="48"/>
+                    </graphics>
+                    <text>Shared_aquireRoom</text>
+                </name>
+                <graphics>
+                    <position x="270" y="1395"/>
+                </graphics>
+            </transition>
+            <transition id="preTransfusionChecks_05_finish1">
+                <name>
+                    <graphics>
+                        <offset x="35" y="0"/>
+                    </graphics>
+                    <text>preTransfusionChecks_05_finish1</text>
+                </name>
+                <graphics>
+                    <position x="435" y="1395"/>
+                </graphics>
+            </transition>
+            <transition id="preTransfusionChecks_05_finish2">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-3"/>
+                    </graphics>
+                    <text>preTransfusionChecks_05_finish2</text>
+                </name>
+                <graphics>
+                    <position x="435" y="1575"/>
+                </graphics>
+            </transition>
+            <transition id="preTransfusionChecks_05_join1">
+                <name>
+                    <graphics>
+                        <offset x="25" y="-10"/>
+                    </graphics>
+                    <text>preTransfusionChecks_05_join1</text>
+                </name>
+                <graphics>
+                    <position x="660" y="1335"/>
+                </graphics>
+            </transition>
+            <transition id="preTransfusionChecks_05_join2">
+                <name>
+                    <graphics>
+                        <offset x="33" y="47"/>
+                    </graphics>
+                    <text>preTransfusionChecks_05_join2</text>
+                </name>
+                <graphics>
+                    <position x="660" y="1650"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_checkRoomNotAvailable">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_checkRoomNotAvailable</text>
+                </name>
+                <graphics>
+                    <position x="210" y="1305"/>
+                </graphics>
+            </transition>
+            <transition id="obtainBloodProduct_06_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>obtainBloodProduct_06_T0</text>
+                </name>
+                <graphics>
+                    <position x="1065" y="1305"/>
+                </graphics>
+            </transition>
+            <transition id="obtainBloodProduct_06_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>obtainBloodProduct_06_T1</text>
+                </name>
+                <graphics>
+                    <position x="1290" y="1305"/>
+                </graphics>
+            </transition>
+            <transition id="obtainBloodProduct_06_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>obtainBloodProduct_06_T2</text>
+                </name>
+                <graphics>
+                    <position x="1530" y="1305"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_releaseBloodProduct">
+                <name>
+                    <graphics>
+                        <offset x="71" y="54"/>
+                    </graphics>
+                    <text>Shared_releaseBloodProduct</text>
+                </name>
+                <graphics>
+                    <position x="1440" y="1425"/>
+                </graphics>
+            </transition>
+            <transition id="checkForTypeAndScreen_07_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_T0</text>
+                </name>
+                <graphics>
+                    <position x="135" y="1800"/>
+                </graphics>
+            </transition>
+            <transition id="checkForTypeAndScreen_07_available">
+                <name>
+                    <graphics>
+                        <offset x="42" y="-5"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_available</text>
+                </name>
+                <graphics>
+                    <position x="225" y="1905"/>
+                </graphics>
+            </transition>
+            <transition id="checkForTypeAndScreen_07_finish1">
+                <name>
+                    <graphics>
+                        <offset x="34" y="-5"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_finish1</text>
+                </name>
+                <graphics>
+                    <position x="360" y="1800"/>
+                </graphics>
+            </transition>
+            <transition id="checkForTypeAndScreen_07_notAvailalbe">
+                <name>
+                    <graphics>
+                        <offset x="38" y="55"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_notAvailalbe</text>
+                </name>
+                <graphics>
+                    <position x="225" y="1995"/>
+                </graphics>
+            </transition>
+            <transition id="checkForTypeAndScreen_07_try2">
+                <name>
+                    <graphics>
+                        <offset x="37" y="0"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_try2</text>
+                </name>
+                <graphics>
+                    <position x="435" y="1995"/>
+                </graphics>
+            </transition>
+            <transition id="checkForTypeAndScreen_07_finish2">
+                <name>
+                    <graphics>
+                        <offset x="83" y="24"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_finish2</text>
+                </name>
+                <graphics>
+                    <position x="690" y="1800"/>
+                </graphics>
+            </transition>
+            <transition id="checkForTypeAndScreen_07_T6">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_T6</text>
+                </name>
+                <graphics>
+                    <position x="240" y="2160"/>
+                </graphics>
+            </transition>
+            <transition id="checkForTypeAndScreen_07_T7">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_T7</text>
+                </name>
+                <graphics>
+                    <position x="405" y="2160"/>
+                </graphics>
+            </transition>
+            <transition id="checkForTypeAndScreen_07_T8">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_T8</text>
+                </name>
+                <graphics>
+                    <position x="585" y="2160"/>
+                </graphics>
+            </transition>
+            <transition id="checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess">
+                <name>
+                    <graphics>
+                        <offset x="128" y="-3"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess</text>
+                </name>
+                <graphics>
+                    <position x="270" y="2280"/>
+                </graphics>
+            </transition>
+            <transition id="checkForTypeAndScreen_07_getValidation">
+                <name>
+                    <graphics>
+                        <offset x="45" y="44"/>
+                    </graphics>
+                    <text>checkForTypeAndScreen_07_getValidation</text>
+                </name>
+                <graphics>
+                    <position x="510" y="2280"/>
+                </graphics>
+            </transition>
+            <transition id="performTransfusion_08_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>performTransfusion_08_T0</text>
+                </name>
+                <graphics>
+                    <position x="990" y="1830"/>
+                </graphics>
+            </transition>
+            <transition id="performTransfusion_08_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>performTransfusion_08_T1</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="1830"/>
+                </graphics>
+            </transition>
+            <transition id="performTransfusion_08_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>performTransfusion_08_T2</text>
+                </name>
+                <graphics>
+                    <position x="1290" y="1830"/>
+                </graphics>
+            </transition>
+            <transition id="performTransfusion_08_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>performTransfusion_08_T3</text>
+                </name>
+                <graphics>
+                    <position x="1440" y="1830"/>
+                </graphics>
+            </transition>
+            <transition id="performTransfusion_08_finish">
+                <name>
+                    <graphics>
+                        <offset x="17" y="-1"/>
+                    </graphics>
+                    <text>performTransfusion_08_finish</text>
+                </name>
+                <graphics>
+                    <position x="1605" y="1830"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_beginInfusionOfBloodProduct">
+                <name>
+                    <graphics>
+                        <offset x="79" y="43"/>
+                    </graphics>
+                    <text>Shared_beginInfusionOfBloodProduct</text>
+                </name>
+                <graphics>
+                    <position x="990" y="1965"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_releaseRoom">
+                <name>
+                    <graphics>
+                        <offset x="48" y="-7"/>
+                    </graphics>
+                    <text>Shared_releaseRoom</text>
+                </name>
+                <graphics>
+                    <position x="1380" y="1965"/>
+                </graphics>
+            </transition>
+            <transition id="performTransfusion_08_checkoutPatientSuccess">
+                <name>
+                    <graphics>
+                        <offset x="79" y="-21"/>
+                    </graphics>
+                    <text>performTransfusion_08_checkoutPatientSuccess</text>
+                </name>
+                <graphics>
+                    <position x="1620" y="2040"/>
+                </graphics>
+            </transition>
+            <transition id="iterateAssessPatient_08A_initialize">
+                <name>
+                    <graphics>
+                        <offset x="53" y="-4"/>
+                    </graphics>
+                    <text>iterateAssessPatient_08A_initialize</text>
+                </name>
+                <graphics>
+                    <position x="165" y="2490"/>
+                </graphics>
+            </transition>
+            <transition id="iterateAssessPatient_08A_start_assessment">
+                <name>
+                    <graphics>
+                        <offset x="68" y="-13"/>
+                    </graphics>
+                    <text>iterateAssessPatient_08A_start_assessment</text>
+                </name>
+                <graphics>
+                    <position x="375" y="2415"/>
+                </graphics>
+            </transition>
+            <transition id="iterateAssessPatient_08A_end_assesment">
+                <name>
+                    <graphics>
+                        <offset x="82" y="57"/>
+                    </graphics>
+                    <text>iterateAssessPatient_08A_end_assesment</text>
+                </name>
+                <graphics>
+                    <position x="375" y="2565"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_stopTransfusion">
+                <name>
+                    <graphics>
+                        <offset x="57" y="54"/>
+                    </graphics>
+                    <text>Shared_stopTransfusion</text>
+                </name>
+                <graphics>
+                    <position x="645" y="2775"/>
+                </graphics>
+            </transition>
+            <transition id="iterateAssessPatient_08A_terminate">
+                <name>
+                    <graphics>
+                        <offset x="81" y="17"/>
+                    </graphics>
+                    <text>iterateAssessPatient_08A_terminate</text>
+                </name>
+                <graphics>
+                    <position x="705" y="2655"/>
+                </graphics>
+            </transition>
+            <transition id="iterateAssessPatient_08A_finish1">
+                <name>
+                    <graphics>
+                        <offset x="38" y="-4"/>
+                    </graphics>
+                    <text>iterateAssessPatient_08A_finish1</text>
+                </name>
+                <graphics>
+                    <position x="555" y="2490"/>
+                </graphics>
+            </transition>
+            <transition id="iterateAssessPatient_08A_done">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>iterateAssessPatient_08A_done</text>
+                </name>
+                <graphics>
+                    <position x="225" y="2430"/>
+                </graphics>
+            </transition>
+            <transition id="iterateAssessPatient_08A_finish2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>iterateAssessPatient_08A_finish2</text>
+                </name>
+                <graphics>
+                    <position x="330" y="2715"/>
+                </graphics>
+            </transition>
+            <transition id="assessPatient_09_startClinicalEvaluation">
+                <name>
+                    <graphics>
+                        <offset x="74" y="-13"/>
+                    </graphics>
+                    <text>assessPatient_09_startClinicalEvaluation</text>
+                </name>
+                <graphics>
+                    <position x="1065" y="2415"/>
+                </graphics>
+            </transition>
+            <transition id="assessPatient_09_evaluatePatientClinicallyOK">
+                <name>
+                    <graphics>
+                        <offset x="73" y="-13"/>
+                    </graphics>
+                    <text>assessPatient_09_evaluatePatientClinicallyOK</text>
+                </name>
+                <graphics>
+                    <position x="1185" y="2520"/>
+                </graphics>
+            </transition>
+            <transition id="assessPatient_09_finishEvaluation">
+                <name>
+                    <graphics>
+                        <offset x="25" y="4"/>
+                    </graphics>
+                    <text>assessPatient_09_finishEvaluation</text>
+                </name>
+                <graphics>
+                    <position x="1320" y="2415"/>
+                </graphics>
+            </transition>
+            <transition id="assessPatient_09_evaluatePatientClinicallyNOK">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>assessPatient_09_evaluatePatientClinicallyNOK</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="2640"/>
+                </graphics>
+            </transition>
+            <transition id="assessPatient_09_finishHandlingReaction">
+                <name>
+                    <graphics>
+                        <offset x="76" y="-16"/>
+                    </graphics>
+                    <text>assessPatient_09_finishHandlingReaction</text>
+                </name>
+                <graphics>
+                    <position x="1605" y="2415"/>
+                </graphics>
+            </transition>
+            <transition id="assessPatient_09_tryHandlingTransfusionReaction">
+                <name>
+                    <graphics>
+                        <offset x="144" y="52"/>
+                    </graphics>
+                    <text>assessPatient_09_tryHandlingTransfusionReaction</text>
+                </name>
+                <graphics>
+                    <position x="1440" y="2640"/>
+                </graphics>
+            </transition>
+            <transition id="handleTransfusionReaction_10_startAdjustIVaccess">
+                <name>
+                    <graphics>
+                        <offset x="118" y="2"/>
+                    </graphics>
+                    <text>handleTransfusionReaction_10_startAdjustIVaccess</text>
+                </name>
+                <graphics>
+                    <position x="165" y="2985"/>
+                </graphics>
+            </transition>
+            <transition id="handleTransfusionReaction_10_adjustIVaccessOK">
+                <name>
+                    <graphics>
+                        <offset x="64" y="-4"/>
+                    </graphics>
+                    <text>handleTransfusionReaction_10_adjustIVaccessOK</text>
+                </name>
+                <graphics>
+                    <position x="270" y="3120"/>
+                </graphics>
+            </transition>
+            <transition id="handleTransfusionReaction_10_finishAdjustIVaccess">
+                <name>
+                    <graphics>
+                        <offset x="77" y="2"/>
+                    </graphics>
+                    <text>handleTransfusionReaction_10_finishAdjustIVaccess</text>
+                </name>
+                <graphics>
+                    <position x="420" y="2985"/>
+                </graphics>
+            </transition>
+            <transition id="handleTransfusionReaction_10_adjustIVaccessNOK">
+                <name>
+                    <graphics>
+                        <offset x="20" y="52"/>
+                    </graphics>
+                    <text>handleTransfusionReaction_10_adjustIVaccessNOK</text>
+                </name>
+                <graphics>
+                    <position x="255" y="3240"/>
+                </graphics>
+            </transition>
+            <transition id="handleTransfusionReaction_10_try_interruptTransfusion">
+                <name>
+                    <graphics>
+                        <offset x="155" y="43"/>
+                    </graphics>
+                    <text>handleTransfusionReaction_10_try_interruptTransfusion</text>
+                </name>
+                <graphics>
+                    <position x="495" y="3240"/>
+                </graphics>
+            </transition>
+            <transition id="handleTransfusionReaction_10_finish">
+                <name>
+                    <graphics>
+                        <offset x="72" y="20"/>
+                    </graphics>
+                    <text>handleTransfusionReaction_10_finish</text>
+                </name>
+                <graphics>
+                    <position x="645" y="2985"/>
+                </graphics>
+            </transition>
+            <transition id="interruptTransfusion_11_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_T0</text>
+                </name>
+                <graphics>
+                    <position x="1005" y="2940"/>
+                </graphics>
+            </transition>
+            <transition id="interruptTransfusion_11_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_T1</text>
+                </name>
+                <graphics>
+                    <position x="1185" y="2940"/>
+                </graphics>
+            </transition>
+            <transition id="interruptTransfusion_11_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_T2</text>
+                </name>
+                <graphics>
+                    <position x="1365" y="2940"/>
+                </graphics>
+            </transition>
+            <transition id="interruptTransfusion_11_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_T3</text>
+                </name>
+                <graphics>
+                    <position x="1530" y="2940"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_emergencyStopInfusion">
+                <name>
+                    <graphics>
+                        <offset x="91" y="-14"/>
+                    </graphics>
+                    <text>Shared_emergencyStopInfusion</text>
+                </name>
+                <graphics>
+                    <position x="1020" y="3090"/>
+                </graphics>
+            </transition>
+            <transition id="interruptTransfusion_11_informDoctor">
+                <name>
+                    <graphics>
+                        <offset x="54" y="1"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_informDoctor</text>
+                </name>
+                <graphics>
+                    <position x="1260" y="3090"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_releaseRoomInterrupted">
+                <name>
+                    <graphics>
+                        <offset x="67" y="53"/>
+                    </graphics>
+                    <text>Shared_releaseRoomInterrupted</text>
+                </name>
+                <graphics>
+                    <position x="1500" y="3090"/>
+                </graphics>
+            </transition>
+            <transition id="interruptTransfusion_11_exception_reactionSuspected">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>interruptTransfusion_11_exception_reactionSuspected</text>
+                </name>
+                <graphics>
+                    <position x="1575" y="3285"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_terminateIterationException">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_terminateIterationException</text>
+                </name>
+                <graphics>
+                    <position x="1575" y="3150"/>
+                </graphics>
+            </transition>
+            <transition id="transfusionRoom_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transfusionRoom_T0</text>
+                </name>
+                <graphics>
+                    <position x="240" y="3600"/>
+                </graphics>
+            </transition>
+            <arc id="Shared_bloodTransfusionWorkflow_START_to_bloodTransfusionWorkflow_01_T0" source="Shared_bloodTransfusionWorkflow_START" target="bloodTransfusionWorkflow_01_T0" type="normal"/>
+            <arc id="Shared_patientInfo_END_to_bloodTransfusionWorkflow_01_T1" source="Shared_patientInfo_END" target="bloodTransfusionWorkflow_01_T1" type="normal"/>
+            <arc id="Shared_prepareTransfusion_END_to_bloodTransfusionWorkflow_01_T2" source="Shared_prepareTransfusion_END" target="bloodTransfusionWorkflow_01_T2" type="normal"/>
+            <arc id="bloodTransfusionWorkflow_01_startCheckout_to_Shared_checkoutPatientWithoutTreatment" source="bloodTransfusionWorkflow_01_startCheckout" target="Shared_checkoutPatientWithoutTreatment" type="normal"/>
+            <arc id="Shared_EX_consentDisagree_to_bloodTransfusionWorkflow_01_exception1" source="Shared_EX_consentDisagree" target="bloodTransfusionWorkflow_01_exception1" type="normal"/>
+            <arc id="Shared_EX_orderIncomplete_to_bloodTransfusionWorkflow_01_exception2" source="Shared_EX_orderIncomplete" target="bloodTransfusionWorkflow_01_exception2" type="normal"/>
+            <arc id="Shared_EX_reactionSuspected_to_bloodTransfusionWorkflow_01_exception3" source="Shared_EX_reactionSuspected" target="bloodTransfusionWorkflow_01_exception3" type="normal"/>
+            <arc id="bloodTransfusionWorkflow_01_done_to_bloodTransfusionWorkflow_01_finishWorkflowException" source="bloodTransfusionWorkflow_01_done" target="bloodTransfusionWorkflow_01_finishWorkflowException" type="normal"/>
+            <arc id="Shared_patientInfo_START_to_patientInfo_02_T0" source="Shared_patientInfo_START" target="patientInfo_02_T0" type="normal"/>
+            <arc id="patientInfo_02_firstPatientInfo_START_to_Shared_checkID" source="patientInfo_02_firstPatientInfo_START" target="Shared_checkID" type="normal"/>
+            <arc id="patientInfo_02_firstPatientInfo_END_to_patientInfo_02_T1" source="patientInfo_02_firstPatientInfo_END" target="patientInfo_02_T1" type="normal"/>
+            <arc id="patientInfo_02_checkConsent_END_to_patientInfo_02_T2" source="patientInfo_02_checkConsent_END" target="patientInfo_02_T2" type="normal"/>
+            <arc id="patientInfo_02_checkConsent_START_to_patientInfo_02_fork1" source="patientInfo_02_checkConsent_START" target="patientInfo_02_fork1" type="normal"/>
+            <arc id="patientInfo_02_checkConsent_START_to_patientInfo_02_fork2" source="patientInfo_02_checkConsent_START" target="patientInfo_02_fork2" type="normal"/>
+            <arc id="patientInfo_02_patientDisagree_START_to_patientInfo_02_patientDisagree" source="patientInfo_02_patientDisagree_START" target="patientInfo_02_patientDisagree" type="normal"/>
+            <arc id="patientInfo_02_patientAgree_START_to_patientInfo_02_patientAgree" source="patientInfo_02_patientAgree_START" target="patientInfo_02_patientAgree" type="normal"/>
+            <arc id="patientInfo_02_patientAgree_END_to_patientInfo_02_join2" source="patientInfo_02_patientAgree_END" target="patientInfo_02_join2" type="normal"/>
+            <arc id="Shared_prepareTransfusion_START_to_prepareTransfusion_03_T0" source="Shared_prepareTransfusion_START" target="prepareTransfusion_03_T0" type="normal"/>
+            <arc id="Shared_completeDoctorOrder_END_to_prepareTransfusion_03_T1" source="Shared_completeDoctorOrder_END" target="prepareTransfusion_03_T1" type="normal"/>
+            <arc id="Shared_preTransfusijonChecks_END_to_prepareTransfusion_03_T2" source="Shared_preTransfusijonChecks_END" target="prepareTransfusion_03_T2" type="normal"/>
+            <arc id="Shared_performTransfusion_END_to_prepareTransfusion_03_T3" source="Shared_performTransfusion_END" target="prepareTransfusion_03_T3" type="normal"/>
+            <arc id="Shared_completeDoctorOrder_START_to_completeOrderDoctor_04_fork1" source="Shared_completeDoctorOrder_START" target="completeOrderDoctor_04_fork1" type="normal"/>
+            <arc id="Shared_completeDoctorOrder_START_to_completeOrderDoctor_04_fork2" source="Shared_completeDoctorOrder_START" target="completeOrderDoctor_04_fork2" type="normal"/>
+            <arc id="completeOrderDoctor_04_orderComplete_START_to_completeOrderDoctor_04_orderComplete" source="completeOrderDoctor_04_orderComplete_START" target="completeOrderDoctor_04_orderComplete" type="normal"/>
+            <arc id="completeOrderDoctor_04_orderComplete_END_to_completeOrderDoctor_04_join1" source="completeOrderDoctor_04_orderComplete_END" target="completeOrderDoctor_04_join1" type="normal"/>
+            <arc id="completeOrderDoctor_04_orderIncomplete_START_to_completeOrderDoctor_04_orderIncomplete" source="completeOrderDoctor_04_orderIncomplete_START" target="completeOrderDoctor_04_orderIncomplete" type="normal"/>
+            <arc id="Shared_preTransfusijonChecks_START_to_preTransfusionChecks_05_T0" source="Shared_preTransfusijonChecks_START" target="preTransfusionChecks_05_T0" type="normal"/>
+            <arc id="preTransfusionChecks_05_aquireRoom_START_to_Shared_aquireRoom" source="preTransfusionChecks_05_aquireRoom_START" target="Shared_aquireRoom" type="normal"/>
+            <arc id="preTransfusionChecks_05_aquireRoom_END_to_preTransfusionChecks_05_finish1" source="preTransfusionChecks_05_aquireRoom_END" target="preTransfusionChecks_05_finish1" type="normal"/>
+            <arc id="Shared_obtainBloodProduct_END_to_preTransfusionChecks_05_finish2" source="Shared_obtainBloodProduct_END" target="preTransfusionChecks_05_finish2" type="normal"/>
+            <arc id="preTransfusionChecks_05_done2_to_preTransfusionChecks_05_join1" source="preTransfusionChecks_05_done2" target="preTransfusionChecks_05_join1" type="normal"/>
+            <arc id="preTransfusionChecks_05_aquireRoom_END_to_preTransfusionChecks_05_join1" source="preTransfusionChecks_05_aquireRoom_END" target="preTransfusionChecks_05_join1" type="normal">
+                <graphics>
+                    <position x="523" y="1348"/>
+                </graphics>
+            </arc>
+            <arc id="preTransfusionChecks_05_done1_to_preTransfusionChecks_05_join2" source="preTransfusionChecks_05_done1" target="preTransfusionChecks_05_join2" type="normal"/>
+            <arc id="Shared_obtainBloodProduct_END_to_preTransfusionChecks_05_join2" source="Shared_obtainBloodProduct_END" target="preTransfusionChecks_05_join2" type="normal">
+                <graphics>
+                    <position x="508" y="1693"/>
+                </graphics>
+            </arc>
+            <arc id="preTransfusionChecks_05_aquireRoom_START_to_Shared_checkRoomNotAvailable" source="preTransfusionChecks_05_aquireRoom_START" target="Shared_checkRoomNotAvailable" type="normal">
+                <graphics>
+                    <position x="198" y="1353"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_obtainBloodProduct_START_to_obtainBloodProduct_06_T0" source="Shared_obtainBloodProduct_START" target="obtainBloodProduct_06_T0" type="normal"/>
+            <arc id="Shared_checkForTypeAndScreen_END_to_obtainBloodProduct_06_T1" source="Shared_checkForTypeAndScreen_END" target="obtainBloodProduct_06_T1" type="normal"/>
+            <arc id="obtainBloodProduct_06_releaseBloodProduct_START_to_Shared_releaseBloodProduct" source="obtainBloodProduct_06_releaseBloodProduct_START" target="Shared_releaseBloodProduct" type="normal"/>
+            <arc id="obtainBloodProduct_06_releaseBloodProduct_END_to_obtainBloodProduct_06_T2" source="obtainBloodProduct_06_releaseBloodProduct_END" target="obtainBloodProduct_06_T2" type="normal"/>
+            <arc id="Shared_checkForTypeAndScreen_START_to_checkForTypeAndScreen_07_T0" source="Shared_checkForTypeAndScreen_START" target="checkForTypeAndScreen_07_T0" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_typeAndScreenAvailable_START_to_checkForTypeAndScreen_07_available" source="checkForTypeAndScreen_07_typeAndScreenAvailable_START" target="checkForTypeAndScreen_07_available" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_typeAndScreenAvailable_END_to_checkForTypeAndScreen_07_finish1" source="checkForTypeAndScreen_07_typeAndScreenAvailable_END" target="checkForTypeAndScreen_07_finish1" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_typeAndScreenAvailable_START_to_checkForTypeAndScreen_07_notAvailalbe" source="checkForTypeAndScreen_07_typeAndScreenAvailable_START" target="checkForTypeAndScreen_07_notAvailalbe" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_fail1_to_checkForTypeAndScreen_07_try2" source="checkForTypeAndScreen_07_fail1" target="checkForTypeAndScreen_07_try2" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_obtainTypeAndScreen_END_to_checkForTypeAndScreen_07_finish2" source="checkForTypeAndScreen_07_obtainTypeAndScreen_END" target="checkForTypeAndScreen_07_finish2" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_obtainTypeAndScreen_START_to_checkForTypeAndScreen_07_T6" source="checkForTypeAndScreen_07_obtainTypeAndScreen_START" target="checkForTypeAndScreen_07_T6" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_END_to_checkForTypeAndScreen_07_T7" source="checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_END" target="checkForTypeAndScreen_07_T7" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_START_to_checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess" source="checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_START" target="checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_getValidation_START_to_checkForTypeAndScreen_07_getValidation" source="checkForTypeAndScreen_07_getValidation_START" target="checkForTypeAndScreen_07_getValidation" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_getValidation_END_to_checkForTypeAndScreen_07_T8" source="checkForTypeAndScreen_07_getValidation_END" target="checkForTypeAndScreen_07_T8" type="normal"/>
+            <arc id="Shared_performTransfusion_START_to_performTransfusion_08_T0" source="Shared_performTransfusion_START" target="performTransfusion_08_T0" type="normal"/>
+            <arc id="performTransfusion_08_beginInfusionOfBloodProduct_START_to_Shared_beginInfusionOfBloodProduct" source="performTransfusion_08_beginInfusionOfBloodProduct_START" target="Shared_beginInfusionOfBloodProduct" type="normal"/>
+            <arc id="performTransfusion_08_beginInfusionOfBloodProduct_END_to_performTransfusion_08_T1" source="performTransfusion_08_beginInfusionOfBloodProduct_END" target="performTransfusion_08_T1" type="normal"/>
+            <arc id="Shared_iterateAssessPatient_END_to_performTransfusion_08_T2" source="Shared_iterateAssessPatient_END" target="performTransfusion_08_T2" type="normal"/>
+            <arc id="performTransfusion_08_releaseRoom_START_to_Shared_releaseRoom" source="performTransfusion_08_releaseRoom_START" target="Shared_releaseRoom" type="normal"/>
+            <arc id="performTransfusion_08_releaseRoom_END_to_performTransfusion_08_T3" source="performTransfusion_08_releaseRoom_END" target="performTransfusion_08_T3" type="normal"/>
+            <arc id="performTransfusion_08_checkoutPatientSuccess_START_to_performTransfusion_08_checkoutPatientSuccess" source="performTransfusion_08_checkoutPatientSuccess_START" target="performTransfusion_08_checkoutPatientSuccess" type="normal"/>
+            <arc id="performTransfusion_08_checkoutPatientSuccess_END_to_performTransfusion_08_finish" source="performTransfusion_08_checkoutPatientSuccess_END" target="performTransfusion_08_finish" type="normal"/>
+            <arc id="Shared_iterateAssessPatient_START_to_iterateAssessPatient_08A_initialize" source="Shared_iterateAssessPatient_START" target="iterateAssessPatient_08A_initialize" type="normal"/>
+            <arc id="Shared_assessPatient_END_to_iterateAssessPatient_08A_end_assesment" source="Shared_assessPatient_END" target="iterateAssessPatient_08A_end_assesment" type="normal"/>
+            <arc id="iterateAssessPatient_08A_stopTransfusion_START_to_Shared_stopTransfusion" source="iterateAssessPatient_08A_stopTransfusion_START" target="Shared_stopTransfusion" type="normal"/>
+            <arc id="iterateAssessPatient_08A_stopTransfusion_END_to_iterateAssessPatient_08A_terminate" source="iterateAssessPatient_08A_stopTransfusion_END" target="iterateAssessPatient_08A_terminate" type="normal"/>
+            <arc id="iterateAssessPatient_08A_timer_to_iterateAssessPatient_08A_start_assessment" source="iterateAssessPatient_08A_timer" target="iterateAssessPatient_08A_start_assessment" type="normal">
+                <graphics>
+                    <position x="286" y="2371"/>
+                </graphics>
+            </arc>
+            <arc id="iterateAssessPatient_08A_P5_to_iterateAssessPatient_08A_finish1" source="iterateAssessPatient_08A_P5" target="iterateAssessPatient_08A_finish1" type="normal"/>
+            <arc id="Shared_assessPatient_END_to_iterateAssessPatient_08A_finish1" source="Shared_assessPatient_END" target="iterateAssessPatient_08A_finish1" type="normal"/>
+            <arc id="iterateAssessPatient_08A_timer_to_iterateAssessPatient_08A_done" source="iterateAssessPatient_08A_timer" target="iterateAssessPatient_08A_done" type="normal"/>
+            <arc id="iterateAssessPatient_08A_P3_to_iterateAssessPatient_08A_finish2" source="iterateAssessPatient_08A_P3" target="iterateAssessPatient_08A_finish2" type="normal"/>
+            <arc id="Shared_assessPatient_START_to_assessPatient_09_startClinicalEvaluation" source="Shared_assessPatient_START" target="assessPatient_09_startClinicalEvaluation" type="normal"/>
+            <arc id="assessPatient_09_evaluatePatientClinicallyOK_START_to_assessPatient_09_evaluatePatientClinicallyOK" source="assessPatient_09_evaluatePatientClinicallyOK_START" target="assessPatient_09_evaluatePatientClinicallyOK" type="normal"/>
+            <arc id="assessPatient_09_evaluatePatientClinicallyOK_END_to_assessPatient_09_finishEvaluation" source="assessPatient_09_evaluatePatientClinicallyOK_END" target="assessPatient_09_finishEvaluation" type="normal"/>
+            <arc id="assessPatient_09_evaluatePatientClinicallyOK_START_to_assessPatient_09_evaluatePatientClinicallyNOK" source="assessPatient_09_evaluatePatientClinicallyOK_START" target="assessPatient_09_evaluatePatientClinicallyNOK" type="normal"/>
+            <arc id="Shared_handleTransfusionReaction_END_to_assessPatient_09_finishHandlingReaction" source="Shared_handleTransfusionReaction_END" target="assessPatient_09_finishHandlingReaction" type="normal"/>
+            <arc id="assessPatient_09_fail_patientNOK_to_assessPatient_09_tryHandlingTransfusionReaction" source="assessPatient_09_fail_patientNOK" target="assessPatient_09_tryHandlingTransfusionReaction" type="normal"/>
+            <arc id="Shared_handleTransfusionReaction_START_to_handleTransfusionReaction_10_startAdjustIVaccess" source="Shared_handleTransfusionReaction_START" target="handleTransfusionReaction_10_startAdjustIVaccess" type="normal"/>
+            <arc id="handleTransfusionReaction_10_adjustIVaccess_START_to_handleTransfusionReaction_10_adjustIVaccessOK" source="handleTransfusionReaction_10_adjustIVaccess_START" target="handleTransfusionReaction_10_adjustIVaccessOK" type="normal"/>
+            <arc id="handleTransfusionReaction_10_adjustIVaccess_END_to_handleTransfusionReaction_10_finishAdjustIVaccess" source="handleTransfusionReaction_10_adjustIVaccess_END" target="handleTransfusionReaction_10_finishAdjustIVaccess" type="normal"/>
+            <arc id="handleTransfusionReaction_10_adjustIVaccess_START_to_handleTransfusionReaction_10_adjustIVaccessNOK" source="handleTransfusionReaction_10_adjustIVaccess_START" target="handleTransfusionReaction_10_adjustIVaccessNOK" type="normal"/>
+            <arc id="handleTransfusionReaction_10_fail_adjustIVaccess_to_handleTransfusionReaction_10_try_interruptTransfusion" source="handleTransfusionReaction_10_fail_adjustIVaccess" target="handleTransfusionReaction_10_try_interruptTransfusion" type="normal"/>
+            <arc id="Shared_interrupTransfusion_END_to_handleTransfusionReaction_10_finish" source="Shared_interrupTransfusion_END" target="handleTransfusionReaction_10_finish" type="normal"/>
+            <arc id="Shared_interrupTransfusion_START_to_interruptTransfusion_11_T0" source="Shared_interrupTransfusion_START" target="interruptTransfusion_11_T0" type="normal"/>
+            <arc id="interruptTransfusion_11_stopInfusion_START_to_Shared_emergencyStopInfusion" source="interruptTransfusion_11_stopInfusion_START" target="Shared_emergencyStopInfusion" type="normal"/>
+            <arc id="interruptTransfusion_11_stopInfusion_END_to_interruptTransfusion_11_T1" source="interruptTransfusion_11_stopInfusion_END" target="interruptTransfusion_11_T1" type="normal"/>
+            <arc id="interruptTransfusion_11_informDoctor_START_to_interruptTransfusion_11_informDoctor" source="interruptTransfusion_11_informDoctor_START" target="interruptTransfusion_11_informDoctor" type="normal"/>
+            <arc id="interruptTransfusion_11_informDoctor_END_to_interruptTransfusion_11_T2" source="interruptTransfusion_11_informDoctor_END" target="interruptTransfusion_11_T2" type="normal"/>
+            <arc id="interruptTransfusion_11_releaseRoom_START_to_Shared_releaseRoomInterrupted" source="interruptTransfusion_11_releaseRoom_START" target="Shared_releaseRoomInterrupted" type="normal"/>
+            <arc id="interruptTransfusion_11_exceptionAlwaysRaised_to_interruptTransfusion_11_T3" source="interruptTransfusion_11_exceptionAlwaysRaised" target="interruptTransfusion_11_T3" type="normal"/>
+            <arc id="interruptTransfusion_11_releaseRoom_END_to_Shared_terminateIterationException" source="interruptTransfusion_11_releaseRoom_END" target="Shared_terminateIterationException" type="normal"/>
+            <arc id="interruptTransfusion_11_P0_to_interruptTransfusion_11_exception_reactionSuspected" source="interruptTransfusion_11_P0" target="interruptTransfusion_11_exception_reactionSuspected" type="normal"/>
+            <arc id="transfusionRoom_available_to_Shared_aquireRoom" source="transfusionRoom_available" target="Shared_aquireRoom" type="normal"/>
+            <arc id="transfusionRoom_notReady_to_transfusionRoom_T0" source="transfusionRoom_notReady" target="transfusionRoom_T0" type="normal"/>
+            <arc id="bloodTransfusionWorkflow_01_T0_to_Shared_patientInfo_START" source="bloodTransfusionWorkflow_01_T0" target="Shared_patientInfo_START" type="normal"/>
+            <arc id="bloodTransfusionWorkflow_01_T1_to_Shared_prepareTransfusion_START" source="bloodTransfusionWorkflow_01_T1" target="Shared_prepareTransfusion_START" type="normal"/>
+            <arc id="bloodTransfusionWorkflow_01_T2_to_Shared_bloodTransfusionWorkflow_END" source="bloodTransfusionWorkflow_01_T2" target="Shared_bloodTransfusionWorkflow_END" type="normal"/>
+            <arc id="bloodTransfusionWorkflow_01_exception1_to_bloodTransfusionWorkflow_01_startCheckout" source="bloodTransfusionWorkflow_01_exception1" target="bloodTransfusionWorkflow_01_startCheckout" type="normal"/>
+            <arc id="bloodTransfusionWorkflow_01_exception2_to_bloodTransfusionWorkflow_01_startCheckout" source="bloodTransfusionWorkflow_01_exception2" target="bloodTransfusionWorkflow_01_startCheckout" type="normal"/>
+            <arc id="bloodTransfusionWorkflow_01_exception3_to_bloodTransfusionWorkflow_01_startCheckout" source="bloodTransfusionWorkflow_01_exception3" target="bloodTransfusionWorkflow_01_startCheckout" type="normal"/>
+            <arc id="Shared_checkoutPatientWithoutTreatment_to_bloodTransfusionWorkflow_01_done" source="Shared_checkoutPatientWithoutTreatment" target="bloodTransfusionWorkflow_01_done" type="normal"/>
+            <arc id="bloodTransfusionWorkflow_01_finishWorkflowException_to_Shared_bloodTransfusionWorkflow_END" source="bloodTransfusionWorkflow_01_finishWorkflowException" target="Shared_bloodTransfusionWorkflow_END" type="normal"/>
+            <arc id="patientInfo_02_T2_to_Shared_patientInfo_END" source="patientInfo_02_T2" target="Shared_patientInfo_END" type="normal"/>
+            <arc id="patientInfo_02_T0_to_patientInfo_02_firstPatientInfo_START" source="patientInfo_02_T0" target="patientInfo_02_firstPatientInfo_START" type="normal"/>
+            <arc id="Shared_checkID_to_patientInfo_02_firstPatientInfo_END" source="Shared_checkID" target="patientInfo_02_firstPatientInfo_END" type="normal"/>
+            <arc id="patientInfo_02_T1_to_patientInfo_02_checkConsent_START" source="patientInfo_02_T1" target="patientInfo_02_checkConsent_START" type="normal">
+                <graphics>
+                    <position x="1295" y="295"/>
+                    <position x="1074" y="332"/>
+                </graphics>
+            </arc>
+            <arc id="patientInfo_02_fork1_to_patientInfo_02_patientDisagree_START" source="patientInfo_02_fork1" target="patientInfo_02_patientDisagree_START" type="normal"/>
+            <arc id="patientInfo_02_fork2_to_patientInfo_02_patientAgree_START" source="patientInfo_02_fork2" target="patientInfo_02_patientAgree_START" type="normal"/>
+            <arc id="patientInfo_02_patientDisagree_to_Shared_EX_consentDisagree" source="patientInfo_02_patientDisagree" target="Shared_EX_consentDisagree" type="normal"/>
+            <arc id="patientInfo_02_patientAgree_to_patientInfo_02_patientAgree_END" source="patientInfo_02_patientAgree" target="patientInfo_02_patientAgree_END" type="normal"/>
+            <arc id="patientInfo_02_join2_to_patientInfo_02_checkConsent_END" source="patientInfo_02_join2" target="patientInfo_02_checkConsent_END" type="normal"/>
+            <arc id="prepareTransfusion_03_T0_to_Shared_completeDoctorOrder_START" source="prepareTransfusion_03_T0" target="Shared_completeDoctorOrder_START" type="normal"/>
+            <arc id="prepareTransfusion_03_T1_to_Shared_preTransfusijonChecks_START" source="prepareTransfusion_03_T1" target="Shared_preTransfusijonChecks_START" type="normal"/>
+            <arc id="prepareTransfusion_03_T2_to_Shared_performTransfusion_START" source="prepareTransfusion_03_T2" target="Shared_performTransfusion_START" type="normal"/>
+            <arc id="prepareTransfusion_03_T3_to_Shared_prepareTransfusion_END" source="prepareTransfusion_03_T3" target="Shared_prepareTransfusion_END" type="normal"/>
+            <arc id="completeOrderDoctor_04_fork1_to_completeOrderDoctor_04_orderComplete_START" source="completeOrderDoctor_04_fork1" target="completeOrderDoctor_04_orderComplete_START" type="normal"/>
+            <arc id="completeOrderDoctor_04_fork2_to_completeOrderDoctor_04_orderIncomplete_START" source="completeOrderDoctor_04_fork2" target="completeOrderDoctor_04_orderIncomplete_START" type="normal"/>
+            <arc id="completeOrderDoctor_04_orderComplete_to_completeOrderDoctor_04_orderComplete_END" source="completeOrderDoctor_04_orderComplete" target="completeOrderDoctor_04_orderComplete_END" type="normal"/>
+            <arc id="completeOrderDoctor_04_join1_to_Shared_completeDoctorOrder_END" source="completeOrderDoctor_04_join1" target="Shared_completeDoctorOrder_END" type="normal"/>
+            <arc id="completeOrderDoctor_04_orderIncomplete_to_Shared_EX_orderIncomplete" source="completeOrderDoctor_04_orderIncomplete" target="Shared_EX_orderIncomplete" type="normal"/>
+            <arc id="preTransfusionChecks_05_T0_to_preTransfusionChecks_05_aquireRoom_START" source="preTransfusionChecks_05_T0" target="preTransfusionChecks_05_aquireRoom_START" type="normal"/>
+            <arc id="preTransfusionChecks_05_T0_to_Shared_obtainBloodProduct_START" source="preTransfusionChecks_05_T0" target="Shared_obtainBloodProduct_START" type="normal"/>
+            <arc id="Shared_aquireRoom_to_preTransfusionChecks_05_aquireRoom_END" source="Shared_aquireRoom" target="preTransfusionChecks_05_aquireRoom_END" type="normal"/>
+            <arc id="preTransfusionChecks_05_finish1_to_preTransfusionChecks_05_done1" source="preTransfusionChecks_05_finish1" target="preTransfusionChecks_05_done1" type="normal"/>
+            <arc id="preTransfusionChecks_05_finish2_to_preTransfusionChecks_05_done2" source="preTransfusionChecks_05_finish2" target="preTransfusionChecks_05_done2" type="normal"/>
+            <arc id="preTransfusionChecks_05_join1_to_Shared_preTransfusijonChecks_END" source="preTransfusionChecks_05_join1" target="Shared_preTransfusijonChecks_END" type="normal"/>
+            <arc id="preTransfusionChecks_05_join2_to_Shared_preTransfusijonChecks_END" source="preTransfusionChecks_05_join2" target="Shared_preTransfusijonChecks_END" type="normal"/>
+            <arc id="Shared_checkRoomNotAvailable_to_preTransfusionChecks_05_aquireRoom_START" source="Shared_checkRoomNotAvailable" target="preTransfusionChecks_05_aquireRoom_START" type="normal">
+                <graphics>
+                    <position x="243" y="1368"/>
+                </graphics>
+            </arc>
+            <arc id="obtainBloodProduct_06_T2_to_Shared_obtainBloodProduct_END" source="obtainBloodProduct_06_T2" target="Shared_obtainBloodProduct_END" type="normal"/>
+            <arc id="obtainBloodProduct_06_T0_to_Shared_checkForTypeAndScreen_START" source="obtainBloodProduct_06_T0" target="Shared_checkForTypeAndScreen_START" type="normal"/>
+            <arc id="obtainBloodProduct_06_T1_to_obtainBloodProduct_06_releaseBloodProduct_START" source="obtainBloodProduct_06_T1" target="obtainBloodProduct_06_releaseBloodProduct_START" type="normal"/>
+            <arc id="Shared_releaseBloodProduct_to_obtainBloodProduct_06_releaseBloodProduct_END" source="Shared_releaseBloodProduct" target="obtainBloodProduct_06_releaseBloodProduct_END" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_T0_to_checkForTypeAndScreen_07_typeAndScreenAvailable_START" source="checkForTypeAndScreen_07_T0" target="checkForTypeAndScreen_07_typeAndScreenAvailable_START" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_available_to_checkForTypeAndScreen_07_typeAndScreenAvailable_END" source="checkForTypeAndScreen_07_available" target="checkForTypeAndScreen_07_typeAndScreenAvailable_END" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_finish1_to_Shared_checkForTypeAndScreen_END" source="checkForTypeAndScreen_07_finish1" target="Shared_checkForTypeAndScreen_END" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_notAvailalbe_to_checkForTypeAndScreen_07_fail1" source="checkForTypeAndScreen_07_notAvailalbe" target="checkForTypeAndScreen_07_fail1" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_try2_to_checkForTypeAndScreen_07_obtainTypeAndScreen_START" source="checkForTypeAndScreen_07_try2" target="checkForTypeAndScreen_07_obtainTypeAndScreen_START" type="normal">
+                <graphics>
+                    <position x="463" y="2023"/>
+                </graphics>
+            </arc>
+            <arc id="checkForTypeAndScreen_07_finish2_to_Shared_checkForTypeAndScreen_END" source="checkForTypeAndScreen_07_finish2" target="Shared_checkForTypeAndScreen_END" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_T8_to_checkForTypeAndScreen_07_obtainTypeAndScreen_END" source="checkForTypeAndScreen_07_T8" target="checkForTypeAndScreen_07_obtainTypeAndScreen_END" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_T6_to_checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_START" source="checkForTypeAndScreen_07_T6" target="checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_START" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_to_checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_END" source="checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess" target="checkForTypeAndScreen_07_performBloodSpecimentObtainingProcess_END" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_T7_to_checkForTypeAndScreen_07_getValidation_START" source="checkForTypeAndScreen_07_T7" target="checkForTypeAndScreen_07_getValidation_START" type="normal"/>
+            <arc id="checkForTypeAndScreen_07_getValidation_to_checkForTypeAndScreen_07_getValidation_END" source="checkForTypeAndScreen_07_getValidation" target="checkForTypeAndScreen_07_getValidation_END" type="normal"/>
+            <arc id="performTransfusion_08_finish_to_Shared_performTransfusion_END" source="performTransfusion_08_finish" target="Shared_performTransfusion_END" type="normal"/>
+            <arc id="performTransfusion_08_T0_to_performTransfusion_08_beginInfusionOfBloodProduct_START" source="performTransfusion_08_T0" target="performTransfusion_08_beginInfusionOfBloodProduct_START" type="normal"/>
+            <arc id="Shared_beginInfusionOfBloodProduct_to_performTransfusion_08_beginInfusionOfBloodProduct_END" source="Shared_beginInfusionOfBloodProduct" target="performTransfusion_08_beginInfusionOfBloodProduct_END" type="normal"/>
+            <arc id="performTransfusion_08_T1_to_Shared_iterateAssessPatient_START" source="performTransfusion_08_T1" target="Shared_iterateAssessPatient_START" type="normal"/>
+            <arc id="performTransfusion_08_T2_to_performTransfusion_08_releaseRoom_START" source="performTransfusion_08_T2" target="performTransfusion_08_releaseRoom_START" type="normal"/>
+            <arc id="Shared_releaseRoom_to_performTransfusion_08_releaseRoom_END" source="Shared_releaseRoom" target="performTransfusion_08_releaseRoom_END" type="normal"/>
+            <arc id="performTransfusion_08_T3_to_performTransfusion_08_checkoutPatientSuccess_START" source="performTransfusion_08_T3" target="performTransfusion_08_checkoutPatientSuccess_START" type="normal"/>
+            <arc id="performTransfusion_08_checkoutPatientSuccess_to_performTransfusion_08_checkoutPatientSuccess_END" source="performTransfusion_08_checkoutPatientSuccess" target="performTransfusion_08_checkoutPatientSuccess_END" type="normal"/>
+            <arc id="iterateAssessPatient_08A_start_assessment_to_Shared_assessPatient_START" source="iterateAssessPatient_08A_start_assessment" target="Shared_assessPatient_START" type="normal"/>
+            <arc id="iterateAssessPatient_08A_initialize_to_iterateAssessPatient_08A_P3" source="iterateAssessPatient_08A_initialize" target="iterateAssessPatient_08A_P3" type="normal"/>
+            <arc id="Shared_stopTransfusion_to_iterateAssessPatient_08A_stopTransfusion_END" source="Shared_stopTransfusion" target="iterateAssessPatient_08A_stopTransfusion_END" type="normal"/>
+            <arc id="iterateAssessPatient_08A_terminate_to_Shared_iterateAssessPatient_END" source="iterateAssessPatient_08A_terminate" target="Shared_iterateAssessPatient_END" type="normal"/>
+            <arc id="iterateAssessPatient_08A_initialize_to_iterateAssessPatient_08A_timer" source="iterateAssessPatient_08A_initialize" target="iterateAssessPatient_08A_timer" type="normal"/>
+            <arc id="iterateAssessPatient_08A_start_assessment_to_iterateAssessPatient_08A_timer" source="iterateAssessPatient_08A_start_assessment" target="iterateAssessPatient_08A_timer" type="normal">
+                <graphics>
+                    <position x="271" y="2416"/>
+                </graphics>
+            </arc>
+            <arc id="iterateAssessPatient_08A_finish1_to_iterateAssessPatient_08A_stopTransfusion_START" source="iterateAssessPatient_08A_finish1" target="iterateAssessPatient_08A_stopTransfusion_START" type="normal">
+                <graphics>
+                    <position x="646" y="2521"/>
+                </graphics>
+            </arc>
+            <arc id="iterateAssessPatient_08A_finish2_to_iterateAssessPatient_08A_stopTransfusion_START" source="iterateAssessPatient_08A_finish2" target="iterateAssessPatient_08A_stopTransfusion_START" type="normal"/>
+            <arc id="assessPatient_09_startClinicalEvaluation_to_assessPatient_09_evaluatePatientClinicallyOK_START" source="assessPatient_09_startClinicalEvaluation" target="assessPatient_09_evaluatePatientClinicallyOK_START" type="normal"/>
+            <arc id="assessPatient_09_evaluatePatientClinicallyOK_to_assessPatient_09_evaluatePatientClinicallyOK_END" source="assessPatient_09_evaluatePatientClinicallyOK" target="assessPatient_09_evaluatePatientClinicallyOK_END" type="normal"/>
+            <arc id="assessPatient_09_finishEvaluation_to_Shared_assessPatient_END" source="assessPatient_09_finishEvaluation" target="Shared_assessPatient_END" type="normal"/>
+            <arc id="assessPatient_09_evaluatePatientClinicallyNOK_to_assessPatient_09_fail_patientNOK" source="assessPatient_09_evaluatePatientClinicallyNOK" target="assessPatient_09_fail_patientNOK" type="normal"/>
+            <arc id="assessPatient_09_finishHandlingReaction_to_Shared_assessPatient_END" source="assessPatient_09_finishHandlingReaction" target="Shared_assessPatient_END" type="normal"/>
+            <arc id="assessPatient_09_tryHandlingTransfusionReaction_to_Shared_handleTransfusionReaction_START" source="assessPatient_09_tryHandlingTransfusionReaction" target="Shared_handleTransfusionReaction_START" type="normal"/>
+            <arc id="handleTransfusionReaction_10_startAdjustIVaccess_to_handleTransfusionReaction_10_adjustIVaccess_START" source="handleTransfusionReaction_10_startAdjustIVaccess" target="handleTransfusionReaction_10_adjustIVaccess_START" type="normal"/>
+            <arc id="handleTransfusionReaction_10_adjustIVaccessOK_to_handleTransfusionReaction_10_adjustIVaccess_END" source="handleTransfusionReaction_10_adjustIVaccessOK" target="handleTransfusionReaction_10_adjustIVaccess_END" type="normal"/>
+            <arc id="handleTransfusionReaction_10_finishAdjustIVaccess_to_Shared_handleTransfusionReaction_END" source="handleTransfusionReaction_10_finishAdjustIVaccess" target="Shared_handleTransfusionReaction_END" type="normal"/>
+            <arc id="handleTransfusionReaction_10_adjustIVaccessNOK_to_handleTransfusionReaction_10_fail_adjustIVaccess" source="handleTransfusionReaction_10_adjustIVaccessNOK" target="handleTransfusionReaction_10_fail_adjustIVaccess" type="normal"/>
+            <arc id="handleTransfusionReaction_10_try_interruptTransfusion_to_Shared_interrupTransfusion_START" source="handleTransfusionReaction_10_try_interruptTransfusion" target="Shared_interrupTransfusion_START" type="normal"/>
+            <arc id="handleTransfusionReaction_10_finish_to_Shared_handleTransfusionReaction_END" source="handleTransfusionReaction_10_finish" target="Shared_handleTransfusionReaction_END" type="normal"/>
+            <arc id="interruptTransfusion_11_T3_to_Shared_interrupTransfusion_END" source="interruptTransfusion_11_T3" target="Shared_interrupTransfusion_END" type="normal"/>
+            <arc id="Shared_emergencyStopInfusion_to_interruptTransfusion_11_stopInfusion_END" source="Shared_emergencyStopInfusion" target="interruptTransfusion_11_stopInfusion_END" type="normal"/>
+            <arc id="interruptTransfusion_11_T0_to_interruptTransfusion_11_stopInfusion_START" source="interruptTransfusion_11_T0" target="interruptTransfusion_11_stopInfusion_START" type="normal"/>
+            <arc id="interruptTransfusion_11_T1_to_interruptTransfusion_11_informDoctor_START" source="interruptTransfusion_11_T1" target="interruptTransfusion_11_informDoctor_START" type="normal"/>
+            <arc id="interruptTransfusion_11_informDoctor_to_interruptTransfusion_11_informDoctor_END" source="interruptTransfusion_11_informDoctor" target="interruptTransfusion_11_informDoctor_END" type="normal"/>
+            <arc id="interruptTransfusion_11_T2_to_interruptTransfusion_11_releaseRoom_START" source="interruptTransfusion_11_T2" target="interruptTransfusion_11_releaseRoom_START" type="normal"/>
+            <arc id="Shared_releaseRoomInterrupted_to_interruptTransfusion_11_releaseRoom_END" source="Shared_releaseRoomInterrupted" target="interruptTransfusion_11_releaseRoom_END" type="normal"/>
+            <arc id="interruptTransfusion_11_exception_reactionSuspected_to_Shared_EX_reactionSuspected" source="interruptTransfusion_11_exception_reactionSuspected" target="Shared_EX_reactionSuspected" type="normal"/>
+            <arc id="Shared_terminateIterationException_to_interruptTransfusion_11_P0" source="Shared_terminateIterationException" target="interruptTransfusion_11_P0" type="normal"/>
+            <arc id="Shared_releaseRoom_to_transfusionRoom_notReady" source="Shared_releaseRoom" target="transfusionRoom_notReady" type="normal"/>
+            <arc id="Shared_releaseRoomInterrupted_to_transfusionRoom_notReady" source="Shared_releaseRoomInterrupted" target="transfusionRoom_notReady" type="normal"/>
+            <arc id="transfusionRoom_T0_to_transfusionRoom_available" source="transfusionRoom_T0" target="transfusionRoom_available" type="normal"/>
+            <arc id="iterateAssessPatient_08A_P5_to_iterateAssessPatient_08A_end_assesment" source="iterateAssessPatient_08A_P5" target="iterateAssessPatient_08A_end_assesment" type="normal"/>
+            <arc id="iterateAssessPatient_08A_end_assesment_to_iterateAssessPatient_08A_P3" source="iterateAssessPatient_08A_end_assesment" target="iterateAssessPatient_08A_P3" type="normal"/>
+            <arc id="iterateAssessPatient_08A_P3_to_iterateAssessPatient_08A_start_assessment" source="iterateAssessPatient_08A_P3" target="iterateAssessPatient_08A_start_assessment" type="normal"/>
+            <arc id="iterateAssessPatient_08A_start_assessment_to_iterateAssessPatient_08A_P5" source="iterateAssessPatient_08A_start_assessment" target="iterateAssessPatient_08A_P5" type="normal"/>
+            <arc id="preTransfusionChecks_05_done2_to_preTransfusionChecks_05_finish1" source="preTransfusionChecks_05_done2" target="preTransfusionChecks_05_finish1" type="inhibitor"/>
+            <arc id="preTransfusionChecks_05_done1_to_preTransfusionChecks_05_finish2" source="preTransfusionChecks_05_done1" target="preTransfusionChecks_05_finish2" type="inhibitor"/>
+            <arc id="iterateAssessPatient_08A_P3_to_iterateAssessPatient_08A_done" source="iterateAssessPatient_08A_P3" target="iterateAssessPatient_08A_done" type="inhibitor"/>
+            <arc id="transfusionRoom_available_to_Shared_checkRoomNotAvailable" source="transfusionRoom_available" target="Shared_checkRoomNotAvailable" type="inhibitor"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

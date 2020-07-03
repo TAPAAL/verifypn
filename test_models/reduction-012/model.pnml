@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="P12">
+                <graphics>
+                    <position x="285" y="15"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P12</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="P13">
+                <graphics>
+                    <position x="285" y="525"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P13</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P16">
+                <graphics>
+                    <position x="480" y="315"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P16</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P11">
+                <graphics>
+                    <position x="285" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P11</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P15">
+                <graphics>
+                    <position x="495" y="165"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P15</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="T10">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T10</text>
+                </name>
+                <graphics>
+                    <position x="285" y="375"/>
+                </graphics>
+            </transition>
+            <transition id="T9">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T9</text>
+                </name>
+                <graphics>
+                    <position x="285" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="T11">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T11</text>
+                </name>
+                <graphics>
+                    <position x="480" y="240"/>
+                </graphics>
+            </transition>
+            <arc id="P16_to_T10" source="P16" target="T10" type="normal"/>
+            <arc id="P12_to_T9" source="P12" target="T9" type="normal"/>
+            <arc id="P11_to_T10" source="P11" target="T10" type="normal"/>
+            <arc id="P15_to_T11" source="P15" target="T11" type="normal"/>
+            <arc id="T10_to_P13" source="T10" target="P13" type="normal"/>
+            <arc id="T9_to_P11" source="T9" target="P11" type="normal"/>
+            <arc id="T9_to_P15" source="T9" target="P15" type="normal"/>
+            <arc id="T11_to_P16" source="T11" target="P16" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

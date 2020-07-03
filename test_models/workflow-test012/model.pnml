@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="WR">
+                <graphics>
+                    <position x="180" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WR</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="WN">
+                <graphics>
+                    <position x="405" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WN</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WD">
+                <graphics>
+                    <position x="690" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WD</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WRoom">
+                <graphics>
+                    <position x="690" y="660"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WRoom</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WO">
+                <graphics>
+                    <position x="825" y="540"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WO</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Out">
+                <graphics>
+                    <position x="180" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Out</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CHO">
+                <graphics>
+                    <position x="540" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CHO</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Working">
+                <graphics>
+                    <position x="225" y="120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Working</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Resting">
+                <graphics>
+                    <position x="75" y="120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Resting</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="NurseResting">
+                <graphics>
+                    <position x="390" y="120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>NurseResting</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="NurseWorking">
+                <graphics>
+                    <position x="540" y="120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>NurseWorking</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="DoctorWorking">
+                <graphics>
+                    <position x="930" y="300"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="9" y="38"/>
+                    </graphics>
+                    <text>DoctorWorking</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="DoctorResting">
+                <graphics>
+                    <position x="1110" y="300"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DoctorResting</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SurgeonWorking">
+                <graphics>
+                    <position x="945" y="480"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="3" y="50"/>
+                    </graphics>
+                    <text>SurgeonWorking</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="SurgeonResting">
+                <graphics>
+                    <position x="1125" y="480"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>SurgeonResting</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WS">
+                <graphics>
+                    <position x="825" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WS</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Check_in">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Check_in</text>
+                </name>
+                <graphics>
+                    <position x="270" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="Nurse">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Nurse</text>
+                </name>
+                <graphics>
+                    <position x="585" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="DoctorOk">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DoctorOk</text>
+                </name>
+                <graphics>
+                    <position x="630" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="Surgeon">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Surgeon</text>
+                </name>
+                <graphics>
+                    <position x="825" y="480"/>
+                </graphics>
+            </transition>
+            <transition id="Check_out">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Check_out</text>
+                </name>
+                <graphics>
+                    <position x="435" y="390"/>
+                </graphics>
+            </transition>
+            <transition id="Operating">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Operating</text>
+                </name>
+                <graphics>
+                    <position x="825" y="600"/>
+                </graphics>
+            </transition>
+            <transition id="In_Room">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>In_Room</text>
+                </name>
+                <graphics>
+                    <position x="540" y="660"/>
+                </graphics>
+            </transition>
+            <transition id="TR">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TR</text>
+                </name>
+                <graphics>
+                    <position x="150" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="TW">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TW</text>
+                </name>
+                <graphics>
+                    <position x="150" y="75"/>
+                </graphics>
+            </transition>
+            <transition id="TNW">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TNW</text>
+                </name>
+                <graphics>
+                    <position x="450" y="75"/>
+                </graphics>
+            </transition>
+            <transition id="TNR">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TNR</text>
+                </name>
+                <graphics>
+                    <position x="450" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="TDW">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TDW</text>
+                </name>
+                <graphics>
+                    <position x="1020" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="TDR">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TDR</text>
+                </name>
+                <graphics>
+                    <position x="1020" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="TSW">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TSW</text>
+                </name>
+                <graphics>
+                    <position x="1035" y="420"/>
+                </graphics>
+            </transition>
+            <transition id="TSR">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TSR</text>
+                </name>
+                <graphics>
+                    <position x="1035" y="555"/>
+                </graphics>
+            </transition>
+            <transition id="NurseOk">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>NurseOk</text>
+                </name>
+                <graphics>
+                    <position x="540" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="Doctor">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Doctor</text>
+                </name>
+                <graphics>
+                    <position x="825" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="DoctorRoom">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DoctorRoom</text>
+                </name>
+                <graphics>
+                    <position x="690" y="405"/>
+                </graphics>
+            </transition>
+            <transition id="T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T0</text>
+                </name>
+                <graphics>
+                    <position x="195" y="300"/>
+                </graphics>
+            </transition>
+            <arc id="WR_to_Check_in" source="WR" target="Check_in" type="normal"/>
+            <arc id="WN_to_Nurse" source="WN" target="Nurse" type="normal"/>
+            <arc id="WD_to_DoctorOk" source="WD" target="DoctorOk" type="normal"/>
+            <arc id="WO_to_Operating" source="WO" target="Operating" type="normal"/>
+            <arc id="CHO_to_Check_out" source="CHO" target="Check_out" type="normal"/>
+            <arc id="WRoom_to_In_Room" source="WRoom" target="In_Room" type="normal"/>
+            <arc id="Resting_to_TW" source="Resting" target="TW" type="normal">
+                <graphics>
+                    <position x="92" y="92"/>
+                </graphics>
+            </arc>
+            <arc id="NurseResting_to_TNW" source="NurseResting" target="TNW" type="normal">
+                <graphics>
+                    <position x="407" y="92"/>
+                </graphics>
+            </arc>
+            <arc id="DoctorResting_to_TDW" source="DoctorResting" target="TDW" type="normal">
+                <graphics>
+                    <position x="1127" y="257"/>
+                </graphics>
+            </arc>
+            <arc id="SurgeonResting_to_TSW" source="SurgeonResting" target="TSW" type="normal">
+                <graphics>
+                    <position x="1142" y="437"/>
+                </graphics>
+            </arc>
+            <arc id="WN_to_NurseOk" source="WN" target="NurseOk" type="normal"/>
+            <arc id="WS_to_Surgeon" source="WS" target="Surgeon" type="normal"/>
+            <arc id="WD_to_Doctor" source="WD" target="Doctor" type="normal"/>
+            <arc id="WD_to_DoctorRoom" source="WD" target="DoctorRoom" type="normal"/>
+            <arc id="WR_to_T0" source="WR" target="T0" type="normal">
+                <graphics>
+                    <position x="178" y="298"/>
+                </graphics>
+            </arc>
+            <arc id="Check_in_to_WN" source="Check_in" target="WN" type="normal"/>
+            <arc id="Surgeon_to_WO" source="Surgeon" target="WO" type="normal"/>
+            <arc id="Operating_to_WRoom" source="Operating" target="WRoom" type="normal">
+                <graphics>
+                    <position x="842" y="677"/>
+                </graphics>
+            </arc>
+            <arc id="Check_out_to_Out" source="Check_out" target="Out" type="normal"/>
+            <arc id="TW_to_Working" source="TW" target="Working" type="normal">
+                <graphics>
+                    <position x="242" y="92"/>
+                </graphics>
+            </arc>
+            <arc id="TNW_to_NurseWorking" source="TNW" target="NurseWorking" type="normal">
+                <graphics>
+                    <position x="557" y="92"/>
+                </graphics>
+            </arc>
+            <arc id="Nurse_to_WD" source="Nurse" target="WD" type="normal"/>
+            <arc id="TDW_to_DoctorWorking" source="TDW" target="DoctorWorking" type="normal">
+                <graphics>
+                    <position x="947" y="257"/>
+                </graphics>
+            </arc>
+            <arc id="TSW_to_SurgeonWorking" source="TSW" target="SurgeonWorking" type="normal">
+                <graphics>
+                    <position x="962" y="437"/>
+                </graphics>
+            </arc>
+            <arc id="DoctorOk_to_CHO" source="DoctorOk" target="CHO" type="normal"/>
+            <arc id="NurseOk_to_CHO" source="NurseOk" target="CHO" type="normal"/>
+            <arc id="Doctor_to_WS" source="Doctor" target="WS" type="normal"/>
+            <arc id="In_Room_to_CHO" source="In_Room" target="CHO" type="normal"/>
+            <arc id="DoctorRoom_to_WRoom" source="DoctorRoom" target="WRoom" type="normal"/>
+            <arc id="T0_to_WR" source="T0" target="WR" type="normal">
+                <graphics>
+                    <position x="238" y="298"/>
+                </graphics>
+            </arc>
+            <arc id="Working_to_TR" source="Working" target="TR" type="normal">
+                <graphics>
+                    <position x="242" y="182"/>
+                </graphics>
+            </arc>
+            <arc id="TR_to_Resting" source="TR" target="Resting" type="normal">
+                <graphics>
+                    <position x="167" y="182"/>
+                    <position x="92" y="182"/>
+                </graphics>
+            </arc>
+            <arc id="Working_to_Check_in" source="Working" target="Check_in" type="normal">
+                <graphics>
+                    <position x="287" y="137"/>
+                </graphics>
+            </arc>
+            <arc id="Check_in_to_Working" source="Check_in" target="Working" type="normal"/>
+            <arc id="NurseWorking_to_TNR" source="NurseWorking" target="TNR" type="normal">
+                <graphics>
+                    <position x="557" y="182"/>
+                </graphics>
+            </arc>
+            <arc id="TNR_to_NurseResting" source="TNR" target="NurseResting" type="normal">
+                <graphics>
+                    <position x="407" y="182"/>
+                </graphics>
+            </arc>
+            <arc id="NurseWorking_to_Nurse" source="NurseWorking" target="Nurse" type="normal">
+                <graphics>
+                    <position x="602" y="137"/>
+                </graphics>
+            </arc>
+            <arc id="Nurse_to_NurseWorking" source="Nurse" target="NurseWorking" type="normal"/>
+            <arc id="DoctorWorking_to_TDR" source="DoctorWorking" target="TDR" type="normal">
+                <graphics>
+                    <position x="947" y="362"/>
+                </graphics>
+            </arc>
+            <arc id="TDR_to_DoctorResting" source="TDR" target="DoctorResting" type="normal">
+                <graphics>
+                    <position x="1127" y="362"/>
+                </graphics>
+            </arc>
+            <arc id="DoctorWorking_to_DoctorOk" source="DoctorWorking" target="DoctorOk" type="normal"/>
+            <arc id="DoctorOk_to_DoctorWorking" source="DoctorOk" target="DoctorWorking" type="normal"/>
+            <arc id="SurgeonWorking_to_TSR" source="SurgeonWorking" target="TSR" type="normal">
+                <graphics>
+                    <position x="962" y="572"/>
+                </graphics>
+            </arc>
+            <arc id="TSR_to_SurgeonResting" source="TSR" target="SurgeonResting" type="normal">
+                <graphics>
+                    <position x="1142" y="572"/>
+                </graphics>
+            </arc>
+            <arc id="SurgeonWorking_to_Surgeon" source="SurgeonWorking" target="Surgeon" type="normal"/>
+            <arc id="Surgeon_to_SurgeonWorking" source="Surgeon" target="SurgeonWorking" type="normal"/>
+            <arc id="NurseWorking_to_Operating" source="NurseWorking" target="Operating" type="normal">
+                <graphics>
+                    <position x="662" y="77"/>
+                    <position x="1172" y="77"/>
+                    <position x="1172" y="617"/>
+                </graphics>
+            </arc>
+            <arc id="Operating_to_NurseWorking" source="Operating" target="NurseWorking" type="normal">
+                <graphics>
+                    <position x="1172" y="617"/>
+                    <position x="1177" y="80"/>
+                    <position x="669" y="80"/>
+                </graphics>
+            </arc>
+            <arc id="SurgeonWorking_to_Operating" source="SurgeonWorking" target="Operating" type="normal"/>
+            <arc id="Operating_to_SurgeonWorking" source="Operating" target="SurgeonWorking" type="normal"/>
+            <arc id="DoctorWorking_to_Doctor" source="DoctorWorking" target="Doctor" type="normal"/>
+            <arc id="Doctor_to_DoctorWorking" source="Doctor" target="DoctorWorking" type="normal">
+                <graphics>
+                    <position x="886" y="286"/>
+                </graphics>
+            </arc>
+            <arc id="DoctorWorking_to_DoctorRoom" source="DoctorWorking" target="DoctorRoom" type="normal"/>
+            <arc id="DoctorRoom_to_DoctorWorking" source="DoctorRoom" target="DoctorWorking" type="normal"/>
+            <arc id="Working_to_T0" source="Working" target="T0" type="inhibitor"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

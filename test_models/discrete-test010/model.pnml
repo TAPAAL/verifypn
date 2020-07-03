@@ -1,0 +1,561 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Train_close">
+                <graphics>
+                    <position x="105" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Train_close</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Train_on">
+                <graphics>
+                    <position x="330" y="120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Train_on</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Train_far">
+                <graphics>
+                    <position x="345" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Train_far</text>
+                </name>
+                <initialMarking>
+                    <text>3</text>
+                </initialMarking>
+            </place>
+            <place id="Train_left">
+                <graphics>
+                    <position x="555" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-23" y="5"/>
+                    </graphics>
+                    <text>Train_left</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Barrier_open">
+                <graphics>
+                    <position x="900" y="255"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Barrier_open</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Barrier_lowering">
+                <graphics>
+                    <position x="1080" y="120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Barrier_lowering</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Barrier_raising">
+                <graphics>
+                    <position x="1095" y="360"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Barrier_raising</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Barrier_closed">
+                <graphics>
+                    <position x="1305" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Barrier_closed</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Barrier_P0">
+                <graphics>
+                    <position x="1395" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Barrier_P0</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Barrier_error">
+                <graphics>
+                    <position x="1590" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Barrier_error</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Controller_in">
+                <graphics>
+                    <position x="45" y="960"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Controller_in</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Controller_far">
+                <graphics>
+                    <position x="315" y="960"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Controller_far</text>
+                </name>
+                <initialMarking>
+                    <text>3</text>
+                </initialMarking>
+            </place>
+            <place id="Controller_comming">
+                <graphics>
+                    <position x="315" y="750"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Controller_comming</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Controller_leaving">
+                <graphics>
+                    <position x="330" y="1170"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Controller_leaving</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Controller_waiting">
+                <graphics>
+                    <position x="315" y="645"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-4" y="10"/>
+                    </graphics>
+                    <text>Controller_waiting</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Controller_P1">
+                <graphics>
+                    <position x="330" y="1290"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Controller_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Train_in">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Train_in</text>
+                </name>
+                <graphics>
+                    <position x="180" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="Train_ex">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Train_ex</text>
+                </name>
+                <graphics>
+                    <position x="465" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_app">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_app</text>
+                </name>
+                <graphics>
+                    <position x="210" y="330"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_app_first">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_app_first</text>
+                </name>
+                <graphics>
+                    <position x="165" y="420"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_exit">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_exit</text>
+                </name>
+                <graphics>
+                    <position x="435" y="315"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_exit_last">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_exit_last</text>
+                </name>
+                <graphics>
+                    <position x="510" y="405"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_down">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_down</text>
+                </name>
+                <graphics>
+                    <position x="945" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_down1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_down1</text>
+                </name>
+                <graphics>
+                    <position x="1080" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="Barrier_L">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Barrier_L</text>
+                </name>
+                <graphics>
+                    <position x="1215" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_up">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_up</text>
+                </name>
+                <graphics>
+                    <position x="1230" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="Barrier_R">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Barrier_R</text>
+                </name>
+                <graphics>
+                    <position x="960" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_waitOne">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_waitOne</text>
+                </name>
+                <graphics>
+                    <position x="1125" y="15"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_waitOne1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_waitOne1</text>
+                </name>
+                <graphics>
+                    <position x="1395" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="Barrier_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Barrier_T3</text>
+                </name>
+                <graphics>
+                    <position x="1515" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="Barrier_T5">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Barrier_T5</text>
+                </name>
+                <graphics>
+                    <position x="1410" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="Controller_ready">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Controller_ready</text>
+                </name>
+                <graphics>
+                    <position x="360" y="690"/>
+                </graphics>
+            </transition>
+            <transition id="Controller_return">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Controller_return</text>
+                </name>
+                <graphics>
+                    <position x="375" y="1230"/>
+                </graphics>
+            </transition>
+            <arc id="Train_close_to_Train_in" source="Train_close" target="Train_in" type="normal"/>
+            <arc id="Train_on_to_Train_ex" source="Train_on" target="Train_ex" type="normal"/>
+            <arc id="Train_left_to_Shared_exit_last" source="Train_left" target="Shared_exit_last" type="normal"/>
+            <arc id="Train_left_to_Shared_exit" source="Train_left" target="Shared_exit" type="normal"/>
+            <arc id="Train_far_to_Shared_app" source="Train_far" target="Shared_app" type="normal"/>
+            <arc id="Train_far_to_Shared_app_first" source="Train_far" target="Shared_app_first" type="normal"/>
+            <arc id="Barrier_open_to_Shared_down" source="Barrier_open" target="Shared_down" type="normal"/>
+            <arc id="Barrier_lowering_to_Barrier_L" source="Barrier_lowering" target="Barrier_L" type="normal"/>
+            <arc id="Barrier_closed_to_Shared_up" source="Barrier_closed" target="Shared_up" type="normal"/>
+            <arc id="Barrier_raising_to_Barrier_R" source="Barrier_raising" target="Barrier_R" type="normal"/>
+            <arc id="Barrier_raising_to_Shared_down1" source="Barrier_raising" target="Shared_down1" type="normal"/>
+            <arc id="Barrier_P0_to_Barrier_L" source="Barrier_P0" target="Barrier_L" type="normal"/>
+            <arc id="Barrier_P0_to_Barrier_T3" source="Barrier_P0" target="Barrier_T3" type="normal"/>
+            <arc id="Barrier_closed_to_Barrier_T5" source="Barrier_closed" target="Barrier_T5" type="normal">
+                <graphics>
+                    <position x="1349" y="209"/>
+                </graphics>
+            </arc>
+            <arc id="Barrier_P0_to_Barrier_T5" source="Barrier_P0" target="Barrier_T5" type="normal"/>
+            <arc id="Controller_in_to_Shared_app" source="Controller_in" target="Shared_app" type="normal">
+                <graphics>
+                    <position x="105" y="915"/>
+                </graphics>
+            </arc>
+            <arc id="Controller_far_to_Shared_app" source="Controller_far" target="Shared_app" type="normal"/>
+            <arc id="Controller_far_to_Shared_app_first" source="Controller_far" target="Shared_app_first" type="normal">
+                <inscription>
+                    <text>3</text>
+                </inscription>
+                <graphics>
+                    <position x="285" y="855"/>
+                </graphics>
+            </arc>
+            <arc id="Controller_comming_to_Shared_down" source="Controller_comming" target="Shared_down" type="normal"/>
+            <arc id="Controller_comming_to_Shared_down1" source="Controller_comming" target="Shared_down1" type="normal"/>
+            <arc id="Controller_in_to_Shared_exit" source="Controller_in" target="Shared_exit" type="normal">
+                <inscription>
+                    <text>2</text>
+                </inscription>
+                <graphics>
+                    <position x="60" y="990"/>
+                    <position x="135" y="1005"/>
+                </graphics>
+            </arc>
+            <arc id="Controller_in_to_Shared_exit_last" source="Controller_in" target="Shared_exit_last" type="normal">
+                <graphics>
+                    <position x="75" y="1125"/>
+                </graphics>
+            </arc>
+            <arc id="Controller_leaving_to_Shared_up" source="Controller_leaving" target="Shared_up" type="normal"/>
+            <arc id="Controller_far_to_Shared_exit_last" source="Controller_far" target="Shared_exit_last" type="normal">
+                <inscription>
+                    <text>2</text>
+                </inscription>
+                <graphics>
+                    <position x="285" y="1110"/>
+                </graphics>
+            </arc>
+            <arc id="Controller_comming_to_Shared_waitOne" source="Controller_comming" target="Shared_waitOne" type="normal"/>
+            <arc id="Controller_waiting_to_Controller_ready" source="Controller_waiting" target="Controller_ready" type="normal"/>
+            <arc id="Controller_leaving_to_Shared_waitOne1" source="Controller_leaving" target="Shared_waitOne1" type="normal"/>
+            <arc id="Controller_P1_to_Controller_return" source="Controller_P1" target="Controller_return" type="normal"/>
+            <arc id="Train_in_to_Train_on" source="Train_in" target="Train_on" type="normal"/>
+            <arc id="Train_ex_to_Train_left" source="Train_ex" target="Train_left" type="normal"/>
+            <arc id="Shared_exit_last_to_Train_far" source="Shared_exit_last" target="Train_far" type="normal"/>
+            <arc id="Shared_exit_to_Train_far" source="Shared_exit" target="Train_far" type="normal"/>
+            <arc id="Shared_app_to_Train_close" source="Shared_app" target="Train_close" type="normal"/>
+            <arc id="Shared_app_first_to_Train_close" source="Shared_app_first" target="Train_close" type="normal"/>
+            <arc id="Shared_down_to_Barrier_lowering" source="Shared_down" target="Barrier_lowering" type="normal"/>
+            <arc id="Barrier_L_to_Barrier_closed" source="Barrier_L" target="Barrier_closed" type="normal"/>
+            <arc id="Shared_up_to_Barrier_raising" source="Shared_up" target="Barrier_raising" type="normal"/>
+            <arc id="Barrier_R_to_Barrier_open" source="Barrier_R" target="Barrier_open" type="normal"/>
+            <arc id="Shared_down1_to_Barrier_lowering" source="Shared_down1" target="Barrier_lowering" type="normal"/>
+            <arc id="Shared_app_first_to_Barrier_P0" source="Shared_app_first" target="Barrier_P0" type="normal"/>
+            <arc id="Barrier_T3_to_Barrier_error" source="Barrier_T3" target="Barrier_error" type="normal"/>
+            <arc id="Barrier_T5_to_Barrier_closed" source="Barrier_T5" target="Barrier_closed" type="normal">
+                <graphics>
+                    <position x="1364" y="284"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_app_to_Controller_in" source="Shared_app" target="Controller_in" type="normal">
+                <inscription>
+                    <text>2</text>
+                </inscription>
+                <graphics>
+                    <position x="135" y="975"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_app_first_to_Controller_far" source="Shared_app_first" target="Controller_far" type="normal">
+                <inscription>
+                    <text>2</text>
+                </inscription>
+                <graphics>
+                    <position x="240" y="885"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_app_first_to_Controller_in" source="Shared_app_first" target="Controller_in" type="normal"/>
+            <arc id="Shared_app_first_to_Controller_comming" source="Shared_app_first" target="Controller_comming" type="normal"/>
+            <arc id="Shared_exit_to_Controller_in" source="Shared_exit" target="Controller_in" type="normal">
+                <graphics>
+                    <position x="90" y="1065"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_exit_to_Controller_far" source="Shared_exit" target="Controller_far" type="normal"/>
+            <arc id="Shared_exit_last_to_Controller_leaving" source="Shared_exit_last" target="Controller_leaving" type="normal"/>
+            <arc id="Shared_exit_last_to_Controller_far" source="Shared_exit_last" target="Controller_far" type="normal">
+                <inscription>
+                    <text>3</text>
+                </inscription>
+                <graphics>
+                    <position x="225" y="1080"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_waitOne_to_Controller_waiting" source="Shared_waitOne" target="Controller_waiting" type="normal"/>
+            <arc id="Controller_ready_to_Controller_comming" source="Controller_ready" target="Controller_comming" type="normal"/>
+            <arc id="Shared_waitOne1_to_Controller_P1" source="Shared_waitOne1" target="Controller_P1" type="normal"/>
+            <arc id="Controller_return_to_Controller_leaving" source="Controller_return" target="Controller_leaving" type="normal"/>
+            <arc id="Barrier_open_to_Shared_waitOne" source="Barrier_open" target="Shared_waitOne" type="inhibitor">
+                <graphics>
+                    <position x="884" y="89"/>
+                </graphics>
+            </arc>
+            <arc id="Barrier_raising_to_Shared_waitOne" source="Barrier_raising" target="Shared_waitOne" type="inhibitor">
+                <graphics>
+                    <position x="1124" y="479"/>
+                    <position x="1529" y="434"/>
+                    <position x="1424" y="134"/>
+                </graphics>
+            </arc>
+            <arc id="Barrier_closed_to_Shared_waitOne1" source="Barrier_closed" target="Shared_waitOne1" type="inhibitor"/>
+            <arc id="Barrier_closed_to_Barrier_T3" source="Barrier_closed" target="Barrier_T3" type="inhibitor">
+                <graphics>
+                    <position x="1499" y="254"/>
+                </graphics>
+            </arc>
+            <arc id="Barrier_P0_to_Shared_up" source="Barrier_P0" target="Shared_up" type="inhibitor">
+                <graphics>
+                    <position x="1229" y="224"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_Doctor1">
+                <graphics>
+                    <position x="315" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Doctor1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Doctor2">
+                <graphics>
+                    <position x="435" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Doctor2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_in1">
+                <graphics>
+                    <position x="300" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="68" y="24"/>
+                    </graphics>
+                    <text>Shared_in1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_in2">
+                <graphics>
+                    <position x="315" y="315"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="59" y="32"/>
+                    </graphics>
+                    <text>Shared_in2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1_out">
+                <graphics>
+                    <position x="660" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="60" y="18"/>
+                    </graphics>
+                    <text>WorkflowNet1_out</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1_Doctor1_working">
+                <graphics>
+                    <position x="330" y="45"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="32" y="-12"/>
+                    </graphics>
+                    <text>WorkflowNet1_Doctor1_working</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1_Doctor2_working">
+                <graphics>
+                    <position x="555" y="45"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="89" y="-15"/>
+                    </graphics>
+                    <text>WorkflowNet1_Doctor2_working</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet2_out">
+                <graphics>
+                    <position x="1320" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="60" y="18"/>
+                    </graphics>
+                    <text>WorkflowNet2_out</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet2_Doctor1_working">
+                <graphics>
+                    <position x="990" y="45"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="32" y="-12"/>
+                    </graphics>
+                    <text>WorkflowNet2_Doctor1_working</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet2_Doctor2_working">
+                <graphics>
+                    <position x="1215" y="45"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="89" y="-15"/>
+                    </graphics>
+                    <text>WorkflowNet2_Doctor2_working</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="AsynchronousStart_init1">
+                <graphics>
+                    <position x="75" y="615"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>AsynchronousStart_init1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="AsynchronousStart_init2">
+                <graphics>
+                    <position x="75" y="405"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>AsynchronousStart_init2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <transition id="WorkflowNet1_treat">
+                <name>
+                    <graphics>
+                        <offset x="-9" y="10"/>
+                    </graphics>
+                    <text>WorkflowNet1_treat</text>
+                </name>
+                <graphics>
+                    <position x="240" y="45"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1_wait_for_tomorrow">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1_wait_for_tomorrow</text>
+                </name>
+                <graphics>
+                    <position x="240" y="315"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1_Doctor1_done">
+                <name>
+                    <graphics>
+                        <offset x="44" y="-17"/>
+                    </graphics>
+                    <text>WorkflowNet1_Doctor1_done</text>
+                </name>
+                <graphics>
+                    <position x="435" y="45"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1_Doctor2_done_Doctor1_check">
+                <name>
+                    <graphics>
+                        <offset x="189" y="17"/>
+                    </graphics>
+                    <text>WorkflowNet1_Doctor2_done_Doctor1_check</text>
+                </name>
+                <graphics>
+                    <position x="585" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet2_treat">
+                <name>
+                    <graphics>
+                        <offset x="-9" y="10"/>
+                    </graphics>
+                    <text>WorkflowNet2_treat</text>
+                </name>
+                <graphics>
+                    <position x="900" y="45"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet2_wait_for_tomorrow">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet2_wait_for_tomorrow</text>
+                </name>
+                <graphics>
+                    <position x="900" y="315"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet2_Doctor1_done">
+                <name>
+                    <graphics>
+                        <offset x="44" y="-17"/>
+                    </graphics>
+                    <text>WorkflowNet2_Doctor1_done</text>
+                </name>
+                <graphics>
+                    <position x="1095" y="45"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet2_Doctor2_done_Doctor1_check">
+                <name>
+                    <graphics>
+                        <offset x="189" y="17"/>
+                    </graphics>
+                    <text>WorkflowNet2_Doctor2_done_Doctor1_check</text>
+                </name>
+                <graphics>
+                    <position x="1245" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="AsynchronousStart_Start1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="-2"/>
+                    </graphics>
+                    <text>AsynchronousStart_Start1</text>
+                </name>
+                <graphics>
+                    <position x="180" y="405"/>
+                </graphics>
+            </transition>
+            <transition id="AsynchronousStart_Start2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="55"/>
+                    </graphics>
+                    <text>AsynchronousStart_Start2</text>
+                </name>
+                <graphics>
+                    <position x="180" y="615"/>
+                </graphics>
+            </transition>
+            <arc id="Shared_in1_to_WorkflowNet1_treat" source="Shared_in1" target="WorkflowNet1_treat" type="normal"/>
+            <arc id="Shared_in1_to_WorkflowNet1_wait_for_tomorrow" source="Shared_in1" target="WorkflowNet1_wait_for_tomorrow" type="normal"/>
+            <arc id="Shared_Doctor1_to_WorkflowNet1_treat" source="Shared_Doctor1" target="WorkflowNet1_treat" type="normal"/>
+            <arc id="WorkflowNet1_Doctor1_working_to_WorkflowNet1_Doctor1_done" source="WorkflowNet1_Doctor1_working" target="WorkflowNet1_Doctor1_done" type="normal"/>
+            <arc id="Shared_Doctor2_to_WorkflowNet1_Doctor1_done" source="Shared_Doctor2" target="WorkflowNet1_Doctor1_done" type="normal"/>
+            <arc id="WorkflowNet1_Doctor2_working_to_WorkflowNet1_Doctor2_done_Doctor1_check" source="WorkflowNet1_Doctor2_working" target="WorkflowNet1_Doctor2_done_Doctor1_check" type="normal"/>
+            <arc id="Shared_Doctor1_to_WorkflowNet1_Doctor2_done_Doctor1_check" source="Shared_Doctor1" target="WorkflowNet1_Doctor2_done_Doctor1_check" type="normal">
+                <graphics>
+                    <position x="410" y="225"/>
+                    <position x="556" y="196"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_in2_to_WorkflowNet2_treat" source="Shared_in2" target="WorkflowNet2_treat" type="normal"/>
+            <arc id="Shared_in2_to_WorkflowNet2_wait_for_tomorrow" source="Shared_in2" target="WorkflowNet2_wait_for_tomorrow" type="normal"/>
+            <arc id="Shared_Doctor1_to_WorkflowNet2_treat" source="Shared_Doctor1" target="WorkflowNet2_treat" type="normal"/>
+            <arc id="WorkflowNet2_Doctor1_working_to_WorkflowNet2_Doctor1_done" source="WorkflowNet2_Doctor1_working" target="WorkflowNet2_Doctor1_done" type="normal"/>
+            <arc id="Shared_Doctor2_to_WorkflowNet2_Doctor1_done" source="Shared_Doctor2" target="WorkflowNet2_Doctor1_done" type="normal"/>
+            <arc id="WorkflowNet2_Doctor2_working_to_WorkflowNet2_Doctor2_done_Doctor1_check" source="WorkflowNet2_Doctor2_working" target="WorkflowNet2_Doctor2_done_Doctor1_check" type="normal"/>
+            <arc id="Shared_Doctor1_to_WorkflowNet2_Doctor2_done_Doctor1_check" source="Shared_Doctor1" target="WorkflowNet2_Doctor2_done_Doctor1_check" type="normal">
+                <graphics>
+                    <position x="1070" y="225"/>
+                    <position x="1216" y="196"/>
+                </graphics>
+            </arc>
+            <arc id="AsynchronousStart_init1_to_AsynchronousStart_Start2" source="AsynchronousStart_init1" target="AsynchronousStart_Start2" type="normal"/>
+            <arc id="AsynchronousStart_init2_to_AsynchronousStart_Start1" source="AsynchronousStart_init2" target="AsynchronousStart_Start1" type="normal"/>
+            <arc id="WorkflowNet1_treat_to_WorkflowNet1_Doctor1_working" source="WorkflowNet1_treat" target="WorkflowNet1_Doctor1_working" type="normal"/>
+            <arc id="WorkflowNet1_wait_for_tomorrow_to_WorkflowNet1_out" source="WorkflowNet1_wait_for_tomorrow" target="WorkflowNet1_out" type="normal">
+                <graphics>
+                    <position x="586" y="331"/>
+                </graphics>
+            </arc>
+            <arc id="WorkflowNet1_Doctor1_done_to_Shared_Doctor1" source="WorkflowNet1_Doctor1_done" target="Shared_Doctor1" type="normal"/>
+            <arc id="WorkflowNet1_Doctor1_done_to_WorkflowNet1_Doctor2_working" source="WorkflowNet1_Doctor1_done" target="WorkflowNet1_Doctor2_working" type="normal"/>
+            <arc id="WorkflowNet1_Doctor2_done_Doctor1_check_to_WorkflowNet1_out" source="WorkflowNet1_Doctor2_done_Doctor1_check" target="WorkflowNet1_out" type="normal"/>
+            <arc id="WorkflowNet1_Doctor2_done_Doctor1_check_to_Shared_Doctor2" source="WorkflowNet1_Doctor2_done_Doctor1_check" target="Shared_Doctor2" type="normal"/>
+            <arc id="WorkflowNet1_Doctor2_done_Doctor1_check_to_Shared_Doctor1" source="WorkflowNet1_Doctor2_done_Doctor1_check" target="Shared_Doctor1" type="normal">
+                <graphics>
+                    <position x="541" y="256"/>
+                    <position x="338" y="225"/>
+                </graphics>
+            </arc>
+            <arc id="WorkflowNet2_treat_to_WorkflowNet2_Doctor1_working" source="WorkflowNet2_treat" target="WorkflowNet2_Doctor1_working" type="normal"/>
+            <arc id="WorkflowNet2_wait_for_tomorrow_to_WorkflowNet2_out" source="WorkflowNet2_wait_for_tomorrow" target="WorkflowNet2_out" type="normal">
+                <graphics>
+                    <position x="1246" y="331"/>
+                </graphics>
+            </arc>
+            <arc id="WorkflowNet2_Doctor1_done_to_Shared_Doctor1" source="WorkflowNet2_Doctor1_done" target="Shared_Doctor1" type="normal"/>
+            <arc id="WorkflowNet2_Doctor1_done_to_WorkflowNet2_Doctor2_working" source="WorkflowNet2_Doctor1_done" target="WorkflowNet2_Doctor2_working" type="normal"/>
+            <arc id="WorkflowNet2_Doctor2_done_Doctor1_check_to_WorkflowNet2_out" source="WorkflowNet2_Doctor2_done_Doctor1_check" target="WorkflowNet2_out" type="normal"/>
+            <arc id="WorkflowNet2_Doctor2_done_Doctor1_check_to_Shared_Doctor2" source="WorkflowNet2_Doctor2_done_Doctor1_check" target="Shared_Doctor2" type="normal"/>
+            <arc id="WorkflowNet2_Doctor2_done_Doctor1_check_to_Shared_Doctor1" source="WorkflowNet2_Doctor2_done_Doctor1_check" target="Shared_Doctor1" type="normal">
+                <graphics>
+                    <position x="1201" y="256"/>
+                    <position x="998" y="225"/>
+                </graphics>
+            </arc>
+            <arc id="AsynchronousStart_Start1_to_Shared_in1" source="AsynchronousStart_Start1" target="Shared_in1" type="normal"/>
+            <arc id="AsynchronousStart_Start2_to_Shared_in2" source="AsynchronousStart_Start2" target="Shared_in2" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

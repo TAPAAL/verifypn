@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="number">
+                <graphics>
+                    <position x="330" y="255"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>number</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="diviser">
+                <graphics>
+                    <position x="570" y="255"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>diviser</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="P2">
+                <graphics>
+                    <position x="570" y="405"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P3">
+                <graphics>
+                    <position x="810" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="notprime">
+                <graphics>
+                    <position x="330" y="420"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>notprime</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P4">
+                <graphics>
+                    <position x="210" y="255"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P5">
+                <graphics>
+                    <position x="210" y="405"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P7">
+                <graphics>
+                    <position x="465" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P7</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P8">
+                <graphics>
+                    <position x="330" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P8</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P9">
+                <graphics>
+                    <position x="210" y="135"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P9</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="init">
+                <graphics>
+                    <position x="150" y="15"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>init</text>
+                </name>
+                <initialMarking>
+                    <text>5</text>
+                </initialMarking>
+            </place>
+            <place id="P12">
+                <graphics>
+                    <position x="45" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P12</text>
+                </name>
+                <initialMarking>
+                    <text>3</text>
+                </initialMarking>
+            </place>
+            <transition id="T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T0</text>
+                </name>
+                <graphics>
+                    <position x="465" y="225"/>
+                </graphics>
+            </transition>
+            <transition id="T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T1</text>
+                </name>
+                <graphics>
+                    <position x="810" y="405"/>
+                </graphics>
+            </transition>
+            <transition id="T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T2</text>
+                </name>
+                <graphics>
+                    <position x="660" y="255"/>
+                </graphics>
+            </transition>
+            <transition id="T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T3</text>
+                </name>
+                <graphics>
+                    <position x="330" y="330"/>
+                </graphics>
+            </transition>
+            <transition id="T4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T4</text>
+                </name>
+                <graphics>
+                    <position x="210" y="330"/>
+                </graphics>
+            </transition>
+            <transition id="T6">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T6</text>
+                </name>
+                <graphics>
+                    <position x="330" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="T7">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T7</text>
+                </name>
+                <graphics>
+                    <position x="390" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="T8">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T8</text>
+                </name>
+                <graphics>
+                    <position x="210" y="195"/>
+                </graphics>
+            </transition>
+            <transition id="T9">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T9</text>
+                </name>
+                <graphics>
+                    <position x="570" y="315"/>
+                </graphics>
+            </transition>
+            <transition id="T10">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T10</text>
+                </name>
+                <graphics>
+                    <position x="285" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="T11">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T11</text>
+                </name>
+                <graphics>
+                    <position x="75" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="T12">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T12</text>
+                </name>
+                <graphics>
+                    <position x="0" y="75"/>
+                </graphics>
+            </transition>
+            <arc id="number_to_T0" source="number" target="T0" type="normal"/>
+            <arc id="diviser_to_T0" source="diviser" target="T0" type="normal"/>
+            <arc id="P2_to_T1" source="P2" target="T1" type="normal"/>
+            <arc id="P3_to_T2" source="P3" target="T2" type="normal"/>
+            <arc id="P4_to_T4" source="P4" target="T4" type="normal"/>
+            <arc id="P8_to_T6" source="P8" target="T6" type="normal"/>
+            <arc id="P7_to_T7" source="P7" target="T7" type="normal"/>
+            <arc id="P9_to_T8" source="P9" target="T8" type="normal"/>
+            <arc id="P2_to_T9" source="P2" target="T9" type="normal"/>
+            <arc id="init_to_T10" source="init" target="T10" type="normal"/>
+            <arc id="P12_to_T11" source="P12" target="T11" type="normal"/>
+            <arc id="P9_to_T11" source="P9" target="T11" type="normal"/>
+            <arc id="P12_to_T12" source="P12" target="T12" type="normal"/>
+            <arc id="T0_to_P2" source="T0" target="P2" type="normal"/>
+            <arc id="T1_to_P3" source="T1" target="P3" type="normal"/>
+            <arc id="T2_to_diviser" source="T2" target="diviser" type="normal"/>
+            <arc id="T3_to_notprime" source="T3" target="notprime" type="normal"/>
+            <arc id="T4_to_P5" source="T4" target="P5" type="normal"/>
+            <arc id="T6_to_number" source="T6" target="number" type="normal"/>
+            <arc id="T7_to_P8" source="T7" target="P8" type="normal"/>
+            <arc id="T0_to_P7" source="T0" target="P7" type="normal"/>
+            <arc id="T8_to_P4" source="T8" target="P4" type="normal"/>
+            <arc id="T9_to_diviser" source="T9" target="diviser" type="normal"/>
+            <arc id="T8_to_diviser" source="T8" target="diviser" type="normal">
+                <graphics>
+                    <position x="272" y="287"/>
+                    <position x="377" y="302"/>
+                </graphics>
+            </arc>
+            <arc id="T10_to_number" source="T10" target="number" type="normal"/>
+            <arc id="T10_to_P9" source="T10" target="P9" type="normal"/>
+            <arc id="diviser_to_T1" source="diviser" target="T1" type="inhibitor"/>
+            <arc id="P2_to_T2" source="P2" target="T2" type="inhibitor"/>
+            <arc id="number_to_T3" source="number" target="T3" type="inhibitor"/>
+            <arc id="diviser_to_T3" source="diviser" target="T3" type="inhibitor"/>
+            <arc id="P3_to_T0" source="P3" target="T0" type="inhibitor"/>
+            <arc id="P2_to_T3" source="P2" target="T3" type="inhibitor"/>
+            <arc id="P2_to_T6" source="P2" target="T6" type="inhibitor"/>
+            <arc id="P8_to_T0" source="P8" target="T0" type="inhibitor"/>
+            <arc id="number_to_T7" source="number" target="T7" type="inhibitor"/>
+            <arc id="P4_to_T8" source="P4" target="T8" type="inhibitor"/>
+            <arc id="number_to_T8" source="number" target="T8" type="inhibitor"/>
+            <arc id="number_to_T9" source="number" target="T9" type="inhibitor"/>
+            <arc id="P7_to_T6" source="P7" target="T6" type="inhibitor"/>
+            <arc id="init_to_T0" source="init" target="T0" type="inhibitor"/>
+            <arc id="P12_to_T8" source="P12" target="T8" type="inhibitor"/>
+            <arc id="P12_to_T0" source="P12" target="T0" type="inhibitor"/>
+            <arc id="init_to_T12" source="init" target="T12" type="inhibitor"/>
+            <arc id="P9_to_T12" source="P9" target="T12" type="inhibitor"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

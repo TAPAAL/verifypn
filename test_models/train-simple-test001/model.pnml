@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="green">
+                <graphics>
+                    <position x="180" y="750"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>green</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="yellow">
+                <graphics>
+                    <position x="570" y="750"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="130" y="47"/>
+                    </graphics>
+                    <text>yellow</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="red">
+                <graphics>
+                    <position x="990" y="750"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="152" y="25"/>
+                    </graphics>
+                    <text>red</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="RedRequested">
+                <graphics>
+                    <position x="180" y="450"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-6" y="5"/>
+                    </graphics>
+                    <text>RedRequested</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="far">
+                <graphics>
+                    <position x="540" y="30"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="29" y="5"/>
+                    </graphics>
+                    <text>far</text>
+                </name>
+                <initialMarking>
+                    <text>4</text>
+                </initialMarking>
+            </place>
+            <place id="approaching">
+                <graphics>
+                    <position x="300" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="135" y="49"/>
+                    </graphics>
+                    <text>approaching</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="dangerZone">
+                <graphics>
+                    <position x="690" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="132" y="53"/>
+                    </graphics>
+                    <text>dangerZone</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T1</text>
+                </name>
+                <graphics>
+                    <position x="780" y="750"/>
+                </graphics>
+            </transition>
+            <transition id="T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T2</text>
+                </name>
+                <graphics>
+                    <position x="570" y="870"/>
+                </graphics>
+            </transition>
+            <transition id="T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T3</text>
+                </name>
+                <graphics>
+                    <position x="180" y="570"/>
+                </graphics>
+            </transition>
+            <transition id="T4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T4</text>
+                </name>
+                <graphics>
+                    <position x="570" y="570"/>
+                </graphics>
+            </transition>
+            <transition id="T5">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T5</text>
+                </name>
+                <graphics>
+                    <position x="990" y="570"/>
+                </graphics>
+            </transition>
+            <transition id="sendSignal">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>sendSignal</text>
+                </name>
+                <graphics>
+                    <position x="180" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="T7">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T7</text>
+                </name>
+                <graphics>
+                    <position x="585" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="T8">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T8</text>
+                </name>
+                <graphics>
+                    <position x="1005" y="270"/>
+                </graphics>
+            </transition>
+            <arc id="yellow_to_T1" source="yellow" target="T1" type="normal"/>
+            <arc id="red_to_T2" source="red" target="T2" type="normal"/>
+            <arc id="green_to_T3" source="green" target="T3" type="normal"/>
+            <arc id="red_to_T5" source="red" target="T5" type="normal">
+                <graphics>
+                    <position x="1048" y="658"/>
+                </graphics>
+            </arc>
+            <arc id="RedRequested_to_T3" source="RedRequested" target="T3" type="normal"/>
+            <arc id="RedRequested_to_T4" source="RedRequested" target="T4" type="normal"/>
+            <arc id="RedRequested_to_T5" source="RedRequested" target="T5" type="normal"/>
+            <arc id="far_to_sendSignal" source="far" target="sendSignal" type="normal"/>
+            <arc id="approaching_to_T7" source="approaching" target="T7" type="normal"/>
+            <arc id="dangerZone_to_T8" source="dangerZone" target="T8" type="normal"/>
+            <arc id="T1_to_red" source="T1" target="red" type="normal"/>
+            <arc id="T2_to_green" source="T2" target="green" type="normal"/>
+            <arc id="T3_to_yellow" source="T3" target="yellow" type="normal"/>
+            <arc id="T5_to_red" source="T5" target="red" type="normal"/>
+            <arc id="sendSignal_to_approaching" source="sendSignal" target="approaching" type="normal"/>
+            <arc id="sendSignal_to_RedRequested" source="sendSignal" target="RedRequested" type="normal"/>
+            <arc id="T7_to_dangerZone" source="T7" target="dangerZone" type="normal"/>
+            <arc id="T8_to_far" source="T8" target="far" type="normal"/>
+            <arc id="yellow_to_T4" source="yellow" target="T4" type="normal">
+                <graphics>
+                    <position x="643" y="679"/>
+                </graphics>
+            </arc>
+            <arc id="T4_to_yellow" source="T4" target="yellow" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

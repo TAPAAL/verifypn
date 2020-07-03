@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Cabines">
+                <graphics>
+                    <position x="281" y="81"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="1" y="16"/>
+                    </graphics>
+                    <text>Cabines</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Attente_P">
+                <graphics>
+                    <position x="121" y="186"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="19" y="13"/>
+                    </graphics>
+                    <text>Attente_P</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Paniers">
+                <graphics>
+                    <position x="281" y="261"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-19" y="-9"/>
+                    </graphics>
+                    <text>Paniers</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Entree">
+                <graphics>
+                    <position x="41" y="186"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="11" y="16"/>
+                    </graphics>
+                    <text>Entree</text>
+                </name>
+                <initialMarking>
+                    <text>3</text>
+                </initialMarking>
+            </place>
+            <place id="Sortie">
+                <graphics>
+                    <position x="521" y="186"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="1" y="21"/>
+                    </graphics>
+                    <text>Sortie</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Fini">
+                <graphics>
+                    <position x="441" y="186"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="11" y="21"/>
+                    </graphics>
+                    <text>Fini</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Habillage">
+                <graphics>
+                    <position x="361" y="186"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="12" y="20"/>
+                    </graphics>
+                    <text>Habillage</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Deshabillage">
+                <graphics>
+                    <position x="201" y="186"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="33" y="20"/>
+                    </graphics>
+                    <text>Deshabillage</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Baignade">
+                <graphics>
+                    <position x="281" y="186"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="15" y="15"/>
+                    </graphics>
+                    <text>Baignade</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Entrer_Piscine">
+                <name>
+                    <graphics>
+                        <offset x="40" y="15"/>
+                    </graphics>
+                    <text>Entrer_Piscine</text>
+                </name>
+                <graphics>
+                    <position x="287" y="310"/>
+                </graphics>
+            </transition>
+            <transition id="R_Panier">
+                <name>
+                    <graphics>
+                        <offset x="29" y="-25"/>
+                    </graphics>
+                    <text>R_Panier</text>
+                </name>
+                <graphics>
+                    <position x="487" y="185"/>
+                </graphics>
+            </transition>
+            <transition id="P_Cle2">
+                <name>
+                    <graphics>
+                        <offset x="18" y="-25"/>
+                    </graphics>
+                    <text>P_Cle2</text>
+                </name>
+                <graphics>
+                    <position x="327" y="185"/>
+                </graphics>
+            </transition>
+            <transition id="R_Cles">
+                <name>
+                    <graphics>
+                        <offset x="8" y="-26"/>
+                    </graphics>
+                    <text>R_Cles</text>
+                </name>
+                <graphics>
+                    <position x="407" y="185"/>
+                </graphics>
+            </transition>
+            <transition id="P_Cle1">
+                <name>
+                    <graphics>
+                        <offset x="12" y="-25"/>
+                    </graphics>
+                    <text>P_Cle1</text>
+                </name>
+                <graphics>
+                    <position x="87" y="185"/>
+                </graphics>
+            </transition>
+            <transition id="R_Cle1">
+                <name>
+                    <graphics>
+                        <offset x="20" y="-26"/>
+                    </graphics>
+                    <text>R_Cle1</text>
+                </name>
+                <graphics>
+                    <position x="247" y="185"/>
+                </graphics>
+            </transition>
+            <transition id="P_Panier">
+                <name>
+                    <graphics>
+                        <offset x="39" y="-27"/>
+                    </graphics>
+                    <text>P_Panier</text>
+                </name>
+                <graphics>
+                    <position x="167" y="185"/>
+                </graphics>
+            </transition>
+            <arc id="Sortie_to_Entrer_Piscine" source="Sortie" target="Entrer_Piscine" type="normal"/>
+            <arc id="Cabines_to_P_Cle2" source="Cabines" target="P_Cle2" type="normal"/>
+            <arc id="Fini_to_R_Panier" source="Fini" target="R_Panier" type="normal"/>
+            <arc id="Baignade_to_P_Cle2" source="Baignade" target="P_Cle2" type="normal"/>
+            <arc id="Paniers_to_P_Panier" source="Paniers" target="P_Panier" type="normal"/>
+            <arc id="Habillage_to_R_Cles" source="Habillage" target="R_Cles" type="normal"/>
+            <arc id="Cabines_to_P_Cle1" source="Cabines" target="P_Cle1" type="normal"/>
+            <arc id="Entree_to_P_Cle1" source="Entree" target="P_Cle1" type="normal"/>
+            <arc id="Deshabillage_to_R_Cle1" source="Deshabillage" target="R_Cle1" type="normal"/>
+            <arc id="Attente_P_to_P_Panier" source="Attente_P" target="P_Panier" type="normal"/>
+            <arc id="Entrer_Piscine_to_Entree" source="Entrer_Piscine" target="Entree" type="normal"/>
+            <arc id="R_Panier_to_Sortie" source="R_Panier" target="Sortie" type="normal"/>
+            <arc id="R_Cles_to_Fini" source="R_Cles" target="Fini" type="normal"/>
+            <arc id="R_Cle1_to_Baignade" source="R_Cle1" target="Baignade" type="normal"/>
+            <arc id="R_Panier_to_Cabines" source="R_Panier" target="Cabines" type="normal"/>
+            <arc id="R_Cle1_to_Cabines" source="R_Cle1" target="Cabines" type="normal"/>
+            <arc id="P_Cle2_to_Habillage" source="P_Cle2" target="Habillage" type="normal"/>
+            <arc id="R_Cles_to_Paniers" source="R_Cles" target="Paniers" type="normal"/>
+            <arc id="P_Panier_to_Deshabillage" source="P_Panier" target="Deshabillage" type="normal"/>
+            <arc id="P_Cle1_to_Attente_P" source="P_Cle1" target="Attente_P" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

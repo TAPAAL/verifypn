@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="researching">
+                <graphics>
+                    <position x="120" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>researching</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="decision">
+                <graphics>
+                    <position x="330" y="360"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="45" y="44"/>
+                    </graphics>
+                    <text>decision</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="writing">
+                <graphics>
+                    <position x="540" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="61" y="47"/>
+                    </graphics>
+                    <text>writing</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="peer_review">
+                <graphics>
+                    <position x="330" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="49" y="-15"/>
+                    </graphics>
+                    <text>peer_review</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="idea_ready">
+                <name>
+                    <graphics>
+                        <offset x="83" y="11"/>
+                    </graphics>
+                    <text>idea_ready</text>
+                </name>
+                <graphics>
+                    <position x="225" y="285"/>
+                </graphics>
+            </transition>
+            <transition id="deadline_missed">
+                <name>
+                    <graphics>
+                        <offset x="5" y="8"/>
+                    </graphics>
+                    <text>deadline_missed</text>
+                </name>
+                <graphics>
+                    <position x="435" y="285"/>
+                </graphics>
+            </transition>
+            <transition id="continue_research">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>continue_research</text>
+                </name>
+                <graphics>
+                    <position x="225" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="submit">
+                <name>
+                    <graphics>
+                        <offset x="70" y="-4"/>
+                    </graphics>
+                    <text>submit</text>
+                </name>
+                <graphics>
+                    <position x="330" y="225"/>
+                </graphics>
+            </transition>
+            <transition id="accept">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>accept</text>
+                </name>
+                <graphics>
+                    <position x="240" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="reject">
+                <name>
+                    <graphics>
+                        <offset x="61" y="31"/>
+                    </graphics>
+                    <text>reject</text>
+                </name>
+                <graphics>
+                    <position x="435" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="write_paper">
+                <name>
+                    <graphics>
+                        <offset x="93" y="32"/>
+                    </graphics>
+                    <text>write_paper</text>
+                </name>
+                <graphics>
+                    <position x="435" y="360"/>
+                </graphics>
+            </transition>
+            <arc id="researching_to_idea_ready" source="researching" target="idea_ready" type="normal"/>
+            <arc id="decision_to_continue_research" source="decision" target="continue_research" type="normal"/>
+            <arc id="writing_to_submit" source="writing" target="submit" type="normal"/>
+            <arc id="peer_review_to_accept" source="peer_review" target="accept" type="normal"/>
+            <arc id="peer_review_to_reject" source="peer_review" target="reject" type="normal"/>
+            <arc id="decision_to_write_paper" source="decision" target="write_paper" type="normal"/>
+            <arc id="writing_to_deadline_missed" source="writing" target="deadline_missed" type="normal"/>
+            <arc id="idea_ready_to_decision" source="idea_ready" target="decision" type="normal"/>
+            <arc id="continue_research_to_researching" source="continue_research" target="researching" type="normal"/>
+            <arc id="submit_to_researching" source="submit" target="researching" type="normal"/>
+            <arc id="submit_to_peer_review" source="submit" target="peer_review" type="normal"/>
+            <arc id="write_paper_to_writing" source="write_paper" target="writing" type="normal"/>
+            <arc id="deadline_missed_to_decision" source="deadline_missed" target="decision" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Train_Trains">
+                <graphics>
+                    <position x="285" y="45"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="29" y="5"/>
+                    </graphics>
+                    <text>Train_Trains</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Train_Approaching">
+                <graphics>
+                    <position x="120" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="135" y="49"/>
+                    </graphics>
+                    <text>Train_Approaching</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Train_DangerZone">
+                <graphics>
+                    <position x="555" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="132" y="53"/>
+                    </graphics>
+                    <text>Train_DangerZone</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TraficLight_Green">
+                <graphics>
+                    <position x="825" y="480"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TraficLight_Green</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="TraficLight_Yellow">
+                <graphics>
+                    <position x="1140" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="130" y="47"/>
+                    </graphics>
+                    <text>TraficLight_Yellow</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TraficLight_Red">
+                <graphics>
+                    <position x="1440" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="152" y="25"/>
+                    </graphics>
+                    <text>TraficLight_Red</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TraficLight_RedRequested">
+                <graphics>
+                    <position x="825" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-6" y="5"/>
+                    </graphics>
+                    <text>TraficLight_RedRequested</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Shared_SensorActivation">
+                <name>
+                    <graphics>
+                        <offset x="-6" y="19"/>
+                    </graphics>
+                    <text>Shared_SensorActivation</text>
+                </name>
+                <graphics>
+                    <position x="120" y="45"/>
+                </graphics>
+            </transition>
+            <transition id="Train_T7">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Train_T7</text>
+                </name>
+                <graphics>
+                    <position x="405" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="Train_LeaveDangerZone">
+                <name>
+                    <graphics>
+                        <offset x="132" y="21"/>
+                    </graphics>
+                    <text>Train_LeaveDangerZone</text>
+                </name>
+                <graphics>
+                    <position x="555" y="45"/>
+                </graphics>
+            </transition>
+            <transition id="TraficLight_YellowToRed">
+                <name>
+                    <graphics>
+                        <offset x="6" y="2"/>
+                    </graphics>
+                    <text>TraficLight_YellowToRed</text>
+                </name>
+                <graphics>
+                    <position x="1290" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="TraficLight_RedToGreen">
+                <name>
+                    <graphics>
+                        <offset x="97" y="8"/>
+                    </graphics>
+                    <text>TraficLight_RedToGreen</text>
+                </name>
+                <graphics>
+                    <position x="1440" y="480"/>
+                </graphics>
+            </transition>
+            <transition id="TraficLight_GreenToYellow">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TraficLight_GreenToYellow</text>
+                </name>
+                <graphics>
+                    <position x="825" y="390"/>
+                </graphics>
+            </transition>
+            <transition id="TraficLight_YellowStaysYellow">
+                <name>
+                    <graphics>
+                        <offset x="122" y="-4"/>
+                    </graphics>
+                    <text>TraficLight_YellowStaysYellow</text>
+                </name>
+                <graphics>
+                    <position x="960" y="255"/>
+                </graphics>
+            </transition>
+            <transition id="TraficLight_RedTimerReset">
+                <name>
+                    <graphics>
+                        <offset x="36" y="-13"/>
+                    </graphics>
+                    <text>TraficLight_RedTimerReset</text>
+                </name>
+                <graphics>
+                    <position x="1110" y="150"/>
+                </graphics>
+            </transition>
+            <arc id="Train_Trains_to_Shared_SensorActivation" source="Train_Trains" target="Shared_SensorActivation" type="normal"/>
+            <arc id="Train_Approaching_to_Train_T7" source="Train_Approaching" target="Train_T7" type="normal"/>
+            <arc id="Train_DangerZone_to_Train_LeaveDangerZone" source="Train_DangerZone" target="Train_LeaveDangerZone" type="normal"/>
+            <arc id="TraficLight_Yellow_to_TraficLight_YellowToRed" source="TraficLight_Yellow" target="TraficLight_YellowToRed" type="normal"/>
+            <arc id="TraficLight_Red_to_TraficLight_RedToGreen" source="TraficLight_Red" target="TraficLight_RedToGreen" type="normal"/>
+            <arc id="TraficLight_Green_to_TraficLight_GreenToYellow" source="TraficLight_Green" target="TraficLight_GreenToYellow" type="normal"/>
+            <arc id="TraficLight_Red_to_TraficLight_RedTimerReset" source="TraficLight_Red" target="TraficLight_RedTimerReset" type="normal">
+                <graphics>
+                    <position x="1233" y="138"/>
+                </graphics>
+            </arc>
+            <arc id="TraficLight_RedRequested_to_TraficLight_GreenToYellow" source="TraficLight_RedRequested" target="TraficLight_GreenToYellow" type="normal"/>
+            <arc id="TraficLight_RedRequested_to_TraficLight_YellowStaysYellow" source="TraficLight_RedRequested" target="TraficLight_YellowStaysYellow" type="normal"/>
+            <arc id="TraficLight_RedRequested_to_TraficLight_RedTimerReset" source="TraficLight_RedRequested" target="TraficLight_RedTimerReset" type="normal"/>
+            <arc id="Shared_SensorActivation_to_Train_Approaching" source="Shared_SensorActivation" target="Train_Approaching" type="normal"/>
+            <arc id="Train_T7_to_Train_DangerZone" source="Train_T7" target="Train_DangerZone" type="normal"/>
+            <arc id="Train_LeaveDangerZone_to_Train_Trains" source="Train_LeaveDangerZone" target="Train_Trains" type="normal"/>
+            <arc id="TraficLight_YellowToRed_to_TraficLight_Red" source="TraficLight_YellowToRed" target="TraficLight_Red" type="normal"/>
+            <arc id="TraficLight_RedToGreen_to_TraficLight_Green" source="TraficLight_RedToGreen" target="TraficLight_Green" type="normal"/>
+            <arc id="TraficLight_GreenToYellow_to_TraficLight_Yellow" source="TraficLight_GreenToYellow" target="TraficLight_Yellow" type="normal"/>
+            <arc id="TraficLight_RedTimerReset_to_TraficLight_Red" source="TraficLight_RedTimerReset" target="TraficLight_Red" type="normal">
+                <graphics>
+                    <position x="1294" y="185"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_SensorActivation_to_TraficLight_RedRequested" source="Shared_SensorActivation" target="TraficLight_RedRequested" type="normal"/>
+            <arc id="TraficLight_Yellow_to_TraficLight_YellowStaysYellow" source="TraficLight_Yellow" target="TraficLight_YellowStaysYellow" type="normal">
+                <graphics>
+                    <position x="1038" y="354"/>
+                </graphics>
+            </arc>
+            <arc id="TraficLight_YellowStaysYellow_to_TraficLight_Yellow" source="TraficLight_YellowStaysYellow" target="TraficLight_Yellow" type="normal">
+                <graphics>
+                    <position x="1100" y="335"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

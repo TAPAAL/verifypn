@@ -1,0 +1,612 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Uf">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>Uf</text>
+                </name>
+                <initialMarking>
+                    <text>2000</text>
+                </initialMarking>
+            </place>
+            <place id="SA">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>SA</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SF">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>SF</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SR">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>SR</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CA">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>CA</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CF">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>CF</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="StF">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>StF</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CG">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>CG</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CR">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>CR</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MpA">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>MpA</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MtF">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>MtF</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SG">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>SG</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MpG">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>MpG</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MwU">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>MwU</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Mi">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>Mi</text>
+                </name>
+                <initialMarking>
+                    <text>1500</text>
+                </initialMarking>
+            </place>
+            <place id="Si">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>Si</text>
+                </name>
+                <initialMarking>
+                    <text>1000</text>
+                </initialMarking>
+            </place>
+            <place id="StR">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>StR</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SwG">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>SwG</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SpG">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>SpG</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SwA">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>SwA</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SpA">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>SpA</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CwA">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>CwA</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Cb">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>Cb</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CwG">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>CwG</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Ci">
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>Ci</text>
+                </name>
+                <initialMarking>
+                    <text>4000</text>
+                </initialMarking>
+            </place>
+            <transition id="ssF">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>ssF</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="srF">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>srF</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="msA">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>msA</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="mfU">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>mfU</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="mrF">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>mrF</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="msG">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>msG</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="maU">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>maU</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="mrR">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>mrR</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="srR">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>srR</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="ssR">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>ssR</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="srG">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>srG</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="ssG">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>ssG</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="srA">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>srA</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="ssA">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>ssA</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="crA">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>crA</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="csF">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>csF</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="crG">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>crG</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="csR">
+                <name>
+                    <graphics>
+                        <offset x="0" y="-10"/>
+                    </graphics>
+                    <text>csR</text>
+                </name>
+                <graphics>
+                    <position x="105" y="105"/>
+                </graphics>
+            </transition>
+            <arc id="Uf_to_maU" source="Uf" target="maU" type="normal"/>
+            <arc id="Mi_to_mrF" source="Mi" target="mrF" type="normal"/>
+            <arc id="SG_to_srG" source="SG" target="srG" type="normal"/>
+            <arc id="SA_to_srA" source="SA" target="srA" type="normal"/>
+            <arc id="SF_to_mrF" source="SF" target="mrF" type="normal"/>
+            <arc id="SR_to_mrR" source="SR" target="mrR" type="normal"/>
+            <arc id="CA_to_crA" source="CA" target="crA" type="normal"/>
+            <arc id="Si_to_srF" source="Si" target="srF" type="normal"/>
+            <arc id="CF_to_srF" source="CF" target="srF" type="normal"/>
+            <arc id="StF_to_ssF" source="StF" target="ssF" type="normal"/>
+            <arc id="CG_to_crG" source="CG" target="crG" type="normal"/>
+            <arc id="CR_to_srR" source="CR" target="srR" type="normal"/>
+            <arc id="CwG_to_crG" source="CwG" target="crG" type="normal"/>
+            <arc id="MpA_to_msA" source="MpA" target="msA" type="normal"/>
+            <arc id="MtF_to_mfU" source="MtF" target="mfU" type="normal"/>
+            <arc id="MpG_to_msG" source="MpG" target="msG" type="normal"/>
+            <arc id="MwU_to_maU" source="MwU" target="maU" type="normal"/>
+            <arc id="Mi_to_mrR" source="Mi" target="mrR" type="normal"/>
+            <arc id="SpG_to_ssG" source="SpG" target="ssG" type="normal"/>
+            <arc id="SpA_to_ssA" source="SpA" target="ssA" type="normal"/>
+            <arc id="SwA_to_srA" source="SwA" target="srA" type="normal"/>
+            <arc id="SwG_to_srG" source="SwG" target="srG" type="normal"/>
+            <arc id="StR_to_ssR" source="StR" target="ssR" type="normal"/>
+            <arc id="Si_to_srR" source="Si" target="srR" type="normal"/>
+            <arc id="Cb_to_csF" source="Cb" target="csF" type="normal"/>
+            <arc id="CwA_to_crA" source="CwA" target="crA" type="normal"/>
+            <arc id="Ci_to_csR" source="Ci" target="csR" type="normal"/>
+            <arc id="mfU_to_Uf" source="mfU" target="Uf" type="normal"/>
+            <arc id="msG_to_Mi" source="msG" target="Mi" type="normal"/>
+            <arc id="msA_to_SA" source="msA" target="SA" type="normal"/>
+            <arc id="ssF_to_SF" source="ssF" target="SF" type="normal"/>
+            <arc id="ssR_to_SR" source="ssR" target="SR" type="normal"/>
+            <arc id="ssF_to_SwA" source="ssF" target="SwA" type="normal"/>
+            <arc id="ssA_to_CA" source="ssA" target="CA" type="normal"/>
+            <arc id="csF_to_CF" source="csF" target="CF" type="normal"/>
+            <arc id="srF_to_StF" source="srF" target="StF" type="normal"/>
+            <arc id="ssG_to_Si" source="ssG" target="Si" type="normal"/>
+            <arc id="ssG_to_CG" source="ssG" target="CG" type="normal"/>
+            <arc id="csR_to_CR" source="csR" target="CR" type="normal"/>
+            <arc id="csF_to_CwA" source="csF" target="CwA" type="normal"/>
+            <arc id="crA_to_Ci" source="crA" target="Ci" type="normal"/>
+            <arc id="msA_to_Mi" source="msA" target="Mi" type="normal"/>
+            <arc id="msG_to_SG" source="msG" target="SG" type="normal"/>
+            <arc id="mfU_to_MpA" source="mfU" target="MpA" type="normal"/>
+            <arc id="mrF_to_MtF" source="mrF" target="MtF" type="normal"/>
+            <arc id="maU_to_MpG" source="maU" target="MpG" type="normal"/>
+            <arc id="mrR_to_MwU" source="mrR" target="MwU" type="normal"/>
+            <arc id="ssA_to_Si" source="ssA" target="Si" type="normal"/>
+            <arc id="srG_to_SpG" source="srG" target="SpG" type="normal"/>
+            <arc id="srA_to_SpA" source="srA" target="SpA" type="normal"/>
+            <arc id="ssR_to_SwG" source="ssR" target="SwG" type="normal"/>
+            <arc id="srR_to_StR" source="srR" target="StR" type="normal"/>
+            <arc id="crG_to_Cb" source="crG" target="Cb" type="normal"/>
+            <arc id="csR_to_CwG" source="csR" target="CwG" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

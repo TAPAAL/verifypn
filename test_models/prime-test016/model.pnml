@@ -1,0 +1,802 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_Number">
+                <graphics>
+                    <position x="570" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Number</text>
+                </name>
+                <initialMarking>
+                    <text>11</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Number_Dual">
+                <graphics>
+                    <position x="570" y="315"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Number_Dual</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Move_Start">
+                <graphics>
+                    <position x="45" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="21" y="57"/>
+                    </graphics>
+                    <text>Shared_Move_Start</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Move_End">
+                <graphics>
+                    <position x="45" y="315"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="17" y="63"/>
+                    </graphics>
+                    <text>Shared_Move_End</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Test_Start">
+                <graphics>
+                    <position x="285" y="0"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Test_Start</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Test_End">
+                <graphics>
+                    <position x="675" y="570"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Test_End</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Devidor">
+                <graphics>
+                    <position x="45" y="120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="8" y="59"/>
+                    </graphics>
+                    <text>Shared_Devidor</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Devidor_Dual">
+                <graphics>
+                    <position x="30" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="54" y="62"/>
+                    </graphics>
+                    <text>Shared_Devidor_Dual</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_NotPrime">
+                <graphics>
+                    <position x="750" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_NotPrime</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_IsPrime">
+                <graphics>
+                    <position x="375" y="495"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_IsPrime</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_TestDone_Start">
+                <graphics>
+                    <position x="690" y="405"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_TestDone_Start</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_TestDone_End">
+                <graphics>
+                    <position x="690" y="525"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_TestDone_End</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MoveDualtoNumber_P4">
+                <graphics>
+                    <position x="285" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MoveDualtoNumber_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Controller_start">
+                <graphics>
+                    <position x="1140" y="135"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Controller_start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Devision_P9">
+                <graphics>
+                    <position x="195" y="765"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_P9</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Devision_P10">
+                <graphics>
+                    <position x="360" y="765"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_P10</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Devision_P12">
+                <graphics>
+                    <position x="285" y="1095"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_P12</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Devision_P13">
+                <graphics>
+                    <position x="735" y="675"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_P13</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TestDone_P6">
+                <graphics>
+                    <position x="1140" y="840"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TestDone_P6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TestDone_P7">
+                <graphics>
+                    <position x="1380" y="855"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TestDone_P7</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="MoveDualtoNumber_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MoveDualtoNumber_T0</text>
+                </name>
+                <graphics>
+                    <position x="270" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="MoveDualtoNumber_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MoveDualtoNumber_T1</text>
+                </name>
+                <graphics>
+                    <position x="435" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="MoveDualtoNumber_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MoveDualtoNumber_T2</text>
+                </name>
+                <graphics>
+                    <position x="285" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="Controller_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Controller_T0</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="Controller_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Controller_T1</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="285"/>
+                </graphics>
+            </transition>
+            <transition id="Controller_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Controller_T2</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="Controller_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Controller_T3</text>
+                </name>
+                <graphics>
+                    <position x="1335" y="480"/>
+                </graphics>
+            </transition>
+            <transition id="Devision_T7">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_T7</text>
+                </name>
+                <graphics>
+                    <position x="210" y="645"/>
+                </graphics>
+            </transition>
+            <transition id="Devision_T8">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_T8</text>
+                </name>
+                <graphics>
+                    <position x="360" y="645"/>
+                </graphics>
+            </transition>
+            <transition id="Devision_T9">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_T9</text>
+                </name>
+                <graphics>
+                    <position x="195" y="900"/>
+                </graphics>
+            </transition>
+            <transition id="Devision_T10">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_T10</text>
+                </name>
+                <graphics>
+                    <position x="375" y="915"/>
+                </graphics>
+            </transition>
+            <transition id="Devision_T11">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_T11</text>
+                </name>
+                <graphics>
+                    <position x="285" y="720"/>
+                </graphics>
+            </transition>
+            <transition id="Devision_T12">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_T12</text>
+                </name>
+                <graphics>
+                    <position x="270" y="810"/>
+                </graphics>
+            </transition>
+            <transition id="Devision_T14">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_T14</text>
+                </name>
+                <graphics>
+                    <position x="135" y="1095"/>
+                </graphics>
+            </transition>
+            <transition id="Devision_T15">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_T15</text>
+                </name>
+                <graphics>
+                    <position x="585" y="780"/>
+                </graphics>
+            </transition>
+            <transition id="Devision_T16">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_T16</text>
+                </name>
+                <graphics>
+                    <position x="585" y="735"/>
+                </graphics>
+            </transition>
+            <transition id="Devision_T17">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_T17</text>
+                </name>
+                <graphics>
+                    <position x="300" y="1020"/>
+                </graphics>
+            </transition>
+            <transition id="Devision_T18">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_T18</text>
+                </name>
+                <graphics>
+                    <position x="480" y="1110"/>
+                </graphics>
+            </transition>
+            <transition id="Devision_T19">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Devision_T19</text>
+                </name>
+                <graphics>
+                    <position x="375" y="1140"/>
+                </graphics>
+            </transition>
+            <transition id="TestDone_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TestDone_T0</text>
+                </name>
+                <graphics>
+                    <position x="975" y="840"/>
+                </graphics>
+            </transition>
+            <transition id="TestDone_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TestDone_T1</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="735"/>
+                </graphics>
+            </transition>
+            <transition id="TestDone_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TestDone_T2</text>
+                </name>
+                <graphics>
+                    <position x="1485" y="855"/>
+                </graphics>
+            </transition>
+            <transition id="TestDone_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TestDone_T3</text>
+                </name>
+                <graphics>
+                    <position x="1155" y="960"/>
+                </graphics>
+            </transition>
+            <transition id="TestDone_T4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TestDone_T4</text>
+                </name>
+                <graphics>
+                    <position x="1260" y="840"/>
+                </graphics>
+            </transition>
+            <transition id="TestDone_T5">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TestDone_T5</text>
+                </name>
+                <graphics>
+                    <position x="1380" y="780"/>
+                </graphics>
+            </transition>
+            <arc id="Shared_Move_Start_to_MoveDualtoNumber_T0" source="Shared_Move_Start" target="MoveDualtoNumber_T0" type="normal"/>
+            <arc id="MoveDualtoNumber_P4_to_MoveDualtoNumber_T1" source="MoveDualtoNumber_P4" target="MoveDualtoNumber_T1" type="normal">
+                <graphics>
+                    <position x="391" y="226"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Number_Dual_to_MoveDualtoNumber_T1" source="Shared_Number_Dual" target="MoveDualtoNumber_T1" type="normal"/>
+            <arc id="MoveDualtoNumber_P4_to_MoveDualtoNumber_T2" source="MoveDualtoNumber_P4" target="MoveDualtoNumber_T2" type="normal"/>
+            <arc id="Controller_start_to_Controller_T0" source="Controller_start" target="Controller_T0" type="normal"/>
+            <arc id="Shared_Test_End_to_Controller_T1" source="Shared_Test_End" target="Controller_T1" type="normal"/>
+            <arc id="Shared_Move_End_to_Controller_T2" source="Shared_Move_End" target="Controller_T2" type="normal"/>
+            <arc id="Shared_TestDone_End_to_Controller_T3" source="Shared_TestDone_End" target="Controller_T3" type="normal"/>
+            <arc id="Devision_P9_to_Devision_T9" source="Devision_P9" target="Devision_T9" type="normal">
+                <graphics>
+                    <position x="151" y="871"/>
+                </graphics>
+            </arc>
+            <arc id="Devision_P10_to_Devision_T10" source="Devision_P10" target="Devision_T10" type="normal">
+                <graphics>
+                    <position x="331" y="856"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Test_Start_to_Devision_T7" source="Shared_Test_Start" target="Devision_T7" type="normal"/>
+            <arc id="Shared_Test_Start_to_Devision_T8" source="Shared_Test_Start" target="Devision_T8" type="normal"/>
+            <arc id="Shared_Number_to_Devision_T9" source="Shared_Number" target="Devision_T9" type="normal"/>
+            <arc id="Shared_Number_to_Devision_T10" source="Shared_Number" target="Devision_T10" type="normal"/>
+            <arc id="Shared_Devidor_Dual_to_Devision_T9" source="Shared_Devidor_Dual" target="Devision_T9" type="normal"/>
+            <arc id="Shared_Devidor_to_Devision_T10" source="Shared_Devidor" target="Devision_T10" type="normal"/>
+            <arc id="Devision_P9_to_Devision_T11" source="Devision_P9" target="Devision_T11" type="normal"/>
+            <arc id="Devision_P10_to_Devision_T12" source="Devision_P10" target="Devision_T12" type="normal"/>
+            <arc id="Shared_Devidor_to_Devision_T14" source="Shared_Devidor" target="Devision_T14" type="normal"/>
+            <arc id="Shared_Devidor_Dual_to_Devision_T14" source="Shared_Devidor_Dual" target="Devision_T14" type="normal"/>
+            <arc id="Devision_P12_to_Devision_T17" source="Devision_P12" target="Devision_T17" type="normal">
+                <graphics>
+                    <position x="271" y="1066"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Devidor_Dual_to_Devision_T17" source="Shared_Devidor_Dual" target="Devision_T17" type="normal"/>
+            <arc id="Devision_P12_to_Devision_T18" source="Devision_P12" target="Devision_T18" type="normal"/>
+            <arc id="Devision_P13_to_Devision_T16" source="Devision_P13" target="Devision_T16" type="normal"/>
+            <arc id="Devision_P13_to_Devision_T15" source="Devision_P13" target="Devision_T15" type="normal"/>
+            <arc id="Devision_P13_to_Devision_T14" source="Devision_P13" target="Devision_T14" type="normal">
+                <graphics>
+                    <position x="541" y="1186"/>
+                    <position x="106" y="1186"/>
+                </graphics>
+            </arc>
+            <arc id="Devision_P10_to_Devision_T18" source="Devision_P10" target="Devision_T18" type="normal">
+                <graphics>
+                    <position x="556" y="991"/>
+                </graphics>
+            </arc>
+            <arc id="Devision_P12_to_Devision_T19" source="Devision_P12" target="Devision_T19" type="normal"/>
+            <arc id="Devision_P9_to_Devision_T19" source="Devision_P9" target="Devision_T19" type="normal">
+                <graphics>
+                    <position x="391" y="1051"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_TestDone_Start_to_TestDone_T0" source="Shared_TestDone_Start" target="TestDone_T0" type="normal"/>
+            <arc id="Shared_Number_to_TestDone_T1" source="Shared_Number" target="TestDone_T1" type="normal"/>
+            <arc id="Shared_Devidor_to_TestDone_T1" source="Shared_Devidor" target="TestDone_T1" type="normal"/>
+            <arc id="TestDone_P6_to_TestDone_T1" source="TestDone_P6" target="TestDone_T1" type="normal">
+                <graphics>
+                    <position x="1111" y="811"/>
+                </graphics>
+            </arc>
+            <arc id="TestDone_P6_to_TestDone_T3" source="TestDone_P6" target="TestDone_T3" type="normal"/>
+            <arc id="TestDone_P6_to_TestDone_T4" source="TestDone_P6" target="TestDone_T4" type="normal"/>
+            <arc id="Shared_Number_to_TestDone_T4" source="Shared_Number" target="TestDone_T4" type="normal">
+                <graphics>
+                    <position x="1036" y="796"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Devidor_Dual_to_TestDone_T5" source="Shared_Devidor_Dual" target="TestDone_T5" type="normal">
+                <graphics>
+                    <position x="1441" y="811"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Number_Dual_to_TestDone_T5" source="Shared_Number_Dual" target="TestDone_T5" type="normal">
+                <graphics>
+                    <position x="1246" y="781"/>
+                </graphics>
+            </arc>
+            <arc id="TestDone_P7_to_TestDone_T5" source="TestDone_P7" target="TestDone_T5" type="normal">
+                <graphics>
+                    <position x="1366" y="841"/>
+                </graphics>
+            </arc>
+            <arc id="TestDone_P7_to_TestDone_T2" source="TestDone_P7" target="TestDone_T2" type="normal"/>
+            <arc id="MoveDualtoNumber_T0_to_MoveDualtoNumber_P4" source="MoveDualtoNumber_T0" target="MoveDualtoNumber_P4" type="normal"/>
+            <arc id="MoveDualtoNumber_T1_to_MoveDualtoNumber_P4" source="MoveDualtoNumber_T1" target="MoveDualtoNumber_P4" type="normal">
+                <graphics>
+                    <position x="361" y="301"/>
+                </graphics>
+            </arc>
+            <arc id="MoveDualtoNumber_T1_to_Shared_Number" source="MoveDualtoNumber_T1" target="Shared_Number" type="normal"/>
+            <arc id="MoveDualtoNumber_T2_to_Shared_Move_End" source="MoveDualtoNumber_T2" target="Shared_Move_End" type="normal"/>
+            <arc id="Controller_T0_to_Shared_Test_Start" source="Controller_T0" target="Shared_Test_Start" type="normal"/>
+            <arc id="Controller_T1_to_Shared_Move_Start" source="Controller_T1" target="Shared_Move_Start" type="normal"/>
+            <arc id="Controller_T2_to_Shared_Devidor" source="Controller_T2" target="Shared_Devidor" type="normal"/>
+            <arc id="Controller_T2_to_Shared_TestDone_Start" source="Controller_T2" target="Shared_TestDone_Start" type="normal"/>
+            <arc id="Controller_T3_to_Controller_start" source="Controller_T3" target="Controller_start" type="normal"/>
+            <arc id="Devision_T9_to_Devision_P9" source="Devision_T9" target="Devision_P9" type="normal">
+                <graphics>
+                    <position x="256" y="856"/>
+                </graphics>
+            </arc>
+            <arc id="Devision_T10_to_Devision_P10" source="Devision_T10" target="Devision_P10" type="normal">
+                <graphics>
+                    <position x="436" y="856"/>
+                </graphics>
+            </arc>
+            <arc id="Devision_T7_to_Devision_P9" source="Devision_T7" target="Devision_P9" type="normal"/>
+            <arc id="Devision_T8_to_Devision_P10" source="Devision_T8" target="Devision_P10" type="normal"/>
+            <arc id="Devision_T9_to_Shared_Number_Dual" source="Devision_T9" target="Shared_Number_Dual" type="normal"/>
+            <arc id="Devision_T10_to_Shared_Number_Dual" source="Devision_T10" target="Shared_Number_Dual" type="normal"/>
+            <arc id="Devision_T9_to_Shared_Devidor" source="Devision_T9" target="Shared_Devidor" type="normal"/>
+            <arc id="Devision_T10_to_Shared_Devidor_Dual" source="Devision_T10" target="Shared_Devidor_Dual" type="normal">
+                <graphics>
+                    <position x="166" y="991"/>
+                </graphics>
+            </arc>
+            <arc id="Devision_T11_to_Devision_P10" source="Devision_T11" target="Devision_P10" type="normal"/>
+            <arc id="Devision_T12_to_Devision_P9" source="Devision_T12" target="Devision_P9" type="normal"/>
+            <arc id="Devision_T16_to_Shared_NotPrime" source="Devision_T16" target="Shared_NotPrime" type="normal"/>
+            <arc id="Devision_T15_to_Shared_NotPrime" source="Devision_T15" target="Shared_NotPrime" type="normal"/>
+            <arc id="Devision_T14_to_Shared_Devidor_Dual" source="Devision_T14" target="Shared_Devidor_Dual" type="normal">
+                <graphics>
+                    <position x="46" y="1096"/>
+                </graphics>
+            </arc>
+            <arc id="Devision_T14_to_Shared_Devidor" source="Devision_T14" target="Shared_Devidor" type="normal">
+                <graphics>
+                    <position x="196" y="1021"/>
+                </graphics>
+            </arc>
+            <arc id="Devision_T14_to_Devision_P12" source="Devision_T14" target="Devision_P12" type="normal"/>
+            <arc id="Devision_T17_to_Devision_P12" source="Devision_T17" target="Devision_P12" type="normal">
+                <graphics>
+                    <position x="346" y="1066"/>
+                </graphics>
+            </arc>
+            <arc id="Devision_T17_to_Shared_Devidor" source="Devision_T17" target="Shared_Devidor" type="normal"/>
+            <arc id="Devision_T18_to_Shared_Test_End" source="Devision_T18" target="Shared_Test_End" type="normal"/>
+            <arc id="Devision_T8_to_Devision_P13" source="Devision_T8" target="Devision_P13" type="normal"/>
+            <arc id="Devision_T7_to_Devision_P13" source="Devision_T7" target="Devision_P13" type="normal">
+                <graphics>
+                    <position x="691" y="631"/>
+                </graphics>
+            </arc>
+            <arc id="Devision_T19_to_Shared_Test_End" source="Devision_T19" target="Shared_Test_End" type="normal"/>
+            <arc id="TestDone_T0_to_TestDone_P6" source="TestDone_T0" target="TestDone_P6" type="normal"/>
+            <arc id="TestDone_T1_to_Shared_Number_Dual" source="TestDone_T1" target="Shared_Number_Dual" type="normal"/>
+            <arc id="TestDone_T1_to_Shared_Devidor_Dual" source="TestDone_T1" target="Shared_Devidor_Dual" type="normal">
+                <graphics>
+                    <position x="1396" y="751"/>
+                </graphics>
+            </arc>
+            <arc id="TestDone_T1_to_TestDone_P6" source="TestDone_T1" target="TestDone_P6" type="normal">
+                <graphics>
+                    <position x="1201" y="826"/>
+                </graphics>
+            </arc>
+            <arc id="TestDone_T3_to_Shared_IsPrime" source="TestDone_T3" target="Shared_IsPrime" type="normal"/>
+            <arc id="TestDone_T4_to_TestDone_P7" source="TestDone_T4" target="TestDone_P7" type="normal"/>
+            <arc id="TestDone_T4_to_Shared_Number" source="TestDone_T4" target="Shared_Number" type="normal">
+                <graphics>
+                    <position x="1081" y="751"/>
+                </graphics>
+            </arc>
+            <arc id="TestDone_T5_to_Shared_Devidor" source="TestDone_T5" target="Shared_Devidor" type="normal"/>
+            <arc id="TestDone_T5_to_Shared_Number" source="TestDone_T5" target="Shared_Number" type="normal">
+                <graphics>
+                    <position x="1441" y="616"/>
+                    <position x="991" y="601"/>
+                </graphics>
+            </arc>
+            <arc id="TestDone_T5_to_TestDone_P7" source="TestDone_T5" target="TestDone_P7" type="normal">
+                <graphics>
+                    <position x="1411" y="826"/>
+                </graphics>
+            </arc>
+            <arc id="TestDone_T2_to_Shared_TestDone_End" source="TestDone_T2" target="Shared_TestDone_End" type="normal"/>
+            <arc id="Shared_Number_Dual_to_MoveDualtoNumber_T2" source="Shared_Number_Dual" target="MoveDualtoNumber_T2" type="inhibitor"/>
+            <arc id="Shared_Devidor_to_Devision_T7" source="Shared_Devidor" target="Devision_T7" type="inhibitor"/>
+            <arc id="Shared_Devidor_Dual_to_Devision_T8" source="Shared_Devidor_Dual" target="Devision_T8" type="inhibitor">
+                <graphics>
+                    <position x="106" y="766"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Devidor_Dual_to_Devision_T11" source="Shared_Devidor_Dual" target="Devision_T11" type="inhibitor">
+                <graphics>
+                    <position x="151" y="706"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Devidor_to_Devision_T12" source="Shared_Devidor" target="Devision_T12" type="inhibitor">
+                <graphics>
+                    <position x="31" y="826"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Number_to_Devision_T16" source="Shared_Number" target="Devision_T16" type="inhibitor"/>
+            <arc id="Shared_Devidor_to_Devision_T16" source="Shared_Devidor" target="Devision_T16" type="inhibitor"/>
+            <arc id="Shared_Number_to_Devision_T15" source="Shared_Number" target="Devision_T15" type="inhibitor">
+                <graphics>
+                    <position x="556" y="781"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Devidor_Dual_to_Devision_T15" source="Shared_Devidor_Dual" target="Devision_T15" type="inhibitor"/>
+            <arc id="Shared_Number_to_Devision_T14" source="Shared_Number" target="Devision_T14" type="inhibitor"/>
+            <arc id="Shared_Devidor_Dual_to_Devision_T18" source="Shared_Devidor_Dual" target="Devision_T18" type="inhibitor">
+                <graphics>
+                    <position x="511" y="1006"/>
+                </graphics>
+            </arc>
+            <arc id="Devision_P12_to_Devision_T14" source="Devision_P12" target="Devision_T14" type="inhibitor">
+                <graphics>
+                    <position x="181" y="1186"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Devidor_Dual_to_Devision_T19" source="Shared_Devidor_Dual" target="Devision_T19" type="inhibitor">
+                <graphics>
+                    <position x="436" y="1066"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Number_to_TestDone_T3" source="Shared_Number" target="TestDone_T3" type="inhibitor">
+                <graphics>
+                    <position x="1066" y="961"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Devidor_to_TestDone_T3" source="Shared_Devidor" target="TestDone_T3" type="inhibitor">
+                <graphics>
+                    <position x="1261" y="961"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Devidor_to_TestDone_T4" source="Shared_Devidor" target="TestDone_T4" type="inhibitor"/>
+            <arc id="Shared_Devidor_Dual_to_TestDone_T2" source="Shared_Devidor_Dual" target="TestDone_T2" type="inhibitor"/>
+            <arc id="Shared_Number_Dual_to_TestDone_T2" source="Shared_Number_Dual" target="TestDone_T2" type="inhibitor"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

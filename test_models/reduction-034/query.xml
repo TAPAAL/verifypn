@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>reduction-034.FALSE-1</id>
+    <description>reduction-034.FALSE-1</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <deadlock/>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+  <property>
+    <id>reduction-034.TRUE-2</id>
+    <description>reduction-034.TRUE-2</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <integer-gt>
+            <tokens-count>
+              <place>P20</place>
+            </tokens-count>
+            <integer-constant>1</integer-constant>
+          </integer-gt>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="R1">
+                <graphics>
+                    <position x="210" y="45"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>R1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="GU1">
+                <graphics>
+                    <position x="210" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>GU1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="G1">
+                <graphics>
+                    <position x="210" y="375"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>G1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="GU2">
+                <graphics>
+                    <position x="420" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>GU2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="G2">
+                <graphics>
+                    <position x="420" y="375"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>G2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="R2">
+                <graphics>
+                    <position x="420" y="45"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>R2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="A">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>A</text>
+                </name>
+                <graphics>
+                    <position x="210" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="B">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>B</text>
+                </name>
+                <graphics>
+                    <position x="210" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="C">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C</text>
+                </name>
+                <graphics>
+                    <position x="285" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="F">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>F</text>
+                </name>
+                <graphics>
+                    <position x="420" y="285"/>
+                </graphics>
+            </transition>
+            <transition id="E">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>E</text>
+                </name>
+                <graphics>
+                    <position x="420" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="D">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>D</text>
+                </name>
+                <graphics>
+                    <position x="330" y="210"/>
+                </graphics>
+            </transition>
+            <arc id="R1_to_A" source="R1" target="A" type="normal"/>
+            <arc id="GU1_to_B" source="GU1" target="B" type="normal"/>
+            <arc id="G1_to_C" source="G1" target="C" type="normal"/>
+            <arc id="GU2_to_F" source="GU2" target="F" type="normal"/>
+            <arc id="G2_to_D" source="G2" target="D" type="normal"/>
+            <arc id="R2_to_E" source="R2" target="E" type="normal"/>
+            <arc id="A_to_GU1" source="A" target="GU1" type="normal"/>
+            <arc id="B_to_G1" source="B" target="G1" type="normal"/>
+            <arc id="C_to_R1" source="C" target="R1" type="normal"/>
+            <arc id="E_to_GU2" source="E" target="GU2" type="normal"/>
+            <arc id="F_to_G2" source="F" target="G2" type="normal"/>
+            <arc id="D_to_R2" source="D" target="R2" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

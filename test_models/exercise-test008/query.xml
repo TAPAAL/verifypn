@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>exercise-test008.FALSE-1</id>
+    <description>exercise-test008.FALSE-1</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <conjunction>
+            <integer-gt>
+              <tokens-count>
+                <place>Dangerzone</place>
+              </tokens-count>
+              <integer-constant>0</integer-constant>
+            </integer-gt>
+            <disjunction>
+              <integer-eq>
+                <tokens-count>
+                  <place>Green</place>
+                </tokens-count>
+                <integer-constant>1</integer-constant>
+              </integer-eq>
+              <integer-eq>
+                <tokens-count>
+                  <place>Yellow</place>
+                </tokens-count>
+                <integer-constant>1</integer-constant>
+              </integer-eq>
+            </disjunction>
+          </conjunction>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

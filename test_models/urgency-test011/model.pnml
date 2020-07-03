@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_RequestMedicalCheck">
+                <graphics>
+                    <position x="150" y="120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-19" y="16"/>
+                    </graphics>
+                    <text>Shared_RequestMedicalCheck</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_MedicalCheckOK">
+                <graphics>
+                    <position x="150" y="330"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-21" y="7"/>
+                    </graphics>
+                    <text>Shared_MedicalCheckOK</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_MedicalCheckNOK">
+                <graphics>
+                    <position x="150" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-19" y="19"/>
+                    </graphics>
+                    <text>Shared_MedicalCheckNOK</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Patient_PatientFinished">
+                <graphics>
+                    <position x="180" y="285"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-9" y="15"/>
+                    </graphics>
+                    <text>Patient_PatientFinished</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Patient_Waiting">
+                <graphics>
+                    <position x="360" y="285"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="73" y="24"/>
+                    </graphics>
+                    <text>Patient_Waiting</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Patient_WaitForDecision">
+                <graphics>
+                    <position x="360" y="465"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="118" y="44"/>
+                    </graphics>
+                    <text>Patient_WaitForDecision</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Patient_Treated">
+                <graphics>
+                    <position x="180" y="465"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="46"/>
+                    </graphics>
+                    <text>Patient_Treated</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Patient_Timer">
+                <graphics>
+                    <position x="150" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Patient_Timer</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Patient_Patient">
+                <graphics>
+                    <position x="360" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="23" y="-4"/>
+                    </graphics>
+                    <text>Patient_Patient</text>
+                </name>
+                <initialMarking>
+                    <text>5</text>
+                </initialMarking>
+            </place>
+            <place id="Patient_P0">
+                <graphics>
+                    <position x="360" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Patient_P0</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_Nurse">
+                <graphics>
+                    <position x="585" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="-7"/>
+                    </graphics>
+                    <text>Nurse_Nurse</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_Busy">
+                <graphics>
+                    <position x="810" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="38" y="-12"/>
+                    </graphics>
+                    <text>Nurse_Busy</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_AwaitingAnswer">
+                <graphics>
+                    <position x="930" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="117" y="0"/>
+                    </graphics>
+                    <text>Nurse_AwaitingAnswer</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_ReadyToReBook">
+                <graphics>
+                    <position x="810" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="68" y="-19"/>
+                    </graphics>
+                    <text>Nurse_ReadyToReBook</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_ReadyToCheckout">
+                <graphics>
+                    <position x="825" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="53" y="-10"/>
+                    </graphics>
+                    <text>Nurse_ReadyToCheckout</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Doctor_Doctor">
+                <graphics>
+                    <position x="345" y="495"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-8" y="13"/>
+                    </graphics>
+                    <text>Doctor_Doctor</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Doctor_ReadyForCheck">
+                <graphics>
+                    <position x="540" y="585"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="126" y="21"/>
+                    </graphics>
+                    <text>Doctor_ReadyForCheck</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Doctor_Decision">
+                <graphics>
+                    <position x="450" y="690"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="38" y="-18"/>
+                    </graphics>
+                    <text>Doctor_Decision</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Doctor_Finished">
+                <graphics>
+                    <position x="345" y="795"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="37" y="-9"/>
+                    </graphics>
+                    <text>Doctor_Finished</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Monitor_InProgress">
+                <graphics>
+                    <position x="660" y="600"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-9" y="8"/>
+                    </graphics>
+                    <text>Monitor_InProgress</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Monitor_MissedDeadline">
+                <graphics>
+                    <position x="945" y="600"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="64" y="-12"/>
+                    </graphics>
+                    <text>Monitor_MissedDeadline</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Patient_Arrive">
+                <name>
+                    <graphics>
+                        <offset x="76" y="17"/>
+                    </graphics>
+                    <text>Patient_Arrive</text>
+                </name>
+                <graphics>
+                    <position x="360" y="180"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_MedicalCheck">
+                <name>
+                    <graphics>
+                        <offset x="114" y="9"/>
+                    </graphics>
+                    <text>Shared_MedicalCheck</text>
+                </name>
+                <graphics>
+                    <position x="360" y="375"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_Treatment">
+                <name>
+                    <graphics>
+                        <offset x="43" y="55"/>
+                    </graphics>
+                    <text>Shared_Treatment</text>
+                </name>
+                <graphics>
+                    <position x="270" y="465"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_Checkout">
+                <name>
+                    <graphics>
+                        <offset x="-9" y="35"/>
+                    </graphics>
+                    <text>Shared_Checkout</text>
+                </name>
+                <graphics>
+                    <position x="180" y="375"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_ReBook">
+                <name>
+                    <graphics>
+                        <offset x="39" y="-8"/>
+                    </graphics>
+                    <text>Shared_ReBook</text>
+                </name>
+                <graphics>
+                    <position x="270" y="375"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_Arrival">
+                <name>
+                    <graphics>
+                        <offset x="73" y="11"/>
+                    </graphics>
+                    <text>Shared_Arrival</text>
+                </name>
+                <graphics>
+                    <position x="465" y="255"/>
+                </graphics>
+            </transition>
+            <transition id="Nurse_OpenPatientJournal">
+                <name>
+                    <graphics>
+                        <offset x="56" y="-11"/>
+                    </graphics>
+                    <text>Nurse_OpenPatientJournal</text>
+                </name>
+                <graphics>
+                    <position x="930" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="Nurse_FindNewDate">
+                <name>
+                    <graphics>
+                        <offset x="-1" y="16"/>
+                    </graphics>
+                    <text>Nurse_FindNewDate</text>
+                </name>
+                <graphics>
+                    <position x="810" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="Nurse_ClosePatientJournal">
+                <name>
+                    <graphics>
+                        <offset x="73" y="45"/>
+                    </graphics>
+                    <text>Nurse_ClosePatientJournal</text>
+                </name>
+                <graphics>
+                    <position x="930" y="390"/>
+                </graphics>
+            </transition>
+            <transition id="Doctor_ReadPatientJournal">
+                <name>
+                    <graphics>
+                        <offset x="140" y="6"/>
+                    </graphics>
+                    <text>Doctor_ReadPatientJournal</text>
+                </name>
+                <graphics>
+                    <position x="345" y="585"/>
+                </graphics>
+            </transition>
+            <transition id="Doctor_NOK">
+                <name>
+                    <graphics>
+                        <offset x="48" y="-1"/>
+                    </graphics>
+                    <text>Doctor_NOK</text>
+                </name>
+                <graphics>
+                    <position x="345" y="690"/>
+                </graphics>
+            </transition>
+            <transition id="Doctor_UpdatePatientJournal">
+                <name>
+                    <graphics>
+                        <offset x="71" y="51"/>
+                    </graphics>
+                    <text>Doctor_UpdatePatientJournal</text>
+                </name>
+                <graphics>
+                    <position x="255" y="795"/>
+                </graphics>
+            </transition>
+            <transition id="Monitor_MissDeadline">
+                <name>
+                    <graphics>
+                        <offset x="56" y="-13"/>
+                    </graphics>
+                    <text>Monitor_MissDeadline</text>
+                </name>
+                <graphics>
+                    <position x="810" y="600"/>
+                </graphics>
+            </transition>
+            <arc id="Patient_Timer_to_Patient_Arrive" source="Patient_Timer" target="Patient_Arrive" type="normal">
+                <graphics>
+                    <position x="270" y="150"/>
+                </graphics>
+            </arc>
+            <arc id="Patient_Patient_to_Patient_Arrive" source="Patient_Patient" target="Patient_Arrive" type="normal"/>
+            <arc id="Patient_P0_to_Shared_Arrival" source="Patient_P0" target="Shared_Arrival" type="normal"/>
+            <arc id="Nurse_Nurse_to_Shared_Arrival" source="Nurse_Nurse" target="Shared_Arrival" type="normal"/>
+            <arc id="Nurse_Busy_to_Nurse_OpenPatientJournal" source="Nurse_Busy" target="Nurse_OpenPatientJournal" type="normal"/>
+            <arc id="Shared_MedicalCheckNOK_to_Nurse_FindNewDate" source="Shared_MedicalCheckNOK" target="Nurse_FindNewDate" type="normal"/>
+            <arc id="Nurse_AwaitingAnswer_to_Nurse_FindNewDate" source="Nurse_AwaitingAnswer" target="Nurse_FindNewDate" type="normal"/>
+            <arc id="Nurse_ReadyToReBook_to_Shared_ReBook" source="Nurse_ReadyToReBook" target="Shared_ReBook" type="normal"/>
+            <arc id="Shared_MedicalCheckOK_to_Nurse_ClosePatientJournal" source="Shared_MedicalCheckOK" target="Nurse_ClosePatientJournal" type="normal"/>
+            <arc id="Nurse_AwaitingAnswer_to_Nurse_ClosePatientJournal" source="Nurse_AwaitingAnswer" target="Nurse_ClosePatientJournal" type="normal">
+                <graphics>
+                    <position x="990" y="315"/>
+                </graphics>
+            </arc>
+            <arc id="Nurse_ReadyToCheckout_to_Shared_Checkout" source="Nurse_ReadyToCheckout" target="Shared_Checkout" type="normal"/>
+            <arc id="Doctor_Doctor_to_Doctor_ReadPatientJournal" source="Doctor_Doctor" target="Doctor_ReadPatientJournal" type="normal"/>
+            <arc id="Shared_RequestMedicalCheck_to_Doctor_ReadPatientJournal" source="Shared_RequestMedicalCheck" target="Doctor_ReadPatientJournal" type="normal"/>
+            <arc id="Doctor_ReadyForCheck_to_Shared_MedicalCheck" source="Doctor_ReadyForCheck" target="Shared_MedicalCheck" type="normal"/>
+            <arc id="Doctor_Decision_to_Doctor_NOK" source="Doctor_Decision" target="Doctor_NOK" type="normal"/>
+            <arc id="Doctor_Decision_to_Shared_Treatment" source="Doctor_Decision" target="Shared_Treatment" type="normal"/>
+            <arc id="Doctor_Finished_to_Doctor_UpdatePatientJournal" source="Doctor_Finished" target="Doctor_UpdatePatientJournal" type="normal"/>
+            <arc id="Monitor_InProgress_to_Shared_Treatment" source="Monitor_InProgress" target="Shared_Treatment" type="normal"/>
+            <arc id="Monitor_InProgress_to_Shared_ReBook" source="Monitor_InProgress" target="Shared_ReBook" type="normal"/>
+            <arc id="Monitor_InProgress_to_Monitor_MissDeadline" source="Monitor_InProgress" target="Monitor_MissDeadline" type="normal"/>
+            <arc id="Patient_Arrive_to_Patient_Timer" source="Patient_Arrive" target="Patient_Timer" type="normal">
+                <graphics>
+                    <position x="240" y="225"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Arrival_to_Patient_Waiting" source="Shared_Arrival" target="Patient_Waiting" type="normal"/>
+            <arc id="Patient_Arrive_to_Patient_P0" source="Patient_Arrive" target="Patient_P0" type="normal"/>
+            <arc id="Shared_Arrival_to_Nurse_Busy" source="Shared_Arrival" target="Nurse_Busy" type="normal"/>
+            <arc id="Nurse_OpenPatientJournal_to_Nurse_AwaitingAnswer" source="Nurse_OpenPatientJournal" target="Nurse_AwaitingAnswer" type="normal"/>
+            <arc id="Nurse_OpenPatientJournal_to_Shared_RequestMedicalCheck" source="Nurse_OpenPatientJournal" target="Shared_RequestMedicalCheck" type="normal"/>
+            <arc id="Nurse_FindNewDate_to_Nurse_ReadyToReBook" source="Nurse_FindNewDate" target="Nurse_ReadyToReBook" type="normal"/>
+            <arc id="Shared_ReBook_to_Nurse_Nurse" source="Shared_ReBook" target="Nurse_Nurse" type="normal"/>
+            <arc id="Nurse_ClosePatientJournal_to_Nurse_ReadyToCheckout" source="Nurse_ClosePatientJournal" target="Nurse_ReadyToCheckout" type="normal"/>
+            <arc id="Shared_Checkout_to_Nurse_Nurse" source="Shared_Checkout" target="Nurse_Nurse" type="normal"/>
+            <arc id="Doctor_ReadPatientJournal_to_Doctor_ReadyForCheck" source="Doctor_ReadPatientJournal" target="Doctor_ReadyForCheck" type="normal"/>
+            <arc id="Shared_MedicalCheck_to_Doctor_Decision" source="Shared_MedicalCheck" target="Doctor_Decision" type="normal"/>
+            <arc id="Doctor_NOK_to_Shared_MedicalCheckNOK" source="Doctor_NOK" target="Shared_MedicalCheckNOK" type="normal"/>
+            <arc id="Shared_Treatment_to_Doctor_Finished" source="Shared_Treatment" target="Doctor_Finished" type="normal"/>
+            <arc id="Doctor_UpdatePatientJournal_to_Shared_MedicalCheckOK" source="Doctor_UpdatePatientJournal" target="Shared_MedicalCheckOK" type="normal"/>
+            <arc id="Doctor_NOK_to_Doctor_Doctor" source="Doctor_NOK" target="Doctor_Doctor" type="normal">
+                <graphics>
+                    <position x="315" y="585"/>
+                </graphics>
+            </arc>
+            <arc id="Doctor_UpdatePatientJournal_to_Doctor_Doctor" source="Doctor_UpdatePatientJournal" target="Doctor_Doctor" type="normal">
+                <graphics>
+                    <position x="255" y="570"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Arrival_to_Monitor_InProgress" source="Shared_Arrival" target="Monitor_InProgress" type="normal"/>
+            <arc id="Monitor_MissDeadline_to_Monitor_MissedDeadline" source="Monitor_MissDeadline" target="Monitor_MissedDeadline" type="normal"/>
+            <arc id="Patient_Waiting_to_Shared_MedicalCheck" source="Patient_Waiting" target="Shared_MedicalCheck" type="normal"/>
+            <arc id="Shared_MedicalCheck_to_Patient_WaitForDecision" source="Shared_MedicalCheck" target="Patient_WaitForDecision" type="normal"/>
+            <arc id="Patient_WaitForDecision_to_Shared_ReBook" source="Patient_WaitForDecision" target="Shared_ReBook" type="normal"/>
+            <arc id="Shared_ReBook_to_Patient_PatientFinished" source="Shared_ReBook" target="Patient_PatientFinished" type="normal"/>
+            <arc id="Patient_WaitForDecision_to_Shared_Treatment" source="Patient_WaitForDecision" target="Shared_Treatment" type="normal"/>
+            <arc id="Shared_Treatment_to_Patient_Treated" source="Shared_Treatment" target="Patient_Treated" type="normal"/>
+            <arc id="Patient_Treated_to_Shared_Checkout" source="Patient_Treated" target="Shared_Checkout" type="normal"/>
+            <arc id="Shared_Checkout_to_Patient_PatientFinished" source="Shared_Checkout" target="Patient_PatientFinished" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

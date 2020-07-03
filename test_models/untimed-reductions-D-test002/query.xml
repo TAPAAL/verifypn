@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>untimed-reductions-D-test002.TRUE-1</id>
+    <description>untimed-reductions-D-test002.TRUE-1</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>P5</place>
+            </tokens-count>
+            <integer-constant>31</integer-constant>
+          </integer-eq>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+  <property>
+    <id>untimed-reductions-D-test002.FALSE-2</id>
+    <description>untimed-reductions-D-test002.FALSE-2</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>P5</place>
+            </tokens-count>
+            <integer-constant>63</integer-constant>
+          </integer-eq>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

@@ -1,0 +1,858 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_storage">
+                <graphics>
+                    <position x="255" y="495"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_storage</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_sup1">
+                <graphics>
+                    <position x="105" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_sup1</text>
+                </name>
+                <initialMarking>
+                    <text>5</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_sup2">
+                <graphics>
+                    <position x="105" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_sup2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_sup3">
+                <graphics>
+                    <position x="435" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_sup3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_sup4">
+                <graphics>
+                    <position x="435" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_sup4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_sup5">
+                <graphics>
+                    <position x="435" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_sup5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_done">
+                <graphics>
+                    <position x="435" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_done</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker2_ready">
+                <graphics>
+                    <position x="165" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker2_ready</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="worker2_prep">
+                <graphics>
+                    <position x="360" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker2_prep</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker2_P4">
+                <graphics>
+                    <position x="270" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker2_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker2_asm">
+                <graphics>
+                    <position x="360" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker2_asm</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker2_idle">
+                <graphics>
+                    <position x="165" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker2_idle</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker3_ready">
+                <graphics>
+                    <position x="600" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker3_ready</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="worker3_prep">
+                <graphics>
+                    <position x="795" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker3_prep</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker3_P4">
+                <graphics>
+                    <position x="705" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker3_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker3_asm">
+                <graphics>
+                    <position x="795" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker3_asm</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker3_idle">
+                <graphics>
+                    <position x="600" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker3_idle</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker4_ready">
+                <graphics>
+                    <position x="165" y="705"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker4_ready</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="worker4_prep">
+                <graphics>
+                    <position x="360" y="705"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker4_prep</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker4_P4">
+                <graphics>
+                    <position x="270" y="585"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker4_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker4_asm">
+                <graphics>
+                    <position x="360" y="885"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker4_asm</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker4_idle">
+                <graphics>
+                    <position x="165" y="885"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker4_idle</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker5_ready">
+                <graphics>
+                    <position x="600" y="705"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker5_ready</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="worker5_prep">
+                <graphics>
+                    <position x="795" y="705"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker5_prep</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker5_P4">
+                <graphics>
+                    <position x="705" y="585"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker5_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker5_asm">
+                <graphics>
+                    <position x="795" y="885"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker5_asm</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker5_idle">
+                <graphics>
+                    <position x="600" y="885"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker5_idle</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker6_ready">
+                <graphics>
+                    <position x="165" y="1200"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker6_ready</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="worker6_prep">
+                <graphics>
+                    <position x="360" y="1200"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker6_prep</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker6_P4">
+                <graphics>
+                    <position x="270" y="1080"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker6_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker6_asm">
+                <graphics>
+                    <position x="360" y="1380"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker6_asm</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="worker6_idle">
+                <graphics>
+                    <position x="165" y="1380"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker6_idle</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="finalization_delivered">
+                <graphics>
+                    <position x="720" y="1155"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>finalization_delivered</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="worker2_finish">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker2_finish</text>
+                </name>
+                <graphics>
+                    <position x="255" y="390"/>
+                </graphics>
+            </transition>
+            <transition id="worker2_start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker2_start</text>
+                </name>
+                <graphics>
+                    <position x="360" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="worker2_reset">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker2_reset</text>
+                </name>
+                <graphics>
+                    <position x="165" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="worker2_sStart">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker2_sStart</text>
+                </name>
+                <graphics>
+                    <position x="180" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="worker2_sDone">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker2_sDone</text>
+                </name>
+                <graphics>
+                    <position x="345" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="worker3_finish">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker3_finish</text>
+                </name>
+                <graphics>
+                    <position x="690" y="390"/>
+                </graphics>
+            </transition>
+            <transition id="worker3_start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker3_start</text>
+                </name>
+                <graphics>
+                    <position x="795" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="worker3_reset">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker3_reset</text>
+                </name>
+                <graphics>
+                    <position x="600" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="worker3_sStart">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker3_sStart</text>
+                </name>
+                <graphics>
+                    <position x="615" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="worker3_sDone">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker3_sDone</text>
+                </name>
+                <graphics>
+                    <position x="780" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="worker4_finish">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker4_finish</text>
+                </name>
+                <graphics>
+                    <position x="255" y="885"/>
+                </graphics>
+            </transition>
+            <transition id="worker4_start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker4_start</text>
+                </name>
+                <graphics>
+                    <position x="360" y="795"/>
+                </graphics>
+            </transition>
+            <transition id="worker4_reset">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker4_reset</text>
+                </name>
+                <graphics>
+                    <position x="165" y="795"/>
+                </graphics>
+            </transition>
+            <transition id="worker4_sStart">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker4_sStart</text>
+                </name>
+                <graphics>
+                    <position x="180" y="585"/>
+                </graphics>
+            </transition>
+            <transition id="worker4_sDone">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker4_sDone</text>
+                </name>
+                <graphics>
+                    <position x="345" y="585"/>
+                </graphics>
+            </transition>
+            <transition id="worker5_finish">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker5_finish</text>
+                </name>
+                <graphics>
+                    <position x="690" y="885"/>
+                </graphics>
+            </transition>
+            <transition id="worker5_start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker5_start</text>
+                </name>
+                <graphics>
+                    <position x="795" y="795"/>
+                </graphics>
+            </transition>
+            <transition id="worker5_reset">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker5_reset</text>
+                </name>
+                <graphics>
+                    <position x="600" y="795"/>
+                </graphics>
+            </transition>
+            <transition id="worker5_sStart">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker5_sStart</text>
+                </name>
+                <graphics>
+                    <position x="615" y="585"/>
+                </graphics>
+            </transition>
+            <transition id="worker5_sDone">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker5_sDone</text>
+                </name>
+                <graphics>
+                    <position x="780" y="585"/>
+                </graphics>
+            </transition>
+            <transition id="worker6_finish">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker6_finish</text>
+                </name>
+                <graphics>
+                    <position x="255" y="1380"/>
+                </graphics>
+            </transition>
+            <transition id="worker6_start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker6_start</text>
+                </name>
+                <graphics>
+                    <position x="360" y="1290"/>
+                </graphics>
+            </transition>
+            <transition id="worker6_reset">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker6_reset</text>
+                </name>
+                <graphics>
+                    <position x="165" y="1290"/>
+                </graphics>
+            </transition>
+            <transition id="worker6_sStart">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker6_sStart</text>
+                </name>
+                <graphics>
+                    <position x="180" y="1080"/>
+                </graphics>
+            </transition>
+            <transition id="worker6_sDone">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>worker6_sDone</text>
+                </name>
+                <graphics>
+                    <position x="345" y="1080"/>
+                </graphics>
+            </transition>
+            <transition id="finalization_d">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>finalization_d</text>
+                </name>
+                <graphics>
+                    <position x="615" y="1155"/>
+                </graphics>
+            </transition>
+            <arc id="Shared_sup1_to_worker2_sStart" source="Shared_sup1" target="worker2_sStart" type="normal">
+                <inscription>
+                    <text>5</text>
+                </inscription>
+            </arc>
+            <arc id="worker2_ready_to_worker2_sStart" source="worker2_ready" target="worker2_sStart" type="normal"/>
+            <arc id="worker2_P4_to_worker2_sDone" source="worker2_P4" target="worker2_sDone" type="normal"/>
+            <arc id="worker2_prep_to_worker2_start" source="worker2_prep" target="worker2_start" type="normal"/>
+            <arc id="worker2_asm_to_worker2_finish" source="worker2_asm" target="worker2_finish" type="normal"/>
+            <arc id="worker2_idle_to_worker2_reset" source="worker2_idle" target="worker2_reset" type="normal"/>
+            <arc id="Shared_sup2_to_worker3_sStart" source="Shared_sup2" target="worker3_sStart" type="normal">
+                <inscription>
+                    <text>4</text>
+                </inscription>
+            </arc>
+            <arc id="worker3_ready_to_worker3_sStart" source="worker3_ready" target="worker3_sStart" type="normal"/>
+            <arc id="worker3_P4_to_worker3_sDone" source="worker3_P4" target="worker3_sDone" type="normal"/>
+            <arc id="worker3_prep_to_worker3_start" source="worker3_prep" target="worker3_start" type="normal"/>
+            <arc id="worker3_asm_to_worker3_finish" source="worker3_asm" target="worker3_finish" type="normal"/>
+            <arc id="worker3_idle_to_worker3_reset" source="worker3_idle" target="worker3_reset" type="normal"/>
+            <arc id="Shared_sup3_to_worker4_sStart" source="Shared_sup3" target="worker4_sStart" type="normal">
+                <inscription>
+                    <text>3</text>
+                </inscription>
+            </arc>
+            <arc id="worker4_ready_to_worker4_sStart" source="worker4_ready" target="worker4_sStart" type="normal"/>
+            <arc id="worker4_P4_to_worker4_sDone" source="worker4_P4" target="worker4_sDone" type="normal"/>
+            <arc id="worker4_prep_to_worker4_start" source="worker4_prep" target="worker4_start" type="normal"/>
+            <arc id="worker4_asm_to_worker4_finish" source="worker4_asm" target="worker4_finish" type="normal"/>
+            <arc id="worker4_idle_to_worker4_reset" source="worker4_idle" target="worker4_reset" type="normal"/>
+            <arc id="Shared_sup4_to_worker5_sStart" source="Shared_sup4" target="worker5_sStart" type="normal">
+                <inscription>
+                    <text>2</text>
+                </inscription>
+            </arc>
+            <arc id="worker5_ready_to_worker5_sStart" source="worker5_ready" target="worker5_sStart" type="normal"/>
+            <arc id="worker5_P4_to_worker5_sDone" source="worker5_P4" target="worker5_sDone" type="normal"/>
+            <arc id="worker5_prep_to_worker5_start" source="worker5_prep" target="worker5_start" type="normal"/>
+            <arc id="worker5_asm_to_worker5_finish" source="worker5_asm" target="worker5_finish" type="normal"/>
+            <arc id="worker5_idle_to_worker5_reset" source="worker5_idle" target="worker5_reset" type="normal"/>
+            <arc id="Shared_sup5_to_worker6_sStart" source="Shared_sup5" target="worker6_sStart" type="normal"/>
+            <arc id="worker6_ready_to_worker6_sStart" source="worker6_ready" target="worker6_sStart" type="normal"/>
+            <arc id="worker6_P4_to_worker6_sDone" source="worker6_P4" target="worker6_sDone" type="normal"/>
+            <arc id="worker6_prep_to_worker6_start" source="worker6_prep" target="worker6_start" type="normal"/>
+            <arc id="worker6_asm_to_worker6_finish" source="worker6_asm" target="worker6_finish" type="normal"/>
+            <arc id="worker6_idle_to_worker6_reset" source="worker6_idle" target="worker6_reset" type="normal"/>
+            <arc id="Shared_done_to_finalization_d" source="Shared_done" target="finalization_d" type="normal"/>
+            <arc id="Shared_storage_to_finalization_d" source="Shared_storage" target="finalization_d" type="normal">
+                <inscription>
+                    <text>5</text>
+                </inscription>
+            </arc>
+            <arc id="worker2_sStart_to_worker2_P4" source="worker2_sStart" target="worker2_P4" type="normal"/>
+            <arc id="worker2_sDone_to_Shared_sup2" source="worker2_sDone" target="Shared_sup2" type="normal">
+                <inscription>
+                    <text>4</text>
+                </inscription>
+            </arc>
+            <arc id="worker2_sDone_to_worker2_prep" source="worker2_sDone" target="worker2_prep" type="normal"/>
+            <arc id="worker2_finish_to_Shared_storage" source="worker2_finish" target="Shared_storage" type="normal"/>
+            <arc id="worker2_start_to_worker2_asm" source="worker2_start" target="worker2_asm" type="normal"/>
+            <arc id="worker2_finish_to_worker2_idle" source="worker2_finish" target="worker2_idle" type="normal"/>
+            <arc id="worker2_reset_to_worker2_ready" source="worker2_reset" target="worker2_ready" type="normal"/>
+            <arc id="worker3_sStart_to_worker3_P4" source="worker3_sStart" target="worker3_P4" type="normal"/>
+            <arc id="worker3_sDone_to_Shared_sup3" source="worker3_sDone" target="Shared_sup3" type="normal">
+                <inscription>
+                    <text>3</text>
+                </inscription>
+            </arc>
+            <arc id="worker3_sDone_to_worker3_prep" source="worker3_sDone" target="worker3_prep" type="normal"/>
+            <arc id="worker3_finish_to_Shared_storage" source="worker3_finish" target="Shared_storage" type="normal"/>
+            <arc id="worker3_start_to_worker3_asm" source="worker3_start" target="worker3_asm" type="normal"/>
+            <arc id="worker3_finish_to_worker3_idle" source="worker3_finish" target="worker3_idle" type="normal"/>
+            <arc id="worker3_reset_to_worker3_ready" source="worker3_reset" target="worker3_ready" type="normal"/>
+            <arc id="worker4_sStart_to_worker4_P4" source="worker4_sStart" target="worker4_P4" type="normal"/>
+            <arc id="worker4_sDone_to_Shared_sup4" source="worker4_sDone" target="Shared_sup4" type="normal">
+                <inscription>
+                    <text>2</text>
+                </inscription>
+            </arc>
+            <arc id="worker4_sDone_to_worker4_prep" source="worker4_sDone" target="worker4_prep" type="normal"/>
+            <arc id="worker4_finish_to_Shared_storage" source="worker4_finish" target="Shared_storage" type="normal"/>
+            <arc id="worker4_start_to_worker4_asm" source="worker4_start" target="worker4_asm" type="normal"/>
+            <arc id="worker4_finish_to_worker4_idle" source="worker4_finish" target="worker4_idle" type="normal"/>
+            <arc id="worker4_reset_to_worker4_ready" source="worker4_reset" target="worker4_ready" type="normal"/>
+            <arc id="worker5_sStart_to_worker5_P4" source="worker5_sStart" target="worker5_P4" type="normal"/>
+            <arc id="worker5_sDone_to_Shared_sup5" source="worker5_sDone" target="Shared_sup5" type="normal"/>
+            <arc id="worker5_sDone_to_worker5_prep" source="worker5_sDone" target="worker5_prep" type="normal"/>
+            <arc id="worker5_finish_to_Shared_storage" source="worker5_finish" target="Shared_storage" type="normal"/>
+            <arc id="worker5_start_to_worker5_asm" source="worker5_start" target="worker5_asm" type="normal"/>
+            <arc id="worker5_finish_to_worker5_idle" source="worker5_finish" target="worker5_idle" type="normal"/>
+            <arc id="worker5_reset_to_worker5_ready" source="worker5_reset" target="worker5_ready" type="normal"/>
+            <arc id="worker6_sStart_to_worker6_P4" source="worker6_sStart" target="worker6_P4" type="normal"/>
+            <arc id="worker6_sDone_to_Shared_done" source="worker6_sDone" target="Shared_done" type="normal"/>
+            <arc id="worker6_sDone_to_worker6_prep" source="worker6_sDone" target="worker6_prep" type="normal"/>
+            <arc id="worker6_finish_to_Shared_storage" source="worker6_finish" target="Shared_storage" type="normal"/>
+            <arc id="worker6_start_to_worker6_asm" source="worker6_start" target="worker6_asm" type="normal"/>
+            <arc id="worker6_finish_to_worker6_idle" source="worker6_finish" target="worker6_idle" type="normal"/>
+            <arc id="worker6_reset_to_worker6_ready" source="worker6_reset" target="worker6_ready" type="normal"/>
+            <arc id="finalization_d_to_finalization_delivered" source="finalization_d" target="finalization_delivered" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

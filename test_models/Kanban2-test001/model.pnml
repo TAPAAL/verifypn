@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="P3">
+                <graphics>
+                    <position x="450" y="360"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P3</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Pm3">
+                <graphics>
+                    <position x="165" y="300"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Pm3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Pback3">
+                <graphics>
+                    <position x="210" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Pback3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Pout3">
+                <graphics>
+                    <position x="120" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Pout3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P4">
+                <graphics>
+                    <position x="300" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P4</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Pm4">
+                <graphics>
+                    <position x="225" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Pm4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Pback4">
+                <graphics>
+                    <position x="195" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Pback4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Pout4">
+                <graphics>
+                    <position x="255" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Pout4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Pm1">
+                <graphics>
+                    <position x="255" y="495"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Pm1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P1">
+                <graphics>
+                    <position x="330" y="525"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P1</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Pout1">
+                <graphics>
+                    <position x="285" y="570"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Pout1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Pback1">
+                <graphics>
+                    <position x="225" y="570"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Pback1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Pm2">
+                <graphics>
+                    <position x="360" y="300"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Pm2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P2">
+                <graphics>
+                    <position x="60" y="360"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P2</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Pout2">
+                <graphics>
+                    <position x="405" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Pout2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Pback2">
+                <graphics>
+                    <position x="315" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Pback2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="tback3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tback3</text>
+                </name>
+                <graphics>
+                    <position x="210" y="435"/>
+                </graphics>
+            </transition>
+            <transition id="tredo3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tredo3</text>
+                </name>
+                <graphics>
+                    <position x="210" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="tredo2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tredo2</text>
+                </name>
+                <graphics>
+                    <position x="315" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="tok3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tok3</text>
+                </name>
+                <graphics>
+                    <position x="120" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="tredo4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tredo4</text>
+                </name>
+                <graphics>
+                    <position x="180" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="tin4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tin4</text>
+                </name>
+                <graphics>
+                    <position x="225" y="75"/>
+                </graphics>
+            </transition>
+            <transition id="tok4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tok4</text>
+                </name>
+                <graphics>
+                    <position x="255" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="tback4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tback4</text>
+                </name>
+                <graphics>
+                    <position x="180" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="tsynch1_23">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tsynch1_23</text>
+                </name>
+                <graphics>
+                    <position x="255" y="465"/>
+                </graphics>
+            </transition>
+            <transition id="tout1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tout1</text>
+                </name>
+                <graphics>
+                    <position x="285" y="615"/>
+                </graphics>
+            </transition>
+            <transition id="tok1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tok1</text>
+                </name>
+                <graphics>
+                    <position x="285" y="540"/>
+                </graphics>
+            </transition>
+            <transition id="tsynch4_23">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tsynch4_23</text>
+                </name>
+                <graphics>
+                    <position x="255" y="255"/>
+                </graphics>
+            </transition>
+            <transition id="tredo1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tredo1</text>
+                </name>
+                <graphics>
+                    <position x="225" y="540"/>
+                </graphics>
+            </transition>
+            <transition id="tback1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tback1</text>
+                </name>
+                <graphics>
+                    <position x="225" y="615"/>
+                </graphics>
+            </transition>
+            <transition id="tback2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tback2</text>
+                </name>
+                <graphics>
+                    <position x="315" y="435"/>
+                </graphics>
+            </transition>
+            <transition id="tok2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>tok2</text>
+                </name>
+                <graphics>
+                    <position x="405" y="360"/>
+                </graphics>
+            </transition>
+            <arc id="Pm4_to_tok4" source="Pm4" target="tok4" type="normal"/>
+            <arc id="Pback4_to_tback4" source="Pback4" target="tback4" type="normal"/>
+            <arc id="Pm4_to_tredo4" source="Pm4" target="tredo4" type="normal"/>
+            <arc id="P4_to_tin4" source="P4" target="tin4" type="normal"/>
+            <arc id="Pm2_to_tredo2" source="Pm2" target="tredo2" type="normal"/>
+            <arc id="Pm3_to_tok3" source="Pm3" target="tok3" type="normal"/>
+            <arc id="Pback3_to_tback3" source="Pback3" target="tback3" type="normal"/>
+            <arc id="Pm3_to_tredo3" source="Pm3" target="tredo3" type="normal"/>
+            <arc id="Pback1_to_tback1" source="Pback1" target="tback1" type="normal"/>
+            <arc id="Pm1_to_tredo1" source="Pm1" target="tredo1" type="normal"/>
+            <arc id="Pm2_to_tok2" source="Pm2" target="tok2" type="normal"/>
+            <arc id="Pback2_to_tback2" source="Pback2" target="tback2" type="normal"/>
+            <arc id="Pout2_to_tsynch1_23" source="Pout2" target="tsynch1_23" type="normal"/>
+            <arc id="Pout3_to_tsynch1_23" source="Pout3" target="tsynch1_23" type="normal"/>
+            <arc id="P1_to_tsynch1_23" source="P1" target="tsynch1_23" type="normal"/>
+            <arc id="Pout1_to_tout1" source="Pout1" target="tout1" type="normal"/>
+            <arc id="Pm1_to_tok1" source="Pm1" target="tok1" type="normal"/>
+            <arc id="P2_to_tsynch4_23" source="P2" target="tsynch4_23" type="normal"/>
+            <arc id="Pout4_to_tsynch4_23" source="Pout4" target="tsynch4_23" type="normal"/>
+            <arc id="P3_to_tsynch4_23" source="P3" target="tsynch4_23" type="normal"/>
+            <arc id="tok4_to_Pout4" source="tok4" target="Pout4" type="normal"/>
+            <arc id="tback4_to_Pm4" source="tback4" target="Pm4" type="normal"/>
+            <arc id="tredo4_to_Pback4" source="tredo4" target="Pback4" type="normal"/>
+            <arc id="tin4_to_Pm4" source="tin4" target="Pm4" type="normal"/>
+            <arc id="tredo2_to_Pback2" source="tredo2" target="Pback2" type="normal"/>
+            <arc id="tok3_to_Pout3" source="tok3" target="Pout3" type="normal"/>
+            <arc id="tback3_to_Pm3" source="tback3" target="Pm3" type="normal"/>
+            <arc id="tredo3_to_Pback3" source="tredo3" target="Pback3" type="normal"/>
+            <arc id="tback1_to_Pm1" source="tback1" target="Pm1" type="normal"/>
+            <arc id="tredo1_to_Pback1" source="tredo1" target="Pback1" type="normal"/>
+            <arc id="tok2_to_Pout2" source="tok2" target="Pout2" type="normal"/>
+            <arc id="tback2_to_Pm2" source="tback2" target="Pm2" type="normal"/>
+            <arc id="tsynch1_23_to_P3" source="tsynch1_23" target="P3" type="normal"/>
+            <arc id="tsynch1_23_to_Pm1" source="tsynch1_23" target="Pm1" type="normal"/>
+            <arc id="tsynch1_23_to_P2" source="tsynch1_23" target="P2" type="normal"/>
+            <arc id="tout1_to_P1" source="tout1" target="P1" type="normal"/>
+            <arc id="tok1_to_Pout1" source="tok1" target="Pout1" type="normal"/>
+            <arc id="tsynch4_23_to_P4" source="tsynch4_23" target="P4" type="normal"/>
+            <arc id="tsynch4_23_to_Pm3" source="tsynch4_23" target="Pm3" type="normal"/>
+            <arc id="tsynch4_23_to_Pm2" source="tsynch4_23" target="Pm2" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

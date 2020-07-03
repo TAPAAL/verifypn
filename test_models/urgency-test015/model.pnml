@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="transportationBelt_P0">
+                <graphics>
+                    <position x="180" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_P0</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="transportationBelt_P1">
+                <graphics>
+                    <position x="195" y="375"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="transportationBelt_P2">
+                <graphics>
+                    <position x="390" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="transportationBelt_P3">
+                <graphics>
+                    <position x="420" y="375"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="transportationBelt_P4">
+                <graphics>
+                    <position x="630" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="transportationBelt_P5">
+                <graphics>
+                    <position x="645" y="360"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_P5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="transportationBelt_P6">
+                <graphics>
+                    <position x="855" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_P6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="transportationBelt_P7">
+                <graphics>
+                    <position x="870" y="375"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_P7</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="transportationBelt_P8">
+                <graphics>
+                    <position x="435" y="765"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_P8</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Crane_waiting">
+                <graphics>
+                    <position x="1365" y="135"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Crane_waiting</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Crane_transportation">
+                <graphics>
+                    <position x="1560" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Crane_transportation</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Crane_stamp">
+                <graphics>
+                    <position x="1650" y="135"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Crane_stamp</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Crane_P3">
+                <graphics>
+                    <position x="1350" y="255"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Crane_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Crane_P5">
+                <graphics>
+                    <position x="1470" y="75"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Crane_P5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Crane_P6">
+                <graphics>
+                    <position x="1560" y="420"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Crane_P6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="finalProducts_Finished">
+                <graphics>
+                    <position x="255" y="1050"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>finalProducts_Finished</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="finalProducts_end">
+                <graphics>
+                    <position x="315" y="1260"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>finalProducts_end</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="transportationBelt_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_T0</text>
+                </name>
+                <graphics>
+                    <position x="735" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="transportationBelt_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_T1</text>
+                </name>
+                <graphics>
+                    <position x="750" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="transportationBelt_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_T2</text>
+                </name>
+                <graphics>
+                    <position x="510" y="195"/>
+                </graphics>
+            </transition>
+            <transition id="transportationBelt_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_T3</text>
+                </name>
+                <graphics>
+                    <position x="525" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="transportationBelt_T4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_T4</text>
+                </name>
+                <graphics>
+                    <position x="270" y="180"/>
+                </graphics>
+            </transition>
+            <transition id="transportationBelt_T5">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_T5</text>
+                </name>
+                <graphics>
+                    <position x="285" y="375"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_metal">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_metal</text>
+                </name>
+                <graphics>
+                    <position x="975" y="195"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_plastic">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_plastic</text>
+                </name>
+                <graphics>
+                    <position x="990" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_start</text>
+                </name>
+                <graphics>
+                    <position x="435" y="600"/>
+                </graphics>
+            </transition>
+            <transition id="transportationBelt_T9">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>transportationBelt_T9</text>
+                </name>
+                <graphics>
+                    <position x="180" y="450"/>
+                </graphics>
+            </transition>
+            <transition id="Crane_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Crane_T2</text>
+                </name>
+                <graphics>
+                    <position x="1545" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="Crane_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Crane_T3</text>
+                </name>
+                <graphics>
+                    <position x="1440" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="Crane_T4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Crane_T4</text>
+                </name>
+                <graphics>
+                    <position x="1635" y="255"/>
+                </graphics>
+            </transition>
+            <transition id="Crane_T5">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Crane_T5</text>
+                </name>
+                <graphics>
+                    <position x="1500" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_move">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_move</text>
+                </name>
+                <graphics>
+                    <position x="1560" y="525"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_doneworking">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_doneworking</text>
+                </name>
+                <graphics>
+                    <position x="1365" y="435"/>
+                </graphics>
+            </transition>
+            <arc id="transportationBelt_P4_to_transportationBelt_T0" source="transportationBelt_P4" target="transportationBelt_T0" type="normal"/>
+            <arc id="transportationBelt_P5_to_transportationBelt_T1" source="transportationBelt_P5" target="transportationBelt_T1" type="normal"/>
+            <arc id="transportationBelt_P2_to_transportationBelt_T2" source="transportationBelt_P2" target="transportationBelt_T2" type="normal"/>
+            <arc id="transportationBelt_P3_to_transportationBelt_T3" source="transportationBelt_P3" target="transportationBelt_T3" type="normal"/>
+            <arc id="transportationBelt_P0_to_transportationBelt_T4" source="transportationBelt_P0" target="transportationBelt_T4" type="normal"/>
+            <arc id="transportationBelt_P1_to_transportationBelt_T5" source="transportationBelt_P1" target="transportationBelt_T5" type="normal"/>
+            <arc id="transportationBelt_P6_to_Shared_metal" source="transportationBelt_P6" target="Shared_metal" type="normal"/>
+            <arc id="transportationBelt_P7_to_Shared_plastic" source="transportationBelt_P7" target="Shared_plastic" type="normal"/>
+            <arc id="transportationBelt_P8_to_Shared_start" source="transportationBelt_P8" target="Shared_start" type="normal"/>
+            <arc id="transportationBelt_P1_to_transportationBelt_T9" source="transportationBelt_P1" target="transportationBelt_T9" type="normal">
+                <graphics>
+                    <position x="163" y="418"/>
+                </graphics>
+            </arc>
+            <arc id="Crane_waiting_to_Shared_metal" source="Crane_waiting" target="Shared_metal" type="normal"/>
+            <arc id="Crane_waiting_to_Shared_plastic" source="Crane_waiting" target="Shared_plastic" type="normal"/>
+            <arc id="Crane_P3_to_Crane_T3" source="Crane_P3" target="Crane_T3" type="normal"/>
+            <arc id="Crane_P5_to_Crane_T2" source="Crane_P5" target="Crane_T2" type="normal"/>
+            <arc id="Crane_stamp_to_Crane_T4" source="Crane_stamp" target="Crane_T4" type="normal"/>
+            <arc id="Crane_transportation_to_Crane_T5" source="Crane_transportation" target="Crane_T5" type="normal"/>
+            <arc id="Crane_P6_to_Shared_move" source="Crane_P6" target="Shared_move" type="normal"/>
+            <arc id="Crane_waiting_to_Shared_doneworking" source="Crane_waiting" target="Shared_doneworking" type="normal">
+                <graphics>
+                    <position x="1408" y="253"/>
+                </graphics>
+            </arc>
+            <arc id="finalProducts_Finished_to_Shared_doneworking" source="finalProducts_Finished" target="Shared_doneworking" type="normal">
+                <inscription>
+                    <text>4</text>
+                </inscription>
+            </arc>
+            <arc id="transportationBelt_T0_to_transportationBelt_P6" source="transportationBelt_T0" target="transportationBelt_P6" type="normal"/>
+            <arc id="transportationBelt_T1_to_transportationBelt_P7" source="transportationBelt_T1" target="transportationBelt_P7" type="normal"/>
+            <arc id="transportationBelt_T2_to_transportationBelt_P4" source="transportationBelt_T2" target="transportationBelt_P4" type="normal"/>
+            <arc id="transportationBelt_T3_to_transportationBelt_P5" source="transportationBelt_T3" target="transportationBelt_P5" type="normal"/>
+            <arc id="transportationBelt_T4_to_transportationBelt_P2" source="transportationBelt_T4" target="transportationBelt_P2" type="normal"/>
+            <arc id="transportationBelt_T5_to_transportationBelt_P3" source="transportationBelt_T5" target="transportationBelt_P3" type="normal"/>
+            <arc id="Shared_start_to_transportationBelt_P0" source="Shared_start" target="transportationBelt_P0" type="normal">
+                <graphics>
+                    <position x="448" y="613"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_start_to_transportationBelt_P3" source="Shared_start" target="transportationBelt_P3" type="normal"/>
+            <arc id="Shared_start_to_transportationBelt_P5" source="Shared_start" target="transportationBelt_P5" type="normal"/>
+            <arc id="Shared_start_to_transportationBelt_P6" source="Shared_start" target="transportationBelt_P6" type="normal">
+                <graphics>
+                    <position x="883" y="583"/>
+                    <position x="928" y="283"/>
+                </graphics>
+            </arc>
+            <arc id="transportationBelt_T9_to_transportationBelt_P1" source="transportationBelt_T9" target="transportationBelt_P1" type="normal">
+                <graphics>
+                    <position x="238" y="448"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_metal_to_Crane_P5" source="Shared_metal" target="Crane_P5" type="normal">
+                <graphics>
+                    <position x="1333" y="58"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_plastic_to_Crane_P3" source="Shared_plastic" target="Crane_P3" type="normal"/>
+            <arc id="Crane_T3_to_Crane_transportation" source="Crane_T3" target="Crane_transportation" type="normal"/>
+            <arc id="Crane_T2_to_Crane_stamp" source="Crane_T2" target="Crane_stamp" type="normal"/>
+            <arc id="Crane_T4_to_Crane_transportation" source="Crane_T4" target="Crane_transportation" type="normal"/>
+            <arc id="Crane_T5_to_Crane_waiting" source="Crane_T5" target="Crane_waiting" type="normal"/>
+            <arc id="Crane_T3_to_Crane_P6" source="Crane_T3" target="Crane_P6" type="normal">
+                <graphics>
+                    <position x="1468" y="403"/>
+                </graphics>
+            </arc>
+            <arc id="Crane_T4_to_Crane_P6" source="Crane_T4" target="Crane_P6" type="normal">
+                <graphics>
+                    <position x="1663" y="388"/>
+                    <position x="1663" y="388"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_start_to_Crane_waiting" source="Shared_start" target="Crane_waiting" type="normal">
+                <graphics>
+                    <position x="1288" y="223"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_move_to_finalProducts_Finished" source="Shared_move" target="finalProducts_Finished" type="normal"/>
+            <arc id="Shared_doneworking_to_finalProducts_end" source="Shared_doneworking" target="finalProducts_end" type="normal"/>
+            <arc id="transportationBelt_P6_to_transportationBelt_T0" source="transportationBelt_P6" target="transportationBelt_T0" type="inhibitor">
+                <graphics>
+                    <position x="838" y="238"/>
+                </graphics>
+            </arc>
+            <arc id="transportationBelt_P7_to_transportationBelt_T0" source="transportationBelt_P7" target="transportationBelt_T0" type="inhibitor"/>
+            <arc id="transportationBelt_P2_to_transportationBelt_T4" source="transportationBelt_P2" target="transportationBelt_T4" type="inhibitor">
+                <graphics>
+                    <position x="328" y="223"/>
+                </graphics>
+            </arc>
+            <arc id="transportationBelt_P3_to_transportationBelt_T4" source="transportationBelt_P3" target="transportationBelt_T4" type="inhibitor"/>
+            <arc id="transportationBelt_P4_to_transportationBelt_T2" source="transportationBelt_P4" target="transportationBelt_T2" type="inhibitor">
+                <graphics>
+                    <position x="598" y="238"/>
+                </graphics>
+            </arc>
+            <arc id="transportationBelt_P5_to_transportationBelt_T2" source="transportationBelt_P5" target="transportationBelt_T2" type="inhibitor"/>
+            <arc id="transportationBelt_P3_to_transportationBelt_T5" source="transportationBelt_P3" target="transportationBelt_T5" type="inhibitor">
+                <graphics>
+                    <position x="358" y="373"/>
+                </graphics>
+            </arc>
+            <arc id="transportationBelt_P2_to_transportationBelt_T5" source="transportationBelt_P2" target="transportationBelt_T5" type="inhibitor"/>
+            <arc id="transportationBelt_P5_to_transportationBelt_T3" source="transportationBelt_P5" target="transportationBelt_T3" type="inhibitor">
+                <graphics>
+                    <position x="568" y="343"/>
+                </graphics>
+            </arc>
+            <arc id="transportationBelt_P4_to_transportationBelt_T3" source="transportationBelt_P4" target="transportationBelt_T3" type="inhibitor"/>
+            <arc id="transportationBelt_P7_to_transportationBelt_T1" source="transportationBelt_P7" target="transportationBelt_T1" type="inhibitor">
+                <graphics>
+                    <position x="808" y="358"/>
+                </graphics>
+            </arc>
+            <arc id="transportationBelt_P6_to_transportationBelt_T1" source="transportationBelt_P6" target="transportationBelt_T1" type="inhibitor"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

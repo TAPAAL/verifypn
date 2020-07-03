@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>transport-test020.FALSE-1</id>
+    <description>transport-test020.FALSE-1</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>P1</place>
+            </tokens-count>
+            <integer-constant>1</integer-constant>
+          </integer-eq>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+  <property>
+    <id>transport-test020.TRUE-2</id>
+    <description>transport-test020.TRUE-2</description>
+    <formula>
+      <exists-path>
+        <globally>
+          <integer-eq>
+            <tokens-count>
+              <place>P1</place>
+            </tokens-count>
+            <integer-constant>0</integer-constant>
+          </integer-eq>
+        </globally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

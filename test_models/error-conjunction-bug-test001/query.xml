@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>error-conjunction-bug-test001.TRUE-1</id>
+    <description>error-conjunction-bug-test001.TRUE-1</description>
+    <formula>
+      <exists-path>
+        <globally>
+          <disjunction>
+            <negation>
+              <is-fireable>
+                <transition>maU</transition>
+              </is-fireable>
+            </negation>
+            <negation>
+              <disjunction>
+                <is-fireable>
+                  <transition>mrF</transition>
+                </is-fireable>
+                <conjunction>
+                  <is-fireable>
+                    <transition>msG</transition>
+                  </is-fireable>
+                  <is-fireable>
+                    <transition>msG</transition>
+                  </is-fireable>
+                </conjunction>
+              </disjunction>
+            </negation>
+          </disjunction>
+        </globally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

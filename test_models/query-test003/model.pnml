@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="P42">
+                <graphics>
+                    <position x="180" y="135"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P42</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="P43">
+                <graphics>
+                    <position x="405" y="135"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P43</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P44">
+                <graphics>
+                    <position x="660" y="135"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P44</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P45">
+                <graphics>
+                    <position x="870" y="135"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P45</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P46">
+                <graphics>
+                    <position x="195" y="360"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P46</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P47">
+                <graphics>
+                    <position x="435" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P47</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P48">
+                <graphics>
+                    <position x="675" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P48</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P49">
+                <graphics>
+                    <position x="885" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P49</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P50">
+                <graphics>
+                    <position x="195" y="570"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P50</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P52">
+                <graphics>
+                    <position x="690" y="585"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P52</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Final">
+                <graphics>
+                    <position x="585" y="855"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Final</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P55">
+                <graphics>
+                    <position x="870" y="705"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P55</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <transition id="T22">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T22</text>
+                </name>
+                <graphics>
+                    <position x="300" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="T23">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T23</text>
+                </name>
+                <graphics>
+                    <position x="525" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="T24">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T24</text>
+                </name>
+                <graphics>
+                    <position x="780" y="225"/>
+                </graphics>
+            </transition>
+            <transition id="T25">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T25</text>
+                </name>
+                <graphics>
+                    <position x="315" y="465"/>
+                </graphics>
+            </transition>
+            <transition id="T27">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T27</text>
+                </name>
+                <graphics>
+                    <position x="825" y="480"/>
+                </graphics>
+            </transition>
+            <transition id="T28">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T28</text>
+                </name>
+                <graphics>
+                    <position x="990" y="225"/>
+                </graphics>
+            </transition>
+            <transition id="T30">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T30</text>
+                </name>
+                <graphics>
+                    <position x="570" y="705"/>
+                </graphics>
+            </transition>
+            <arc id="P42_to_T22" source="P42" target="T22" type="normal"/>
+            <arc id="P43_to_T23" source="P43" target="T23" type="normal"/>
+            <arc id="P44_to_T24" source="P44" target="T24" type="normal"/>
+            <arc id="P46_to_T25" source="P46" target="T25" type="normal"/>
+            <arc id="P47_to_T25" source="P47" target="T25" type="normal"/>
+            <arc id="P48_to_T27" source="P48" target="T27" type="normal"/>
+            <arc id="P49_to_T27" source="P49" target="T27" type="normal"/>
+            <arc id="P45_to_T28" source="P45" target="T28" type="normal"/>
+            <arc id="P50_to_T30" source="P50" target="T30" type="normal"/>
+            <arc id="P52_to_T30" source="P52" target="T30" type="normal"/>
+            <arc id="P55_to_T30" source="P55" target="T30" type="normal"/>
+            <arc id="T22_to_P43" source="T22" target="P43" type="normal"/>
+            <arc id="T22_to_P46" source="T22" target="P46" type="normal"/>
+            <arc id="T23_to_P44" source="T23" target="P44" type="normal"/>
+            <arc id="T23_to_P47" source="T23" target="P47" type="normal"/>
+            <arc id="T24_to_P48" source="T24" target="P48" type="normal"/>
+            <arc id="T24_to_P45" source="T24" target="P45" type="normal"/>
+            <arc id="T25_to_P50" source="T25" target="P50" type="normal"/>
+            <arc id="T27_to_P52" source="T27" target="P52" type="normal"/>
+            <arc id="T28_to_P49" source="T28" target="P49" type="normal"/>
+            <arc id="T30_to_Final" source="T30" target="Final" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

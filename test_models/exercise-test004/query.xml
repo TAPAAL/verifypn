@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>exercise-test004.TRUE-1</id>
+    <description>exercise-test004.TRUE-1</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <conjunction>
+            <integer-eq>
+              <tokens-count>
+                <place>P4</place>
+              </tokens-count>
+              <integer-constant>1</integer-constant>
+            </integer-eq>
+            <integer-eq>
+              <tokens-count>
+                <place>P3</place>
+              </tokens-count>
+              <integer-constant>0</integer-constant>
+            </integer-eq>
+          </conjunction>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

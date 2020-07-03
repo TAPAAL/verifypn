@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>simple-test009.FALSE-1</id>
+    <description>simple-test009.FALSE-1</description>
+    <formula>
+      <all-paths>
+        <globally>
+          <conjunction>
+            <integer-eq>
+              <tokens-count>
+                <place>Holder</place>
+              </tokens-count>
+              <integer-constant>2</integer-constant>
+            </integer-eq>
+            <integer-eq>
+              <tokens-count>
+                <place>P0</place>
+              </tokens-count>
+              <integer-constant>2</integer-constant>
+            </integer-eq>
+          </conjunction>
+        </globally>
+      </all-paths>
+    </formula>
+  </property>
+</property-set>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>urgency-test017.TRUE-1</id>
+    <description>urgency-test017.TRUE-1</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>EndFridge</place>
+            </tokens-count>
+            <integer-constant>2</integer-constant>
+          </integer-eq>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+  <property>
+    <id>urgency-test017.FALSE-2</id>
+    <description>urgency-test017.FALSE-2</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>Deadline</place>
+            </tokens-count>
+            <integer-constant>3</integer-constant>
+          </integer-eq>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

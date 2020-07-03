@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>other-test008.FALSE-1</id>
+    <description>other-test008.FALSE-1</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <conjunction>
+            <integer-ge>
+              <tokens-count>
+                <place>goal</place>
+              </tokens-count>
+              <integer-constant>1</integer-constant>
+            </integer-ge>
+            <integer-ge>
+              <tokens-count>
+                <place>here</place>
+              </tokens-count>
+              <integer-constant>1</integer-constant>
+            </integer-ge>
+          </conjunction>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

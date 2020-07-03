@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>urgency-test010.TRUE-1</id>
+    <description>urgency-test010.TRUE-1</description>
+    <formula>
+      <all-paths>
+        <globally>
+          <integer-le>
+            <tokens-count>
+              <place>Monitor_MissedDeadline</place>
+            </tokens-count>
+            <integer-constant>0</integer-constant>
+          </integer-le>
+        </globally>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>urgency-test010.TRUE-2</id>
+    <description>urgency-test010.TRUE-2</description>
+    <formula>
+      <all-paths>
+        <finally>
+          <integer-ge>
+            <tokens-count>
+              <place>Patient_PatientFinished</place>
+            </tokens-count>
+            <integer-constant>5</integer-constant>
+          </integer-ge>
+        </finally>
+      </all-paths>
+    </formula>
+  </property>
+</property-set>

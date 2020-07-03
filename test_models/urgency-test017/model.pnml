@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="ReadyWorkforce">
+                <graphics>
+                    <position x="150" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ReadyWorkforce</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="PackingArea">
+                <graphics>
+                    <position x="315" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PackingArea</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="FoodPacked">
+                <graphics>
+                    <position x="510" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>FoodPacked</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P3">
+                <graphics>
+                    <position x="375" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P4">
+                <graphics>
+                    <position x="195" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P5">
+                <graphics>
+                    <position x="90" y="450"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P6">
+                <graphics>
+                    <position x="315" y="450"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="EndFridge">
+                <graphics>
+                    <position x="195" y="540"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>EndFridge</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P8">
+                <graphics>
+                    <position x="435" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P8</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Deadline">
+                <graphics>
+                    <position x="675" y="255"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Deadline</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="StartFridge">
+                <graphics>
+                    <position x="225" y="30"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>StartFridge</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <transition id="GetBox">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>GetBox</text>
+                </name>
+                <graphics>
+                    <position x="225" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="PackingFood">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PackingFood</text>
+                </name>
+                <graphics>
+                    <position x="420" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="DeliverPackedFood">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DeliverPackedFood</text>
+                </name>
+                <graphics>
+                    <position x="435" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="GiveRecievePackedFood">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>GiveRecievePackedFood</text>
+                </name>
+                <graphics>
+                    <position x="300" y="225"/>
+                </graphics>
+            </transition>
+            <transition id="GoToCar">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>GoToCar</text>
+                </name>
+                <graphics>
+                    <position x="90" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="DeliverToCar">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DeliverToCar</text>
+                </name>
+                <graphics>
+                    <position x="195" y="450"/>
+                </graphics>
+            </transition>
+            <transition id="T6">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T6</text>
+                </name>
+                <graphics>
+                    <position x="435" y="450"/>
+                </graphics>
+            </transition>
+            <arc id="ReadyWorkforce_to_GetBox" source="ReadyWorkforce" target="GetBox" type="normal"/>
+            <arc id="PackingArea_to_PackingFood" source="PackingArea" target="PackingFood" type="normal"/>
+            <arc id="FoodPacked_to_DeliverPackedFood" source="FoodPacked" target="DeliverPackedFood" type="normal"/>
+            <arc id="P3_to_GiveRecievePackedFood" source="P3" target="GiveRecievePackedFood" type="normal"/>
+            <arc id="P4_to_GoToCar" source="P4" target="GoToCar" type="normal"/>
+            <arc id="P5_to_DeliverToCar" source="P5" target="DeliverToCar" type="normal"/>
+            <arc id="P6_to_T6" source="P6" target="T6" type="normal"/>
+            <arc id="P8_to_GiveRecievePackedFood" source="P8" target="GiveRecievePackedFood" type="normal"/>
+            <arc id="StartFridge_to_GetBox" source="StartFridge" target="GetBox" type="normal"/>
+            <arc id="PackingFood_to_FoodPacked" source="PackingFood" target="FoodPacked" type="normal"/>
+            <arc id="DeliverPackedFood_to_P3" source="DeliverPackedFood" target="P3" type="normal"/>
+            <arc id="GiveRecievePackedFood_to_ReadyWorkforce" source="GiveRecievePackedFood" target="ReadyWorkforce" type="normal"/>
+            <arc id="GiveRecievePackedFood_to_P4" source="GiveRecievePackedFood" target="P4" type="normal"/>
+            <arc id="GoToCar_to_P5" source="GoToCar" target="P5" type="normal"/>
+            <arc id="DeliverToCar_to_P6" source="DeliverToCar" target="P6" type="normal"/>
+            <arc id="T6_to_P8" source="T6" target="P8" type="normal"/>
+            <arc id="DeliverToCar_to_EndFridge" source="DeliverToCar" target="EndFridge" type="normal"/>
+            <arc id="GetBox_to_PackingArea" source="GetBox" target="PackingArea" type="normal"/>
+            <arc id="PackingArea_to_GetBox" source="PackingArea" target="GetBox" type="inhibitor">
+                <graphics>
+                    <position x="329" y="149"/>
+                    <position x="254" y="149"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

@@ -1,0 +1,1304 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="StartProcedure_start">
+                <graphics>
+                    <position x="300" y="30"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>StartProcedure_start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="StartProcedure_end">
+                <graphics>
+                    <position x="240" y="435"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>StartProcedure_end</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="StartProcedure_P2">
+                <graphics>
+                    <position x="300" y="255"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>StartProcedure_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="StartProcedure_endNoTreatment">
+                <graphics>
+                    <position x="360" y="435"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="135" y="37"/>
+                    </graphics>
+                    <text>StartProcedure_endNoTreatment</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PreparePatient_start">
+                <graphics>
+                    <position x="1080" y="45"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PreparePatient_start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="PreparePatient_P1">
+                <graphics>
+                    <position x="1320" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="71" y="35"/>
+                    </graphics>
+                    <text>PreparePatient_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PreparePatient_P2">
+                <graphics>
+                    <position x="1620" y="45"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PreparePatient_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PreparePatient_P3">
+                <graphics>
+                    <position x="1740" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PreparePatient_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PreparePatient_P4">
+                <graphics>
+                    <position x="1500" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="103" y="36"/>
+                    </graphics>
+                    <text>PreparePatient_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PreparePatient_P5">
+                <graphics>
+                    <position x="1230" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="87" y="36"/>
+                    </graphics>
+                    <text>PreparePatient_P5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PreparePatient_end">
+                <graphics>
+                    <position x="1575" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PreparePatient_end</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PreparePatient_P7">
+                <graphics>
+                    <position x="1875" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="203" y="37"/>
+                    </graphics>
+                    <text>PreparePatient_P7</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PrepareBlood_P0">
+                <graphics>
+                    <position x="90" y="780"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PrepareBlood_P0</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PrepareBlood_P1">
+                <graphics>
+                    <position x="555" y="780"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PrepareBlood_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PrepareBlood_P2">
+                <graphics>
+                    <position x="300" y="870"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="92" y="37"/>
+                    </graphics>
+                    <text>PrepareBlood_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PrepareBlood_end">
+                <graphics>
+                    <position x="555" y="1035"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PrepareBlood_end</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PrepareBlood_P5">
+                <graphics>
+                    <position x="690" y="900"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="152" y="48"/>
+                    </graphics>
+                    <text>PrepareBlood_P5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PrepareBlood_start">
+                <graphics>
+                    <position x="90" y="1035"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PrepareBlood_start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="StartTransfusion_P1">
+                <graphics>
+                    <position x="1350" y="960"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>StartTransfusion_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="StartTransfusion_end">
+                <graphics>
+                    <position x="1350" y="1170"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>StartTransfusion_end</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="StartTransfusion_start">
+                <graphics>
+                    <position x="1350" y="765"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>StartTransfusion_start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="MonitorTransfusion_start">
+                <graphics>
+                    <position x="120" y="1650"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MonitorTransfusion_start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="MonitorTransfusion_P1">
+                <graphics>
+                    <position x="360" y="1650"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MonitorTransfusion_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MonitorTransfusion_P2">
+                <graphics>
+                    <position x="570" y="1650"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="191" y="10"/>
+                    </graphics>
+                    <text>MonitorTransfusion_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MonitorTransfusion_end">
+                <graphics>
+                    <position x="570" y="1860"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MonitorTransfusion_end</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MonitorTransfusion_P4">
+                <graphics>
+                    <position x="225" y="1755"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="87" y="43"/>
+                    </graphics>
+                    <text>MonitorTransfusion_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MonitorTransfusion_transfusionDuration">
+                <graphics>
+                    <position x="465" y="1485"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="70" y="-9"/>
+                    </graphics>
+                    <text>MonitorTransfusion_transfusionDuration</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MonitorTransfusion_P5">
+                <graphics>
+                    <position x="360" y="1860"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MonitorTransfusion_P5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CompleteTransfusion_start">
+                <graphics>
+                    <position x="1110" y="1530"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CompleteTransfusion_start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="CompleteTransfusion_P1">
+                <graphics>
+                    <position x="1320" y="1530"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="108" y="-28"/>
+                    </graphics>
+                    <text>CompleteTransfusion_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CompleteTransfusion_P2">
+                <graphics>
+                    <position x="1665" y="1530"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="112" y="44"/>
+                    </graphics>
+                    <text>CompleteTransfusion_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CompleteTransfusion_end">
+                <graphics>
+                    <position x="2010" y="1530"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CompleteTransfusion_end</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PatientIDinfo_start">
+                <graphics>
+                    <position x="135" y="2250"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PatientIDinfo_start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="PatientIDinfo_P1">
+                <graphics>
+                    <position x="345" y="2250"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PatientIDinfo_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="PatientIDinfo_end">
+                <graphics>
+                    <position x="525" y="2250"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PatientIDinfo_end</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="BloodIDinfo_start">
+                <graphics>
+                    <position x="1140" y="2250"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>BloodIDinfo_start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="BloodIDinfo_P1">
+                <graphics>
+                    <position x="1350" y="2250"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>BloodIDinfo_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="BloodIDinfo_end">
+                <graphics>
+                    <position x="1530" y="2250"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>BloodIDinfo_end</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_start">
+                <graphics>
+                    <position x="60" y="2910"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Nurse_start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_P1">
+                <graphics>
+                    <position x="285" y="3000"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Nurse_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_P2">
+                <graphics>
+                    <position x="495" y="3000"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="96" y="34"/>
+                    </graphics>
+                    <text>Nurse_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_P3">
+                <graphics>
+                    <position x="705" y="3000"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="178" y="35"/>
+                    </graphics>
+                    <text>Nurse_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_P4">
+                <graphics>
+                    <position x="930" y="3120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="85" y="-24"/>
+                    </graphics>
+                    <text>Nurse_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_P5">
+                <graphics>
+                    <position x="780" y="3120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="89" y="-24"/>
+                    </graphics>
+                    <text>Nurse_P5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_P6">
+                <graphics>
+                    <position x="135" y="3075"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Nurse_P6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_end">
+                <graphics>
+                    <position x="90" y="3600"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Nurse_end</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_P8">
+                <graphics>
+                    <position x="120" y="3225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="59" y="34"/>
+                    </graphics>
+                    <text>Nurse_P8</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_P9">
+                <graphics>
+                    <position x="495" y="3225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Nurse_P9</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_P10">
+                <graphics>
+                    <position x="495" y="3375"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Nurse_P10</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_P11">
+                <graphics>
+                    <position x="300" y="3120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="41" y="-18"/>
+                    </graphics>
+                    <text>Nurse_P11</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Nurse_P12">
+                <graphics>
+                    <position x="570" y="3120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Nurse_P12</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Physician_start">
+                <graphics>
+                    <position x="1140" y="2970"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Physician_start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Physician_end">
+                <graphics>
+                    <position x="1455" y="2970"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Physician_end</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="BloodBank_start">
+                <graphics>
+                    <position x="105" y="3690"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>BloodBank_start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="BloodBank_end">
+                <graphics>
+                    <position x="105" y="3855"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>BloodBank_end</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Observer_IDchecked">
+                <graphics>
+                    <position x="1530" y="3705"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Observer_IDchecked</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Observer_TransfusionStart">
+                <graphics>
+                    <position x="1530" y="3825"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Observer_TransfusionStart</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Observer_PatientReaction">
+                <graphics>
+                    <position x="1530" y="3945"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Observer_PatientReaction</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Observer_Time">
+                <graphics>
+                    <position x="1530" y="4065"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Observer_Time</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <transition id="Shared_checkPatientInfo">
+                <name>
+                    <graphics>
+                        <offset x="-11" y="23"/>
+                    </graphics>
+                    <text>Shared_checkPatientInfo</text>
+                </name>
+                <graphics>
+                    <position x="300" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_checkoutPatient">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_checkoutPatient</text>
+                </name>
+                <graphics>
+                    <position x="240" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_checkoutPatientWithoutTreatment">
+                <name>
+                    <graphics>
+                        <offset x="231" y="32"/>
+                    </graphics>
+                    <text>Shared_checkoutPatientWithoutTreatment</text>
+                </name>
+                <graphics>
+                    <position x="360" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_firstPatientInfo">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_firstPatientInfo</text>
+                </name>
+                <graphics>
+                    <position x="1230" y="45"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_firstBloodInfo">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_firstBloodInfo</text>
+                </name>
+                <graphics>
+                    <position x="1440" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_checkPatientConsent">
+                <name>
+                    <graphics>
+                        <offset x="141" y="29"/>
+                    </graphics>
+                    <text>Shared_checkPatientConsent</text>
+                </name>
+                <graphics>
+                    <position x="1740" y="45"/>
+                </graphics>
+            </transition>
+            <transition id="PreparePatient_patientAgree">
+                <name>
+                    <graphics>
+                        <offset x="49" y="-10"/>
+                    </graphics>
+                    <text>PreparePatient_patientAgree</text>
+                </name>
+                <graphics>
+                    <position x="1620" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="PreparePatient_patientDisagree">
+                <name>
+                    <graphics>
+                        <offset x="78" y="-1"/>
+                    </graphics>
+                    <text>PreparePatient_patientDisagree</text>
+                </name>
+                <graphics>
+                    <position x="1875" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_checkPhyOrder">
+                <name>
+                    <graphics>
+                        <offset x="51" y="-8"/>
+                    </graphics>
+                    <text>Shared_checkPhyOrder</text>
+                </name>
+                <graphics>
+                    <position x="1365" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_orderIncomplete">
+                <name>
+                    <graphics>
+                        <offset x="40" y="61"/>
+                    </graphics>
+                    <text>Shared_orderIncomplete</text>
+                </name>
+                <graphics>
+                    <position x="1080" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_completeOrder">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_completeOrder</text>
+                </name>
+                <graphics>
+                    <position x="1230" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="PrepareBlood_bloodTypeOK">
+                <name>
+                    <graphics>
+                        <offset x="-1" y="11"/>
+                    </graphics>
+                    <text>PrepareBlood_bloodTypeOK</text>
+                </name>
+                <graphics>
+                    <position x="300" y="735"/>
+                </graphics>
+            </transition>
+            <transition id="PrepareBlood_bloodTypeNOK">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>PrepareBlood_bloodTypeNOK</text>
+                </name>
+                <graphics>
+                    <position x="180" y="870"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_obtainBloodType">
+                <name>
+                    <graphics>
+                        <offset x="39" y="-14"/>
+                    </graphics>
+                    <text>Shared_obtainBloodType</text>
+                </name>
+                <graphics>
+                    <position x="420" y="870"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_bloodAvailableNOK">
+                <name>
+                    <graphics>
+                        <offset x="47" y="-17"/>
+                    </graphics>
+                    <text>Shared_bloodAvailableNOK</text>
+                </name>
+                <graphics>
+                    <position x="690" y="780"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_bloodReady">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_bloodReady</text>
+                </name>
+                <graphics>
+                    <position x="690" y="1035"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_checkBloodAvailability">
+                <name>
+                    <graphics>
+                        <offset x="38" y="55"/>
+                    </graphics>
+                    <text>Shared_checkBloodAvailability</text>
+                </name>
+                <graphics>
+                    <position x="555" y="900"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_checkBloodType">
+                <name>
+                    <graphics>
+                        <offset x="114" y="35"/>
+                    </graphics>
+                    <text>Shared_checkBloodType</text>
+                </name>
+                <graphics>
+                    <position x="60" y="915"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_transStarted">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_transStarted</text>
+                </name>
+                <graphics>
+                    <position x="1350" y="1065"/>
+                </graphics>
+            </transition>
+            <transition id="MonitorTransfusion_patientOK">
+                <name>
+                    <graphics>
+                        <offset x="38" y="50"/>
+                    </graphics>
+                    <text>MonitorTransfusion_patientOK</text>
+                </name>
+                <graphics>
+                    <position x="465" y="1650"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_reaction">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="20"/>
+                    </graphics>
+                    <text>Shared_reaction</text>
+                </name>
+                <graphics>
+                    <position x="360" y="1755"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_transEnded">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_transEnded</text>
+                </name>
+                <graphics>
+                    <position x="570" y="1755"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_monitorReaction">
+                <name>
+                    <graphics>
+                        <offset x="13" y="-17"/>
+                    </graphics>
+                    <text>Shared_monitorReaction</text>
+                </name>
+                <graphics>
+                    <position x="225" y="1650"/>
+                </graphics>
+            </transition>
+            <transition id="MonitorTransfusion_singleUnitAssessment">
+                <name>
+                    <graphics>
+                        <offset x="77" y="-8"/>
+                    </graphics>
+                    <text>MonitorTransfusion_singleUnitAssessment</text>
+                </name>
+                <graphics>
+                    <position x="465" y="1590"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_transInterrupted">
+                <name>
+                    <graphics>
+                        <offset x="67" y="-12"/>
+                    </graphics>
+                    <text>Shared_transInterrupted</text>
+                </name>
+                <graphics>
+                    <position x="465" y="1860"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_lastBloodInfo">
+                <name>
+                    <graphics>
+                        <offset x="47" y="-10"/>
+                    </graphics>
+                    <text>Shared_lastBloodInfo</text>
+                </name>
+                <graphics>
+                    <position x="1590" y="1530"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_lastPatientInfo">
+                <name>
+                    <graphics>
+                        <offset x="40" y="-11"/>
+                    </graphics>
+                    <text>Shared_lastPatientInfo</text>
+                </name>
+                <graphics>
+                    <position x="1935" y="1530"/>
+                </graphics>
+            </transition>
+            <arc id="StartProcedure_start_to_Shared_checkPatientInfo" source="StartProcedure_start" target="Shared_checkPatientInfo" type="normal"/>
+            <arc id="StartProcedure_P2_to_Shared_checkoutPatient" source="StartProcedure_P2" target="Shared_checkoutPatient" type="normal"/>
+            <arc id="StartProcedure_P2_to_Shared_checkoutPatientWithoutTreatment" source="StartProcedure_P2" target="Shared_checkoutPatientWithoutTreatment" type="normal"/>
+            <arc id="PreparePatient_start_to_Shared_firstPatientInfo" source="PreparePatient_start" target="Shared_firstPatientInfo" type="normal"/>
+            <arc id="PreparePatient_P1_to_Shared_firstBloodInfo" source="PreparePatient_P1" target="Shared_firstBloodInfo" type="normal"/>
+            <arc id="PreparePatient_P2_to_Shared_checkPatientConsent" source="PreparePatient_P2" target="Shared_checkPatientConsent" type="normal"/>
+            <arc id="PreparePatient_P3_to_PreparePatient_patientAgree" source="PreparePatient_P3" target="PreparePatient_patientAgree" type="normal"/>
+            <arc id="PreparePatient_P3_to_PreparePatient_patientDisagree" source="PreparePatient_P3" target="PreparePatient_patientDisagree" type="normal"/>
+            <arc id="PreparePatient_P5_to_Shared_completeOrder" source="PreparePatient_P5" target="Shared_completeOrder" type="normal"/>
+            <arc id="PreparePatient_P7_to_Shared_checkoutPatientWithoutTreatment" source="PreparePatient_P7" target="Shared_checkoutPatientWithoutTreatment" type="normal"/>
+            <arc id="PrepareBlood_P0_to_PrepareBlood_bloodTypeOK" source="PrepareBlood_P0" target="PrepareBlood_bloodTypeOK" type="normal"/>
+            <arc id="PrepareBlood_P0_to_PrepareBlood_bloodTypeNOK" source="PrepareBlood_P0" target="PrepareBlood_bloodTypeNOK" type="normal"/>
+            <arc id="PrepareBlood_P2_to_Shared_obtainBloodType" source="PrepareBlood_P2" target="Shared_obtainBloodType" type="normal"/>
+            <arc id="PrepareBlood_start_to_Shared_checkBloodType" source="PrepareBlood_start" target="Shared_checkBloodType" type="normal"/>
+            <arc id="PrepareBlood_P5_to_Shared_bloodReady" source="PrepareBlood_P5" target="Shared_bloodReady" type="normal"/>
+            <arc id="StartTransfusion_P1_to_Shared_transStarted" source="StartTransfusion_P1" target="Shared_transStarted" type="normal"/>
+            <arc id="StartTransfusion_start_to_Shared_bloodReady" source="StartTransfusion_start" target="Shared_bloodReady" type="normal"/>
+            <arc id="MonitorTransfusion_start_to_Shared_transStarted" source="MonitorTransfusion_start" target="Shared_transStarted" type="normal"/>
+            <arc id="MonitorTransfusion_P1_to_Shared_reaction" source="MonitorTransfusion_P1" target="Shared_reaction" type="normal"/>
+            <arc id="MonitorTransfusion_P2_to_Shared_transEnded" source="MonitorTransfusion_P2" target="Shared_transEnded" type="normal"/>
+            <arc id="MonitorTransfusion_P4_to_Shared_monitorReaction" source="MonitorTransfusion_P4" target="Shared_monitorReaction" type="normal"/>
+            <arc id="MonitorTransfusion_P1_to_MonitorTransfusion_patientOK" source="MonitorTransfusion_P1" target="MonitorTransfusion_patientOK" type="normal"/>
+            <arc id="MonitorTransfusion_P2_to_MonitorTransfusion_singleUnitAssessment" source="MonitorTransfusion_P2" target="MonitorTransfusion_singleUnitAssessment" type="normal">
+                <graphics>
+                    <position x="586" y="1606"/>
+                </graphics>
+            </arc>
+            <arc id="MonitorTransfusion_transfusionDuration_to_Shared_transEnded" source="MonitorTransfusion_transfusionDuration" target="Shared_transEnded" type="normal">
+                <graphics>
+                    <position x="796" y="1501"/>
+                    <position x="796" y="1771"/>
+                </graphics>
+            </arc>
+            <arc id="MonitorTransfusion_P5_to_Shared_transInterrupted" source="MonitorTransfusion_P5" target="Shared_transInterrupted" type="normal"/>
+            <arc id="MonitorTransfusion_transfusionDuration_to_Shared_transInterrupted" source="MonitorTransfusion_transfusionDuration" target="Shared_transInterrupted" type="normal">
+                <graphics>
+                    <position x="599" y="1469"/>
+                    <position x="944" y="1469"/>
+                    <position x="944" y="2009"/>
+                    <position x="479" y="2009"/>
+                </graphics>
+            </arc>
+            <arc id="CompleteTransfusion_start_to_Shared_transEnded" source="CompleteTransfusion_start" target="Shared_transEnded" type="normal"/>
+            <arc id="CompleteTransfusion_P1_to_Shared_lastBloodInfo" source="CompleteTransfusion_P1" target="Shared_lastBloodInfo" type="normal"/>
+            <arc id="CompleteTransfusion_P2_to_Shared_lastPatientInfo" source="CompleteTransfusion_P2" target="Shared_lastPatientInfo" type="normal"/>
+            <arc id="CompleteTransfusion_start_to_Shared_transInterrupted" source="CompleteTransfusion_start" target="Shared_transInterrupted" type="normal"/>
+            <arc id="PatientIDinfo_start_to_Shared_firstPatientInfo" source="PatientIDinfo_start" target="Shared_firstPatientInfo" type="normal"/>
+            <arc id="PatientIDinfo_P1_to_Shared_lastPatientInfo" source="PatientIDinfo_P1" target="Shared_lastPatientInfo" type="normal"/>
+            <arc id="BloodIDinfo_start_to_Shared_firstBloodInfo" source="BloodIDinfo_start" target="Shared_firstBloodInfo" type="normal"/>
+            <arc id="BloodIDinfo_P1_to_Shared_lastBloodInfo" source="BloodIDinfo_P1" target="Shared_lastBloodInfo" type="normal"/>
+            <arc id="Nurse_start_to_Shared_checkPatientInfo" source="Nurse_start" target="Shared_checkPatientInfo" type="normal"/>
+            <arc id="Nurse_P1_to_Shared_checkPatientConsent" source="Nurse_P1" target="Shared_checkPatientConsent" type="normal"/>
+            <arc id="Nurse_P3_to_Shared_checkBloodType" source="Nurse_P3" target="Shared_checkBloodType" type="normal">
+                <graphics>
+                    <position x="1024" y="3017"/>
+                </graphics>
+            </arc>
+            <arc id="Nurse_P6_to_Shared_transEnded" source="Nurse_P6" target="Shared_transEnded" type="normal"/>
+            <arc id="Nurse_P8_to_Shared_lastBloodInfo" source="Nurse_P8" target="Shared_lastBloodInfo" type="normal"/>
+            <arc id="Nurse_P9_to_Shared_lastPatientInfo" source="Nurse_P9" target="Shared_lastPatientInfo" type="normal"/>
+            <arc id="Nurse_P10_to_Shared_checkoutPatient" source="Nurse_P10" target="Shared_checkoutPatient" type="normal"/>
+            <arc id="Nurse_P5_to_Shared_firstBloodInfo" source="Nurse_P5" target="Shared_firstBloodInfo" type="normal"/>
+            <arc id="Nurse_P11_to_Shared_monitorReaction" source="Nurse_P11" target="Shared_monitorReaction" type="normal"/>
+            <arc id="Nurse_P12_to_Shared_transStarted" source="Nurse_P12" target="Shared_transStarted" type="normal"/>
+            <arc id="Nurse_P6_to_Shared_transInterrupted" source="Nurse_P6" target="Shared_transInterrupted" type="normal"/>
+            <arc id="Physician_start_to_Shared_completeOrder" source="Physician_start" target="Shared_completeOrder" type="normal"/>
+            <arc id="BloodBank_start_to_Shared_obtainBloodType" source="BloodBank_start" target="Shared_obtainBloodType" type="normal"/>
+            <arc id="BloodBank_start_to_Shared_bloodReady" source="BloodBank_start" target="Shared_bloodReady" type="normal"/>
+            <arc id="Shared_checkPatientInfo_to_StartProcedure_P2" source="Shared_checkPatientInfo" target="StartProcedure_P2" type="normal"/>
+            <arc id="Shared_checkoutPatient_to_StartProcedure_end" source="Shared_checkoutPatient" target="StartProcedure_end" type="normal"/>
+            <arc id="Shared_checkoutPatientWithoutTreatment_to_StartProcedure_endNoTreatment" source="Shared_checkoutPatientWithoutTreatment" target="StartProcedure_endNoTreatment" type="normal"/>
+            <arc id="Shared_checkPatientConsent_to_PreparePatient_P3" source="Shared_checkPatientConsent" target="PreparePatient_P3" type="normal"/>
+            <arc id="PreparePatient_patientAgree_to_PreparePatient_P4" source="PreparePatient_patientAgree" target="PreparePatient_P4" type="normal"/>
+            <arc id="PreparePatient_patientDisagree_to_PreparePatient_P7" source="PreparePatient_patientDisagree" target="PreparePatient_P7" type="normal"/>
+            <arc id="Shared_checkoutPatientWithoutTreatment_to_PreparePatient_end" source="Shared_checkoutPatientWithoutTreatment" target="PreparePatient_end" type="normal"/>
+            <arc id="Shared_completeOrder_to_PreparePatient_P1" source="Shared_completeOrder" target="PreparePatient_P1" type="normal"/>
+            <arc id="Shared_firstBloodInfo_to_PreparePatient_end" source="Shared_firstBloodInfo" target="PreparePatient_end" type="normal"/>
+            <arc id="Shared_firstPatientInfo_to_PreparePatient_P2" source="Shared_firstPatientInfo" target="PreparePatient_P2" type="normal"/>
+            <arc id="PrepareBlood_bloodTypeOK_to_PrepareBlood_P1" source="PrepareBlood_bloodTypeOK" target="PrepareBlood_P1" type="normal"/>
+            <arc id="PrepareBlood_bloodTypeNOK_to_PrepareBlood_P2" source="PrepareBlood_bloodTypeNOK" target="PrepareBlood_P2" type="normal"/>
+            <arc id="Shared_obtainBloodType_to_PrepareBlood_P1" source="Shared_obtainBloodType" target="PrepareBlood_P1" type="normal"/>
+            <arc id="Shared_bloodReady_to_PrepareBlood_end" source="Shared_bloodReady" target="PrepareBlood_end" type="normal"/>
+            <arc id="Shared_checkBloodType_to_PrepareBlood_P0" source="Shared_checkBloodType" target="PrepareBlood_P0" type="normal"/>
+            <arc id="Shared_transStarted_to_StartTransfusion_end" source="Shared_transStarted" target="StartTransfusion_end" type="normal"/>
+            <arc id="Shared_bloodReady_to_StartTransfusion_P1" source="Shared_bloodReady" target="StartTransfusion_P1" type="normal"/>
+            <arc id="Shared_transEnded_to_MonitorTransfusion_end" source="Shared_transEnded" target="MonitorTransfusion_end" type="normal"/>
+            <arc id="Shared_transStarted_to_MonitorTransfusion_P4" source="Shared_transStarted" target="MonitorTransfusion_P4" type="normal"/>
+            <arc id="Shared_monitorReaction_to_MonitorTransfusion_P1" source="Shared_monitorReaction" target="MonitorTransfusion_P1" type="normal"/>
+            <arc id="MonitorTransfusion_patientOK_to_MonitorTransfusion_P2" source="MonitorTransfusion_patientOK" target="MonitorTransfusion_P2" type="normal"/>
+            <arc id="MonitorTransfusion_singleUnitAssessment_to_MonitorTransfusion_P1" source="MonitorTransfusion_singleUnitAssessment" target="MonitorTransfusion_P1" type="normal">
+                <graphics>
+                    <position x="376" y="1606"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_monitorReaction_to_MonitorTransfusion_transfusionDuration" source="Shared_monitorReaction" target="MonitorTransfusion_transfusionDuration" type="normal">
+                <graphics>
+                    <position x="241" y="1501"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_reaction_to_MonitorTransfusion_P5" source="Shared_reaction" target="MonitorTransfusion_P5" type="normal"/>
+            <arc id="Shared_transInterrupted_to_MonitorTransfusion_end" source="Shared_transInterrupted" target="MonitorTransfusion_end" type="normal"/>
+            <arc id="Shared_transEnded_to_CompleteTransfusion_P1" source="Shared_transEnded" target="CompleteTransfusion_P1" type="normal"/>
+            <arc id="Shared_lastBloodInfo_to_CompleteTransfusion_P2" source="Shared_lastBloodInfo" target="CompleteTransfusion_P2" type="normal"/>
+            <arc id="Shared_lastPatientInfo_to_CompleteTransfusion_end" source="Shared_lastPatientInfo" target="CompleteTransfusion_end" type="normal"/>
+            <arc id="Shared_transInterrupted_to_CompleteTransfusion_P1" source="Shared_transInterrupted" target="CompleteTransfusion_P1" type="normal"/>
+            <arc id="Shared_firstPatientInfo_to_PatientIDinfo_P1" source="Shared_firstPatientInfo" target="PatientIDinfo_P1" type="normal"/>
+            <arc id="Shared_lastPatientInfo_to_PatientIDinfo_end" source="Shared_lastPatientInfo" target="PatientIDinfo_end" type="normal"/>
+            <arc id="Shared_firstBloodInfo_to_BloodIDinfo_P1" source="Shared_firstBloodInfo" target="BloodIDinfo_P1" type="normal"/>
+            <arc id="Shared_lastBloodInfo_to_BloodIDinfo_end" source="Shared_lastBloodInfo" target="BloodIDinfo_end" type="normal"/>
+            <arc id="Shared_checkPatientInfo_to_Nurse_P1" source="Shared_checkPatientInfo" target="Nurse_P1" type="normal"/>
+            <arc id="Shared_checkPatientConsent_to_Nurse_P2" source="Shared_checkPatientConsent" target="Nurse_P2" type="normal"/>
+            <arc id="Shared_checkBloodType_to_Nurse_P4" source="Shared_checkBloodType" target="Nurse_P4" type="normal"/>
+            <arc id="Shared_monitorReaction_to_Nurse_P6" source="Shared_monitorReaction" target="Nurse_P6" type="normal"/>
+            <arc id="Shared_checkoutPatient_to_Nurse_end" source="Shared_checkoutPatient" target="Nurse_end" type="normal"/>
+            <arc id="Shared_transEnded_to_Nurse_P8" source="Shared_transEnded" target="Nurse_P8" type="normal"/>
+            <arc id="Shared_lastBloodInfo_to_Nurse_P9" source="Shared_lastBloodInfo" target="Nurse_P9" type="normal"/>
+            <arc id="Shared_lastPatientInfo_to_Nurse_P10" source="Shared_lastPatientInfo" target="Nurse_P10" type="normal"/>
+            <arc id="Shared_firstBloodInfo_to_Nurse_P12" source="Shared_firstBloodInfo" target="Nurse_P12" type="normal"/>
+            <arc id="Shared_transStarted_to_Nurse_P11" source="Shared_transStarted" target="Nurse_P11" type="normal"/>
+            <arc id="Shared_transInterrupted_to_Nurse_P8" source="Shared_transInterrupted" target="Nurse_P8" type="normal"/>
+            <arc id="Shared_completeOrder_to_Physician_end" source="Shared_completeOrder" target="Physician_end" type="normal"/>
+            <arc id="Shared_bloodReady_to_BloodBank_end" source="Shared_bloodReady" target="BloodBank_end" type="normal"/>
+            <arc id="Shared_obtainBloodType_to_BloodBank_start" source="Shared_obtainBloodType" target="BloodBank_start" type="normal">
+                <graphics>
+                    <position x="181" y="3751"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_firstPatientInfo_to_Observer_IDchecked" source="Shared_firstPatientInfo" target="Observer_IDchecked" type="normal"/>
+            <arc id="Shared_transStarted_to_Observer_TransfusionStart" source="Shared_transStarted" target="Observer_TransfusionStart" type="normal"/>
+            <arc id="Shared_reaction_to_Observer_PatientReaction" source="Shared_reaction" target="Observer_PatientReaction" type="normal"/>
+            <arc id="PreparePatient_P4_to_Shared_checkPhyOrder" source="PreparePatient_P4" target="Shared_checkPhyOrder" type="normal"/>
+            <arc id="Shared_checkPhyOrder_to_PreparePatient_P5" source="Shared_checkPhyOrder" target="PreparePatient_P5" type="normal">
+                <graphics>
+                    <position x="1381" y="166"/>
+                </graphics>
+            </arc>
+            <arc id="PreparePatient_P5_to_Shared_orderIncomplete" source="PreparePatient_P5" target="Shared_orderIncomplete" type="normal"/>
+            <arc id="Shared_orderIncomplete_to_PreparePatient_P4" source="Shared_orderIncomplete" target="PreparePatient_P4" type="normal">
+                <graphics>
+                    <position x="1096" y="106"/>
+                    <position x="1516" y="106"/>
+                </graphics>
+            </arc>
+            <arc id="PrepareBlood_P1_to_Shared_checkBloodAvailability" source="PrepareBlood_P1" target="Shared_checkBloodAvailability" type="normal"/>
+            <arc id="Shared_checkBloodAvailability_to_PrepareBlood_P5" source="Shared_checkBloodAvailability" target="PrepareBlood_P5" type="normal"/>
+            <arc id="PrepareBlood_P5_to_Shared_bloodAvailableNOK" source="PrepareBlood_P5" target="Shared_bloodAvailableNOK" type="normal"/>
+            <arc id="Shared_bloodAvailableNOK_to_PrepareBlood_P1" source="Shared_bloodAvailableNOK" target="PrepareBlood_P1" type="normal"/>
+            <arc id="Nurse_P2_to_Shared_checkPhyOrder" source="Nurse_P2" target="Shared_checkPhyOrder" type="normal"/>
+            <arc id="Shared_checkPhyOrder_to_Nurse_P3" source="Shared_checkPhyOrder" target="Nurse_P3" type="normal"/>
+            <arc id="Nurse_P3_to_Shared_orderIncomplete" source="Nurse_P3" target="Shared_orderIncomplete" type="normal">
+                <graphics>
+                    <position x="721" y="2941"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_orderIncomplete_to_Nurse_P2" source="Shared_orderIncomplete" target="Nurse_P2" type="normal">
+                <graphics>
+                    <position x="511" y="2941"/>
+                </graphics>
+            </arc>
+            <arc id="Nurse_P4_to_Shared_checkBloodAvailability" source="Nurse_P4" target="Shared_checkBloodAvailability" type="normal"/>
+            <arc id="Shared_checkBloodAvailability_to_Nurse_P5" source="Shared_checkBloodAvailability" target="Nurse_P5" type="normal"/>
+            <arc id="Nurse_P5_to_Shared_bloodAvailableNOK" source="Nurse_P5" target="Shared_bloodAvailableNOK" type="normal">
+                <graphics>
+                    <position x="795" y="3240"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_bloodAvailableNOK_to_Nurse_P4" source="Shared_bloodAvailableNOK" target="Nurse_P4" type="normal">
+                <graphics>
+                    <position x="945" y="3240"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

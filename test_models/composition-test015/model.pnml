@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="TAPN1_P0">
+                <graphics>
+                    <position x="105" y="165"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN1_P1">
+                <graphics>
+                    <position x="405" y="165"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN1_P2">
+                <graphics>
+                    <position x="720" y="165"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN1_End">
+                <graphics>
+                    <position x="990" y="165"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_End</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN2_P0">
+                <graphics>
+                    <position x="1095" y="165"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN2_P1">
+                <graphics>
+                    <position x="1395" y="165"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN2_P2">
+                <graphics>
+                    <position x="1710" y="165"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN2_End">
+                <graphics>
+                    <position x="1980" y="165"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_End</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN3_P0">
+                <graphics>
+                    <position x="105" y="330"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN3_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN3_P1">
+                <graphics>
+                    <position x="405" y="330"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN3_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN3_P2">
+                <graphics>
+                    <position x="720" y="330"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN3_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN3_End">
+                <graphics>
+                    <position x="990" y="330"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN3_End</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="TAPN1_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_T0</text>
+                </name>
+                <graphics>
+                    <position x="240" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN1_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_T1</text>
+                </name>
+                <graphics>
+                    <position x="555" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN1_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_T2</text>
+                </name>
+                <graphics>
+                    <position x="870" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN2_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_T0</text>
+                </name>
+                <graphics>
+                    <position x="1230" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN2_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_T1</text>
+                </name>
+                <graphics>
+                    <position x="1545" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN2_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_T2</text>
+                </name>
+                <graphics>
+                    <position x="1860" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN3_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN3_T0</text>
+                </name>
+                <graphics>
+                    <position x="240" y="330"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN3_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN3_T1</text>
+                </name>
+                <graphics>
+                    <position x="555" y="330"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN3_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN3_T2</text>
+                </name>
+                <graphics>
+                    <position x="870" y="330"/>
+                </graphics>
+            </transition>
+            <arc id="TAPN1_P0_to_TAPN1_T0" source="TAPN1_P0" target="TAPN1_T0" type="normal"/>
+            <arc id="TAPN1_P1_to_TAPN1_T1" source="TAPN1_P1" target="TAPN1_T1" type="normal"/>
+            <arc id="TAPN1_P2_to_TAPN1_T2" source="TAPN1_P2" target="TAPN1_T2" type="normal"/>
+            <arc id="TAPN2_P0_to_TAPN2_T0" source="TAPN2_P0" target="TAPN2_T0" type="normal"/>
+            <arc id="TAPN2_P1_to_TAPN2_T1" source="TAPN2_P1" target="TAPN2_T1" type="normal"/>
+            <arc id="TAPN2_P2_to_TAPN2_T2" source="TAPN2_P2" target="TAPN2_T2" type="normal"/>
+            <arc id="TAPN3_P0_to_TAPN3_T0" source="TAPN3_P0" target="TAPN3_T0" type="normal"/>
+            <arc id="TAPN3_P1_to_TAPN3_T1" source="TAPN3_P1" target="TAPN3_T1" type="normal"/>
+            <arc id="TAPN3_P2_to_TAPN3_T2" source="TAPN3_P2" target="TAPN3_T2" type="normal"/>
+            <arc id="TAPN1_T0_to_TAPN1_P1" source="TAPN1_T0" target="TAPN1_P1" type="normal"/>
+            <arc id="TAPN1_T1_to_TAPN1_P2" source="TAPN1_T1" target="TAPN1_P2" type="normal"/>
+            <arc id="TAPN1_T2_to_TAPN1_End" source="TAPN1_T2" target="TAPN1_End" type="normal"/>
+            <arc id="TAPN2_T0_to_TAPN2_P1" source="TAPN2_T0" target="TAPN2_P1" type="normal"/>
+            <arc id="TAPN2_T1_to_TAPN2_P2" source="TAPN2_T1" target="TAPN2_P2" type="normal"/>
+            <arc id="TAPN2_T2_to_TAPN2_End" source="TAPN2_T2" target="TAPN2_End" type="normal"/>
+            <arc id="TAPN3_T0_to_TAPN3_P1" source="TAPN3_T0" target="TAPN3_P1" type="normal"/>
+            <arc id="TAPN3_T1_to_TAPN3_P2" source="TAPN3_T1" target="TAPN3_P2" type="normal"/>
+            <arc id="TAPN3_T2_to_TAPN3_End" source="TAPN3_T2" target="TAPN3_End" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>
