@@ -1,6 +1,5 @@
 #include "PetriEngine/STSolver.h"
 
-#include <glpk.h>
 #include <cassert>
 
 namespace PetriEngine {     

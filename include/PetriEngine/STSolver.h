@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <chrono>
-#include <glpk.h>
 
 namespace PetriEngine {
     class STSolver {
