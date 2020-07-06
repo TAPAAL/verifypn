@@ -98,7 +98,10 @@ namespace PetriEngine {
                             ++post.first;
                         }
                         else if (post.first == post.second || (pre.first != pre.second && pre.first->place < post.first->place)) {
-                            col[l] = -(double) pre.first->tokens;
+                            if(!pre.first->inhibitor)
+                                col[l] = -(double) pre.first->tokens;
+                            else
+                                col[l] = 0;
                             indir[l] = pre.first->place + 1;
                             ++pre.first;
                         }
