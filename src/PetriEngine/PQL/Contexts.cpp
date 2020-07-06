@@ -104,7 +104,10 @@ namespace PetriEngine {
                         }
                         else {
                             assert(pre.first->place == post.first->place);
-                            col[l] = (double) post.first->tokens - (double) pre.first->tokens;
+                            if(!pre.first->inhibitor)
+                                col[l] = (double) post.first->tokens - (double) pre.first->tokens;
+                            else
+                                col[l] = (double) post.first->tokens;
                             indir[l] = pre.first->place + 1;
                             ++pre.first;
                             ++post.first;
