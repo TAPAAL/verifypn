@@ -22,27 +22,27 @@ The four distributions of VerifyPN can be compiled as follows
 ```
 mkdir build
 cd  build
-cmake .. -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF -DVERIFYPN_TAR=OFF
+cmake .. -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF 
 ```
 
 ### Windows 64 cross-compilation with minGW
 ```
 mkdir build
 cd  build
-cmake .. -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF -DVERIFYPN_TAR=OFF
+cmake .. -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF 
 ```
 
 ### Linux64 - Model Checking Competition
 ```
 mkdir build
 cd  build
-cmake .. -DVERIFYPN_Static=OFF -DVERIFYPN_MC_Simplification=ON -DVERIFYPN_TAR=ON
+cmake .. -DVERIFYPN_Static=OFF -DVERIFYPN_MC_Simplification=ON 
 ```
 
 ### Mac 64 compilation
 ```
 mkdir build
 cd build
-cmake -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex -DCMAKE_C_COMPILER=/usr/local/bin/gcc-9 -DCMAKE_CXX_COMPILER=/usr/local/bin/g++-9 ..
+cmake -DVERIFYPN_MC_Simplification=OFF  -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex -DCMAKE_C_COMPILER=/usr/local/bin/gcc-9 -DCMAKE_CXX_COMPILER=/usr/local/bin/g++-9 ..
 ```
 
