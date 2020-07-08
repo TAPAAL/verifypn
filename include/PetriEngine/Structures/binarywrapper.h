@@ -27,9 +27,6 @@
 #include <assert.h>
 #include <limits>
 #include <stdlib.h>
-#ifndef __clang__
-#include <malloc.h>
-#endif
 #include <stdint.h>
 
 #ifndef BINARYWRAPPER_H

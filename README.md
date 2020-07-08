@@ -39,4 +39,10 @@ cd  build
 cmake .. -DVERIFYPN_Static=OFF -DVERIFYPN_MC_Simplification=ON -DVERIFYPN_TAR=ON
 ```
 
+### Mac 64 compilation
+```
+mkdir build
+cd build
+cmake -DBISON_EXECUTABLE=/usr/local/opt/bison/bin/bison -DFLEX_EXECUTABLE=/usr/local/opt/flex/bin/flex -DCMAKE_C_COMPILER=/usr/local/bin/gcc-9 -DCMAKE_CXX_COMPILER=/usr/local/bin/g++-9 ..
+```
 
