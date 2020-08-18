@@ -26,10 +26,18 @@ cmake .. -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF
 ```
 
 ### Windows 64 cross-compilation with minGW
+Install cross-compiler and libs
+
 ```
-mkdir build
-cd  build
-cmake .. -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF 
+sudo apt install mingw-w64-x86-64-dev mingw-w64-tools g++-mingw-w64-x86-64
+```
+
+To build
+
+```
+mkdir build-win
+cd  build-win
+cmake .. -DVERIFYPN_Static=ON -DVERIFYPN_MC_Simplification=OFF -DCMAKE_TOOLCHAIN_FILE=../toolchain-x86_64-w64-mingw32.cmake
 ```
 
 ### Linux64 - Model Checking Competition
