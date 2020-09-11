@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Raf">
+                <graphics>
+                    <position x="555" y="1305"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Raf</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="RasGTP">
+                <graphics>
+                    <position x="465" y="1230"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>RasGTP</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="RafP_Phase1">
+                <graphics>
+                    <position x="675" y="1305"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>RafP_Phase1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MEK_RafP">
+                <graphics>
+                    <position x="810" y="1170"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MEK_RafP</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Raf_RasGTP">
+                <graphics>
+                    <position x="465" y="1320"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Raf_RasGTP</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="RafP">
+                <graphics>
+                    <position x="810" y="1275"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>RafP</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ERK">
+                <graphics>
+                    <position x="1350" y="1005"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ERK</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="MEKPP_Phase2">
+                <graphics>
+                    <position x="1155" y="1095"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MEKPP_Phase2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MEKP_Phase2">
+                <graphics>
+                    <position x="1050" y="1095"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MEKP_Phase2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MEKP_RafP">
+                <graphics>
+                    <position x="915" y="1335"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MEKP_RafP</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ERKPP">
+                <graphics>
+                    <position x="1770" y="1215"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ERKPP</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MEKP">
+                <graphics>
+                    <position x="915" y="1215"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MEKP</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Phase3">
+                <graphics>
+                    <position x="1665" y="1005"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Phase3</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Phase2">
+                <graphics>
+                    <position x="1095" y="1005"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Phase2</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="MEKPP">
+                <graphics>
+                    <position x="1260" y="1050"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MEKPP</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ERKP">
+                <graphics>
+                    <position x="1455" y="1050"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ERKP</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ERKP_Phase3">
+                <graphics>
+                    <position x="1545" y="1095"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ERKP_Phase3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ERKPP_Phase3">
+                <graphics>
+                    <position x="1740" y="1095"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ERKPP_Phase3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="MEK">
+                <graphics>
+                    <position x="810" y="1095"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>MEK</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Phase1">
+                <graphics>
+                    <position x="675" y="1230"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Phase1</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="ERKP_MEKPP">
+                <graphics>
+                    <position x="1365" y="1245"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ERKP_MEKPP</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ERK_MEKPP">
+                <graphics>
+                    <position x="1350" y="1095"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ERK_MEKPP</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="k5">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k5</text>
+                </name>
+                <graphics>
+                    <position x="675" y="1350"/>
+                </graphics>
+            </transition>
+            <transition id="k16">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k16</text>
+                </name>
+                <graphics>
+                    <position x="1050" y="1065"/>
+                </graphics>
+            </transition>
+            <transition id="k30">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k30</text>
+                </name>
+                <graphics>
+                    <position x="1590" y="1125"/>
+                </graphics>
+            </transition>
+            <transition id="k17">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k17</text>
+                </name>
+                <graphics>
+                    <position x="1050" y="1125"/>
+                </graphics>
+            </transition>
+            <transition id="k29">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k29</text>
+                </name>
+                <graphics>
+                    <position x="1485" y="1125"/>
+                </graphics>
+            </transition>
+            <transition id="k4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k4</text>
+                </name>
+                <graphics>
+                    <position x="675" y="1275"/>
+                </graphics>
+            </transition>
+            <transition id="k19">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k19</text>
+                </name>
+                <graphics>
+                    <position x="1350" y="1065"/>
+                </graphics>
+            </transition>
+            <transition id="k22">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k22</text>
+                </name>
+                <graphics>
+                    <position x="1365" y="1185"/>
+                </graphics>
+            </transition>
+            <transition id="k27">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k27</text>
+                </name>
+                <graphics>
+                    <position x="1680" y="1125"/>
+                </graphics>
+            </transition>
+            <transition id="k13">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k13</text>
+                </name>
+                <graphics>
+                    <position x="1155" y="1065"/>
+                </graphics>
+            </transition>
+            <transition id="k14">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k14</text>
+                </name>
+                <graphics>
+                    <position x="1215" y="1125"/>
+                </graphics>
+            </transition>
+            <transition id="k28">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k28</text>
+                </name>
+                <graphics>
+                    <position x="1545" y="1065"/>
+                </graphics>
+            </transition>
+            <transition id="k7">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k7</text>
+                </name>
+                <graphics>
+                    <position x="810" y="1125"/>
+                </graphics>
+            </transition>
+            <transition id="k10">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k10</text>
+                </name>
+                <graphics>
+                    <position x="900" y="1275"/>
+                </graphics>
+            </transition>
+            <transition id="k23">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k23</text>
+                </name>
+                <graphics>
+                    <position x="1365" y="1290"/>
+                </graphics>
+            </transition>
+            <transition id="k20">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k20</text>
+                </name>
+                <graphics>
+                    <position x="1320" y="1125"/>
+                </graphics>
+            </transition>
+            <transition id="k11">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k11</text>
+                </name>
+                <graphics>
+                    <position x="870" y="1395"/>
+                </graphics>
+            </transition>
+            <transition id="k8">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k8</text>
+                </name>
+                <graphics>
+                    <position x="750" y="1230"/>
+                </graphics>
+            </transition>
+            <transition id="k26">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k26</text>
+                </name>
+                <graphics>
+                    <position x="1770" y="1125"/>
+                </graphics>
+            </transition>
+            <transition id="k25">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k25</text>
+                </name>
+                <graphics>
+                    <position x="1740" y="1065"/>
+                </graphics>
+            </transition>
+            <transition id="k15">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k15</text>
+                </name>
+                <graphics>
+                    <position x="1095" y="1125"/>
+                </graphics>
+            </transition>
+            <transition id="k24">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k24</text>
+                </name>
+                <graphics>
+                    <position x="1440" y="1215"/>
+                </graphics>
+            </transition>
+            <transition id="k9">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k9</text>
+                </name>
+                <graphics>
+                    <position x="855" y="1230"/>
+                </graphics>
+            </transition>
+            <transition id="k12">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k12</text>
+                </name>
+                <graphics>
+                    <position x="945" y="1395"/>
+                </graphics>
+            </transition>
+            <transition id="k21">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k21</text>
+                </name>
+                <graphics>
+                    <position x="1395" y="1125"/>
+                </graphics>
+            </transition>
+            <transition id="k18">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k18</text>
+                </name>
+                <graphics>
+                    <position x="930" y="1095"/>
+                </graphics>
+            </transition>
+            <transition id="k3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k3</text>
+                </name>
+                <graphics>
+                    <position x="375" y="1365"/>
+                </graphics>
+            </transition>
+            <transition id="k6">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k6</text>
+                </name>
+                <graphics>
+                    <position x="600" y="1320"/>
+                </graphics>
+            </transition>
+            <transition id="k1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k1</text>
+                </name>
+                <graphics>
+                    <position x="465" y="1275"/>
+                </graphics>
+            </transition>
+            <transition id="k2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>k2</text>
+                </name>
+                <graphics>
+                    <position x="555" y="1365"/>
+                </graphics>
+            </transition>
+            <arc id="Phase3_to_k28" source="Phase3" target="k28" type="normal"/>
+            <arc id="ERKP_to_k28" source="ERKP" target="k28" type="normal"/>
+            <arc id="MEKP_to_k16" source="MEKP" target="k16" type="normal"/>
+            <arc id="Phase2_to_k16" source="Phase2" target="k16" type="normal"/>
+            <arc id="MEKP_Phase2_to_k17" source="MEKP_Phase2" target="k17" type="normal"/>
+            <arc id="MEKPP_Phase2_to_k14" source="MEKPP_Phase2" target="k14" type="normal"/>
+            <arc id="ERKP_Phase3_to_k29" source="ERKP_Phase3" target="k29" type="normal"/>
+            <arc id="ERKP_MEKPP_to_k24" source="ERKP_MEKPP" target="k24" type="normal"/>
+            <arc id="RasGTP_to_k1" source="RasGTP" target="k1" type="normal"/>
+            <arc id="Raf_to_k1" source="Raf" target="k1" type="normal"/>
+            <arc id="Raf_RasGTP_to_k2" source="Raf_RasGTP" target="k2" type="normal"/>
+            <arc id="ERKP_Phase3_to_k30" source="ERKP_Phase3" target="k30" type="normal"/>
+            <arc id="ERKPP_Phase3_to_k27" source="ERKPP_Phase3" target="k27" type="normal"/>
+            <arc id="RafP_to_k10" source="RafP" target="k10" type="normal"/>
+            <arc id="MEKP_RafP_to_k12" source="MEKP_RafP" target="k12" type="normal"/>
+            <arc id="ERKP_to_k22" source="ERKP" target="k22" type="normal"/>
+            <arc id="MEKPP_to_k22" source="MEKPP" target="k22" type="normal"/>
+            <arc id="MEKPP_to_k19" source="MEKPP" target="k19" type="normal"/>
+            <arc id="ERK_to_k19" source="ERK" target="k19" type="normal"/>
+            <arc id="MEKP_to_k10" source="MEKP" target="k10" type="normal"/>
+            <arc id="Raf_RasGTP_to_k3" source="Raf_RasGTP" target="k3" type="normal"/>
+            <arc id="MEKP_Phase2_to_k18" source="MEKP_Phase2" target="k18" type="normal"/>
+            <arc id="MEKPP_Phase2_to_k15" source="MEKPP_Phase2" target="k15" type="normal"/>
+            <arc id="MEK_RafP_to_k9" source="MEK_RafP" target="k9" type="normal"/>
+            <arc id="ERKP_MEKPP_to_k23" source="ERKP_MEKPP" target="k23" type="normal"/>
+            <arc id="ERK_MEKPP_to_k21" source="ERK_MEKPP" target="k21" type="normal"/>
+            <arc id="RafP_Phase1_to_k6" source="RafP_Phase1" target="k6" type="normal"/>
+            <arc id="RafP_to_k7" source="RafP" target="k7" type="normal"/>
+            <arc id="MEK_to_k7" source="MEK" target="k7" type="normal"/>
+            <arc id="ERK_MEKPP_to_k20" source="ERK_MEKPP" target="k20" type="normal"/>
+            <arc id="ERKPP_Phase3_to_k26" source="ERKPP_Phase3" target="k26" type="normal"/>
+            <arc id="MEKP_RafP_to_k11" source="MEKP_RafP" target="k11" type="normal"/>
+            <arc id="ERKPP_to_k25" source="ERKPP" target="k25" type="normal"/>
+            <arc id="MEK_RafP_to_k8" source="MEK_RafP" target="k8" type="normal"/>
+            <arc id="Phase2_to_k13" source="Phase2" target="k13" type="normal"/>
+            <arc id="MEKPP_to_k13" source="MEKPP" target="k13" type="normal"/>
+            <arc id="Phase3_to_k25" source="Phase3" target="k25" type="normal"/>
+            <arc id="RafP_to_k4" source="RafP" target="k4" type="normal"/>
+            <arc id="RafP_Phase1_to_k5" source="RafP_Phase1" target="k5" type="normal"/>
+            <arc id="Phase1_to_k4" source="Phase1" target="k4" type="normal"/>
+            <arc id="k29_to_ERKP" source="k29" target="ERKP" type="normal"/>
+            <arc id="k28_to_ERKP_Phase3" source="k28" target="ERKP_Phase3" type="normal"/>
+            <arc id="k16_to_MEKP_Phase2" source="k16" target="MEKP_Phase2" type="normal"/>
+            <arc id="k14_to_Phase2" source="k14" target="Phase2" type="normal"/>
+            <arc id="k17_to_Phase2" source="k17" target="Phase2" type="normal"/>
+            <arc id="k17_to_MEKP" source="k17" target="MEKP" type="normal"/>
+            <arc id="k29_to_Phase3" source="k29" target="Phase3" type="normal"/>
+            <arc id="k15_to_MEKP" source="k15" target="MEKP" type="normal"/>
+            <arc id="k24_to_MEKPP" source="k24" target="MEKPP" type="normal"/>
+            <arc id="k24_to_ERKPP" source="k24" target="ERKPP" type="normal"/>
+            <arc id="k1_to_Raf_RasGTP" source="k1" target="Raf_RasGTP" type="normal"/>
+            <arc id="k30_to_ERK" source="k30" target="ERK" type="normal"/>
+            <arc id="k30_to_Phase3" source="k30" target="Phase3" type="normal"/>
+            <arc id="k27_to_ERKP" source="k27" target="ERKP" type="normal"/>
+            <arc id="k27_to_Phase3" source="k27" target="Phase3" type="normal"/>
+            <arc id="k2_to_Raf" source="k2" target="Raf" type="normal"/>
+            <arc id="k2_to_RasGTP" source="k2" target="RasGTP" type="normal"/>
+            <arc id="k7_to_MEK_RafP" source="k7" target="MEK_RafP" type="normal"/>
+            <arc id="k9_to_RafP" source="k9" target="RafP" type="normal"/>
+            <arc id="k12_to_RafP" source="k12" target="RafP" type="normal"/>
+            <arc id="k12_to_MEKPP" source="k12" target="MEKPP" type="normal"/>
+            <arc id="k18_to_Phase2" source="k18" target="Phase2" type="normal"/>
+            <arc id="k18_to_MEK" source="k18" target="MEK" type="normal"/>
+            <arc id="k22_to_ERKP_MEKPP" source="k22" target="ERKP_MEKPP" type="normal"/>
+            <arc id="k19_to_ERK_MEKPP" source="k19" target="ERK_MEKPP" type="normal"/>
+            <arc id="k10_to_MEKP_RafP" source="k10" target="MEKP_RafP" type="normal"/>
+            <arc id="k3_to_RafP" source="k3" target="RafP" type="normal"/>
+            <arc id="k21_to_MEKPP" source="k21" target="MEKPP" type="normal"/>
+            <arc id="k15_to_Phase2" source="k15" target="Phase2" type="normal"/>
+            <arc id="k9_to_MEKP" source="k9" target="MEKP" type="normal"/>
+            <arc id="k23_to_MEKPP" source="k23" target="MEKPP" type="normal"/>
+            <arc id="k21_to_ERKP" source="k21" target="ERKP" type="normal"/>
+            <arc id="k6_to_Phase1" source="k6" target="Phase1" type="normal"/>
+            <arc id="k6_to_Raf" source="k6" target="Raf" type="normal"/>
+            <arc id="k3_to_RasGTP" source="k3" target="RasGTP" type="normal"/>
+            <arc id="k23_to_ERKP" source="k23" target="ERKP" type="normal"/>
+            <arc id="k20_to_MEKPP" source="k20" target="MEKPP" type="normal"/>
+            <arc id="k20_to_ERK" source="k20" target="ERK" type="normal"/>
+            <arc id="k8_to_RafP" source="k8" target="RafP" type="normal"/>
+            <arc id="k8_to_MEK" source="k8" target="MEK" type="normal"/>
+            <arc id="k26_to_Phase3" source="k26" target="Phase3" type="normal"/>
+            <arc id="k11_to_RafP" source="k11" target="RafP" type="normal"/>
+            <arc id="k25_to_ERKPP_Phase3" source="k25" target="ERKPP_Phase3" type="normal"/>
+            <arc id="k11_to_MEKP" source="k11" target="MEKP" type="normal"/>
+            <arc id="k14_to_MEKPP" source="k14" target="MEKPP" type="normal"/>
+            <arc id="k13_to_MEKPP_Phase2" source="k13" target="MEKPP_Phase2" type="normal"/>
+            <arc id="k26_to_ERKPP" source="k26" target="ERKPP" type="normal"/>
+            <arc id="k4_to_RafP_Phase1" source="k4" target="RafP_Phase1" type="normal"/>
+            <arc id="k5_to_Phase1" source="k5" target="Phase1" type="normal"/>
+            <arc id="k5_to_RafP" source="k5" target="RafP" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

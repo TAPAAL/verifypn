@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>workflow-test006.FALSE-1</id>
+    <description>workflow-test006.FALSE-1</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <integer-ge>
+            <tokens-count>
+              <place>P5</place>
+            </tokens-count>
+            <integer-constant>2</integer-constant>
+          </integer-ge>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="A1">
+                <graphics>
+                    <position x="195" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>A1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="OP1">
+                <graphics>
+                    <position x="195" y="525"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>OP1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="A2">
+                <graphics>
+                    <position x="480" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>A2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="SIGNAL1">
+                <graphics>
+                    <position x="195" y="765"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>SIGNAL1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SIGNAL2">
+                <graphics>
+                    <position x="480" y="765"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>SIGNAL2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="B">
+                <graphics>
+                    <position x="1005" y="510"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="36"/>
+                    </graphics>
+                    <text>B</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="NULL">
+                <graphics>
+                    <position x="615" y="75"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>NULL</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="BNOT">
+                <graphics>
+                    <position x="165" y="75"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>BNOT</text>
+                </name>
+                <initialMarking>
+                    <text>3</text>
+                </initialMarking>
+            </place>
+            <place id="OP2">
+                <graphics>
+                    <position x="480" y="510"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>OP2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="A3">
+                <graphics>
+                    <position x="720" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>A3</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="OP3">
+                <graphics>
+                    <position x="735" y="510"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>OP3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SIGNAL3">
+                <graphics>
+                    <position x="750" y="765"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>SIGNAL3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T2</text>
+                </name>
+                <graphics>
+                    <position x="195" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="T7">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T7</text>
+                </name>
+                <graphics>
+                    <position x="480" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="T10">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T10</text>
+                </name>
+                <graphics>
+                    <position x="195" y="705"/>
+                </graphics>
+            </transition>
+            <transition id="T13">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T13</text>
+                </name>
+                <graphics>
+                    <position x="480" y="705"/>
+                </graphics>
+            </transition>
+            <transition id="T18">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T18</text>
+                </name>
+                <graphics>
+                    <position x="105" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="CARRY1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CARRY1</text>
+                </name>
+                <graphics>
+                    <position x="390" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="CARRY2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CARRY2</text>
+                </name>
+                <graphics>
+                    <position x="660" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="T21">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T21</text>
+                </name>
+                <graphics>
+                    <position x="735" y="345"/>
+                </graphics>
+            </transition>
+            <transition id="T23">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T23</text>
+                </name>
+                <graphics>
+                    <position x="750" y="705"/>
+                </graphics>
+            </transition>
+            <arc id="A1_to_T2" source="A1" target="T2" type="normal"/>
+            <arc id="A2_to_T7" source="A2" target="T7" type="normal"/>
+            <arc id="B_to_T10" source="B" target="T10" type="normal"/>
+            <arc id="B_to_T13" source="B" target="T13" type="normal"/>
+            <arc id="B_to_T2" source="B" target="T2" type="normal"/>
+            <arc id="OP1_to_T10" source="OP1" target="T10" type="normal"/>
+            <arc id="BNOT_to_T18" source="BNOT" target="T18" type="normal"/>
+            <arc id="A1_to_T18" source="A1" target="T18" type="normal"/>
+            <arc id="OP2_to_T13" source="OP2" target="T13" type="normal"/>
+            <arc id="A2_to_CARRY1" source="A2" target="CARRY1" type="normal"/>
+            <arc id="B_to_T7" source="B" target="T7" type="normal"/>
+            <arc id="BNOT_to_CARRY1" source="BNOT" target="CARRY1" type="normal"/>
+            <arc id="OP1_to_CARRY1" source="OP1" target="CARRY1" type="normal"/>
+            <arc id="A3_to_CARRY2" source="A3" target="CARRY2" type="normal"/>
+            <arc id="A3_to_T21" source="A3" target="T21" type="normal"/>
+            <arc id="OP2_to_CARRY2" source="OP2" target="CARRY2" type="normal"/>
+            <arc id="OP3_to_T23" source="OP3" target="T23" type="normal"/>
+            <arc id="B_to_T21" source="B" target="T21" type="normal"/>
+            <arc id="BNOT_to_CARRY2" source="BNOT" target="CARRY2" type="normal"/>
+            <arc id="B_to_T23" source="B" target="T23" type="normal"/>
+            <arc id="T2_to_OP1" source="T2" target="OP1" type="normal"/>
+            <arc id="T10_to_SIGNAL1" source="T10" target="SIGNAL1" type="normal"/>
+            <arc id="T13_to_SIGNAL2" source="T13" target="SIGNAL2" type="normal"/>
+            <arc id="T2_to_NULL" source="T2" target="NULL" type="normal"/>
+            <arc id="T7_to_NULL" source="T7" target="NULL" type="normal"/>
+            <arc id="T18_to_OP1" source="T18" target="OP1" type="normal"/>
+            <arc id="T7_to_OP2" source="T7" target="OP2" type="normal"/>
+            <arc id="CARRY1_to_OP2" source="CARRY1" target="OP2" type="normal"/>
+            <arc id="CARRY2_to_OP3" source="CARRY2" target="OP3" type="normal"/>
+            <arc id="T21_to_OP3" source="T21" target="OP3" type="normal"/>
+            <arc id="T21_to_NULL" source="T21" target="NULL" type="normal"/>
+            <arc id="T23_to_SIGNAL3" source="T23" target="SIGNAL3" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

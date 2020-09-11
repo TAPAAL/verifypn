@@ -1,0 +1,856 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="FORK_1">
+                <graphics>
+                    <position x="560" y="722"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>FORK_1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="WAIT_RIGHT_FORK_2">
+                <graphics>
+                    <position x="368" y="892"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>WAIT_RIGHT_FORK_2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="FORK_3">
+                <graphics>
+                    <position x="394" y="434"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>FORK_3</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="WAIT_RIGHT_FORK_5">
+                <graphics>
+                    <position x="752" y="168"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>WAIT_RIGHT_FORK_5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="EAT_5">
+                <graphics>
+                    <position x="725" y="244"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>EAT_5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="THINK_4">
+                <graphics>
+                    <position x="315" y="106"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>THINK_4</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="EAT_4">
+                <graphics>
+                    <position x="395" y="244"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>EAT_4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WAIT_LEFT_FORK_3">
+                <graphics>
+                    <position x="150" y="516"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>WAIT_LEFT_FORK_3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WAIT_RIGHT_FORK_6">
+                <graphics>
+                    <position x="970" y="516"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>WAIT_RIGHT_FORK_6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="EAT_2">
+                <graphics>
+                    <position x="395" y="816"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>EAT_2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="THINK_6">
+                <graphics>
+                    <position x="1050" y="530"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>THINK_6</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="WAIT_RIGHT_FORK_1">
+                <graphics>
+                    <position x="777" y="878"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="30" y="-6"/>
+                    </graphics>
+                    <text>WAIT_RIGHT_FORK_1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="FORK_6">
+                <graphics>
+                    <position x="726" y="626"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>FORK_6</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="WAIT_LEFT_FORK_4">
+                <graphics>
+                    <position x="368" y="168"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>WAIT_LEFT_FORK_4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="EAT_3">
+                <graphics>
+                    <position x="230" y="530"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>EAT_3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="EAT_1">
+                <graphics>
+                    <position x="725" y="816"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>EAT_1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WAIT_RIGHT_FORK_3">
+                <graphics>
+                    <position x="150" y="544"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>WAIT_RIGHT_FORK_3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="THINK_2">
+                <graphics>
+                    <position x="315" y="954"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>THINK_2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="FORK_4">
+                <graphics>
+                    <position x="560" y="338"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>FORK_4</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="WAIT_LEFT_FORK_5">
+                <graphics>
+                    <position x="777" y="182"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>WAIT_LEFT_FORK_5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="FORK_2">
+                <graphics>
+                    <position x="394" y="626"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>FORK_2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="THINK_3">
+                <graphics>
+                    <position x="70" y="530"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>THINK_3</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="WAIT_LEFT_FORK_6">
+                <graphics>
+                    <position x="970" y="544"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>WAIT_LEFT_FORK_6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WAIT_RIGHT_FORK_4">
+                <graphics>
+                    <position x="343" y="182"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>WAIT_RIGHT_FORK_4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WAIT_LEFT_FORK_2">
+                <graphics>
+                    <position x="343" y="878"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>WAIT_LEFT_FORK_2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="FORK_5">
+                <graphics>
+                    <position x="726" y="434"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>FORK_5</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="EAT_6">
+                <graphics>
+                    <position x="890" y="530"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>EAT_6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="THINK_5">
+                <graphics>
+                    <position x="805" y="106"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="22" y="-10"/>
+                    </graphics>
+                    <text>THINK_5</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="WAIT_LEFT_FORK_1">
+                <graphics>
+                    <position x="752" y="892"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-127" y="10"/>
+                    </graphics>
+                    <text>WAIT_LEFT_FORK_1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="THINK_1">
+                <graphics>
+                    <position x="805" y="954"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="63" y="-6"/>
+                    </graphics>
+                    <text>THINK_1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <transition id="TAKE_LEFT_1_FORK_6">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_LEFT_1_FORK_6</text>
+                </name>
+                <graphics>
+                    <position x="1010" y="514"/>
+                </graphics>
+            </transition>
+            <transition id="RELEASE_FORK_2">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>RELEASE_FORK_2</text>
+                </name>
+                <graphics>
+                    <position x="415" y="781"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_LEFT_1_FORK_4">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_LEFT_1_FORK_4</text>
+                </name>
+                <graphics>
+                    <position x="322" y="148"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_RIGHT_2_FORK_2">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_RIGHT_2_FORK_2</text>
+                </name>
+                <graphics>
+                    <position x="392" y="860"/>
+                </graphics>
+            </transition>
+            <transition id="RELEASE_FORK_3">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>RELEASE_FORK_3</text>
+                </name>
+                <graphics>
+                    <position x="270" y="530"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_LEFT_1_FORK_5">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_LEFT_1_FORK_5</text>
+                </name>
+                <graphics>
+                    <position x="771" y="133"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_LEFT_1_FORK_2">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_LEFT_1_FORK_2</text>
+                </name>
+                <graphics>
+                    <position x="349" y="927"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_LEFT_1_FORK_3">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_LEFT_1_FORK_3</text>
+                </name>
+                <graphics>
+                    <position x="110" y="546"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_RIGHT_1_FORK_2">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_RIGHT_1_FORK_2</text>
+                </name>
+                <graphics>
+                    <position x="322" y="912"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_LEFT_2_FORK_4">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_LEFT_2_FORK_4</text>
+                </name>
+                <graphics>
+                    <position x="392" y="200"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_LEFT_2_FORK_3">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_LEFT_2_FORK_3</text>
+                </name>
+                <graphics>
+                    <position x="191" y="511"/>
+                </graphics>
+            </transition>
+            <transition id="RELEASE_FORK_4">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>RELEASE_FORK_4</text>
+                </name>
+                <graphics>
+                    <position x="415" y="279"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_LEFT_1_FORK_1">
+                <name>
+                    <graphics>
+                        <offset x="120" y="-14"/>
+                    </graphics>
+                    <text>TAKE_LEFT_1_FORK_1</text>
+                </name>
+                <graphics>
+                    <position x="798" y="912"/>
+                </graphics>
+            </transition>
+            <transition id="RELEASE_FORK_6">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>RELEASE_FORK_6</text>
+                </name>
+                <graphics>
+                    <position x="850" y="530"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_LEFT_2_FORK_1">
+                <name>
+                    <graphics>
+                        <offset x="-145" y="1"/>
+                    </graphics>
+                    <text>TAKE_LEFT_2_FORK_1</text>
+                </name>
+                <graphics>
+                    <position x="728" y="860"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_RIGHT_2_FORK_6">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_RIGHT_2_FORK_6</text>
+                </name>
+                <graphics>
+                    <position x="929" y="511"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_LEFT_2_FORK_6">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_LEFT_2_FORK_6</text>
+                </name>
+                <graphics>
+                    <position x="929" y="549"/>
+                </graphics>
+            </transition>
+            <transition id="RELEASE_FORK_5">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>RELEASE_FORK_5</text>
+                </name>
+                <graphics>
+                    <position x="705" y="279"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_RIGHT_2_FORK_5">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_RIGHT_2_FORK_5</text>
+                </name>
+                <graphics>
+                    <position x="728" y="200"/>
+                </graphics>
+            </transition>
+            <transition id="RELEASE_FORK_1">
+                <name>
+                    <graphics>
+                        <offset x="32" y="-14"/>
+                    </graphics>
+                    <text>RELEASE_FORK_1</text>
+                </name>
+                <graphics>
+                    <position x="705" y="781"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_RIGHT_1_FORK_6">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_RIGHT_1_FORK_6</text>
+                </name>
+                <graphics>
+                    <position x="1010" y="546"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_RIGHT_2_FORK_3">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_RIGHT_2_FORK_3</text>
+                </name>
+                <graphics>
+                    <position x="191" y="549"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_LEFT_2_FORK_5">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_LEFT_2_FORK_5</text>
+                </name>
+                <graphics>
+                    <position x="762" y="220"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_LEFT_2_FORK_2">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_LEFT_2_FORK_2</text>
+                </name>
+                <graphics>
+                    <position x="358" y="840"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_RIGHT_1_FORK_1">
+                <name>
+                    <graphics>
+                        <offset x="96" y="-4"/>
+                    </graphics>
+                    <text>TAKE_RIGHT_1_FORK_1</text>
+                </name>
+                <graphics>
+                    <position x="771" y="927"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_RIGHT_1_FORK_4">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_RIGHT_1_FORK_4</text>
+                </name>
+                <graphics>
+                    <position x="349" y="133"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_RIGHT_1_FORK_5">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_RIGHT_1_FORK_5</text>
+                </name>
+                <graphics>
+                    <position x="798" y="148"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_RIGHT_2_FORK_1">
+                <name>
+                    <graphics>
+                        <offset x="26" y="-10"/>
+                    </graphics>
+                    <text>TAKE_RIGHT_2_FORK_1</text>
+                </name>
+                <graphics>
+                    <position x="762" y="840"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_RIGHT_1_FORK_3">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_RIGHT_1_FORK_3</text>
+                </name>
+                <graphics>
+                    <position x="110" y="514"/>
+                </graphics>
+            </transition>
+            <transition id="TAKE_RIGHT_2_FORK_4">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>TAKE_RIGHT_2_FORK_4</text>
+                </name>
+                <graphics>
+                    <position x="358" y="220"/>
+                </graphics>
+            </transition>
+            <arc id="WAIT_RIGHT_FORK_5_to_TAKE_RIGHT_2_FORK_5" source="WAIT_RIGHT_FORK_5" target="TAKE_RIGHT_2_FORK_5" type="normal"/>
+            <arc id="FORK_1_to_TAKE_LEFT_1_FORK_1" source="FORK_1" target="TAKE_LEFT_1_FORK_1" type="normal"/>
+            <arc id="WAIT_LEFT_FORK_1_to_TAKE_LEFT_2_FORK_1" source="WAIT_LEFT_FORK_1" target="TAKE_LEFT_2_FORK_1" type="normal"/>
+            <arc id="FORK_6_to_TAKE_RIGHT_2_FORK_1" source="FORK_6" target="TAKE_RIGHT_2_FORK_1" type="normal"/>
+            <arc id="FORK_2_to_TAKE_LEFT_2_FORK_2" source="FORK_2" target="TAKE_LEFT_2_FORK_2" type="normal"/>
+            <arc id="THINK_5_to_TAKE_LEFT_1_FORK_5" source="THINK_5" target="TAKE_LEFT_1_FORK_5" type="normal"/>
+            <arc id="THINK_3_to_TAKE_LEFT_1_FORK_3" source="THINK_3" target="TAKE_LEFT_1_FORK_3" type="normal"/>
+            <arc id="WAIT_LEFT_FORK_2_to_TAKE_LEFT_2_FORK_2" source="WAIT_LEFT_FORK_2" target="TAKE_LEFT_2_FORK_2" type="normal"/>
+            <arc id="EAT_1_to_RELEASE_FORK_1" source="EAT_1" target="RELEASE_FORK_1" type="normal"/>
+            <arc id="FORK_5_to_TAKE_LEFT_1_FORK_5" source="FORK_5" target="TAKE_LEFT_1_FORK_5" type="normal"/>
+            <arc id="FORK_4_to_TAKE_RIGHT_1_FORK_5" source="FORK_4" target="TAKE_RIGHT_1_FORK_5" type="normal"/>
+            <arc id="FORK_5_to_TAKE_RIGHT_1_FORK_6" source="FORK_5" target="TAKE_RIGHT_1_FORK_6" type="normal"/>
+            <arc id="WAIT_LEFT_FORK_6_to_TAKE_LEFT_2_FORK_6" source="WAIT_LEFT_FORK_6" target="TAKE_LEFT_2_FORK_6" type="normal"/>
+            <arc id="EAT_2_to_RELEASE_FORK_2" source="EAT_2" target="RELEASE_FORK_2" type="normal"/>
+            <arc id="WAIT_LEFT_FORK_3_to_TAKE_LEFT_2_FORK_3" source="WAIT_LEFT_FORK_3" target="TAKE_LEFT_2_FORK_3" type="normal"/>
+            <arc id="FORK_6_to_TAKE_LEFT_2_FORK_6" source="FORK_6" target="TAKE_LEFT_2_FORK_6" type="normal"/>
+            <arc id="FORK_4_to_TAKE_LEFT_2_FORK_4" source="FORK_4" target="TAKE_LEFT_2_FORK_4" type="normal"/>
+            <arc id="WAIT_RIGHT_FORK_4_to_TAKE_RIGHT_2_FORK_4" source="WAIT_RIGHT_FORK_4" target="TAKE_RIGHT_2_FORK_4" type="normal"/>
+            <arc id="FORK_3_to_TAKE_LEFT_2_FORK_3" source="FORK_3" target="TAKE_LEFT_2_FORK_3" type="normal"/>
+            <arc id="WAIT_RIGHT_FORK_3_to_TAKE_RIGHT_2_FORK_3" source="WAIT_RIGHT_FORK_3" target="TAKE_RIGHT_2_FORK_3" type="normal"/>
+            <arc id="FORK_2_to_TAKE_RIGHT_1_FORK_3" source="FORK_2" target="TAKE_RIGHT_1_FORK_3" type="normal"/>
+            <arc id="EAT_5_to_RELEASE_FORK_5" source="EAT_5" target="RELEASE_FORK_5" type="normal"/>
+            <arc id="FORK_5_to_TAKE_LEFT_2_FORK_5" source="FORK_5" target="TAKE_LEFT_2_FORK_5" type="normal"/>
+            <arc id="FORK_3_to_TAKE_LEFT_1_FORK_3" source="FORK_3" target="TAKE_LEFT_1_FORK_3" type="normal"/>
+            <arc id="FORK_1_to_TAKE_RIGHT_1_FORK_2" source="FORK_1" target="TAKE_RIGHT_1_FORK_2" type="normal"/>
+            <arc id="THINK_2_to_TAKE_RIGHT_1_FORK_2" source="THINK_2" target="TAKE_RIGHT_1_FORK_2" type="normal"/>
+            <arc id="EAT_6_to_RELEASE_FORK_6" source="EAT_6" target="RELEASE_FORK_6" type="normal"/>
+            <arc id="FORK_3_to_TAKE_RIGHT_2_FORK_4" source="FORK_3" target="TAKE_RIGHT_2_FORK_4" type="normal"/>
+            <arc id="THINK_6_to_TAKE_RIGHT_1_FORK_6" source="THINK_6" target="TAKE_RIGHT_1_FORK_6" type="normal"/>
+            <arc id="FORK_5_to_TAKE_RIGHT_2_FORK_6" source="FORK_5" target="TAKE_RIGHT_2_FORK_6" type="normal"/>
+            <arc id="WAIT_RIGHT_FORK_6_to_TAKE_RIGHT_2_FORK_6" source="WAIT_RIGHT_FORK_6" target="TAKE_RIGHT_2_FORK_6" type="normal"/>
+            <arc id="THINK_5_to_TAKE_RIGHT_1_FORK_5" source="THINK_5" target="TAKE_RIGHT_1_FORK_5" type="normal"/>
+            <arc id="THINK_2_to_TAKE_LEFT_1_FORK_2" source="THINK_2" target="TAKE_LEFT_1_FORK_2" type="normal"/>
+            <arc id="EAT_4_to_RELEASE_FORK_4" source="EAT_4" target="RELEASE_FORK_4" type="normal"/>
+            <arc id="THINK_4_to_TAKE_RIGHT_1_FORK_4" source="THINK_4" target="TAKE_RIGHT_1_FORK_4" type="normal"/>
+            <arc id="WAIT_LEFT_FORK_5_to_TAKE_LEFT_2_FORK_5" source="WAIT_LEFT_FORK_5" target="TAKE_LEFT_2_FORK_5" type="normal"/>
+            <arc id="FORK_3_to_TAKE_RIGHT_1_FORK_4" source="FORK_3" target="TAKE_RIGHT_1_FORK_4" type="normal"/>
+            <arc id="WAIT_LEFT_FORK_4_to_TAKE_LEFT_2_FORK_4" source="WAIT_LEFT_FORK_4" target="TAKE_LEFT_2_FORK_4" type="normal"/>
+            <arc id="FORK_6_to_TAKE_LEFT_1_FORK_6" source="FORK_6" target="TAKE_LEFT_1_FORK_6" type="normal"/>
+            <arc id="THINK_4_to_TAKE_LEFT_1_FORK_4" source="THINK_4" target="TAKE_LEFT_1_FORK_4" type="normal"/>
+            <arc id="THINK_6_to_TAKE_LEFT_1_FORK_6" source="THINK_6" target="TAKE_LEFT_1_FORK_6" type="normal"/>
+            <arc id="FORK_2_to_TAKE_LEFT_1_FORK_2" source="FORK_2" target="TAKE_LEFT_1_FORK_2" type="normal"/>
+            <arc id="WAIT_RIGHT_FORK_1_to_TAKE_RIGHT_2_FORK_1" source="WAIT_RIGHT_FORK_1" target="TAKE_RIGHT_2_FORK_1" type="normal"/>
+            <arc id="THINK_1_to_TAKE_RIGHT_1_FORK_1" source="THINK_1" target="TAKE_RIGHT_1_FORK_1" type="normal"/>
+            <arc id="FORK_1_to_TAKE_RIGHT_2_FORK_2" source="FORK_1" target="TAKE_RIGHT_2_FORK_2" type="normal"/>
+            <arc id="FORK_1_to_TAKE_LEFT_2_FORK_1" source="FORK_1" target="TAKE_LEFT_2_FORK_1" type="normal"/>
+            <arc id="EAT_3_to_RELEASE_FORK_3" source="EAT_3" target="RELEASE_FORK_3" type="normal"/>
+            <arc id="FORK_2_to_TAKE_RIGHT_2_FORK_3" source="FORK_2" target="TAKE_RIGHT_2_FORK_3" type="normal"/>
+            <arc id="FORK_4_to_TAKE_LEFT_1_FORK_4" source="FORK_4" target="TAKE_LEFT_1_FORK_4" type="normal"/>
+            <arc id="THINK_1_to_TAKE_LEFT_1_FORK_1" source="THINK_1" target="TAKE_LEFT_1_FORK_1" type="normal"/>
+            <arc id="FORK_4_to_TAKE_RIGHT_2_FORK_5" source="FORK_4" target="TAKE_RIGHT_2_FORK_5" type="normal"/>
+            <arc id="FORK_6_to_TAKE_RIGHT_1_FORK_1" source="FORK_6" target="TAKE_RIGHT_1_FORK_1" type="normal"/>
+            <arc id="WAIT_RIGHT_FORK_2_to_TAKE_RIGHT_2_FORK_2" source="WAIT_RIGHT_FORK_2" target="TAKE_RIGHT_2_FORK_2" type="normal"/>
+            <arc id="THINK_3_to_TAKE_RIGHT_1_FORK_3" source="THINK_3" target="TAKE_RIGHT_1_FORK_3" type="normal"/>
+            <arc id="TAKE_LEFT_1_FORK_1_to_WAIT_RIGHT_FORK_1" source="TAKE_LEFT_1_FORK_1" target="WAIT_RIGHT_FORK_1" type="normal"/>
+            <arc id="TAKE_LEFT_1_FORK_6_to_WAIT_RIGHT_FORK_6" source="TAKE_LEFT_1_FORK_6" target="WAIT_RIGHT_FORK_6" type="normal"/>
+            <arc id="TAKE_LEFT_2_FORK_5_to_EAT_5" source="TAKE_LEFT_2_FORK_5" target="EAT_5" type="normal"/>
+            <arc id="TAKE_LEFT_2_FORK_6_to_EAT_6" source="TAKE_LEFT_2_FORK_6" target="EAT_6" type="normal"/>
+            <arc id="RELEASE_FORK_4_to_THINK_4" source="RELEASE_FORK_4" target="THINK_4" type="normal"/>
+            <arc id="TAKE_RIGHT_2_FORK_4_to_EAT_4" source="TAKE_RIGHT_2_FORK_4" target="EAT_4" type="normal"/>
+            <arc id="TAKE_LEFT_2_FORK_3_to_EAT_3" source="TAKE_LEFT_2_FORK_3" target="EAT_3" type="normal"/>
+            <arc id="TAKE_RIGHT_2_FORK_1_to_EAT_1" source="TAKE_RIGHT_2_FORK_1" target="EAT_1" type="normal"/>
+            <arc id="RELEASE_FORK_1_to_FORK_6" source="RELEASE_FORK_1" target="FORK_6" type="normal"/>
+            <arc id="TAKE_LEFT_1_FORK_5_to_WAIT_RIGHT_FORK_5" source="TAKE_LEFT_1_FORK_5" target="WAIT_RIGHT_FORK_5" type="normal"/>
+            <arc id="RELEASE_FORK_5_to_FORK_5" source="RELEASE_FORK_5" target="FORK_5" type="normal"/>
+            <arc id="RELEASE_FORK_6_to_THINK_6" source="RELEASE_FORK_6" target="THINK_6" type="normal"/>
+            <arc id="RELEASE_FORK_2_to_THINK_2" source="RELEASE_FORK_2" target="THINK_2" type="normal"/>
+            <arc id="TAKE_RIGHT_1_FORK_1_to_WAIT_LEFT_FORK_1" source="TAKE_RIGHT_1_FORK_1" target="WAIT_LEFT_FORK_1" type="normal"/>
+            <arc id="TAKE_LEFT_2_FORK_1_to_EAT_1" source="TAKE_LEFT_2_FORK_1" target="EAT_1" type="normal"/>
+            <arc id="TAKE_RIGHT_1_FORK_2_to_WAIT_LEFT_FORK_2" source="TAKE_RIGHT_1_FORK_2" target="WAIT_LEFT_FORK_2" type="normal"/>
+            <arc id="RELEASE_FORK_6_to_FORK_6" source="RELEASE_FORK_6" target="FORK_6" type="normal"/>
+            <arc id="RELEASE_FORK_3_to_FORK_3" source="RELEASE_FORK_3" target="FORK_3" type="normal"/>
+            <arc id="TAKE_RIGHT_2_FORK_6_to_EAT_6" source="TAKE_RIGHT_2_FORK_6" target="EAT_6" type="normal"/>
+            <arc id="RELEASE_FORK_5_to_THINK_5" source="RELEASE_FORK_5" target="THINK_5" type="normal"/>
+            <arc id="TAKE_LEFT_2_FORK_4_to_EAT_4" source="TAKE_LEFT_2_FORK_4" target="EAT_4" type="normal"/>
+            <arc id="RELEASE_FORK_1_to_FORK_1" source="RELEASE_FORK_1" target="FORK_1" type="normal"/>
+            <arc id="RELEASE_FORK_3_to_FORK_2" source="RELEASE_FORK_3" target="FORK_2" type="normal"/>
+            <arc id="TAKE_LEFT_2_FORK_2_to_EAT_2" source="TAKE_LEFT_2_FORK_2" target="EAT_2" type="normal"/>
+            <arc id="RELEASE_FORK_2_to_FORK_1" source="RELEASE_FORK_2" target="FORK_1" type="normal"/>
+            <arc id="RELEASE_FORK_1_to_THINK_1" source="RELEASE_FORK_1" target="THINK_1" type="normal"/>
+            <arc id="TAKE_RIGHT_1_FORK_3_to_WAIT_LEFT_FORK_3" source="TAKE_RIGHT_1_FORK_3" target="WAIT_LEFT_FORK_3" type="normal"/>
+            <arc id="TAKE_LEFT_1_FORK_2_to_WAIT_RIGHT_FORK_2" source="TAKE_LEFT_1_FORK_2" target="WAIT_RIGHT_FORK_2" type="normal"/>
+            <arc id="TAKE_RIGHT_1_FORK_5_to_WAIT_LEFT_FORK_5" source="TAKE_RIGHT_1_FORK_5" target="WAIT_LEFT_FORK_5" type="normal"/>
+            <arc id="TAKE_RIGHT_1_FORK_6_to_WAIT_LEFT_FORK_6" source="TAKE_RIGHT_1_FORK_6" target="WAIT_LEFT_FORK_6" type="normal"/>
+            <arc id="TAKE_RIGHT_2_FORK_2_to_EAT_2" source="TAKE_RIGHT_2_FORK_2" target="EAT_2" type="normal"/>
+            <arc id="RELEASE_FORK_4_to_FORK_4" source="RELEASE_FORK_4" target="FORK_4" type="normal"/>
+            <arc id="RELEASE_FORK_5_to_FORK_4" source="RELEASE_FORK_5" target="FORK_4" type="normal"/>
+            <arc id="TAKE_RIGHT_1_FORK_4_to_WAIT_LEFT_FORK_4" source="TAKE_RIGHT_1_FORK_4" target="WAIT_LEFT_FORK_4" type="normal"/>
+            <arc id="TAKE_RIGHT_2_FORK_3_to_EAT_3" source="TAKE_RIGHT_2_FORK_3" target="EAT_3" type="normal"/>
+            <arc id="RELEASE_FORK_2_to_FORK_2" source="RELEASE_FORK_2" target="FORK_2" type="normal"/>
+            <arc id="TAKE_LEFT_1_FORK_3_to_WAIT_RIGHT_FORK_3" source="TAKE_LEFT_1_FORK_3" target="WAIT_RIGHT_FORK_3" type="normal"/>
+            <arc id="RELEASE_FORK_4_to_FORK_3" source="RELEASE_FORK_4" target="FORK_3" type="normal"/>
+            <arc id="TAKE_LEFT_1_FORK_4_to_WAIT_RIGHT_FORK_4" source="TAKE_LEFT_1_FORK_4" target="WAIT_RIGHT_FORK_4" type="normal"/>
+            <arc id="RELEASE_FORK_3_to_THINK_3" source="RELEASE_FORK_3" target="THINK_3" type="normal"/>
+            <arc id="TAKE_RIGHT_2_FORK_5_to_EAT_5" source="TAKE_RIGHT_2_FORK_5" target="EAT_5" type="normal"/>
+            <arc id="RELEASE_FORK_6_to_FORK_5" source="RELEASE_FORK_6" target="FORK_5" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_Res1">
+                <graphics>
+                    <position x="435" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Res1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Res2">
+                <graphics>
+                    <position x="615" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Res2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1_in">
+                <graphics>
+                    <position x="165" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1_in</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1_P1">
+                <graphics>
+                    <position x="345" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1_P2">
+                <graphics>
+                    <position x="330" y="255"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1_P3">
+                <graphics>
+                    <position x="540" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1_P4">
+                <graphics>
+                    <position x="540" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1_out">
+                <graphics>
+                    <position x="735" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="60" y="18"/>
+                    </graphics>
+                    <text>WorkflowNet1_out</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1Copy_in">
+                <graphics>
+                    <position x="900" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1Copy_in</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1Copy_P1">
+                <graphics>
+                    <position x="1080" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1Copy_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1Copy_P2">
+                <graphics>
+                    <position x="1065" y="255"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1Copy_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1Copy_P3">
+                <graphics>
+                    <position x="1275" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1Copy_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1Copy_P4">
+                <graphics>
+                    <position x="1275" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1Copy_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkflowNet1Copy_out">
+                <graphics>
+                    <position x="1470" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="60" y="18"/>
+                    </graphics>
+                    <text>WorkflowNet1Copy_out</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="WorkflowNet1_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1_T0</text>
+                </name>
+                <graphics>
+                    <position x="240" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1_T1</text>
+                </name>
+                <graphics>
+                    <position x="240" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1_T2</text>
+                </name>
+                <graphics>
+                    <position x="435" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1_T3</text>
+                </name>
+                <graphics>
+                    <position x="435" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1_T4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1_T4</text>
+                </name>
+                <graphics>
+                    <position x="630" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1_T5">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1_T5</text>
+                </name>
+                <graphics>
+                    <position x="630" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1Copy_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1Copy_T0</text>
+                </name>
+                <graphics>
+                    <position x="975" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1Copy_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1Copy_T1</text>
+                </name>
+                <graphics>
+                    <position x="975" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1Copy_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1Copy_T2</text>
+                </name>
+                <graphics>
+                    <position x="1170" y="90"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1Copy_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1Copy_T3</text>
+                </name>
+                <graphics>
+                    <position x="1170" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1Copy_T4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1Copy_T4</text>
+                </name>
+                <graphics>
+                    <position x="1365" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="WorkflowNet1Copy_T5">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>WorkflowNet1Copy_T5</text>
+                </name>
+                <graphics>
+                    <position x="1365" y="240"/>
+                </graphics>
+            </transition>
+            <arc id="WorkflowNet1_in_to_WorkflowNet1_T0" source="WorkflowNet1_in" target="WorkflowNet1_T0" type="normal"/>
+            <arc id="WorkflowNet1_P1_to_WorkflowNet1_T2" source="WorkflowNet1_P1" target="WorkflowNet1_T2" type="normal"/>
+            <arc id="WorkflowNet1_P3_to_WorkflowNet1_T4" source="WorkflowNet1_P3" target="WorkflowNet1_T4" type="normal"/>
+            <arc id="WorkflowNet1_in_to_WorkflowNet1_T1" source="WorkflowNet1_in" target="WorkflowNet1_T1" type="normal"/>
+            <arc id="WorkflowNet1_P2_to_WorkflowNet1_T3" source="WorkflowNet1_P2" target="WorkflowNet1_T3" type="normal"/>
+            <arc id="WorkflowNet1_P4_to_WorkflowNet1_T5" source="WorkflowNet1_P4" target="WorkflowNet1_T5" type="normal"/>
+            <arc id="Shared_Res1_to_WorkflowNet1_T2" source="Shared_Res1" target="WorkflowNet1_T2" type="normal"/>
+            <arc id="Shared_Res2_to_WorkflowNet1_T4" source="Shared_Res2" target="WorkflowNet1_T4" type="normal"/>
+            <arc id="Shared_Res2_to_WorkflowNet1_T3" source="Shared_Res2" target="WorkflowNet1_T3" type="normal"/>
+            <arc id="Shared_Res1_to_WorkflowNet1_T5" source="Shared_Res1" target="WorkflowNet1_T5" type="normal"/>
+            <arc id="WorkflowNet1Copy_in_to_WorkflowNet1Copy_T0" source="WorkflowNet1Copy_in" target="WorkflowNet1Copy_T0" type="normal"/>
+            <arc id="WorkflowNet1Copy_P1_to_WorkflowNet1Copy_T2" source="WorkflowNet1Copy_P1" target="WorkflowNet1Copy_T2" type="normal"/>
+            <arc id="WorkflowNet1Copy_P3_to_WorkflowNet1Copy_T4" source="WorkflowNet1Copy_P3" target="WorkflowNet1Copy_T4" type="normal"/>
+            <arc id="WorkflowNet1Copy_in_to_WorkflowNet1Copy_T1" source="WorkflowNet1Copy_in" target="WorkflowNet1Copy_T1" type="normal"/>
+            <arc id="WorkflowNet1Copy_P2_to_WorkflowNet1Copy_T3" source="WorkflowNet1Copy_P2" target="WorkflowNet1Copy_T3" type="normal"/>
+            <arc id="WorkflowNet1Copy_P4_to_WorkflowNet1Copy_T5" source="WorkflowNet1Copy_P4" target="WorkflowNet1Copy_T5" type="normal"/>
+            <arc id="Shared_Res1_to_WorkflowNet1Copy_T2" source="Shared_Res1" target="WorkflowNet1Copy_T2" type="normal"/>
+            <arc id="Shared_Res2_to_WorkflowNet1Copy_T4" source="Shared_Res2" target="WorkflowNet1Copy_T4" type="normal"/>
+            <arc id="Shared_Res2_to_WorkflowNet1Copy_T3" source="Shared_Res2" target="WorkflowNet1Copy_T3" type="normal"/>
+            <arc id="Shared_Res1_to_WorkflowNet1Copy_T5" source="Shared_Res1" target="WorkflowNet1Copy_T5" type="normal"/>
+            <arc id="WorkflowNet1_T0_to_WorkflowNet1_P1" source="WorkflowNet1_T0" target="WorkflowNet1_P1" type="normal"/>
+            <arc id="WorkflowNet1_T2_to_WorkflowNet1_P3" source="WorkflowNet1_T2" target="WorkflowNet1_P3" type="normal"/>
+            <arc id="WorkflowNet1_T4_to_WorkflowNet1_out" source="WorkflowNet1_T4" target="WorkflowNet1_out" type="normal"/>
+            <arc id="WorkflowNet1_T1_to_WorkflowNet1_P2" source="WorkflowNet1_T1" target="WorkflowNet1_P2" type="normal"/>
+            <arc id="WorkflowNet1_T3_to_WorkflowNet1_P4" source="WorkflowNet1_T3" target="WorkflowNet1_P4" type="normal"/>
+            <arc id="WorkflowNet1_T5_to_WorkflowNet1_out" source="WorkflowNet1_T5" target="WorkflowNet1_out" type="normal"/>
+            <arc id="WorkflowNet1_T4_to_Shared_Res2" source="WorkflowNet1_T4" target="Shared_Res2" type="normal">
+                <graphics>
+                    <position x="673" y="178"/>
+                </graphics>
+            </arc>
+            <arc id="WorkflowNet1_T4_to_Shared_Res1" source="WorkflowNet1_T4" target="Shared_Res1" type="normal"/>
+            <arc id="WorkflowNet1_T5_to_Shared_Res1" source="WorkflowNet1_T5" target="Shared_Res1" type="normal">
+                <graphics>
+                    <position x="553" y="208"/>
+                </graphics>
+            </arc>
+            <arc id="WorkflowNet1_T5_to_Shared_Res2" source="WorkflowNet1_T5" target="Shared_Res2" type="normal"/>
+            <arc id="WorkflowNet1Copy_T0_to_WorkflowNet1Copy_P1" source="WorkflowNet1Copy_T0" target="WorkflowNet1Copy_P1" type="normal"/>
+            <arc id="WorkflowNet1Copy_T2_to_WorkflowNet1Copy_P3" source="WorkflowNet1Copy_T2" target="WorkflowNet1Copy_P3" type="normal"/>
+            <arc id="WorkflowNet1Copy_T4_to_WorkflowNet1Copy_out" source="WorkflowNet1Copy_T4" target="WorkflowNet1Copy_out" type="normal"/>
+            <arc id="WorkflowNet1Copy_T1_to_WorkflowNet1Copy_P2" source="WorkflowNet1Copy_T1" target="WorkflowNet1Copy_P2" type="normal"/>
+            <arc id="WorkflowNet1Copy_T3_to_WorkflowNet1Copy_P4" source="WorkflowNet1Copy_T3" target="WorkflowNet1Copy_P4" type="normal"/>
+            <arc id="WorkflowNet1Copy_T5_to_WorkflowNet1Copy_out" source="WorkflowNet1Copy_T5" target="WorkflowNet1Copy_out" type="normal"/>
+            <arc id="WorkflowNet1Copy_T4_to_Shared_Res2" source="WorkflowNet1Copy_T4" target="Shared_Res2" type="normal">
+                <graphics>
+                    <position x="1408" y="178"/>
+                </graphics>
+            </arc>
+            <arc id="WorkflowNet1Copy_T4_to_Shared_Res1" source="WorkflowNet1Copy_T4" target="Shared_Res1" type="normal"/>
+            <arc id="WorkflowNet1Copy_T5_to_Shared_Res1" source="WorkflowNet1Copy_T5" target="Shared_Res1" type="normal">
+                <graphics>
+                    <position x="1288" y="208"/>
+                </graphics>
+            </arc>
+            <arc id="WorkflowNet1Copy_T5_to_Shared_Res2" source="WorkflowNet1Copy_T5" target="Shared_Res2" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Train_Crossing">
+                <graphics>
+                    <position x="540" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="49" y="-17"/>
+                    </graphics>
+                    <text>Train_Crossing</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Train_P5">
+                <graphics>
+                    <position x="300" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Train_P5</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Train_P2">
+                <graphics>
+                    <position x="375" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="144" y="59"/>
+                    </graphics>
+                    <text>Train_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TragicLight_Green">
+                <graphics>
+                    <position x="735" y="330"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TragicLight_Green</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="TragicLight_Yellow">
+                <graphics>
+                    <position x="1050" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TragicLight_Yellow</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TragicLight_Red">
+                <graphics>
+                    <position x="1380" y="330"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TragicLight_Red</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TragicLight_Request">
+                <graphics>
+                    <position x="1005" y="120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-15" y="18"/>
+                    </graphics>
+                    <text>TragicLight_Request</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Shared_StopCars">
+                <name>
+                    <graphics>
+                        <offset x="44" y="59"/>
+                    </graphics>
+                    <text>Shared_StopCars</text>
+                </name>
+                <graphics>
+                    <position x="315" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="Train_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Train_T0</text>
+                </name>
+                <graphics>
+                    <position x="525" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="Train_DangerZoneEntrance">
+                <name>
+                    <graphics>
+                        <offset x="53" y="55"/>
+                    </graphics>
+                    <text>Train_DangerZoneEntrance</text>
+                </name>
+                <graphics>
+                    <position x="495" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="TragicLight_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TragicLight_T1</text>
+                </name>
+                <graphics>
+                    <position x="870" y="285"/>
+                </graphics>
+            </transition>
+            <transition id="TragicLight_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TragicLight_T2</text>
+                </name>
+                <graphics>
+                    <position x="1215" y="285"/>
+                </graphics>
+            </transition>
+            <transition id="TragicLight_T7">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TragicLight_T7</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="TragicLight_T5">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TragicLight_T5</text>
+                </name>
+                <graphics>
+                    <position x="1035" y="435"/>
+                </graphics>
+            </transition>
+            <arc id="Train_P5_to_Shared_StopCars" source="Train_P5" target="Shared_StopCars" type="normal">
+                <graphics>
+                    <position x="225" y="255"/>
+                </graphics>
+            </arc>
+            <arc id="Train_Crossing_to_Train_T0" source="Train_Crossing" target="Train_T0" type="normal"/>
+            <arc id="Train_P2_to_Train_DangerZoneEntrance" source="Train_P2" target="Train_DangerZoneEntrance" type="normal"/>
+            <arc id="TragicLight_Green_to_TragicLight_T1" source="TragicLight_Green" target="TragicLight_T1" type="normal"/>
+            <arc id="TragicLight_Request_to_TragicLight_T1" source="TragicLight_Request" target="TragicLight_T1" type="normal"/>
+            <arc id="TragicLight_Yellow_to_TragicLight_T2" source="TragicLight_Yellow" target="TragicLight_T2" type="normal"/>
+            <arc id="TragicLight_Request_to_TragicLight_T7" source="TragicLight_Request" target="TragicLight_T7" type="normal"/>
+            <arc id="TragicLight_Red_to_TragicLight_T5" source="TragicLight_Red" target="TragicLight_T5" type="normal"/>
+            <arc id="Train_T0_to_Train_P5" source="Train_T0" target="Train_P5" type="normal"/>
+            <arc id="Train_DangerZoneEntrance_to_Train_Crossing" source="Train_DangerZoneEntrance" target="Train_Crossing" type="normal"/>
+            <arc id="Shared_StopCars_to_Train_P2" source="Shared_StopCars" target="Train_P2" type="normal"/>
+            <arc id="Shared_StopCars_to_TragicLight_Request" source="Shared_StopCars" target="TragicLight_Request" type="normal"/>
+            <arc id="TragicLight_T1_to_TragicLight_Yellow" source="TragicLight_T1" target="TragicLight_Yellow" type="normal"/>
+            <arc id="TragicLight_T2_to_TragicLight_Red" source="TragicLight_T2" target="TragicLight_Red" type="normal"/>
+            <arc id="TragicLight_T5_to_TragicLight_Green" source="TragicLight_T5" target="TragicLight_Green" type="normal"/>
+            <arc id="TragicLight_Yellow_to_TragicLight_T7" source="TragicLight_Yellow" target="TragicLight_T7" type="normal">
+                <graphics>
+                    <position x="1097" y="182"/>
+                </graphics>
+            </arc>
+            <arc id="TragicLight_T7_to_TragicLight_Yellow" source="TragicLight_T7" target="TragicLight_Yellow" type="normal">
+                <graphics>
+                    <position x="1157" y="152"/>
+                    <position x="1157" y="212"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

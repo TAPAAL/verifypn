@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>deadlock-test001.TRUE-1</id>
+    <description>deadlock-test001.TRUE-1</description>
+    <formula>
+      <all-paths>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>out</place>
+            </tokens-count>
+            <integer-constant>1</integer-constant>
+          </integer-eq>
+        </finally>
+      </all-paths>
+    </formula>
+  </property>
+</property-set>

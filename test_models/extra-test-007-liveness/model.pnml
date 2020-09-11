@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_P0s">
+                <graphics>
+                    <position x="165" y="135"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_P0s</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_P1s">
+                <graphics>
+                    <position x="495" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_P1s</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_P2s">
+                <graphics>
+                    <position x="660" y="75"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_P2s</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_P3s">
+                <graphics>
+                    <position x="660" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_P3s</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_P4s">
+                <graphics>
+                    <position x="270" y="375"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_P4s</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN2_Error">
+                <graphics>
+                    <position x="885" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_Error</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="TAPN1_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_T2</text>
+                </name>
+                <graphics>
+                    <position x="495" y="375"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN1_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_T3</text>
+                </name>
+                <graphics>
+                    <position x="105" y="285"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN1_T5">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_T5</text>
+                </name>
+                <graphics>
+                    <position x="570" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN1_T6">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_T6</text>
+                </name>
+                <graphics>
+                    <position x="570" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN1_T7">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_T7</text>
+                </name>
+                <graphics>
+                    <position x="330" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN2_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_T0</text>
+                </name>
+                <graphics>
+                    <position x="975" y="195"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN2_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_T1</text>
+                </name>
+                <graphics>
+                    <position x="1005" y="105"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN2_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_T2</text>
+                </name>
+                <graphics>
+                    <position x="990" y="255"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN2_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_T3</text>
+                </name>
+                <graphics>
+                    <position x="975" y="315"/>
+                </graphics>
+            </transition>
+            <arc id="Shared_P2s_to_TAPN1_T2" source="Shared_P2s" target="TAPN1_T2" type="normal">
+                <graphics>
+                    <position x="778" y="298"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_P3s_to_TAPN1_T2" source="Shared_P3s" target="TAPN1_T2" type="normal"/>
+            <arc id="Shared_P0s_to_TAPN1_T7" source="Shared_P0s" target="TAPN1_T7" type="normal"/>
+            <arc id="Shared_P3s_to_TAPN2_T3" source="Shared_P3s" target="TAPN2_T3" type="normal"/>
+            <arc id="Shared_P2s_to_TAPN2_T2" source="Shared_P2s" target="TAPN2_T2" type="normal"/>
+            <arc id="Shared_P1s_to_TAPN2_T0" source="Shared_P1s" target="TAPN2_T0" type="normal"/>
+            <arc id="Shared_P0s_to_TAPN2_T1" source="Shared_P0s" target="TAPN2_T1" type="normal"/>
+            <arc id="TAPN1_T2_to_Shared_P4s" source="TAPN1_T2" target="Shared_P4s" type="normal">
+                <inscription>
+                    <text>2</text>
+                </inscription>
+            </arc>
+            <arc id="TAPN1_T7_to_Shared_P1s" source="TAPN1_T7" target="Shared_P1s" type="normal"/>
+            <arc id="TAPN2_T3_to_TAPN2_Error" source="TAPN2_T3" target="TAPN2_Error" type="normal"/>
+            <arc id="TAPN2_T2_to_TAPN2_Error" source="TAPN2_T2" target="TAPN2_Error" type="normal"/>
+            <arc id="TAPN2_T0_to_TAPN2_Error" source="TAPN2_T0" target="TAPN2_Error" type="normal"/>
+            <arc id="TAPN2_T1_to_TAPN2_Error" source="TAPN2_T1" target="TAPN2_Error" type="normal"/>
+            <arc id="Shared_P4s_to_TAPN1_T3" source="Shared_P4s" target="TAPN1_T3" type="normal">
+                <inscription>
+                    <text>2</text>
+                </inscription>
+            </arc>
+            <arc id="TAPN1_T3_to_Shared_P0s" source="TAPN1_T3" target="Shared_P0s" type="normal">
+                <inscription>
+                    <text>2</text>
+                </inscription>
+            </arc>
+            <arc id="Shared_P1s_to_TAPN1_T5" source="Shared_P1s" target="TAPN1_T5" type="normal"/>
+            <arc id="TAPN1_T5_to_Shared_P2s" source="TAPN1_T5" target="Shared_P2s" type="normal"/>
+            <arc id="Shared_P1s_to_TAPN1_T6" source="Shared_P1s" target="TAPN1_T6" type="normal"/>
+            <arc id="TAPN1_T6_to_Shared_P3s" source="TAPN1_T6" target="Shared_P3s" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

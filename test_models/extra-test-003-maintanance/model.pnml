@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="EngineModel_Engines">
+                <graphics>
+                    <position x="600" y="165"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="203" y="39"/>
+                    </graphics>
+                    <text>EngineModel_Engines</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="EngineModel_SmallMaintanance">
+                <graphics>
+                    <position x="615" y="420"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="205" y="39"/>
+                    </graphics>
+                    <text>EngineModel_SmallMaintanance</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="EngineModel_LargeMaintanance">
+                <graphics>
+                    <position x="615" y="690"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="150" y="15"/>
+                    </graphics>
+                    <text>EngineModel_LargeMaintanance</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="EngineModel_FailedEngines">
+                <graphics>
+                    <position x="615" y="855"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="50" y="42"/>
+                    </graphics>
+                    <text>EngineModel_FailedEngines</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="EngineModel_Working2">
+                <graphics>
+                    <position x="960" y="285"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="213" y="9"/>
+                    </graphics>
+                    <text>EngineModel_Working2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="EngineModel_Working1and2">
+                <graphics>
+                    <position x="315" y="405"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="219" y="14"/>
+                    </graphics>
+                    <text>EngineModel_Working1and2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="EngineFlow_EngineStartTimer">
+                <graphics>
+                    <position x="1500" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="117" y="43"/>
+                    </graphics>
+                    <text>EngineFlow_EngineStartTimer</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="EngineFlow_EnginesIdle">
+                <graphics>
+                    <position x="1770" y="75"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="49" y="-1"/>
+                    </graphics>
+                    <text>EngineFlow_EnginesIdle</text>
+                </name>
+                <initialMarking>
+                    <text>55</text>
+                </initialMarking>
+            </place>
+            <place id="WorkerModel_WorkerOneReadyForLarge">
+                <graphics>
+                    <position x="945" y="1350"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="172" y="26"/>
+                    </graphics>
+                    <text>WorkerModel_WorkerOneReadyForLarge</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkerModel_WorkerTwoReadyForLarge">
+                <graphics>
+                    <position x="585" y="1350"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-4" y="19"/>
+                    </graphics>
+                    <text>WorkerModel_WorkerTwoReadyForLarge</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkerModel_OneWorkerSmailMaint">
+                <graphics>
+                    <position x="765" y="1080"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="214" y="15"/>
+                    </graphics>
+                    <text>WorkerModel_OneWorkerSmailMaint</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkerModel_TwoWorkingLargeMaint">
+                <graphics>
+                    <position x="765" y="1515"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="129" y="51"/>
+                    </graphics>
+                    <text>WorkerModel_TwoWorkingLargeMaint</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="WorkerModel_Workers">
+                <graphics>
+                    <position x="765" y="1245"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="34" y="45"/>
+                    </graphics>
+                    <text>WorkerModel_Workers</text>
+                </name>
+                <initialMarking>
+                    <text>15</text>
+                </initialMarking>
+            </place>
+            <transition id="EngineModel_NeedsSmallMaintanance">
+                <name>
+                    <graphics>
+                        <offset x="159" y="21"/>
+                    </graphics>
+                    <text>EngineModel_NeedsSmallMaintanance</text>
+                </name>
+                <graphics>
+                    <position x="615" y="285"/>
+                </graphics>
+            </transition>
+            <transition id="EngineModel_NeedsLargeMaintanance">
+                <name>
+                    <graphics>
+                        <offset x="162" y="21"/>
+                    </graphics>
+                    <text>EngineModel_NeedsLargeMaintanance</text>
+                </name>
+                <graphics>
+                    <position x="615" y="555"/>
+                </graphics>
+            </transition>
+            <transition id="EngineModel_EngineFailing">
+                <name>
+                    <graphics>
+                        <offset x="105" y="21"/>
+                    </graphics>
+                    <text>EngineModel_EngineFailing</text>
+                </name>
+                <graphics>
+                    <position x="615" y="780"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_SmallMaint">
+                <name>
+                    <graphics>
+                        <offset x="35" y="-12"/>
+                    </graphics>
+                    <text>Shared_SmallMaint</text>
+                </name>
+                <graphics>
+                    <position x="750" y="420"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_SmallMaintDone">
+                <name>
+                    <graphics>
+                        <offset x="56" y="-11"/>
+                    </graphics>
+                    <text>Shared_SmallMaintDone</text>
+                </name>
+                <graphics>
+                    <position x="750" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_LargeMaint">
+                <name>
+                    <graphics>
+                        <offset x="42" y="-12"/>
+                    </graphics>
+                    <text>Shared_LargeMaint</text>
+                </name>
+                <graphics>
+                    <position x="465" y="690"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_startEngine">
+                <name>
+                    <graphics>
+                        <offset x="45" y="1"/>
+                    </graphics>
+                    <text>Shared_startEngine</text>
+                </name>
+                <graphics>
+                    <position x="600" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_LargeMaintDone">
+                <name>
+                    <graphics>
+                        <offset x="46" y="-6"/>
+                    </graphics>
+                    <text>Shared_LargeMaintDone</text>
+                </name>
+                <graphics>
+                    <position x="465" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="EngineFlow_NoMoreToStart">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>EngineFlow_NoMoreToStart</text>
+                </name>
+                <graphics>
+                    <position x="1500" y="75"/>
+                </graphics>
+            </transition>
+            <transition id="WorkerModel_WorkerOneEnterCoOpZone">
+                <name>
+                    <graphics>
+                        <offset x="20" y="42"/>
+                    </graphics>
+                    <text>WorkerModel_WorkerOneEnterCoOpZone</text>
+                </name>
+                <graphics>
+                    <position x="915" y="1275"/>
+                </graphics>
+            </transition>
+            <transition id="WorkerModel_WorkerOneLeaveCoOpZone">
+                <name>
+                    <graphics>
+                        <offset x="170" y="5"/>
+                    </graphics>
+                    <text>WorkerModel_WorkerOneLeaveCoOpZone</text>
+                </name>
+                <graphics>
+                    <position x="945" y="1245"/>
+                </graphics>
+            </transition>
+            <transition id="WorkerModel_WorkerTwoEnterCoOpZone">
+                <name>
+                    <graphics>
+                        <offset x="148" y="40"/>
+                    </graphics>
+                    <text>WorkerModel_WorkerTwoEnterCoOpZone</text>
+                </name>
+                <graphics>
+                    <position x="630" y="1275"/>
+                </graphics>
+            </transition>
+            <transition id="WorkerModel_WorkerTwoLeaveCoOpZone">
+                <name>
+                    <graphics>
+                        <offset x="-2" y="4"/>
+                    </graphics>
+                    <text>WorkerModel_WorkerTwoLeaveCoOpZone</text>
+                </name>
+                <graphics>
+                    <position x="585" y="1245"/>
+                </graphics>
+            </transition>
+            <arc id="EngineModel_LargeMaintanance_to_EngineModel_EngineFailing" source="EngineModel_LargeMaintanance" target="EngineModel_EngineFailing" type="normal"/>
+            <arc id="EngineModel_SmallMaintanance_to_Shared_SmallMaint" source="EngineModel_SmallMaintanance" target="Shared_SmallMaint" type="normal"/>
+            <arc id="EngineModel_Working2_to_Shared_SmallMaintDone" source="EngineModel_Working2" target="Shared_SmallMaintDone" type="normal">
+                <graphics>
+                    <position x="966" y="183"/>
+                </graphics>
+            </arc>
+            <arc id="EngineModel_LargeMaintanance_to_Shared_LargeMaint" source="EngineModel_LargeMaintanance" target="Shared_LargeMaint" type="normal"/>
+            <arc id="EngineModel_Working1and2_to_Shared_LargeMaintDone" source="EngineModel_Working1and2" target="Shared_LargeMaintDone" type="normal">
+                <graphics>
+                    <position x="336" y="184"/>
+                </graphics>
+            </arc>
+            <arc id="EngineFlow_EngineStartTimer_to_Shared_startEngine" source="EngineFlow_EngineStartTimer" target="Shared_startEngine" type="normal">
+                <graphics>
+                    <position x="1657" y="194"/>
+                </graphics>
+            </arc>
+            <arc id="EngineFlow_EnginesIdle_to_Shared_startEngine" source="EngineFlow_EnginesIdle" target="Shared_startEngine" type="normal"/>
+            <arc id="EngineFlow_EngineStartTimer_to_EngineFlow_NoMoreToStart" source="EngineFlow_EngineStartTimer" target="EngineFlow_NoMoreToStart" type="normal"/>
+            <arc id="WorkerModel_OneWorkerSmailMaint_to_Shared_SmallMaintDone" source="WorkerModel_OneWorkerSmailMaint" target="Shared_SmallMaintDone" type="normal"/>
+            <arc id="WorkerModel_TwoWorkingLargeMaint_to_Shared_LargeMaintDone" source="WorkerModel_TwoWorkingLargeMaint" target="Shared_LargeMaintDone" type="normal"/>
+            <arc id="WorkerModel_WorkerTwoReadyForLarge_to_Shared_LargeMaint" source="WorkerModel_WorkerTwoReadyForLarge" target="Shared_LargeMaint" type="normal">
+                <graphics>
+                    <position x="602" y="1714"/>
+                </graphics>
+            </arc>
+            <arc id="WorkerModel_WorkerOneReadyForLarge_to_Shared_LargeMaint" source="WorkerModel_WorkerOneReadyForLarge" target="Shared_LargeMaint" type="normal">
+                <graphics>
+                    <position x="960" y="1714"/>
+                </graphics>
+            </arc>
+            <arc id="WorkerModel_Workers_to_Shared_SmallMaint" source="WorkerModel_Workers" target="Shared_SmallMaint" type="normal">
+                <graphics>
+                    <position x="639" y="1158"/>
+                    <position x="639" y="1054"/>
+                </graphics>
+            </arc>
+            <arc id="WorkerModel_Workers_to_WorkerModel_WorkerOneEnterCoOpZone" source="WorkerModel_Workers" target="WorkerModel_WorkerOneEnterCoOpZone" type="normal"/>
+            <arc id="WorkerModel_WorkerOneReadyForLarge_to_WorkerModel_WorkerOneLeaveCoOpZone" source="WorkerModel_WorkerOneReadyForLarge" target="WorkerModel_WorkerOneLeaveCoOpZone" type="normal"/>
+            <arc id="WorkerModel_Workers_to_WorkerModel_WorkerTwoEnterCoOpZone" source="WorkerModel_Workers" target="WorkerModel_WorkerTwoEnterCoOpZone" type="normal"/>
+            <arc id="WorkerModel_WorkerTwoReadyForLarge_to_WorkerModel_WorkerTwoLeaveCoOpZone" source="WorkerModel_WorkerTwoReadyForLarge" target="WorkerModel_WorkerTwoLeaveCoOpZone" type="normal"/>
+            <arc id="EngineModel_EngineFailing_to_EngineModel_FailedEngines" source="EngineModel_EngineFailing" target="EngineModel_FailedEngines" type="normal"/>
+            <arc id="Shared_SmallMaint_to_EngineModel_Working2" source="Shared_SmallMaint" target="EngineModel_Working2" type="normal">
+                <graphics>
+                    <position x="966" y="435"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_SmallMaintDone_to_EngineModel_Engines" source="Shared_SmallMaintDone" target="EngineModel_Engines" type="normal"/>
+            <arc id="Shared_LargeMaint_to_EngineModel_Working1and2" source="Shared_LargeMaint" target="EngineModel_Working1and2" type="normal">
+                <graphics>
+                    <position x="336" y="699"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_startEngine_to_EngineModel_Engines" source="Shared_startEngine" target="EngineModel_Engines" type="normal"/>
+            <arc id="Shared_LargeMaintDone_to_EngineModel_Engines" source="Shared_LargeMaintDone" target="EngineModel_Engines" type="normal"/>
+            <arc id="Shared_startEngine_to_EngineFlow_EngineStartTimer" source="Shared_startEngine" target="EngineFlow_EngineStartTimer" type="normal"/>
+            <arc id="Shared_SmallMaint_to_WorkerModel_OneWorkerSmailMaint" source="Shared_SmallMaint" target="WorkerModel_OneWorkerSmailMaint" type="normal"/>
+            <arc id="Shared_LargeMaint_to_WorkerModel_TwoWorkingLargeMaint" source="Shared_LargeMaint" target="WorkerModel_TwoWorkingLargeMaint" type="normal"/>
+            <arc id="Shared_LargeMaintDone_to_WorkerModel_WorkerOneReadyForLarge" source="Shared_LargeMaintDone" target="WorkerModel_WorkerOneReadyForLarge" type="normal"/>
+            <arc id="Shared_LargeMaintDone_to_WorkerModel_WorkerTwoReadyForLarge" source="Shared_LargeMaintDone" target="WorkerModel_WorkerTwoReadyForLarge" type="normal"/>
+            <arc id="Shared_SmallMaintDone_to_WorkerModel_Workers" source="Shared_SmallMaintDone" target="WorkerModel_Workers" type="normal"/>
+            <arc id="WorkerModel_WorkerOneEnterCoOpZone_to_WorkerModel_WorkerOneReadyForLarge" source="WorkerModel_WorkerOneEnterCoOpZone" target="WorkerModel_WorkerOneReadyForLarge" type="normal"/>
+            <arc id="WorkerModel_WorkerOneLeaveCoOpZone_to_WorkerModel_Workers" source="WorkerModel_WorkerOneLeaveCoOpZone" target="WorkerModel_Workers" type="normal"/>
+            <arc id="WorkerModel_WorkerTwoEnterCoOpZone_to_WorkerModel_WorkerTwoReadyForLarge" source="WorkerModel_WorkerTwoEnterCoOpZone" target="WorkerModel_WorkerTwoReadyForLarge" type="normal"/>
+            <arc id="WorkerModel_WorkerTwoLeaveCoOpZone_to_WorkerModel_Workers" source="WorkerModel_WorkerTwoLeaveCoOpZone" target="WorkerModel_Workers" type="normal"/>
+            <arc id="EngineModel_Engines_to_EngineModel_NeedsSmallMaintanance" source="EngineModel_Engines" target="EngineModel_NeedsSmallMaintanance" type="normal"/>
+            <arc id="EngineModel_NeedsSmallMaintanance_to_EngineModel_SmallMaintanance" source="EngineModel_NeedsSmallMaintanance" target="EngineModel_SmallMaintanance" type="normal"/>
+            <arc id="EngineModel_SmallMaintanance_to_EngineModel_NeedsLargeMaintanance" source="EngineModel_SmallMaintanance" target="EngineModel_NeedsLargeMaintanance" type="normal"/>
+            <arc id="EngineModel_NeedsLargeMaintanance_to_EngineModel_LargeMaintanance" source="EngineModel_NeedsLargeMaintanance" target="EngineModel_LargeMaintanance" type="normal"/>
+            <arc id="EngineFlow_EnginesIdle_to_EngineFlow_NoMoreToStart" source="EngineFlow_EnginesIdle" target="EngineFlow_NoMoreToStart" type="inhibitor"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

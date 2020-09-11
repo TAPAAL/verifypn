@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>discrete-test012.TRUE-1</id>
+    <description>discrete-test012.TRUE-1</description>
+    <formula>
+      <exists-path>
+        <globally>
+          <integer-eq>
+            <tokens-count>
+              <place>dontDeadlock_P0</place>
+            </tokens-count>
+            <integer-constant>0</integer-constant>
+          </integer-eq>
+        </globally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

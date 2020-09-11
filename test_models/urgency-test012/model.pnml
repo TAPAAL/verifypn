@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="in">
+                <graphics>
+                    <position x="90" y="330"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>in</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="out">
+                <graphics>
+                    <position x="780" y="330"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>out</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="booking">
+                <graphics>
+                    <position x="165" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="50" y="-18"/>
+                    </graphics>
+                    <text>booking</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="payment">
+                <graphics>
+                    <position x="405" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="44" y="-19"/>
+                    </graphics>
+                    <text>payment</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="succesful">
+                <graphics>
+                    <position x="645" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="41" y="-11"/>
+                    </graphics>
+                    <text>succesful</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="attempts">
+                <graphics>
+                    <position x="270" y="420"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>attempts</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>start</text>
+                </name>
+                <graphics>
+                    <position x="165" y="330"/>
+                </graphics>
+            </transition>
+            <transition id="book">
+                <name>
+                    <graphics>
+                        <offset x="29" y="-12"/>
+                    </graphics>
+                    <text>book</text>
+                </name>
+                <graphics>
+                    <position x="285" y="195"/>
+                </graphics>
+            </transition>
+            <transition id="pay">
+                <name>
+                    <graphics>
+                        <offset x="39" y="-10"/>
+                    </graphics>
+                    <text>pay</text>
+                </name>
+                <graphics>
+                    <position x="510" y="195"/>
+                </graphics>
+            </transition>
+            <transition id="empty">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>empty</text>
+                </name>
+                <graphics>
+                    <position x="510" y="330"/>
+                </graphics>
+            </transition>
+            <transition id="success">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>success</text>
+                </name>
+                <graphics>
+                    <position x="720" y="330"/>
+                </graphics>
+            </transition>
+            <transition id="fail1">
+                <name>
+                    <graphics>
+                        <offset x="26" y="41"/>
+                    </graphics>
+                    <text>fail1</text>
+                </name>
+                <graphics>
+                    <position x="165" y="525"/>
+                </graphics>
+            </transition>
+            <transition id="fail2">
+                <name>
+                    <graphics>
+                        <offset x="25" y="44"/>
+                    </graphics>
+                    <text>fail2</text>
+                </name>
+                <graphics>
+                    <position x="405" y="585"/>
+                </graphics>
+            </transition>
+            <transition id="restart1">
+                <name>
+                    <graphics>
+                        <offset x="75" y="23"/>
+                    </graphics>
+                    <text>restart1</text>
+                </name>
+                <graphics>
+                    <position x="225" y="285"/>
+                </graphics>
+            </transition>
+            <transition id="restart2">
+                <name>
+                    <graphics>
+                        <offset x="76" y="24"/>
+                    </graphics>
+                    <text>restart2</text>
+                </name>
+                <graphics>
+                    <position x="360" y="285"/>
+                </graphics>
+            </transition>
+            <arc id="in_to_start" source="in" target="start" type="normal"/>
+            <arc id="payment_to_pay" source="payment" target="pay" type="normal"/>
+            <arc id="succesful_to_empty" source="succesful" target="empty" type="normal">
+                <graphics>
+                    <position x="554" y="284"/>
+                </graphics>
+            </arc>
+            <arc id="attempts_to_empty" source="attempts" target="empty" type="normal">
+                <graphics>
+                    <position x="509" y="374"/>
+                </graphics>
+            </arc>
+            <arc id="succesful_to_success" source="succesful" target="success" type="normal"/>
+            <arc id="booking_to_restart1" source="booking" target="restart1" type="normal">
+                <graphics>
+                    <position x="194" y="254"/>
+                </graphics>
+            </arc>
+            <arc id="attempts_to_restart1" source="attempts" target="restart1" type="normal"/>
+            <arc id="payment_to_restart2" source="payment" target="restart2" type="normal"/>
+            <arc id="attempts_to_restart2" source="attempts" target="restart2" type="normal"/>
+            <arc id="booking_to_fail1" source="booking" target="fail1" type="normal">
+                <graphics>
+                    <position x="59" y="284"/>
+                    <position x="104" y="494"/>
+                </graphics>
+            </arc>
+            <arc id="payment_to_fail2" source="payment" target="fail2" type="normal">
+                <graphics>
+                    <position x="329" y="119"/>
+                    <position x="179" y="119"/>
+                    <position x="29" y="254"/>
+                    <position x="59" y="524"/>
+                    <position x="314" y="614"/>
+                </graphics>
+            </arc>
+            <arc id="start_to_booking" source="start" target="booking" type="normal"/>
+            <arc id="start_to_attempts" source="start" target="attempts" type="normal">
+                <inscription>
+                    <text>3</text>
+                </inscription>
+            </arc>
+            <arc id="pay_to_succesful" source="pay" target="succesful" type="normal"/>
+            <arc id="empty_to_succesful" source="empty" target="succesful" type="normal">
+                <graphics>
+                    <position x="629" y="269"/>
+                </graphics>
+            </arc>
+            <arc id="success_to_out" source="success" target="out" type="normal"/>
+            <arc id="restart1_to_booking" source="restart1" target="booking" type="normal">
+                <graphics>
+                    <position x="224" y="254"/>
+                </graphics>
+            </arc>
+            <arc id="restart2_to_booking" source="restart2" target="booking" type="normal"/>
+            <arc id="fail1_to_out" source="fail1" target="out" type="normal">
+                <graphics>
+                    <position x="614" y="524"/>
+                    <position x="779" y="464"/>
+                </graphics>
+            </arc>
+            <arc id="fail2_to_out" source="fail2" target="out" type="normal">
+                <graphics>
+                    <position x="719" y="599"/>
+                    <position x="824" y="449"/>
+                </graphics>
+            </arc>
+            <arc id="booking_to_book" source="booking" target="book" type="normal"/>
+            <arc id="book_to_payment" source="book" target="payment" type="normal"/>
+            <arc id="attempts_to_success" source="attempts" target="success" type="inhibitor">
+                <graphics>
+                    <position x="734" y="434"/>
+                </graphics>
+            </arc>
+            <arc id="attempts_to_fail1" source="attempts" target="fail1" type="inhibitor"/>
+            <arc id="attempts_to_fail2" source="attempts" target="fail2" type="inhibitor"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

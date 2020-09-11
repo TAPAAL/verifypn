@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>composition-prime-test002.FALSE-1</id>
+    <description>composition-prime-test002.FALSE-1</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <integer-ge>
+            <tokens-count>
+              <place>Finish_NotPrime</place>
+            </tokens-count>
+            <integer-constant>1</integer-constant>
+          </integer-ge>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

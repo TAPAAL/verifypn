@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Workplace1">
+                <graphics>
+                    <position x="210" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Workplace1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Workplace2">
+                <graphics>
+                    <position x="390" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Workplace2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Workplace3">
+                <graphics>
+                    <position x="540" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Workplace3</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Start">
+                <graphics>
+                    <position x="30" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Start</text>
+                </name>
+                <initialMarking>
+                    <text>5</text>
+                </initialMarking>
+            </place>
+            <place id="End">
+                <graphics>
+                    <position x="705" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>End</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Finishedtask1">
+                <graphics>
+                    <position x="195" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Finishedtask1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Finishedtask2">
+                <graphics>
+                    <position x="375" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Finishedtask2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Move2to1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Move2to1</text>
+                </name>
+                <graphics>
+                    <position x="285" y="60"/>
+                </graphics>
+            </transition>
+            <transition id="Move1to2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Move1to2</text>
+                </name>
+                <graphics>
+                    <position x="300" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="Move3to2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Move3to2</text>
+                </name>
+                <graphics>
+                    <position x="465" y="60"/>
+                </graphics>
+            </transition>
+            <transition id="Move2to3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Move2to3</text>
+                </name>
+                <graphics>
+                    <position x="480" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="Task1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task1</text>
+                </name>
+                <graphics>
+                    <position x="195" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="Task2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task2</text>
+                </name>
+                <graphics>
+                    <position x="375" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="Task3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task3</text>
+                </name>
+                <graphics>
+                    <position x="555" y="270"/>
+                </graphics>
+            </transition>
+            <arc id="Workplace1_to_Task1" source="Workplace1" target="Task1" type="normal">
+                <graphics>
+                    <position x="180" y="225"/>
+                </graphics>
+            </arc>
+            <arc id="Workplace2_to_Task2" source="Workplace2" target="Task2" type="normal">
+                <graphics>
+                    <position x="375" y="225"/>
+                </graphics>
+            </arc>
+            <arc id="Workplace3_to_Task3" source="Workplace3" target="Task3" type="normal">
+                <graphics>
+                    <position x="540" y="225"/>
+                </graphics>
+            </arc>
+            <arc id="Workplace1_to_Move1to2" source="Workplace1" target="Move1to2" type="normal"/>
+            <arc id="Workplace2_to_Move2to3" source="Workplace2" target="Move2to3" type="normal"/>
+            <arc id="Workplace3_to_Move3to2" source="Workplace3" target="Move3to2" type="normal"/>
+            <arc id="Workplace2_to_Move2to1" source="Workplace2" target="Move2to1" type="normal"/>
+            <arc id="Task1_to_Workplace1" source="Task1" target="Workplace1" type="normal">
+                <graphics>
+                    <position x="255" y="240"/>
+                </graphics>
+            </arc>
+            <arc id="Task2_to_Workplace2" source="Task2" target="Workplace2" type="normal">
+                <graphics>
+                    <position x="420" y="225"/>
+                </graphics>
+            </arc>
+            <arc id="Task3_to_Workplace3" source="Task3" target="Workplace3" type="normal">
+                <graphics>
+                    <position x="600" y="210"/>
+                </graphics>
+            </arc>
+            <arc id="Move1to2_to_Workplace2" source="Move1to2" target="Workplace2" type="normal">
+                <graphics>
+                    <position x="315" y="225"/>
+                </graphics>
+            </arc>
+            <arc id="Move2to3_to_Workplace3" source="Move2to3" target="Workplace3" type="normal"/>
+            <arc id="Move3to2_to_Workplace2" source="Move3to2" target="Workplace2" type="normal"/>
+            <arc id="Move2to1_to_Workplace1" source="Move2to1" target="Workplace1" type="normal"/>
+            <arc id="Start_to_Task1" source="Start" target="Task1" type="normal"/>
+            <arc id="Task1_to_Finishedtask1" source="Task1" target="Finishedtask1" type="normal">
+                <graphics>
+                    <position x="210" y="300"/>
+                </graphics>
+            </arc>
+            <arc id="Finishedtask1_to_Task2" source="Finishedtask1" target="Task2" type="normal"/>
+            <arc id="Task2_to_Finishedtask2" source="Task2" target="Finishedtask2" type="normal">
+                <graphics>
+                    <position x="390" y="285"/>
+                </graphics>
+            </arc>
+            <arc id="Finishedtask2_to_Task3" source="Finishedtask2" target="Task3" type="normal"/>
+            <arc id="Task3_to_End" source="Task3" target="End" type="normal">
+                <graphics>
+                    <position x="570" y="285"/>
+                </graphics>
+            </arc>
+            <arc id="Workplace2_to_Move1to2" source="Workplace2" target="Move1to2" type="inhibitor">
+                <graphics>
+                    <position x="313" y="148"/>
+                </graphics>
+            </arc>
+            <arc id="Workplace2_to_Move3to2" source="Workplace2" target="Move3to2" type="inhibitor">
+                <graphics>
+                    <position x="463" y="148"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_Done1">
+                <graphics>
+                    <position x="240" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Done1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Done2">
+                <graphics>
+                    <position x="360" y="60"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Done2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Done3">
+                <graphics>
+                    <position x="240" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Done3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Done4">
+                <graphics>
+                    <position x="240" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Done4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Done5">
+                <graphics>
+                    <position x="240" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Done5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Task1_P0">
+                <graphics>
+                    <position x="255" y="60"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task1_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Task1_P1">
+                <graphics>
+                    <position x="120" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task1_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Task1_P2">
+                <graphics>
+                    <position x="375" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task1_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Task2_P0">
+                <graphics>
+                    <position x="630" y="60"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task2_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Task2_P1">
+                <graphics>
+                    <position x="495" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task2_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Task2_P2">
+                <graphics>
+                    <position x="750" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task2_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Task3_P0">
+                <graphics>
+                    <position x="255" y="450"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task3_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Task3_P1">
+                <graphics>
+                    <position x="120" y="615"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task3_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Task3_P2">
+                <graphics>
+                    <position x="375" y="630"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task3_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Task4_P0">
+                <graphics>
+                    <position x="630" y="450"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task4_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Task4_P1">
+                <graphics>
+                    <position x="495" y="615"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task4_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Task4_P2">
+                <graphics>
+                    <position x="750" y="630"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task4_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Task5_P0">
+                <graphics>
+                    <position x="255" y="840"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task5_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Task5_P1">
+                <graphics>
+                    <position x="120" y="1005"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task5_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Task5_P2">
+                <graphics>
+                    <position x="375" y="1020"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task5_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Task1_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task1_T0</text>
+                </name>
+                <graphics>
+                    <position x="255" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="Task1_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task1_T1</text>
+                </name>
+                <graphics>
+                    <position x="240" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="Task2_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task2_T0</text>
+                </name>
+                <graphics>
+                    <position x="630" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="Task2_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task2_T1</text>
+                </name>
+                <graphics>
+                    <position x="615" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="Task3_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task3_T0</text>
+                </name>
+                <graphics>
+                    <position x="255" y="540"/>
+                </graphics>
+            </transition>
+            <transition id="Task3_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task3_T1</text>
+                </name>
+                <graphics>
+                    <position x="240" y="690"/>
+                </graphics>
+            </transition>
+            <transition id="Task4_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task4_T0</text>
+                </name>
+                <graphics>
+                    <position x="630" y="540"/>
+                </graphics>
+            </transition>
+            <transition id="Task4_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task4_T1</text>
+                </name>
+                <graphics>
+                    <position x="615" y="690"/>
+                </graphics>
+            </transition>
+            <transition id="Task5_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task5_T0</text>
+                </name>
+                <graphics>
+                    <position x="255" y="930"/>
+                </graphics>
+            </transition>
+            <transition id="Task5_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Task5_T1</text>
+                </name>
+                <graphics>
+                    <position x="240" y="1080"/>
+                </graphics>
+            </transition>
+            <arc id="Task1_P0_to_Task1_T0" source="Task1_P0" target="Task1_T0" type="normal"/>
+            <arc id="Task1_P1_to_Task1_T1" source="Task1_P1" target="Task1_T1" type="normal"/>
+            <arc id="Task1_P2_to_Task1_T1" source="Task1_P2" target="Task1_T1" type="normal"/>
+            <arc id="Task2_P0_to_Task2_T0" source="Task2_P0" target="Task2_T0" type="normal"/>
+            <arc id="Task2_P1_to_Task2_T1" source="Task2_P1" target="Task2_T1" type="normal"/>
+            <arc id="Task2_P2_to_Task2_T1" source="Task2_P2" target="Task2_T1" type="normal"/>
+            <arc id="Shared_Done1_to_Task2_T0" source="Shared_Done1" target="Task2_T0" type="normal">
+                <graphics>
+                    <position x="689" y="104"/>
+                </graphics>
+            </arc>
+            <arc id="Task3_P0_to_Task3_T0" source="Task3_P0" target="Task3_T0" type="normal"/>
+            <arc id="Task3_P1_to_Task3_T1" source="Task3_P1" target="Task3_T1" type="normal"/>
+            <arc id="Task3_P2_to_Task3_T1" source="Task3_P2" target="Task3_T1" type="normal"/>
+            <arc id="Shared_Done1_to_Task3_T0" source="Shared_Done1" target="Task3_T0" type="normal">
+                <graphics>
+                    <position x="314" y="494"/>
+                </graphics>
+            </arc>
+            <arc id="Task4_P0_to_Task4_T0" source="Task4_P0" target="Task4_T0" type="normal"/>
+            <arc id="Task4_P1_to_Task4_T1" source="Task4_P1" target="Task4_T1" type="normal"/>
+            <arc id="Task4_P2_to_Task4_T1" source="Task4_P2" target="Task4_T1" type="normal"/>
+            <arc id="Shared_Done2_to_Task4_T0" source="Shared_Done2" target="Task4_T0" type="normal">
+                <graphics>
+                    <position x="689" y="494"/>
+                </graphics>
+            </arc>
+            <arc id="Task5_P0_to_Task5_T0" source="Task5_P0" target="Task5_T0" type="normal"/>
+            <arc id="Task5_P1_to_Task5_T1" source="Task5_P1" target="Task5_T1" type="normal"/>
+            <arc id="Task5_P2_to_Task5_T1" source="Task5_P2" target="Task5_T1" type="normal"/>
+            <arc id="Shared_Done3_to_Task5_T0" source="Shared_Done3" target="Task5_T0" type="normal">
+                <graphics>
+                    <position x="314" y="884"/>
+                </graphics>
+            </arc>
+            <arc id="Task1_T0_to_Task1_P1" source="Task1_T0" target="Task1_P1" type="normal"/>
+            <arc id="Task1_T0_to_Task1_P2" source="Task1_T0" target="Task1_P2" type="normal"/>
+            <arc id="Task1_T1_to_Shared_Done1" source="Task1_T1" target="Shared_Done1" type="normal"/>
+            <arc id="Task2_T0_to_Task2_P1" source="Task2_T0" target="Task2_P1" type="normal"/>
+            <arc id="Task2_T0_to_Task2_P2" source="Task2_T0" target="Task2_P2" type="normal"/>
+            <arc id="Task2_T1_to_Shared_Done2" source="Task2_T1" target="Shared_Done2" type="normal"/>
+            <arc id="Task2_T0_to_Shared_Done1" source="Task2_T0" target="Shared_Done1" type="normal">
+                <graphics>
+                    <position x="704" y="149"/>
+                </graphics>
+            </arc>
+            <arc id="Task3_T0_to_Task3_P1" source="Task3_T0" target="Task3_P1" type="normal"/>
+            <arc id="Task3_T0_to_Task3_P2" source="Task3_T0" target="Task3_P2" type="normal"/>
+            <arc id="Task3_T1_to_Shared_Done3" source="Task3_T1" target="Shared_Done3" type="normal"/>
+            <arc id="Task3_T0_to_Shared_Done1" source="Task3_T0" target="Shared_Done1" type="normal">
+                <graphics>
+                    <position x="329" y="539"/>
+                </graphics>
+            </arc>
+            <arc id="Task4_T0_to_Task4_P1" source="Task4_T0" target="Task4_P1" type="normal"/>
+            <arc id="Task4_T0_to_Task4_P2" source="Task4_T0" target="Task4_P2" type="normal"/>
+            <arc id="Task4_T1_to_Shared_Done4" source="Task4_T1" target="Shared_Done4" type="normal"/>
+            <arc id="Task4_T0_to_Shared_Done2" source="Task4_T0" target="Shared_Done2" type="normal">
+                <graphics>
+                    <position x="704" y="539"/>
+                </graphics>
+            </arc>
+            <arc id="Task5_T0_to_Task5_P1" source="Task5_T0" target="Task5_P1" type="normal"/>
+            <arc id="Task5_T0_to_Task5_P2" source="Task5_T0" target="Task5_P2" type="normal"/>
+            <arc id="Task5_T1_to_Shared_Done5" source="Task5_T1" target="Shared_Done5" type="normal"/>
+            <arc id="Task5_T0_to_Shared_Done3" source="Task5_T0" target="Shared_Done3" type="normal">
+                <graphics>
+                    <position x="329" y="929"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

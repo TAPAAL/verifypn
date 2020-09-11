@@ -1,0 +1,602 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_mutex">
+                <graphics>
+                    <position x="540" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="35" y="-12"/>
+                    </graphics>
+                    <text>Shared_mutex</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Type1_P0">
+                <graphics>
+                    <position x="225" y="75"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_P0</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type1_P1">
+                <graphics>
+                    <position x="225" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type1_P2">
+                <graphics>
+                    <position x="135" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type1_P3">
+                <graphics>
+                    <position x="315" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type1_P4">
+                <graphics>
+                    <position x="135" y="465"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type1_P5">
+                <graphics>
+                    <position x="315" y="465"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_P5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type1_P6">
+                <graphics>
+                    <position x="210" y="645"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_P6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type1_P7">
+                <graphics>
+                    <position x="210" y="750"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_P7</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type1_P8">
+                <graphics>
+                    <position x="345" y="810"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_P8</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type1_P9">
+                <graphics>
+                    <position x="420" y="690"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_P9</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type1_P11">
+                <graphics>
+                    <position x="45" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_P11</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Type2_P0">
+                <graphics>
+                    <position x="1305" y="75"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_P0</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type2_P1">
+                <graphics>
+                    <position x="1305" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type2_P2">
+                <graphics>
+                    <position x="1305" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type2_P3">
+                <graphics>
+                    <position x="1305" y="480"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type2_P4">
+                <graphics>
+                    <position x="1305" y="600"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type2_P5">
+                <graphics>
+                    <position x="1155" y="810"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_P5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type2_P6">
+                <graphics>
+                    <position x="1095" y="570"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_P6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Type2_P8">
+                <graphics>
+                    <position x="1530" y="255"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_P8</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Type2_P9">
+                <graphics>
+                    <position x="1305" y="720"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_P9</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Type1_waitRobot">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_waitRobot</text>
+                </name>
+                <graphics>
+                    <position x="225" y="15"/>
+                </graphics>
+            </transition>
+            <transition id="Type1_endRobot">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_endRobot</text>
+                </name>
+                <graphics>
+                    <position x="225" y="165"/>
+                </graphics>
+            </transition>
+            <transition id="Type1_M1working">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_M1working</text>
+                </name>
+                <graphics>
+                    <position x="135" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="Type1_M3working">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_M3working</text>
+                </name>
+                <graphics>
+                    <position x="315" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="Type1_waitRobota">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_waitRobota</text>
+                </name>
+                <graphics>
+                    <position x="135" y="405"/>
+                </graphics>
+            </transition>
+            <transition id="Type1_waitRobotb">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_waitRobotb</text>
+                </name>
+                <graphics>
+                    <position x="315" y="405"/>
+                </graphics>
+            </transition>
+            <transition id="Type1_M2working">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_M2working</text>
+                </name>
+                <graphics>
+                    <position x="210" y="705"/>
+                </graphics>
+            </transition>
+            <transition id="Type1_waitRobotc">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_waitRobotc</text>
+                </name>
+                <graphics>
+                    <position x="210" y="810"/>
+                </graphics>
+            </transition>
+            <transition id="Type1_endRobotc">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_endRobotc</text>
+                </name>
+                <graphics>
+                    <position x="345" y="735"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_join">
+                <name>
+                    <graphics>
+                        <offset x="24" y="-9"/>
+                    </graphics>
+                    <text>Shared_join</text>
+                </name>
+                <graphics>
+                    <position x="540" y="600"/>
+                </graphics>
+            </transition>
+            <transition id="Type1_endRobota">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_endRobota</text>
+                </name>
+                <graphics>
+                    <position x="135" y="555"/>
+                </graphics>
+            </transition>
+            <transition id="Type1_endRobotb">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type1_endRobotb</text>
+                </name>
+                <graphics>
+                    <position x="315" y="555"/>
+                </graphics>
+            </transition>
+            <transition id="Type2_waitRobot">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_waitRobot</text>
+                </name>
+                <graphics>
+                    <position x="1305" y="15"/>
+                </graphics>
+            </transition>
+            <transition id="Type2_endRobot">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_endRobot</text>
+                </name>
+                <graphics>
+                    <position x="1305" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="Type2_M2working">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_M2working</text>
+                </name>
+                <graphics>
+                    <position x="1305" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="Type2_waitRobota">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_waitRobota</text>
+                </name>
+                <graphics>
+                    <position x="1305" y="405"/>
+                </graphics>
+            </transition>
+            <transition id="Type2_endRobota">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_endRobota</text>
+                </name>
+                <graphics>
+                    <position x="1305" y="540"/>
+                </graphics>
+            </transition>
+            <transition id="Type2_M1working">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_M1working</text>
+                </name>
+                <graphics>
+                    <position x="1305" y="660"/>
+                </graphics>
+            </transition>
+            <transition id="Type2_waitRobotc">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_waitRobotc</text>
+                </name>
+                <graphics>
+                    <position x="1305" y="795"/>
+                </graphics>
+            </transition>
+            <transition id="Type2_endRobotc">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Type2_endRobotc</text>
+                </name>
+                <graphics>
+                    <position x="1170" y="660"/>
+                </graphics>
+            </transition>
+            <arc id="Type1_P0_to_Type1_endRobot" source="Type1_P0" target="Type1_endRobot" type="normal"/>
+            <arc id="Type1_P1_to_Type1_M1working" source="Type1_P1" target="Type1_M1working" type="normal"/>
+            <arc id="Type1_P1_to_Type1_M3working" source="Type1_P1" target="Type1_M3working" type="normal"/>
+            <arc id="Type1_P2_to_Type1_waitRobota" source="Type1_P2" target="Type1_waitRobota" type="normal"/>
+            <arc id="Type1_P3_to_Type1_waitRobotb" source="Type1_P3" target="Type1_waitRobotb" type="normal"/>
+            <arc id="Type1_P6_to_Type1_M2working" source="Type1_P6" target="Type1_M2working" type="normal"/>
+            <arc id="Type1_P7_to_Type1_waitRobotc" source="Type1_P7" target="Type1_waitRobotc" type="normal"/>
+            <arc id="Type1_P8_to_Type1_endRobotc" source="Type1_P8" target="Type1_endRobotc" type="normal"/>
+            <arc id="Type1_P9_to_Shared_join" source="Type1_P9" target="Shared_join" type="normal"/>
+            <arc id="Type1_P11_to_Type1_waitRobot" source="Type1_P11" target="Type1_waitRobot" type="normal"/>
+            <arc id="Type1_P4_to_Type1_endRobota" source="Type1_P4" target="Type1_endRobota" type="normal"/>
+            <arc id="Type1_P5_to_Type1_endRobotb" source="Type1_P5" target="Type1_endRobotb" type="normal"/>
+            <arc id="Shared_mutex_to_Type1_waitRobot" source="Shared_mutex" target="Type1_waitRobot" type="normal"/>
+            <arc id="Shared_mutex_to_Type1_waitRobota" source="Shared_mutex" target="Type1_waitRobota" type="normal"/>
+            <arc id="Shared_mutex_to_Type1_waitRobotb" source="Shared_mutex" target="Type1_waitRobotb" type="normal"/>
+            <arc id="Shared_mutex_to_Type1_waitRobotc" source="Shared_mutex" target="Type1_waitRobotc" type="normal"/>
+            <arc id="Type2_P0_to_Type2_endRobot" source="Type2_P0" target="Type2_endRobot" type="normal"/>
+            <arc id="Type2_P1_to_Type2_M2working" source="Type2_P1" target="Type2_M2working" type="normal"/>
+            <arc id="Type2_P2_to_Type2_waitRobota" source="Type2_P2" target="Type2_waitRobota" type="normal"/>
+            <arc id="Type2_P3_to_Type2_endRobota" source="Type2_P3" target="Type2_endRobota" type="normal"/>
+            <arc id="Type2_P4_to_Type2_M1working" source="Type2_P4" target="Type2_M1working" type="normal"/>
+            <arc id="Type2_P9_to_Type2_waitRobotc" source="Type2_P9" target="Type2_waitRobotc" type="normal"/>
+            <arc id="Type2_P5_to_Type2_endRobotc" source="Type2_P5" target="Type2_endRobotc" type="normal"/>
+            <arc id="Type2_P6_to_Shared_join" source="Type2_P6" target="Shared_join" type="normal"/>
+            <arc id="Type2_P8_to_Type2_waitRobot" source="Type2_P8" target="Type2_waitRobot" type="normal">
+                <graphics>
+                    <position x="1484" y="59"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_mutex_to_Type2_waitRobot" source="Shared_mutex" target="Type2_waitRobot" type="normal"/>
+            <arc id="Shared_mutex_to_Type2_waitRobota" source="Shared_mutex" target="Type2_waitRobota" type="normal"/>
+            <arc id="Shared_mutex_to_Type2_waitRobotc" source="Shared_mutex" target="Type2_waitRobotc" type="normal"/>
+            <arc id="Type1_waitRobot_to_Type1_P0" source="Type1_waitRobot" target="Type1_P0" type="normal"/>
+            <arc id="Type1_endRobot_to_Type1_P1" source="Type1_endRobot" target="Type1_P1" type="normal"/>
+            <arc id="Type1_M3working_to_Type1_P3" source="Type1_M3working" target="Type1_P3" type="normal"/>
+            <arc id="Type1_M1working_to_Type1_P2" source="Type1_M1working" target="Type1_P2" type="normal"/>
+            <arc id="Type1_waitRobotb_to_Type1_P5" source="Type1_waitRobotb" target="Type1_P5" type="normal"/>
+            <arc id="Type1_M2working_to_Type1_P7" source="Type1_M2working" target="Type1_P7" type="normal"/>
+            <arc id="Type1_waitRobotc_to_Type1_P8" source="Type1_waitRobotc" target="Type1_P8" type="normal"/>
+            <arc id="Type1_endRobotc_to_Type1_P9" source="Type1_endRobotc" target="Type1_P9" type="normal"/>
+            <arc id="Type1_endRobotc_to_Shared_mutex" source="Type1_endRobotc" target="Shared_mutex" type="normal"/>
+            <arc id="Shared_join_to_Type1_P11" source="Shared_join" target="Type1_P11" type="normal">
+                <graphics>
+                    <position x="524" y="869"/>
+                    <position x="89" y="854"/>
+                </graphics>
+            </arc>
+            <arc id="Type1_waitRobota_to_Type1_P4" source="Type1_waitRobota" target="Type1_P4" type="normal"/>
+            <arc id="Type1_endRobota_to_Type1_P6" source="Type1_endRobota" target="Type1_P6" type="normal"/>
+            <arc id="Type1_endRobotb_to_Type1_P6" source="Type1_endRobotb" target="Type1_P6" type="normal"/>
+            <arc id="Type1_endRobot_to_Shared_mutex" source="Type1_endRobot" target="Shared_mutex" type="normal"/>
+            <arc id="Type1_endRobota_to_Shared_mutex" source="Type1_endRobota" target="Shared_mutex" type="normal"/>
+            <arc id="Type1_endRobotb_to_Shared_mutex" source="Type1_endRobotb" target="Shared_mutex" type="normal"/>
+            <arc id="Type2_waitRobot_to_Type2_P0" source="Type2_waitRobot" target="Type2_P0" type="normal">
+                <graphics>
+                    <position x="1319" y="29"/>
+                </graphics>
+            </arc>
+            <arc id="Type2_endRobot_to_Type2_P1" source="Type2_endRobot" target="Type2_P1" type="normal">
+                <graphics>
+                    <position x="1319" y="149"/>
+                </graphics>
+            </arc>
+            <arc id="Type2_M2working_to_Type2_P2" source="Type2_M2working" target="Type2_P2" type="normal"/>
+            <arc id="Type2_waitRobota_to_Type2_P3" source="Type2_waitRobota" target="Type2_P3" type="normal"/>
+            <arc id="Type2_endRobota_to_Type2_P4" source="Type2_endRobota" target="Type2_P4" type="normal"/>
+            <arc id="Type2_M1working_to_Type2_P9" source="Type2_M1working" target="Type2_P9" type="normal"/>
+            <arc id="Type2_waitRobotc_to_Type2_P5" source="Type2_waitRobotc" target="Type2_P5" type="normal"/>
+            <arc id="Type2_endRobotc_to_Type2_P6" source="Type2_endRobotc" target="Type2_P6" type="normal"/>
+            <arc id="Shared_join_to_Type2_P8" source="Shared_join" target="Type2_P8" type="normal">
+                <graphics>
+                    <position x="1049" y="854"/>
+                    <position x="1514" y="854"/>
+                </graphics>
+            </arc>
+            <arc id="Type2_endRobot_to_Shared_mutex" source="Type2_endRobot" target="Shared_mutex" type="normal"/>
+            <arc id="Type2_endRobota_to_Shared_mutex" source="Type2_endRobota" target="Shared_mutex" type="normal"/>
+            <arc id="Type2_endRobotc_to_Shared_mutex" source="Type2_endRobotc" target="Shared_mutex" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

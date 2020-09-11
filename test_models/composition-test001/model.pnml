@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_tmp1">
+                <graphics>
+                    <position x="135" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_tmp1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_tmp2">
+                <graphics>
+                    <position x="105" y="450"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_tmp2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN1_P0">
+                <graphics>
+                    <position x="135" y="60"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_P0</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN3_Final">
+                <graphics>
+                    <position x="105" y="1230"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN3_Final</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="TAPN3_P2">
+                <graphics>
+                    <position x="315" y="1140"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN3_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="TAPN1_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN1_T0</text>
+                </name>
+                <graphics>
+                    <position x="135" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_putitthre">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_putitthre</text>
+                </name>
+                <graphics>
+                    <position x="255" y="60"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN2_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN2_T0</text>
+                </name>
+                <graphics>
+                    <position x="435" y="330"/>
+                </graphics>
+            </transition>
+            <transition id="TAPN3_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>TAPN3_T0</text>
+                </name>
+                <graphics>
+                    <position x="105" y="1155"/>
+                </graphics>
+            </transition>
+            <arc id="TAPN1_P0_to_Shared_putitthre" source="TAPN1_P0" target="Shared_putitthre" type="normal">
+                <graphics>
+                    <position x="208" y="28"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_tmp1_to_TAPN2_T0" source="Shared_tmp1" target="TAPN2_T0" type="normal"/>
+            <arc id="Shared_tmp2_to_TAPN3_T0" source="Shared_tmp2" target="TAPN3_T0" type="normal"/>
+            <arc id="TAPN3_P2_to_TAPN3_T0" source="TAPN3_P2" target="TAPN3_T0" type="normal"/>
+            <arc id="TAPN2_T0_to_Shared_tmp2" source="TAPN2_T0" target="Shared_tmp2" type="normal"/>
+            <arc id="TAPN3_T0_to_TAPN3_Final" source="TAPN3_T0" target="TAPN3_Final" type="normal"/>
+            <arc id="Shared_putitthre_to_TAPN3_P2" source="Shared_putitthre" target="TAPN3_P2" type="normal"/>
+            <arc id="TAPN1_P0_to_TAPN1_T0" source="TAPN1_P0" target="TAPN1_T0" type="normal"/>
+            <arc id="TAPN1_T0_to_Shared_tmp1" source="TAPN1_T0" target="Shared_tmp1" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

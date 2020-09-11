@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="in">
+                <graphics>
+                    <position x="90" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-2" y="-2"/>
+                    </graphics>
+                    <text>in</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="P1">
+                <graphics>
+                    <position x="300" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="out">
+                <graphics>
+                    <position x="555" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="47" y="-6"/>
+                    </graphics>
+                    <text>out</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="start">
+                <name>
+                    <graphics>
+                        <offset x="31" y="-10"/>
+                    </graphics>
+                    <text>start</text>
+                </name>
+                <graphics>
+                    <position x="180" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="loop">
+                <name>
+                    <graphics>
+                        <offset x="27" y="-9"/>
+                    </graphics>
+                    <text>loop</text>
+                </name>
+                <graphics>
+                    <position x="300" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="end1">
+                <name>
+                    <graphics>
+                        <offset x="25" y="-8"/>
+                    </graphics>
+                    <text>end1</text>
+                </name>
+                <graphics>
+                    <position x="420" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="end2">
+                <name>
+                    <graphics>
+                        <offset x="27" y="-10"/>
+                    </graphics>
+                    <text>end2</text>
+                </name>
+                <graphics>
+                    <position x="420" y="120"/>
+                </graphics>
+            </transition>
+            <arc id="P1_to_end1" source="P1" target="end1" type="normal"/>
+            <arc id="P1_to_end2" source="P1" target="end2" type="normal"/>
+            <arc id="end1_to_out" source="end1" target="out" type="normal"/>
+            <arc id="end2_to_out" source="end2" target="out" type="normal"/>
+            <arc id="in_to_start" source="in" target="start" type="normal"/>
+            <arc id="start_to_P1" source="start" target="P1" type="normal"/>
+            <arc id="P1_to_loop" source="P1" target="loop" type="normal">
+                <graphics>
+                    <position x="283" y="178"/>
+                </graphics>
+            </arc>
+            <arc id="loop_to_P1" source="loop" target="P1" type="normal">
+                <graphics>
+                    <position x="313" y="133"/>
+                    <position x="343" y="178"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

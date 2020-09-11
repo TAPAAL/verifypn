@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>trace-test004.TRUE-1</id>
+    <description>trace-test004.TRUE-1</description>
+    <formula>
+      <exists-path>
+        <globally>
+          <conjunction>
+            <true/>
+            <negation>
+              <deadlock/>
+            </negation>
+          </conjunction>
+        </globally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

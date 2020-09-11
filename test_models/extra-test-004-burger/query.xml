@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>extra-test-004-burger.TRUE-1</id>
+    <description>extra-test-004-burger.TRUE-1</description>
+    <formula>
+      <exists-path>
+        <globally>
+          <integer-eq>
+            <tokens-count>
+              <place>Shared_MissedDeadline</place>
+            </tokens-count>
+            <integer-constant>0</integer-constant>
+          </integer-eq>
+        </globally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>trace-test007.FALSE-1</id>
+    <description>trace-test007.FALSE-1</description>
+    <formula>
+      <exists-path>
+        <globally>
+          <negation>
+            <deadlock/>
+          </negation>
+        </globally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

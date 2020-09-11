@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>orphans-test003.TRUE-1</id>
+    <description>orphans-test003.TRUE-1</description>
+    <formula>
+      <all-paths>
+        <globally>
+          <disjunction>
+            <negation>
+              <integer-gt>
+                <tokens-count>
+                  <place>Train_DangerZone</place>
+                </tokens-count>
+                <integer-constant>0</integer-constant>
+              </integer-gt>
+            </negation>
+            <integer-eq>
+              <tokens-count>
+                <place>TraficLight_Red</place>
+              </tokens-count>
+              <integer-constant>1</integer-constant>
+            </integer-eq>
+          </disjunction>
+        </globally>
+      </all-paths>
+    </formula>
+  </property>
+</property-set>

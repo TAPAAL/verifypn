@@ -1,0 +1,983 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_CPUReady">
+                <graphics>
+                    <position x="600" y="480"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_CPUReady</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_ControllerReady">
+                <graphics>
+                    <position x="540" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="53" y="-9"/>
+                    </graphics>
+                    <text>Shared_ControllerReady</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_SonarReady">
+                <graphics>
+                    <position x="330" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="4" y="-3"/>
+                    </graphics>
+                    <text>Shared_SonarReady</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_DataloggingReady">
+                <graphics>
+                    <position x="450" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="49" y="-15"/>
+                    </graphics>
+                    <text>Shared_DataloggingReady</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_AEBReady">
+                <graphics>
+                    <position x="330" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_AEBReady</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_ReadRawReady">
+                <graphics>
+                    <position x="360" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="29" y="-16"/>
+                    </graphics>
+                    <text>Shared_ReadRawReady</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_CalcSpeedReady">
+                <graphics>
+                    <position x="330" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_CalcSpeedReady</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_LaneControlReady">
+                <graphics>
+                    <position x="630" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="72" y="-15"/>
+                    </graphics>
+                    <text>Shared_LaneControlReady</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_ACCReady">
+                <graphics>
+                    <position x="630" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="43" y="-12"/>
+                    </graphics>
+                    <text>Shared_ACCReady</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="ControllerTask_Running">
+                <graphics>
+                    <position x="750" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="122" y="-34"/>
+                    </graphics>
+                    <text>ControllerTask_Running</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ControllerTask_Suspended">
+                <graphics>
+                    <position x="330" y="690"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ControllerTask_Suspended</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ControllerTask_TaskAge">
+                <graphics>
+                    <position x="480" y="480"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ControllerTask_TaskAge</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SonarTask_Running1">
+                <graphics>
+                    <position x="1560" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="133" y="-3"/>
+                    </graphics>
+                    <text>SonarTask_Running1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SonarTask_Suspended">
+                <graphics>
+                    <position x="1140" y="690"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>SonarTask_Suspended</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="SonarTask_TaskAge">
+                <graphics>
+                    <position x="1290" y="480"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>SonarTask_TaskAge</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="DataloggingTask_Running">
+                <graphics>
+                    <position x="750" y="960"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="122" y="-34"/>
+                    </graphics>
+                    <text>DataloggingTask_Running</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="DataloggingTask_Suspended">
+                <graphics>
+                    <position x="330" y="1380"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DataloggingTask_Suspended</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="DataloggingTask_TaskAge">
+                <graphics>
+                    <position x="480" y="1170"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DataloggingTask_TaskAge</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="AEBTask_Running">
+                <graphics>
+                    <position x="1560" y="960"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="122" y="-34"/>
+                    </graphics>
+                    <text>AEBTask_Running</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="AEBTask_Suspended">
+                <graphics>
+                    <position x="1140" y="1380"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>AEBTask_Suspended</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="AEBTask_TaskAge">
+                <graphics>
+                    <position x="1290" y="1170"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>AEBTask_TaskAge</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ReadRawTask_Running">
+                <graphics>
+                    <position x="750" y="1650"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="122" y="-34"/>
+                    </graphics>
+                    <text>ReadRawTask_Running</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ReadRawTask_Suspended">
+                <graphics>
+                    <position x="330" y="2070"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ReadRawTask_Suspended</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ReadRawTask_TaskAge">
+                <graphics>
+                    <position x="480" y="1860"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ReadRawTask_TaskAge</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CalcSpeedTask_Running">
+                <graphics>
+                    <position x="1560" y="1650"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="122" y="-34"/>
+                    </graphics>
+                    <text>CalcSpeedTask_Running</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CalcSpeedTask_Suspended">
+                <graphics>
+                    <position x="1140" y="2070"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CalcSpeedTask_Suspended</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="CalcSpeedTask_TaskAge">
+                <graphics>
+                    <position x="1290" y="1860"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CalcSpeedTask_TaskAge</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="LaneControlTask_Running">
+                <graphics>
+                    <position x="750" y="2340"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="122" y="-34"/>
+                    </graphics>
+                    <text>LaneControlTask_Running</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="LaneControlTask_Suspended">
+                <graphics>
+                    <position x="330" y="2760"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>LaneControlTask_Suspended</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="LaneControlTask_TaskAge">
+                <graphics>
+                    <position x="480" y="2550"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>LaneControlTask_TaskAge</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ACCTask_Running">
+                <graphics>
+                    <position x="1560" y="2340"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="122" y="-34"/>
+                    </graphics>
+                    <text>ACCTask_Running</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ACCTask_Suspended">
+                <graphics>
+                    <position x="1140" y="2760"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ACCTask_Suspended</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ACCTask_TaskAge">
+                <graphics>
+                    <position x="1290" y="2550"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ACCTask_TaskAge</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="ControllerTask_Start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ControllerTask_Start</text>
+                </name>
+                <graphics>
+                    <position x="540" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="ControllerTask_Terminate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ControllerTask_Terminate</text>
+                </name>
+                <graphics>
+                    <position x="540" y="690"/>
+                </graphics>
+            </transition>
+            <transition id="ControllerTask_Activate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ControllerTask_Activate</text>
+                </name>
+                <graphics>
+                    <position x="330" y="480"/>
+                </graphics>
+            </transition>
+            <transition id="SonarTask_Start1">
+                <name>
+                    <graphics>
+                        <offset x="58" y="33"/>
+                    </graphics>
+                    <text>SonarTask_Start1</text>
+                </name>
+                <graphics>
+                    <position x="1350" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="SonarTask_Terminate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>SonarTask_Terminate</text>
+                </name>
+                <graphics>
+                    <position x="1350" y="690"/>
+                </graphics>
+            </transition>
+            <transition id="SonarTask_Activate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>SonarTask_Activate</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="480"/>
+                </graphics>
+            </transition>
+            <transition id="DataloggingTask_Start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DataloggingTask_Start</text>
+                </name>
+                <graphics>
+                    <position x="540" y="960"/>
+                </graphics>
+            </transition>
+            <transition id="DataloggingTask_Terminate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DataloggingTask_Terminate</text>
+                </name>
+                <graphics>
+                    <position x="540" y="1380"/>
+                </graphics>
+            </transition>
+            <transition id="DataloggingTask_Activate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DataloggingTask_Activate</text>
+                </name>
+                <graphics>
+                    <position x="330" y="1170"/>
+                </graphics>
+            </transition>
+            <transition id="AEBTask_Start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>AEBTask_Start</text>
+                </name>
+                <graphics>
+                    <position x="1350" y="960"/>
+                </graphics>
+            </transition>
+            <transition id="AEBTask_Terminate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>AEBTask_Terminate</text>
+                </name>
+                <graphics>
+                    <position x="1350" y="1380"/>
+                </graphics>
+            </transition>
+            <transition id="AEBTask_Activate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>AEBTask_Activate</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="1170"/>
+                </graphics>
+            </transition>
+            <transition id="ReadRawTask_Start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ReadRawTask_Start</text>
+                </name>
+                <graphics>
+                    <position x="540" y="1650"/>
+                </graphics>
+            </transition>
+            <transition id="ReadRawTask_Terminate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ReadRawTask_Terminate</text>
+                </name>
+                <graphics>
+                    <position x="540" y="2070"/>
+                </graphics>
+            </transition>
+            <transition id="ReadRawTask_Activate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ReadRawTask_Activate</text>
+                </name>
+                <graphics>
+                    <position x="330" y="1860"/>
+                </graphics>
+            </transition>
+            <transition id="CalcSpeedTask_Start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CalcSpeedTask_Start</text>
+                </name>
+                <graphics>
+                    <position x="1350" y="1650"/>
+                </graphics>
+            </transition>
+            <transition id="CalcSpeedTask_Terminate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CalcSpeedTask_Terminate</text>
+                </name>
+                <graphics>
+                    <position x="1350" y="2070"/>
+                </graphics>
+            </transition>
+            <transition id="CalcSpeedTask_Activate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CalcSpeedTask_Activate</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="1860"/>
+                </graphics>
+            </transition>
+            <transition id="LaneControlTask_Start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>LaneControlTask_Start</text>
+                </name>
+                <graphics>
+                    <position x="540" y="2340"/>
+                </graphics>
+            </transition>
+            <transition id="LaneControlTask_Terminate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>LaneControlTask_Terminate</text>
+                </name>
+                <graphics>
+                    <position x="540" y="2760"/>
+                </graphics>
+            </transition>
+            <transition id="LaneControlTask_Activate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>LaneControlTask_Activate</text>
+                </name>
+                <graphics>
+                    <position x="330" y="2550"/>
+                </graphics>
+            </transition>
+            <transition id="ACCTask_Start">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ACCTask_Start</text>
+                </name>
+                <graphics>
+                    <position x="1350" y="2340"/>
+                </graphics>
+            </transition>
+            <transition id="ACCTask_Terminate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ACCTask_Terminate</text>
+                </name>
+                <graphics>
+                    <position x="1350" y="2760"/>
+                </graphics>
+            </transition>
+            <transition id="ACCTask_Activate">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ACCTask_Activate</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="2550"/>
+                </graphics>
+            </transition>
+            <arc id="Shared_CPUReady_to_ControllerTask_Start" source="Shared_CPUReady" target="ControllerTask_Start" type="normal"/>
+            <arc id="ControllerTask_Suspended_to_ControllerTask_Activate" source="ControllerTask_Suspended" target="ControllerTask_Activate" type="normal"/>
+            <arc id="ControllerTask_Running_to_ControllerTask_Terminate" source="ControllerTask_Running" target="ControllerTask_Terminate" type="normal">
+                <graphics>
+                    <position x="768" y="708"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CPUReady_to_SonarTask_Start1" source="Shared_CPUReady" target="SonarTask_Start1" type="normal"/>
+            <arc id="SonarTask_Suspended_to_SonarTask_Activate" source="SonarTask_Suspended" target="SonarTask_Activate" type="normal"/>
+            <arc id="SonarTask_Running1_to_SonarTask_Terminate" source="SonarTask_Running1" target="SonarTask_Terminate" type="normal">
+                <graphics>
+                    <position x="1576" y="706"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CPUReady_to_DataloggingTask_Start" source="Shared_CPUReady" target="DataloggingTask_Start" type="normal"/>
+            <arc id="DataloggingTask_Suspended_to_DataloggingTask_Activate" source="DataloggingTask_Suspended" target="DataloggingTask_Activate" type="normal"/>
+            <arc id="DataloggingTask_Running_to_DataloggingTask_Terminate" source="DataloggingTask_Running" target="DataloggingTask_Terminate" type="normal">
+                <graphics>
+                    <position x="768" y="1398"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CPUReady_to_AEBTask_Start" source="Shared_CPUReady" target="AEBTask_Start" type="normal"/>
+            <arc id="AEBTask_Suspended_to_AEBTask_Activate" source="AEBTask_Suspended" target="AEBTask_Activate" type="normal"/>
+            <arc id="AEBTask_Running_to_AEBTask_Terminate" source="AEBTask_Running" target="AEBTask_Terminate" type="normal">
+                <graphics>
+                    <position x="1578" y="1398"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CPUReady_to_ReadRawTask_Start" source="Shared_CPUReady" target="ReadRawTask_Start" type="normal"/>
+            <arc id="ReadRawTask_Suspended_to_ReadRawTask_Activate" source="ReadRawTask_Suspended" target="ReadRawTask_Activate" type="normal"/>
+            <arc id="ReadRawTask_Running_to_ReadRawTask_Terminate" source="ReadRawTask_Running" target="ReadRawTask_Terminate" type="normal">
+                <graphics>
+                    <position x="768" y="2088"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CPUReady_to_CalcSpeedTask_Start" source="Shared_CPUReady" target="CalcSpeedTask_Start" type="normal"/>
+            <arc id="CalcSpeedTask_Suspended_to_CalcSpeedTask_Activate" source="CalcSpeedTask_Suspended" target="CalcSpeedTask_Activate" type="normal"/>
+            <arc id="CalcSpeedTask_Running_to_CalcSpeedTask_Terminate" source="CalcSpeedTask_Running" target="CalcSpeedTask_Terminate" type="normal">
+                <graphics>
+                    <position x="1578" y="2088"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CPUReady_to_LaneControlTask_Start" source="Shared_CPUReady" target="LaneControlTask_Start" type="normal"/>
+            <arc id="LaneControlTask_Suspended_to_LaneControlTask_Activate" source="LaneControlTask_Suspended" target="LaneControlTask_Activate" type="normal"/>
+            <arc id="LaneControlTask_Running_to_LaneControlTask_Terminate" source="LaneControlTask_Running" target="LaneControlTask_Terminate" type="normal">
+                <graphics>
+                    <position x="768" y="2778"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CPUReady_to_ACCTask_Start" source="Shared_CPUReady" target="ACCTask_Start" type="normal"/>
+            <arc id="ACCTask_Suspended_to_ACCTask_Activate" source="ACCTask_Suspended" target="ACCTask_Activate" type="normal"/>
+            <arc id="ACCTask_Running_to_ACCTask_Terminate" source="ACCTask_Running" target="ACCTask_Terminate" type="normal">
+                <graphics>
+                    <position x="1578" y="2778"/>
+                </graphics>
+            </arc>
+            <arc id="ControllerTask_Start_to_ControllerTask_Running" source="ControllerTask_Start" target="ControllerTask_Running" type="normal"/>
+            <arc id="ControllerTask_Terminate_to_Shared_CPUReady" source="ControllerTask_Terminate" target="Shared_CPUReady" type="normal"/>
+            <arc id="ControllerTask_Activate_to_Shared_ControllerReady" source="ControllerTask_Activate" target="Shared_ControllerReady" type="normal"/>
+            <arc id="SonarTask_Start1_to_SonarTask_Running1" source="SonarTask_Start1" target="SonarTask_Running1" type="normal"/>
+            <arc id="SonarTask_Terminate_to_Shared_CPUReady" source="SonarTask_Terminate" target="Shared_CPUReady" type="normal"/>
+            <arc id="SonarTask_Activate_to_Shared_SonarReady" source="SonarTask_Activate" target="Shared_SonarReady" type="normal"/>
+            <arc id="DataloggingTask_Start_to_DataloggingTask_Running" source="DataloggingTask_Start" target="DataloggingTask_Running" type="normal"/>
+            <arc id="DataloggingTask_Terminate_to_Shared_CPUReady" source="DataloggingTask_Terminate" target="Shared_CPUReady" type="normal"/>
+            <arc id="DataloggingTask_Activate_to_Shared_DataloggingReady" source="DataloggingTask_Activate" target="Shared_DataloggingReady" type="normal"/>
+            <arc id="AEBTask_Start_to_AEBTask_Running" source="AEBTask_Start" target="AEBTask_Running" type="normal"/>
+            <arc id="AEBTask_Terminate_to_Shared_CPUReady" source="AEBTask_Terminate" target="Shared_CPUReady" type="normal"/>
+            <arc id="AEBTask_Activate_to_Shared_AEBReady" source="AEBTask_Activate" target="Shared_AEBReady" type="normal"/>
+            <arc id="ReadRawTask_Start_to_ReadRawTask_Running" source="ReadRawTask_Start" target="ReadRawTask_Running" type="normal"/>
+            <arc id="ReadRawTask_Terminate_to_Shared_CPUReady" source="ReadRawTask_Terminate" target="Shared_CPUReady" type="normal"/>
+            <arc id="ReadRawTask_Activate_to_Shared_ReadRawReady" source="ReadRawTask_Activate" target="Shared_ReadRawReady" type="normal"/>
+            <arc id="CalcSpeedTask_Start_to_CalcSpeedTask_Running" source="CalcSpeedTask_Start" target="CalcSpeedTask_Running" type="normal"/>
+            <arc id="CalcSpeedTask_Terminate_to_Shared_CPUReady" source="CalcSpeedTask_Terminate" target="Shared_CPUReady" type="normal"/>
+            <arc id="CalcSpeedTask_Activate_to_Shared_CalcSpeedReady" source="CalcSpeedTask_Activate" target="Shared_CalcSpeedReady" type="normal"/>
+            <arc id="LaneControlTask_Start_to_LaneControlTask_Running" source="LaneControlTask_Start" target="LaneControlTask_Running" type="normal"/>
+            <arc id="LaneControlTask_Terminate_to_Shared_CPUReady" source="LaneControlTask_Terminate" target="Shared_CPUReady" type="normal"/>
+            <arc id="LaneControlTask_Activate_to_Shared_LaneControlReady" source="LaneControlTask_Activate" target="Shared_LaneControlReady" type="normal"/>
+            <arc id="ACCTask_Start_to_ACCTask_Running" source="ACCTask_Start" target="ACCTask_Running" type="normal"/>
+            <arc id="ACCTask_Terminate_to_Shared_CPUReady" source="ACCTask_Terminate" target="Shared_CPUReady" type="normal"/>
+            <arc id="ACCTask_Activate_to_Shared_ACCReady" source="ACCTask_Activate" target="Shared_ACCReady" type="normal"/>
+            <arc id="Shared_ControllerReady_to_ControllerTask_Start" source="Shared_ControllerReady" target="ControllerTask_Start" type="normal"/>
+            <arc id="ControllerTask_Start_to_ControllerTask_TaskAge" source="ControllerTask_Start" target="ControllerTask_TaskAge" type="normal"/>
+            <arc id="ControllerTask_TaskAge_to_ControllerTask_Terminate" source="ControllerTask_TaskAge" target="ControllerTask_Terminate" type="normal"/>
+            <arc id="ControllerTask_Terminate_to_ControllerTask_Suspended" source="ControllerTask_Terminate" target="ControllerTask_Suspended" type="normal"/>
+            <arc id="SonarTask_TaskAge_to_SonarTask_Terminate" source="SonarTask_TaskAge" target="SonarTask_Terminate" type="normal"/>
+            <arc id="SonarTask_Terminate_to_SonarTask_Suspended" source="SonarTask_Terminate" target="SonarTask_Suspended" type="normal"/>
+            <arc id="Shared_SonarReady_to_SonarTask_Start1" source="Shared_SonarReady" target="SonarTask_Start1" type="normal"/>
+            <arc id="SonarTask_Start1_to_SonarTask_TaskAge" source="SonarTask_Start1" target="SonarTask_TaskAge" type="normal"/>
+            <arc id="Shared_DataloggingReady_to_DataloggingTask_Start" source="Shared_DataloggingReady" target="DataloggingTask_Start" type="normal"/>
+            <arc id="DataloggingTask_Start_to_DataloggingTask_TaskAge" source="DataloggingTask_Start" target="DataloggingTask_TaskAge" type="normal"/>
+            <arc id="DataloggingTask_TaskAge_to_DataloggingTask_Terminate" source="DataloggingTask_TaskAge" target="DataloggingTask_Terminate" type="normal"/>
+            <arc id="DataloggingTask_Terminate_to_DataloggingTask_Suspended" source="DataloggingTask_Terminate" target="DataloggingTask_Suspended" type="normal"/>
+            <arc id="Shared_AEBReady_to_AEBTask_Start" source="Shared_AEBReady" target="AEBTask_Start" type="normal"/>
+            <arc id="AEBTask_Start_to_AEBTask_TaskAge" source="AEBTask_Start" target="AEBTask_TaskAge" type="normal"/>
+            <arc id="AEBTask_TaskAge_to_AEBTask_Terminate" source="AEBTask_TaskAge" target="AEBTask_Terminate" type="normal"/>
+            <arc id="AEBTask_Terminate_to_AEBTask_Suspended" source="AEBTask_Terminate" target="AEBTask_Suspended" type="normal"/>
+            <arc id="Shared_ReadRawReady_to_ReadRawTask_Start" source="Shared_ReadRawReady" target="ReadRawTask_Start" type="normal"/>
+            <arc id="ReadRawTask_Start_to_ReadRawTask_TaskAge" source="ReadRawTask_Start" target="ReadRawTask_TaskAge" type="normal"/>
+            <arc id="ReadRawTask_TaskAge_to_ReadRawTask_Terminate" source="ReadRawTask_TaskAge" target="ReadRawTask_Terminate" type="normal"/>
+            <arc id="ReadRawTask_Terminate_to_ReadRawTask_Suspended" source="ReadRawTask_Terminate" target="ReadRawTask_Suspended" type="normal"/>
+            <arc id="Shared_CalcSpeedReady_to_CalcSpeedTask_Start" source="Shared_CalcSpeedReady" target="CalcSpeedTask_Start" type="normal"/>
+            <arc id="CalcSpeedTask_Start_to_CalcSpeedTask_TaskAge" source="CalcSpeedTask_Start" target="CalcSpeedTask_TaskAge" type="normal"/>
+            <arc id="CalcSpeedTask_TaskAge_to_CalcSpeedTask_Terminate" source="CalcSpeedTask_TaskAge" target="CalcSpeedTask_Terminate" type="normal"/>
+            <arc id="CalcSpeedTask_Terminate_to_CalcSpeedTask_Suspended" source="CalcSpeedTask_Terminate" target="CalcSpeedTask_Suspended" type="normal"/>
+            <arc id="Shared_LaneControlReady_to_LaneControlTask_Start" source="Shared_LaneControlReady" target="LaneControlTask_Start" type="normal"/>
+            <arc id="LaneControlTask_Start_to_LaneControlTask_TaskAge" source="LaneControlTask_Start" target="LaneControlTask_TaskAge" type="normal"/>
+            <arc id="LaneControlTask_TaskAge_to_LaneControlTask_Terminate" source="LaneControlTask_TaskAge" target="LaneControlTask_Terminate" type="normal"/>
+            <arc id="LaneControlTask_Terminate_to_LaneControlTask_Suspended" source="LaneControlTask_Terminate" target="LaneControlTask_Suspended" type="normal"/>
+            <arc id="Shared_ACCReady_to_ACCTask_Start" source="Shared_ACCReady" target="ACCTask_Start" type="normal"/>
+            <arc id="ACCTask_Start_to_ACCTask_TaskAge" source="ACCTask_Start" target="ACCTask_TaskAge" type="normal"/>
+            <arc id="ACCTask_TaskAge_to_ACCTask_Terminate" source="ACCTask_TaskAge" target="ACCTask_Terminate" type="normal"/>
+            <arc id="ACCTask_Terminate_to_ACCTask_Suspended" source="ACCTask_Terminate" target="ACCTask_Suspended" type="normal"/>
+            <arc id="Shared_ReadRawReady_to_ControllerTask_Start" source="Shared_ReadRawReady" target="ControllerTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="510" y="225"/>
+                    <position x="555" y="225"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CalcSpeedReady_to_ControllerTask_Start" source="Shared_CalcSpeedReady" target="ControllerTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="600" y="225"/>
+                    <position x="555" y="225"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_ReadRawReady_to_SonarTask_Start1" source="Shared_ReadRawReady" target="SonarTask_Start1" type="inhibitor">
+                <graphics>
+                    <position x="1096" y="211"/>
+                    <position x="1366" y="211"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_DataloggingReady_to_SonarTask_Start1" source="Shared_DataloggingReady" target="SonarTask_Start1" type="inhibitor">
+                <graphics>
+                    <position x="1186" y="211"/>
+                    <position x="1366" y="211"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_ControllerReady_to_SonarTask_Start1" source="Shared_ControllerReady" target="SonarTask_Start1" type="inhibitor">
+                <graphics>
+                    <position x="1276" y="211"/>
+                    <position x="1366" y="211"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_AEBReady_to_SonarTask_Start1" source="Shared_AEBReady" target="SonarTask_Start1" type="inhibitor"/>
+            <arc id="Shared_ACCReady_to_SonarTask_Start1" source="Shared_ACCReady" target="SonarTask_Start1" type="inhibitor">
+                <graphics>
+                    <position x="1456" y="211"/>
+                    <position x="1366" y="211"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_LaneControlReady_to_SonarTask_Start1" source="Shared_LaneControlReady" target="SonarTask_Start1" type="inhibitor">
+                <graphics>
+                    <position x="1546" y="211"/>
+                    <position x="1366" y="211"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CalcSpeedReady_to_SonarTask_Start1" source="Shared_CalcSpeedReady" target="SonarTask_Start1" type="inhibitor">
+                <graphics>
+                    <position x="1636" y="211"/>
+                    <position x="1366" y="211"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_ReadRawReady_to_DataloggingTask_Start" source="Shared_ReadRawReady" target="DataloggingTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="510" y="915"/>
+                    <position x="555" y="915"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CalcSpeedReady_to_DataloggingTask_Start" source="Shared_CalcSpeedReady" target="DataloggingTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="600" y="915"/>
+                    <position x="555" y="915"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_ReadRawReady_to_AEBTask_Start" source="Shared_ReadRawReady" target="AEBTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="1186" y="916"/>
+                    <position x="1366" y="916"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_DataloggingReady_to_AEBTask_Start" source="Shared_DataloggingReady" target="AEBTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="1276" y="916"/>
+                    <position x="1366" y="916"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_ControllerReady_to_AEBTask_Start" source="Shared_ControllerReady" target="AEBTask_Start" type="inhibitor"/>
+            <arc id="Shared_LaneControlReady_to_AEBTask_Start" source="Shared_LaneControlReady" target="AEBTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="1456" y="916"/>
+                    <position x="1366" y="916"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CalcSpeedReady_to_AEBTask_Start" source="Shared_CalcSpeedReady" target="AEBTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="1546" y="916"/>
+                    <position x="1366" y="916"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_ControllerReady_to_LaneControlTask_Start" source="Shared_ControllerReady" target="LaneControlTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="510" y="2280"/>
+                    <position x="555" y="2280"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_ReadRawReady_to_LaneControlTask_Start" source="Shared_ReadRawReady" target="LaneControlTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="600" y="2280"/>
+                    <position x="555" y="2280"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_DataloggingReady_to_LaneControlTask_Start" source="Shared_DataloggingReady" target="LaneControlTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="690" y="2280"/>
+                    <position x="555" y="2280"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CalcSpeedReady_to_LaneControlTask_Start" source="Shared_CalcSpeedReady" target="LaneControlTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="420" y="2280"/>
+                    <position x="555" y="2280"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_DataloggingReady_to_ACCTask_Start" source="Shared_DataloggingReady" target="ACCTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="1185" y="2295"/>
+                    <position x="1365" y="2295"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_CalcSpeedReady_to_ACCTask_Start" source="Shared_CalcSpeedReady" target="ACCTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="1275" y="2295"/>
+                    <position x="1365" y="2295"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_ReadRawReady_to_ACCTask_Start" source="Shared_ReadRawReady" target="ACCTask_Start" type="inhibitor"/>
+            <arc id="Shared_ControllerReady_to_ACCTask_Start" source="Shared_ControllerReady" target="ACCTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="1455" y="2295"/>
+                    <position x="1365" y="2295"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_LaneControlReady_to_ACCTask_Start" source="Shared_LaneControlReady" target="ACCTask_Start" type="inhibitor">
+                <graphics>
+                    <position x="1545" y="2295"/>
+                    <position x="1365" y="2295"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

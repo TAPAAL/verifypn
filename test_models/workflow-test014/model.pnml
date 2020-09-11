@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_out">
+                <graphics>
+                    <position x="660" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="59" y="-1"/>
+                    </graphics>
+                    <text>Shared_out</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_in">
+                <graphics>
+                    <position x="90" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-9" y="3"/>
+                    </graphics>
+                    <text>Shared_in</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Registration_P1">
+                <graphics>
+                    <position x="180" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Registration_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Registration_P2">
+                <graphics>
+                    <position x="180" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Registration_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Registration_P3">
+                <graphics>
+                    <position x="420" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Registration_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Registration_P4">
+                <graphics>
+                    <position x="420" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Registration_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Handling_P0">
+                <graphics>
+                    <position x="840" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="10" y="50"/>
+                    </graphics>
+                    <text>Handling_P0</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Handling_P1">
+                <graphics>
+                    <position x="1020" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="43" y="46"/>
+                    </graphics>
+                    <text>Handling_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Handling_P2">
+                <graphics>
+                    <position x="990" y="120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Handling_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Handling_P3">
+                <graphics>
+                    <position x="990" y="420"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="9" y="54"/>
+                    </graphics>
+                    <text>Handling_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Handling_P4">
+                <graphics>
+                    <position x="1140" y="270"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Handling_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Monitor_Timer">
+                <graphics>
+                    <position x="120" y="510"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Monitor_Timer</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Monitor_finished_in_time">
+                <graphics>
+                    <position x="195" y="735"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Monitor_finished_in_time</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Shared_collect">
+                <name>
+                    <graphics>
+                        <offset x="56" y="-11"/>
+                    </graphics>
+                    <text>Shared_collect</text>
+                </name>
+                <graphics>
+                    <position x="420" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="Registration_register">
+                <name>
+                    <graphics>
+                        <offset x="71" y="2"/>
+                    </graphics>
+                    <text>Registration_register</text>
+                </name>
+                <graphics>
+                    <position x="180" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="Registration_contact_customer">
+                <name>
+                    <graphics>
+                        <offset x="54" y="45"/>
+                    </graphics>
+                    <text>Registration_contact_customer</text>
+                </name>
+                <graphics>
+                    <position x="300" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="Registration_contact_department">
+                <name>
+                    <graphics>
+                        <offset x="61" y="52"/>
+                    </graphics>
+                    <text>Registration_contact_department</text>
+                </name>
+                <graphics>
+                    <position x="300" y="390"/>
+                </graphics>
+            </transition>
+            <transition id="Handling_accept">
+                <name>
+                    <graphics>
+                        <offset x="5" y="-4"/>
+                    </graphics>
+                    <text>Handling_accept</text>
+                </name>
+                <graphics>
+                    <position x="840" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="Handling_reject">
+                <name>
+                    <graphics>
+                        <offset x="3" y="43"/>
+                    </graphics>
+                    <text>Handling_reject</text>
+                </name>
+                <graphics>
+                    <position x="840" y="420"/>
+                </graphics>
+            </transition>
+            <transition id="Handling_send_rejection">
+                <name>
+                    <graphics>
+                        <offset x="98" y="45"/>
+                    </graphics>
+                    <text>Handling_send_rejection</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="420"/>
+                </graphics>
+            </transition>
+            <transition id="Handling_pay_refund">
+                <name>
+                    <graphics>
+                        <offset x="83" y="-19"/>
+                    </graphics>
+                    <text>Handling_pay_refund</text>
+                </name>
+                <graphics>
+                    <position x="1140" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="Handling_acquire_info">
+                <name>
+                    <graphics>
+                        <offset x="65" y="-18"/>
+                    </graphics>
+                    <text>Handling_acquire_info</text>
+                </name>
+                <graphics>
+                    <position x="930" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="Handling_need_more_info">
+                <name>
+                    <graphics>
+                        <offset x="69" y="52"/>
+                    </graphics>
+                    <text>Handling_need_more_info</text>
+                </name>
+                <graphics>
+                    <position x="930" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="Handling_archive">
+                <name>
+                    <graphics>
+                        <offset x="36" y="-22"/>
+                    </graphics>
+                    <text>Handling_archive</text>
+                </name>
+                <graphics>
+                    <position x="1230" y="270"/>
+                </graphics>
+            </transition>
+            <transition id="Monitor_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Monitor_T0</text>
+                </name>
+                <graphics>
+                    <position x="195" y="615"/>
+                </graphics>
+            </transition>
+            <arc id="Shared_in_to_Registration_register" source="Shared_in" target="Registration_register" type="normal"/>
+            <arc id="Registration_P1_to_Registration_contact_customer" source="Registration_P1" target="Registration_contact_customer" type="normal"/>
+            <arc id="Registration_P3_to_Shared_collect" source="Registration_P3" target="Shared_collect" type="normal"/>
+            <arc id="Registration_P4_to_Shared_collect" source="Registration_P4" target="Shared_collect" type="normal"/>
+            <arc id="Registration_P2_to_Registration_contact_department" source="Registration_P2" target="Registration_contact_department" type="normal"/>
+            <arc id="Handling_P0_to_Handling_need_more_info" source="Handling_P0" target="Handling_need_more_info" type="normal"/>
+            <arc id="Handling_P1_to_Handling_acquire_info" source="Handling_P1" target="Handling_acquire_info" type="normal"/>
+            <arc id="Handling_P0_to_Handling_accept" source="Handling_P0" target="Handling_accept" type="normal"/>
+            <arc id="Handling_P2_to_Handling_pay_refund" source="Handling_P2" target="Handling_pay_refund" type="normal"/>
+            <arc id="Handling_P0_to_Handling_reject" source="Handling_P0" target="Handling_reject" type="normal"/>
+            <arc id="Handling_P3_to_Handling_send_rejection" source="Handling_P3" target="Handling_send_rejection" type="normal"/>
+            <arc id="Handling_P4_to_Handling_archive" source="Handling_P4" target="Handling_archive" type="normal"/>
+            <arc id="Monitor_Timer_to_Monitor_T0" source="Monitor_Timer" target="Monitor_T0" type="normal"/>
+            <arc id="Shared_out_to_Monitor_T0" source="Shared_out" target="Monitor_T0" type="normal"/>
+            <arc id="Registration_register_to_Registration_P1" source="Registration_register" target="Registration_P1" type="normal"/>
+            <arc id="Registration_register_to_Registration_P2" source="Registration_register" target="Registration_P2" type="normal"/>
+            <arc id="Registration_contact_customer_to_Registration_P3" source="Registration_contact_customer" target="Registration_P3" type="normal"/>
+            <arc id="Registration_contact_department_to_Registration_P4" source="Registration_contact_department" target="Registration_P4" type="normal"/>
+            <arc id="Shared_collect_to_Handling_P0" source="Shared_collect" target="Handling_P0" type="normal"/>
+            <arc id="Handling_need_more_info_to_Handling_P1" source="Handling_need_more_info" target="Handling_P1" type="normal"/>
+            <arc id="Handling_acquire_info_to_Handling_P0" source="Handling_acquire_info" target="Handling_P0" type="normal"/>
+            <arc id="Handling_accept_to_Handling_P2" source="Handling_accept" target="Handling_P2" type="normal"/>
+            <arc id="Handling_pay_refund_to_Handling_P4" source="Handling_pay_refund" target="Handling_P4" type="normal"/>
+            <arc id="Handling_reject_to_Handling_P3" source="Handling_reject" target="Handling_P3" type="normal"/>
+            <arc id="Handling_send_rejection_to_Handling_P4" source="Handling_send_rejection" target="Handling_P4" type="normal"/>
+            <arc id="Handling_archive_to_Shared_out" source="Handling_archive" target="Shared_out" type="normal"/>
+            <arc id="Monitor_T0_to_Monitor_finished_in_time" source="Monitor_T0" target="Monitor_finished_in_time" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

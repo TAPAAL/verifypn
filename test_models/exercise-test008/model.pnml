@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Train">
+                <graphics>
+                    <position x="585" y="435"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Train</text>
+                </name>
+                <initialMarking>
+                    <text>4</text>
+                </initialMarking>
+            </place>
+            <place id="Sensor">
+                <graphics>
+                    <position x="480" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="78" y="13"/>
+                    </graphics>
+                    <text>Sensor</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Red">
+                <graphics>
+                    <position x="105" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-7" y="36"/>
+                    </graphics>
+                    <text>Red</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Green">
+                <graphics>
+                    <position x="345" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="36"/>
+                    </graphics>
+                    <text>Green</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Yellow">
+                <graphics>
+                    <position x="225" y="360"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-6" y="35"/>
+                    </graphics>
+                    <text>Yellow</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Dangerzone">
+                <graphics>
+                    <position x="225" y="495"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Dangerzone</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="BetweenSensorAndCrossing">
+                <graphics>
+                    <position x="390" y="450"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="129" y="50"/>
+                    </graphics>
+                    <text>BetweenSensorAndCrossing</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T0</text>
+                </name>
+                <graphics>
+                    <position x="270" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T2</text>
+                </name>
+                <graphics>
+                    <position x="465" y="420"/>
+                </graphics>
+            </transition>
+            <transition id="T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T3</text>
+                </name>
+                <graphics>
+                    <position x="105" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="T4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T4</text>
+                </name>
+                <graphics>
+                    <position x="345" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="T5">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T5</text>
+                </name>
+                <graphics>
+                    <position x="225" y="225"/>
+                </graphics>
+            </transition>
+            <transition id="T7">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T7</text>
+                </name>
+                <graphics>
+                    <position x="300" y="465"/>
+                </graphics>
+            </transition>
+            <transition id="T8">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T8</text>
+                </name>
+                <graphics>
+                    <position x="30" y="480"/>
+                </graphics>
+            </transition>
+            <transition id="T10">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T10</text>
+                </name>
+                <graphics>
+                    <position x="300" y="15"/>
+                </graphics>
+            </transition>
+            <arc id="Green_to_T4" source="Green" target="T4" type="normal">
+                <graphics>
+                    <position x="360" y="240"/>
+                </graphics>
+            </arc>
+            <arc id="Yellow_to_T3" source="Yellow" target="T3" type="normal"/>
+            <arc id="Red_to_T5" source="Red" target="T5" type="normal"/>
+            <arc id="Sensor_to_T0" source="Sensor" target="T0" type="normal"/>
+            <arc id="Train_to_T2" source="Train" target="T2" type="normal"/>
+            <arc id="BetweenSensorAndCrossing_to_T7" source="BetweenSensorAndCrossing" target="T7" type="normal"/>
+            <arc id="Dangerzone_to_T8" source="Dangerzone" target="T8" type="normal"/>
+            <arc id="Sensor_to_T4" source="Sensor" target="T4" type="normal"/>
+            <arc id="Sensor_to_T10" source="Sensor" target="T10" type="normal"/>
+            <arc id="Red_to_T0" source="Red" target="T0" type="normal"/>
+            <arc id="T4_to_Yellow" source="T4" target="Yellow" type="normal"/>
+            <arc id="T3_to_Red" source="T3" target="Red" type="normal"/>
+            <arc id="T5_to_Green" source="T5" target="Green" type="normal"/>
+            <arc id="T0_to_Red" source="T0" target="Red" type="normal"/>
+            <arc id="T2_to_Sensor" source="T2" target="Sensor" type="normal"/>
+            <arc id="T7_to_Dangerzone" source="T7" target="Dangerzone" type="normal"/>
+            <arc id="T2_to_BetweenSensorAndCrossing" source="T2" target="BetweenSensorAndCrossing" type="normal"/>
+            <arc id="Sensor_to_T5" source="Sensor" target="T5" type="inhibitor"/>
+            <arc id="Green_to_T10" source="Green" target="T10" type="inhibitor"/>
+            <arc id="Red_to_T10" source="Red" target="T10" type="inhibitor"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

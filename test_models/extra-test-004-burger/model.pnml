@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_Ham">
+                <graphics>
+                    <position x="330" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Ham</text>
+                </name>
+                <initialMarking>
+                    <text>5</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Cheese">
+                <graphics>
+                    <position x="450" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Cheese</text>
+                </name>
+                <initialMarking>
+                    <text>5</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_Bread">
+                <graphics>
+                    <position x="120" y="90"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Bread</text>
+                </name>
+                <initialMarking>
+                    <text>5</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_MissedDeadline">
+                <graphics>
+                    <position x="225" y="555"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_MissedDeadline</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="BreadImporter_P1">
+                <graphics>
+                    <position x="180" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>BreadImporter_P1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="CheeseImporter_P1">
+                <graphics>
+                    <position x="690" y="180"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CheeseImporter_P1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="HamImporter_P1">
+                <graphics>
+                    <position x="180" y="735"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>HamImporter_P1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="HamBurger_P2">
+                <graphics>
+                    <position x="735" y="870"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>HamBurger_P2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="CheeseBurger_P2">
+                <graphics>
+                    <position x="225" y="1425"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CheeseBurger_P2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="DoubleBurger_P2">
+                <graphics>
+                    <position x="735" y="1425"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DoubleBurger_P2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <transition id="BreadImporter_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>BreadImporter_T0</text>
+                </name>
+                <graphics>
+                    <position x="315" y="180"/>
+                </graphics>
+            </transition>
+            <transition id="BreadImporter_miss">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>BreadImporter_miss</text>
+                </name>
+                <graphics>
+                    <position x="180" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="CheeseImporter_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CheeseImporter_T0</text>
+                </name>
+                <graphics>
+                    <position x="825" y="180"/>
+                </graphics>
+            </transition>
+            <transition id="CheeseImporter_miss">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CheeseImporter_miss</text>
+                </name>
+                <graphics>
+                    <position x="690" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="HamImporter_T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>HamImporter_T0</text>
+                </name>
+                <graphics>
+                    <position x="315" y="735"/>
+                </graphics>
+            </transition>
+            <transition id="HamImporter_miss">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>HamImporter_miss</text>
+                </name>
+                <graphics>
+                    <position x="180" y="855"/>
+                </graphics>
+            </transition>
+            <transition id="HamBurger_MakeHamBurger">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>HamBurger_MakeHamBurger</text>
+                </name>
+                <graphics>
+                    <position x="735" y="750"/>
+                </graphics>
+            </transition>
+            <transition id="HamBurger_miss">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>HamBurger_miss</text>
+                </name>
+                <graphics>
+                    <position x="735" y="990"/>
+                </graphics>
+            </transition>
+            <transition id="CheeseBurger_MakeCheeseBurger">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CheeseBurger_MakeCheeseBurger</text>
+                </name>
+                <graphics>
+                    <position x="225" y="1305"/>
+                </graphics>
+            </transition>
+            <transition id="CheeseBurger_miss">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>CheeseBurger_miss</text>
+                </name>
+                <graphics>
+                    <position x="225" y="1545"/>
+                </graphics>
+            </transition>
+            <transition id="DoubleBurger_MakeDoubleBurger">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DoubleBurger_MakeDoubleBurger</text>
+                </name>
+                <graphics>
+                    <position x="735" y="1305"/>
+                </graphics>
+            </transition>
+            <transition id="DoubleBurger_miss">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>DoubleBurger_miss</text>
+                </name>
+                <graphics>
+                    <position x="735" y="1545"/>
+                </graphics>
+            </transition>
+            <arc id="BreadImporter_P1_to_BreadImporter_T0" source="BreadImporter_P1" target="BreadImporter_T0" type="normal">
+                <graphics>
+                    <position x="258" y="153"/>
+                </graphics>
+            </arc>
+            <arc id="BreadImporter_P1_to_BreadImporter_miss" source="BreadImporter_P1" target="BreadImporter_miss" type="normal"/>
+            <arc id="CheeseImporter_P1_to_CheeseImporter_T0" source="CheeseImporter_P1" target="CheeseImporter_T0" type="normal">
+                <graphics>
+                    <position x="768" y="153"/>
+                </graphics>
+            </arc>
+            <arc id="CheeseImporter_P1_to_CheeseImporter_miss" source="CheeseImporter_P1" target="CheeseImporter_miss" type="normal"/>
+            <arc id="HamImporter_P1_to_HamImporter_T0" source="HamImporter_P1" target="HamImporter_T0" type="normal">
+                <graphics>
+                    <position x="258" y="708"/>
+                </graphics>
+            </arc>
+            <arc id="HamImporter_P1_to_HamImporter_miss" source="HamImporter_P1" target="HamImporter_miss" type="normal"/>
+            <arc id="Shared_Bread_to_HamBurger_MakeHamBurger" source="Shared_Bread" target="HamBurger_MakeHamBurger" type="normal"/>
+            <arc id="Shared_Ham_to_HamBurger_MakeHamBurger" source="Shared_Ham" target="HamBurger_MakeHamBurger" type="normal"/>
+            <arc id="HamBurger_P2_to_HamBurger_MakeHamBurger" source="HamBurger_P2" target="HamBurger_MakeHamBurger" type="normal">
+                <graphics>
+                    <position x="708" y="828"/>
+                </graphics>
+            </arc>
+            <arc id="HamBurger_P2_to_HamBurger_miss" source="HamBurger_P2" target="HamBurger_miss" type="normal"/>
+            <arc id="Shared_Bread_to_CheeseBurger_MakeCheeseBurger" source="Shared_Bread" target="CheeseBurger_MakeCheeseBurger" type="normal"/>
+            <arc id="Shared_Ham_to_CheeseBurger_MakeCheeseBurger" source="Shared_Ham" target="CheeseBurger_MakeCheeseBurger" type="normal"/>
+            <arc id="CheeseBurger_P2_to_CheeseBurger_MakeCheeseBurger" source="CheeseBurger_P2" target="CheeseBurger_MakeCheeseBurger" type="normal">
+                <graphics>
+                    <position x="198" y="1383"/>
+                </graphics>
+            </arc>
+            <arc id="CheeseBurger_P2_to_CheeseBurger_miss" source="CheeseBurger_P2" target="CheeseBurger_miss" type="normal"/>
+            <arc id="Shared_Cheese_to_CheeseBurger_MakeCheeseBurger" source="Shared_Cheese" target="CheeseBurger_MakeCheeseBurger" type="normal">
+                <graphics>
+                    <position x="453" y="1308"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Bread_to_DoubleBurger_MakeDoubleBurger" source="Shared_Bread" target="DoubleBurger_MakeDoubleBurger" type="normal"/>
+            <arc id="Shared_Ham_to_DoubleBurger_MakeDoubleBurger" source="Shared_Ham" target="DoubleBurger_MakeDoubleBurger" type="normal">
+                <inscription>
+                    <text>2</text>
+                </inscription>
+            </arc>
+            <arc id="DoubleBurger_P2_to_DoubleBurger_MakeDoubleBurger" source="DoubleBurger_P2" target="DoubleBurger_MakeDoubleBurger" type="normal">
+                <graphics>
+                    <position x="708" y="1383"/>
+                </graphics>
+            </arc>
+            <arc id="DoubleBurger_P2_to_DoubleBurger_miss" source="DoubleBurger_P2" target="DoubleBurger_miss" type="normal"/>
+            <arc id="Shared_Cheese_to_DoubleBurger_MakeDoubleBurger" source="Shared_Cheese" target="DoubleBurger_MakeDoubleBurger" type="normal">
+                <inscription>
+                    <text>3</text>
+                </inscription>
+                <graphics>
+                    <position x="963" y="1308"/>
+                </graphics>
+            </arc>
+            <arc id="BreadImporter_T0_to_BreadImporter_P1" source="BreadImporter_T0" target="BreadImporter_P1" type="normal">
+                <graphics>
+                    <position x="258" y="243"/>
+                </graphics>
+            </arc>
+            <arc id="BreadImporter_T0_to_Shared_Bread" source="BreadImporter_T0" target="Shared_Bread" type="normal">
+                <inscription>
+                    <text>5</text>
+                </inscription>
+            </arc>
+            <arc id="BreadImporter_miss_to_Shared_MissedDeadline" source="BreadImporter_miss" target="Shared_MissedDeadline" type="normal"/>
+            <arc id="CheeseImporter_T0_to_CheeseImporter_P1" source="CheeseImporter_T0" target="CheeseImporter_P1" type="normal">
+                <graphics>
+                    <position x="768" y="243"/>
+                </graphics>
+            </arc>
+            <arc id="CheeseImporter_T0_to_Shared_Cheese" source="CheeseImporter_T0" target="Shared_Cheese" type="normal">
+                <inscription>
+                    <text>5</text>
+                </inscription>
+            </arc>
+            <arc id="CheeseImporter_miss_to_Shared_MissedDeadline" source="CheeseImporter_miss" target="Shared_MissedDeadline" type="normal"/>
+            <arc id="HamImporter_T0_to_HamImporter_P1" source="HamImporter_T0" target="HamImporter_P1" type="normal">
+                <graphics>
+                    <position x="258" y="798"/>
+                </graphics>
+            </arc>
+            <arc id="HamImporter_T0_to_Shared_Ham" source="HamImporter_T0" target="Shared_Ham" type="normal">
+                <inscription>
+                    <text>8</text>
+                </inscription>
+            </arc>
+            <arc id="HamImporter_miss_to_Shared_MissedDeadline" source="HamImporter_miss" target="Shared_MissedDeadline" type="normal"/>
+            <arc id="HamBurger_MakeHamBurger_to_HamBurger_P2" source="HamBurger_MakeHamBurger" target="HamBurger_P2" type="normal">
+                <graphics>
+                    <position x="798" y="813"/>
+                </graphics>
+            </arc>
+            <arc id="HamBurger_miss_to_Shared_MissedDeadline" source="HamBurger_miss" target="Shared_MissedDeadline" type="normal"/>
+            <arc id="CheeseBurger_MakeCheeseBurger_to_CheeseBurger_P2" source="CheeseBurger_MakeCheeseBurger" target="CheeseBurger_P2" type="normal">
+                <graphics>
+                    <position x="288" y="1368"/>
+                </graphics>
+            </arc>
+            <arc id="CheeseBurger_miss_to_Shared_MissedDeadline" source="CheeseBurger_miss" target="Shared_MissedDeadline" type="normal"/>
+            <arc id="DoubleBurger_MakeDoubleBurger_to_DoubleBurger_P2" source="DoubleBurger_MakeDoubleBurger" target="DoubleBurger_P2" type="normal">
+                <graphics>
+                    <position x="798" y="1368"/>
+                </graphics>
+            </arc>
+            <arc id="DoubleBurger_miss_to_Shared_MissedDeadline" source="DoubleBurger_miss" target="Shared_MissedDeadline" type="normal"/>
+            <arc id="Shared_Bread_to_BreadImporter_T0" source="Shared_Bread" target="BreadImporter_T0" type="inhibitor">
+                <inscription>
+                    <text>11</text>
+                </inscription>
+                <graphics>
+                    <position x="393" y="123"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Cheese_to_CheeseImporter_T0" source="Shared_Cheese" target="CheeseImporter_T0" type="inhibitor">
+                <inscription>
+                    <text>11</text>
+                </inscription>
+                <graphics>
+                    <position x="903" y="123"/>
+                </graphics>
+            </arc>
+            <arc id="Shared_Ham_to_HamImporter_T0" source="Shared_Ham" target="HamImporter_T0" type="inhibitor">
+                <inscription>
+                    <text>11</text>
+                </inscription>
+                <graphics>
+                    <position x="408" y="678"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

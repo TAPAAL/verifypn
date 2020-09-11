@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="T1_P0">
+                <graphics>
+                    <position x="570" y="120"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T1_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="T1_P1">
+                <graphics>
+                    <position x="210" y="540"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T1_P1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="T1_DoneP">
+                <graphics>
+                    <position x="585" y="540"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T1_DoneP</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="C1_P0">
+                <graphics>
+                    <position x="1395" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="C1_P1">
+                <graphics>
+                    <position x="1410" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1_P1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="C1_P2">
+                <graphics>
+                    <position x="1380" y="435"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1_P2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="C1_P3">
+                <graphics>
+                    <position x="1725" y="345"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="C1_P4">
+                <graphics>
+                    <position x="2040" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="C1_P6">
+                <graphics>
+                    <position x="2280" y="390"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1_P6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="C1Copy_P0">
+                <graphics>
+                    <position x="240" y="780"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1Copy_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="C1Copy_P1">
+                <graphics>
+                    <position x="255" y="885"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1Copy_P1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="C1Copy_P2">
+                <graphics>
+                    <position x="225" y="975"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1Copy_P2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="C1Copy_P3">
+                <graphics>
+                    <position x="570" y="885"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1Copy_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="C1Copy_P4">
+                <graphics>
+                    <position x="885" y="930"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1Copy_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="C1Copy_P6">
+                <graphics>
+                    <position x="1125" y="930"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1Copy_P6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="C1CopyCopy_P0">
+                <graphics>
+                    <position x="1395" y="780"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1CopyCopy_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="C1CopyCopy_P1">
+                <graphics>
+                    <position x="1410" y="885"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1CopyCopy_P1</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="C1CopyCopy_P2">
+                <graphics>
+                    <position x="1380" y="975"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1CopyCopy_P2</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="C1CopyCopy_P3">
+                <graphics>
+                    <position x="1725" y="885"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1CopyCopy_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="C1CopyCopy_P4">
+                <graphics>
+                    <position x="2040" y="930"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1CopyCopy_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="C1CopyCopy_P6">
+                <graphics>
+                    <position x="2280" y="930"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1CopyCopy_P6</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Shared_Done">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Done</text>
+                </name>
+                <graphics>
+                    <position x="390" y="540"/>
+                </graphics>
+            </transition>
+            <transition id="Shared_T">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_T</text>
+                </name>
+                <graphics>
+                    <position x="1875" y="375"/>
+                </graphics>
+            </transition>
+            <transition id="C1_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1_T1</text>
+                </name>
+                <graphics>
+                    <position x="1590" y="255"/>
+                </graphics>
+            </transition>
+            <transition id="C1_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1_T2</text>
+                </name>
+                <graphics>
+                    <position x="1590" y="315"/>
+                </graphics>
+            </transition>
+            <transition id="C1_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1_T3</text>
+                </name>
+                <graphics>
+                    <position x="1575" y="420"/>
+                </graphics>
+            </transition>
+            <transition id="C1_T4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1_T4</text>
+                </name>
+                <graphics>
+                    <position x="2130" y="375"/>
+                </graphics>
+            </transition>
+            <transition id="C1Copy_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1Copy_T1</text>
+                </name>
+                <graphics>
+                    <position x="435" y="795"/>
+                </graphics>
+            </transition>
+            <transition id="C1Copy_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1Copy_T2</text>
+                </name>
+                <graphics>
+                    <position x="435" y="855"/>
+                </graphics>
+            </transition>
+            <transition id="C1Copy_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1Copy_T3</text>
+                </name>
+                <graphics>
+                    <position x="420" y="960"/>
+                </graphics>
+            </transition>
+            <transition id="C1Copy_T4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1Copy_T4</text>
+                </name>
+                <graphics>
+                    <position x="975" y="915"/>
+                </graphics>
+            </transition>
+            <transition id="C1CopyCopy_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1CopyCopy_T1</text>
+                </name>
+                <graphics>
+                    <position x="1590" y="795"/>
+                </graphics>
+            </transition>
+            <transition id="C1CopyCopy_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1CopyCopy_T2</text>
+                </name>
+                <graphics>
+                    <position x="1590" y="855"/>
+                </graphics>
+            </transition>
+            <transition id="C1CopyCopy_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1CopyCopy_T3</text>
+                </name>
+                <graphics>
+                    <position x="1575" y="960"/>
+                </graphics>
+            </transition>
+            <transition id="C1CopyCopy_T4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>C1CopyCopy_T4</text>
+                </name>
+                <graphics>
+                    <position x="2130" y="915"/>
+                </graphics>
+            </transition>
+            <arc id="T1_P1_to_Shared_Done" source="T1_P1" target="Shared_Done" type="normal"/>
+            <arc id="C1_P0_to_C1_T1" source="C1_P0" target="C1_T1" type="normal"/>
+            <arc id="C1_P1_to_C1_T2" source="C1_P1" target="C1_T2" type="normal"/>
+            <arc id="C1_P2_to_C1_T3" source="C1_P2" target="C1_T3" type="normal"/>
+            <arc id="C1_P6_to_Shared_Done" source="C1_P6" target="Shared_Done" type="normal"/>
+            <arc id="C1Copy_P0_to_C1Copy_T1" source="C1Copy_P0" target="C1Copy_T1" type="normal"/>
+            <arc id="C1Copy_P1_to_C1Copy_T2" source="C1Copy_P1" target="C1Copy_T2" type="normal"/>
+            <arc id="C1Copy_P2_to_C1Copy_T3" source="C1Copy_P2" target="C1Copy_T3" type="normal"/>
+            <arc id="C1Copy_P6_to_Shared_Done" source="C1Copy_P6" target="Shared_Done" type="normal"/>
+            <arc id="C1CopyCopy_P0_to_C1CopyCopy_T1" source="C1CopyCopy_P0" target="C1CopyCopy_T1" type="normal"/>
+            <arc id="C1CopyCopy_P1_to_C1CopyCopy_T2" source="C1CopyCopy_P1" target="C1CopyCopy_T2" type="normal"/>
+            <arc id="C1CopyCopy_P2_to_C1CopyCopy_T3" source="C1CopyCopy_P2" target="C1CopyCopy_T3" type="normal"/>
+            <arc id="C1CopyCopy_P6_to_Shared_Done" source="C1CopyCopy_P6" target="Shared_Done" type="normal"/>
+            <arc id="Shared_Done_to_T1_DoneP" source="Shared_Done" target="T1_DoneP" type="normal"/>
+            <arc id="C1_T2_to_C1_P3" source="C1_T2" target="C1_P3" type="normal"/>
+            <arc id="C1_T3_to_C1_P3" source="C1_T3" target="C1_P3" type="normal"/>
+            <arc id="C1_T1_to_C1_P3" source="C1_T1" target="C1_P3" type="normal"/>
+            <arc id="C1Copy_T2_to_C1Copy_P3" source="C1Copy_T2" target="C1Copy_P3" type="normal"/>
+            <arc id="C1Copy_T3_to_C1Copy_P3" source="C1Copy_T3" target="C1Copy_P3" type="normal"/>
+            <arc id="C1Copy_T1_to_C1Copy_P3" source="C1Copy_T1" target="C1Copy_P3" type="normal"/>
+            <arc id="C1CopyCopy_T2_to_C1CopyCopy_P3" source="C1CopyCopy_T2" target="C1CopyCopy_P3" type="normal"/>
+            <arc id="C1CopyCopy_T3_to_C1CopyCopy_P3" source="C1CopyCopy_T3" target="C1CopyCopy_P3" type="normal"/>
+            <arc id="C1CopyCopy_T1_to_C1CopyCopy_P3" source="C1CopyCopy_T1" target="C1CopyCopy_P3" type="normal"/>
+            <arc id="C1_P3_to_Shared_T" source="C1_P3" target="Shared_T" type="normal"/>
+            <arc id="Shared_T_to_C1_P4" source="Shared_T" target="C1_P4" type="normal"/>
+            <arc id="C1_P4_to_C1_T4" source="C1_P4" target="C1_T4" type="normal"/>
+            <arc id="C1_T4_to_C1_P6" source="C1_T4" target="C1_P6" type="normal"/>
+            <arc id="C1Copy_P3_to_Shared_T" source="C1Copy_P3" target="Shared_T" type="normal"/>
+            <arc id="Shared_T_to_C1Copy_P4" source="Shared_T" target="C1Copy_P4" type="normal"/>
+            <arc id="C1Copy_P4_to_C1Copy_T4" source="C1Copy_P4" target="C1Copy_T4" type="normal"/>
+            <arc id="C1Copy_T4_to_C1Copy_P6" source="C1Copy_T4" target="C1Copy_P6" type="normal"/>
+            <arc id="C1CopyCopy_P3_to_Shared_T" source="C1CopyCopy_P3" target="Shared_T" type="normal"/>
+            <arc id="Shared_T_to_C1CopyCopy_P4" source="Shared_T" target="C1CopyCopy_P4" type="normal"/>
+            <arc id="C1CopyCopy_P4_to_C1CopyCopy_T4" source="C1CopyCopy_P4" target="C1CopyCopy_T4" type="normal"/>
+            <arc id="C1CopyCopy_T4_to_C1CopyCopy_P6" source="C1CopyCopy_T4" target="C1CopyCopy_P6" type="normal">
+                <graphics>
+                    <position x="2147" y="932"/>
+                </graphics>
+            </arc>
+            <arc id="C1_P0_to_Shared_T" source="C1_P0" target="Shared_T" type="inhibitor">
+                <graphics>
+                    <position x="1592" y="167"/>
+                </graphics>
+            </arc>
+            <arc id="C1_P1_to_Shared_T" source="C1_P1" target="Shared_T" type="inhibitor">
+                <graphics>
+                    <position x="1262" y="257"/>
+                    <position x="1472" y="107"/>
+                    <position x="1742" y="92"/>
+                </graphics>
+            </arc>
+            <arc id="C1_P2_to_Shared_T" source="C1_P2" target="Shared_T" type="inhibitor">
+                <graphics>
+                    <position x="1532" y="572"/>
+                    <position x="1802" y="572"/>
+                </graphics>
+            </arc>
+            <arc id="C1_P6_to_C1_T4" source="C1_P6" target="C1_T4" type="inhibitor">
+                <graphics>
+                    <position x="2222" y="452"/>
+                </graphics>
+            </arc>
+            <arc id="C1Copy_P0_to_Shared_T" source="C1Copy_P0" target="Shared_T" type="inhibitor">
+                <graphics>
+                    <position x="437" y="707"/>
+                </graphics>
+            </arc>
+            <arc id="C1Copy_P1_to_Shared_T" source="C1Copy_P1" target="Shared_T" type="inhibitor">
+                <graphics>
+                    <position x="107" y="797"/>
+                    <position x="317" y="647"/>
+                    <position x="587" y="632"/>
+                </graphics>
+            </arc>
+            <arc id="C1Copy_P2_to_Shared_T" source="C1Copy_P2" target="Shared_T" type="inhibitor">
+                <graphics>
+                    <position x="377" y="1112"/>
+                    <position x="647" y="1112"/>
+                </graphics>
+            </arc>
+            <arc id="C1Copy_P6_to_C1Copy_T4" source="C1Copy_P6" target="C1Copy_T4" type="inhibitor">
+                <graphics>
+                    <position x="1067" y="992"/>
+                </graphics>
+            </arc>
+            <arc id="C1CopyCopy_P0_to_Shared_T" source="C1CopyCopy_P0" target="Shared_T" type="inhibitor">
+                <graphics>
+                    <position x="1592" y="707"/>
+                </graphics>
+            </arc>
+            <arc id="C1CopyCopy_P1_to_Shared_T" source="C1CopyCopy_P1" target="Shared_T" type="inhibitor">
+                <graphics>
+                    <position x="1262" y="797"/>
+                    <position x="1472" y="647"/>
+                    <position x="1742" y="632"/>
+                </graphics>
+            </arc>
+            <arc id="C1CopyCopy_P2_to_Shared_T" source="C1CopyCopy_P2" target="Shared_T" type="inhibitor">
+                <graphics>
+                    <position x="1532" y="1112"/>
+                    <position x="1802" y="1112"/>
+                </graphics>
+            </arc>
+            <arc id="C1CopyCopy_P6_to_C1CopyCopy_T4" source="C1CopyCopy_P6" target="C1CopyCopy_T4" type="inhibitor">
+                <graphics>
+                    <position x="2222" y="992"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

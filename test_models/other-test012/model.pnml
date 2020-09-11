@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Test_P0">
+                <graphics>
+                    <position x="150" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Test_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Test_Finished">
+                <graphics>
+                    <position x="510" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Test_Finished</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Net1_Start">
+                <graphics>
+                    <position x="690" y="135"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Net1_Start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Net2_Start">
+                <graphics>
+                    <position x="180" y="405"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Net2_Start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Net3_Start">
+                <graphics>
+                    <position x="690" y="405"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Net3_Start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Net4_Start">
+                <graphics>
+                    <position x="180" y="675"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Net4_Start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <transition id="Shared_Done">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_Done</text>
+                </name>
+                <graphics>
+                    <position x="330" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="Net1_Reset">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Net1_Reset</text>
+                </name>
+                <graphics>
+                    <position x="840" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="Net2_Reset">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Net2_Reset</text>
+                </name>
+                <graphics>
+                    <position x="330" y="405"/>
+                </graphics>
+            </transition>
+            <transition id="Net3_Reset">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Net3_Reset</text>
+                </name>
+                <graphics>
+                    <position x="840" y="405"/>
+                </graphics>
+            </transition>
+            <transition id="Net4_Reset">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Net4_Reset</text>
+                </name>
+                <graphics>
+                    <position x="330" y="675"/>
+                </graphics>
+            </transition>
+            <arc id="Test_P0_to_Shared_Done" source="Test_P0" target="Shared_Done" type="normal"/>
+            <arc id="Net1_Start_to_Net1_Reset" source="Net1_Start" target="Net1_Reset" type="normal">
+                <graphics>
+                    <position x="748" y="88"/>
+                </graphics>
+            </arc>
+            <arc id="Net1_Start_to_Shared_Done" source="Net1_Start" target="Shared_Done" type="normal"/>
+            <arc id="Net2_Start_to_Net2_Reset" source="Net2_Start" target="Net2_Reset" type="normal">
+                <graphics>
+                    <position x="238" y="358"/>
+                </graphics>
+            </arc>
+            <arc id="Net2_Start_to_Shared_Done" source="Net2_Start" target="Shared_Done" type="normal"/>
+            <arc id="Net3_Start_to_Net3_Reset" source="Net3_Start" target="Net3_Reset" type="normal">
+                <graphics>
+                    <position x="748" y="358"/>
+                </graphics>
+            </arc>
+            <arc id="Net3_Start_to_Shared_Done" source="Net3_Start" target="Shared_Done" type="normal"/>
+            <arc id="Net4_Start_to_Net4_Reset" source="Net4_Start" target="Net4_Reset" type="normal">
+                <graphics>
+                    <position x="238" y="628"/>
+                </graphics>
+            </arc>
+            <arc id="Net4_Start_to_Shared_Done" source="Net4_Start" target="Shared_Done" type="normal"/>
+            <arc id="Shared_Done_to_Test_Finished" source="Shared_Done" target="Test_Finished" type="normal"/>
+            <arc id="Net1_Reset_to_Net1_Start" source="Net1_Reset" target="Net1_Start" type="normal">
+                <graphics>
+                    <position x="778" y="193"/>
+                </graphics>
+            </arc>
+            <arc id="Net2_Reset_to_Net2_Start" source="Net2_Reset" target="Net2_Start" type="normal">
+                <graphics>
+                    <position x="268" y="463"/>
+                </graphics>
+            </arc>
+            <arc id="Net3_Reset_to_Net3_Start" source="Net3_Reset" target="Net3_Start" type="normal">
+                <graphics>
+                    <position x="778" y="463"/>
+                </graphics>
+            </arc>
+            <arc id="Net4_Reset_to_Net4_Start" source="Net4_Reset" target="Net4_Start" type="normal">
+                <graphics>
+                    <position x="268" y="733"/>
+                </graphics>
+            </arc>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

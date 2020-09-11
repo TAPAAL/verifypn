@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>extra-test-001-liveness.FALSE-1</id>
+    <description>extra-test-001-liveness.FALSE-1</description>
+    <formula>
+      <all-paths>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>P1</place>
+            </tokens-count>
+            <integer-constant>1</integer-constant>
+          </integer-eq>
+        </finally>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>extra-test-001-liveness.TRUE-2</id>
+    <description>extra-test-001-liveness.TRUE-2</description>
+    <formula>
+      <exists-path>
+        <globally>
+          <negation>
+            <integer-eq>
+              <tokens-count>
+                <place>P1</place>
+              </tokens-count>
+              <integer-constant>1</integer-constant>
+            </integer-eq>
+          </negation>
+        </globally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>

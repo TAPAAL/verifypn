@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="start">
+                <graphics>
+                    <position x="480" y="45"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>start</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="A">
+                <graphics>
+                    <position x="180" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-12" y="1"/>
+                    </graphics>
+                    <text>A</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="B">
+                <graphics>
+                    <position x="480" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-12" y="3"/>
+                    </graphics>
+                    <text>B</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="C">
+                <graphics>
+                    <position x="765" y="225"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="35" y="1"/>
+                    </graphics>
+                    <text>C</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="rA">
+                <graphics>
+                    <position x="75" y="420"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>rA</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="P5">
+                <graphics>
+                    <position x="315" y="420"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>P5</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="ready">
+                <graphics>
+                    <position x="480" y="420"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="14" y="-6"/>
+                    </graphics>
+                    <text>ready</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="rB">
+                <graphics>
+                    <position x="615" y="420"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>rB</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="rC">
+                <graphics>
+                    <position x="765" y="420"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>rC</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="doneAB">
+                <graphics>
+                    <position x="360" y="660"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>doneAB</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="doneAll">
+                <graphics>
+                    <position x="480" y="750"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>doneAll</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="T0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>T0</text>
+                </name>
+                <graphics>
+                    <position x="480" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="sA">
+                <name>
+                    <graphics>
+                        <offset x="-6" y="8"/>
+                    </graphics>
+                    <text>sA</text>
+                </name>
+                <graphics>
+                    <position x="180" y="315"/>
+                </graphics>
+            </transition>
+            <transition id="sBC">
+                <name>
+                    <graphics>
+                        <offset x="22" y="-14"/>
+                    </graphics>
+                    <text>sBC</text>
+                </name>
+                <graphics>
+                    <position x="615" y="300"/>
+                </graphics>
+            </transition>
+            <transition id="latency">
+                <name>
+                    <graphics>
+                        <offset x="33" y="-5"/>
+                    </graphics>
+                    <text>latency</text>
+                </name>
+                <graphics>
+                    <position x="390" y="420"/>
+                </graphics>
+            </transition>
+            <transition id="eAB">
+                <name>
+                    <graphics>
+                        <offset x="25" y="-14"/>
+                    </graphics>
+                    <text>eAB</text>
+                </name>
+                <graphics>
+                    <position x="360" y="570"/>
+                </graphics>
+            </transition>
+            <transition id="end">
+                <name>
+                    <graphics>
+                        <offset x="23" y="-8"/>
+                    </graphics>
+                    <text>end</text>
+                </name>
+                <graphics>
+                    <position x="480" y="660"/>
+                </graphics>
+            </transition>
+            <arc id="start_to_T0" source="start" target="T0" type="normal"/>
+            <arc id="A_to_sA" source="A" target="sA" type="normal">
+                <graphics>
+                    <position x="193" y="238"/>
+                </graphics>
+            </arc>
+            <arc id="P5_to_latency" source="P5" target="latency" type="normal"/>
+            <arc id="ready_to_sBC" source="ready" target="sBC" type="normal"/>
+            <arc id="B_to_sBC" source="B" target="sBC" type="normal"/>
+            <arc id="C_to_sBC" source="C" target="sBC" type="normal"/>
+            <arc id="rA_to_eAB" source="rA" target="eAB" type="normal"/>
+            <arc id="rB_to_eAB" source="rB" target="eAB" type="normal"/>
+            <arc id="rC_to_end" source="rC" target="end" type="normal"/>
+            <arc id="doneAB_to_end" source="doneAB" target="end" type="normal"/>
+            <arc id="T0_to_B" source="T0" target="B" type="normal"/>
+            <arc id="T0_to_A" source="T0" target="A" type="normal">
+                <graphics>
+                    <position x="493" y="133"/>
+                </graphics>
+            </arc>
+            <arc id="T0_to_C" source="T0" target="C" type="normal"/>
+            <arc id="sA_to_rA" source="sA" target="rA" type="normal"/>
+            <arc id="sA_to_P5" source="sA" target="P5" type="normal"/>
+            <arc id="latency_to_ready" source="latency" target="ready" type="normal"/>
+            <arc id="sBC_to_rB" source="sBC" target="rB" type="normal"/>
+            <arc id="sBC_to_rC" source="sBC" target="rC" type="normal"/>
+            <arc id="eAB_to_doneAB" source="eAB" target="doneAB" type="normal"/>
+            <arc id="end_to_doneAll" source="end" target="doneAll" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>reduction-018.FALSE-1</id>
+    <description>reduction-018.FALSE-1</description>
+    <formula>
+      <all-paths>
+        <globally>
+          <negation>
+            <integer-eq>
+              <tokens-count>
+                <place>P1</place>
+              </tokens-count>
+              <integer-constant>2</integer-constant>
+            </integer-eq>
+          </negation>
+        </globally>
+      </all-paths>
+    </formula>
+  </property>
+</property-set>

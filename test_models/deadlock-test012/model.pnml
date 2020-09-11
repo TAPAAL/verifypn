@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Medium_A">
+                <graphics>
+                    <position x="390" y="150"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="21" y="-4"/>
+                    </graphics>
+                    <text>Medium_A</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Sender_A">
+                <graphics>
+                    <position x="150" y="60"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Sender_A</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Receiver_D">
+                <graphics>
+                    <position x="600" y="600"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Receiver_D</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Receiver_A">
+                <graphics>
+                    <position x="600" y="780"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Receiver_A</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="Sender_B">
+                <graphics>
+                    <position x="150" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="31"/>
+                    </graphics>
+                    <text>Sender_B</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Sender_C">
+                <graphics>
+                    <position x="150" y="450"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Sender_C</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Sender_D">
+                <graphics>
+                    <position x="150" y="630"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Sender_D</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Medium_B">
+                <graphics>
+                    <position x="390" y="360"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Medium_B</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Medium_C">
+                <graphics>
+                    <position x="390" y="540"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Medium_C</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Medium_D">
+                <graphics>
+                    <position x="390" y="720"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Medium_D</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Receiver_B">
+                <graphics>
+                    <position x="600" y="240"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Receiver_B</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="Receiver_C">
+                <graphics>
+                    <position x="600" y="450"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Receiver_C</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <transition id="Ack_rec_0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Ack_rec_0</text>
+                </name>
+                <graphics>
+                    <position x="150" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="Send_1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Send_1</text>
+                </name>
+                <graphics>
+                    <position x="150" y="540"/>
+                </graphics>
+            </transition>
+            <transition id="Ack_send_0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Ack_send_0</text>
+                </name>
+                <graphics>
+                    <position x="600" y="360"/>
+                </graphics>
+            </transition>
+            <transition id="Loss_C">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Loss_C</text>
+                </name>
+                <graphics>
+                    <position x="390" y="630"/>
+                </graphics>
+            </transition>
+            <transition id="Loss_D">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Loss_D</text>
+                </name>
+                <graphics>
+                    <position x="390" y="780"/>
+                </graphics>
+            </transition>
+            <transition id="ReSend_1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ReSend_1</text>
+                </name>
+                <graphics>
+                    <position x="240" y="630"/>
+                </graphics>
+            </transition>
+            <transition id="Receive_old_1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Receive_old_1</text>
+                </name>
+                <graphics>
+                    <position x="480" y="600"/>
+                </graphics>
+            </transition>
+            <transition id="Ack_send_1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Ack_send_1</text>
+                </name>
+                <graphics>
+                    <position x="600" y="720"/>
+                </graphics>
+            </transition>
+            <transition id="Ack_rec_1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Ack_rec_1</text>
+                </name>
+                <graphics>
+                    <position x="150" y="720"/>
+                </graphics>
+            </transition>
+            <transition id="Send_0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Send_0</text>
+                </name>
+                <graphics>
+                    <position x="150" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="Receive_0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Receive_0</text>
+                </name>
+                <graphics>
+                    <position x="600" y="150"/>
+                </graphics>
+            </transition>
+            <transition id="ReSend_0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>ReSend_0</text>
+                </name>
+                <graphics>
+                    <position x="240" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="Receive_old_0">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Receive_old_0</text>
+                </name>
+                <graphics>
+                    <position x="480" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="Loss_A">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Loss_A</text>
+                </name>
+                <graphics>
+                    <position x="390" y="240"/>
+                </graphics>
+            </transition>
+            <transition id="Loss_B">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Loss_B</text>
+                </name>
+                <graphics>
+                    <position x="390" y="450"/>
+                </graphics>
+            </transition>
+            <transition id="Receive_1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Receive_1</text>
+                </name>
+                <graphics>
+                    <position x="600" y="540"/>
+                </graphics>
+            </transition>
+            <arc id="Medium_A_to_Receive_0" source="Medium_A" target="Receive_0" type="normal"/>
+            <arc id="Medium_A_to_Receive_old_0" source="Medium_A" target="Receive_old_0" type="normal"/>
+            <arc id="Medium_A_to_Loss_A" source="Medium_A" target="Loss_A" type="normal"/>
+            <arc id="Receiver_D_to_Ack_send_1" source="Receiver_D" target="Ack_send_1" type="normal"/>
+            <arc id="Receiver_A_to_Receive_old_1" source="Receiver_A" target="Receive_old_1" type="normal"/>
+            <arc id="Receiver_A_to_Receive_0" source="Receiver_A" target="Receive_0" type="normal">
+                <graphics>
+                    <position x="672" y="797"/>
+                    <position x="721" y="796"/>
+                    <position x="721" y="136"/>
+                    <position x="647" y="135"/>
+                </graphics>
+            </arc>
+            <arc id="Sender_A_to_Send_0" source="Sender_A" target="Send_0" type="normal"/>
+            <arc id="Sender_B_to_Ack_rec_0" source="Sender_B" target="Ack_rec_0" type="normal"/>
+            <arc id="Sender_B_to_ReSend_0" source="Sender_B" target="ReSend_0" type="normal">
+                <graphics>
+                    <position x="211" y="226"/>
+                </graphics>
+            </arc>
+            <arc id="Sender_C_to_Send_1" source="Sender_C" target="Send_1" type="normal"/>
+            <arc id="Sender_D_to_ReSend_1" source="Sender_D" target="ReSend_1" type="normal">
+                <graphics>
+                    <position x="211" y="616"/>
+                </graphics>
+            </arc>
+            <arc id="Sender_D_to_Ack_rec_1" source="Sender_D" target="Ack_rec_1" type="normal"/>
+            <arc id="Medium_B_to_Ack_rec_0" source="Medium_B" target="Ack_rec_0" type="normal"/>
+            <arc id="Medium_B_to_Loss_B" source="Medium_B" target="Loss_B" type="normal"/>
+            <arc id="Medium_C_to_Loss_C" source="Medium_C" target="Loss_C" type="normal"/>
+            <arc id="Medium_C_to_Receive_old_1" source="Medium_C" target="Receive_old_1" type="normal"/>
+            <arc id="Medium_C_to_Receive_1" source="Medium_C" target="Receive_1" type="normal"/>
+            <arc id="Medium_D_to_Loss_D" source="Medium_D" target="Loss_D" type="normal"/>
+            <arc id="Medium_D_to_Ack_rec_1" source="Medium_D" target="Ack_rec_1" type="normal"/>
+            <arc id="Receiver_B_to_Ack_send_0" source="Receiver_B" target="Ack_send_0" type="normal"/>
+            <arc id="Receiver_C_to_Receive_old_0" source="Receiver_C" target="Receive_old_0" type="normal"/>
+            <arc id="Receiver_C_to_Receive_1" source="Receiver_C" target="Receive_1" type="normal"/>
+            <arc id="Ack_rec_0_to_Sender_C" source="Ack_rec_0" target="Sender_C" type="normal"/>
+            <arc id="Ack_send_0_to_Medium_B" source="Ack_send_0" target="Medium_B" type="normal"/>
+            <arc id="Ack_send_0_to_Receiver_C" source="Ack_send_0" target="Receiver_C" type="normal"/>
+            <arc id="ReSend_1_to_Sender_D" source="ReSend_1" target="Sender_D" type="normal">
+                <graphics>
+                    <position x="211" y="691"/>
+                </graphics>
+            </arc>
+            <arc id="ReSend_1_to_Medium_C" source="ReSend_1" target="Medium_C" type="normal"/>
+            <arc id="Receive_old_1_to_Receiver_D" source="Receive_old_1" target="Receiver_D" type="normal"/>
+            <arc id="Ack_send_1_to_Receiver_A" source="Ack_send_1" target="Receiver_A" type="normal"/>
+            <arc id="Ack_send_1_to_Medium_D" source="Ack_send_1" target="Medium_D" type="normal"/>
+            <arc id="Send_1_to_Sender_D" source="Send_1" target="Sender_D" type="normal"/>
+            <arc id="Send_1_to_Medium_C" source="Send_1" target="Medium_C" type="normal"/>
+            <arc id="Ack_rec_1_to_Sender_A" source="Ack_rec_1" target="Sender_A" type="normal">
+                <graphics>
+                    <position x="136" y="781"/>
+                    <position x="76" y="781"/>
+                    <position x="76" y="46"/>
+                    <position x="151" y="46"/>
+                </graphics>
+            </arc>
+            <arc id="Send_0_to_Medium_A" source="Send_0" target="Medium_A" type="normal"/>
+            <arc id="Send_0_to_Sender_B" source="Send_0" target="Sender_B" type="normal"/>
+            <arc id="Receive_0_to_Receiver_B" source="Receive_0" target="Receiver_B" type="normal"/>
+            <arc id="ReSend_0_to_Medium_A" source="ReSend_0" target="Medium_A" type="normal"/>
+            <arc id="ReSend_0_to_Sender_B" source="ReSend_0" target="Sender_B" type="normal">
+                <graphics>
+                    <position x="211" y="301"/>
+                </graphics>
+            </arc>
+            <arc id="Receive_old_0_to_Receiver_B" source="Receive_old_0" target="Receiver_B" type="normal"/>
+            <arc id="Receive_1_to_Receiver_D" source="Receive_1" target="Receiver_D" type="normal"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

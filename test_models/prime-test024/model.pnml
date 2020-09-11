@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <page id="page0">
+            <place id="Shared_varA">
+                <graphics>
+                    <position x="150" y="75"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_varA</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="Shared_varB">
+                <graphics>
+                    <position x="465" y="75"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>Shared_varB</text>
+                </name>
+                <initialMarking>
+                    <text>2</text>
+                </initialMarking>
+            </place>
+            <place id="numberGuesser_P0">
+                <graphics>
+                    <position x="315" y="75"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>numberGuesser_P0</text>
+                </name>
+                <initialMarking>
+                    <text>1</text>
+                </initialMarking>
+            </place>
+            <place id="numberGuesser_P1">
+                <graphics>
+                    <position x="315" y="195"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>numberGuesser_P1</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="numberGuesser_P2">
+                <graphics>
+                    <position x="315" y="15"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>numberGuesser_P2</text>
+                </name>
+                <initialMarking>
+                    <text>30</text>
+                </initialMarking>
+            </place>
+            <place id="compareProduct_P2">
+                <graphics>
+                    <position x="855" y="375"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>compareProduct_P2</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="compareProduct_P3">
+                <graphics>
+                    <position x="870" y="105"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>compareProduct_P3</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="compareProduct_P4">
+                <graphics>
+                    <position x="945" y="330"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>compareProduct_P4</text>
+                </name>
+                <initialMarking>
+                    <text>0</text>
+                </initialMarking>
+            </place>
+            <place id="compareProduct_input">
+                <graphics>
+                    <position x="1080" y="210"/>
+                </graphics>
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>compareProduct_input</text>
+                </name>
+                <initialMarking>
+                    <text>23</text>
+                </initialMarking>
+            </place>
+            <transition id="numberGuesser_stopgenerating">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>numberGuesser_stopgenerating</text>
+                </name>
+                <graphics>
+                    <position x="315" y="135"/>
+                </graphics>
+            </transition>
+            <transition id="numberGuesser_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>numberGuesser_T1</text>
+                </name>
+                <graphics>
+                    <position x="390" y="75"/>
+                </graphics>
+            </transition>
+            <transition id="numberGuesser_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>numberGuesser_T2</text>
+                </name>
+                <graphics>
+                    <position x="225" y="75"/>
+                </graphics>
+            </transition>
+            <transition id="compareProduct_discard">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>compareProduct_discard</text>
+                </name>
+                <graphics>
+                    <position x="795" y="30"/>
+                </graphics>
+            </transition>
+            <transition id="compareProduct_T1">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>compareProduct_T1</text>
+                </name>
+                <graphics>
+                    <position x="720" y="120"/>
+                </graphics>
+            </transition>
+            <transition id="compareProduct_T2">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>compareProduct_T2</text>
+                </name>
+                <graphics>
+                    <position x="840" y="210"/>
+                </graphics>
+            </transition>
+            <transition id="compareProduct_T3">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>compareProduct_T3</text>
+                </name>
+                <graphics>
+                    <position x="705" y="375"/>
+                </graphics>
+            </transition>
+            <transition id="compareProduct_T4">
+                <name>
+                    <graphics>
+                        <offset x="-5" y="35"/>
+                    </graphics>
+                    <text>compareProduct_T4</text>
+                </name>
+                <graphics>
+                    <position x="1005" y="255"/>
+                </graphics>
+            </transition>
+            <arc id="numberGuesser_P0_to_numberGuesser_T2" source="numberGuesser_P0" target="numberGuesser_T2" type="normal"/>
+            <arc id="numberGuesser_P0_to_numberGuesser_T1" source="numberGuesser_P0" target="numberGuesser_T1" type="normal"/>
+            <arc id="numberGuesser_P0_to_numberGuesser_stopgenerating" source="numberGuesser_P0" target="numberGuesser_stopgenerating" type="normal"/>
+            <arc id="numberGuesser_P2_to_numberGuesser_T2" source="numberGuesser_P2" target="numberGuesser_T2" type="normal"/>
+            <arc id="numberGuesser_P2_to_numberGuesser_T1" source="numberGuesser_P2" target="numberGuesser_T1" type="normal"/>
+            <arc id="Shared_varA_to_compareProduct_T1" source="Shared_varA" target="compareProduct_T1" type="normal"/>
+            <arc id="compareProduct_P3_to_compareProduct_discard" source="compareProduct_P3" target="compareProduct_discard" type="normal"/>
+            <arc id="compareProduct_P3_to_compareProduct_T2" source="compareProduct_P3" target="compareProduct_T2" type="normal"/>
+            <arc id="Shared_varB_to_compareProduct_T2" source="Shared_varB" target="compareProduct_T2" type="normal"/>
+            <arc id="compareProduct_P2_to_compareProduct_T3" source="compareProduct_P2" target="compareProduct_T3" type="normal"/>
+            <arc id="compareProduct_P4_to_compareProduct_T4" source="compareProduct_P4" target="compareProduct_T4" type="normal"/>
+            <arc id="compareProduct_input_to_compareProduct_T4" source="compareProduct_input" target="compareProduct_T4" type="normal"/>
+            <arc id="numberGuesser_T2_to_numberGuesser_P0" source="numberGuesser_T2" target="numberGuesser_P0" type="normal"/>
+            <arc id="numberGuesser_T1_to_numberGuesser_P0" source="numberGuesser_T1" target="numberGuesser_P0" type="normal"/>
+            <arc id="numberGuesser_T1_to_Shared_varB" source="numberGuesser_T1" target="Shared_varB" type="normal"/>
+            <arc id="numberGuesser_T2_to_Shared_varA" source="numberGuesser_T2" target="Shared_varA" type="normal"/>
+            <arc id="numberGuesser_stopgenerating_to_numberGuesser_P1" source="numberGuesser_stopgenerating" target="numberGuesser_P1" type="normal"/>
+            <arc id="compareProduct_T1_to_compareProduct_P3" source="compareProduct_T1" target="compareProduct_P3" type="normal"/>
+            <arc id="compareProduct_T3_to_Shared_varB" source="compareProduct_T3" target="Shared_varB" type="normal"/>
+            <arc id="compareProduct_T2_to_compareProduct_P2" source="compareProduct_T2" target="compareProduct_P2" type="normal"/>
+            <arc id="compareProduct_T2_to_compareProduct_P4" source="compareProduct_T2" target="compareProduct_P4" type="normal"/>
+            <arc id="compareProduct_T2_to_compareProduct_P3" source="compareProduct_T2" target="compareProduct_P3" type="normal"/>
+            <arc id="compareProduct_P3_to_compareProduct_T3" source="compareProduct_P3" target="compareProduct_T3" type="inhibitor"/>
+            <arc id="Shared_varA_to_compareProduct_T4" source="Shared_varA" target="compareProduct_T4" type="inhibitor"/>
+            <arc id="compareProduct_P3_to_compareProduct_T4" source="compareProduct_P3" target="compareProduct_T4" type="inhibitor"/>
+            <arc id="compareProduct_P3_to_compareProduct_T1" source="compareProduct_P3" target="compareProduct_T1" type="inhibitor"/>
+            <arc id="compareProduct_P2_to_compareProduct_T1" source="compareProduct_P2" target="compareProduct_T1" type="inhibitor"/>
+        </page>
+        <name>
+            <text>ComposedModel</text>
+        </name>
+    </net>
+</pnml>

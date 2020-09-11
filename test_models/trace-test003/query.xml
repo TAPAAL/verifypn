@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>trace-test003.TRUE-1</id>
+    <description>trace-test003.TRUE-1</description>
+    <formula>
+      <exists-path>
+        <globally>
+          <true/>
+        </globally>
+      </exists-path>
+    </formula>
+  </property>
+  <property>
+    <id>trace-test003.TRUE-2</id>
+    <description>trace-test003.TRUE-2</description>
+    <formula>
+      <all-paths>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>P1</place>
+            </tokens-count>
+            <integer-constant>1</integer-constant>
+          </integer-eq>
+        </finally>
+      </all-paths>
+    </formula>
+  </property>
+</property-set>

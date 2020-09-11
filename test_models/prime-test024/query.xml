@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>prime-test024.TRUE-1</id>
+    <description>prime-test024.TRUE-1</description>
+    <formula>
+      <all-paths>
+        <globally>
+          <disjunction>
+            <negation>
+              <integer-eq>
+                <tokens-count>
+                  <place>compareProduct_input</place>
+                </tokens-count>
+                <integer-constant>0</integer-constant>
+              </integer-eq>
+            </negation>
+            <negation>
+              <integer-eq>
+                <tokens-count>
+                  <place>compareProduct_P4</place>
+                </tokens-count>
+                <integer-constant>0</integer-constant>
+              </integer-eq>
+            </negation>
+          </disjunction>
+        </globally>
+      </all-paths>
+    </formula>
+  </property>
+</property-set>
