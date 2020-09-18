@@ -124,6 +124,9 @@ namespace PetriEngine {
         std::vector<std::string> _transitionnames;
         std::vector<std::string> _placenames;
 
+        std::vector< std::tuple<double, double> > _placelocations;
+        std::vector< std::tuple<double, double> > _transitionlocations;
+
         friend class PetriNetBuilder;
         friend class Reducer;
         friend class SuccessorGenerator;
