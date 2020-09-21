@@ -106,9 +106,9 @@ namespace PetriEngine {
         if (_stripped) assert(false);
         if (_isColored && !_unfolded) {
             auto start = std::chrono::high_resolution_clock::now();
-            for (auto& place : _places) {
-                unfoldPlace(place);
-            }
+            //for (auto& place : _places) {
+            //    unfoldPlace(place);
+            //}
 
             for (auto& transition : _transitions) {
                 unfoldTransition(transition);
@@ -150,11 +150,21 @@ namespace PetriEngine {
         Colored::ExpressionContext context {binding, _colors};
         auto ms = arc.expr->eval(context);
 
+        uint32_t i = 0;
         for (const auto& color : ms) {
             if (color.second == 0) {
                 continue;
             }
-            const std::string& pName = _ptplacenames[_places[arc.place].name][color.first->getId()];
+            PetriEngine::Colored::Place place = _places[arc.place];
+            const std::string& pName = _ptplacenames[place.name][color.first->getId()];
+            if (pName.empty()) {
+                std::string name = place.name + ";" + std::to_string(i);
+                const Colored::Color* color = &place.type->operator[](i);
+                _ptBuilder.addPlace(name, place.marking[color], 0.0, 0.0);
+                _ptplacenames[place.name][color->getId()] = std::move(name);
+                ++_nptplaces;
+                i++;
+            }
             if (arc.input) {
                 _ptBuilder.addInputArc(pName, tName, false, color.second);
             } else {

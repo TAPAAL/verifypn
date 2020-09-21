@@ -768,6 +768,7 @@ int main(int argc, char* argv[]) {
         auto begin = std::chrono::high_resolution_clock::now();
         auto end = std::chrono::high_resolution_clock::now();
         std::vector<bool> hadTo(queries.size(), true);
+
         
         do
         {
