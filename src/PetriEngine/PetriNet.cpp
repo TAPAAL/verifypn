@@ -172,9 +172,7 @@ namespace PetriEngine {
         for(size_t i = 0; i < _ntransitions; ++i)
         {
             TransPtr& t = _transitions[i];
-            std::cout << "1" << std::endl;
             std::sort(&_invariants[t.inputs], &_invariants[t.outputs], [](const auto& a, const auto& b) { return a.place < b.place; });
-            std::cout << "2" << std::endl;
             TransPtr& t2 = _transitions[i + 1];
             std::sort(&_invariants[t.outputs], &_invariants[t2.inputs], [](const auto& a, const auto& b) { return a.place < b.place; });
         }
