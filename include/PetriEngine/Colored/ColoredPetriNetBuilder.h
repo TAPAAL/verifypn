@@ -12,6 +12,7 @@
 #include <unordered_map>
 
 #include "ColoredNetStructures.h"
+#include "Patterns.h"
 #include "../AbstractPetriNetBuilder.h"
 #include "../PetriNetBuilder.h"
 
@@ -158,6 +159,7 @@ namespace PetriEngine {
     private:
         Colored::GuardExpression_ptr _expr;
         Colored::ExpressionContext::BindingMap _bindings;
+        Colored::PatternSet _patterns;
         ColoredPetriNetBuilder::ColorTypeMap& _colorTypes;
         
         bool eval();
@@ -165,6 +167,7 @@ namespace PetriEngine {
     public:
         BindingGenerator(Colored::Transition& transition,
                 const std::vector<Colored::Arc>& arcs,
+                const std::vector<Colored::Place>& places,
                 ColoredPetriNetBuilder::ColorTypeMap& colorTypes);
 
         Colored::ExpressionContext::BindingMap& nextBinding();

@@ -133,7 +133,7 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
-        BindingGenerator gen(transition, _arcs, _colors);
+        BindingGenerator gen(transition, _arcs, _places, _colors);
         size_t i = 0, j = 0;
         for (auto b : gen) {
             /*
@@ -249,18 +249,44 @@ namespace PetriEngine {
 
     BindingGenerator::BindingGenerator(Colored::Transition& transition,
             const std::vector<Colored::Arc>& arcs,
+            const std::vector<Colored::Place>& places,
             ColoredPetriNetBuilder::ColorTypeMap& colorTypes)
         : _colorTypes(colorTypes)
     {
         _expr = transition.guard;
         std::set<Colored::Variable*> variables;
+        std::set<Colored::Variable*> guardVariables;
         if (_expr != nullptr) {
             _expr->getVariables(variables);
+            _expr->getVariables(guardVariables);
+            const Colored::Pattern guardPattern = {
+                Colored::PatternType::Guard,
+                _expr,
+                guardVariables,
+                nullptr,
+            };
+            _patterns.insert(&guardPattern);
         }
         for (auto arc : transition.arcs) {
+            std::set<Colored::Variable*> arcVariables;
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
+            arc.expr->getVariables(arcVariables);
+            Colored::ColorType* ctype = places[arc.place].type;
+            const Colored::Pattern arcPattern {
+                Colored::PatternType::ArcExp,
+                arc.expr,
+                arcVariables,
+                ctype,
+            };
+            _patterns.insert(&arcPattern);
         }
+
+        for (auto pat : _patterns) {
+            pat->toString();
+        }
+        
+
         for (auto var : variables) {
             _bindings[var->name] = &var->colorType->operator[](0);
         }
@@ -268,6 +294,7 @@ namespace PetriEngine {
         if (!eval())
             nextBinding();
     }
+
 
     bool BindingGenerator::eval() {
         if (_expr == nullptr)
