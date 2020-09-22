@@ -134,7 +134,7 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         BindingGenerator gen(transition, _arcs, _places, _colors);
-        size_t i = 0, j = 0;
+        size_t i = 0;
         for (auto b : gen) {
             /*
             //Print all bindings
@@ -149,12 +149,12 @@ namespace PetriEngine {
             _pttransitionnames[transition.name].push_back(name);
             ++_npttransitions;
             for (auto& arc : transition.arcs) {
-                unfoldArc(arc, b, name, &j);
+                unfoldArc(arc, b, name);
             }
         }
     }
 
-    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName, size_t *j) {
+    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName) {
         Colored::ExpressionContext context {binding, _colors};
         auto ms = arc.expr->eval(context);       
 
@@ -165,7 +165,8 @@ namespace PetriEngine {
             PetriEngine::Colored::Place place = _places[arc.place];
             const std::string& pName = _ptplacenames[place.name][color.first->getId()];
             if (pName.empty()) {
-                std::string name = place.name + "_" + std::to_string((*j)++);
+                
+                std::string name = place.name + "_" + std::to_string(color.first->getId());
                 _ptBuilder.addPlace(name, place.marking[color.first], 0.0, 0.0);
                 _ptplacenames[place.name][color.first->getId()] = std::move(name);
                 ++_nptplaces;                

@@ -138,7 +138,7 @@ namespace PetriEngine {
         
         void unfoldPlace(Colored::Place& place);
         void unfoldTransition(Colored::Transition& transition);
-        void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name, size_t* j);
+        void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name);
     };
     
     class BindingGenerator {
