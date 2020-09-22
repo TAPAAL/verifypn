@@ -134,23 +134,30 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         BindingGenerator gen(transition, _arcs, _colors);
-        size_t i = 0;
-        for (auto& b : gen) {
+        size_t i = 0, j = 0;
+        for (auto b : gen) {
+            /*
+            //Print all bindings
+            for (auto test : b){
+                std::cout << "Binding '" << test.first << "\t" << *test.second << "' in bindingds." << std::endl;
+            }
+            std::cout << std::endl;
+            */
+            
             std::string name = transition.name + "_" + std::to_string(i++);
             _ptBuilder.addTransition(name, 0.0, 0.0);
             _pttransitionnames[transition.name].push_back(name);
             ++_npttransitions;
             for (auto& arc : transition.arcs) {
-                unfoldArc(arc, b, name);
+                unfoldArc(arc, b, name, &j);
             }
         }
     }
 
-    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName) {
+    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName, size_t *j) {
         Colored::ExpressionContext context {binding, _colors};
-        auto ms = arc.expr->eval(context);
+        auto ms = arc.expr->eval(context);       
 
-        //uint32_t i = 0;
         for (const auto& color : ms) {
             if (color.second == 0) {
                 continue;
@@ -158,9 +165,7 @@ namespace PetriEngine {
             PetriEngine::Colored::Place place = _places[arc.place];
             const std::string& pName = _ptplacenames[place.name][color.first->getId()];
             if (pName.empty()) {
-                //i++;
-                std::string name = place.name + "_" + (*color.first).toString();
-                //const Colored::Color* color = &place.type->operator[](i);
+                std::string name = place.name + "_" + std::to_string((*j)++);
                 _ptBuilder.addPlace(name, place.marking[color.first], 0.0, 0.0);
                 _ptplacenames[place.name][color.first->getId()] = std::move(name);
                 ++_nptplaces;                
