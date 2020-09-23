@@ -110,7 +110,7 @@ namespace PetriEngine {
 
             void _accept(const NaryExpr *element, const std::string &op);
         };
-    };
-};
+    }
+}
 
 #endif //VERIFYPN_QUERYPRINTER_H

@@ -456,7 +456,7 @@ namespace PetriEngine {
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
             Quantifier getQuantifier() const override { return Quantifier::E; }
-            Path getPath() const override             { return Path::X; }
+            Path getPath() const override             { return Path::pError; }
             uint32_t distance(DistanceContext& context) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -492,7 +492,7 @@ namespace PetriEngine {
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
             Quantifier getQuantifier() const override { return Quantifier::E; }
-            Path getPath() const override             { return Path::X; }
+            Path getPath() const override             { return Path::pError; }
             uint32_t distance(DistanceContext& context) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -527,8 +527,8 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            Quantifier getQuantifier() const override { return Quantifier::E; }
-            Path getPath() const override             { return Path::X; }
+            Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
+            Path getPath() const override             { return Path::G; }
             uint32_t distance(DistanceContext& context) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -563,8 +563,8 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            Quantifier getQuantifier() const override { return Quantifier::E; }
-            Path getPath() const override             { return Path::X; }
+            Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
+            Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -599,7 +599,7 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            Quantifier getQuantifier() const override { return Quantifier::E; }
+            Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override {
                 // TODO implement

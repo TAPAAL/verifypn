@@ -1225,6 +1225,26 @@ namespace PetriEngine {
         }
         
         /******************** Op (QuantifierCondition subclasses) ********************/
+
+        std::string ACondition::op() const {
+            return "A";
+        }
+
+        std::string ECondition::op() const {
+            return "E";
+        }
+
+        std::string GCondition::op() const {
+            return "G";
+        }
+
+        std::string FCondition::op() const {
+            return "F";
+        }
+
+        std::string XCondition::op() const {
+            return "X";
+        }
         
         std::string EXCondition::op() const {
             return "EX";
@@ -1248,26 +1268,6 @@ namespace PetriEngine {
         
         std::string AFCondition::op() const {
             return "AF";
-        }
-
-        std::string ACondition::op() const {
-            return "A";
-        }
-
-        std::string ECondition::op() const {
-            return "E";
-        }
-
-        std::string GCondition::op() const {
-            return "G";
-        }
-
-        std::string FCondition::op() const {
-            return "F";
-        }
-
-        std::string XCondition::op() const {
-            return "X";
         }
 
         /******************** Op (UntilCondition subclasses) ********************/
