@@ -95,32 +95,32 @@ namespace PetriEngine {
 
         void QueryPrinter::_accept(const EFCondition *condition) {
             os << "EF ";
-            condition->visit(*this);
+            (*condition)[0]->visit(*this);
         }
 
         void QueryPrinter::_accept(const EGCondition *condition) {
             os << "EG ";
-            condition->visit(*this);
+            (*condition)[0]->visit(*this);
         }
 
         void QueryPrinter::_accept(const AGCondition *condition) {
             os << "AG ";
-            condition->visit(*this);
+            (*condition)[0]->visit(*this);
         }
 
         void QueryPrinter::_accept(const AFCondition *condition) {
             os << "AF ";
-            condition->visit(*this);
+            (*condition)[0]->visit(*this);
         }
 
         void QueryPrinter::_accept(const EXCondition *condition) {
             os << "AF ";
-            condition->visit(*this);
+            (*condition)[0]->visit(*this);
         }
 
         void QueryPrinter::_accept(const AXCondition *condition) {
             os << "AX ";
-            condition->visit(*this);
+            (*condition)[0]->visit(*this);
         }
 
         void QueryPrinter::_accept(const EUCondition *condition) {

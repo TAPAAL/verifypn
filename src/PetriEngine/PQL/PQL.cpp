@@ -19,6 +19,7 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Contexts.h"
 #include "PetriEngine/PQL/Expressions.h"
+#include "PetriEngine/PQL/QueryPrinter.h"
 
 namespace PetriEngine {
     namespace PQL {
@@ -63,6 +64,11 @@ namespace PetriEngine {
                 }
             }
             return res;            
+        }
+
+        void Condition::toString(std::ostream &os) {
+            QueryPrinter printer{std::cout};
+            this->visit(printer);
         }
 
 

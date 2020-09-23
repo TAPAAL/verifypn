@@ -8,6 +8,7 @@
 #include "Visitor.h"
 
 #include <iostream>
+#include <string>
 
 namespace PetriEngine {
     namespace PQL {
@@ -105,9 +106,9 @@ namespace PetriEngine {
 
             void _accept(const LogicalCondition *element, const std::string &op);
 
-            void _accept(const CompareCondition *element, const string &op);
+            void _accept(const CompareCondition *element, const std::string &op);
 
-            void _accept(const NaryExpr *element, const string &op);
+            void _accept(const NaryExpr *element, const std::string &op);
         };
     };
 };
