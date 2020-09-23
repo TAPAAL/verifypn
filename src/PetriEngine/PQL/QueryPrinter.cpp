@@ -32,11 +32,11 @@ namespace PetriEngine {
         }
 
         void QueryPrinter::_accept(const AndCondition *element) {
-            _accept((const LogicalCondition *) element, "and");
+            _accept(element, "and");
         }
 
         void QueryPrinter::_accept(const OrCondition *element) {
-            _accept((const LogicalCondition *) element, "or");
+            _accept(element, "or");
         }
 
         void QueryPrinter::_accept(const LessThanCondition *element) {

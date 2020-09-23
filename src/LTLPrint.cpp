@@ -70,6 +70,9 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 
+#include <spot/tl/parse.hh>
+#include <spot/tl/print.hh>
+
 using namespace std;
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -673,5 +676,9 @@ int main(int argc, char* argv[]) {
     std::set<size_t> queries{1};
     parser.parse(testfile, queries);
     parser.printQueries(2);
+
+    std::cout << spot::parse_formula("[]<>p0 || <>[]p1") << '\n';
+    spot::formula f = spot::parse_formula("& & G p0 p1 p2");
+    print_latex_psl(std::cout, f) << '\n';
 }
 

@@ -10,10 +10,10 @@ add_dependencies(verifypn-${ARCH_TYPE} glpk-ext)
 
 target_link_libraries(verifypn-${ARCH_TYPE} PRIVATE CTL PetriEngine PetriParse glpk)
 
-add_executable(verifyltl-${ARCH_TYPE} LTLPrint.cpp)
-add_dependencies(verifyltl-${ARCH_TYPE} glpk-ext)
+add_executable(verifyltl-${ARCH_TYPE} LTLPrint.cpp ../include/LTL/LTLToBuchi.h LTL/LTLToBuchi.cpp)
+add_dependencies(verifyltl-${ARCH_TYPE} glpk-ext spot-ext)
 
-target_link_libraries(verifyltl-${ARCH_TYPE} PRIVATE CTL PetriEngine PetriParse glpk)
+target_link_libraries(verifyltl-${ARCH_TYPE} PRIVATE CTL PetriEngine PetriParse glpk spot)
 
 if (VERIFYPN_MC_Simplification)
     target_link_libraries(verifypn-${ARCH_TYPE} PUBLIC pthread)

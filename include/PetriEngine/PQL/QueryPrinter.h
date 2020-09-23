@@ -101,7 +101,7 @@ namespace PetriEngine {
             void _accept(const IdentifierExpr *element) override;
 
 
-        private:
+        protected:
             std::ostream &os;
 
             void _accept(const LogicalCondition *element, const std::string &op);
