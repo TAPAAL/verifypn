@@ -18,6 +18,7 @@
 
 #include "PetriParse/QueryXMLParser.h"
 #include "PetriEngine/PQL/Expressions.h"
+#include "PetriEngine/PQL/QueryPrinter.h"
 
 #include <string>
 #include <cstdio>
@@ -528,7 +529,8 @@ void QueryXMLParser::printQueries(size_t i) {
         cout << "\t---------- unsupported query ----------" << endl;
     } else {
         cout << "\t";
-        it.query->toString(cout);
+        PetriEngine::PQL::QueryPrinter printer;
+        it.query->visit(printer);
         cout << std::endl;
     }
 }

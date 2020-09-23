@@ -30,6 +30,7 @@
 #include <set>
 #include <cmath>
 #include <numeric>
+#include "PetriEngine/PQL/QueryPrinter.h"
 
 using namespace PetriEngine::Simplification;
 
@@ -166,169 +167,6 @@ namespace PetriEngine {
                 return FALSE_CONSTANT;
             }
         }
-        
-        /******************** To String ********************/
-
-        void LiteralExpr::toString(std::ostream& out) const {
-            out << _value;
-        }
-
-        void UnfoldedIdentifierExpr::toString(std::ostream& out) const {
-            out << _name << "(P" << _offsetInMarking << ")";
-        }
-
-        void NaryExpr::toString(std::ostream& ss) const {
-            ss << "(";
-            _exprs[0]->toString(ss);
-            for(size_t i = 1; i < _exprs.size(); ++i)
-            {
-                ss << " " << op() << " ";
-                _exprs[i]->toString(ss);
-            }
-            ss << ")";
-        }
-
-        void CommutativeExpr::toString(std::ostream& ss) const {
-            ss << "( " << _constant;
-            for(auto& i : _ids)
-                ss << " " << op() << " " << i.second;
-            for(auto& e : _exprs)
-            {
-                ss << " " << op() << " ";
-                e->toString(ss);
-            }
-            ss << ")";
-        }
-
-
-        void MinusExpr::toString(std::ostream& out) const {
-            out << "-";
-            _expr->toString(out);
-        }
-
-        void SimpleQuantifierCondition::toString(std::ostream& out) const {
-            out << op() << " ";
-            _cond->toString(out);
-        }
-        
-        void UntilCondition::toString(std::ostream& out) const {
-            out << op() << " (";
-            _cond1->toString(out);
-            out << " U ";
-            _cond2->toString(out);
-            out << ")";
-        }
-        
-        void LogicalCondition::toString(std::ostream& out) const {
-            out << "(";
-            _conds[0]->toString(out);
-            for(size_t i = 1; i < _conds.size(); ++i)
-            {
-                out << " " << op() << " ";
-                _conds[i]->toString(out);
-            }
-            out << ")";
-        }
-        
-        void CompareConjunction::toString(std::ostream& out) const {
-            out << "(";
-            if(_negated) out << "not";
-            bool first = true;
-            for(auto& c : _constraints)
-            {
-                if(!first) out << " and ";
-                if(c._lower != 0) 
-                    out << "(" << c._lower << " <= " << c._name << ")";
-                if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max()) 
-                    out << " and ";
-                if(c._upper != std::numeric_limits<uint32_t>::max()) 
-                    out << "(" << c._upper << " >= " << c._name << ")";
-                first = false;
-            }
-            out << ")";
-        }
-
-        void CompareCondition::toString(std::ostream& out) const {
-            out << "(";
-            _expr1->toString(out);
-            out << " " << op() << " ";
-            _expr2->toString(out);
-            out <<")";
-        }
-
-        void NotCondition::toString(std::ostream& out) const {
-            out << "(not ";
-            _cond->toString(out);
-            out << ")";
-        }
-
-        void BooleanCondition::toString(std::ostream& out) const {
-            if (_value)
-                out << "true";
-            else
-                out << "false";
-        }
-
-        void DeadlockCondition::toString(std::ostream& out) const {
-            out << "deadlock";
-        }
-
-        void StableMarkingCondition::_toString(std::ostream &out) const {
-            if(_compiled) _compiled->toString(out);
-            else out << "stable-marking";
-        }
-
-        void LivenessCondition::_toString(std::ostream &out) const {
-            if(_compiled) _compiled->toString(out);
-            else out << "liveness";
-        }
-
-        void QuasiLivenessCondition::_toString(std::ostream &out) const {
-            if(_compiled) _compiled->toString(out);
-            else out << "liveness";
-        }
-
-        void KSafeCondition::_toString(std::ostream &out) const {
-            if(_compiled) _compiled->toString(out);
-            else
-            {
-                out << "k-safe(";
-                _bound->toString(out);
-                out << ")";
-            }
-        }
-
-        void UpperBoundsCondition::_toString(std::ostream& out) const {
-            if(_compiled) _compiled->toString(out);
-            else
-            {
-                out << "bounds (";
-                for(size_t i = 0; i < _places.size(); ++i)
-                {
-                    if(i != 0) out << ", ";
-                    out << _places[i];
-                }
-                out << ")";            
-            }
-        }
-        
-        void UnfoldedUpperBoundsCondition::toString(std::ostream& out) const {
-            out << "bounds (";
-            for(size_t i = 0; i < _places.size(); ++i)
-            {
-                if(i != 0) out << ", ";
-                out << _places[i]._name;
-            }
-            out << ")";
-        }
-
-        void FireableCondition::_toString(std::ostream &out) const {
-            out << "is-fireable(" << _name << ")";
-        }
-
-        void UnfoldedFireableCondition::_toString(std::ostream &out) const {
-            out << "is-fireable(" << _name << ")";
-        }
 
         /******************** To TAPAAL Query ********************/
 
@@ -376,18 +214,19 @@ namespace PetriEngine {
 
         void CompareCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
             //If <id> <op> <literal>
+            QueryPrinter printer;
             if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
                 out << " ( " << context.netName << ".";
-                _expr1->toString(out);
+                _expr1->visit(printer);
                 out << " " << opTAPAAL() << " ";
-                _expr2->toString(out);
+                _expr2->visit(printer);
                 out << " ) ";
                 //If <literal> <op> <id>
             } else if (_expr2->type() == Expr::IdentifierExpr && _expr1->type() == Expr::LiteralExpr) {
                 out << " ( ";
-                _expr1->toString(out);
+                _expr1->visit(printer);
                 out << " " << sopTAPAAL() << " " << context.netName << ".";
-                _expr2->toString(out);
+                _expr2->visit(printer);
                 out << " ) ";
             } else {
                 context.failed = true;
@@ -408,7 +247,7 @@ namespace PetriEngine {
         }
 
         void BooleanCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext&) const {
-            if (_value)
+            if (value)
                 out << "true";
             else
                 out << "false";
@@ -944,7 +783,7 @@ namespace PetriEngine {
         }
 
         Condition::Result BooleanCondition::evaluate(const EvaluationContext&) {
-            return _value ? RTRUE : RFALSE;
+            return value ? RTRUE : RFALSE;
         }
 
         Condition::Result DeadlockCondition::evaluate(const EvaluationContext& context) {
@@ -1081,8 +920,8 @@ namespace PetriEngine {
         }
 
         Condition::Result BooleanCondition::evalAndSet(const EvaluationContext&) {
-            setSatisfied(_value);
-            return _value ? RTRUE : RFALSE;
+            setSatisfied(value);
+            return value ? RTRUE : RFALSE;
         }
 
         Condition::Result DeadlockCondition::evalAndSet(const EvaluationContext& context) {
@@ -1101,6 +940,10 @@ namespace PetriEngine {
 
         /******************** Range Contexts ********************/
 
+        void UntilCondition::visit(Visitor &ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
 
         void EGCondition::visit(Visitor& ctx) const
         {
@@ -1141,7 +984,32 @@ namespace PetriEngine {
         {
             ctx.accept<decltype(this)>(this);
         }
-        
+
+        void ACondition::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void ECondition::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void GCondition::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void FCondition::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void XCondition::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
         void AndCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
@@ -1381,8 +1249,32 @@ namespace PetriEngine {
         std::string AFCondition::op() const {
             return "AF";
         }
-        
+
+        std::string ACondition::op() const {
+            return "A";
+        }
+
+        std::string ECondition::op() const {
+            return "E";
+        }
+
+        std::string GCondition::op() const {
+            return "G";
+        }
+
+        std::string FCondition::op() const {
+            return "F";
+        }
+
+        std::string XCondition::op() const {
+            return "X";
+        }
+
         /******************** Op (UntilCondition subclasses) ********************/
+
+        std::string UntilCondition::op() const {
+            return "";
+        }
 
         std::string EUCondition::op() const {
             return "E";
@@ -1527,7 +1419,7 @@ namespace PetriEngine {
         }
 
         uint32_t BooleanCondition::distance(DistanceContext& context) const {
-            if (context.negated() != _value)
+            if (context.negated() != value)
                 return 0;
             return std::numeric_limits<uint32_t>::max();
         }
@@ -1798,7 +1690,7 @@ namespace PetriEngine {
             auto quant = Quantifier::PN_BOOLEAN;
             out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
             out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
-            out.write(reinterpret_cast<const char*>(&_value), sizeof(bool));
+            out.write(reinterpret_cast<const char*>(&value), sizeof(bool));
         }
         
         void UnfoldedUpperBoundsCondition::toBinary(std::ostream& out) const
@@ -2098,7 +1990,7 @@ namespace PetriEngine {
         
         void BooleanCondition::toXML(std::ostream& out,uint32_t tabs) const {            
             generateTabs(out,tabs) << "<" << 
-                    (_value ? "true" : "false") 
+                    (value ? "true" : "false")
                     << "/>\n"; 
         }
         
@@ -2931,9 +2823,9 @@ namespace PetriEngine {
         
         Retval BooleanCondition::simplify(SimplificationContext& context) const {
             if (context.negated()) {
-                return Retval(getShared(!_value));
+                return Retval(getShared(!value));
             } else {
-                return Retval(getShared(_value));
+                return Retval(getShared(value));
             }
         }
         
@@ -3569,8 +3461,8 @@ namespace PetriEngine {
                 if(auto p2 = dynamic_pointer_cast<CommutativeExpr>(_expr2))            
                     return p1->_exprs.size() + p1->_ids.size() + p2->_exprs.size() + p2->_ids.size() == 0;
             return _expr1->placeFree() && _expr2->placeFree();
-        }        
-        
+        }
+
         Condition_ptr LessThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
             if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
@@ -3636,8 +3528,8 @@ namespace PetriEngine {
                 
         Condition_ptr BooleanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            if(negated) return getShared(!_value);
-            else        return getShared( _value);
+            if(negated) return getShared(!value);
+            else        return getShared(value);
             }, stats, context, nested, negated, initrw);
         }
         
@@ -3758,7 +3650,8 @@ namespace PetriEngine {
             _cond1->findInteresting(generator, !negated);
             _cond2->findInteresting(generator, negated);
         }
-        
+
+
         void AndCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
             if(!negated){               // and
                 for(auto& c : _conds)
