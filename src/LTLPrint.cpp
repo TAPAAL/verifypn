@@ -51,5 +51,8 @@ int main(int argc, char* argv[]) {
     IsCTLVisitor isCtlVisitor;
     parser.queries[1].query->visit(isCtlVisitor);
     cout << "Is CTL query: " << isCtlVisitor.isCTL << endl;
+    AsCTL asCtlVisitor;
+    parser.queries[1].query->visit(asCtlVisitor);
+    cout << "As CTL success." << endl;
 }
 
