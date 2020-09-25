@@ -18,39 +18,37 @@
 #include <unordered_map>
 #include <optional>
 
-#include "ColoredNetStructures.h"
+#include <set>
+
 
 namespace PetriEngine {
     namespace Colored {
+        class Expression;
+        class Variable;
+        class ColorType;
         enum PatternType {
-            ArcExp = 1,
+            Constant = 0,
+            Var = 1,
             Guard = 2,
+            Tuple = 3,
         };
 
-        struct Pattern {
-                PatternType patternType;
-                std::shared_ptr<Colored::Expression> expr;
-                std::set<Variable*> variables; //This could instead be Variable* (name, colortype), but then the colortype is duplicated
-                ColorType* colorType;
-
-                bool operator== (const Pattern& other) const {
-                    return variables == other.variables && colorType == other.colorType;
-                }
-                bool operator< (const Pattern& other) const {
-                    for (auto _var : variables) {
-                        if (other.variables.find(_var) == other.variables.end()) {
-                            return false;
-                        }
-                    } 
-                    return true;
-                }
-
-                void toString () const {
-                    std::cout << "{" << patternType << "," << expr->toString() << ","<<colorType->getName() << "}" << std::endl;
-                }
+        class Pattern {
+            private:
+                PatternType _patternType;
+                //std::shared_ptr<Colored::Expression> expr;
+                const Colored::Expression* _expr;
+                std::set<Variable*> _variables; //This could instead be Variable* (name, colortype), but then the colortype is duplicated
+                ColorType* _colorType;
+            public:
+                Pattern(PatternType patterntype, const Colored::Expression* expr, std::set<Variable*> variables, ColorType* colorType);
+                bool operator== (const Pattern& other) const;
+                bool operator< (const Pattern& other) const;
+                
+                void toString () const;
         };
 
-        typedef std::set<const Colored::Pattern*> PatternSet;
+        typedef std::set<Colored::Pattern> PatternSet;
 
     }
 }

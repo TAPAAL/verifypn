@@ -256,35 +256,36 @@ namespace PetriEngine {
     {
         _expr = transition.guard;
         std::set<Colored::Variable*> variables;
-        std::set<Colored::Variable*> guardVariables;
+        //std::set<Colored::Variable*> guardVariables;
         if (_expr != nullptr) {
             _expr->getVariables(variables);
-            _expr->getVariables(guardVariables);
+            /*_expr->getVariables(guardVariables);
             const Colored::Pattern guardPattern = {
                 Colored::PatternType::Guard,
                 _expr,
                 guardVariables,
                 nullptr,
             };
-            _patterns.insert(&guardPattern);
+            _patterns.insert(&guardPattern);*/
+            _expr->getPatterns(_patterns);
         }
         for (auto arc : transition.arcs) {
-            std::set<Colored::Variable*> arcVariables;
+            //std::set<Colored::Variable*> arcVariables;
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
-            arc.expr->getVariables(arcVariables);
+            /*arc.expr->getVariables(arcVariables);
             Colored::ColorType* ctype = places[arc.place].type;
             const Colored::Pattern arcPattern {
                 Colored::PatternType::ArcExp,
                 arc.expr,
                 arcVariables,
                 ctype,
-            };
-            _patterns.insert(&arcPattern);
+            };*/
+            arc.expr->getPatterns(_patterns);
         }
-
+        std::cout << _patterns.size() << endl;
         for (auto pat : _patterns) {
-            pat->toString();
+            pat.toString();
         }
         
 
