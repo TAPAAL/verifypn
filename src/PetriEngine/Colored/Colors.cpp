@@ -60,28 +60,28 @@ namespace PetriEngine {
         }
         
         bool Color::operator< (const Color& other) const {
-            if (_colorType == other._colorType) {
+            if (_colorType != other._colorType) {
                 throw "Cannot compare colors from different types";
             }
             return _id < other._id;
         }
         
         bool Color::operator> (const Color& other) const {
-            if (_colorType == other._colorType) {
+            if (_colorType != other._colorType) {
                 throw "Cannot compare colors from different types";
             }
             return _id > other._id;
         }
         
         bool Color::operator<= (const Color& other) const {
-            if (_colorType == other._colorType) {
+            if (_colorType != other._colorType) {
                 throw "Cannot compare colors from different types";
             }
             return _id <= other._id;
         }
         
         bool Color::operator>= (const Color& other) const {
-            if (_colorType == other._colorType) {
+            if (_colorType != other._colorType) {
                 throw "Cannot compare colors from different types";
             }
             return _id >= other._id;

@@ -28,6 +28,7 @@ namespace PetriEngine {
             uint32_t transition;
             ArcExpression_ptr expr;
             bool input;
+            bool activatable;
         };
         
         struct Transition {
@@ -40,6 +41,11 @@ namespace PetriEngine {
             std::string name;
             ColorType* type;
             Multiset marking;
+        };
+
+        struct ColorFixpoint {
+            std::set<Color> colors;
+            bool inQueue;
         };
     }
 }

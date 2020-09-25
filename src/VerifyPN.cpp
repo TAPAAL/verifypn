@@ -733,6 +733,9 @@ int main(int argc, char* argv[]) {
             }
         }
     }
+
+    cpnBuilder.computePlaceColorFixpoint();
+    cpnBuilder.printPlaceTable();
     
     auto builder = options.cpnOverApprox ? cpnBuilder.stripColors() : cpnBuilder.unfold();
     printUnfoldingStats(cpnBuilder, options);

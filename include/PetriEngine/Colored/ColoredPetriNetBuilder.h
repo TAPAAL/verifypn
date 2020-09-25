@@ -16,9 +16,49 @@
 #include "../PetriNetBuilder.h"
 
 namespace PetriEngine {
+
+    typedef std::unordered_map<std::string, Colored::ColorType*> ColorTypeMap;
+    class BindingGenerator {
+    public:
+        class Iterator {
+        private:
+            BindingGenerator* _generator;
+            
+        public:
+            Iterator(BindingGenerator* generator);
+            
+            bool operator==(Iterator& other);
+            bool operator!=(Iterator& other);
+            Iterator& operator++();
+            const Colored::ExpressionContext::BindingMap operator++(int);
+            Colored::ExpressionContext::BindingMap& operator*();
+        };
+    private:
+        Colored::GuardExpression_ptr _expr;
+        Colored::ExpressionContext::BindingMap _bindings;
+        ColorTypeMap& _colorTypes;
+        
+        bool eval();
+        
+    public:
+        BindingGenerator(Colored::Transition& transition,
+                ColorTypeMap& colorTypes);
+
+        BindingGenerator(const BindingGenerator& ) = default;
+        
+        BindingGenerator operator= (const BindingGenerator& b) {
+            return BindingGenerator(b);
+        }
+
+        Colored::ExpressionContext::BindingMap& nextBinding();
+        Colored::ExpressionContext::BindingMap& currentBinding();
+        bool isInitial() const;
+        Iterator begin();
+        Iterator end();
+    };
+
     class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
     public:
-        typedef std::unordered_map<std::string, Colored::ColorType*> ColorTypeMap;
         typedef std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>> PTPlaceMap;
         typedef std::unordered_map<std::string, std::vector<std::string>> PTTransitionMap;
         
@@ -109,9 +149,13 @@ namespace PetriEngine {
         
         PetriNetBuilder& unfold();
         PetriNetBuilder& stripColors();
+        void computePlaceColorFixpoint();
+        void printPlaceTable();
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
         std::unordered_map<std::string,uint32_t> _transitionnames;
+        std::unordered_map<uint32_t,std::vector<uint32_t>> _placePostTransitionMap;
+        std::unordered_map<uint32_t,BindingGenerator> _bindings;
         PTPlaceMap _ptplacenames;
         PTTransitionMap _pttransitionnames;
         uint32_t _nptplaces = 0;
@@ -121,10 +165,14 @@ namespace PetriEngine {
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
         std::vector<Colored::Arc> _arcs;
+        std::vector<Colored::ColorFixpoint> _placeColorFixpoints;
         ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
         bool _unfolded = false;
         bool _stripped = false;
+
+        std::vector<uint32_t> _placeFixpointQueue;
+
 
         double _time;
 
@@ -134,45 +182,15 @@ namespace PetriEngine {
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
                 bool input);
+
+
         
         void unfoldPlace(Colored::Place& place);
         void unfoldTransition(Colored::Transition& transition);
         void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name);
     };
     
-    class BindingGenerator {
-    public:
-        class Iterator {
-        private:
-            BindingGenerator* _generator;
-            
-        public:
-            Iterator(BindingGenerator* generator);
-            
-            bool operator==(Iterator& other);
-            bool operator!=(Iterator& other);
-            Iterator& operator++();
-            const Colored::ExpressionContext::BindingMap operator++(int);
-            Colored::ExpressionContext::BindingMap& operator*();
-        };
-    private:
-        Colored::GuardExpression_ptr _expr;
-        Colored::ExpressionContext::BindingMap _bindings;
-        ColoredPetriNetBuilder::ColorTypeMap& _colorTypes;
-        
-        bool eval();
-        
-    public:
-        BindingGenerator(Colored::Transition& transition,
-                const std::vector<Colored::Arc>& arcs,
-                ColoredPetriNetBuilder::ColorTypeMap& colorTypes);
 
-        Colored::ExpressionContext::BindingMap& nextBinding();
-        Colored::ExpressionContext::BindingMap& currentBinding();
-        bool isInitial() const;
-        Iterator begin();
-        Iterator end();
-    };
 }
 
 #endif /* COLOREDPETRINETBUILDER_H */
