@@ -111,8 +111,6 @@ namespace PetriEngine {
             virtual int evaluate(const EvaluationContext& context) = 0;
             int evalAndSet(const EvaluationContext& context);
             virtual void visit(Visitor& visitor) const = 0;
-            /** Convert expression to string */
-            virtual void toString(std::ostream&) const = 0;
             /** Expression type */
             virtual Types type() const = 0;
             /** Construct left/right side of equations used in query simplification */
@@ -210,8 +208,6 @@ namespace PetriEngine {
             virtual Result evalAndSet(const EvaluationContext& context) = 0;
             virtual void visit(Visitor& visitor) const = 0;
             
-            /** Convert condition to string */
-            virtual void toString(std::ostream&) const = 0;
             /** Export condition to TAPAAL query (add EF manually!) */
             virtual void toTAPAALQuery(std::ostream&, TAPAALConditionExportContext& context) const = 0;
             /** Get distance to query */
@@ -272,6 +268,7 @@ namespace PetriEngine {
             initialMarkingRW(const std::function<std::shared_ptr<Condition> ()>& func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw);
             virtual bool containsNext() const = 0;   
             virtual bool nestedDeadlock() const = 0;
+            void toString(std::ostream& os = std::cout);
         protected:
             //Value for checking if condition is trivially true or false.
             //0 is undecided (default), 1 is true, 2 is false.

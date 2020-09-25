@@ -59,6 +59,7 @@
 #include "PetriParse/PNMLParser.h"
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriEngine/PQL/PQL.h"
+#include "PetriEngine/PQL/CTLVisitor.h"
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
 #include "PetriEngine/STSolver.h"
@@ -446,8 +447,8 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
             stringstream buffer;
             buffer << qfile.rdbuf();
             string querystr = buffer.str(); // including EF and AG
-            //Parse XML the queries and querystr let be the index of xmlquery 
-        
+            //Parse XML the queries and querystr let be the index of xmlquery
+
             qstrings.push_back(querystring);
             //Validate query type
             if (querystr.substr(0, 2) != "EF" && querystr.substr(0, 2) != "AG") {
@@ -667,6 +668,22 @@ void writeQueries(vector<std::shared_ptr<Condition>>& queries, vector<std::strin
     out.close();
 }
 
+std::vector<Condition_ptr> getCTLQueries(const vector<Condition_ptr>& ctlStarQueries) {
+    std::vector<Condition_ptr> ctlQueries;
+    for (const auto& ctlStarQuery : ctlStarQueries) {
+        IsCTLVisitor isCtlVisitor;
+        ctlStarQuery->visit(isCtlVisitor);
+        if (isCtlVisitor.isCTL) {
+            AsCTL asCtl;
+            ctlStarQuery->visit(asCtl);
+            ctlQueries.push_back(asCtl.ctlQuery);
+        } else {
+            ctlQueries.push_back(nullptr);
+        }
+    }
+    return ctlQueries;
+}
+
 int main(int argc, char* argv[]) {
 
     options_t options;
@@ -692,7 +709,8 @@ int main(int argc, char* argv[]) {
 
     //----------------------- Parse Query -----------------------//
     std::vector<std::string> querynames;
-    auto queries = readQueries(options, querynames);
+    auto ctlStarQueries = readQueries(options, querynames);
+    auto queries = getCTLQueries(ctlStarQueries);
     
     if(options.printstatistics && options.queryReductionTimeout > 0)
     {
