@@ -1,7 +1,9 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-add_library(LTL ${HEADER_FILES}
-        LTLToBuchi.cpp)
+add_subdirectory(LTL_algorithm)
 
-target_link_libraries(LTL bddx)
+add_library(LTL ${HEADER_FILES}
+ProductSuccessorGenerator.cpp LTLToBuchi.cpp)
+
+target_link_libraries(LTL LTL_algorithm bddx)
 

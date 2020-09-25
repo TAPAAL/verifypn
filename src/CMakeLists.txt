@@ -5,7 +5,6 @@ add_subdirectory(LTL)
 add_subdirectory(PetriParse)
 add_subdirectory(PetriEngine)
 
-
 add_executable(verifypn-${ARCH_TYPE} VerifyPN.cpp)
 add_dependencies(verifypn-${ARCH_TYPE} glpk-ext)
 
