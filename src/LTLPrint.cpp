@@ -69,6 +69,7 @@
 #include "CTL/CTLEngine.h"
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
+#include "LTL/LTLToBuchi.h"
 
 #include <spot/tl/parse.hh>
 #include <spot/tl/print.hh>
@@ -672,13 +673,20 @@ void writeQueries(vector<std::shared_ptr<Condition>>& queries, vector<std::strin
 
 int main(int argc, char* argv[]) {
     QueryXMLParser parser;
+    //std::ifstream testfile{"/home/waefwerf/dev/P9/INPUTS/AirplaneLD-PT-0200/LTLCardinality.xml"};
     std::ifstream testfile{"/home/waefwerf/dev/tapaal/ltl_xml_parser/test_models/query-test002/query.xml"};
-    std::set<size_t> queries{1};
-    parser.parse(testfile, queries);
-    parser.printQueries(2);
-
-    std::cout << spot::parse_formula("[]<>p0 || <>[]p1") << '\n';
-    spot::formula f = spot::parse_formula("& & G p0 p1 p2");
-    print_latex_psl(std::cout, f) << '\n';
+    parser.parse(testfile, {});
+    auto queries = parser.queries;
+    for (int i = 1; i < 2/*queries.size()*/; ++i) {
+        std::cout << "=============== QUERY " << i << "===============" << std::endl;
+        parser.printQueries(i+1);
+        std::flush(std::cout);
+        LTL::makeBuchiAutomaton(queries[i]);
+        /* if (query.query) {
+              auto spot_query = LTL::toSpotFormat(query);
+              std::cout << "orig: " << spot_query << "\tconverted: " << spot::parse_formula(spot_query) << std::endl;
+        }*/
+    }
+    return 0;
 }
 

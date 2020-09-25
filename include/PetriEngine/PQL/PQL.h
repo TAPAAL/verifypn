@@ -190,7 +190,7 @@ namespace PetriEngine {
         };
         
         /** Base condition */
-        class Condition {
+        class Condition : public enable_shared_from_this<Condition> {
         public:
             enum Result {RUNKNOWN=-1,RFALSE=0,RTRUE=1};
         private:
@@ -275,6 +275,7 @@ namespace PetriEngine {
             uint32_t trivial = 0;
         };
         typedef std::shared_ptr<Condition> Condition_ptr;
+        using Condition_constptr = std::shared_ptr<const Condition>;
         typedef std::shared_ptr<Expr> Expr_ptr;
     } // PQL
 } // PetriEngine

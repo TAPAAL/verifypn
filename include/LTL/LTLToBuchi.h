@@ -8,52 +8,25 @@
 #ifndef VERIFYPN_LTLTOBUCHI_H
 #define VERIFYPN_LTLTOBUCHI_H
 
+#include "PetriParse/QueryParser.h"
 #include "PetriEngine/PQL/QueryPrinter.h"
+#include "BuchiSuccessorGenerator.h"
+
+#include <iostream>
+#include <string>
 
 namespace LTL {
-    /**
-     * Formula serializer to SPOT-compatible syntax.
-     */
-    class FormulaToSpotSyntax : public PetriEngine::PQL::QueryPrinter {
-    protected:
-        void _accept(const PetriEngine::PQL::NotCondition *element) override;
+    std::string toSpotFormat(const QueryItem &query);
+    void toSpotFormat(const QueryItem &query, std::ostream &os);
 
-        void _accept(const PetriEngine::PQL::AndCondition *element) override;
+    BuchiSuccessorGenerator makeBuchiAutomaton(const QueryItem &query);
 
-        void _accept(const PetriEngine::PQL::OrCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::CompareConjunction *element) override;
-
-        void _accept(const PetriEngine::PQL::LessThanCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::LessThanOrEqualCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::GreaterThanCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::GreaterThanOrEqualCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::EqualCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::NotEqualCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::FireableCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::BooleanCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::LiteralExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::PlusExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::MultiplyExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::MinusExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::SubtractExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::IdentifierExpr *element) override;
+    struct AtomicProposition {
+        Condition_constptr expression;
+        std::string text;
     };
+
+    using APInfo = std::vector<AtomicProposition>;
 }
 
 #endif //VERIFYPN_LTLTOBUCHI_H

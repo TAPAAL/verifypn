@@ -294,7 +294,7 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
         return BooleanCondition::TRUE_CONSTANT;
     } else if (elementName == "false") {
         return BooleanCondition::FALSE_CONSTANT;
-    } else if (elementName == "negation") {
+    } else if (elementName == "negation" || elementName == "not") {
         if (getChildCount(element) != 1) 
         {
             assert(false);
@@ -302,7 +302,7 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
         }
         if ((cond = parseBooleanFormula(element->first_node())) != nullptr)
             return std::make_shared<NotCondition>(cond);
-    } else if (elementName == "conjunction") {
+    } else if (elementName == "conjunction" || elementName == "and") {
         auto children = element->first_node();
         if (getChildCount(element) < 2) 
         {
@@ -322,7 +322,7 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
             cond = std::make_shared<AndCondition>(cond, child);
         }
         return cond;
-    } else if (elementName == "disjunction") {
+    } else if (elementName == "disjunction" || elementName == "or") {
         auto children = element->first_node();
         if (getChildCount(element) < 2) 
         {
