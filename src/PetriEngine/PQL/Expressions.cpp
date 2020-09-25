@@ -667,7 +667,7 @@ namespace PetriEngine {
             }
             return r;
         }
-        
+
         int32_t NaryExpr::preOp(const EvaluationContext& context) const {
             return _exprs[0]->evaluate(context);
         }
@@ -683,7 +683,7 @@ namespace PetriEngine {
             if(_exprs.size() == 0) return preOp(context);
             return NaryExpr::evaluate(context);
         }
-        
+
         int MinusExpr::evaluate(const EvaluationContext& context) {
             return -(_expr->evaluate(context));
         }
@@ -706,7 +706,7 @@ namespace PetriEngine {
             return RUNKNOWN;
         }
 
-        Condition::Result AGCondition::evaluate(const EvaluationContext& context) 
+        Condition::Result AGCondition::evaluate(const EvaluationContext& context)
         {
             if(_cond->evaluate(context) == RFALSE) return RFALSE;
             return RUNKNOWN;
@@ -722,7 +722,7 @@ namespace PetriEngine {
             return RUNKNOWN;
         }
 
-        
+
         Condition::Result UntilCondition::evaluate(const EvaluationContext& context) {
             auto r2 = _cond2->evaluate(context);
             if(r2 != RFALSE) return r2;
@@ -733,11 +733,11 @@ namespace PetriEngine {
             }
             return RUNKNOWN;
         }
-        
 
-        
+
+
         Condition::Result AndCondition::evaluate(const EvaluationContext& context) {
-            auto res = RTRUE;            
+            auto res = RTRUE;
             for(auto& c : _conds)
             {
                 auto r = c->evaluate(context);
@@ -748,7 +748,7 @@ namespace PetriEngine {
         }
 
         Condition::Result OrCondition::evaluate(const EvaluationContext& context) {
-            auto res = RFALSE;            
+            auto res = RFALSE;
             for(auto& c : _conds)
             {
                 auto r = c->evaluate(context);
@@ -757,7 +757,7 @@ namespace PetriEngine {
             }
             return res;
         }
-        
+
         Condition::Result CompareConjunction::evaluate(const EvaluationContext& context){
 //            auto rres = _org->evaluate(context);
             bool res = true;
@@ -769,7 +769,7 @@ namespace PetriEngine {
             }
             return (_negated xor res) ? RTRUE : RFALSE;
         }
-        
+
         Condition::Result CompareCondition::evaluate(const EvaluationContext& context) {
             int v1 = _expr1->evaluate(context);
             int v2 = _expr2->evaluate(context);
@@ -794,7 +794,7 @@ namespace PetriEngine {
             }
             return RTRUE;
         }
-        
+
         size_t UnfoldedUpperBoundsCondition::value(const MarkVal* marking)
         {
             size_t tmp = 0;
@@ -806,7 +806,7 @@ namespace PetriEngine {
             }
             return tmp;
         }
-        
+
         Condition::Result UnfoldedUpperBoundsCondition::evaluate(const EvaluationContext& context) {
             setUpperBound(value(context.marking()));
             return _max <= _bound ? RTRUE : RUNKNOWN;

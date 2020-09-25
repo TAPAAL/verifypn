@@ -60,8 +60,10 @@ public:
      */
     void producePostset(Structures::State& write, uint32_t t);
 
-private:
+protected:
     const PetriNet& _net;
+
+private:
     const Structures::State* _parent;
     uint32_t _suc_pcounter;
     uint32_t _suc_tcounter;

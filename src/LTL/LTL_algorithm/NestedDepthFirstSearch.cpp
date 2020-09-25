@@ -10,13 +10,13 @@ namespace LTL {
         return false; //TODO implement
     }
 
-    void NestedDepthFirstSearch::dfs(Structures::State &state) {
-        std::stack<Structures::State> todo;
-        std::stack<Structures::State*> call_stack;
-        Structures::State working;
+    void NestedDepthFirstSearch::dfs(LTL::Structures::ProductState &state) {
+        std::stack<LTL::Structures::ProductState> todo;
+        std::stack<LTL::Structures::ProductState*> call_stack;
+        LTL::Structures::ProductState working;
         todo.push(state);
         while (!todo.empty()) {
-            Structures::State curState = todo.top();
+            LTL::Structures::ProductState curState = todo.top();
 
             if (&curState == call_stack.top()) {
                 if (successorGenerator.isAccepting(curState)){
@@ -40,12 +40,12 @@ namespace LTL {
         }
     }
 
-    void NestedDepthFirstSearch::ndfs(Structures::State& state) {
-        std::stack<Structures::State> todo;
-        Structures::State working;
+    void NestedDepthFirstSearch::ndfs(Structures::ProductState& state) {
+        std::stack<Structures::ProductState> todo;
+        Structures::ProductState working;
         todo.push(state);
         while (!todo.empty()) {
-            Structures::State curState = todo.top();
+            Structures::ProductState curState = todo.top();
             todo.pop();
 
             if (!mark2.add(curState).first) {

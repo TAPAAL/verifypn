@@ -10,16 +10,17 @@
 
 #include "PetriParse/QueryParser.h"
 #include "PetriEngine/PQL/QueryPrinter.h"
-#include "BuchiSuccessorGenerator.h"
+//#include "BuchiSuccessorGenerator.h"
 
 #include <iostream>
 #include <string>
 
 namespace LTL {
+    class BuchiSuccessorGenerator;
     std::string toSpotFormat(const QueryItem &query);
     void toSpotFormat(const QueryItem &query, std::ostream &os);
 
-    BuchiSuccessorGenerator makeBuchiAutomaton(const QueryItem &query);
+    BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query);
 
     struct AtomicProposition {
         Condition_constptr expression;

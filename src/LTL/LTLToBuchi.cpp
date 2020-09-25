@@ -66,9 +66,15 @@ namespace LTL {
         auto begin() const {
             return std::begin(ap_info);
         }
+
         auto end() const {
             return std::end(ap_info);
         }
+
+        const APInfo &getAPInfo() const {
+            return ap_info;
+        }
+
     private:
         APInfo ap_info;
         bool is_quoted = false;
@@ -192,11 +198,11 @@ namespace LTL {
         (*top_quant)[0]->visit(spotConverter);
     }
 
-    BuchiSuccessorGenerator makeBuchiAutomaton(const QueryItem &query) {
+    BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query) {
         std::stringstream ss;
         FormulaToSpotSyntax spotConverter{ss};
         // FIXME nasty hack for top-level query, should be fixed elsewhere (e.g. asLTL)
-        auto top_quant = dynamic_cast<SimpleQuantifierCondition*>(query.query.get());
+        auto top_quant = dynamic_cast<SimpleQuantifierCondition*>(query.get());
         (*top_quant)[0]->visit(spotConverter);
 
         const std::string spotFormula = ss.str();
@@ -207,7 +213,7 @@ namespace LTL {
             automaton->register_ap(apinfo.text);
         }
 
-        return BuchiSuccessorGenerator{automaton};
+        return BuchiSuccessorGenerator{automaton, spotConverter.getAPInfo()};
     }
 
 }

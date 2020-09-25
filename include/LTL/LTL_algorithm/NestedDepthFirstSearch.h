@@ -18,14 +18,14 @@ namespace LTL {
     class NestedDepthFirstSearch : ModelChecker{
         bool isSatisfied() override;
     private:
-        Structures::StateSet mark1;
-        Structures::StateSet mark2;
-        Structures::State* seed;
-        Structures::DFSQueue searchQueue;
+        PetriEngine::Structures::StateSet mark1;
+        PetriEngine::Structures::StateSet mark2;
+        Structures::ProductState* seed;
+        PetriEngine::Structures::DFSQueue searchQueue;
         bool violation = false;
 
-        void dfs(Structures::State& state);
-        void ndfs(Structures::State& state);
+        void dfs(Structures::ProductState& state);
+        void ndfs(Structures::ProductState& state);
     };
 }
 
