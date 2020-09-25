@@ -69,6 +69,15 @@ namespace PetriEngine {
                 }
                 std::cout << std::endl;
             }
+
+            bool operator==(const State &rhs) const {
+                return _marking == rhs._marking;
+            }
+
+            bool operator!=(const State &rhs) const {
+                return !(rhs == *this);
+            }
+
         private:
             MarkVal* _marking;
         };

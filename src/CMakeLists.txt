@@ -3,6 +3,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 add_subdirectory(CTL)
 add_subdirectory(PetriParse)
 add_subdirectory(PetriEngine)
+add_subdirectory(LTL)
 
 
 add_executable(verifypn-${ARCH_TYPE} VerifyPN.cpp)
