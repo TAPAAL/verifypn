@@ -360,6 +360,12 @@ namespace PetriEngine {
                 patterns.insert(pattern);
             }
             
+            std::string toString() const override {
+                std::string res = _left->toString() + " < " + _right->toString();
+                return res;
+            }
+
+            
             LessThanExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
@@ -391,6 +397,12 @@ namespace PetriEngine {
                 );
                 patterns.insert(pattern);
             }
+
+            std::string toString() const override {
+                std::string res = _left->toString() + " > " + _right->toString();
+                return res;
+            }
+
             
             GreaterThanExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
@@ -424,6 +436,12 @@ namespace PetriEngine {
                 );
                 patterns.insert(pattern);
             }
+
+            std::string toString() const override {
+                std::string res = _left->toString() + " <= " + _right->toString();
+                return res;
+            }
+
             
             LessThanEqExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
@@ -458,6 +476,11 @@ namespace PetriEngine {
                 patterns.insert(pattern);
             }
             
+            std::string toString() const override {
+                std::string res = _left->toString() + " >= " + _right->toString();
+                return res;
+            }
+
             GreaterThanEqExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
         };
@@ -489,6 +512,11 @@ namespace PetriEngine {
                     nullptr
                 );
                 patterns.insert(pattern);
+            }
+
+            std::string toString() const override {
+                std::string res = _left->toString() + " == " + _right->toString();
+                return res;
             }
 
             EqualityExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
@@ -523,6 +551,11 @@ namespace PetriEngine {
                 );
                 patterns.insert(pattern);
             }
+
+            std::string toString() const override {
+                std::string res = _left->toString() + " != " + _right->toString();
+                return res;
+            }
             
             InequalityExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
@@ -555,6 +588,11 @@ namespace PetriEngine {
                 );
                 patterns.insert(pattern);
             }
+
+            std::string toString() const override {
+                std::string res = "!" + _expr->toString();
+                return res;
+            }
             
             NotExpression(GuardExpression_ptr&& expr) : _expr(std::move(expr)) {}
         };
@@ -580,6 +618,12 @@ namespace PetriEngine {
                 _left->getPatterns(patterns);
                 _right->getPatterns(patterns);
             }
+
+            std::string toString() const override {
+                std::string res = _left->toString() + " && " + _right->toString();
+                return res;
+            }
+
             AndExpression(GuardExpression_ptr&& left, GuardExpression_ptr&& right)
                     : _left(left), _right(right) {}
         };
@@ -611,6 +655,11 @@ namespace PetriEngine {
                     nullptr
                 );
                 patterns.insert(pattern);
+            }
+
+            std::string toString() const override {
+                std::string res = _left->toString() + " || " + _right->toString();
+                return res;
             }
 
             OrExpression(GuardExpression_ptr&& left, GuardExpression_ptr&& right)
