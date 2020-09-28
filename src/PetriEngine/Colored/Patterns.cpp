@@ -6,9 +6,7 @@
 namespace PetriEngine {
     namespace Colored {
         Pattern::Pattern(PatternType patterntype, const Colored::Expression* expr, std::set<Variable*> variables, ColorType* colorType) 
-                : _colorType(colorType), _variables(variables), _expr(expr), _patternType(patterntype){
-                    std::cout << patterntype << std::endl;
-                }
+                : _colorType(colorType), _variables(variables), _expr(expr), _patternType(patterntype){}
         bool Pattern::operator== (const Pattern& other) const {
             return _variables == other._variables && _colorType == other._colorType;
         }
@@ -22,10 +20,11 @@ namespace PetriEngine {
         }
 
         void Pattern::toString () const {
-            //std::cout << "{" << _patternType << "," << _expr->toString() << ","<<_colorType->getName() << "}" << std::endl;
-            std::cout << "{" << _patternType << ","  << "}" << std::endl;
-
+            if(_colorType != nullptr){
+                std::cout << "{" << _patternType << "," << _expr->toString() << ","<<_colorType->getName() << "}" << std::endl;
+            } else{
+                std::cout << "{" << _patternType << ","  << _expr->toString() << "}" << std::endl;
+            }
         }
-
     }
 }

@@ -283,7 +283,7 @@ namespace PetriEngine {
             };*/
             arc.expr->getPatterns(_patterns);
         }
-        std::cout << _patterns.size() << endl;
+        std::cout << "NEW TRANSITION BOI" << std::endl;
         for (auto pat : _patterns) {
             pat.toString();
         }

@@ -159,6 +159,7 @@ namespace PetriEngine {
                     std::set<Variable*>{},
                     _userOperator->getColorType()
                 );
+
                 patterns.insert(pattern);
             }
             std::string toString() const override {
