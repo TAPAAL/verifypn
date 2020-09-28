@@ -48,7 +48,7 @@ namespace PetriEngine {
                 void toString () const;
         };
 
-        typedef std::set<Colored::Pattern> PatternSet;
+        typedef std::vector<Colored::Pattern> PatternSet;
 
     }
 }

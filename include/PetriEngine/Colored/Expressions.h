@@ -122,7 +122,7 @@ namespace PetriEngine {
             }
 
             void getPatterns(PatternSet& patterns) const override{
-                std::cout << "var expression" << std::endl;
+                std::cout << "var expression with name: " << _variable->name << std::endl;
 
                 Colored::Pattern pattern(
                     Colored::PatternType::Var,
@@ -130,7 +130,8 @@ namespace PetriEngine {
                     {_variable},
                     _variable->colorType
                 );
-                patterns.insert(pattern);
+                pattern.toString();
+                patterns.push_back(pattern);
             }
 
             std::string toString() const override {
@@ -160,7 +161,7 @@ namespace PetriEngine {
                     _userOperator->getColorType()
                 );
 
-                patterns.insert(pattern);
+                patterns.push_back(pattern);
             }
             std::string toString() const override {
                 return _userOperator->toString();
@@ -228,7 +229,7 @@ namespace PetriEngine {
                     variables,
                     nullptr
                 );
-                patterns.insert(pattern);*/
+                patterns.push_back(pattern);*/
                 std::cout << "succ expression" << std::endl;
 
                 _color->getPatterns(patterns);
@@ -305,7 +306,7 @@ namespace PetriEngine {
                     //TODO: how to retrieve???
                     nullptr
                 );
-                patterns.insert(pattern);
+                patterns.push_back(pattern);
             }
 
             std::string toString() const override {
@@ -357,7 +358,7 @@ namespace PetriEngine {
                     variables,
                     nullptr
                 );
-                patterns.insert(pattern);
+                patterns.push_back(pattern);
             }
             
             std::string toString() const override {
@@ -395,7 +396,7 @@ namespace PetriEngine {
                     variables,
                     nullptr
                 );
-                patterns.insert(pattern);
+                patterns.push_back(pattern);
             }
 
             std::string toString() const override {
@@ -434,7 +435,7 @@ namespace PetriEngine {
                     variables,
                     nullptr
                 );
-                patterns.insert(pattern);
+                patterns.push_back(pattern);
             }
 
             std::string toString() const override {
@@ -473,7 +474,7 @@ namespace PetriEngine {
                     variables,
                     nullptr
                 );
-                patterns.insert(pattern);
+                patterns.push_back(pattern);
             }
             
             std::string toString() const override {
@@ -511,7 +512,7 @@ namespace PetriEngine {
                     variables,
                     nullptr
                 );
-                patterns.insert(pattern);
+                patterns.push_back(pattern);
             }
 
             std::string toString() const override {
@@ -549,7 +550,7 @@ namespace PetriEngine {
                     variables,
                     nullptr
                 );
-                patterns.insert(pattern);
+                patterns.push_back(pattern);
             }
 
             std::string toString() const override {
@@ -586,7 +587,7 @@ namespace PetriEngine {
                     //TODO: how to retrieve???
                     nullptr
                 );
-                patterns.insert(pattern);
+                patterns.push_back(pattern);
             }
 
             std::string toString() const override {
@@ -654,7 +655,7 @@ namespace PetriEngine {
                     variables,
                     nullptr
                 );
-                patterns.insert(pattern);
+                patterns.push_back(pattern);
             }
 
             std::string toString() const override {
@@ -710,7 +711,7 @@ namespace PetriEngine {
                     variables,
                     _sort
                 );
-                patterns.insert(pattern);
+                patterns.push_back(pattern);
             }
 
             std::string toString() const override {
@@ -890,7 +891,7 @@ namespace PetriEngine {
                     variables,
                     nullptr
                 );
-                patterns.insert(pattern);
+                patterns.push_back(pattern);
             }
 
             std::string toString() const override {

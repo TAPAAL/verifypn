@@ -20,10 +20,14 @@ namespace PetriEngine {
         }
 
         void Pattern::toString () const {
+            std::string variableString = "";
+            for(auto variable : _variables){
+                variableString.append(variable->name);
+            }
             if(_colorType != nullptr){
-                std::cout << "{" << _patternType << "," << _expr->toString() << ","<<_colorType->getName() << "}" << std::endl;
+                std::cout << "{" << _patternType << "," << _expr->toString() << ","<< "{" << variableString << "}, " <<_colorType->getName() << "}" << std::endl;
             } else{
-                std::cout << "{" << _patternType << ","  << _expr->toString() << "}" << std::endl;
+                std::cout << "{" << _patternType << ","  << _expr->toString()<< ","<< "{" << variableString << "}}" << std::endl;
             }
         }
     }
