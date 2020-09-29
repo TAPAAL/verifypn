@@ -28,8 +28,8 @@ namespace PetriEngine {
         class ColorType;
         enum PatternType {
             Constant = 0,
-            Var = 1,
-            Guard = 2,
+            Guard = 1,
+            Var = 2,
             Tuple = 3,
         };
 

@@ -288,7 +288,9 @@ PetriEngine::Colored::ColorExpression_ptr PNMLParser::parseColorExpression(rapid
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
             colors.push_back(parseColorExpression(it));
         }
-        return std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors));
+        std::shared_ptr<PetriEngine::Colored::TupleExpression> tupleExpr = std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors));
+        tupleExpr->setColorType(tupleExpr->getColorType(colorTypes));
+        return tupleExpr;
     } else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {
         return parseColorExpression(element->first_node());
     }

@@ -312,6 +312,7 @@ namespace PetriEngine {
         class TupleExpression : public ColorExpression {
         private:
             std::vector<ColorExpression_ptr> _colors;
+            ColorType* _colorType;
             
         public:
             const Color* eval(ExpressionContext& context) const override {
@@ -358,7 +359,7 @@ namespace PetriEngine {
                     this,
                     variables,
                     //TODO: how to retrieve???
-                    getColorType(colorTypes)
+                    _colorType
                 );
                 patterns.insert(pattern);
             }
@@ -382,6 +383,10 @@ namespace PetriEngine {
                 }
                 res += ")";
                 return res;
+            }
+
+            void setColorType(ColorType* ct){
+                _colorType = ct;
             }
 
             TupleExpression(std::vector<ColorExpression_ptr>&& colors)
