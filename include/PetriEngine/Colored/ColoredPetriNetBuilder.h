@@ -12,6 +12,7 @@
 #include <unordered_map>
 
 #include "ColoredNetStructures.h"
+#include "Patterns.h"
 #include "../AbstractPetriNetBuilder.h"
 #include "../PetriNetBuilder.h"
 
@@ -23,7 +24,7 @@ namespace PetriEngine {
         class Iterator {
         private:
             BindingGenerator* _generator;
-            
+                        
         public:
             Iterator(BindingGenerator* generator);
             
@@ -37,6 +38,7 @@ namespace PetriEngine {
         Colored::GuardExpression_ptr _expr;
         Colored::ExpressionContext::BindingMap _bindings;
         ColorTypeMap& _colorTypes;
+        Colored::PatternSet _patterns;
         
         bool eval();
         
@@ -191,8 +193,8 @@ namespace PetriEngine {
         void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name, bool input);
     };
     
+ 
 
 }
 
 #endif /* COLOREDPETRINETBUILDER_H */
-

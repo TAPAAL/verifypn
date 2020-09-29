@@ -137,7 +137,7 @@ namespace PetriEngine {
     }
     
     PetriNet* PetriNetBuilder::makePetriNet(bool reorder) {
-        
+
         /*
          * The basic idea is to construct three arrays, the first array, 
          * _invariants points to "arcs" - they are triplets (weight, place, inhibitor)
@@ -165,6 +165,8 @@ namespace PetriEngine {
         std::vector<uint32_t> place_prod_count = std::vector<uint32_t>(_places.size());
         std::vector<uint32_t> place_idmap = std::vector<uint32_t>(_places.size());
         std::vector<uint32_t> trans_idmap = std::vector<uint32_t>(_transitions.size());
+
+
         
         uint32_t invariants = 0;
         
@@ -183,6 +185,7 @@ namespace PetriEngine {
         {
             trans_idmap[i] = std::numeric_limits<uint32_t>::max();
         }
+
         
         PetriNet* net = new PetriNet(ntrans, invariants, nplaces);
         
@@ -192,7 +195,6 @@ namespace PetriEngine {
         uint32_t freetrans = 0;
         
         // first handle orphans
-        
         if(place_idmap.size() > next) place_idmap[next] = free;
         net->_placeToPtrs[free] = freetrans;
         for(size_t t = 0; t < _transitions.size(); ++t)
@@ -233,7 +235,6 @@ namespace PetriEngine {
                 ++freetrans;
             }
         }
-        
         
         bool first = true;
         while(next != std::numeric_limits<uint32_t>::max())
@@ -338,7 +339,6 @@ namespace PetriEngine {
         }
         
         // reindex place-names
-
         net->_placenames.resize(_placenames.size());
         int rindex = _placenames.size() - 1;
         for(auto& i : _placenames)
@@ -355,7 +355,6 @@ namespace PetriEngine {
                 --rindex;
             }
         }
-
         net->_transitionnames.resize(_transitionnames.size());
         int trindex = _transitionnames.size() - 1;
         for(auto& i : _transitionnames)
@@ -372,7 +371,7 @@ namespace PetriEngine {
             }
         }
         net->sort();
-        
+
         for(size_t t = 0; t < net->numberOfTransitions(); ++t)
         {
             {
@@ -420,7 +419,6 @@ namespace PetriEngine {
                 }
             }
         }
-        
         return net;
     }
     
