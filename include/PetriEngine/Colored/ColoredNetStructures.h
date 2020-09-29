@@ -27,14 +27,15 @@ namespace PetriEngine {
             uint32_t place;
             uint32_t transition;
             ArcExpression_ptr expr;
-            bool input;
             bool activatable;
+            bool input;
         };
         
         struct Transition {
             std::string name;
             GuardExpression_ptr guard;
-            std::vector<Arc> arcs;
+            std::vector<Arc> input_arcs;
+            std::vector<Arc> output_arcs;
         };
         
         struct Place {

@@ -93,12 +93,21 @@ namespace PetriEngine {
             virtual ~ColorExpression() {}
             
             virtual const Color* eval(ExpressionContext& context) const = 0;
+
+            virtual void getConstants(std::set<const Color*>& colors) const {
+            }
+
         };
         
         class DotConstantExpression : public ColorExpression {
         public:
             const Color* eval(ExpressionContext& context) const override {
                 return DotConstant::dotConstant();
+            }
+
+            void getConstants(std::set<const Color*>& colors) const override {
+                const Color *dotColor = DotConstant::dotConstant();
+                colors.insert(dotColor);
             }
         };
 
@@ -136,6 +145,10 @@ namespace PetriEngine {
 
             std::string toString() const override {
                 return _userOperator->toString();
+            }
+
+            void getConstants(std::set<const Color*>& colors) const override {
+                colors.insert(_userOperator);
             }
 
             UserOperatorExpression(const Color* userOperator)
@@ -189,6 +202,10 @@ namespace PetriEngine {
                 _color->getVariables(variables);
             }
 
+            void getConstants(std::set<const Color*>& colors) const override {
+                _color->getConstants(colors);
+            }
+
             std::string toString() const override {
                 return _color->toString() + "++";
             }
@@ -208,6 +225,10 @@ namespace PetriEngine {
             
             void getVariables(std::set<Variable*>& variables) const override {
                 _color->getVariables(variables);
+            }
+
+            void getConstants(std::set<const Color*>& colors) const override {
+                _color->getConstants(colors);
             }
 
             std::string toString() const override {
@@ -242,6 +263,18 @@ namespace PetriEngine {
                     elem->getVariables(variables);
                 }
             }
+
+            void getConstants(std::set<const Color*>& colors) const override {
+                std::set<const Color*> tupleColors;
+                for (auto elem : _colors) {
+                    elem->getConstants(tupleColors);
+                }
+
+                
+
+
+            }
+
 
             std::string toString() const override {
                 std::string res = "(" + _colors[0]->toString();
@@ -444,6 +477,8 @@ namespace PetriEngine {
             virtual void expressionType() override {
                 std::cout << "ArcExpression" << std::endl;
             }
+            virtual void getConstants(std::set<const Color*>& colors) const {
+            }
 
             virtual uint32_t weight() const = 0;
         };
@@ -464,6 +499,14 @@ namespace PetriEngine {
                 }
                 return colors;
             }
+
+            void getConstants(std::set<const Color*>& colors) const {
+                for(auto color : *_sort) {
+                    colors.insert(&color);
+                }
+            }
+
+            
 
             size_t size() const {
                 return  _sort->size();
@@ -509,6 +552,14 @@ namespace PetriEngine {
                     return;
                 for (auto elem : _color) {
                     elem->getVariables(variables);
+                }
+            }
+
+            void getConstants(std::set<const Color*>& colors) const override {
+                if (_all != nullptr)
+                    _all->getConstants(colors);
+                else for (auto elem : _color) {
+                    elem->getConstants(colors);
                 }
             }
 
@@ -569,6 +620,12 @@ namespace PetriEngine {
                 }
             }
 
+            void getConstants(std::set<const Color*>& colors) const override {
+                for (auto elem : _constituents) {
+                    elem->getConstants(colors);
+                }
+            }
+
             uint32_t weight() const override {
                 uint32_t res = 0;
                 for (auto expr : _constituents) {
@@ -602,6 +659,11 @@ namespace PetriEngine {
             void getVariables(std::set<Variable*>& variables) const override {
                 _left->getVariables(variables);
                 _right->getVariables(variables);
+            }
+
+            void getConstants(std::set<const Color*>& colors) const override {
+                _left->getConstants(colors);
+                _right->getConstants(colors);
             }
 
             uint32_t weight() const override {
@@ -638,6 +700,10 @@ namespace PetriEngine {
             
             void getVariables(std::set<Variable*>& variables) const override {
                 _expr->getVariables(variables);
+            }
+
+            void getConstants(std::set<const Color*>& colors) const override {
+                _expr->getConstants(colors);
             }
 
             uint32_t weight() const override {

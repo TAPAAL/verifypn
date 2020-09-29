@@ -108,7 +108,7 @@ namespace PetriEngine {
         assert(expr != nullptr);
         arc.expr = std::move(expr);
         arc.input = input;
-        _transitions[t].arcs.push_back(std::move(arc));
+        input? _transitions[t].input_arcs.push_back(std::move(arc)): _transitions[t].output_arcs.push_back(std::move(arc));
     }
 
     void ColoredPetriNetBuilder::addColorType(const std::string& id, Colored::ColorType* type) {
@@ -142,134 +142,110 @@ namespace PetriEngine {
 
             PetriEngine::Colored::ColorFixpoint& colorfixpoint = _placeColorFixpoints[currentPlaceId];
 
-            colorfixpoint.inQueue = false;
-
             std::vector<uint32_t> connectedTransitions = _placePostTransitionMap[currentPlaceId];
             
             for (uint32_t transitionId : connectedTransitions) {
                 
                 Colored::Transition& transition = _transitions[transitionId];
 
-                auto bindingMap = _bindings.find(transitionId);
+                bool transitionActivated = true;
 
-                if ( bindingMap == _bindings.end()) {
-                    BindingGenerator gen {transition, _colors};
-                    _bindings.emplace(std::make_pair(transitionId, gen));
+                for (auto& arc : transition.input_arcs) {
+                    if (arc.place == currentPlaceId) {
+                        std::set<Colored::Variable *> variables;
+                        arc.expr.get()->getVariables(variables);
 
-                    for (auto binding : gen) {
+                        if (variables.empty()) {
+                            // check what colors are on the arcs againts the ones in this place
+                            
+                        } else {
+                            auto bindingMap = _bindings.find(transitionId);
 
-                        Colored::ExpressionContext context {binding, _colors};
+                            if ( bindingMap == _bindings.end()) {
+                                BindingGenerator gen {transition, _colors};
+                                _bindings.emplace(std::make_pair(transitionId, gen));
 
-                        
-                        bool transitionActivated = true;
+                                for (auto binding : gen) {
 
-                        for (auto& arc : transition.arcs) {
-                            if (arc.input && arc.place == currentPlaceId) {
+                                    Colored::ExpressionContext context {binding, _colors};           
 
-                                Colored::Multiset ms = arc.expr->eval(context);
-
-                                std::set<Colored::Color> colors;
-                                //extract the color vector from the multiset
-                                for (auto colorPair : ms) {
-                                    colors.insert(*colorPair.first);
-                                }
-                                
-                                if (std::includes(colorfixpoint.colors.begin(), colorfixpoint.colors.end(), 
-                                colors.begin(), colors.end())) {
-                                    arc.activatable = true;
-                                } else {
-                                    transitionActivated = false;
-                                    break;
-                                }
-                                
-                            } else if (arc.input && !arc.activatable) {
-                                transitionActivated = false;
-                            }
-                        }
-                        
-
-                        if (transitionActivated) {
-                            for (auto& arc : transition.arcs) {
-                                if (!arc.input) {
                                     Colored::Multiset ms = arc.expr->eval(context);
-                                    Colored::ColorFixpoint& placeFixpoint = _placeColorFixpoints[arc.place];
-
-                                    auto colorsBefore = placeFixpoint.colors.size();
 
                                     std::set<Colored::Color> colors;
                                     //extract the color vector from the multiset
                                     for (auto colorPair : ms) {
                                         colors.insert(*colorPair.first);
                                     }
-                                    placeFixpoint.colors.insert(colors.begin(), colors.end());
                                     
-                                    if (placeFixpoint.colors.size() > colorsBefore && !placeFixpoint.inQueue){
-                                        _placeFixpointQueue.push_back(arc.place);
-                                        placeFixpoint.inQueue = true;
+                                    if (std::includes(colorfixpoint.colors.begin(), colorfixpoint.colors.end(), 
+                                    colors.begin(), colors.end())) {
+                                        arc.activatable = true;
+                                    } else {
+                                        transitionActivated = false;
+                                        break;
+                                    }
+                                            
+                                }                                 
+                            } else for (auto binding : bindingMap->second) {
+
+                                Colored::ExpressionContext context {binding, _colors};
+
+                                
+                                bool transitionActivated = true;
+
+                                if (arc.place == currentPlaceId) {
+
+                                    Colored::Multiset ms = arc.expr->eval(context);
+
+                                    std::set<Colored::Color> colors;
+                                    //extract the color vector from the multiset
+                                    for (auto colorPair : ms) {
+                                        colors.insert(*colorPair.first);
                                     }
                                     
-                                }
+                                    if (std::includes(colorfixpoint.colors.begin(), colorfixpoint.colors.end(), 
+                                    colors.begin(), colors.end())) {
+                                        arc.activatable = true;
+                                    } else {
+                                        transitionActivated = false;
+                                        break;
+                                    }
+                                    
+                                } else if (!arc.activatable) {
+                                    transitionActivated = false;
+                                }                                
                             }
                         }
-
-                    }
-                } else for (auto binding : bindingMap->second) {
-
-                    Colored::ExpressionContext context {binding, _colors};
-
-                    
-                    bool transitionActivated = true;
-
-                    for (auto& arc : transition.arcs) {
-                        if (arc.input && arc.place == currentPlaceId) {
-
-                            Colored::Multiset ms = arc.expr->eval(context);
-
-                            std::set<Colored::Color> colors;
-                            //extract the color vector from the multiset
-                            for (auto colorPair : ms) {
-                                colors.insert(*colorPair.first);
-                            }
-                            
-                            if (std::includes(colorfixpoint.colors.begin(), colorfixpoint.colors.end(), 
-                            colors.begin(), colors.end())) {
-                                arc.activatable = true;
-                            } else {
-                                transitionActivated = false;
-                                break;
-                            }
-                            
-                        } else if (arc.input && !arc.activatable) {
-                            transitionActivated = false;
-                        }
-                    }
-                    
-
-                    if (transitionActivated) {
-                        for (auto& arc : transition.arcs) {
-                            if (!arc.input) {
-                                Colored::Multiset ms = arc.expr->eval(context);
-                                Colored::ColorFixpoint& placeFixpoint = _placeColorFixpoints[arc.place];
-
-                                auto colorsBefore = placeFixpoint.colors.size();
-
-                                std::set<Colored::Color> colors;
-                                //extract the color vector from the multiset
-                                for (auto colorPair : ms) {
-                                    colors.insert(*colorPair.first);
-                                }
-                                placeFixpoint.colors.insert(colors.begin(), colors.end());
-                                
-                                if (placeFixpoint.colors.size() > colorsBefore && !placeFixpoint.inQueue){
-                                    _placeFixpointQueue.push_back(arc.place);
-                                    placeFixpoint.inQueue = true;
-                                }
-                                
-                            }
-                        }
-                    }
-
+                    } else if (!arc.activatable) {
+                        transitionActivated = false;
+                    }                
                 }
+
+                if (transitionActivated) {
+                    for (auto& arc : transition.output_arcs) {
+                        Colored::ColorFixpoint& placeFixpoint = _placeColorFixpoints[arc.place];
+                        if (placeFixpoint.inQueue) break;
+                        
+                        //Colored::Multiset ms = arc.expr->eval(context);
+                        //If variable, use colortsum += t.input_arcs.size();ype otherwise use color
+
+                        auto colorsBefore = placeFixpoint.colors.size();
+
+                        std::set<Colored::Color> colors;
+                        //extract the color vector from the multiset
+                        // for (auto colorPair : ms) {
+                        //     colors.insert(*colorPair.first);
+                        // }
+                        placeFixpoint.colors.insert(colors.begin(), colors.end());
+                        
+                        if (placeFixpoint.colors.size() > colorsBefore){
+                            _placeFixpointQueue.push_back(arc.place);
+                            placeFixpoint.inQueue = true;
+                        }                           
+                    }
+                } 
+                
+                
 
                 //update the colortype of variables such that bindings generate only valid vlaues
 
@@ -326,13 +302,16 @@ namespace PetriEngine {
             _ptBuilder.addTransition(name, 0.0, 0.0);
             _pttransitionnames[transition.name].push_back(name);
             ++_npttransitions;
-            for (auto& arc : transition.arcs) {
-                unfoldArc(arc, b, name);
+            for (auto& arc : transition.input_arcs) {
+                unfoldArc(arc, b, name, true );
+            }
+            for (auto& arc : transition.output_arcs) {
+                unfoldArc(arc, b, name, false);
             }
         }
     }
 
-    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName) {
+    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName, bool input) {
         Colored::ExpressionContext context {binding, _colors};
         auto ms = arc.expr->eval(context);
 
@@ -341,7 +320,7 @@ namespace PetriEngine {
                 continue;
             }
             const std::string& pName = _ptplacenames[_places[arc.place].name][color.first->getId()];
-            if (arc.input) {
+            if (input) {
                 _ptBuilder.addInputArc(pName, tName, false, color.second);
             } else {
                 _ptBuilder.addOutputArc(tName, pName, color.second);
@@ -359,17 +338,23 @@ namespace PetriEngine {
 
             for (auto& transition : _transitions) {
                 _ptBuilder.addTransition(transition.name, 0.0, 0.0);
-                for (auto& arc : transition.arcs) {
+                for (auto& arc : transition.input_arcs) {
                     try {
-                        if (arc.input) {
-                            _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false,
-                                                   arc.expr->weight());
-                        } else {
-                            _ptBuilder.addOutputArc(_transitions[arc.transition].name, _places[arc.place].name,
-                                                    arc.expr->weight());
-                        }
+                        _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false,
+                                                arc.expr->weight());
                     } catch (Colored::WeightException& e) {
-                        std::cerr << "Exception on arc: " << arcToString(arc) << std::endl;
+                        std::cerr << "Exception on input arc: " << arcToString(arc) << std::endl;
+                        std::cerr << "In expression: " << arc.expr->toString() << std::endl;
+                        std::cerr << e.what() << std::endl;
+                        exit(ErrorCode);
+                    }
+                }
+                for (auto& arc : transition.output_arcs) {
+                    try {
+                        _ptBuilder.addOutputArc(_transitions[arc.transition].name, _places[arc.place].name,
+                                                arc.expr->weight());
+                    } catch (Colored::WeightException& e) {
+                        std::cerr << "Exception on output arc: " << arcToString(arc) << std::endl;
                         std::cerr << "In expression: " << arc.expr->toString() << std::endl;
                         std::cerr << e.what() << std::endl;
                         exit(ErrorCode);
@@ -426,7 +411,11 @@ namespace PetriEngine {
         if (_expr != nullptr) {
             _expr->getVariables(variables);
         }
-        for (auto arc : transition.arcs) {
+        for (auto arc : transition.input_arcs) {
+            assert(arc.expr != nullptr);
+            arc.expr->getVariables(variables);
+        }
+        for (auto arc : transition.output_arcs) {
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
         }

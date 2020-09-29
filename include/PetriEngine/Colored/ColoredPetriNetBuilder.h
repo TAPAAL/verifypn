@@ -117,7 +117,8 @@ namespace PetriEngine {
         uint32_t getArcCount() const {
             uint32_t sum = 0;
             for (auto& t : _transitions) {
-                sum += t.arcs.size();
+                sum += t.input_arcs.size();
+                sum += t.output_arcs.size();
             }
             return sum;
         }
@@ -187,7 +188,7 @@ namespace PetriEngine {
         
         void unfoldPlace(Colored::Place& place);
         void unfoldTransition(Colored::Transition& transition);
-        void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name);
+        void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name, bool input);
     };
     
 
