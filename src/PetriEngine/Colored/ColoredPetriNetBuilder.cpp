@@ -267,7 +267,7 @@ namespace PetriEngine {
                 nullptr,
             };
             _patterns.insert(&guardPattern);*/
-            _expr->getPatterns(_patterns);
+            _expr->getPatterns(_patterns, _colorTypes);
         }
         for (auto arc : transition.arcs) {
             //std::set<Colored::Variable*> arcVariables;
@@ -281,14 +281,12 @@ namespace PetriEngine {
                 arcVariables,
                 ctype,
             };*/
-            arc.expr->getPatterns(_patterns);
-            if(transition.name == "elaborate2"){
-            for (auto pat : _patterns) {
-                pat.toString();
-            }
-            }   
+            arc.expr->getPatterns(_patterns, _colorTypes);
         }
         std::cout << "NEW TRANSITION BOI: " << transition.name << std::endl;
+        for (auto pat : _patterns) {
+            pat.toString();
+        }
         
 
         for (auto var : variables) {

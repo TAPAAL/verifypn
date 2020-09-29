@@ -79,7 +79,7 @@ namespace PetriEngine {
             virtual void getVariables(std::set<Variable*>& variables) const {
             }
 
-            virtual void getPatterns(PatternSet& patterns) const {
+            virtual void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const {
             }
             
             virtual void expressionType() {
@@ -97,12 +97,18 @@ namespace PetriEngine {
             virtual ~ColorExpression() {}
             
             virtual const Color* eval(ExpressionContext& context) const = 0;
+
+            virtual ColorType* getColorType(std::unordered_map<std::string,Colored::ColorType*>& colorTypes) const = 0;
         };
         
         class DotConstantExpression : public ColorExpression {
         public:
             const Color* eval(ExpressionContext& context) const override {
                 return DotConstant::dotConstant();
+            }
+
+            ColorType* getColorType(std::unordered_map<std::string,Colored::ColorType*>& colorTypes) const override{
+                return DotConstant::dotConstant()->getColorType();
             }
         };
 
@@ -121,14 +127,14 @@ namespace PetriEngine {
                 variables.insert(_variable);
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "var expression with name: " << _variable->name << std::endl;
 
                 Colored::Pattern pattern(
                     Colored::PatternType::Var,
                     this,
                     {_variable},
-                    _variable->colorType
+                    getColorType(colorTypes)
                 );
                 pattern.toString();
                 std::pair<std::set<Colored::Pattern>::iterator, bool> res = patterns.insert(pattern);
@@ -137,6 +143,10 @@ namespace PetriEngine {
 
             std::string toString() const override {
                 return _variable->name;
+            }
+
+            ColorType* getColorType(std::unordered_map<std::string,Colored::ColorType*>& colorTypes) const override{
+                return _variable->colorType;
             }
 
             VariableExpression(Variable* variable)
@@ -152,20 +162,24 @@ namespace PetriEngine {
                 return _userOperator;
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "UserOp expression" << std::endl;
 
                 Colored::Pattern pattern(
                     Colored::PatternType::Constant,
                     this,
                     std::set<Variable*>{},
-                    _userOperator->getColorType()
+                    getColorType(colorTypes)
                 );
 
                 patterns.insert(pattern);
             }
             std::string toString() const override {
                 return _userOperator->toString();
+            }
+
+            ColorType* getColorType(std::unordered_map<std::string,Colored::ColorType*>& colorTypes) const override{
+                return _userOperator->getColorType();
             }
 
             UserOperatorExpression(const Color* userOperator)
@@ -177,7 +191,7 @@ namespace PetriEngine {
             ColorType* _userSort;
             
         public:
-        //TODO: pattern?
+            //TODO: pattern?
             ColorType* eval(ExpressionContext& context) const {
                 return _userSort;
             }
@@ -221,7 +235,7 @@ namespace PetriEngine {
                 _color->getVariables(variables);
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 /*std::set<Variable*> variables = {};
                 getVariables(variables);
                 Colored::Pattern pattern (
@@ -233,11 +247,15 @@ namespace PetriEngine {
                 patterns.insert(pattern);*/
                 std::cout << "succ expression" << std::endl;
 
-                _color->getPatterns(patterns);
+                _color->getPatterns(patterns, colorTypes);
             }
 
             std::string toString() const override {
                 return _color->toString() + "++";
+            }
+
+            ColorType* getColorType(std::unordered_map<std::string,Colored::ColorType*>& colorTypes) const override{
+                return _color->getColorType(colorTypes);
             }
 
             SuccessorExpression(ColorExpression_ptr&& color)
@@ -260,10 +278,14 @@ namespace PetriEngine {
             std::string toString() const override {
                 return _color->toString() + "--";
             }
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "pred expression" << std::endl;
 
-                _color->getPatterns(patterns);
+                _color->getPatterns(patterns, colorTypes);
+            }
+
+            ColorType* getColorType(std::unordered_map<std::string,Colored::ColorType*>& colorTypes) const override{
+                return _color->getColorType(colorTypes);
             }
 
             PredecessorExpression(ColorExpression_ptr&& color)
@@ -294,8 +316,22 @@ namespace PetriEngine {
                     elem->getVariables(variables);
                 }
             }
+            ColorType* getColorType(std::unordered_map<std::string,Colored::ColorType*>& colorTypes) const override{
+                std::vector<const ColorType*> types;
+                for (auto color : _colors) {
+                    types.push_back(color->getColorType(colorTypes));
+                }
+                for (auto& elem : colorTypes) {
+                    auto* pt = dynamic_cast<ProductType*>(elem.second);
+                    if (pt && pt->containsTypes(types)) {
+                        return pt;
+                    }
+                }
+                std::cout << "COULD NOT FIND PRODUCT TYPE" << std::endl;
+                return nullptr;
 
-            void getPatterns(PatternSet& patterns) const override{
+            }
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "tuple expression" << std::endl;
 
                 std::set<Variable*> variables = {};
@@ -305,7 +341,7 @@ namespace PetriEngine {
                     this,
                     variables,
                     //TODO: how to retrieve???
-                    nullptr
+                    getColorType(colorTypes)
                 );
                 patterns.insert(pattern);
             }
@@ -348,7 +384,7 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "lt expression" << std::endl;
 
                 std::set<Variable*> variables = {};
@@ -387,7 +423,7 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "gt expression" << std::endl;
                 std::set<Variable*> variables = {};
                 getVariables(variables);
@@ -425,7 +461,7 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "lteq expression" << std::endl;
 
                 std::set<Variable*> variables = {};
@@ -464,7 +500,7 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "gteq expression" << std::endl;
 
                 std::set<Variable*> variables = {};
@@ -502,7 +538,7 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
             
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "eq expression" << std::endl;
 
                 std::set<Variable*> variables = {};
@@ -540,7 +576,7 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "ineq expression" << std::endl;
 
                 std::set<Variable*> variables = {};
@@ -576,7 +612,7 @@ namespace PetriEngine {
                 _expr->getVariables(variables);
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "not expression" << std::endl;
 
                 std::set<Variable*> variables = {};
@@ -614,11 +650,11 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
             
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "and expression" << std::endl;
 
-                _left->getPatterns(patterns);
-                _right->getPatterns(patterns);
+                _left->getPatterns(patterns, colorTypes);
+                _right->getPatterns(patterns, colorTypes);
             }
 
             std::string toString() const override {
@@ -645,7 +681,7 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
             
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "or expression" << std::endl;
 
                 std::set<Variable*> variables = {};
@@ -703,7 +739,7 @@ namespace PetriEngine {
                 return  _sort->size();
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "all expression" << std::endl;
                 std::set<Variable*> variables = {};
                 Colored::Pattern pattern (
@@ -758,13 +794,13 @@ namespace PetriEngine {
                 }
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "numOfExpr" << std::endl;
                 if(_all != nullptr){
-                    _all->getPatterns(patterns);
+                    _all->getPatterns(patterns,colorTypes);
                 } else{
                     for (auto elem : _color) {
-                        elem->getPatterns(patterns);
+                        elem->getPatterns(patterns, colorTypes);
                     }
                 }
             }
@@ -834,10 +870,10 @@ namespace PetriEngine {
                 return res;
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "add expression" << std::endl;
                 for (auto elem : _constituents) {
-                    elem->getPatterns(patterns);
+                    elem->getPatterns(patterns, colorTypes);
                 }
             }
 
@@ -882,7 +918,7 @@ namespace PetriEngine {
                 return _left->weight() - val;
             }
 
-            void getPatterns(PatternSet& patterns) const override{
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
                 std::cout << "sub expression" << std::endl;
                 std::set<Variable*> variables = {};
                 getVariables(variables);
@@ -925,10 +961,10 @@ namespace PetriEngine {
                 return std::to_string(_scalar) + " * " + _expr->toString();
             }
 
-            void getPatterns(PatternSet& patterns){
+            void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes){
                 std::cout << "scalar expression" << std::endl;
 
-                _expr->getPatterns(patterns);
+                _expr->getPatterns(patterns, colorTypes);
             }
 
             ScalarProductExpression(ArcExpression_ptr&& expr, uint32_t scalar)
