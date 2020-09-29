@@ -8,7 +8,12 @@ namespace PetriEngine {
         Pattern::Pattern(PatternType patterntype, const Colored::Expression* expr, std::set<Variable*> variables, ColorType* colorType) 
                 : _colorType(colorType), _variables(variables), _expr(expr), _patternType(patterntype){}
         bool Pattern::operator== (const Pattern& other) const {
-            return _variables == other._variables && _colorType == other._colorType;
+            if (_patternType == 2 && other._patternType == 2) {
+                return _variables == other._variables && _colorType == other._colorType && _expr->toString() == other._expr->toString();
+            }
+            else {
+                return _patternType == other._patternType && _variables == other._variables && _colorType == other._colorType;
+            }            
         }
         bool Pattern::operator< (const Pattern& other) const {
             for (auto _var : _variables) {
@@ -30,5 +35,10 @@ namespace PetriEngine {
                 std::cout << "{" << _patternType << ","  << _expr->toString()<< ","<< "{" << variableString << "}}" << std::endl;
             }
         }
+        
+        bool pattern_compare::operator() (const Pattern& left, const Pattern& right) const {
+            return !(left == right);
+        }
+
     }
 }

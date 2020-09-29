@@ -283,14 +283,12 @@ namespace PetriEngine {
             };*/
             arc.expr->getPatterns(_patterns);
             if(transition.name == "elaborate2"){
-                for (auto pat : _patterns) {
-                    pat.toString();
-                }
+            for (auto pat : _patterns) {
+                pat.toString();
             }
-            
+            }   
         }
         std::cout << "NEW TRANSITION BOI: " << transition.name << std::endl;
-        
         
 
         for (auto var : variables) {

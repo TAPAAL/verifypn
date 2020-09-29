@@ -38,18 +38,22 @@ namespace PetriEngine {
                 PatternType _patternType;
                 //std::shared_ptr<Colored::Expression> expr;
                 const Colored::Expression* _expr;
-                std::set<Variable*> _variables; //This could instead be Variable* (name, colortype), but then the colortype is duplicated
+                std::set<Variable*> _variables;
                 ColorType* _colorType;
             public:
                 Pattern(PatternType patterntype, const Colored::Expression* expr, std::set<Variable*> variables, ColorType* colorType);
                 bool operator== (const Pattern& other) const;
                 bool operator< (const Pattern& other) const;
-                
+
                 void toString () const;
         };
+        struct pattern_compare {
+            bool operator() (const Pattern& left, const Pattern& right) const;
+        };
 
-        typedef std::vector<Colored::Pattern> PatternSet;
+        typedef std::set<Colored::Pattern, Colored::pattern_compare> PatternSet;
 
+        //typedef std::set<Colored::Pattern> PatternSet;
     }
 }
 
