@@ -29,7 +29,7 @@ namespace LTL::Structures {
         }
 
     private:
-        size_t buchi_state = std::numeric_limits<size_t>::max();
+        size_t buchi_state;
         friend class LTL::ProductSuccessorGenerator;
     };
 }

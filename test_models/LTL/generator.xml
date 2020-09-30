@@ -17,4 +17,36 @@
       </all-paths>
     </formula>
   </property>
+  <property>
+    <id>Query Comment/Name Here</id>
+    <description>Query Comment/Name Here</description>
+    <formula>
+      <all-paths>
+        <globally>
+          <integer-eq>
+            <tokens-count>
+              <place>P1</place>
+            </tokens-count>
+            <integer-constant>1</integer-constant>
+          </integer-eq>
+        </globally>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Query Comment/Name Here</id>
+    <description>Query Comment/Name Here</description>
+    <formula>
+      <all-paths>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>P0</place>
+            </tokens-count>
+            <integer-constant>2</integer-constant>
+          </integer-eq>
+        </finally>
+      </all-paths>
+    </formula>
+  </property>
 </property-set>

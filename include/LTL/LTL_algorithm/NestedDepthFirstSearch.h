@@ -23,6 +23,8 @@ namespace LTL {
         bool isSatisfied() override;
 
     private:
+        using State = LTL::Structures::ProductState;
+
         PetriEngine::Structures::StateSet mark1;
         PetriEngine::Structures::StateSet mark2;
         Structures::ProductState *seed = nullptr;

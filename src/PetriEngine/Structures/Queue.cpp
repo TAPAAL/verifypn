@@ -70,7 +70,14 @@ namespace PetriEngine {
         {
             _stack.push(id);
         }
-        
+
+        bool DFSQueue::top(State &state) const {
+            if(_stack.empty()) return false;
+            uint32_t n = _stack.top();
+            _states->decode(state, n);
+            return true;
+        }
+
         RDFSQueue::RDFSQueue(StateSetInterface* states) : Queue(states) {}
         RDFSQueue::~RDFSQueue(){}
        

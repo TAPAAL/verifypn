@@ -22,9 +22,6 @@ namespace LTL {
         }
 
         void prepare(size_t state) {
-            if (state == std::numeric_limits<size_t>::max()) {
-                state = aut.buchi->get_init_state_number();
-            }
             auto curstate = aut.buchi->state_from_number(state);
             succ = aut.buchi->succ_iter(curstate);
             succ->first();
@@ -40,11 +37,15 @@ namespace LTL {
             return false;
         }
 
-        bool is_accepting(size_t state) {
+        [[nodiscard]] bool is_accepting(size_t state) const {
             return aut.buchi->state_is_accepting(state);
         }
 
-        Condition_ptr getExpression(size_t i) {
+        [[nodiscard]] size_t initial_state_number() const {
+            return aut.buchi->get_init_state_number();
+        }
+
+        [[nodiscard]] Condition_ptr getExpression(size_t i) const {
             return aut.ap_info[i].expression;
         }
 

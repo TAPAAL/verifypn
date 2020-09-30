@@ -66,12 +66,12 @@ ReturnValue parseModel(AbstractPetriNetBuilder &builder, const std::string &file
     if (!model_file) {
         fprintf(stderr, "Error: Model file \"%s\" couldn't be opened\n", filename.c_str());
         fprintf(stdout, "CANNOT_COMPUTE\n");
-        return ReturnValue::ErrorCode;
+        return ErrorCode;
     }
 
     PNMLParser parser;
     parser.parse(model_file, &builder);
-    return ReturnValue::ContinueCode;
+    return ContinueCode;
 }
 
 /**
@@ -107,7 +107,7 @@ void LTLMain(const std::string& model_file, const std::string& qfilename) {
     //std::string qfilename = //"/home/waefwerf/dev/P9/INPUTS/AirplaneLD-PT-0200/LTLCardinality.xml";
     std::ifstream queryfile{qfilename};
     assert(queryfile.is_open());
-    std::set<size_t> queries{0};
+    std::set<size_t> queries{};
     parser.parse(queryfile, queries);
 
     PetriNetBuilder builder;
