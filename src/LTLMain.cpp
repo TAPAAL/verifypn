@@ -1,6 +1,6 @@
-#include <stdio.h>
+#include <cstdio>
 #include <string>
-#include <string.h>
+#include <cstring>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -8,6 +8,7 @@
 #include <memory>
 #include <utility>
 #include <functional>
+#include <PetriEngine/Colored/ColoredPetriNetBuilder.h>
 
 #ifdef VERIFYPN_MC_Simplification
 #include <thread>
@@ -38,6 +39,27 @@
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
+
+ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder& builder, const PetriNet* net, vector<QueryItem> queries)
+{
+    //Context analysis
+    ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net, cpnBuilder.getUnfoldedPlaceNames(), cpnBuilder.getUnfoldedTransitionNames(), cpnBuilder.isColored());
+    for(auto& q : queries)
+    {
+        if (q.id.empty())
+            continue;
+        q.query->analyze(context);
+
+        //Print errors if any
+        if (context.errors().size() > 0) {
+            for (size_t i = 0; i < context.errors().size(); i++) {
+                fprintf(stderr, "Query Context Analysis Error: %s\n", context.errors()[i].toString().c_str());
+            }
+            return ErrorCode;
+        }
+    }
+    return ContinueCode;
+}
 
 ReturnValue parseModel(AbstractPetriNetBuilder &builder, const std::string &filename) {
     ifstream model_file{filename};
@@ -79,18 +101,22 @@ std::pair<Condition_ptr, bool> to_ltl(const Condition_ptr &formula) {
     return std::make_pair(converted, should_negate);
 }
 
-void LTLMain() {
+void LTLMain(const std::string& model_file, const std::string& qfilename) {
     QueryXMLParser parser;
 
-    std::string qfilename = "/home/waefwerf/dev/P9/INPUTS/AirplaneLD-PT-0200/LTLCardinality.xml";
+    //std::string qfilename = //"/home/waefwerf/dev/P9/INPUTS/AirplaneLD-PT-0200/LTLCardinality.xml";
     std::ifstream queryfile{qfilename};
     assert(queryfile.is_open());
-    std::set<size_t> queries{1};
+    std::set<size_t> queries{0};
     parser.parse(queryfile, queries);
 
     PetriNetBuilder builder;
-    if (parseModel(builder, "/home/waefwerf/dev/P9/INPUTS/AirplaneLD-PT-0200/model.pnml")) {
+    ColoredPetriNetBuilder cpnBuilder;
+    if (parseModel(cpnBuilder, model_file)) {
+        auto strippedBuilder = cpnBuilder.stripColors(); //TODO can we trivially handle colors or do we need to strip?
+        PetriNetBuilder builder(strippedBuilder);
         std::unique_ptr<PetriNet> net{builder.makePetriNet()};
+        contextAnalysis(cpnBuilder, builder, net.get(), parser.queries);
         for (const auto &query : parser.queries) {
             if (query.query) {
                 auto[negated_formula, negate_answer] = to_ltl(query.query);
@@ -108,7 +134,11 @@ void LTLMain() {
 
 
 int main(int argc, char *argv[]) {
-    LTLMain();
+    if (argc != 3) {
+        std::cerr << "Usage: " << argv[0] << " model_file query_file" << std::endl;
+        exit(1);
+    }
+    LTLMain(argv[1], argv[2]);
 /*    QueryXMLParser parser;
 
     std::ifstream testfile{"test_models/query-test002/query.xml"};
