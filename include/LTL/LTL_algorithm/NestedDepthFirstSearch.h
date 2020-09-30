@@ -15,17 +15,22 @@
 using namespace PetriEngine;
 
 namespace LTL {
-    class NestedDepthFirstSearch : ModelChecker{
+    class NestedDepthFirstSearch : public ModelChecker {
+    public:
+        NestedDepthFirstSearch(const PetriNet &net, PetriEngine::PQL::Condition_ptr ptr)
+                : ModelChecker(net, ptr), mark1(net, 0), mark2(net, 0) {}
+
         bool isSatisfied() override;
+
     private:
         PetriEngine::Structures::StateSet mark1;
         PetriEngine::Structures::StateSet mark2;
-        Structures::ProductState* seed;
-        PetriEngine::Structures::DFSQueue searchQueue;
+        Structures::ProductState *seed = nullptr;
         bool violation = false;
 
-        void dfs(Structures::ProductState& state);
-        void ndfs(Structures::ProductState& state);
+        void dfs(Structures::ProductState &state);
+
+        void ndfs(Structures::ProductState &state);
     };
 }
 

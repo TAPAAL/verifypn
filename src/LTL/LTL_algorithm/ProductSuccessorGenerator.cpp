@@ -18,14 +18,14 @@ namespace LTL {
                 return false;
             }
         }
-        if (next_buchi_succ(state.buchi_state)) {
+        if (next_buchi_succ(state)) {
             return true;
         }
         // No valid transition in Büchi automaton for current marking;
         // Try next marking(s) and see if we find a successor.
         else {
             while (SuccessorGenerator::next(state)) {
-                if (next_buchi_succ(state.buchi_state)) {
+                if (next_buchi_succ(state)) {
                     return true;
                 }
             }
@@ -50,7 +50,23 @@ namespace LTL {
 
     bool ProductSuccessorGenerator::guard_valid(const PetriEngine::Structures::State &state, bdd &bdd) {
         EvaluationContext ctx{state.marking(), &_net};
-        size_t var = bdd_var(bdd);
-        // TODO finish impl
+        while (!(bdd == bddtrue || bdd == bddfalse)) {
+            size_t var = bdd_var(bdd);
+            Condition::Result res = buchi.getExpression(var)->evaluate(ctx);
+            switch (res) {
+                case Condition::RUNKNOWN:
+                    std::cerr << "Unexpected unknown answer from evaluating query!\n";
+                    assert(false);
+                    exit(0);
+                    break;
+                case Condition::RFALSE:
+                    bdd = bdd_low(bdd);
+                    break;
+                case Condition::RTRUE:
+                    bdd = bdd_high(bdd);
+                    break;
+            }
+        }
+        return bdd == bddtrue;
     }
 }

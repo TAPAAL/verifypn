@@ -11,11 +11,14 @@
 namespace LTL {
     class ModelChecker {
     public:
-        ModelChecker(const PetriEngine::PetriNet& net, const PetriEngine::PQL::Condition_ptr);
+        ModelChecker(const PetriEngine::PetriNet& net, PetriEngine::PQL::Condition_ptr);
         virtual bool isSatisfied() = 0;
-
+        
+        virtual ~ModelChecker() = default;
     protected:
-        ProductSuccessorGenerator successorGenerator;
+        std::unique_ptr<ProductSuccessorGenerator> successorGenerator;
+        const PetriEngine::PetriNet &net;
+        PetriEngine::PQL::Condition_ptr formula;
     };
 }
 

@@ -23,7 +23,7 @@ namespace LTL {
     BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query);
 
     struct AtomicProposition {
-        Condition_constptr expression;
+        Condition_ptr expression;
         std::string text;
     };
 

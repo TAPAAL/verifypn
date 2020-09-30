@@ -12,10 +12,10 @@
 #include <spot/twa/twagraph.hh>
 
 namespace LTL::Structures {
-    struct BuchiAutomaton {
-        spot::twa_graph_ptr buchi;
-        APInfo ap_info;
-    };
-}
+        struct BuchiAutomaton {
+            spot::twa_graph_ptr buchi;
+            LTL::APInfo ap_info;
+        };
+    }
 
 #endif //VERIFYPN_BUCHIAUTOMATON_H

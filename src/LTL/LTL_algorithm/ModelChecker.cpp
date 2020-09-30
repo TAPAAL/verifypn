@@ -4,10 +4,14 @@
 
 #include "LTL/LTL_algorithm/ModelChecker.h"
 
+#include <utility>
+
 namespace LTL {
     ModelChecker::ModelChecker(const PetriEngine::PetriNet& net, PetriEngine::PQL::Condition_ptr condition)
-        : successorGenerator(ProductSuccessorGenerator(net))
+        : net(net), formula(condition)
     {
+
+        successorGenerator = std::make_unique<ProductSuccessorGenerator>(net, condition);
         //TODO Create successor generator from net and condition
     }
 }

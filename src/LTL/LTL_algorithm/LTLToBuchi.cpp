@@ -6,6 +6,7 @@
  */
 
 #include "LTL/LTLToBuchi.h"
+#include "LTL/BuchiSuccessorGenerator.h"
 
 #include <spot/twaalgos/translate.hh>
 #include <spot/tl/parse.hh>
@@ -80,13 +81,14 @@ namespace LTL {
         bool is_quoted = false;
         void make_atomic_prop(const Condition_constptr &element)
         {
+            auto cond = const_cast<Condition*>(element.get())->shared_from_this();
             std::stringstream ss;
             ss << "\"";
             QueryPrinter _printer{ss};
-            element->visit(_printer);
+            cond->visit(_printer);
             ss << "\"";
             os << ss.str();
-            ap_info.push_back(AtomicProposition{element, ss.str()});
+            ap_info.push_back(AtomicProposition{cond, ss.str()});
         }
     };
 
@@ -201,9 +203,7 @@ namespace LTL {
     BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query) {
         std::stringstream ss;
         FormulaToSpotSyntax spotConverter{ss};
-        // FIXME nasty hack for top-level query, should be fixed elsewhere (e.g. asLTL)
-        auto top_quant = dynamic_cast<SimpleQuantifierCondition*>(query.get());
-        (*top_quant)[0]->visit(spotConverter);
+        query->visit(spotConverter);
 
         const std::string spotFormula = ss.str();
         spot::formula formula = spot::parse_formula(spotFormula);
@@ -213,7 +213,7 @@ namespace LTL {
             automaton->register_ap(apinfo.text);
         }
 
-        return BuchiSuccessorGenerator{automaton, spotConverter.getAPInfo()};
+        return BuchiSuccessorGenerator{Structures::BuchiAutomaton{automaton, spotConverter.getAPInfo()}};
     }
 
 }

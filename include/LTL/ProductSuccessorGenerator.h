@@ -15,7 +15,7 @@ namespace LTL {
     class ProductSuccessorGenerator : public PetriEngine::SuccessorGenerator {
     public:
         ProductSuccessorGenerator(const PetriEngine::PetriNet &net,
-                                  PetriEngine::PQL::Condition_ptr cond)
+                                  const PetriEngine::PQL::Condition_ptr& cond)
                                   : PetriEngine::SuccessorGenerator(net), buchi(makeBuchiAutomaton(cond))
         {}
 

@@ -7,19 +7,23 @@
 namespace LTL {
 
     bool NestedDepthFirstSearch::isSatisfied() {
-        return false; //TODO implement
+        LTL::Structures::ProductState init;
+        init.setMarking(net.makeInitialMarking());
+        dfs(init);
+        return !violation;
     }
 
     void NestedDepthFirstSearch::dfs(LTL::Structures::ProductState &state) {
         std::stack<LTL::Structures::ProductState> todo;
         std::stack<LTL::Structures::ProductState*> call_stack;
         LTL::Structures::ProductState working;
+        working.setMarking(net.makeInitialMarking());
         todo.push(state);
         while (!todo.empty()) {
             LTL::Structures::ProductState curState = todo.top();
 
-            if (&curState == call_stack.top()) {
-                if (successorGenerator.isAccepting(curState)){
+            if (!call_stack.empty() && &curState == call_stack.top()) {
+                if (successorGenerator->isAccepting(curState)){
                     seed = &curState;
                     ndfs(curState);
                     if (violation)
@@ -32,8 +36,8 @@ namespace LTL {
                 if (!mark1.add(curState).first) {
                     continue;
                 }
-                successorGenerator.prepare(&curState);
-                while (successorGenerator.next(working)) {
+                successorGenerator->prepare(&curState);
+                while (successorGenerator->next(working)) {
                     todo.push(working);
                 }
             }
@@ -52,8 +56,8 @@ namespace LTL {
                 continue;
             }
 
-            successorGenerator.prepare(&curState);
-            while (successorGenerator.next(working)) {
+            successorGenerator->prepare(&curState);
+            while (successorGenerator->next(working)) {
                 if (working == *seed) {
                     violation = true;
                     return;

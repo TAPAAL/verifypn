@@ -18,8 +18,18 @@ namespace LTL::Structures {
             return buchi_state;
         }
 
+        bool operator==(const ProductState &rhs) const {
+            return static_cast<const PetriEngine::Structures::State &>(*this) ==
+                   static_cast<const PetriEngine::Structures::State &>(rhs) &&
+                   buchi_state == rhs.buchi_state;
+        }
+
+        bool operator!=(const ProductState &rhs) const {
+            return !(rhs == *this);
+        }
+
     private:
-        size_t buchi_state;
+        size_t buchi_state = std::numeric_limits<size_t>::max();
         friend class LTL::ProductSuccessorGenerator;
     };
 }

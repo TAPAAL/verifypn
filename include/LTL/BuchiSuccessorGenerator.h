@@ -21,13 +21,13 @@ namespace LTL {
                 : aut(std::move(automaton)) {
         }
 
-        size_t get_initial_state() const {
-            return aut.buchi->get_init_state_number();
-        }
-
         void prepare(size_t state) {
+            if (state == std::numeric_limits<size_t>::max()) {
+                state = aut.buchi->get_init_state_number();
+            }
             auto curstate = aut.buchi->state_from_number(state);
             succ = aut.buchi->succ_iter(curstate);
+            succ->first();
         }
 
         bool next(size_t &state, bdd &cond) {
@@ -44,7 +44,7 @@ namespace LTL {
             return aut.buchi->state_is_accepting(state);
         }
 
-        Condition_constptr getExpression(size_t i) {
+        Condition_ptr getExpression(size_t i) {
             return aut.ap_info[i].expression;
         }
 

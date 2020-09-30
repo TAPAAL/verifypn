@@ -51,7 +51,7 @@ namespace PetriEngine {
             {
                 _marking = NULL;
             }
-            
+
             ~State()
             {
                 delete[] _marking;
