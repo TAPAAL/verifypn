@@ -11,6 +11,7 @@
 #include "PetriEngine/Structures/StateSet.h"
 #include "PetriEngine/Structures/State.h"
 #include "PetriEngine/Structures/Queue.h"
+#include "LTL/Structures/ProductStateFactory.h"
 
 using namespace PetriEngine;
 
@@ -18,21 +19,26 @@ namespace LTL {
     class NestedDepthFirstSearch : public ModelChecker {
     public:
         NestedDepthFirstSearch(const PetriNet &net, PetriEngine::PQL::Condition_ptr ptr)
-                : ModelChecker(net, ptr), mark1(net, 0), mark2(net, 0) {}
+                : ModelChecker(net, ptr), factory{net, successorGenerator->initial_buchi_state()},
+                  mark1(net, 0), mark2(net, 0) {}
 
         bool isSatisfied() override;
 
     private:
         using State = LTL::Structures::ProductState;
+        using State_sptr = std::shared_ptr<State>;
 
         PetriEngine::Structures::StateSet mark1;
         PetriEngine::Structures::StateSet mark2;
-        Structures::ProductState *seed = nullptr;
+
+        Structures::ProductStateFactory factory;
+
+        State *seed;
         bool violation = false;
 
-        void dfs(Structures::ProductState &state);
+        void dfs();
 
-        void ndfs(Structures::ProductState &state);
+        void ndfs(State &state);
     };
 }
 

@@ -19,7 +19,7 @@ namespace LTL {
                                   : PetriEngine::SuccessorGenerator(net), buchi(makeBuchiAutomaton(cond))
         {}
 
-        void initial_state(LTL::Structures::ProductState &state);
+        [[nodiscard]] size_t initial_buchi_state() const { return buchi.initial_state_number(); };
 
         void prepare(const LTL::Structures::ProductState *state);
 

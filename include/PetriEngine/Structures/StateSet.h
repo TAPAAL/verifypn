@@ -32,17 +32,17 @@ namespace PetriEngine {
         class StateSetInterface
         {
         public:
-            StateSetInterface(const PetriNet& net, uint32_t kbound) :
-            _encoder(net.numberOfPlaces(), kbound), _net(net)
+            StateSetInterface(const PetriNet& net, uint32_t kbound, int nplaces = -1) :
+            _encoder(nplaces == -1 ? net.numberOfPlaces() : nplaces, kbound), _net(net)
             {
                 _discovered = 0;
                 _kbound = kbound;
                 _maxTokens = 0;
-                _maxPlaceBound = std::vector<uint32_t>(_net.numberOfPlaces(), 0);
-                _sp = binarywrapper_t(sizeof(uint32_t)*_net.numberOfPlaces()*8);
+                _maxPlaceBound = std::vector<uint32_t>(nplaces == -1 ? net.numberOfPlaces() : nplaces, 0);
+                _sp = binarywrapper_t(sizeof(uint32_t)*(nplaces == -1 ? net.numberOfPlaces() : nplaces)*8);
             }
 
-	    ~StateSetInterface()
+	    virtual ~StateSetInterface()
 	    {
 		_sp.release();
 	    }

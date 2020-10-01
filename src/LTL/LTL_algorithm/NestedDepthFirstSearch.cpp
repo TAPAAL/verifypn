@@ -7,31 +7,27 @@
 namespace LTL {
 
     bool NestedDepthFirstSearch::isSatisfied() {
-        State init;
-        init.setMarking(net.makeInitialMarking());
-        dfs(init);
+        dfs();
         return !violation;
     }
 
-    void NestedDepthFirstSearch::dfs(LTL::Structures::ProductState &state) {
+    void NestedDepthFirstSearch::dfs() {
+        std::stack<size_t> call_stack;
 
-        PQL::DistanceContext ctx{&net, state.marking()};
-        std::stack<State *> call_stack;
-        State working;
-        State curState;
-        successorGenerator->initial_state(working);
-        successorGenerator->initial_state(curState);
-
-        PetriEngine::Structures::StateSet states{net, 0};
+        PetriEngine::Structures::StateSet states{net,0};
         PetriEngine::Structures::DFSQueue todo{&states};
-        if (auto r = states.add(state); !r.first) {
-            throw std::runtime_error{"LTL: Could not add initial state to state set"};
-        } else {
-            todo.push(r.second, ctx, formula);
-        }
+
+        State working = factory.makeInitialState();
+        State curState = factory.makeInitialState();
+        PQL::DistanceContext ctx{&net, working.marking()};
+
+        auto res = states.add(working);
+        assert(res.first);
+        todo.push(res.second, ctx, formula);
+
         while (todo.top(curState)) {
 
-            if (!call_stack.empty() && &curState == call_stack.top()) {
+            if (!call_stack.empty() && states.add(curState).second == call_stack.top()) {
                 if (successorGenerator->isAccepting(curState)) {
                     seed = &curState;
                     ndfs(curState);
@@ -41,7 +37,7 @@ namespace LTL {
                 todo.pop(curState);
                 call_stack.pop();
             } else {
-                call_stack.push(&curState);
+                call_stack.push(states.add(curState).second);
                 if (!mark1.add(curState).first) {
                     continue;
                 }
@@ -54,22 +50,19 @@ namespace LTL {
         }
     }
 
-    void NestedDepthFirstSearch::ndfs(Structures::ProductState &state) {
+
+    void NestedDepthFirstSearch::ndfs(State& state) {
         PetriEngine::Structures::StateSet states{net, 0};
         PetriEngine::Structures::DFSQueue todo{&states};
-        State working;
-        State curState;
 
-        successorGenerator->initial_state(working);
-        successorGenerator->initial_state(curState);
+        State working = factory.makeInitialState();
+        State curState = factory.makeInitialState();
 
-        auto r = states.add(state);
-        assert(r.first);
         PQL::DistanceContext ctx{&net, state.marking()};
 
-        todo.push(r.second, ctx, formula);
-        while (todo.pop(curState)) {
+        todo.push(states.add(state).second, ctx, formula);
 
+        while (todo.pop(curState)) {
             if (!mark2.add(curState).first) {
                 continue;
             }
@@ -80,10 +73,7 @@ namespace LTL {
                     violation = true;
                     return;
                 }
-                r = states.add(working);
-                if (r.first) {
-                    todo.push(r.second, ctx, formula);
-                }
+                todo.push(states.add(working).second, ctx, formula);
             }
         }
     }

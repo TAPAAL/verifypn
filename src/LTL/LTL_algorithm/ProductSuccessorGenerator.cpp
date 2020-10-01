@@ -34,17 +34,14 @@ namespace LTL {
     }
 
     bool ProductSuccessorGenerator::isAccepting(const LTL::Structures::ProductState &state) {
-        if (state.buchi_state == std::numeric_limits<size_t>::max()) {
-            throw std::runtime_error("asking for acceptance of size_t::max");
-        }
-        return buchi.is_accepting(state.buchi_state);
+        return buchi.is_accepting(state.getBuchiState());
     }
 
     bool ProductSuccessorGenerator::next_buchi_succ(LTL::Structures::ProductState &state) {
         size_t tmp;
         while (buchi.next(tmp, cond)) {
             if (guard_valid(state, cond)) {
-                state.buchi_state = tmp;
+                state.setBuchiState(tmp);
                 return true;
             }
         }
@@ -73,8 +70,4 @@ namespace LTL {
         return bdd == bddtrue;
     }
 
-    void ProductSuccessorGenerator::initial_state(LTL::Structures::ProductState &state) {
-        state.buchi_state = buchi.initial_state_number();
-        state.setMarking(_net.makeInitialMarking());
-    }
 }
