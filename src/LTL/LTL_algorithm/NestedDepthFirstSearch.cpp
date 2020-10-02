@@ -6,6 +6,17 @@
 
 namespace LTL {
 
+#ifdef PRINFT_DEBUG
+    inline void dump_state(LTL::Structures::ProductState &state, int nplaces=5) {
+        std::cerr << "marking: ";
+        std::cerr << state.marking()[0];
+        for (int i = 1; i <= nplaces; ++i) {
+            std::cerr << ", " << state.marking()[i];
+        }
+        std::cerr << std::endl;
+    }
+#endif
+
     bool NestedDepthFirstSearch::isSatisfied() {
         dfs();
         return !violation;
@@ -14,7 +25,7 @@ namespace LTL {
     void NestedDepthFirstSearch::dfs() {
         std::stack<size_t> call_stack;
 
-        PetriEngine::Structures::StateSet states{net,0};
+        PetriEngine::Structures::StateSet states{net,0, (int)net.numberOfPlaces() + 1};
         PetriEngine::Structures::DFSQueue todo{&states};
 
         State working = factory.makeInitialState();
@@ -27,7 +38,7 @@ namespace LTL {
 
         while (todo.top(curState)) {
 
-            if (!call_stack.empty() && states.add(curState).second == call_stack.top()) {
+            if (!call_stack.empty() && states.lookup(curState).second == call_stack.top()) {
                 if (successorGenerator->isAccepting(curState)) {
                     seed = &curState;
                     ndfs(curState);
@@ -37,13 +48,24 @@ namespace LTL {
                 todo.pop(curState);
                 call_stack.pop();
             } else {
-                call_stack.push(states.add(curState).second);
+                call_stack.push(states.lookup(curState).second);
                 if (!mark1.add(curState).first) {
                     continue;
                 }
                 successorGenerator->prepare(&curState);
+#ifdef PRINFT_DEBUG
+                std::cerr << "curState:\n";
+                dump_state(curState);
+#endif
                 while (successorGenerator->next(working)) {
+#ifdef PRINFT_DEBUG
+                    std::cerr << "working:\n";
+                    dump_state(working);
+#endif
                     auto r = states.add(working);
+                    if (!r.first) {
+                        r = states.lookup(working);
+                    }
                     todo.push(r.second, ctx, formula);
                 }
             }
@@ -52,7 +74,7 @@ namespace LTL {
 
 
     void NestedDepthFirstSearch::ndfs(State& state) {
-        PetriEngine::Structures::StateSet states{net, 0};
+        PetriEngine::Structures::StateSet states{net, 0, (int)net.numberOfPlaces() + 1};
         PetriEngine::Structures::DFSQueue todo{&states};
 
         State working = factory.makeInitialState();
@@ -68,13 +90,30 @@ namespace LTL {
             }
 
             successorGenerator->prepare(&curState);
+#ifdef PRINTF_DEBUG
+            std::cerr << "curState:\n";
+            dump_state(curState);
+#endif
             while (successorGenerator->next(working)) {
+#ifdef PRINFT_DEBUG
+                std::cerr << "working:\n";
+                dump_state(working);
+#endif
                 if (working == *seed) {
+#ifdef PRINFT_DEBUG
+                    std::cerr << "seed:\n  "; dump_state(*seed);
+                    std::cerr << "working:\n  "; dump_state(working);
+#endif
                     violation = true;
                     return;
                 }
-                todo.push(states.add(working).second, ctx, formula);
+                auto r = states.add(working);
+                if (!r.first) {
+                    r = states.lookup(working);
+                }
+                todo.push(r.second, ctx, formula);
             }
         }
+
     }
 }

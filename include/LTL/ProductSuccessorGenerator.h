@@ -32,7 +32,7 @@ namespace LTL {
         bdd cond;
         bool fresh_marking = true;
 
-        bool guard_valid(const PetriEngine::Structures::State &state, bdd &bdd);
+        bool guard_valid(const PetriEngine::Structures::State &state, bdd bdd);
 
         bool next_buchi_succ(LTL::Structures::ProductState &state);
     };

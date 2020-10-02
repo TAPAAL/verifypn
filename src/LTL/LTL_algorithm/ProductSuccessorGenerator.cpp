@@ -14,6 +14,7 @@ namespace LTL {
 
     bool ProductSuccessorGenerator::next(LTL::Structures::ProductState &state) {
         if (fresh_marking) {
+            fresh_marking = false;
             if (!SuccessorGenerator::next(state)) {
                 return false;
             }
@@ -48,7 +49,7 @@ namespace LTL {
         return false;
     }
 
-    bool ProductSuccessorGenerator::guard_valid(const PetriEngine::Structures::State &state, bdd &bdd) {
+    bool ProductSuccessorGenerator::guard_valid(const PetriEngine::Structures::State &state, bdd bdd) {
         EvaluationContext ctx{state.marking(), &_net};
         while (!(bdd == bddtrue || bdd == bddfalse)) {
             size_t var = bdd_var(bdd);

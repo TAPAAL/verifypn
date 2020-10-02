@@ -12,6 +12,7 @@
 #include <spot/tl/parse.hh>
 #include <spot/twa/bddprint.hh>
 #include <sstream>
+#include <spot/twaalgos/dot.hh>
 
 namespace LTL {
 
@@ -79,16 +80,16 @@ namespace LTL {
     private:
         APInfo ap_info;
         bool is_quoted = false;
-        void make_atomic_prop(const Condition_constptr &element)
-        {
-            auto cond = const_cast<Condition*>(element.get())->shared_from_this();
+
+        void make_atomic_prop(const Condition_constptr &element) {
+            auto cond = const_cast<Condition *>(element.get())->shared_from_this();
             std::stringstream ss;
             ss << "\"";
             QueryPrinter _printer{ss};
             cond->visit(_printer);
             ss << "\"";
             os << ss.str();
-            ap_info.push_back(AtomicProposition{cond, ss.str()});
+            ap_info.push_back(AtomicProposition{cond, ss.str().substr(1, ss.str().size() - 2)});
         }
     };
 
@@ -109,35 +110,35 @@ namespace LTL {
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanCondition *element) {
         make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) {
         make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::FireableCondition *element) {
         make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanOrEqualCondition *element) {
         make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::GreaterThanCondition *element) {
         make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::GreaterThanOrEqualCondition *element) {
         make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EqualCondition *element) {
         make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotEqualCondition *element) {
         make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::BooleanCondition *element) {
         os << (element->value ? "1" : "0");
@@ -148,43 +149,42 @@ namespace LTL {
         std::cerr << "LiteralExpr should not be visited by Spot serialiezr" << std::endl;
         exit(1);
         //make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::PlusExpr *element) {
         assert(false);
         std::cerr << "PlusExpr should not be visited by Spot serialiezr" << std::endl;
         exit(1);
         //make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::MultiplyExpr *element) {
         assert(false);
         std::cerr << "MultiplyExpr should not be visited by Spot serialiezr" << std::endl;
         exit(1);
         //make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::MinusExpr *element) {
         assert(false);
         std::cerr << "MinusExpr should not be visited by Spot serialiezr" << std::endl;
         exit(1);
         //make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::SubtractExpr *element) {
         assert(false);
         std::cerr << "LiteralExpr should not be visited by Spot serialiezr" << std::endl;
         exit(1);
         //make_atomic_prop(element->shared_from_this());
-     }
+    }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::IdentifierExpr *element) {
         assert(false);
         std::cerr << "IdentifierExpr should not be visited by Spot serialiezr" << std::endl;
         exit(1);
         //make_atomic_prop(element->shared_from_this());
-     }
-
+    }
 
 
     std::string toSpotFormat(const QueryItem &query) {
@@ -196,7 +196,7 @@ namespace LTL {
     void toSpotFormat(const QueryItem &query, std::ostream &os) {
         FormulaToSpotSyntax spotConverter{os};
         // FIXME nasty hack for top-level query, should be fixed elsewhere (e.g. asLTL)
-        auto top_quant = dynamic_cast<SimpleQuantifierCondition*>(query.query.get());
+        auto top_quant = dynamic_cast<SimpleQuantifierCondition *>(query.query.get());
         (*top_quant)[0]->visit(spotConverter);
     }
 
@@ -205,15 +205,26 @@ namespace LTL {
         FormulaToSpotSyntax spotConverter{ss};
         query->visit(spotConverter);
 
-        const std::string spotFormula = ss.str();
+        const std::string spotFormula = "!(" + ss.str() + ")";
         spot::formula formula = spot::parse_formula(spotFormula);
         spot::bdd_dict_ptr bdd = spot::make_bdd_dict();
-        spot::twa_graph_ptr automaton = spot::translator(bdd).run(formula);
+        auto translator = spot::translator(bdd);
+        translator.set_pref(spot::postprocessor::Complete
+                            | spot::postprocessor::Deterministic
+                            | spot::postprocessor::SBAcc);
+        spot::twa_graph_ptr automaton = translator.run(formula);
+#ifdef PRINTF_DEBUG
+        automaton->get_graph().dump_storage(std::cerr);
+        spot::print_dot(std::cerr, automaton);
+        bdd->dump(std::cerr);
+#endif
+        std::unordered_map<int, AtomicProposition> ap_map;
         for (const auto &apinfo : spotConverter) {
-            automaton->register_ap(apinfo.text);
+            int varnum = automaton->register_ap(apinfo.text);
+            ap_map[varnum] = apinfo;
         }
 
-        return BuchiSuccessorGenerator{Structures::BuchiAutomaton{automaton, spotConverter.getAPInfo()}};
+        return BuchiSuccessorGenerator{Structures::BuchiAutomaton{automaton, ap_map}};
     }
 
 }

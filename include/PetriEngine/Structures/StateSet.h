@@ -50,6 +50,8 @@ namespace PetriEngine {
             virtual std::pair<bool, size_t> add(State& state) = 0;
             
             virtual void decode(State& state, size_t id) = 0;
+
+            virtual std::pair<bool, size_t> lookup(State& state) = 0;
             
             const PetriNet& net() { return _net;}
             
@@ -107,7 +109,7 @@ namespace PetriEngine {
                 size_t length = _encoder.encode(state.marking(), type);
                 binarywrapper_t w = binarywrapper_t(_encoder.scratchpad().raw(), length*8);
                 auto tit = _trie.insert(w.raw(), w.size());
-            
+
                 
                 if(!tit.first)
                 {
@@ -132,6 +134,29 @@ namespace PetriEngine {
 #endif     
                 return std::pair<bool, size_t>(true, tit.second);
             }
+
+            template <typename T>
+            std::pair<bool, size_t> _lookup(const State& state, T& _trie) {
+                MarkVal sum = 0;
+                bool allsame = true;
+                uint32_t val = 0;
+                uint32_t active = 0;
+                uint32_t last = 0;
+                markingStats(state.marking(), sum, allsame, val, active, last);
+
+                unsigned char type = _encoder.getType(sum, active, allsame, val);
+
+                size_t length = _encoder.encode(state.marking(), type);
+                binarywrapper_t w = binarywrapper_t(_encoder.scratchpad().raw(), length*8);
+                auto tit = _trie.exists(w.raw(), w.size());
+
+                if (tit.first) {
+                    return tit;
+                }
+                else return std::make_pair(false, std::numeric_limits<size_t>::max());
+            }
+
+
 
         public:
             size_t discovered() const {
@@ -186,8 +211,11 @@ namespace PetriEngine {
             {
                 _decode(state, id, _trie);
             }
-            
-            
+
+            std::pair<bool, size_t> lookup(State &state) override {
+                return _lookup(state, _trie);
+            }
+
             virtual void setHistory(size_t id, size_t transition) override {}
 
             virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
@@ -232,7 +260,11 @@ namespace PetriEngine {
                 _parent = id;
                 _decode(state, id, _trie);
             }
-                       
+
+            pair<bool, size_t> lookup(State &state) override {
+                return _lookup(state, _trie);
+            }
+
             virtual void setHistory(size_t id, size_t transition) override 
             {
                 traceable_t& t = _trie.get_data(id);

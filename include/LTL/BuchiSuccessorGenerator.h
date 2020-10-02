@@ -29,9 +29,9 @@ namespace LTL {
 
         bool next(size_t &state, bdd &cond) {
             if (!succ->done()) {
-                succ->next();
                 state = aut.buchi->state_number(succ->dst());
                 cond = succ->cond();
+                succ->next();
                 return true;
             }
             return false;
@@ -46,7 +46,7 @@ namespace LTL {
         }
 
         [[nodiscard]] Condition_ptr getExpression(size_t i) const {
-            return aut.ap_info[i].expression;
+            return aut.ap_info.at(i).expression;
         }
 
     private:

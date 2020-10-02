@@ -20,7 +20,7 @@ namespace LTL {
     public:
         NestedDepthFirstSearch(const PetriNet &net, PetriEngine::PQL::Condition_ptr ptr)
                 : ModelChecker(net, ptr), factory{net, successorGenerator->initial_buchi_state()},
-                  mark1(net, 0), mark2(net, 0) {}
+                  mark1(net, 0, (int)net.numberOfPlaces() + 1), mark2(net, 0, (int)net.numberOfPlaces() + 1) {}
 
         bool isSatisfied() override;
 

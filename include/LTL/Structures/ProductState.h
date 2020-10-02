@@ -37,9 +37,15 @@ namespace LTL::Structures {
         }
 
         bool operator==(const ProductState &rhs) const {
-            return static_cast<const PetriEngine::Structures::State &>(*this) ==
+            for (int i = 0; i <= buchi_state_idx; ++i) {
+                if (marking()[i] != rhs.marking()[i]) {
+                    return false;
+                }
+            }
+            return true;
+/*            return static_cast<const PetriEngine::Structures::State &>(*this) ==
                    static_cast<const PetriEngine::Structures::State &>(rhs) &&
-                   getBuchiState() == rhs.getBuchiState();
+                   getBuchiState() == rhs.getBuchiState();*/
         }
 
         bool operator!=(const ProductState &rhs) const {
