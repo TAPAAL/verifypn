@@ -369,7 +369,7 @@ namespace PetriEngine::PQL {
     }
 
     void AsCTL::_accept(const ECondition *condition) {
-        auto child = dynamic_cast<SimpleQuantifierCondition*>((*condition)[0].get());
+        auto child = dynamic_cast<QuantifierCondition*>((*condition)[0].get());
         switch (child->getPath()) {
             case Path::G:
                 (*child)[0]->visit(*this);
