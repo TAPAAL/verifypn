@@ -711,7 +711,7 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> querynames;
     auto ctlStarQueries = readQueries(options, querynames);
     auto queries = getCTLQueries(ctlStarQueries);
-    
+
     if(options.printstatistics && options.queryReductionTimeout > 0)
     {
         negstat_t stats;            
