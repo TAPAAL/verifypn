@@ -13,6 +13,7 @@
 
 #include <spot/twa/twagraph.hh>
 #include <utility>
+#include <memory>
 
 namespace LTL {
     class BuchiSuccessorGenerator {
@@ -23,13 +24,16 @@ namespace LTL {
 
         void prepare(size_t state) {
             auto curstate = aut.buchi->state_from_number(state);
-            succ = aut.buchi->succ_iter(curstate);
+            succ = std::unique_ptr<spot::twa_succ_iterator>{aut.buchi->succ_iter(curstate)};
             succ->first();
         }
 
         bool next(size_t &state, bdd &cond) {
             if (!succ->done()) {
                 state = aut.buchi->state_number(succ->dst());
+#ifdef PRINTF_DEBUG
+                std::cerr << "buchi state " << state << std::endl;
+#endif
                 cond = succ->cond();
                 succ->next();
                 return true;
@@ -51,7 +55,7 @@ namespace LTL {
 
     private:
         Structures::BuchiAutomaton aut;
-        spot::twa_succ_iterator *succ;
+        std::unique_ptr<spot::twa_succ_iterator> succ;
     };
 }
 #endif //VERIFYPN_BUCHISUCCESSORGENERATOR_H

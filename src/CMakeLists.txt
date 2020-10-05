@@ -10,10 +10,10 @@ add_dependencies(verifypn-${ARCH_TYPE} glpk-ext)
 
 target_link_libraries(verifypn-${ARCH_TYPE} PRIVATE CTL PetriEngine PetriParse glpk)
 
-add_executable(verifyltl-${ARCH_TYPE} LTLMain.cpp ../include/LTL/BuchiSuccessorGenerator.h ../include/LTL/Structures/BuchiAutomaton.h ../include/LTL/LTLValidator.h ../include/LTL/Structures/ProductStateSet.h ../include/LTL/Structures/ProductStateFactory.h)
+add_executable(verifyltl-${ARCH_TYPE} LTLMain.cpp)
 add_dependencies(verifyltl-${ARCH_TYPE} glpk-ext spot-ext)
 
-target_link_libraries(verifyltl-${ARCH_TYPE} PRIVATE CTL LTL PetriEngine PetriParse glpk spot)
+target_link_libraries(verifyltl-${ARCH_TYPE} CTL LTL PetriEngine PetriParse glpk spot)
 
 if (VERIFYPN_MC_Simplification)
     target_link_libraries(verifypn-${ARCH_TYPE} PUBLIC pthread)

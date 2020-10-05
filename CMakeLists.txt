@@ -86,9 +86,9 @@ if (VERIFYPN_GetDependencies)
     ExternalProject_add(spot-ext
         URL http://www.lrde.epita.fr/dload/spot/spot-2.9.4.tar.gz
         URL_HASH SHA512=d8e5f8c97495f7964698547d83d8a657afb5e71e886d31298802a6d9d449359d9b34714c080551ca24ab1dce9ca874bfc79ac70d3236dbf6e4fd56bd981483bf
-        BUILD_COMMAND ""
+        BUILD_COMMAND make -j4
         CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python
-        INSTALL_COMMAND make -j4 && make install
+        INSTALL_COMMAND make install
     )
 
     if (WIN32) #If windows 32 or 64 

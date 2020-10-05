@@ -33,13 +33,14 @@ namespace PetriEngine {
         {
         public:
             StateSetInterface(const PetriNet& net, uint32_t kbound, int nplaces = -1) :
-            _encoder(nplaces == -1 ? net.numberOfPlaces() : nplaces, kbound), _net(net)
+            _nplaces(nplaces == -1 ? net.numberOfPlaces() : nplaces),
+            _encoder(_nplaces, kbound), _net(net)
             {
                 _discovered = 0;
                 _kbound = kbound;
                 _maxTokens = 0;
-                _maxPlaceBound = std::vector<uint32_t>(nplaces == -1 ? net.numberOfPlaces() : nplaces, 0);
-                _sp = binarywrapper_t(sizeof(uint32_t)*(nplaces == -1 ? net.numberOfPlaces() : nplaces)*8);
+                _maxPlaceBound = std::vector<uint32_t>(net.numberOfPlaces(), 0);
+                _sp = binarywrapper_t(sizeof(uint32_t) * _nplaces * 8);
             }
 
 	    virtual ~StateSetInterface()
@@ -63,6 +64,7 @@ namespace PetriEngine {
             size_t _discovered;
             uint32_t _kbound;
             uint32_t _maxTokens;
+            size_t _nplaces;
             std::vector<uint32_t> _maxPlaceBound;
             AlignedEncoder _encoder;
             const PetriNet& _net;
@@ -177,7 +179,7 @@ namespace PetriEngine {
             {
                 uint32_t cnt = 0;
                 
-                for (uint32_t i = 0; i < _net.numberOfPlaces(); i++)
+                for (uint32_t i = 0; i < _nplaces; i++)
                 {
                     uint32_t old = val;
                     if(marking[i] != 0)

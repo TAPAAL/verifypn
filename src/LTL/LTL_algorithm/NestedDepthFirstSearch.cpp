@@ -6,8 +6,9 @@
 
 namespace LTL {
 
-#ifdef PRINFT_DEBUG
-    inline void dump_state(LTL::Structures::ProductState &state, int nplaces=5) {
+#ifdef PRINTF_DEBUG
+    inline void dump_state(const LTL::Structures::ProductState &state, int nplaces=-1) {
+        if (nplaces == -1) nplaces = state.buchi_state_idx;
         std::cerr << "marking: ";
         std::cerr << state.marking()[0];
         for (int i = 1; i <= nplaces; ++i) {
@@ -53,12 +54,12 @@ namespace LTL {
                     continue;
                 }
                 successorGenerator->prepare(&curState);
-#ifdef PRINFT_DEBUG
+#ifdef PRINTF_DEBUG
                 std::cerr << "curState:\n";
                 dump_state(curState);
 #endif
                 while (successorGenerator->next(working)) {
-#ifdef PRINFT_DEBUG
+#ifdef PRINTF_DEBUG
                     std::cerr << "working:\n";
                     dump_state(working);
 #endif
@@ -95,12 +96,12 @@ namespace LTL {
             dump_state(curState);
 #endif
             while (successorGenerator->next(working)) {
-#ifdef PRINFT_DEBUG
+#ifdef PRINTF_DEBUG
                 std::cerr << "working:\n";
                 dump_state(working);
 #endif
                 if (working == *seed) {
-#ifdef PRINFT_DEBUG
+#ifdef PRINTF_DEBUG
                     std::cerr << "seed:\n  "; dump_state(*seed);
                     std::cerr << "working:\n  "; dump_state(working);
 #endif

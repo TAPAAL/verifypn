@@ -18,6 +18,13 @@ namespace LTL {
         operator bool() const { return bad(); }
 
     protected:
+
+        void _visitNary(const PetriEngine::PQL::LogicalCondition *condition) {
+            for (const auto &cond : *condition) {
+                cond->visit(*this);
+            }
+        };
+
         void _accept(const PetriEngine::PQL::EFCondition *condition) override {
             setBad();
             std::cerr << "found EFCondition" << std::endl;
@@ -73,13 +80,11 @@ namespace LTL {
         }
 
         void _accept(const PetriEngine::PQL::AndCondition *element) override {
-            (*element)[0]->visit(*this);
-            (*element)[1]->visit(*this);
+            _visitNary(element);
         }
 
         void _accept(const PetriEngine::PQL::OrCondition *element) override {
-            (*element)[0]->visit(*this);
-            (*element)[1]->visit(*this);
+            _visitNary(element);
         }
 
         void _accept(const PetriEngine::PQL::LessThanCondition *element) override {

@@ -5,13 +5,13 @@
 #ifndef VERIFYPN_NESTEDDEPTHFIRSTSEARCH_H
 #define VERIFYPN_NESTEDDEPTHFIRSTSEARCH_H
 
-#include <ptrie/ptrie_stable.h>
-
 #include "ModelChecker.h"
 #include "PetriEngine/Structures/StateSet.h"
 #include "PetriEngine/Structures/State.h"
 #include "PetriEngine/Structures/Queue.h"
 #include "LTL/Structures/ProductStateFactory.h"
+
+#include <ptrie/ptrie_stable.h>
 
 using namespace PetriEngine;
 
@@ -26,12 +26,11 @@ namespace LTL {
 
     private:
         using State = LTL::Structures::ProductState;
-        using State_sptr = std::shared_ptr<State>;
 
+        Structures::ProductStateFactory factory;
         PetriEngine::Structures::StateSet mark1;
         PetriEngine::Structures::StateSet mark2;
 
-        Structures::ProductStateFactory factory;
 
         State *seed;
         bool violation = false;

@@ -5,8 +5,22 @@
 #include "LTL/ProductSuccessorGenerator.h"
 
 namespace LTL {
+#ifdef PRINTF_DEBUG
+    inline void _dump_state(const LTL::Structures::ProductState &state, int nplaces=-1) {
+        if (nplaces == -1) nplaces = state.buchi_state_idx;
+        std::cerr << "marking: ";
+        std::cerr << state.marking()[0];
+        for (int i = 1; i <= nplaces; ++i) {
+            std::cerr << ", " << state.marking()[i];
+        }
+        std::cerr << std::endl;
+    }
+#endif
 
     void ProductSuccessorGenerator::prepare(const LTL::Structures::ProductState *state) {
+#ifdef PRINTF_DEBUG
+        _dump_state(*state);
+#endif
         SuccessorGenerator::prepare(state);
         buchi.prepare(state->getBuchiState());
         fresh_marking = true;
