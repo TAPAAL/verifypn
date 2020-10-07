@@ -166,7 +166,6 @@ namespace PetriEngine {
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "var expression with name: " << _variable->name << std::endl;
 
                 Colored::Pattern pattern(
                     Colored::PatternType::Var,
@@ -176,7 +175,6 @@ namespace PetriEngine {
                 );
                 pattern.toString();
                 std::pair<std::set<Colored::Pattern>::iterator, bool> res = patterns.insert(pattern);
-                std::cout << "Insertion was: " << res.second << std::endl;
             }
 
             std::string toString() const override {
@@ -211,7 +209,6 @@ namespace PetriEngine {
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "UserOp expression" << std::endl;
 
                 Colored::Pattern pattern(
                     Colored::PatternType::Constant,
@@ -318,7 +315,6 @@ namespace PetriEngine {
                     nullptr
                 );
                 patterns.insert(pattern);*/
-                std::cout << "succ expression" << std::endl;
 
                 _color->getPatterns(patterns, colorTypes);
             }
@@ -374,7 +370,6 @@ namespace PetriEngine {
                 return _color->toString() + "--";
             }
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "pred expression" << std::endl;
 
                 _color->getPatterns(patterns, colorTypes);
             }
@@ -461,7 +456,6 @@ namespace PetriEngine {
 
             }
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "tuple expression" << std::endl;
 
                 std::set<Variable*> variables = {};
                 getVariables(variables);
@@ -561,25 +555,33 @@ namespace PetriEngine {
                 uint32_t intervalSize = 0;
                 std::vector<uint32_t> restrictionvector;
                 if(varIndexLeft > -1) {
-                    _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if(restrictionvector.size() == 1) {
+                    bool succes = _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    if (!succes) {
+                        //comparing vars
+                    } else if(restrictionvector.size() == 1) {
                         var->interval_upper = restrictionvector.back()-1;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
                 if (varIndexRight > -1) {
-                    _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if(restrictionvector.size() == 1) {
+                    bool sucess = _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    if (!sucess) {
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
+                    } else if(restrictionvector.size() == 1) {
                         var->interval_lower = restrictionvector.back()+1;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "lt expression" << std::endl;
 
                 std::set<Variable*> variables = {};
                 getVariables(variables);
@@ -623,25 +625,33 @@ namespace PetriEngine {
                 uint32_t intervalSize = 0;
                 std::vector<uint32_t> restrictionvector;
                 if(varIndexLeft > -1) {
-                    _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if(restrictionvector.size() == 1) {
+                    bool succes = _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    if(!succes) {
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
+                    }else if(restrictionvector.size() == 1) {
                         var->interval_lower = restrictionvector.back()+1;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
                 if (varIndexRight > -1) {
-                    _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if(restrictionvector.size() == 1) {
+                    bool succes = _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    if (!succes) {
+                        //comparing vars
+                    } else if(restrictionvector.size() == 1) {
                         var->interval_upper = restrictionvector.back()-1;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "gt expression" << std::endl;
                 std::set<Variable*> variables = {};
                 getVariables(variables);
                 Colored::Pattern pattern (
@@ -679,7 +689,7 @@ namespace PetriEngine {
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "lteq expression" << std::endl;
+
 
                 std::set<Variable*> variables = {};
                 getVariables(variables);
@@ -698,19 +708,28 @@ namespace PetriEngine {
                 uint32_t intervalSize = 0;
                 std::vector<uint32_t> restrictionvector;
                 if(varIndexLeft > -1) {
-                    _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if(restrictionvector.size() == 1) {
+                    bool succes = _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    if (!succes) {
+                        //comparing vars
+                    } else if(restrictionvector.size() == 1) {
                         var->interval_upper = restrictionvector.back();
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
                 if (varIndexRight > -1) {
-                    _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if(restrictionvector.size() == 1) {
+                    bool succes = _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    if(!succes) {
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
+                    } else if(restrictionvector.size() == 1) {
                         var->interval_lower = restrictionvector.back();
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
             }
@@ -741,7 +760,6 @@ namespace PetriEngine {
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "gteq expression" << std::endl;
 
                 std::set<Variable*> variables = {};
                 getVariables(variables);
@@ -760,19 +778,28 @@ namespace PetriEngine {
                 uint32_t intervalSize = 0;
                 std::vector<uint32_t> restrictionvector;
                 if(varIndexLeft > -1) {
-                    _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if(restrictionvector.size() == 1) {
+                    bool succes = _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    if (!succes) {
+                        //comparing vars
+                    } else if(restrictionvector.size() == 1) {
                         var->interval_lower = restrictionvector.back();
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
                 if (varIndexRight > -1) {
-                    _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if(restrictionvector.size() == 1) {
+                    bool succes = _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    if (!succes) {
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
+                    } else if(restrictionvector.size() == 1) {
                         var->interval_upper = restrictionvector.back();
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
             }
@@ -807,25 +834,32 @@ namespace PetriEngine {
                 uint32_t intervalSize = 0;
                 std::vector<uint32_t> restrictionvector;
                 if(varIndexLeft > -1) {
-                    _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if(restrictionvector.size() == 1) {
+                    bool succes = _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    if (!succes) {
+                        //comparing vars;
+                    } else if(restrictionvector.size() == 1) {
                         var->interval_upper = var->interval_lower = restrictionvector.back();
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
                 if (varIndexRight > -1) {
-                    _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if(restrictionvector.size() == 1) {
+                    bool succes = _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    if (!succes) {
+                        //comparing vars
+                    } else if(restrictionvector.size() == 1) {
                         var->interval_upper = var->interval_lower = restrictionvector.back();
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
             }
             
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "eq expression" << std::endl;
 
                 std::set<Variable*> variables = {};
                 getVariables(variables);
@@ -863,7 +897,6 @@ namespace PetriEngine {
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "ineq expression" << std::endl;
 
                 std::set<Variable*> variables = {};
                 getVariables(variables);
@@ -882,30 +915,43 @@ namespace PetriEngine {
                 uint32_t intervalSize = 0;
                 std::vector<uint32_t> restrictionvector;
                 if(varIndexLeft > -1) {
-                    _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if(restrictionvector.size() == 1) {
+                    bool succes = _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    if (!succes) {
+                        //comparing vars
+                    } else if(restrictionvector.size() == 1) {
                         if (restrictionvector.back() == var->interval_lower) {
                             var->interval_lower++;                            
                         } else if (restrictionvector.back() == var->interval_upper) {
                             var->interval_upper--;
+                        } else {
+                            var->interval_lower = 0;
+                            var->interval_upper = var->colorType->size()-1;
                         }
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
                 if (varIndexRight > -1) {
-                    _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if(restrictionvector.size() == 1) {
-                        _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    bool succes = _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
+                    if (!succes) {
+                        //comparing vars
+                    } else if(restrictionvector.size() == 1) {
                         if(restrictionvector.size() == 1) {
                             if (restrictionvector.back() == var->interval_lower) {
                                 var->interval_lower++;                            
                             } else if (restrictionvector.back() == var->interval_upper) {
                                 var->interval_upper--;
+                            } else {
+                                var->interval_lower = 0;
+                                var->interval_upper = var->colorType->size()-1;
                             }
                         }
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
+                        var->interval_lower = 0;
+                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
             }
@@ -933,7 +979,6 @@ namespace PetriEngine {
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "not expression" << std::endl;
 
                 std::set<Variable*> variables = {};
                 getVariables(variables);
@@ -981,7 +1026,6 @@ namespace PetriEngine {
             }
             
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "and expression" << std::endl;
 
                 _left->getPatterns(patterns, colorTypes);
                 _right->getPatterns(patterns, colorTypes);
@@ -1017,7 +1061,6 @@ namespace PetriEngine {
             }
             
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "or expression" << std::endl;
 
                 std::set<Variable*> variables = {};
                 getVariables(variables);
@@ -1086,7 +1129,6 @@ namespace PetriEngine {
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "all expression" << std::endl;
                 std::set<Variable*> variables = {};
                 Colored::Pattern pattern (
                     Colored::PatternType::Constant,
@@ -1152,7 +1194,6 @@ namespace PetriEngine {
             }
             
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "numOfExpr" << std::endl;
                 if(_all != nullptr){
                     _all->getPatterns(patterns,colorTypes);
                 } else{
@@ -1238,7 +1279,6 @@ namespace PetriEngine {
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "add expression" << std::endl;
                 for (auto elem : _constituents) {
                     elem->getPatterns(patterns, colorTypes);
                 }
@@ -1294,7 +1334,6 @@ namespace PetriEngine {
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                std::cout << "sub expression" << std::endl;
                 std::set<Variable*> variables = {};
                 getVariables(variables);
                 Colored::Pattern pattern (
@@ -1341,7 +1380,6 @@ namespace PetriEngine {
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes){
-                std::cout << "scalar expression" << std::endl;
 
                 _expr->getPatterns(patterns, colorTypes);
             }

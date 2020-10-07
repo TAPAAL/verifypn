@@ -198,6 +198,15 @@ namespace PetriEngine {
                                 }
                                 if (var->interval_upper > colorfixpoint.interval_upper) {
                                     var->interval_upper = colorfixpoint.interval_upper;
+                                }
+
+                                if (var->interval_upper < colorfixpoint.interval_lower || 
+                                    var->interval_lower > colorfixpoint.interval_upper) {
+                                    
+                                    //If the arc connected to the place under consideration cannot be activated,
+                                    //then there is no reason to keep checking
+                                    transitionActivated = false;
+                                    break;
                                 }                                
                             }                            
 
@@ -306,7 +315,9 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldPlace(Colored::Place& place) {
-        for (size_t i = 0; i < place.type->size(); ++i) {
+        auto placeId = _placenames[place.name];
+        auto placeFixpoint = _placeColorFixpoints[placeId];
+        for (size_t i = placeFixpoint.interval_lower; i <= placeFixpoint.interval_upper; ++i) {
             std::string name = place.name + "_" + std::to_string(i);
             const Colored::Color* color = &place.type->operator[](i);
             _ptBuilder.addPlace(name, place.marking[color], 0.0, 0.0);
@@ -474,10 +485,6 @@ namespace PetriEngine {
                 ctype,
             };*/
             arc.expr->getPatterns(_patterns, _colorTypes);
-        }
-        std::cout << "NEW TRANSITION BOI: " << transition.name << std::endl;
-        for (auto pat : _patterns) {
-            pat.toString();
         }
         
 
