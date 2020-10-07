@@ -262,6 +262,8 @@ namespace PetriEngine {
         struct Variable {
             std::string name;
             ColorType* colorType;
+            uint32_t interval_lower;
+            uint32_t interval_upper;
         };
         
         struct Binding {

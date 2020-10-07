@@ -36,6 +36,7 @@ namespace PetriEngine {
             GuardExpression_ptr guard;
             std::vector<Arc> input_arcs;
             std::vector<Arc> output_arcs;
+            bool considered;
         };
         
         struct Place {
@@ -45,8 +46,13 @@ namespace PetriEngine {
         };
 
         struct ColorFixpoint {
-            std::set<Color> colors;
+            uint32_t interval_lower;
+            uint32_t interval_upper;
             bool inQueue;
+
+            bool constainsColor(uint32_t colorId) {
+                return interval_lower <= colorId && colorId <= interval_upper;
+            }
         };
     }
 }
