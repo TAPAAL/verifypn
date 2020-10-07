@@ -466,11 +466,11 @@ ReturnValue LTLMain(options_t options) {
             auto[negated_formula, negate_answer] = to_ltl(query.query);
             if (!negated_formula) {
                 std::cerr << "Query file " << qfilename << " contained non-LTL formula";
-                exit(1);
+                return ErrorCode;
             }
             LTL::NestedDepthFirstSearch modelChecker(*net, negated_formula);
             bool satisfied = negate_answer ^ modelChecker.isSatisfied();
-            std::cout << "Formula " << (satisfied ? "" : "not ") << "satisfied" << std::endl;
+            std::cout << std::endl << "FORMULA " << query.id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << std::endl;
         }
     }
     return SuccessCode;
