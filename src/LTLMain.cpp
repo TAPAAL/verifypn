@@ -470,7 +470,7 @@ ReturnValue LTLMain(options_t options) {
             }
             LTL::NestedDepthFirstSearch modelChecker(*net, negated_formula);
             bool satisfied = negate_answer ^ modelChecker.isSatisfied();
-            std::cout << std::endl << "FORMULA " << query.id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << std::endl;
+            std::cout  << "FORMULA " << query.id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << std::endl;
         }
     }
     return SuccessCode;
