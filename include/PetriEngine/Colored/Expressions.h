@@ -79,6 +79,10 @@ namespace PetriEngine {
             virtual void getVariables(std::set<Variable*>& variables) const {
             }
 
+            virtual std::pair<uint32_t, uint32_t> getOutputInterval(std::unordered_map<std::string, PetriEngine::Colored::VariableInterval> *varIntervals) const {
+                return std::make_pair(UINT32_MAX, 0);
+            }
+
             virtual void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const {
             }
             
@@ -100,7 +104,7 @@ namespace PetriEngine {
 
             virtual std::set<const Color*> getConstants() const = 0;
 
-            virtual int32_t getVariableIndex(Variable * variable) const = 0;
+            virtual int32_t getVariableIndex(Variable * variable, int32_t *modifier) const = 0;
 
             virtual bool getVariableRestriction(int32_t index, std::vector<uint32_t> * restrictionValue, uint32_t *intervalSize) const = 0;
 
@@ -113,7 +117,7 @@ namespace PetriEngine {
                 return DotConstant::dotConstant();
             }
 
-            int32_t getVariableIndex(Variable * variable) const override {
+            int32_t getVariableIndex(Variable * variable, int32_t *modifier) const override {
                 return -1;
             }
 
@@ -145,7 +149,7 @@ namespace PetriEngine {
                 return context.binding[_variable->name];
             }
 
-            int32_t getVariableIndex(Variable * variable) const override {
+            int32_t getVariableIndex(Variable * variable, int32_t *modifier) const override {
                 return 0;
             }
 
@@ -155,6 +159,15 @@ namespace PetriEngine {
             
             void getVariables(std::set<Variable*>& variables) const override {
                 variables.insert(_variable);
+            }
+
+            std::pair<uint32_t, uint32_t> getOutputInterval(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+                auto varInterval = varIntervals->find(_variable->name);
+                if (varInterval == varIntervals->end()){
+                    std::cout << "Could not find intervals for: " << _variable->name << std::endl;
+                    return std::make_pair(UINT32_MAX, 0);
+                }
+                return std::make_pair(varInterval.operator*().second.interval_lower, varInterval.operator*().second.interval_upper);
             }
 
             std::set<const Color*> getConstants() const override {
@@ -198,7 +211,7 @@ namespace PetriEngine {
                 return _userOperator;
             }
 
-            int32_t getVariableIndex(Variable * variable) const override {
+            int32_t getVariableIndex(Variable * variable, int32_t *modifier) const override {
                 return -1;
             }
 
@@ -285,18 +298,26 @@ namespace PetriEngine {
                 _color->getVariables(variables);
             }
 
-            int32_t getVariableIndex(Variable * variable) const override {
-                return _color->getVariableIndex(variable);
+            std::pair<uint32_t, uint32_t> getOutputInterval(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+                return _color->getOutputInterval(varIntervals);
+            }
+
+            int32_t getVariableIndex(Variable * variable, int32_t *modifier) const override {
+                (*modifier)--;
+                return _color->getVariableIndex(variable, modifier);
             }
 
             bool getVariableRestriction(int32_t index, std::vector<uint32_t> * restrictionValue, uint32_t *intervalSize) const override {
                 if (_color->getVariableRestriction(index, restrictionValue, intervalSize)){
-                    auto lastElement = restrictionValue->back();
-                    if(lastElement < (*intervalSize) -1) {
-                        lastElement++;
+                    uint32_t lastElement = restrictionValue->back();
+                    if(lastElement > 0) {
+                        lastElement--;
                     } else {
-                        lastElement = 0;
+                        lastElement = *intervalSize;
                     }
+
+                    restrictionValue->pop_back();
+                    restrictionValue->push_back(lastElement);
                     return true;
                 }
                 return false;
@@ -343,9 +364,14 @@ namespace PetriEngine {
             void getVariables(std::set<Variable*>& variables) const override {
                 _color->getVariables(variables);
             }
+            
+            std::pair<uint32_t, uint32_t> getOutputInterval(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+                return _color->getOutputInterval(varIntervals);
+            }
 
-            int32_t getVariableIndex(Variable * variable) const override {
-                return _color->getVariableIndex(variable);
+            int32_t getVariableIndex(Variable * variable, int32_t *modifier) const override {
+                (*modifier)++;
+                return _color->getVariableIndex(variable, modifier);
             }
 
             bool getVariableRestriction(int32_t index, std::vector<uint32_t> * restrictionValue, uint32_t *intervalSize) const override {
@@ -353,10 +379,12 @@ namespace PetriEngine {
                     
                     auto lastElement = restrictionValue->back();
                     if(lastElement < (*intervalSize) -1) {
-                        lastElement--;
+                        lastElement++;
                     } else {
-                        lastElement = *intervalSize;
+                        lastElement = 0;
                     }
+                    restrictionValue->pop_back();
+                    restrictionValue->push_back(lastElement);
                     return true;
                 }
                 return false;
@@ -402,16 +430,40 @@ namespace PetriEngine {
                 return col;
             }
 
-            int32_t getVariableIndex(Variable * variable) const override {
+            int32_t getVariableIndex(Variable * variable, int32_t *modifier) const override {
                 int32_t index = 0;
                 for(auto colorExp : _colors) {
-                    int32_t nested_index = colorExp->getVariableIndex(variable);
+                    int32_t nested_index = colorExp->getVariableIndex(variable, modifier);
                     if ( nested_index > -1) {
                         return nested_index + index;
                     }
                     index++;
                 }
                 return -1;
+            }
+
+            std::pair<uint32_t, uint32_t> getOutputInterval(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+                uint32_t lower_bound = 0;
+                uint32_t upper_bound = 0;
+                size_t prev_ct_size = 0;
+                size_t index = 0;
+
+                for(auto colorExp : _colors) {
+                    auto nested_interval = colorExp->getOutputInterval(varIntervals);
+                    
+                    if (index == 0) {
+                        lower_bound += nested_interval.first;
+                        upper_bound += nested_interval.second;
+                    } else {
+                        lower_bound += nested_interval.first * prev_ct_size;
+                        upper_bound += nested_interval.second * prev_ct_size;
+                    }
+                    
+                    prev_ct_size = ((ProductType *) _colorType)->getNestedColorType(index)->size();
+                    index++;
+                }
+                
+                return std::make_pair(lower_bound, upper_bound);
             }
             
             void getVariables(std::set<Variable*>& variables) const override {
@@ -423,9 +475,13 @@ namespace PetriEngine {
             bool getVariableRestriction(int32_t index, std::vector<uint32_t> * restrictionValue, uint32_t *intervalSize) const override {
                 
                 if (index == 0) {
+                    bool succes = true;
                     for (auto colorExp : _colors) {
-                        bool succes = colorExp->getVariableRestriction(0, restrictionValue, intervalSize);
+                        if(!colorExp->getVariableRestriction(0, restrictionValue, intervalSize)){
+                            succes = false;
+                        }
                     }
+                    return succes;
                 }
 
                 for(auto colorExp : _colors) {
@@ -529,7 +585,7 @@ namespace PetriEngine {
             
             virtual bool eval(ExpressionContext& context) const = 0;
 
-            virtual void restrictVar(Variable * var) const = 0;
+            virtual void restrictVar(Colored::VariableInterval *varInterval) const = 0;
         };
 
         typedef std::shared_ptr<GuardExpression> GuardExpression_ptr;
@@ -549,9 +605,10 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
 
-            void restrictVar(Variable * var) const override {
-                int32_t varIndexLeft = _left->getVariableIndex(var);
-                int32_t varIndexRight = _right->getVariableIndex(var);
+            void restrictVar(Colored::VariableInterval *varInterval) const override {
+                int32_t leftModifier = 0, rightmodifier = 0;
+                int32_t varIndexLeft = _left->getVariableIndex(varInterval->varaible, &leftModifier);
+                int32_t varIndexRight = _right->getVariableIndex(varInterval->varaible, &rightmodifier);
                 uint32_t intervalSize = 0;
                 std::vector<uint32_t> restrictionvector;
                 if(varIndexLeft > -1) {
@@ -559,24 +616,19 @@ namespace PetriEngine {
                     if (!succes) {
                         //comparing vars
                     } else if(restrictionvector.size() == 1) {
-                        var->interval_upper = restrictionvector.back()-1;
+                        varInterval->interval_upper = restrictionvector.back()-1 + leftModifier;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
                 if (varIndexRight > -1) {
                     bool sucess = _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
                     if (!sucess) {
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
+                        //comparing vars
                     } else if(restrictionvector.size() == 1) {
-                        var->interval_lower = restrictionvector.back()+1;
+                        varInterval->interval_lower = restrictionvector.back()+1 + rightmodifier;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
             }
@@ -619,22 +671,20 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
 
-            void restrictVar(Variable * var) const override {
-                int32_t varIndexLeft = _left->getVariableIndex(var);
-                int32_t varIndexRight = _right->getVariableIndex(var);
+            void restrictVar(Colored::VariableInterval *varInterval) const override {
+                int32_t leftModifier = 0, rightmodifier = 0;
+                int32_t varIndexLeft = _left->getVariableIndex(varInterval->varaible, &leftModifier);
+                int32_t varIndexRight = _right->getVariableIndex(varInterval->varaible, &rightmodifier);
                 uint32_t intervalSize = 0;
                 std::vector<uint32_t> restrictionvector;
                 if(varIndexLeft > -1) {
                     bool succes = _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
                     if(!succes) {
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
+                        //comparing vars
                     }else if(restrictionvector.size() == 1) {
-                        var->interval_lower = restrictionvector.back()+1;
+                        varInterval->interval_lower = restrictionvector.back()+1 + leftModifier;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
                 if (varIndexRight > -1) {
@@ -642,11 +692,9 @@ namespace PetriEngine {
                     if (!succes) {
                         //comparing vars
                     } else if(restrictionvector.size() == 1) {
-                        var->interval_upper = restrictionvector.back()-1;
+                        varInterval->interval_upper = restrictionvector.back()-1 + rightmodifier;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
             }
@@ -702,9 +750,10 @@ namespace PetriEngine {
                 patterns.insert(pattern);
             }
 
-            void restrictVar(Variable * var) const override {
-                int32_t varIndexLeft = _left->getVariableIndex(var);
-                int32_t varIndexRight = _right->getVariableIndex(var);
+            void restrictVar(Colored::VariableInterval *varInterval) const override {
+                int32_t leftModifier = 0, rightmodifier = 0;
+                int32_t varIndexLeft = _left->getVariableIndex(varInterval->varaible, &leftModifier);
+                int32_t varIndexRight = _right->getVariableIndex(varInterval->varaible, &rightmodifier);
                 uint32_t intervalSize = 0;
                 std::vector<uint32_t> restrictionvector;
                 if(varIndexLeft > -1) {
@@ -712,24 +761,19 @@ namespace PetriEngine {
                     if (!succes) {
                         //comparing vars
                     } else if(restrictionvector.size() == 1) {
-                        var->interval_upper = restrictionvector.back();
+                        varInterval->interval_upper = restrictionvector.back() + leftModifier;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
                 if (varIndexRight > -1) {
                     bool succes = _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
                     if(!succes) {
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
+                        //comparing vars
                     } else if(restrictionvector.size() == 1) {
-                        var->interval_lower = restrictionvector.back();
+                        varInterval->interval_lower = restrictionvector.back() + rightmodifier;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
             }
@@ -772,9 +816,10 @@ namespace PetriEngine {
                 patterns.insert(pattern);
             }
 
-            void restrictVar(Variable * var) const override {
-                int32_t varIndexLeft = _left->getVariableIndex(var);
-                int32_t varIndexRight = _right->getVariableIndex(var);
+            void restrictVar(Colored::VariableInterval *varInterval) const override {
+                int32_t leftModifier = 0, rightmodifier = 0;
+                int32_t varIndexLeft = _left->getVariableIndex(varInterval->varaible, &leftModifier);
+                int32_t varIndexRight = _right->getVariableIndex(varInterval->varaible, &rightmodifier);
                 uint32_t intervalSize = 0;
                 std::vector<uint32_t> restrictionvector;
                 if(varIndexLeft > -1) {
@@ -782,24 +827,19 @@ namespace PetriEngine {
                     if (!succes) {
                         //comparing vars
                     } else if(restrictionvector.size() == 1) {
-                        var->interval_lower = restrictionvector.back();
+                        varInterval->interval_lower = restrictionvector.back()+ leftModifier;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
                 if (varIndexRight > -1) {
                     bool succes = _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
                     if (!succes) {
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
+                        //comparing vars
                     } else if(restrictionvector.size() == 1) {
-                        var->interval_upper = restrictionvector.back();
+                        varInterval->interval_upper = restrictionvector.back() + rightmodifier;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
             }
@@ -828,9 +868,10 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
 
-            void restrictVar(Variable * var) const override {
-                int32_t varIndexLeft = _left->getVariableIndex(var);
-                int32_t varIndexRight = _right->getVariableIndex(var);
+            void restrictVar(Colored::VariableInterval *varInterval) const override {
+                int32_t leftModifier = 0, rightmodifier = 0;
+                int32_t varIndexLeft = _left->getVariableIndex(varInterval->varaible, &leftModifier);
+                int32_t varIndexRight = _right->getVariableIndex(varInterval->varaible, & rightmodifier);
                 uint32_t intervalSize = 0;
                 std::vector<uint32_t> restrictionvector;
                 if(varIndexLeft > -1) {
@@ -838,11 +879,9 @@ namespace PetriEngine {
                     if (!succes) {
                         //comparing vars;
                     } else if(restrictionvector.size() == 1) {
-                        var->interval_upper = var->interval_lower = restrictionvector.back();
+                        varInterval->interval_upper = varInterval->interval_lower = restrictionvector.back() + leftModifier;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
                 if (varIndexRight > -1) {
@@ -850,11 +889,9 @@ namespace PetriEngine {
                     if (!succes) {
                         //comparing vars
                     } else if(restrictionvector.size() == 1) {
-                        var->interval_upper = var->interval_lower = restrictionvector.back();
+                        varInterval->interval_upper = varInterval->interval_lower = restrictionvector.back() + rightmodifier;
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
             }
@@ -909,9 +946,10 @@ namespace PetriEngine {
                 patterns.insert(pattern);
             }
 
-            void restrictVar(Variable * var) const override {
-                int32_t varIndexLeft = _left->getVariableIndex(var);
-                int32_t varIndexRight = _right->getVariableIndex(var);
+            void restrictVar(Colored::VariableInterval *varInterval) const override {
+                /*int32_t leftModifier = 0, rightmodifier = 0;
+                int32_t varIndexLeft = _left->getVariableIndex(varInterval->varaible, &leftModifier);
+                int32_t varIndexRight = _right->getVariableIndex(varInterval->varaible, &rightmodifier);
                 uint32_t intervalSize = 0;
                 std::vector<uint32_t> restrictionvector;
                 if(varIndexLeft > -1) {
@@ -919,18 +957,16 @@ namespace PetriEngine {
                     if (!succes) {
                         //comparing vars
                     } else if(restrictionvector.size() == 1) {
-                        if (restrictionvector.back() == var->interval_lower) {
-                            var->interval_lower++;                            
-                        } else if (restrictionvector.back() == var->interval_upper) {
-                            var->interval_upper--;
+                        if (restrictionvector.back() == varInterval->interval_lower) {
+                            varInterval->interval_lower += 1 + leftModifier;                            
+                        } else if (restrictionvector.back() == varInterval->interval_upper) {
+                            varInterval->interval_upper += -1 + leftModifier;
                         } else {
-                            var->interval_lower = 0;
-                            var->interval_upper = var->colorType->size()-1;
+                            varInterval->interval_lower = 0;
+                            varInterval->interval_upper = varInterval->varaible->colorType->size()-1;
                         }
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
                 if (varIndexRight > -1) {
@@ -939,21 +975,21 @@ namespace PetriEngine {
                         //comparing vars
                     } else if(restrictionvector.size() == 1) {
                         if(restrictionvector.size() == 1) {
-                            if (restrictionvector.back() == var->interval_lower) {
-                                var->interval_lower++;                            
-                            } else if (restrictionvector.back() == var->interval_upper) {
-                                var->interval_upper--;
+                            if (restrictionvector.back() == varInterval->interval_lower) {
+                                varInterval->interval_lower++;                            
+                            } else if (restrictionvector.back() == varInterval->interval_upper) {
+                                varInterval->interval_upper--;
                             } else {
-                                var->interval_lower = 0;
-                                var->interval_upper = var->colorType->size()-1;
+                                varInterval->interval_lower = 0;
+                                varInterval->interval_upper = varInterval->varaible->colorType->size()-1;
                             }
                         }
                     } else if (restrictionvector.size() > 1) {
                         //handle tuple vars
-                        var->interval_lower = 0;
-                        var->interval_upper = var->colorType->size()-1;
                     }
                 }
+                */
+               //this is whatever for now
             }
 
             std::string toString() const override {
@@ -997,9 +1033,9 @@ namespace PetriEngine {
                 return res;
             }
 
-            void restrictVar(Variable * var) const override {
-                var->interval_lower = 0;
-                var->interval_upper = var->colorType->size()-1;
+            void restrictVar(Colored::VariableInterval *varInterval) const override {
+                varInterval->interval_lower = 0;
+                varInterval->interval_upper = varInterval->varaible->colorType->size()-1;
             }
             
             NotExpression(GuardExpression_ptr&& expr) : _expr(std::move(expr)) {}
@@ -1020,9 +1056,9 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
 
-            void restrictVar(Variable * var) const override {
-                _left->restrictVar(var);
-                _right->restrictVar(var);
+            void restrictVar(Colored::VariableInterval *varInterval) const override {
+                _left->restrictVar(varInterval);
+                _right->restrictVar(varInterval);
             }
             
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
@@ -1055,9 +1091,9 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
 
-            void restrictVar(Variable * var) const override {
-                var->interval_lower = 0;
-                var->interval_upper = var->colorType->size()-1;
+            void restrictVar(Colored::VariableInterval *varInterval) const override {
+                varInterval->interval_lower = 0;
+                varInterval->interval_upper = varInterval->varaible->colorType->size()-1;
             }
             
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
@@ -1178,8 +1214,27 @@ namespace PetriEngine {
                 if (_all != nullptr)
                     return;
                 for (auto elem : _color) {
-                    elem->getVariables(variables);
+                    //TODO: can there be more than one element in a number of expression?
+                    return elem->getVariables(variables);
                 }
+            }
+
+            std::pair<uint32_t, uint32_t> getOutputInterval(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+                uint32_t lower_bound = UINT32_MAX;
+                uint32_t upper_bound = 0;
+                if (_all == nullptr) {
+                    for (auto elem : _color) {
+                        auto interval = elem->getOutputInterval(varIntervals);
+                        if(interval.first < lower_bound) {
+                            lower_bound = interval.first;
+                        }
+                        if(interval.second > upper_bound) {
+                            upper_bound = interval.second;
+                        }
+                    }
+                }
+                return std::make_pair(lower_bound, upper_bound);
+
             }
 
             std::set<const Color*> getConstants() const override {
@@ -1260,6 +1315,22 @@ namespace PetriEngine {
                 }
             }
 
+            std::pair<uint32_t, uint32_t> getOutputInterval(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+                uint32_t lower_bound = UINT32_MAX;
+                uint32_t upper_bound = 0;
+                for (auto elem : _constituents) {
+                    auto interval = elem->getOutputInterval(varIntervals);
+                    if(interval.first < lower_bound) {
+                        lower_bound = interval.first;
+                    }
+                    if(interval.second > upper_bound) {
+                        upper_bound = interval.second;
+                    }
+                }
+
+                return std::make_pair(lower_bound, upper_bound);
+            }
+
             std::set<const Color*> getConstants() const override {
                 std::set<const Color*> colors;
                 for (auto elem : _constituents) {
@@ -1311,10 +1382,19 @@ namespace PetriEngine {
                 _right->getVariables(variables);
             }
 
+            std::pair<uint32_t, uint32_t> getOutputInterval(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+                //We could maybe reduce the intervals slightly by checking if the upper or lower bound is being subtracted
+                auto leftInterval = _left->getOutputInterval(varIntervals);
+
+                return leftInterval;
+            }   
+
             std::set<const Color*> getConstants() const override {
                 std::set<const Color*> colors;
-                colors.insert(_left->getConstants().begin(), _left->getConstants().end());
-                colors.insert(_right->getConstants().begin(), _right->getConstants().end());
+                auto leftConstants = _left->getConstants();
+                auto rightConstants = _right->getConstants();
+                colors.insert(leftConstants.begin(), leftConstants.end());
+                colors.insert(rightConstants.begin(), rightConstants.end());
 
                 return colors;
             }
@@ -1365,6 +1445,10 @@ namespace PetriEngine {
             
             void getVariables(std::set<Variable*>& variables) const override {
                 _expr->getVariables(variables);
+            }
+
+            std::pair<uint32_t, uint32_t> getOutputInterval(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+                return _expr->getOutputInterval(varIntervals);
             }
 
             std::set<const Color*> getConstants() const override {

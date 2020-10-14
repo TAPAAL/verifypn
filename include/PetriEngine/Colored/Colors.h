@@ -45,6 +45,10 @@ namespace PetriEngine {
                 return _tuple.size() > 1;
             }
             
+            std::vector<const Color*> getTupleColors() const {
+                return _tuple;
+            }
+
             const std::string& getColorName() const {
                 if (this->isTuple()) {
                     throw "Cannot get color from a tuple color.";
@@ -245,6 +249,10 @@ namespace PetriEngine {
                 return true;
             }
 
+            const ColorType* getNestedColorType(size_t index) {
+                return constituents[index];
+            }
+
             const Color* getColor(const std::vector<const Color*>& colors);
 
             const Color& operator[](size_t index) override;
@@ -262,6 +270,10 @@ namespace PetriEngine {
         struct Variable {
             std::string name;
             ColorType* colorType;
+        };
+
+        struct VariableInterval {
+            Colored::Variable *varaible;
             uint32_t interval_lower;
             uint32_t interval_upper;
         };

@@ -36,6 +36,7 @@ namespace PetriEngine {
             GuardExpression_ptr guard;
             std::vector<Arc> input_arcs;
             std::vector<Arc> output_arcs;
+            std::unordered_map<std::string, Colored::VariableInterval> variableIntervals;
             bool considered;
         };
         
