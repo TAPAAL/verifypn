@@ -30,7 +30,9 @@ namespace LTL {
         if (fresh_marking) {
             fresh_marking = false;
             if (!SuccessorGenerator::next(state)) {
-                return false;
+                // This is a fresh marking, so if there is no more successors for the state the state is deadlocked.
+                // The semantics for deadlock is to just loop the marking so return true without changing the value of state.
+                // This assumes SuccessorGenerator::next only modifies &state if there is a successor.
             }
         }
         if (next_buchi_succ(state)) {
@@ -56,6 +58,9 @@ namespace LTL {
         size_t tmp;
         while (buchi.next(tmp, cond)) {
             if (guard_valid(state, cond)) {
+#ifdef PRINTF_DEBUG
+                std::cerr << "Satisfied guard: " << cond << std::endl;
+#endif
                 state.setBuchiState(tmp);
                 return true;
             }

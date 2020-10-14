@@ -51,7 +51,11 @@ namespace LTL::Structures {
         bool operator!=(const ProductState &rhs) const {
             return !(rhs == *this);
         }
+#ifdef PRINTF_DEBUG
+    public:
+#else
     private:
+#endif
         size_t buchi_state_idx;
     };
 }

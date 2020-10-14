@@ -433,7 +433,8 @@ std::pair<Condition_ptr, bool> to_ltl(const Condition_ptr &formula) {
     return std::make_pair(converted, should_negate);
 }
 
-void LTLMain(options_t options) {
+ReturnValue LTLMain(options_t options) {
+    ReturnValue v;
     QueryXMLParser parser;
 
     std::string model_file{options.modelfile};
@@ -441,41 +442,52 @@ void LTLMain(options_t options) {
 
     //std::string qfilename = //"/home/waefwerf/dev/P9/INPUTS/AirplaneLD-PT-0200/LTLCardinality.xml";
     std::ifstream queryfile{qfilename};
-    assert(queryfile.is_open());
-    parser.parse(queryfile, options.querynumbers);
-
-    PetriNetBuilder builder;
+    if (!queryfile.is_open()){
+        std::cerr << "Error opening the query file: " << qfilename << std::endl;
+        return ErrorCode;
+    }
+    if (!parser.parse(queryfile, options.querynumbers)){
+        std::cerr << "Error parsing the query file" << std::endl;
+        return ErrorCode;
+    }
     ColoredPetriNetBuilder cpnBuilder;
-    if (parseModel(cpnBuilder, model_file)) {
-        auto strippedBuilder = cpnBuilder.stripColors(); //TODO can we trivially handle colors or do we need to strip?
-        PetriNetBuilder builder(strippedBuilder);
-        std::unique_ptr<PetriNet> net{builder.makePetriNet()};
-        contextAnalysis(cpnBuilder, builder, net.get(), parser.queries);
-        for (const auto &query : parser.queries) {
-            if (query.query) {
-                auto[negated_formula, negate_answer] = to_ltl(query.query);
-                if (!negated_formula) {
-                    std::cerr << "Query file " << qfilename << " contained non-LTL formula";
-                    exit(1);
-                }
-                LTL::TarjanModelChecker modelChecker(*net, negated_formula);
-                bool satisfied = negate_answer ^ modelChecker.isSatisfied();
-                std::cout << "Formula " << (satisfied ? "" : "not ") << "satisfied" << std::endl;
+
+    if ((v = parseModel(cpnBuilder, model_file)) != ContinueCode) {
+        std::cerr << "Error parsing the model" << std::endl;
+        return v;
+    }
+    auto strippedBuilder = cpnBuilder.stripColors(); //TODO can we trivially handle colors or do we need to strip?
+    PetriNetBuilder builder(strippedBuilder);
+    std::unique_ptr<PetriNet> net{builder.makePetriNet()};
+    if ((v = contextAnalysis(cpnBuilder, builder, net.get(), parser.queries)) != ContinueCode){
+        std::cerr << "Error performing context analysis" << std::endl;
+        return v;
+    }
+    for (const auto &query : parser.queries) {
+        if (query.query) {
+            auto[negated_formula, negate_answer] = to_ltl(query.query);
+            if (!negated_formula) {
+                std::cerr << "Query file " << qfilename << " contained non-LTL formula";
+                return ErrorCode;
             }
+            LTL::TarjanModelChecker modelChecker(*net, negated_formula);
+            bool satisfied = negate_answer ^ modelChecker.isSatisfied();
+            std::cout  << "FORMULA " << query.id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << std::endl;
         }
     }
+    return SuccessCode;
 }
 
 
 int main(int argc, char *argv[]) {
     options_t options;
     ReturnValue v = parseOptions(argc, argv, options);
-
+    if (v != ContinueCode) return v;
 /*    if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " model_file query_file" << std::endl;
         exit(1);
     }*/
-    LTLMain(options);
+    return LTLMain(options);
 /*    QueryXMLParser parser;
 
     std::ifstream testfile{"test_models/query-test002/query.xml"};

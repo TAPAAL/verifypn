@@ -173,9 +173,7 @@ namespace LTL {
             Visitor::_accept(element);
         }
 
-        void _accept(const PetriEngine::PQL::BooleanCondition *element) override {
-            Visitor::_accept(element);
-        }
+        void _accept(const PetriEngine::PQL::BooleanCondition *element) override {}
 
         void _accept(const PetriEngine::PQL::UnfoldedIdentifierExpr *element) override {}
 
