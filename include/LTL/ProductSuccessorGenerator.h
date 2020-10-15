@@ -27,6 +27,25 @@ namespace LTL {
 
         bool isAccepting(const LTL::Structures::ProductState &state);
 
+        void makeInitialState(std::vector<LTL::Structures::ProductState> &states) {
+            auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces() + 1];
+            std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), buf);
+            buf[_net.numberOfPlaces()] = 0;
+            LTL::Structures::ProductState state;
+            state.setMarking(buf, _net.numberOfPlaces());
+            state.setBuchiState(initial_buchi_state());
+            buchi.prepare(state.getBuchiState());
+            while (next_buchi_succ(state)) {
+                states.emplace_back();
+                states.back().setMarking(new PetriEngine::MarkVal[_net.numberOfPlaces() + 1], _net.numberOfPlaces());
+                std::copy(state.marking(), state.marking() + _net.numberOfPlaces(), states.back().marking());
+                states.back().setBuchiState(state.getBuchiState());
+            }
+        }
+
+    protected:
+        bool next(LTL::Structures::ProductState &write, uint32_t &tindex);
+
     private:
         BuchiSuccessorGenerator buchi;
         bdd cond;

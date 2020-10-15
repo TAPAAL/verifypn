@@ -6,22 +6,29 @@
  */
 
 #include "LTL/LTL_algorithm/TarjanModelChecker.h"
-#include <stack>
 
 namespace LTL {
 
     bool LTL::TarjanModelChecker::isSatisfied() {
-        State working = factory.makeInitialState();
-        push(working);
+        {
+            std::vector<State> initial_states;
+            successorGenerator.makeInitialState(initial_states);
+            for (auto &state : initial_states) {
+                seen.add(state);
+                push(state);
+            }
+        }
+        State working = factory.newState();
         while (!dstack.empty() && !violation) {
-            auto dtop = dstack.top();
+            DStack &dtop = dstack.top();
             seen.decode(working, cstack[dtop.pos].stateid);
-            if (!successorGenerator.next(working, dtop.lasttrans)) {
+            if (!nexttrans(working, dtop)) {
                 pop();
                 continue;
             }
             else {
-                if (auto res = seen.lookup(working); res.first) {
+                auto res = seen.lookup(working);
+                if (res.first && hash_search(res.second) != std::numeric_limits<idx_t>::max()) {
                     update(res.second);
                     continue;
                 }
@@ -30,15 +37,17 @@ namespace LTL {
                 }
             }
         }
-        return violation;
+        return !violation;
     }
 
     void TarjanModelChecker::push(State &state) {
-        const auto res = seen.add(state);
+        const auto res = seen.lookup(state);
         assert(res.first);
-        const auto ctop = cstack.size();
-        cstack.push_back({res.second, ctop});
-        dstack.push({ctop, std::numeric_limits<idx_t>::max()});
+        const auto ctop = static_cast<idx_t>(cstack.size());
+        cstack.push_back({ctop, res.second});
+        cstack.back().next = hash_search(res.second);
+        hash_search(res.second) = ctop;
+        dstack.push({ctop, std::numeric_limits<uint32_t>::max()});
         if (successorGenerator.isAccepting(state)) {
             astack.push(ctop);
         }
@@ -47,10 +56,11 @@ namespace LTL {
     void TarjanModelChecker::pop() {
         const auto p = dstack.top().pos; dstack.pop();
         if (cstack[p].lowlink == p) {
-            while (cstack.size() - 1 > p) {
-                State tmp = factory.makeInitialState();
+            while (cstack.size() > p) {
+                State tmp = factory.newState();
                 seen.decode(tmp, cstack.back().stateid);
                 store.add(tmp);
+                hash_search(cstack.back().stateid) = cstack.back().next;
                 cstack.pop_back();
             }
         }
@@ -67,6 +77,33 @@ namespace LTL {
         if (cstack[to].lowlink <= cstack[from].lowlink) {
             violation = (!astack.empty() && to <= astack.top());
             cstack[from].lowlink = cstack[to].lowlink;
+        }
+    }
+
+    bool TarjanModelChecker::nexttrans(State &state, TarjanModelChecker::DStack &delem) {
+        if (!delem.neighbors) {
+            delem.neighbors = std::vector<idx_t>();
+            delem.nexttrans = 0;
+            State tmp = factory.newState();
+            seen.decode(tmp, cstack[delem.pos].stateid);
+            successorGenerator.prepare(&tmp);
+            while (successorGenerator.next(tmp)) {
+                auto res = seen.lookup(tmp);
+                if (res.first) {
+                    delem.neighbors->push_back(res.second); continue;
+                }
+                res = seen.add(tmp);
+                assert(res.first);
+                delem.neighbors->push_back(res.second);
+            }
+        }
+        if (delem.nexttrans == delem.neighbors->size()) {
+            return false;
+        }
+        else {
+            seen.decode(state, (*delem.neighbors)[delem.nexttrans]);
+            delem.nexttrans++;
+            return true;
         }
     }
 }

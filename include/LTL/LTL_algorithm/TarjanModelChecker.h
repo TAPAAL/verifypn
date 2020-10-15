@@ -9,17 +9,21 @@
 #define VERIFYPN_TARJANMODELCHECKER_H
 
 
-#include "ModelChecker.h"
+#include "LTL/LTL_algorithm/ModelChecker.h"
 #include "LTL/Structures/ProductStateFactory.h"
-#include "LTL/TarjanSuccessorGenerator.h"
 #include "PetriEngine/Structures/StateSet.h"
 
+#include <stack>
+
 namespace LTL {
+
     class TarjanModelChecker : public ModelChecker {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond)
                 : ModelChecker(net, cond), successorGenerator(net, cond), factory(net, successorGenerator.initial_buchi_state()),
-                  seen(net, 0, (int) net.numberOfPlaces() + 1), store(net, 0, (int) net.numberOfPlaces() + 1) {}
+                  seen(net, 0, (int) net.numberOfPlaces() + 1), store(net, 0, (int) net.numberOfPlaces() + 1) {
+            chash.fill(std::numeric_limits<idx_t>::max());
+        }
 
         bool isSatisfied() override;
 
@@ -28,21 +32,30 @@ namespace LTL {
         using idx_t = size_t;
         static constexpr auto MISSING = std::numeric_limits<idx_t>::max();
 
-        LTL::TarjanSuccessorGenerator successorGenerator;
+        LTL::ProductSuccessorGenerator successorGenerator;
         LTL::Structures::ProductStateFactory factory;
 
         PetriEngine::Structures::StateSet seen;
         PetriEngine::Structures::StateSet store;
 
+        static constexpr auto HashSz = 4096;
+        std::array<idx_t, HashSz> chash;
+        inline idx_t &hash_search(idx_t stateid) {
+            return chash[stateid % HashSz];
+        }
+
         struct CStack {
-            idx_t lowlink;
-            idx_t stateid;
+            size_t lowlink;
+            size_t stateid;
+            size_t next = std::numeric_limits<idx_t>::max();
         };
+
         struct DStack {
-            idx_t pos;
-            idx_t lasttrans;
-            //std::vector<idx_t> neighbors;
+            size_t pos;
+            uint32_t nexttrans = -1;
+            std::optional<std::vector<size_t>> neighbors;
         };
+
 
         std::vector<CStack> cstack;
         std::stack<DStack> dstack;
@@ -54,6 +67,8 @@ namespace LTL {
         void pop();
 
         void update(idx_t to);
+
+        bool nexttrans(State &state, DStack &delem);
     };
 }
 

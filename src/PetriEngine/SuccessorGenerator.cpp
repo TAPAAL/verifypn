@@ -112,6 +112,8 @@ namespace PetriEngine {
     }
 
     bool SuccessorGenerator::next(Structures::State& write, uint32_t &tindex) {
+        _parent = &write;
+        _suc_pcounter = 0;
         for (; _suc_pcounter < _net._nplaces; ++_suc_pcounter) {
             // orphans are currently under "place 0" as a special case
             if (_suc_pcounter == 0 || (*_parent).marking()[_suc_pcounter] > 0) {
