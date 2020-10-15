@@ -52,6 +52,23 @@ namespace PetriEngine {
                 _marking = NULL;
             }
 
+            State (const State &state) = delete;
+
+            State (State &&state)
+            :_marking(state._marking)
+            {
+                state._marking = nullptr;
+            }
+
+            State &operator=(State &&other) {
+                if (&other != this) {
+                    delete _marking;
+                    _marking = other._marking;
+                    other._marking = nullptr;
+                }
+                return *this;
+            }
+
             virtual ~State()
             {
                 delete[] _marking;

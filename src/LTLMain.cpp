@@ -35,6 +35,7 @@
 #include "LTL/LTLToBuchi.h"
 #include "LTL/LTLValidator.h"
 #include "LTL/LTL_algorithm/NestedDepthFirstSearch.h"
+#include "LTL/LTL_algorithm/TarjanModelChecker.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -450,6 +451,7 @@ ReturnValue LTLMain(options_t options) {
         return ErrorCode;
     }
     ColoredPetriNetBuilder cpnBuilder;
+
     if ((v = parseModel(cpnBuilder, model_file)) != ContinueCode) {
         std::cerr << "Error parsing the model" << std::endl;
         return v;
@@ -468,7 +470,7 @@ ReturnValue LTLMain(options_t options) {
                 std::cerr << "Query file " << qfilename << " contained non-LTL formula";
                 return ErrorCode;
             }
-            LTL::NestedDepthFirstSearch modelChecker(*net, negated_formula);
+            LTL::TarjanModelChecker modelChecker(*net, negated_formula);
             bool satisfied = negate_answer ^ modelChecker.isSatisfied();
             std::cout  << "FORMULA " << query.id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << std::endl;
         }

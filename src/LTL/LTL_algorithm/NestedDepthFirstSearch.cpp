@@ -29,13 +29,18 @@ namespace LTL {
         PetriEngine::Structures::StateSet states{net,0, (int)net.numberOfPlaces() + 1};
         PetriEngine::Structures::DFSQueue todo{&states};
 
-        State working = factory.makeInitialState();
-        State curState = factory.makeInitialState();
+        State working = factory.newState();
         PQL::DistanceContext ctx{&net, working.marking()};
-
-        auto res = states.add(working);
-        assert(res.first);
-        todo.push(res.second, ctx, formula);
+        State curState = factory.newState();
+        {
+            std::vector<State> initial_states;
+            successorGenerator->makeInitialState(initial_states);
+            for (auto &state : initial_states) {
+                auto res = states.add(state);
+                assert(res.first);
+                todo.push(res.second, ctx, formula);
+            }
+        }
 
         while (todo.top(curState)) {
 
@@ -78,8 +83,8 @@ namespace LTL {
         PetriEngine::Structures::StateSet states{net, 0, (int)net.numberOfPlaces() + 1};
         PetriEngine::Structures::DFSQueue todo{&states};
 
-        State working = factory.makeInitialState();
-        State curState = factory.makeInitialState();
+        State working = factory.newState();
+        State curState = factory.newState();
 
         PQL::DistanceContext ctx{&net, state.marking()};
 
