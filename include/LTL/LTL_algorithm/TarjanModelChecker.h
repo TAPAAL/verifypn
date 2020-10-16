@@ -38,16 +38,26 @@ namespace LTL {
         PetriEngine::Structures::StateSet seen;
         PetriEngine::Structures::StateSet store;
 
-        static constexpr auto HashSz = 4096;
+        static constexpr idx_t HashSz = 4096;
         std::array<idx_t, HashSz> chash;
-        inline idx_t &hash_search(idx_t stateid) {
-            return chash[stateid % HashSz];
+        inline idx_t hash_search(idx_t stateid) {
+            idx_t idx = chash[hash(stateid)];
+            while (idx != stateid && idx != std::numeric_limits<idx_t>::max()) {
+                idx = cstack[idx].next;
+            }
+            return idx;
+        }
+
+        inline idx_t hash(idx_t id) {
+            return id % HashSz;
         }
 
         struct CStack {
             size_t lowlink;
             size_t stateid;
             size_t next = std::numeric_limits<idx_t>::max();
+
+            CStack(size_t lowlink, size_t stateid, size_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
         };
 
         struct DStack {

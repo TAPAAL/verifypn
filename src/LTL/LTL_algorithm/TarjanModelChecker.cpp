@@ -9,6 +9,21 @@
 
 namespace LTL {
 
+
+#ifdef PRINTF_DEBUG
+
+    inline void _dump_state(const LTL::Structures::ProductState &state, int nplaces = -1) {
+        if (nplaces == -1) nplaces = state.buchi_state_idx;
+        std::cerr << "marking: ";
+        std::cerr << state.marking()[0];
+        for (int i = 1; i <= nplaces; ++i) {
+            std::cerr << ", " << state.marking()[i];
+        }
+        std::cerr << std::endl;
+    }
+
+#endif
+
     bool LTL::TarjanModelChecker::isSatisfied() {
         {
             std::vector<State> initial_states;
@@ -26,15 +41,20 @@ namespace LTL {
                 pop();
                 continue;
             }
-            else {
-                auto res = seen.lookup(working);
-                if (res.first && hash_search(res.second) != std::numeric_limits<idx_t>::max()) {
-                    update(res.second);
+            auto res = seen.lookup(working);
+
+            if (res.first) {
+                auto p = chash[hash(res.second)];
+                while (p != std::numeric_limits<idx_t>::max() && cstack[p].stateid != res.second) {
+                    p = cstack[p].next;
+                }
+                if (p != std::numeric_limits<idx_t>::max()) {
+                    update(p);
                     continue;
                 }
-                if (!store.lookup(working).first) {
-                    push(working);
-                }
+            }
+            if (!store.lookup(working).first) {
+                push(working);
             }
         }
         return !violation;
@@ -44,23 +64,25 @@ namespace LTL {
         const auto res = seen.lookup(state);
         assert(res.first);
         const auto ctop = static_cast<idx_t>(cstack.size());
-        cstack.push_back({ctop, res.second});
-        cstack.back().next = hash_search(res.second);
-        hash_search(res.second) = ctop;
-        dstack.push({ctop, std::numeric_limits<uint32_t>::max()});
+        const auto h = hash(res.second);
+        cstack.emplace_back(ctop, res.second, chash[h]);
+        chash[h] = ctop;
+        dstack.push({ctop});
         if (successorGenerator.isAccepting(state)) {
             astack.push(ctop);
         }
     }
 
     void TarjanModelChecker::pop() {
-        const auto p = dstack.top().pos; dstack.pop();
+        const size_t p = dstack.top().pos;
+        dstack.pop();
         if (cstack[p].lowlink == p) {
+            State tmp = factory.newState();
             while (cstack.size() > p) {
-                State tmp = factory.newState();
+                auto h = hash(cstack.back().stateid);
                 seen.decode(tmp, cstack.back().stateid);
                 store.add(tmp);
-                hash_search(cstack.back().stateid) = cstack.back().next;
+                chash[h] = cstack.back().next;
                 cstack.pop_back();
             }
         }
@@ -90,7 +112,8 @@ namespace LTL {
             while (successorGenerator.next(tmp)) {
                 auto res = seen.lookup(tmp);
                 if (res.first) {
-                    delem.neighbors->push_back(res.second); continue;
+                    delem.neighbors->push_back(res.second);
+                    continue;
                 }
                 res = seen.add(tmp);
                 assert(res.first);
@@ -99,11 +122,11 @@ namespace LTL {
         }
         if (delem.nexttrans == delem.neighbors->size()) {
             return false;
-        }
-        else {
+        } else {
             seen.decode(state, (*delem.neighbors)[delem.nexttrans]);
             delem.nexttrans++;
             return true;
         }
     }
+
 }
