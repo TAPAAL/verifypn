@@ -9,6 +9,8 @@
 
 #include "Reachability/ReachabilitySearch.h"
 #include "../CTL/Algorithm/AlgorithmTypes.h"
+#include "../LTL/LTL.h"
+
 
 struct options_t {
 //    bool outputtrace = false;
@@ -35,7 +37,11 @@ struct options_t {
     CTL::CTLAlgorithmType ctlalgorithm = CTL::CZero;
     bool tar = false;
     uint32_t binary_query_io = 0;
-    
+
+    // LTL Specific options
+    bool isltl = false;
+    LTL::Algorithm ltlalgorithm = LTL::Algorithm::NDFS;
+
     std::string query_out_file;
     std::string model_out_file;
 
@@ -111,12 +117,25 @@ struct options_t {
         optionsOut += ",LPSolve_Timeout=" + std::to_string(lpsolveTimeout);
         
 
-        if (ctlalgorithm == CTL::CZero) {
-            optionsOut += ",CTLAlgorithm=CZERO";
-        } else {
-            optionsOut += ",CTLAlgorithm=LOCAL";
+        if (isctl) {
+            if (ctlalgorithm == CTL::CZero) {
+                optionsOut += ",CTLAlgorithm=CZERO";
+            } else {
+                optionsOut += ",CTLAlgorithm=LOCAL";
+            }
         }
-        
+        else if (isltl) {
+            switch (ltlalgorithm) {
+
+                case LTL::Algorithm::NDFS:
+                    optionsOut += ",LTLAlgorithm=NDFS";
+                    break;
+                case LTL::Algorithm::Tarjan:
+                    optionsOut += ",LTLAlgorithm=Tarjan";
+                    break;
+            }
+        }
+
         optionsOut += "\n";
         
         std::cout << optionsOut;

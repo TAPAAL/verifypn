@@ -4,6 +4,8 @@
 
 #include "LTL/ProductSuccessorGenerator.h"
 
+#undef PRINTF_DEBUG
+
 namespace LTL {
 #ifdef PRINTF_DEBUG
     inline void _dump_state(const LTL::Structures::ProductState &state, int nplaces=-1) {
@@ -23,6 +25,7 @@ namespace LTL {
 #endif
         SuccessorGenerator::prepare(state);
         buchi.prepare(state->getBuchiState());
+        buchi_parent = state->getBuchiState();
         fresh_marking = true;
     }
 
@@ -32,7 +35,7 @@ namespace LTL {
             if (!SuccessorGenerator::next(state)) {
                 // This is a fresh marking, so if there is no more successors for the state the state is deadlocked.
                 // The semantics for deadlock is to just loop the marking so return true without changing the value of state.
-                // This assumes SuccessorGenerator::next only modifies &state if there is a successor.
+                std::copy(_parent->marking(), _parent->marking() + state.buchi_state_idx + 1, state.marking());
             }
         }
         if (next_buchi_succ(state)) {
@@ -42,6 +45,8 @@ namespace LTL {
         // Try next marking(s) and see if we find a successor.
         else {
             while (SuccessorGenerator::next(state)) {
+                // reset buchi successors
+                buchi.prepare(buchi_parent);
                 if (next_buchi_succ(state)) {
                     return true;
                 }
@@ -88,6 +93,30 @@ namespace LTL {
             }
         }
         return bdd == bddtrue;
+    }
+
+    bool ProductSuccessorGenerator::next(Structures::ProductState &state, uint32_t &tindex) {
+        if (fresh_marking) {
+            fresh_marking = false;
+            if (!SuccessorGenerator::next(state, tindex)) {
+                // This is a fresh marking, so if there is no more successors for the state the state is deadlocked.
+                // The semantics for deadlock is to just loop the marking so return true without changing the value of state.
+                // This assumes SuccessorGenerator::next only modifies &state if there is a successor.
+            }
+        }
+        if (next_buchi_succ(state)) {
+            return true;
+        }
+            // No valid transition in Büchi automaton for current marking;
+            // Try next marking(s) and see if we find a successor.
+        else {
+            while (SuccessorGenerator::next(state, tindex)) {
+                if (next_buchi_succ(state)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
 }

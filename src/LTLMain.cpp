@@ -36,6 +36,8 @@
 #include "LTL/LTLValidator.h"
 #include "LTL/LTL_algorithm/NestedDepthFirstSearch.h"
 #include "LTL/LTL_algorithm/ProductPrinter.h"
+#include "LTL/LTL_algorithm/TarjanModelChecker.h"
+#include "LTL/LTL.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -238,10 +240,30 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     fprintf(stderr, "Argument Error: Invalid ctl-algorithm type \"%s\"\n", argv[i + 1]);
                     return ErrorCode;
                 }
+                options.isctl = true;
+                options.isltl = false;
                 i++;
 
             }
-        } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
+        } else if (strcmp(argv[i], "-ltl") == 0) {
+            if(argc > i + 1){
+                if(strcmp(argv[i + 1], "ndfs") == 0){
+                    options.ltlalgorithm = LTL::Algorithm::NDFS;
+                }
+                else if(strcmp(argv[i + 1], "tarjan") == 0){
+                    options.ltlalgorithm = LTL::Algorithm::Tarjan;
+                }
+                else {
+                    fprintf(stderr, "Argument Error: Invalid ltl-algorithm type \"%s\"\n", argv[i + 1]);
+                    return ErrorCode;
+                }
+                options.isctl = false;
+                options.isltl = true;
+                i++;
+            }
+        }
+
+        else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
             options.gamemode = true;
         } else if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--cpn-overapproximation") == 0) {
             options.cpnOverApprox = true;
@@ -281,6 +303,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                    "  -ctl <type>                        Verify CTL properties\n"
                    "                                     - local     Liu and Smolka's on-the-fly algorithm\n"
                    "                                     - czero     local with certain zero extension (default)\n"
+                   "  -ltl <type>                        Verify LTL properties\n"
+                   "                                     - ndfs      Nested Depth First Search\n"
+                   "                                     - tarjan    On-the-fly variant of Tarjan's algorithm\n"
+                   "                                     "
                    "  -c, --cpn-overapproximation        Over approximate query on Colored Petri Nets (CPN only)\n"
                    //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
                    #ifdef VERIFYPN_MC_Simplification
@@ -451,6 +477,7 @@ ReturnValue LTLMain(options_t options) {
         return ErrorCode;
     }
     ColoredPetriNetBuilder cpnBuilder;
+
     if ((v = parseModel(cpnBuilder, model_file)) != ContinueCode) {
         std::cerr << "Error parsing the model" << std::endl;
         return v;
@@ -469,9 +496,18 @@ ReturnValue LTLMain(options_t options) {
                 std::cerr << "Query file " << qfilename << " contained non-LTL formula";
                 return ErrorCode;
             }
-            LTL::NestedDepthFirstSearch modelChecker(*net, negated_formula);
-            bool satisfied = negate_answer ^ modelChecker.isSatisfied();
-            std::cout  << "FORMULA " << query.id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << std::endl;
+            std::unique_ptr<LTL::ModelChecker> modelChecker;
+            switch (options.ltlalgorithm) {
+                case LTL::Algorithm::NDFS:
+                    modelChecker = std::make_unique<LTL::NestedDepthFirstSearch>(*net, negated_formula);
+                    break;
+                case LTL::Algorithm::Tarjan:
+                    modelChecker = std::make_unique<LTL::TarjanModelChecker>(*net, negated_formula);
+                    break;
+            }
+
+            bool satisfied = negate_answer ^ modelChecker->isSatisfied();
+            std::cout  << "FORMULA " << query.id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << (options.ltlalgorithm == LTL::Algorithm::NDFS ? " NDFS" : " TARJAN") << std::endl;
         }
     }
     return SuccessCode;

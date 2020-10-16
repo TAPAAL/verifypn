@@ -63,12 +63,15 @@ public:
 protected:
     const PetriNet& _net;
 
-private:
+    bool next(Structures::State &write, uint32_t &tindex);
+
     const Structures::State* _parent;
+private:
     uint32_t _suc_pcounter;
     uint32_t _suc_tcounter;
 
     friend class ReducingSuccessorGenerator;
+
 };
 }
 

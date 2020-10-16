@@ -56,6 +56,7 @@ namespace LTL::Structures {
 #else
     private:
 #endif
+        friend class LTL::ProductSuccessorGenerator;
         size_t buchi_state_idx;
     };
 }
