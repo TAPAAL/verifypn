@@ -13,6 +13,8 @@ namespace LTL {
 
         successorGenerator = std::make_unique<ProductSuccessorGenerator>(net, condition);
         //TODO Create successor generator from net and condition
+
+        LTL::ProductPrinter::printProduct(*successorGenerator, std::cout, net, condition);
     }
 }
 

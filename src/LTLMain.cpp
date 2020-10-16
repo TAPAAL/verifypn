@@ -35,6 +35,7 @@
 #include "LTL/LTLToBuchi.h"
 #include "LTL/LTLValidator.h"
 #include "LTL/LTL_algorithm/NestedDepthFirstSearch.h"
+#include "LTL/LTL_algorithm/ProductPrinter.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
