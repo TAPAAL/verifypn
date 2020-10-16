@@ -36,22 +36,22 @@ namespace LTL {
         State working = factory.newState();
         while (!dstack.empty() && !violation) {
             DStack &dtop = dstack.top();
-            seen.decode(working, cstack[dtop.pos].stateid);
+            //seen.decode(working, cstack[dtop.pos].stateid);
             if (!nexttrans(working, dtop)) {
                 pop();
                 continue;
             }
-            auto res = seen.lookup(working);
+            idx_t stateid = (*dtop.neighbors)[dtop.nexttrans - 1];
+            //auto res = seen.lookup(working);
+            //assert((res.first && res.second == stateid) || !res.first);
 
-            if (res.first) {
-                auto p = chash[hash(res.second)];
-                while (p != std::numeric_limits<idx_t>::max() && cstack[p].stateid != res.second) {
-                    p = cstack[p].next;
-                }
-                if (p != std::numeric_limits<idx_t>::max()) {
-                    update(p);
-                    continue;
-                }
+            auto p = chash[hash(stateid)];
+            while (p != std::numeric_limits<idx_t>::max() && cstack[p].stateid != stateid) {
+                p = cstack[p].next;
+            }
+            if (p != std::numeric_limits<idx_t>::max()) {
+                update(p);
+                continue;
             }
             if (!store.lookup(working).first) {
                 push(working);
@@ -106,16 +106,21 @@ namespace LTL {
         if (!delem.neighbors) {
             delem.neighbors = std::vector<idx_t>();
             delem.nexttrans = 0;
-            State tmp = factory.newState();
-            seen.decode(tmp, cstack[delem.pos].stateid);
-            successorGenerator.prepare(&tmp);
-            while (successorGenerator.next(tmp)) {
-                auto res = seen.lookup(tmp);
+            State src = factory.newState();
+            State dst = factory.newState();
+            seen.decode(src, cstack[delem.pos].stateid);
+            successorGenerator.prepare(&src);
+            while (successorGenerator.next(dst)) {
+                auto res = seen.lookup(dst);
                 if (res.first) {
                     delem.neighbors->push_back(res.second);
                     continue;
                 }
-                res = seen.add(tmp);
+#ifdef PRINTF_DEBUG
+                std::cerr << "adding state\n";
+                _dump_state(dst);
+#endif
+                res = seen.add(dst);
                 assert(res.first);
                 delem.neighbors->push_back(res.second);
             }
@@ -124,6 +129,10 @@ namespace LTL {
             return false;
         } else {
             seen.decode(state, (*delem.neighbors)[delem.nexttrans]);
+#ifdef PRINTF_DEBUG
+            std::cerr << "loaded state\n";
+            _dump_state(state);
+#endif
             delem.nexttrans++;
             return true;
         }

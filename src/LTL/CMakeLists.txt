@@ -1,7 +1,5 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-    add_compile_definitions(PRINTF_DEBUG)
-endif()
+
 
 add_subdirectory(LTL_algorithm)
 
