@@ -49,6 +49,7 @@ namespace LTL {
     private:
         BuchiSuccessorGenerator buchi;
         bdd cond;
+        size_t buchi_parent;
         bool fresh_marking = true;
 
         bool guard_valid(const PetriEngine::Structures::State &state, bdd bdd);

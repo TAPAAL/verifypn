@@ -207,11 +207,14 @@ namespace LTL {
         query->visit(spotConverter);
 
         const std::string spotFormula = "!(" + ss.str() + ")";
+#ifdef PRINTF_DEBUG
+        std::cerr << "ORIG FORMULA: \n  " << ss.str() << std::endl;
+        std::cerr << "SPOT FORMULA: \n  " << spotFormula << std::endl;
+#endif
         spot::formula formula = spot::parse_formula(spotFormula);
         spot::bdd_dict_ptr bdd = spot::make_bdd_dict();
         auto translator = spot::translator(bdd);
         translator.set_pref(spot::postprocessor::Complete
-                            | spot::postprocessor::Deterministic
                             | spot::postprocessor::SBAcc);
         spot::twa_graph_ptr automaton = translator.run(formula);
 #ifdef PRINTF_DEBUG

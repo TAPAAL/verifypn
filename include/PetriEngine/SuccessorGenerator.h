@@ -64,8 +64,9 @@ protected:
     const PetriNet& _net;
 
     bool next(Structures::State &write, uint32_t &tindex);
-private:
+
     const Structures::State* _parent;
+private:
     uint32_t _suc_pcounter;
     uint32_t _suc_tcounter;
 
