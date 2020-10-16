@@ -14,19 +14,26 @@ namespace LTL::ProductPrinter {
         std::vector<trans> discovered_transitions;
         Structures::ProductStateFactory factory{net, successorGenerator.initial_buchi_state()};
 
-        State working = factory.makeInitialState();
-        State curState = factory.makeInitialState();
+        State working = factory.newState();
+        State curState = factory.newState();
         PetriEngine::PQL::DistanceContext ctx{&net, working.marking()};
 
-        auto res = states.add(working);
-        assert(res.first);
-        todo.push(res.second, ctx, formula);
-        discovered_states.insert(std::make_pair(res.second, successorGenerator.isAccepting(working)));
+        {
+            std::vector<State> initial_states;
+            successorGenerator.makeInitialState(initial_states);
+            for (auto &state : initial_states) {
+                auto res = states.add(state);
+                assert(res.first);
+                todo.push(res.second, ctx, formula);
+                discovered_states.insert(std::make_pair(res.second, successorGenerator.isAccepting(state)));
+            }
+        }
+
 
         while (todo.pop(curState)) {
             successorGenerator.prepare(&curState);
             while (successorGenerator.next(working)){
-                res = states.lookup(working);
+                auto res = states.lookup(working);
                 if (!res.first) {
                     res = states.add(working);
                 }
