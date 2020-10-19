@@ -53,7 +53,7 @@ namespace LTL {
                 update(p);
                 continue;
             }
-            if (!store.lookup(working).first) {
+            if (store.find(stateid) == std::end(store)) {
                 push(working);
             }
         }
@@ -61,8 +61,7 @@ namespace LTL {
     }
 
     void TarjanModelChecker::push(State &state) {
-        const auto res = seen.lookup(state);
-        assert(res.first);
+        const auto res = seen.add(state);
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(res.second);
         cstack.emplace_back(ctop, res.second, chash[h]);
@@ -77,11 +76,11 @@ namespace LTL {
         const size_t p = dstack.top().pos;
         dstack.pop();
         if (cstack[p].lowlink == p) {
-            State tmp = factory.newState();
+            //State tmp = factory.newState();
             while (cstack.size() > p) {
                 auto h = hash(cstack.back().stateid);
-                seen.decode(tmp, cstack.back().stateid);
-                store.add(tmp);
+                //seen.decode(tmp, cstack.back().stateid);
+                store.insert(cstack.back().stateid);
                 chash[h] = cstack.back().next;
                 cstack.pop_back();
             }
@@ -111,11 +110,11 @@ namespace LTL {
             seen.decode(src, cstack[delem.pos].stateid);
             successorGenerator.prepare(&src);
             while (successorGenerator.next(dst)) {
-                auto res = seen.lookup(dst);
-                if (res.first) {
+                auto res = seen.add(dst);
+//                if (res.first) {
                     delem.neighbors->push_back(res.second);
                     continue;
-                }
+//                }
 #ifdef PRINTF_DEBUG
                 std::cerr << "adding state\n";
                 _dump_state(dst);

@@ -33,11 +33,8 @@ namespace LTL::ProductPrinter {
         while (todo.pop(curState)) {
             successorGenerator.prepare(&curState);
             while (successorGenerator.next(working)){
-                auto res = states.lookup(working);
-                if (!res.first) {
-                    res = states.add(working);
-                }
-                discovered_transitions.emplace_back(states.lookup(curState).second, res.second);
+                auto res = states.add(working);
+                discovered_transitions.emplace_back(states.add(curState).second, res.second);
                 if (discovered_states.count(res.second) == 0){
                     discovered_states.insert(std::make_pair(res.second, successorGenerator.isAccepting(working)));
                     todo.push(res.second, ctx, formula);

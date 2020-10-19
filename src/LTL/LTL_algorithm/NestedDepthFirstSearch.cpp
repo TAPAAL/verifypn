@@ -44,7 +44,7 @@ namespace LTL {
 
         while (todo.top(curState)) {
 
-            if (!call_stack.empty() && states.lookup(curState).second == call_stack.top()) {
+            if (!call_stack.empty() && states.add(curState).second == call_stack.top()) {
                 if (successorGenerator->isAccepting(curState)) {
                     seed = &curState;
                     ndfs(curState);
@@ -54,7 +54,7 @@ namespace LTL {
                 todo.pop(curState);
                 call_stack.pop();
             } else {
-                call_stack.push(states.lookup(curState).second);
+                call_stack.push(states.add(curState).second);
                 if (!mark1.add(curState).first) {
                     continue;
                 }
@@ -69,9 +69,6 @@ namespace LTL {
                     dump_state(working);
 #endif
                     auto r = states.add(working);
-                    if (!r.first) {
-                        r = states.lookup(working);
-                    }
                     todo.push(r.second, ctx, formula);
                 }
             }
@@ -114,9 +111,6 @@ namespace LTL {
                     return;
                 }
                 auto r = states.add(working);
-                if (!r.first) {
-                    r = states.lookup(working);
-                }
                 todo.push(r.second, ctx, formula);
             }
         }
