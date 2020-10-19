@@ -21,7 +21,7 @@ namespace LTL {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond)
                 : ModelChecker(net, cond), successorGenerator(net, cond), factory(net, successorGenerator.initial_buchi_state()),
-                  seen(net, 0, (int) net.numberOfPlaces() + 1) {
+                  seen(net, 0, (int) net.numberOfPlaces() + 1), store(net, 0, (int) net.numberOfPlaces() + 1) {
             chash.fill(std::numeric_limits<idx_t>::max());
         }
 
@@ -30,13 +30,13 @@ namespace LTL {
     private:
         using State = LTL::Structures::ProductState;
         using idx_t = size_t;
+        static constexpr auto MISSING = std::numeric_limits<idx_t>::max();
 
         LTL::ProductSuccessorGenerator successorGenerator;
         LTL::Structures::ProductStateFactory factory;
 
         PetriEngine::Structures::StateSet seen;
-        std::set<idx_t> store;
-        //PetriEngine::Structures::StateSet store;
+        PetriEngine::Structures::StateSet store;
 
         static constexpr idx_t HashSz = 4096;
         std::array<idx_t, HashSz> chash;

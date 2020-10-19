@@ -52,6 +52,8 @@ namespace PetriEngine {
             
             virtual void decode(State& state, size_t id) = 0;
 
+            virtual std::pair<bool, size_t> lookup(State& state) = 0;
+
             const PetriNet& net() { return _net;}
             
             virtual void setHistory(size_t id, size_t transition) = 0;
@@ -212,6 +214,10 @@ namespace PetriEngine {
                 _decode(state, id, _trie);
             }
 
+            std::pair<bool, size_t> lookup(State &state) override {
+                return _lookup(state, _trie);
+            }
+
             virtual void setHistory(size_t id, size_t transition) override {}
 
             virtual std::pair<size_t, size_t> getHistory(size_t markingid) override
@@ -255,6 +261,10 @@ namespace PetriEngine {
             {
                 _parent = id;
                 _decode(state, id, _trie);
+            }
+
+            pair<bool, size_t> lookup(State &state) override {
+                return _lookup(state, _trie);
             }
 
             virtual void setHistory(size_t id, size_t transition) override
