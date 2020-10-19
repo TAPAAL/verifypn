@@ -372,6 +372,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Søren Moss Nielsen <soren_moss@mac.com>\n");
             printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>\n");
             printf("                        Samuel Pastva <daemontus@gmail.com>\n");
+            printf("                        Thomas Pedersen <thomas.pedersen@stofanet.dk\n");
             printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
