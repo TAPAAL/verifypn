@@ -54,7 +54,7 @@ namespace LTL {
                 todo.pop(curState);
                 call_stack.pop();
             } else {
-                call_stack.push(states.lookup(curState).second);
+                call_stack.push(states.add(curState).second);
                 if (!mark1.add(curState).first) {
                     continue;
                 }

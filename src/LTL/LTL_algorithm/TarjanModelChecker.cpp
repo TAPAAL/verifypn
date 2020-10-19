@@ -36,24 +36,24 @@ namespace LTL {
         State working = factory.newState();
         while (!dstack.empty() && !violation) {
             DStack &dtop = dstack.top();
-            //seen.decode(working, cstack[dtop.pos].stateid);
             if (!nexttrans(working, dtop)) {
                 pop();
                 continue;
             }
+            // get ID of transition taken (nexttrans = lasttrans + 1)
             idx_t stateid = (*dtop.neighbors)[dtop.nexttrans - 1];
-            //auto res = seen.lookup(working);
-            //assert((res.first && res.second == stateid) || !res.first);
 
+            // lookup successor in 'hash' table
             auto p = chash[hash(stateid)];
             while (p != std::numeric_limits<idx_t>::max() && cstack[p].stateid != stateid) {
                 p = cstack[p].next;
             }
             if (p != std::numeric_limits<idx_t>::max()) {
+                // we found the successor! update lowlinks etc
                 update(p);
                 continue;
             }
-            if (!store.lookup(working).first) {
+            if (store.find(stateid) == std::end(store)) {
                 push(working);
             }
         }
@@ -61,8 +61,7 @@ namespace LTL {
     }
 
     void TarjanModelChecker::push(State &state) {
-        const auto res = seen.lookup(state);
-        assert(res.first);
+        const auto res = seen.add(state);
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(res.second);
         cstack.emplace_back(ctop, res.second, chash[h]);
@@ -77,11 +76,9 @@ namespace LTL {
         const size_t p = dstack.top().pos;
         dstack.pop();
         if (cstack[p].lowlink == p) {
-            State tmp = factory.newState();
             while (cstack.size() > p) {
                 auto h = hash(cstack.back().stateid);
-                seen.decode(tmp, cstack.back().stateid);
-                store.add(tmp);
+                store.insert(cstack.back().stateid);
                 chash[h] = cstack.back().next;
                 cstack.pop_back();
             }
@@ -112,14 +109,10 @@ namespace LTL {
             successorGenerator.prepare(&src);
             while (successorGenerator.next(dst)) {
                 auto res = seen.add(dst);
-                delem.neighbors->push_back(res.second);
-                continue;
 #ifdef PRINTF_DEBUG
                 std::cerr << "adding state\n";
                 _dump_state(dst);
 #endif
-                res = seen.add(dst);
-                assert(res.first);
                 delem.neighbors->push_back(res.second);
             }
         }
