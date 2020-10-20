@@ -570,10 +570,11 @@ void printStats(PetriNetBuilder& builder, options_t& options)
 }
 
 void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
-    if (options.printstatistics) {
+    //if (options.printstatistics) {
         if (!builder.isColored() && !builder.isUnfolded())
             return;
-        std::cout << "\nSize of colored net: " <<
+        std::cout << "\nColor fixpoint computed in " << builder.getFixpointTime() << " seconds" << std::endl;
+        std::cout << "Size of colored net: " <<
                 builder.getPlaceCount() << " places, " <<
                 builder.getTransitionCount() << " transitions, and " <<
                 builder.getArcCount() << " arcs" << std::endl;
@@ -582,7 +583,8 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
                 builder.getUnfoldedTransitionCount() << " transitions, and " <<
                 builder.getUnfoldedArcCount() << " arcs" << std::endl;
         std::cout << "Unfolded in " << builder.getUnfoldTime() << " seconds" << std::endl;
-    }
+
+    //}
 }
 
 std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {

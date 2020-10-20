@@ -144,6 +144,8 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::computePlaceColorFixpoint() {
+
+        auto start = std::chrono::high_resolution_clock::now();
         
         while(!_placeFixpointQueue.empty()){
             uint32_t currentPlaceId = _placeFixpointQueue.back();
@@ -167,6 +169,8 @@ namespace PetriEngine {
             }
         }
         
+        auto end = std::chrono::high_resolution_clock::now();
+        _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
         //printPlaceTable();
         //We should not need to keep colors in places after we have found fixpoint
         _placeColorFixpoints.clear();
@@ -186,8 +190,6 @@ namespace PetriEngine {
         }
         
         for (auto& arc : transition.input_arcs) {
-
-            
 
             //std::cout << "Arc " << arc.place << "->" << arc.transition << " with expr: " << arc.expr->toString() << std::endl;
 

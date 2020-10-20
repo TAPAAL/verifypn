@@ -111,6 +111,10 @@ namespace PetriEngine {
             return _time;
         }
 
+        double getFixpointTime() const {
+            return _fixPointCreationTime;
+        }
+
         uint32_t getPlaceCount() const {
             return _places.size();
         }
@@ -181,6 +185,7 @@ namespace PetriEngine {
 
 
         double _time;
+        double _fixPointCreationTime;
 
         std::string arcToString(Colored::Arc& arc) const ;
 
