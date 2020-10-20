@@ -188,6 +188,7 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
             auto id = it->first_attribute("id");
             assert(id != nullptr);
             ct->addColor(id->value());
+            
         }
     }
 
@@ -208,6 +209,7 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml:
         return std::make_shared<PetriEngine::Colored::AddExpression>(std::move(constituents));
     } else if (strcmp(element->name(), "subtract") == 0) {
         auto left = element->first_node();
+        //Quick hack to parse pnml created by tapaal, maybe remove
         if (strcmp(left->name(), "subterm") == 0) {
             left = left->first_node();
         }

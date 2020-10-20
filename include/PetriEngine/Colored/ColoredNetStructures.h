@@ -47,12 +47,21 @@ namespace PetriEngine {
         };
 
         struct ColorFixpoint {
-            uint32_t interval_lower;
-            uint32_t interval_upper;
+            std::vector<std::pair<uint32_t, uint32_t>> constraints;
             bool inQueue;
 
-            bool constainsColor(uint32_t colorId) {
-                return interval_lower <= colorId && colorId <= interval_upper;
+            bool constainsColor(const Color *color) {
+                std::vector<uint32_t> colorIdVector;
+                color->getTupleId(&colorIdVector);
+                for (uint32_t i = 0; i < colorIdVector.size(); i++) {
+                    auto colorId = colorIdVector[i];
+                    auto constraintsPair = constraints[i];
+                    if (colorId < constraintsPair.first || colorId > constraintsPair.second){
+                        return false;
+                    }                         
+                }
+
+                return true;
             }
         };
     }

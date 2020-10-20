@@ -88,7 +88,9 @@ namespace PetriEngine {
         }
         
         const Color& Color::operator++ () const {
+            //std::cout << _colorName <<" " << _colorType->getName() << std::endl;
             if (_id >= _colorType->size() - 1) {
+                //std::cout << "inside if" << std::endl;
                 return (*_colorType)[0];
             }
             assert(_id + 1 < _colorType->size());
@@ -105,6 +107,43 @@ namespace PetriEngine {
         
         std::string Color::toString() const {
             return toString(this);
+        }
+
+        void Color::getColorConstraints(std::vector<std::pair<uint32_t, uint32_t>> *constraintsVector, uint32_t *index) const {
+            if (isTuple()) {
+                for (const Color *color : _tuple) {
+                    color->getColorConstraints(constraintsVector, index);
+                    (*index)++;
+                }
+            } else {
+                std::pair<uint32_t, uint32_t> curPair;
+                if (*index >= constraintsVector->size()){
+                    curPair = std::make_pair(_id, _id);
+
+                    constraintsVector->push_back(curPair);
+
+                } else {
+                    curPair = constraintsVector->operator[](*index);
+                    if (_id < curPair.first){
+                        curPair.first = _id;
+                    }
+                    if (_id > curPair.second){
+                        curPair.second = _id;
+                    }
+
+                    constraintsVector->operator[](*index) = curPair;
+                }            
+            }
+        }
+
+        void Color::getTupleId(std::vector<uint32_t> *idVector) const {
+            if(isTuple()) {
+                for (auto color : _tuple) {
+                    color->getTupleId(idVector);
+                }
+            } else {
+                idVector->push_back(_id);
+            }
         }
         
         std::string Color::toString(const Color* color) {

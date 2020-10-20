@@ -21,6 +21,8 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
+#include <iostream>
+#include <cassert>
 
 namespace PetriEngine {
     namespace Colored {
@@ -44,10 +46,14 @@ namespace PetriEngine {
             bool isTuple() const {
                 return _tuple.size() > 1;
             }
+
+            void getColorConstraints(std::vector<std::pair<uint32_t, uint32_t>> *constraintsVector, uint32_t *index) const;
             
             std::vector<const Color*> getTupleColors() const {
                 return _tuple;
             }
+
+            void getTupleId(std::vector<uint32_t> *idVector) const;
 
             const std::string& getColorName() const {
                 if (this->isTuple()) {
@@ -180,6 +186,7 @@ namespace PetriEngine {
             }
             
             virtual const Color& operator[] (uint32_t index) {
+                assert(index < _colors.size());
                 return _colors[index];
             }
             

@@ -39,6 +39,8 @@ namespace PetriEngine {
         Colored::ExpressionContext::BindingMap _bindings;
         ColorTypeMap& _colorTypes;
         Colored::PatternSet _patterns;
+        Colored::Transition &_transition;
+        bool _isDone;
         
         bool eval();
         
@@ -55,6 +57,7 @@ namespace PetriEngine {
         Colored::ExpressionContext::BindingMap& nextBinding();
         Colored::ExpressionContext::BindingMap& currentBinding();
         bool isInitial() const;
+        bool isFinal() const;
         Iterator begin();
         Iterator end();
     };
@@ -153,7 +156,7 @@ namespace PetriEngine {
         PetriNetBuilder& unfold();
         PetriNetBuilder& stripColors();
         void computePlaceColorFixpoint();
-        void printPlaceTable();
+        
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
         std::unordered_map<std::string,uint32_t> _transitionnames;
@@ -180,13 +183,16 @@ namespace PetriEngine {
         double _time;
 
         std::string arcToString(Colored::Arc& arc) const ;
+
+        void printPlaceTable();
         
         void addArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
                 bool input);
-
-
+       
+        void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, bool &transitionActivated);
+        void processOutputArcs(Colored::Transition& transition);
         
         void unfoldPlace(Colored::Place& place);
         void unfoldTransition(Colored::Transition& transition);
