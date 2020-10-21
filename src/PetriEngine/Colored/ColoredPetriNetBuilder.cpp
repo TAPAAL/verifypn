@@ -551,6 +551,8 @@ namespace PetriEngine {
     }
 
     Colored::ExpressionContext::BindingMap& BindingGenerator::nextBinding() {
+            
+            
         bool test = false;
         while (!test) {
             
@@ -564,14 +566,19 @@ namespace PetriEngine {
                     break;
                 }
             }
-
-            if (isFinal()) {
+            
+            if (isInitial()) {
                 _isDone = true;
                 break;
-            }                
-
+            }      
             test = eval();
+            if(_transition.name == "I_rec2"){
+                for (auto& _binding : _bindings){
+                    cout << "color " << _binding.second->getColorName() << " for " << _binding.first << " is " << test << endl;
+                }                
+            }          
         }
+        
         return _bindings;
     }
 
@@ -581,7 +588,7 @@ namespace PetriEngine {
 
     bool BindingGenerator::isInitial() const {
         for (auto& b : _bindings) {
-            if (b.second->getId() != 0) return false;
+            if (b.second->getId() != _transition.variableIntervals[b.first].interval_lower) return false;
         }
         return true;
     }
