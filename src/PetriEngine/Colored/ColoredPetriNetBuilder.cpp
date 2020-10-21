@@ -109,6 +109,7 @@ namespace PetriEngine {
         arc.transition = t;
         assert(expr != nullptr);
         arc.expr = std::move(expr);
+        arc.activatable = false;
         arc.input = input;
         input? _transitions[t].input_arcs.push_back(std::move(arc)): _transitions[t].output_arcs.push_back(std::move(arc));
     }
@@ -195,7 +196,9 @@ namespace PetriEngine {
 
             //Once we have considered the arc connecting to the current place 
             //we can break if transitions are not activated
-            if (!transitionActivated && curPlaceArcProcessed) break;
+            if (!transitionActivated && curPlaceArcProcessed) {
+                break;
+            }
 
             if (arc.place == currentPlaceId) {
                 bool succes = true;
@@ -243,13 +246,11 @@ namespace PetriEngine {
                             varInterval.interval_lower > colorfixpoint.constraints[index].second) {
                                 //If the arc connected to the place under consideration cannot be activated,
                                 //then there is no reason to keep checking
-                                arc.activatable = false;
                                 transitionActivated = false;
                                 succes = false;
                                 break;
                             }
                         }
-
                         transition.variableIntervals[var->name] = varInterval;                              
                     } 
                 }                           
@@ -260,10 +261,8 @@ namespace PetriEngine {
                     if(!colorfixpoint.constainsColor(color)) {
                         //If the arc connected to the place under consideration cannot be activated,
                         //then there is no reason to keep checking
-                        arc.activatable = false;
                         transitionActivated = false;
                         succes = false;
-                        curPlaceArcProcessed = true;
                         break;
                     } 
                 }
@@ -556,9 +555,10 @@ namespace PetriEngine {
         while (!test) {
             
             for (auto& _binding : _bindings) {
+                auto varInterval = _transition.variableIntervals[_binding.first];
 
-                if (_binding.second->getId() == _transition.variableIntervals[_binding.first].interval_upper){
-                    _binding.second = &_binding.second->getColorType()->operator[](_transition.variableIntervals[_binding.first].interval_lower);
+                if (_binding.second->getId() == varInterval.interval_upper){
+                    _binding.second = &_binding.second->getColorType()->operator[](varInterval.interval_lower);
                 } else {
                     _binding.second = &_binding.second->operator++();
                     break;

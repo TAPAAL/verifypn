@@ -165,12 +165,19 @@ namespace PetriEngine {
 
             std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
                 auto varInterval = varIntervals->find(_variable->name);
-                //this check should probably be removed
+                std::vector<std::pair<uint32_t, uint32_t>> intervals;
+                
                 if (varInterval == varIntervals->end()){
                     std::cout << "Could not find intervals for: " << _variable->name << std::endl;
-                    return std::vector<std::pair<uint32_t, uint32_t>>();
+                    std::cout << "[";
+                    for (auto interval : *varIntervals) {
+                        std::cout << interval.first << ", ";
+                    }
+                    std::cout << std::endl;
+                    intervals.push_back(std::make_pair(0, _variable->colorType->size()-1));
+                    return intervals;
                 }
-                std::vector<std::pair<uint32_t, uint32_t>> intervals;
+                
                 intervals.push_back(std::make_pair(varInterval.operator*().second.interval_lower, varInterval.operator*().second.interval_upper));
                 return intervals;
             }
@@ -947,6 +954,7 @@ namespace PetriEngine {
                     bool succes = _right->getVariableRestriction(index, &restrictionvector, &intervalSize);
                     if (!succes) {
                         //comparing vars;
+                        
                     } else if(restrictionvector.size() == 1) {
                         varInterval->interval_upper = varInterval->interval_lower = (restrictionvector.back() + leftModifier) % colortypeSize;
                     } else if (restrictionvector.size() > 1) {
