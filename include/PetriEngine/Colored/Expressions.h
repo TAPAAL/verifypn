@@ -141,6 +141,10 @@ namespace PetriEngine {
             ColorType* getColorType(std::unordered_map<std::string,Colored::ColorType*>& colorTypes) const override{
                 return DotConstant::dotConstant()->getColorType();
             }
+
+            std::string toString() const override {
+                return "dot";
+            }
         };
 
         typedef std::shared_ptr<ColorExpression> ColorExpression_ptr;

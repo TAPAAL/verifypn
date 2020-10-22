@@ -163,6 +163,10 @@ namespace PetriEngine {
 
                 
                 processInputArcs(transition, currentPlaceId, transitionActivated);
+
+                /*if(transition.name == "I_free"){
+                    cout << "transition activated: " << transitionActivated << " for place " << _places[currentPlaceId].name << endl;
+                }*/
                 
                 if (transitionActivated) {
                     processOutputArcs(transition);
@@ -191,8 +195,10 @@ namespace PetriEngine {
         }
         
         for (auto& arc : transition.input_arcs) {
+            /*if(transition.name == "I_free"){
+                std::cout << "Arc " << arc.place << "->" << transition.name << " with expr: " << arc.expr->toString() << std::endl;
 
-            //std::cout << "Arc " << arc.place << "->" << arc.transition << " with expr: " << arc.expr->toString() << std::endl;
+            }*/
 
             //Once we have considered the arc connecting to the current place 
             //we can break if transitions are not activated
@@ -221,6 +227,7 @@ namespace PetriEngine {
 
                         if (transition.guard != nullptr && transitionVars.find(var) != transitionVars.end()) {
                             transition.guard->restrictVar(&guardVarInterval);
+                            //std::cout << "variable " << var->name << " with range [" << guardVarInterval.interval_lower << "," << guardVarInterval.interval_upper << "] in colortype " << var->colorType->getName() << endl;  
                         } 
 
                         if (transition.variableIntervals.count(var->name) == 0) {
@@ -246,6 +253,7 @@ namespace PetriEngine {
                             varInterval.interval_lower > colorfixpoint.constraints[index].second) {
                                 //If the arc connected to the place under consideration cannot be activated,
                                 //then there is no reason to keep checking
+                                //cout << "could not activate arc " << endl;
                                 transitionActivated = false;
                                 succes = false;
                                 break;
@@ -261,6 +269,7 @@ namespace PetriEngine {
                     if(!colorfixpoint.constainsColor(color)) {
                         //If the arc connected to the place under consideration cannot be activated,
                         //then there is no reason to keep checking
+                         //cout << "could not activate arc in these corlors " << endl;
                         transitionActivated = false;
                         succes = false;
                         break;
@@ -277,6 +286,7 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::processOutputArcs(Colored::Transition& transition) {
         bool transitionHasVarOutArcs = false;
+        //cout << transition.name << " activated " << endl;
         for (auto& arc : transition.output_arcs) {
             Colored::ColorFixpoint& placeFixpoint = _placeColorFixpoints[arc.place];
 
@@ -285,7 +295,7 @@ namespace PetriEngine {
             //can be checked by summing the differences
             uint32_t colorsBefore = 0;
             for (auto constraint : placeFixpoint.constraints) {
-                colorsBefore += constraint.second - constraint.first;
+                colorsBefore += 1+  constraint.second - constraint.first;
             }
                 
             std::set<Colored::Variable *> variables;
@@ -337,9 +347,10 @@ namespace PetriEngine {
             if (!placeFixpoint.inQueue) {
                 uint32_t colorsAfter = 0;
                 for (auto constraint : placeFixpoint.constraints) {
-                    colorsAfter += constraint.second - constraint.first;
+                    colorsAfter += 1 + constraint.second - constraint.first;
                 }
                 if (colorsAfter > colorsBefore) {
+
                     _placeFixpointQueue.push_back(arc.place);
                     placeFixpoint.inQueue = true;
                 }
@@ -572,11 +583,11 @@ namespace PetriEngine {
                 break;
             }      
             test = eval();
-            if(_transition.name == "I_rec2"){
+            /*if(_transition.name == "I_rec2"){
                 for (auto& _binding : _bindings){
                     cout << "color " << _binding.second->getColorName() << " for " << _binding.first << " is " << test << endl;
                 }                
-            }          
+            } */         
         }
         
         return _bindings;
