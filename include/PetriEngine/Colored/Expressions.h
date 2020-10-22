@@ -91,6 +91,12 @@ namespace PetriEngine {
             }
 
             virtual std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, PetriEngine::Colored::VariableInterval> *varIntervals) const {
+                std::vector<Colored::ColorType *> colortypes;
+                
+                return getOutputIntervals(varIntervals, &colortypes);
+            }
+
+            virtual std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, PetriEngine::Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const {
                 return std::vector<std::pair<uint32_t, uint32_t>>();
             }
 
@@ -167,9 +173,10 @@ namespace PetriEngine {
                 varPositions[_variable->name].insert(*index);
             }
 
-            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 auto varInterval = varIntervals->find(_variable->name);
                 std::vector<std::pair<uint32_t, uint32_t>> intervals;
+                colortypes->push_back(_variable->colorType);
                 
                 if (varInterval == varIntervals->end()){
                     std::cout << "Could not find intervals for: " << _variable->name << std::endl;
@@ -257,6 +264,15 @@ namespace PetriEngine {
                 return _userOperator->getColorType();
             }
 
+            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+                std::vector<std::pair<uint32_t, uint32_t>> intervals;
+                colortypes->push_back(_userOperator->getColorType());
+                auto colorId = _userOperator->getId();
+                
+                intervals.push_back(std::make_pair(colorId, colorId));
+                return intervals;
+            }
+
             UserOperatorExpression(const Color* userOperator)
                     : _userOperator(userOperator) {}
         };
@@ -311,8 +327,26 @@ namespace PetriEngine {
                 _color->getVariables(variables, varPositions, modifier, index);
             }
 
-            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
-                return _color->getOutputIntervals(varIntervals);
+            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+                auto nestedInterval = _color->getOutputIntervals(varIntervals, colortypes);
+                bool reduced = false;
+                for(uint32_t i = 0;  i < nestedInterval.size(); i++) {
+                    auto interval = &nestedInterval[i];
+                    if(interval->second < colortypes->operator[](i)->size()-1){
+                        interval->second++;
+                        reduced = true;
+                        break;
+                    }
+                }
+
+                //predecessor called on maximal element, so the minimal element is returned
+                if(!reduced) {
+                    for(auto &interval : nestedInterval) {
+                        interval.first = 0;
+                    }
+                }
+                
+                return nestedInterval;
             }
 
             bool getVariableRestriction(int32_t index, std::vector<uint32_t> * restrictionValue, uint32_t *intervalSize) const override {
@@ -374,8 +408,25 @@ namespace PetriEngine {
                 _color->getVariables(variables, varPositions, modifier, index);
             }
             
-            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
-                return _color->getOutputIntervals(varIntervals);
+            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+                auto nestedInterval = _color->getOutputIntervals(varIntervals, colortypes);
+                bool reduced = false;
+                for (auto interval : nestedInterval) {
+                    if(interval.first != 0){
+                        interval.first--;
+                        reduced = true;
+                        break;
+                    }
+                }
+
+                //predecessor called on minimal element, so the maximal element is returned
+                if(!reduced) {
+                    for(uint32_t i = 0;  i < nestedInterval.size(); i++) {
+                        nestedInterval[i].second = colortypes->operator[](i)->size()-1;
+                    }
+                }
+                
+                return nestedInterval;
             }
 
             bool getVariableRestriction(int32_t index, std::vector<uint32_t> * restrictionValue, uint32_t *intervalSize) const override {
@@ -434,11 +485,11 @@ namespace PetriEngine {
                 return col;
             }
 
-            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 std::vector<std::pair<uint32_t, uint32_t>> intervals;
 
                 for(auto colorExp : _colors) {
-                    auto nested_interval = colorExp->getOutputIntervals(varIntervals);
+                    auto nested_interval = colorExp->getOutputIntervals(varIntervals, colortypes);
                     
                     intervals.insert(intervals.end(), nested_interval.begin(), nested_interval.end());
                 }
@@ -1320,11 +1371,11 @@ namespace PetriEngine {
                 }
             }
 
-            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 std::vector<std::pair<uint32_t, uint32_t>> intervals;
                 if (_all == nullptr) {
                     for (auto elem : _color) {
-                        auto nestedIntervals = elem->getOutputIntervals(varIntervals);
+                        auto nestedIntervals = elem->getOutputIntervals(varIntervals, colortypes);
 
                         if (intervals.empty()) {
                             intervals = nestedIntervals;
@@ -1423,11 +1474,11 @@ namespace PetriEngine {
                 }
             }            
 
-            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 std::vector<std::pair<uint32_t, uint32_t>> intervals;
                 
                 for (auto elem : _constituents) {
-                    auto nestedIntervals = elem->getOutputIntervals(varIntervals);
+                    auto nestedIntervals = elem->getOutputIntervals(varIntervals, colortypes);
 
                     if (intervals.empty()) {
                         intervals = nestedIntervals;
@@ -1498,9 +1549,9 @@ namespace PetriEngine {
                 _right->getVariables(variables, varPositions);
             }
 
-            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 //We could maybe reduce the intervals slightly by checking if the upper or lower bound is being subtracted
-                auto leftIntervals = _left->getOutputIntervals(varIntervals);
+                auto leftIntervals = _left->getOutputIntervals(varIntervals, colortypes);
 
                 return leftIntervals;
             }   
@@ -1566,8 +1617,8 @@ namespace PetriEngine {
                 _expr->getVariables(variables, varPositions);
             }
 
-            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
-                return _expr->getOutputIntervals(varIntervals);
+            std::vector<std::pair<uint32_t, uint32_t>> getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+                return _expr->getOutputIntervals(varIntervals, colortypes);
             }
 
             std::set<const Color*> getConstants() const override {
