@@ -43,6 +43,25 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
+void printStats(PetriNetBuilder& builder, options_t& options)
+{
+    if (options.printstatistics) {
+        if (options.enablereduction != 0) {
+
+            std::cout << "Size of net before structural reductions: " <<
+                      builder.numberOfPlaces() << " places, " <<
+                      builder.numberOfTransitions() << " transitions" << std::endl;
+            std::cout << "Size of net after structural reductions: " <<
+                      builder.numberOfPlaces() - builder.RemovedPlaces() << " places, " <<
+                      builder.numberOfTransitions() - builder.RemovedTransitions() << " transitions" << std::endl;
+            std::cout << "Structural reduction finished after " << builder.getReductionTime() <<
+                      " seconds" << std::endl;
+
+            std::cout   << "\nNet reduction is enabled.\n";
+            builder.printStats(std::cout);
+        }
+    }
+}
 
 std::vector<std::string> explode(std::string const & s)
 {
@@ -398,15 +417,13 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 }
 
 
-ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder& builder, const PetriNet* net, vector<QueryItem> queries)
+ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder& builder, const PetriNet* net, vector<Condition_ptr> queries)
 {
     //Context analysis
     ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net, cpnBuilder.getUnfoldedPlaceNames(), cpnBuilder.getUnfoldedTransitionNames(), cpnBuilder.isColored());
     for(auto& q : queries)
     {
-        if (q.id.empty())
-            continue;
-        q.query->analyze(context);
+        q->analyze(context);
 
         //Print errors if any
         if (context.errors().size() > 0) {
@@ -476,6 +493,14 @@ ReturnValue LTLMain(options_t options) {
         std::cerr << "Error parsing the query file" << std::endl;
         return ErrorCode;
     }
+    std::vector<std::string> querynames;
+    std::vector<Condition_ptr> queries;
+    for (int i=0; i < parser.queries.size(); i++){
+        if (options.querynumbers.count(i) == 0) continue;
+        querynames.push_back(parser.queries[i].id);
+        queries.push_back(parser.queries[i].query);
+    }
+
     ColoredPetriNetBuilder cpnBuilder;
 
     if ((v = parseModel(cpnBuilder, model_file)) != ContinueCode) {
@@ -484,31 +509,59 @@ ReturnValue LTLMain(options_t options) {
     }
     auto strippedBuilder = cpnBuilder.stripColors(); //TODO can we trivially handle colors or do we need to strip?
     PetriNetBuilder builder(strippedBuilder);
+    builder.sort();
     std::unique_ptr<PetriNet> net{builder.makePetriNet()};
-    if ((v = contextAnalysis(cpnBuilder, builder, net.get(), parser.queries)) != ContinueCode){
+    if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode){
         std::cerr << "Error performing context analysis" << std::endl;
         return v;
     }
-    for (const auto &query : parser.queries) {
-        if (query.query) {
-            auto[negated_formula, negate_answer] = to_ltl(query.query);
-            if (!negated_formula) {
-                std::cerr << "Query file " << qfilename << " contained non-LTL formula";
-                return ErrorCode;
-            }
-            std::unique_ptr<LTL::ModelChecker> modelChecker;
-            switch (options.ltlalgorithm) {
-                case LTL::Algorithm::NDFS:
-                    modelChecker = std::make_unique<LTL::NestedDepthFirstSearch>(*net, negated_formula);
-                    break;
-                case LTL::Algorithm::Tarjan:
-                    modelChecker = std::make_unique<LTL::TarjanModelChecker>(*net, negated_formula);
-                    break;
-            }
 
-            bool satisfied = negate_answer ^ modelChecker->isSatisfied();
-            std::cout  << "FORMULA " << query.id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << (options.ltlalgorithm == LTL::Algorithm::NDFS ? " NDFS" : " TARJAN") << std::endl;
+    //--------------------- Apply Net Reduction ---------------//
+
+    std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Unknown);
+    ResultPrinter printer(&builder, &options, querynames);
+
+    if (options.enablereduction > 0) {
+
+        // Compute how many times each place appears in the query
+        builder.startTimer();
+        builder.reduce(queries, results, options.enablereduction, options.trace, nullptr, options.reductionTimeout, options.reductions);
+        printer.setReducer(builder.getReducer());
+    }
+
+    printStats(builder, options);
+
+    net = std::unique_ptr<PetriNet>(builder.makePetriNet());
+
+    if(!options.model_out_file.empty())
+    {
+        fstream file;
+        file.open(options.model_out_file, std::ios::out);
+        net->toXML(file);
+    }
+
+    //--------------------- Verify LTL queries ---------------//
+
+    for (int i; i < queries.size(); i++) {
+        auto query = queries[i];
+        auto id = querynames[i];
+        auto[negated_formula, negate_answer] = to_ltl(query);
+        if (!negated_formula) {
+            std::cerr << "Query file " << qfilename << " contained non-LTL formula";
+            return ErrorCode;
         }
+        std::unique_ptr<LTL::ModelChecker> modelChecker;
+        switch (options.ltlalgorithm) {
+            case LTL::Algorithm::NDFS:
+                modelChecker = std::make_unique<LTL::NestedDepthFirstSearch>(*net, negated_formula);
+                break;
+            case LTL::Algorithm::Tarjan:
+                modelChecker = std::make_unique<LTL::TarjanModelChecker>(*net, negated_formula);
+                break;
+        }
+
+        bool satisfied = negate_answer ^ modelChecker->isSatisfied();
+        std::cout  << "FORMULA " << id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << (options.ltlalgorithm == LTL::Algorithm::NDFS ? " NDFS" : " TARJAN") << std::endl;
     }
     return SuccessCode;
 }

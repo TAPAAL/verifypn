@@ -461,7 +461,6 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            bool containsNext() const override { return true; }
             virtual bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
         private:
@@ -497,7 +496,6 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            bool containsNext() const override { return true; }
             virtual bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
         private:
@@ -533,7 +531,6 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            bool containsNext() const override { return true; }
             virtual bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
         private:
@@ -569,7 +566,6 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            bool containsNext() const override { return true; }
             virtual bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
         private:
