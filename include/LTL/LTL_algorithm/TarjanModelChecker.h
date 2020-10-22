@@ -31,36 +31,35 @@ namespace LTL {
     private:
         using State = LTL::Structures::ProductState;
         using idx_t = size_t;
+        static constexpr idx_t HashSz = 4096;
 
         LTL::Structures::ProductStateFactory factory;
 
         PetriEngine::Structures::StateSet seen;
         std::unordered_set<idx_t> store;
-        //PetriEngine::Structures::StateSet store;
 
-        static constexpr idx_t HashSz = 4096;
         std::array<idx_t, HashSz> chash;
 
         static inline idx_t hash(idx_t id) {
             return id % HashSz;
         }
 
-        struct CStack {
+        struct CEntry {
             size_t lowlink;
             size_t stateid;
             size_t next = std::numeric_limits<idx_t>::max();
 
-            CStack(size_t lowlink, size_t stateid, size_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
+            CEntry(size_t lowlink, size_t stateid, size_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
         };
 
-        struct DStack {
+        struct DEntry {
             size_t pos;
             successor_info sucinfo;
         };
 
 
-        std::vector<CStack> cstack;
-        std::stack<DStack> dstack;
+        std::vector<CEntry> cstack;
+        std::stack<DEntry> dstack;
         std::stack<idx_t> astack;
         bool violation = false;
 
@@ -70,7 +69,7 @@ namespace LTL {
 
         void update(idx_t to);
 
-        bool nexttrans(State &state, State& parent, DStack &delem);
+        bool nexttrans(State &state, State& parent, DEntry &delem);
     };
 }
 

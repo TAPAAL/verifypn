@@ -49,8 +49,6 @@ namespace LTL {
 
         void prepare(const LTL::Structures::ProductState *state);
 
-        void prepare(const LTL::Structures::ProductState *state, successor_info &sucinfo);
-
         bool next(LTL::Structures::ProductState &state);
 
         bool isAccepting(const LTL::Structures::ProductState &state);
@@ -71,6 +69,20 @@ namespace LTL {
             }
         }
 
+        /**
+         * prepare a state for successor generation, starting from specific point in iteration
+         * @param state the source state to generate successors from
+         * @param sucinfo the point in the iteration to start from, as returned by `next`.
+         */
+        void prepare(const LTL::Structures::ProductState *state, const successor_info &sucinfo);
+
+        /**
+         * compute the next successor from the last state that was sent to `prepare`.
+         * @param[out] state the state to write
+         * @param[out] sucinfo checkpoint information from which iteration can later be resumed.
+         * @return `true` if a successor was successfully generated, `false` otherwise.
+         * @warning do not use the same State for both prepare and next, this will cause wildly incorrect behaviour!
+         */
         bool next(Structures::ProductState &state, successor_info &sucinfo);
 
     private:
