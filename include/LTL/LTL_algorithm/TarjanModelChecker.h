@@ -21,7 +21,7 @@ namespace LTL {
     class TarjanModelChecker : public ModelChecker {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond)
-                : ModelChecker(net, cond), successorGenerator(net, cond), factory(net, successorGenerator.initial_buchi_state()),
+                : ModelChecker(net, cond), factory(net, successorGenerator->initial_buchi_state()),
                   seen(net, 0, (int) net.numberOfPlaces() + 1) {
             chash.fill(std::numeric_limits<idx_t>::max());
         }
@@ -32,7 +32,6 @@ namespace LTL {
         using State = LTL::Structures::ProductState;
         using idx_t = size_t;
 
-        LTL::ProductSuccessorGenerator successorGenerator;
         LTL::Structures::ProductStateFactory factory;
 
         PetriEngine::Structures::StateSet seen;
@@ -41,15 +40,8 @@ namespace LTL {
 
         static constexpr idx_t HashSz = 4096;
         std::array<idx_t, HashSz> chash;
-        inline idx_t hash_search(idx_t stateid) {
-            idx_t idx = chash[hash(stateid)];
-            while (idx != stateid && idx != std::numeric_limits<idx_t>::max()) {
-                idx = cstack[idx].next;
-            }
-            return idx;
-        }
 
-        inline idx_t hash(idx_t id) {
+        static inline idx_t hash(idx_t id) {
             return id % HashSz;
         }
 
@@ -63,8 +55,7 @@ namespace LTL {
 
         struct DStack {
             size_t pos;
-            uint32_t nexttrans = -1;
-            std::optional<std::vector<size_t>> neighbors;
+            successor_info sucinfo;
         };
 
 
@@ -79,7 +70,7 @@ namespace LTL {
 
         void update(idx_t to);
 
-        bool nexttrans(State &state, DStack &delem);
+        bool nexttrans(State &state, State& parent, DStack &delem);
     };
 }
 

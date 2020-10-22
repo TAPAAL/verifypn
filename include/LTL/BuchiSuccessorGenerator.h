@@ -18,7 +18,7 @@
 namespace LTL {
     class BuchiSuccessorGenerator {
     public:
-        BuchiSuccessorGenerator(Structures::BuchiAutomaton automaton)
+        explicit BuchiSuccessorGenerator(Structures::BuchiAutomaton automaton)
                 : aut(std::move(automaton)) {
         }
 

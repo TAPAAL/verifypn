@@ -205,7 +205,6 @@ namespace LTL {
         std::stringstream ss;
         FormulaToSpotSyntax spotConverter{ss};
         query->visit(spotConverter);
-
         const std::string spotFormula = "!(" + ss.str() + ")";
 #ifdef PRINTF_DEBUG
         std::cerr << "ORIG FORMULA: \n  " << ss.str() << std::endl;

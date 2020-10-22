@@ -25,23 +25,25 @@ namespace LTL {
 #endif
 
     bool LTL::TarjanModelChecker::isSatisfied() {
+        std::unordered_set<idx_t> inits;
         {
             std::vector<State> initial_states;
-            successorGenerator.makeInitialState(initial_states);
+            successorGenerator->makeInitialState(initial_states);
             for (auto &state : initial_states) {
-                seen.add(state);
+                auto res = seen.add(state);
                 push(state);
+                inits.insert(res.second);
             }
         }
         State working = factory.newState();
+        State parent = factory.newState();
         while (!dstack.empty() && !violation) {
             DStack &dtop = dstack.top();
-            if (!nexttrans(working, dtop)) {
+            if (!nexttrans(working, parent, dtop)) {
                 pop();
                 continue;
             }
-            // get ID of transition taken (nexttrans = lasttrans + 1)
-            idx_t stateid = (*dtop.neighbors)[dtop.nexttrans - 1];
+            idx_t stateid = seen.add(working).second;
 
             // lookup successor in 'hash' table
             auto p = chash[hash(stateid)];
@@ -60,14 +62,18 @@ namespace LTL {
         return !violation;
     }
 
+    /**
+     * Push a state to the various stacks.
+     * @param state
+     */
     void TarjanModelChecker::push(State &state) {
         const auto res = seen.add(state);
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(res.second);
         cstack.emplace_back(ctop, res.second, chash[h]);
         chash[h] = ctop;
-        dstack.push({ctop});
-        if (successorGenerator.isAccepting(state)) {
+        dstack.push(DStack{ctop, initial_suc_info});
+        if (successorGenerator->isAccepting(state)) {
             astack.push(ctop);
         }
     }
@@ -99,34 +105,20 @@ namespace LTL {
         }
     }
 
-    bool TarjanModelChecker::nexttrans(State &state, TarjanModelChecker::DStack &delem) {
-        if (!delem.neighbors) {
-            delem.neighbors = std::vector<idx_t>();
-            delem.nexttrans = 0;
-            State src = factory.newState();
-            State dst = factory.newState();
-            seen.decode(src, cstack[delem.pos].stateid);
-            successorGenerator.prepare(&src);
-            while (successorGenerator.next(dst)) {
-                auto res = seen.add(dst);
+    bool TarjanModelChecker::nexttrans(State &state, State &parent, TarjanModelChecker::DStack &delem) {
+        seen.decode(parent, cstack[delem.pos].stateid);
 #ifdef PRINTF_DEBUG
-                std::cerr << "adding state\n";
-                _dump_state(dst);
+        std::cerr << "loaded parent\n  ";
+        _dump_state(parent);
 #endif
-                delem.neighbors->push_back(res.second);
-            }
-        }
-        if (delem.nexttrans == delem.neighbors->size()) {
-            return false;
-        } else {
-            seen.decode(state, (*delem.neighbors)[delem.nexttrans]);
+        successorGenerator->prepare(&parent, delem.sucinfo);
+        auto res = successorGenerator->next(state, delem.sucinfo);
 #ifdef PRINTF_DEBUG
-            std::cerr << "loaded state\n";
+        if (res) {
+            std::cerr << "going to state\n";
             _dump_state(state);
-#endif
-            delem.nexttrans++;
-            return true;
         }
+#endif
+        return res;
     }
-
 }

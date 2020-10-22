@@ -11,17 +11,45 @@
 #include "LTL/BuchiSuccessorGenerator.h"
 #include "LTL/LTLToBuchi.h"
 
+
 namespace LTL {
+    /**
+     * type holding sufficient information to resume successor generation for a state from a given point.
+     */
+    struct successor_info {
+        uint32_t pcounter;
+        uint32_t tcounter;
+        size_t buchi_state;
+
+        friend bool operator==(const successor_info &lhs, const successor_info &rhs) {
+            return lhs.pcounter == rhs.pcounter &&
+                   lhs.tcounter == rhs.tcounter &&
+                   lhs.buchi_state == rhs.buchi_state;
+        }
+
+        friend bool operator!=(const successor_info &lhs, const successor_info &rhs) {
+            return !(rhs == lhs);
+        }
+    };
+
+    constexpr successor_info initial_suc_info{
+            0,
+            std::numeric_limits<uint32_t>::max(),
+            std::numeric_limits<size_t>::max(),
+    };
+
     class ProductSuccessorGenerator : public PetriEngine::SuccessorGenerator {
     public:
+
         ProductSuccessorGenerator(const PetriEngine::PetriNet &net,
-                                  const PetriEngine::PQL::Condition_ptr& cond)
-                                  : PetriEngine::SuccessorGenerator(net), buchi(makeBuchiAutomaton(cond))
-        {}
+                                  const PetriEngine::PQL::Condition_ptr &cond)
+                : PetriEngine::SuccessorGenerator(net), buchi(makeBuchiAutomaton(cond)) {}
 
         [[nodiscard]] size_t initial_buchi_state() const { return buchi.initial_state_number(); };
 
         void prepare(const LTL::Structures::ProductState *state);
+
+        void prepare(const LTL::Structures::ProductState *state, successor_info &sucinfo);
 
         bool next(LTL::Structures::ProductState &state);
 
@@ -43,8 +71,7 @@ namespace LTL {
             }
         }
 
-    protected:
-        bool next(LTL::Structures::ProductState &write, uint32_t &tindex);
+        bool next(Structures::ProductState &state, successor_info &sucinfo);
 
     private:
         BuchiSuccessorGenerator buchi;
