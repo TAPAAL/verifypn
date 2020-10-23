@@ -25,12 +25,12 @@ namespace LTL {
 
     void NestedDepthFirstSearch::dfs() {
         std::stack<size_t> call_stack;
-
-        PetriEngine::Structures::StateSet states{net,0, (int)net.numberOfPlaces() + 1};
-        PetriEngine::Structures::DFSQueue todo{&states};
+        std::stack<StackEntry> todo;
+        PetriEngine::Structures::StateSet states{net, 0, (int) net.numberOfPlaces() + 1};
+        //PetriEngine::Structures::DFSQueue todo{&states};
 
         State working = factory.newState();
-        PQL::DistanceContext ctx{&net, working.marking()};
+        //PQL::DistanceContext ctx{&net, working.marking()};
         State curState = factory.newState();
         {
             std::vector<State> initial_states;
@@ -38,12 +38,28 @@ namespace LTL {
             for (auto &state : initial_states) {
                 auto res = states.add(state);
                 assert(res.first);
-                todo.push(res.second, ctx, formula);
+                todo.push(StackEntry{res.second, initial_suc_info});
             }
         }
 
-        while (todo.top(curState)) {
-
+        while (!todo.empty()) {
+            auto& top = todo.top();
+            states.decode(curState, top.id);
+            successorGenerator->prepare(&curState, top.sucinfo);
+            std::pair<bool, size_t> res;
+            if (!successorGenerator->next(working, top.sucinfo) || !mark1.add(working).first) {
+                todo.pop();
+                if (successorGenerator->isAccepting(curState)) {
+                    seed = &curState;
+                    ndfs(curState);
+                    if (violation) return;
+                }
+            } else {
+                res = states.add(working);
+                todo.push(StackEntry{res.second, initial_suc_info});
+            }
+            continue;
+            //todo.top(curState);
             if (!call_stack.empty() && states.lookup(curState).second == call_stack.top()) {
                 if (successorGenerator->isAccepting(curState)) {
                     seed = &curState;
@@ -51,53 +67,77 @@ namespace LTL {
                     if (violation)
                         return;
                 }
-                todo.pop(curState);
+                // todo.pop(curState);
+                todo.pop();
                 call_stack.pop();
             } else {
                 call_stack.push(states.add(curState).second);
                 if (!mark1.add(curState).first) {
                     continue;
                 }
-                successorGenerator->prepare(&curState);
+                successorGenerator->prepare(&curState, top.sucinfo);
 #ifdef PRINTF_DEBUG
                 std::cerr << "curState:\n";
                 dump_state(curState);
 #endif
-                while (successorGenerator->next(working)) {
+                if (successorGenerator->next(working, top.sucinfo)) {
 #ifdef PRINTF_DEBUG
                     std::cerr << "working:\n";
                     dump_state(working);
 #endif
                     auto r = states.add(working);
-                    todo.push(r.second, ctx, formula);
+                    todo.push(StackEntry{r.second, initial_suc_info});
                 }
             }
         }
     }
 
 
-    void NestedDepthFirstSearch::ndfs(State& state) {
-        PetriEngine::Structures::StateSet states{net, 0, (int)net.numberOfPlaces() + 1};
-        PetriEngine::Structures::DFSQueue todo{&states};
+    void NestedDepthFirstSearch::ndfs(State &state) {
+        PetriEngine::Structures::StateSet states{net, 0, (int) net.numberOfPlaces() + 1};
+        //PetriEngine::Structures::DFSQueue todo{&states};
+        std::stack<StackEntry> todo;
 
         State working = factory.newState();
         State curState = factory.newState();
 
         PQL::DistanceContext ctx{&net, state.marking()};
 
-        todo.push(states.add(state).second, ctx, formula);
+        todo.push(StackEntry{states.add(state).second, initial_suc_info});
 
-        while (todo.pop(curState)) {
+        while (!todo.empty()) {
+            auto& top = todo.top();
+            states.decode(curState, top.id);
+            successorGenerator->prepare(&curState, top.sucinfo);
+            std::pair<bool, size_t> res;
+            if (!successorGenerator->next(working, top.sucinfo)) {
+                todo.pop();
+            } else {
+                if (working == *seed) {
+#ifdef PRINTF_DEBUG
+                    std::cerr << "seed:\n  "; dump_state(*seed);
+                    std::cerr << "working:\n  "; dump_state(working);
+#endif
+                    violation = true;
+                    return;
+                }
+                res = mark2.add(working);
+                if (res.first) {
+                    res = states.add(working);
+                    todo.push(StackEntry{res.second, initial_suc_info});
+                }
+            }
+            continue;
             if (!mark2.add(curState).first) {
-                continue;
+                todo.pop();
             }
 
-            successorGenerator->prepare(&curState);
+            successorGenerator->prepare(&curState, top.sucinfo);
 #ifdef PRINTF_DEBUG
             std::cerr << "curState:\n";
             dump_state(curState);
 #endif
-            while (successorGenerator->next(working)) {
+            if (successorGenerator->next(working, top.sucinfo)) {
 #ifdef PRINTF_DEBUG
                 std::cerr << "working:\n";
                 dump_state(working);
@@ -111,7 +151,8 @@ namespace LTL {
                     return;
                 }
                 auto r = states.add(working);
-                todo.push(r.second, ctx, formula);
+                todo.push(StackEntry{r.second, initial_suc_info});
+                //todo.push(r.second, ctx, formula);
             }
         }
 

@@ -31,6 +31,10 @@ namespace LTL {
         PetriEngine::Structures::StateSet mark1;
         PetriEngine::Structures::StateSet mark2;
 
+        struct StackEntry {
+            size_t id;
+            successor_info sucinfo;
+        };
 
         State *seed;
         bool violation = false;
