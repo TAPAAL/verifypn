@@ -210,9 +210,9 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml:
     } else if (strcmp(element->name(), "subtract") == 0) {
         auto left = element->first_node();
         //Quick hack to parse pnml created by tapaal, maybe remove
-        if (strcmp(left->name(), "subterm") == 0) {
+        /*if (strcmp(left->name(), "subterm") == 0) {
             left = left->first_node();
-        }
+        }*/
         auto right = left->next_sibling();
         auto res = std::make_shared<PetriEngine::Colored::SubtractExpression>(parseArcExpression(left), parseArcExpression(right));
         auto next = right;
