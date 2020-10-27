@@ -1304,8 +1304,8 @@ namespace PetriEngine {
 
             std::set<const Color*> getConstants() const {
                 std::set<const Color*> colors;
-                for(auto color : *_sort) {
-                    colors.insert(&color);
+                for (size_t i = 0; i < _sort->size(); i++) {
+                    colors.insert(&(*_sort)[i]);
                 }
                 return colors;
             }
