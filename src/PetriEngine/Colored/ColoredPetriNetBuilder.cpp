@@ -375,6 +375,9 @@ namespace PetriEngine {
             for (auto& transition : _transitions) {
                 unfoldTransition(transition);
             }
+            for (auto& place : _places) {
+               handleOrphanPlace(place);
+            }
 
             _unfolded = true;
             auto end = std::chrono::high_resolution_clock::now();
@@ -382,6 +385,20 @@ namespace PetriEngine {
         }
 
         return _ptBuilder;
+    }
+    //Due to the way we unfold places, we only unfold palces connected to an arc (which makes sense)
+    //However, in queries asking about orphan places it cannot find these, as they have not been unfolded
+    //so we make a placeholder place which just has tokens equal to the number of colored tokens
+    //Ideally, orphan places should just be translated to a constant in the query
+    void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place) {
+        if(_ptplacenames.count(place.name) <= 0){
+            std::string name = place.name + "_" + std::to_string(place.marking.size());
+            _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
+            _ptplacenames[place.name][0] = std::move(name);
+        }
+        
+        //++_nptplaces;
+        
     }
 
     void ColoredPetriNetBuilder::unfoldPlace(Colored::Place& place) {
