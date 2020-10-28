@@ -155,7 +155,6 @@ namespace PetriEngine {
             std::vector<uint32_t> connectedTransitions = _placePostTransitionMap[currentPlaceId];
 
             for (uint32_t transitionId : connectedTransitions) {
-                
                 Colored::Transition& transition = _transitions[transitionId];
                 if (transition.considered) break;
                 bool transitionActivated = true;
@@ -560,6 +559,7 @@ namespace PetriEngine {
             //arc.expr->getPatterns(_patterns, _colorTypes);
         }
         
+        
         for (auto var : variables) {
             auto color = &var->colorType->operator[](_transition.variableIntervals[var->name].interval_lower);
             _bindings[var->name] = color;
@@ -600,11 +600,11 @@ namespace PetriEngine {
                 break;
             }      
             test = eval();
-            /*if(_transition.name == "I_rec2"){
+            /*if(_transition.name == "Start"){
                 for (auto& _binding : _bindings){
                     cout << "color " << _binding.second->getColorName() << " for " << _binding.first << " is " << test << endl;
                 }                
-            } */         
+            }*/         
         }
         
         return _bindings;

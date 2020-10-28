@@ -180,12 +180,8 @@ namespace PetriEngine {
                 
                 if (varInterval == varIntervals->end()){
                     std::cout << "Could not find intervals for: " << _variable->name << std::endl;
-                    std::cout << "[";
-                    for (auto interval : *varIntervals) {
-                        std::cout << interval.first << ", ";
-                    }
-                    std::cout << std::endl;
                     intervals.push_back(std::make_pair(0, _variable->colorType->size()-1));
+                    varIntervals->insert(std::make_pair(_variable->name, VariableInterval{_variable, 0, (uint32_t)_variable->colorType->size()-1}));
                     return intervals;
                 }
                 
