@@ -42,6 +42,7 @@ namespace LTL {
                 continue;
             }
             idx_t stateid = seen.add(working).second;
+            dtop.sucinfo.last_state = stateid;
 
             // lookup successor in 'hash' table
             auto p = chash[hash(stateid)];
@@ -114,6 +115,9 @@ namespace LTL {
         _dump_state(parent);
 #endif
         successorGenerator->prepare(&parent, delem.sucinfo);
+        if (delem.sucinfo.has_prev_state()) {
+            seen.decode(state, delem.sucinfo.last_state);
+        }
         auto res = successorGenerator->next(state, delem.sucinfo);
 #ifdef PRINTF_DEBUG
         if (res) {

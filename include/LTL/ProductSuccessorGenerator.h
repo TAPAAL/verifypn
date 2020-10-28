@@ -20,22 +20,46 @@ namespace LTL {
         uint32_t pcounter;
         uint32_t tcounter;
         size_t buchi_state;
+        size_t last_state;
 
         friend bool operator==(const successor_info &lhs, const successor_info &rhs) {
             return lhs.pcounter == rhs.pcounter &&
                    lhs.tcounter == rhs.tcounter &&
-                   lhs.buchi_state == rhs.buchi_state;
+                   lhs.buchi_state == rhs.buchi_state &&
+                   lhs.last_state == rhs.last_state;
         }
 
         friend bool operator!=(const successor_info &lhs, const successor_info &rhs) {
             return !(rhs == lhs);
         }
+
+        inline bool has_pcounter() const {
+            return pcounter != NoPCounter;
+        }
+
+        inline bool has_tcounter() const {
+            return tcounter != NoTCounter;
+        }
+
+        inline bool has_buchistate() const {
+            return buchi_state != NoBuchiState;
+        }
+
+        inline bool has_prev_state() const {
+            return last_state != NoLastState;
+        }
+
+        static constexpr auto NoPCounter = 0;
+        static constexpr auto NoTCounter = std::numeric_limits<uint32_t>::max();
+        static constexpr auto NoBuchiState = std::numeric_limits<size_t>::max();
+        static constexpr auto NoLastState = std::numeric_limits<size_t>::max();
     };
 
     constexpr successor_info initial_suc_info{
-            0,
-            std::numeric_limits<uint32_t>::max(),
-            std::numeric_limits<size_t>::max(),
+            successor_info::NoPCounter,
+            successor_info::NoTCounter,
+            successor_info::NoBuchiState,
+            successor_info::NoLastState
     };
 
     class ProductSuccessorGenerator : public PetriEngine::SuccessorGenerator {

@@ -197,13 +197,12 @@ namespace LTL {
         spot::formula formula = spot::parse_formula(spotFormula);
         //spot::bdd_dict_ptr bdd = spot::make_bdd_dict();
         spot::translator translator;
-        translator.set_pref(spot::postprocessor::Complete
-                            | spot::postprocessor::SBAcc);
+        translator.set_type(spot::postprocessor::BA);
+        translator.set_pref(spot::postprocessor::Complete);
         spot::twa_graph_ptr automaton = translator.run(formula);
 #ifdef PRINTF_DEBUG
         automaton->get_graph().dump_storage(std::cerr);
         spot::print_dot(std::cerr, automaton);
-        bdd->dump(std::cerr);
 #endif
         std::unordered_map<int, AtomicProposition> ap_map;
         // bind PQL expressions to the atomic proposition IDs used by spot.
@@ -212,6 +211,9 @@ namespace LTL {
             int varnum = automaton->register_ap(apinfo.text);
             ap_map[varnum] = apinfo;
         }
+#ifdef PRINTF_DEBUG
+        automaton->get_dict()->dump(std::cerr);
+#endif
 
         return BuchiSuccessorGenerator{Structures::BuchiAutomaton{std::move(automaton), std::move(ap_map)}};
     }

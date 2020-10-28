@@ -47,7 +47,10 @@ namespace LTL {
             states.decode(curState, top.id);
             successorGenerator->prepare(&curState, top.sucinfo);
             std::pair<bool, size_t> res;
-            if (!successorGenerator->next(working, top.sucinfo) || !mark1.add(working).first) {
+            if (top.sucinfo.has_prev_state()) {
+                states.decode(working, top.sucinfo.last_state);
+            }
+            if (!successorGenerator->next(working, top.sucinfo)) {
                 todo.pop();
                 if (successorGenerator->isAccepting(curState)) {
                     seed = &curState;
@@ -55,8 +58,12 @@ namespace LTL {
                     if (violation) return;
                 }
             } else {
-                res = states.add(working);
-                todo.push(StackEntry{res.second, initial_suc_info});
+                auto res = mark1.add(working);
+                if (res.first) {
+                    res = states.add(working);
+                    top.sucinfo.last_state = res.second;
+                    todo.push(StackEntry{res.second, initial_suc_info});
+                }
             }
             continue;
             //todo.top(curState);
@@ -94,6 +101,9 @@ namespace LTL {
 
 
     void NestedDepthFirstSearch::ndfs(State &state) {
+#ifdef PRINTF_DEBUG
+        std::cerr << "ENTERING NDFS" << std::endl;
+#endif
         PetriEngine::Structures::StateSet states{net, 0, (int) net.numberOfPlaces() + 1};
         //PetriEngine::Structures::DFSQueue todo{&states};
         std::stack<StackEntry> todo;
@@ -110,6 +120,9 @@ namespace LTL {
             states.decode(curState, top.id);
             successorGenerator->prepare(&curState, top.sucinfo);
             std::pair<bool, size_t> res;
+            if (top.sucinfo.last_state != successor_info::NoLastState) {
+                states.decode(working, top.sucinfo.last_state);
+            }
             if (!successorGenerator->next(working, top.sucinfo)) {
                 todo.pop();
             } else {
