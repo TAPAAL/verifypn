@@ -25,7 +25,11 @@ option(VERIFYPN_MC_Simplification "Enables multicore simplification, incompatibl
 option(VERIFYPN_GetDependencies "Fetch external dependencies from web." ON)
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-    set(VERIFYPN_STATIC OFF)
+    set(VERIFYPN_Static OFF)
+endif()
+
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+    #add_compile_definitions(PRINTF_DEBUG)
 endif()
 
 if (VERIFYPN_Static)
@@ -55,7 +59,7 @@ else()
 endif ()
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -pedantic-errors -O3 -DNDEBUG")
-
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-omit-frame-pointer -fsanitize=address ")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -O3 -DNDEBUG")
 if (VERIFYPN_Static AND NOT APPLE)
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -static")
@@ -81,6 +85,14 @@ if (VERIFYPN_GetDependencies)
         BUILD_COMMAND ""
         CONFIGURE_COMMAND mkdir -p ${CMAKE_BINARY_DIR}/external/include
         INSTALL_COMMAND cd ../rapidxml-ext && ${CMAKE_COMMAND} -E copy rapidxml.hpp rapidxml_iterators.hpp rapidxml_print.hpp rapidxml_utils.hpp ${EXTERNAL_INSTALL_LOCATION}/include    
+    )
+
+    ExternalProject_add(spot-ext
+        URL http://www.lrde.epita.fr/dload/spot/spot-2.9.4.tar.gz
+        URL_HASH SHA512=d8e5f8c97495f7964698547d83d8a657afb5e71e886d31298802a6d9d449359d9b34714c080551ca24ab1dce9ca874bfc79ac70d3236dbf6e4fd56bd981483bf
+        BUILD_COMMAND make -j4
+        CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python
+        INSTALL_COMMAND make install
     )
 
     if (WIN32) #If windows 32 or 64 

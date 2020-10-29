@@ -97,6 +97,9 @@ namespace PetriEngine {
                 for (; _suc_tcounter != last; ++_suc_tcounter) {
 
                     if (!checkPreset(_suc_tcounter)) continue;
+#ifdef PRINTF_DEBUG
+                    std::cerr << "trace: " << _net.transitionNames()[_suc_tcounter] << std::endl;
+#endif
                     memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
                     consumePreset(write, _suc_tcounter);
                     producePostset(write, _suc_tcounter);
@@ -107,6 +110,33 @@ namespace PetriEngine {
                 _suc_tcounter = std::numeric_limits<uint32_t>::max();
             }
             _suc_tcounter = std::numeric_limits<uint32_t>::max();
+        }
+        return false;
+    }
+
+    bool SuccessorGenerator::next(Structures::State& write, uint32_t &tindex) {
+        _parent = &write;
+        _suc_pcounter = 0;
+        for (; _suc_pcounter < _net._nplaces; ++_suc_pcounter) {
+            // orphans are currently under "place 0" as a special case
+            if (_suc_pcounter == 0 || (*_parent).marking()[_suc_pcounter] > 0) {
+                if (tindex == std::numeric_limits<uint32_t>::max()) {
+                    tindex = _net._placeToPtrs[_suc_pcounter];
+                }
+                uint32_t last = _net._placeToPtrs[_suc_pcounter + 1];
+                for (; tindex != last; ++tindex) {
+
+                    if (!checkPreset(tindex)) continue;
+                    memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
+                    consumePreset(write, tindex);
+                    producePostset(write, tindex);
+
+                    ++tindex;
+                    return true;
+                }
+                tindex = std::numeric_limits<uint32_t>::max();
+            }
+            tindex = std::numeric_limits<uint32_t>::max();
         }
         return false;
     }
