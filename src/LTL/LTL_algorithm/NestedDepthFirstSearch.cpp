@@ -20,19 +20,20 @@ namespace LTL {
 
     bool NestedDepthFirstSearch::isSatisfied() {
         dfs();
+#ifdef _PRINTF_DEBUG
         std::cout << "discovered " << _discovered << " states." << std::endl;
+        std::cout << "mark1 size: " << mark1.size() << "\tmark2 size: " << mark2.size() << std::endl;
+#endif
         return !violation;
     }
 
     void NestedDepthFirstSearch::dfs() {
         std::stack<size_t> call_stack;
         std::stack<StackEntry> todo;
-        //PetriEngine::Structures::StateSet states{net, 0, (int) net.numberOfPlaces() + 1};
-        //PetriEngine::Structures::DFSQueue todo{&states};
 
         State working = factory.newState();
-        //PQL::DistanceContext ctx{&net, working.marking()};
         State curState = factory.newState();
+
         {
             std::vector<State> initial_states;
             successorGenerator->makeInitialState(initial_states);
@@ -65,9 +66,9 @@ namespace LTL {
 #endif
                 auto[_, stateid] = states.add(working);
                 auto[it, is_new] = mark1.insert(stateid);
+                top.sucinfo.last_state = stateid;
                 if (is_new) {
                     _discovered++;
-                    top.sucinfo.last_state = stateid;
                     todo.push(StackEntry{stateid, initial_suc_info});
                 }
             }
@@ -79,14 +80,10 @@ namespace LTL {
 #ifdef PRINTF_DEBUG
         std::cerr << "ENTERING NDFS" << std::endl;
 #endif
-        PetriEngine::Structures::StateSet states{net, 0, (int) net.numberOfPlaces() + 1};
-        //PetriEngine::Structures::DFSQueue todo{&states};
         std::stack<StackEntry> todo;
 
         State working = factory.newState();
         State curState = factory.newState();
-
-        PQL::DistanceContext ctx{&net, state.marking()};
 
         todo.push(StackEntry{states.add(state).second, initial_suc_info});
 
@@ -113,9 +110,9 @@ namespace LTL {
                 }
                 auto[_, stateid] = states.add(working);
                 auto[it, is_new] = mark2.insert(stateid);
+                top.sucinfo.last_state = stateid;
                 if (is_new) {
                     _discovered++;
-                    top.sucinfo.last_state = stateid;
                     todo.push(StackEntry{stateid, initial_suc_info});
                 }
 
