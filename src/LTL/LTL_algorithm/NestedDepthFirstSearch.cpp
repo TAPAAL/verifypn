@@ -26,7 +26,7 @@ namespace LTL {
     void NestedDepthFirstSearch::dfs() {
         std::stack<size_t> call_stack;
         std::stack<StackEntry> todo;
-        PetriEngine::Structures::StateSet states{net, 0, (int) net.numberOfPlaces() + 1};
+        //PetriEngine::Structures::StateSet states{net, 0, (int) net.numberOfPlaces() + 1};
         //PetriEngine::Structures::DFSQueue todo{&states};
 
         State working = factory.newState();
@@ -39,14 +39,14 @@ namespace LTL {
                 auto res = states.add(state);
                 assert(res.first);
                 todo.push(StackEntry{res.second, initial_suc_info});
+                _discovered++;
             }
         }
 
         while (!todo.empty()) {
-            auto& top = todo.top();
+            auto &top = todo.top();
             states.decode(curState, top.id);
             successorGenerator->prepare(&curState, top.sucinfo);
-            std::pair<bool, size_t> res;
             if (top.sucinfo.has_prev_state()) {
                 states.decode(working, top.sucinfo.last_state);
             }
@@ -58,42 +58,12 @@ namespace LTL {
                     if (violation) return;
                 }
             } else {
-                auto res = mark1.add(working);
-                if (res.first) {
-                    res = states.add(working);
-                    top.sucinfo.last_state = res.second;
-                    todo.push(StackEntry{res.second, initial_suc_info});
-                }
-            }
-            continue;
-            //todo.top(curState);
-            if (!call_stack.empty() && states.lookup(curState).second == call_stack.top()) {
-                if (successorGenerator->isAccepting(curState)) {
-                    seed = &curState;
-                    ndfs(curState);
-                    if (violation)
-                        return;
-                }
-                // todo.pop(curState);
-                todo.pop();
-                call_stack.pop();
-            } else {
-                call_stack.push(states.add(curState).second);
-                if (!mark1.add(curState).first) {
-                    continue;
-                }
-                successorGenerator->prepare(&curState, top.sucinfo);
-#ifdef PRINTF_DEBUG
-                std::cerr << "curState:\n";
-                dump_state(curState);
-#endif
-                if (successorGenerator->next(working, top.sucinfo)) {
-#ifdef PRINTF_DEBUG
-                    std::cerr << "working:\n";
-                    dump_state(working);
-#endif
-                    auto r = states.add(working);
-                    todo.push(StackEntry{r.second, initial_suc_info});
+                auto[_, stateid] = states.add(working);
+                auto[it, is_new] = mark1.insert(stateid);
+                if (is_new) {
+                    _discovered++;
+                    top.sucinfo.last_state = stateid;
+                    todo.push(StackEntry{stateid, initial_suc_info});
                 }
             }
         }
@@ -116,11 +86,11 @@ namespace LTL {
         todo.push(StackEntry{states.add(state).second, initial_suc_info});
 
         while (!todo.empty()) {
-            auto& top = todo.top();
+            auto &top = todo.top();
             states.decode(curState, top.id);
             successorGenerator->prepare(&curState, top.sucinfo);
             std::pair<bool, size_t> res;
-            if (top.sucinfo.last_state != successor_info::NoLastState) {
+            if (top.sucinfo.has_prev_state()) {
                 states.decode(working, top.sucinfo.last_state);
             }
             if (!successorGenerator->next(working, top.sucinfo)) {
@@ -134,40 +104,14 @@ namespace LTL {
                     violation = true;
                     return;
                 }
-                res = mark2.add(working);
-                if (res.first) {
-                    res = states.add(working);
-                    todo.push(StackEntry{res.second, initial_suc_info});
+                auto[_, stateid] = states.add(working);
+                auto[it, is_new] = mark2.insert(res.second);
+                if (is_new) {
+                    top.sucinfo.last_state = stateid;
+                    todo.push(StackEntry{stateid, initial_suc_info});
                 }
-            }
-            continue;
-            if (!mark2.add(curState).first) {
-                todo.pop();
-            }
 
-            successorGenerator->prepare(&curState, top.sucinfo);
-#ifdef PRINTF_DEBUG
-            std::cerr << "curState:\n";
-            dump_state(curState);
-#endif
-            if (successorGenerator->next(working, top.sucinfo)) {
-#ifdef PRINTF_DEBUG
-                std::cerr << "working:\n";
-                dump_state(working);
-#endif
-                if (working == *seed) {
-#ifdef PRINTF_DEBUG
-                    std::cerr << "seed:\n  "; dump_state(*seed);
-                    std::cerr << "working:\n  "; dump_state(working);
-#endif
-                    violation = true;
-                    return;
-                }
-                auto r = states.add(working);
-                todo.push(StackEntry{r.second, initial_suc_info});
-                //todo.push(r.second, ctx, formula);
             }
         }
-
     }
 }
