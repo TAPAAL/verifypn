@@ -20,6 +20,7 @@ namespace LTL {
 
     bool NestedDepthFirstSearch::isSatisfied() {
         dfs();
+        std::cout << "discovered " << _discovered << " states." << std::endl;
         return !violation;
     }
 
@@ -51,6 +52,7 @@ namespace LTL {
                 states.decode(working, top.sucinfo.last_state);
             }
             if (!successorGenerator->next(working, top.sucinfo)) {
+                // no successor
                 todo.pop();
                 if (successorGenerator->isAccepting(curState)) {
                     seed = &curState;
@@ -58,6 +60,9 @@ namespace LTL {
                     if (violation) return;
                 }
             } else {
+#ifdef PRINTF_DEBUG
+                dump_state(working);
+#endif
                 auto[_, stateid] = states.add(working);
                 auto[it, is_new] = mark1.insert(stateid);
                 if (is_new) {
@@ -89,15 +94,17 @@ namespace LTL {
             auto &top = todo.top();
             states.decode(curState, top.id);
             successorGenerator->prepare(&curState, top.sucinfo);
-            std::pair<bool, size_t> res;
             if (top.sucinfo.has_prev_state()) {
                 states.decode(working, top.sucinfo.last_state);
             }
             if (!successorGenerator->next(working, top.sucinfo)) {
                 todo.pop();
             } else {
-                if (working == *seed) {
 #ifdef PRINTF_DEBUG
+                dump_state(working);
+#endif
+                if (working == *seed) {
+#ifdef _PRINTF_DEBUG
                     std::cerr << "seed:\n  "; dump_state(*seed);
                     std::cerr << "working:\n  "; dump_state(working);
 #endif
@@ -105,13 +112,17 @@ namespace LTL {
                     return;
                 }
                 auto[_, stateid] = states.add(working);
-                auto[it, is_new] = mark2.insert(res.second);
+                auto[it, is_new] = mark2.insert(stateid);
                 if (is_new) {
+                    _discovered++;
                     top.sucinfo.last_state = stateid;
                     todo.push(StackEntry{stateid, initial_suc_info});
                 }
 
             }
         }
+#ifdef PRINTF_DEBUG
+        std::cerr << "LEAVING NDFS" << std::endl;
+#endif
     }
 }

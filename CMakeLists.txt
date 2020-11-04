@@ -29,7 +29,7 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-    #add_compile_definitions(PRINTF_DEBUG)
+    add_compile_definitions(PRINTF_DEBUG)
 endif()
 
 if (VERIFYPN_Static)
