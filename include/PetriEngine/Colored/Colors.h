@@ -24,6 +24,8 @@
 #include <iostream>
 #include <cassert>
 
+#include "../TAR/range.h"
+
 namespace PetriEngine {
     namespace Colored {
         class ColorType;
@@ -47,7 +49,7 @@ namespace PetriEngine {
                 return _tuple.size() > 1;
             }
 
-            void getColorConstraints(std::vector<std::pair<uint32_t, uint32_t>> *constraintsVector, uint32_t *index) const;
+            void getColorConstraints(Reachability::interval_t *constraintsVector, uint32_t *index) const;
             
             std::vector<const Color*> getTupleColors() const {
                 return _tuple;
@@ -176,6 +178,23 @@ namespace PetriEngine {
             virtual size_t size() const {
                 return _colors.size();
             }
+
+            virtual size_t productSize() {
+                return 1;
+            }
+
+            virtual std::vector<size_t> getConstituentsSizes(){
+                std::vector<size_t> result;                
+                result.push_back(_colors.size());
+                
+                return result;
+            }
+
+            virtual Reachability::interval_t getFullInterval(){
+                Reachability::interval_t interval;
+                interval.addRange(Reachability::range_t(0, size()-1));
+                return interval;
+            }
             
             virtual const Color& operator[] (size_t index) {
                 return _colors[index];
@@ -194,6 +213,11 @@ namespace PetriEngine {
             
             virtual const Color* operator[] (const std::string& index) {
                 return (*this)[index.c_str()];
+            }
+
+            virtual const Color* getColor(std::vector<uint32_t> ids){
+                assert(ids.size() == 1);
+                return &_colors[ids[0]];
             }
             
             bool operator== (const ColorType& other) const {
@@ -244,6 +268,26 @@ namespace PetriEngine {
                 return product;
             }
 
+            virtual size_t productSize() {
+                return constituents.size();
+            }
+
+            std::vector<size_t> getConstituentsSizes() override{
+                std::vector<size_t> result;
+                for (auto ct : constituents) {
+                    result.push_back(ct->size());
+                }
+                return result;
+            }
+
+            Reachability::interval_t getFullInterval() override{
+                Reachability::interval_t interval;
+                for(auto ct : constituents) {
+                    interval.addRange(Reachability::range_t(0, ct->size()-1));
+                }                
+                return interval;
+            }
+
             bool containsTypes(const std::vector<const ColorType*>& types) const {
                 if (constituents.size() != types.size()) return false;
 
@@ -258,6 +302,15 @@ namespace PetriEngine {
 
             const ColorType* getNestedColorType(size_t index) {
                 return constituents[index];
+            }
+
+            const Color* getColor(std::vector<uint32_t> ids){
+                assert(ids.size() == constituents.size());
+                std::vector<const Color *> colors;
+                for(uint32_t i = 0; i < ids.size(); i++){
+                    colors.push_back(&constituents[i]->operator[](i));
+                }
+                return getColor(colors);
             }
 
             const Color* getColor(const std::vector<const Color*>& colors);
@@ -280,17 +333,46 @@ namespace PetriEngine {
         };
 
         struct VariableInterval {
-            Colored::Variable *varaible;
-            uint32_t interval_lower;
-            uint32_t interval_upper;
-        };
-        
-        struct Binding {
-            Variable* var;
-            const Color* color;
+            Colored::Variable *_variable;
+            Reachability::rangeInterval_t _ranges;
+
+            VariableInterval() {
+            }
+
+            VariableInterval(Colored::Variable *variable) : _variable(variable) {
+            };
+
+            VariableInterval(Colored::Variable *variable,  Reachability::rangeInterval_t ranges) : _variable(variable), _ranges(ranges) {
+            };
+
+            size_t size() {
+                return _ranges.size();
+            }
+
+            Reachability::interval_t& operator[] (size_t index) {
+                return _ranges[index];
+            }
             
-            bool operator==(Binding& other) {
-                return var->name.compare(other.var->name);
+            Reachability::interval_t& operator[] (int index) {
+                return _ranges[index];
+            }
+            
+            Reachability::interval_t& operator[] (uint32_t index) {
+                assert(index < _ranges.size());
+                return _ranges[index];
+            }
+
+            Reachability::interval_t& back(){
+                return _ranges.back();
+            }
+
+            bool hasValidIntervals(){
+                return _ranges.hasValidIntervals();
+            }
+
+            void print() {
+                std::cout << "Variable " << _variable->name << std::endl;
+                _ranges.print();
             }
         };
     }

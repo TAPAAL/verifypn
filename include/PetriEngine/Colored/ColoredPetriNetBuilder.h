@@ -12,7 +12,7 @@
 #include <unordered_map>
 
 #include "ColoredNetStructures.h"
-#include "Patterns.h"
+//#include "Patterns.h"
 #include "../AbstractPetriNetBuilder.h"
 #include "../PetriNetBuilder.h"
 
@@ -41,6 +41,7 @@ namespace PetriEngine {
         Colored::PatternSet _patterns;
         Colored::Transition &_transition;
         bool _isDone;
+        bool _noValidBindings;
         
         bool eval();
         

@@ -16,9 +16,11 @@
 
 #include <vector>
 #include <set>
+#include <assert.h>
 #include "Colors.h"
 #include "Expressions.h"
 #include "Multiset.h"
+#include "../TAR/range.h"
 
 namespace PetriEngine {
     namespace Colored {
@@ -47,20 +49,26 @@ namespace PetriEngine {
         };
 
         struct ColorFixpoint {
-            std::vector<std::pair<uint32_t, uint32_t>> constraints;
+            Reachability::rangeInterval_t constraints;
             bool inQueue;
+            uint32_t productSize;
 
-            bool constainsColor(const Color *color) {
-                std::vector<uint32_t> colorIdVector;
-                color->getTupleId(&colorIdVector);
-                for (uint32_t i = 0; i < colorIdVector.size(); i++) {
-                    auto colorId = colorIdVector[i];
-                    auto constraintsPair = constraints[i];
-                    if (colorId < constraintsPair.first || colorId > constraintsPair.second){
-                        return false;
-                    }                         
+            bool constainsColor(std::pair<const PetriEngine::Colored::Color *const, std::vector<uint32_t>> constPair) {
+                std::unordered_map<uint32_t, bool> contained;
+                for(auto interval : constraints._ranges) {
+                    for(uint32_t id : constPair.second){
+                        
+                        if(contained[id] != true){
+                            contained[id] = interval[id].contains(constPair.first->getId());
+                        }                        
+                    }
                 }
 
+                for(auto pair : contained){
+                    if (!pair.second){
+                        return false;
+                    }
+                }
                 return true;
             }
         };

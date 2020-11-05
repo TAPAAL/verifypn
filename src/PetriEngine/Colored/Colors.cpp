@@ -109,29 +109,27 @@ namespace PetriEngine {
             return toString(this);
         }
 
-        void Color::getColorConstraints(std::vector<std::pair<uint32_t, uint32_t>> *constraintsVector, uint32_t *index) const {
+        void Color::getColorConstraints(Reachability::interval_t *constraintsVector, uint32_t *index) const {
             if (isTuple()) {
                 for (const Color *color : _tuple) {
                     color->getColorConstraints(constraintsVector, index);
                     (*index)++;
                 }
             } else {
-                std::pair<uint32_t, uint32_t> curPair;
+                Reachability::range_t curRange;
                 if (*index >= constraintsVector->size()){
-                    curPair = std::make_pair(_id, _id);
-
-                    constraintsVector->push_back(curPair);
-
+                    curRange &= _id;
+                    constraintsVector->addRange(curRange);
                 } else {
-                    curPair = constraintsVector->operator[](*index);
-                    if (_id < curPair.first){
-                        curPair.first = _id;
+                    curRange = constraintsVector->operator[](*index);
+                    if (_id < curRange._lower){
+                        curRange._lower = _id;
                     }
-                    if (_id > curPair.second){
-                        curPair.second = _id;
+                    if (_id > curRange._upper){
+                        curRange._upper = _id;
                     }
 
-                    constraintsVector->operator[](*index) = curPair;
+                    constraintsVector->operator[](*index) = curRange;
                 }            
             }
         }
