@@ -32,10 +32,8 @@
 
 #include "CTL/CTLEngine.h"
 #include "PetriEngine/PQL/Expressions.h"
-#include "LTL/LTLToBuchi.h"
 #include "LTL/LTLValidator.h"
 #include "LTL/LTL_algorithm/NestedDepthFirstSearch.h"
-#include "LTL/LTL_algorithm/ProductPrinter.h"
 #include "LTL/LTL_algorithm/TarjanModelChecker.h"
 #include "LTL/LTL.h"
 
@@ -556,8 +554,11 @@ ReturnValue LTLMain(options_t options) {
                 modelChecker = std::make_unique<LTL::NestedDepthFirstSearch>(*net, negated_formula);
                 break;
             case LTL::Algorithm::Tarjan:
-                modelChecker = std::make_unique<LTL::TarjanModelChecker>(*net, negated_formula);
-                break;
+              if (options.trace)
+                modelChecker = std::make_unique<LTL::TarjanModelChecker<true>>(*net, negated_formula);
+              else
+                modelChecker = std::make_unique<LTL::TarjanModelChecker<false>>(*net, negated_formula);
+              break;
         }
 
         bool satisfied = negate_answer ^ modelChecker->isSatisfied();

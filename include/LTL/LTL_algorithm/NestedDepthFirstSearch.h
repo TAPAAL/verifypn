@@ -12,6 +12,7 @@
 #include "LTL/Structures/ProductStateFactory.h"
 
 #include <ptrie/ptrie_stable.h>
+#include <unordered_set>
 
 using namespace PetriEngine;
 
@@ -20,7 +21,7 @@ namespace LTL {
     public:
         NestedDepthFirstSearch(const PetriNet &net, PetriEngine::PQL::Condition_ptr ptr)
                 : ModelChecker(net, ptr), factory{net, successorGenerator->initial_buchi_state()},
-                  mark1(net, 0, (int)net.numberOfPlaces() + 1), mark2(net, 0, (int)net.numberOfPlaces() + 1) {}
+                states(net, 0, (int)net.numberOfPlaces() + 1) {}
 
         bool isSatisfied() override;
 
@@ -28,9 +29,16 @@ namespace LTL {
         using State = LTL::Structures::ProductState;
 
         Structures::ProductStateFactory factory;
-        PetriEngine::Structures::StateSet mark1;
-        PetriEngine::Structures::StateSet mark2;
+        PetriEngine::Structures::StateSet states;
+        std::set<size_t> mark1;
+        std::set<size_t> mark2;
+        //PetriEngine::Structures::StateSet mark1;
+        //PetriEngine::Structures::StateSet mark2;
 
+        struct StackEntry {
+            size_t id;
+            successor_info sucinfo;
+        };
 
         State *seed;
         bool violation = false;

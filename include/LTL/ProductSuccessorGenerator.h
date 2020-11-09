@@ -11,13 +11,63 @@
 #include "LTL/BuchiSuccessorGenerator.h"
 #include "LTL/LTLToBuchi.h"
 
+
 namespace LTL {
+    /**
+     * type holding sufficient information to resume successor generation for a state from a given point.
+     */
+    struct successor_info {
+        uint32_t pcounter;
+        uint32_t tcounter;
+        size_t buchi_state;
+        size_t last_state;
+
+        friend bool operator==(const successor_info &lhs, const successor_info &rhs) {
+            return lhs.pcounter == rhs.pcounter &&
+                   lhs.tcounter == rhs.tcounter &&
+                   lhs.buchi_state == rhs.buchi_state &&
+                   lhs.last_state == rhs.last_state;
+        }
+
+        friend bool operator!=(const successor_info &lhs, const successor_info &rhs) {
+            return !(rhs == lhs);
+        }
+
+        inline bool has_pcounter() const {
+            return pcounter != NoPCounter;
+        }
+
+        inline bool has_tcounter() const {
+            return tcounter != NoTCounter;
+        }
+
+        inline bool has_buchistate() const {
+            return buchi_state != NoBuchiState;
+        }
+
+        inline bool has_prev_state() const {
+            return last_state != NoLastState;
+        }
+
+        static constexpr auto NoPCounter = 0;
+        static constexpr auto NoTCounter = std::numeric_limits<uint32_t>::max();
+        static constexpr auto NoBuchiState = std::numeric_limits<size_t>::max();
+        static constexpr auto NoLastState = std::numeric_limits<size_t>::max();
+    };
+
+    constexpr successor_info initial_suc_info{
+            successor_info::NoPCounter,
+            successor_info::NoTCounter,
+            successor_info::NoBuchiState,
+            successor_info::NoLastState
+    };
+
     class ProductSuccessorGenerator : public PetriEngine::SuccessorGenerator {
     public:
+
         ProductSuccessorGenerator(const PetriEngine::PetriNet &net,
-                                  const PetriEngine::PQL::Condition_ptr& cond)
-                                  : PetriEngine::SuccessorGenerator(net), buchi(makeBuchiAutomaton(cond))
-        {}
+                                  const PetriEngine::PQL::Condition_ptr &cond)
+                : PetriEngine::SuccessorGenerator(net), buchi(makeBuchiAutomaton(cond)) {}
 
         [[nodiscard]] size_t initial_buchi_state() const { return buchi.initial_state_number(); };
 
@@ -43,8 +93,21 @@ namespace LTL {
             }
         }
 
-    protected:
-        bool next(LTL::Structures::ProductState &write, uint32_t &tindex);
+        /**
+         * prepare a state for successor generation, starting from specific point in iteration
+         * @param state the source state to generate successors from
+         * @param sucinfo the point in the iteration to start from, as returned by `next`.
+         */
+        void prepare(const LTL::Structures::ProductState *state, const successor_info &sucinfo);
+
+        /**
+         * compute the next successor from the last state that was sent to `prepare`.
+         * @param[out] state the state to write
+         * @param[out] sucinfo checkpoint information from which iteration can later be resumed.
+         * @return `true` if a successor was successfully generated, `false` otherwise.
+         * @warning do not use the same State for both prepare and next, this will cause wildly incorrect behaviour!
+         */
+        bool next(Structures::ProductState &state, successor_info &sucinfo);
 
     private:
         BuchiSuccessorGenerator buchi;
