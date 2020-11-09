@@ -195,7 +195,6 @@ namespace LTL {
         std::cerr << "SPOT FORMULA: \n  " << spotFormula << std::endl;
 #endif
         spot::formula formula = spot::parse_formula(spotFormula);
-        //spot::bdd_dict_ptr bdd = spot::make_bdd_dict();
         spot::translator translator;
         translator.set_type(spot::postprocessor::BA);
         translator.set_pref(spot::postprocessor::Complete);
