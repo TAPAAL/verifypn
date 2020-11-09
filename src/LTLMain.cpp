@@ -540,7 +540,7 @@ ReturnValue LTLMain(options_t options) {
 
     //--------------------- Verify LTL queries ---------------//
 
-    for (int i; i < queries.size(); i++) {
+    for (int i=0; i < queries.size(); i++) {
         auto query = queries[i];
         auto id = querynames[i];
         auto[negated_formula, negate_answer] = to_ltl(query);
