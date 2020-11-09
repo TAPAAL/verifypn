@@ -42,6 +42,7 @@ namespace LTL {
 
         State *seed;
         bool violation = false;
+        bool is_weak = false;
 
         void dfs();
 

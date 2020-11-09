@@ -109,6 +109,10 @@ namespace LTL {
          */
         bool next(Structures::ProductState &state, successor_info &sucinfo);
 
+        [[nodiscard]] bool is_weak() const {
+            return buchi.is_weak();
+        }
+
     private:
         BuchiSuccessorGenerator buchi;
         bdd cond;
