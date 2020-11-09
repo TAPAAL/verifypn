@@ -60,6 +60,8 @@ public:
      */
     void producePostset(Structures::State& write, uint32_t t);
 
+    size_t last_transition() const { return _suc_tcounter == std::numeric_limits<uint32_t>::max() ? std::numeric_limits<uint32_t>::max() : _suc_tcounter - 1; }
+
 protected:
     const PetriNet& _net;
 

@@ -18,6 +18,7 @@
 
 namespace LTL {
 
+    template <bool SaveTrace>
     class TarjanModelChecker : public ModelChecker {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond)
@@ -44,13 +45,24 @@ namespace LTL {
             return id % HashSz;
         }
 
-        struct CEntry {
+        struct PlainCEntry {
             size_t lowlink;
             size_t stateid;
             size_t next = std::numeric_limits<idx_t>::max();
 
-            CEntry(size_t lowlink, size_t stateid, size_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
+            PlainCEntry(size_t lowlink, size_t stateid, size_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
         };
+
+        struct TracableCEntry : PlainCEntry {
+            idx_t lowsource = std::numeric_limits<size_t>::max();
+            uint32_t sourcetrans;
+
+            TracableCEntry(size_t lowlink, size_t stateid, size_t next) : PlainCEntry(lowlink, stateid, next) {}
+        };
+
+        using CEntry = std::conditional_t<SaveTrace,
+            TracableCEntry,
+            PlainCEntry>;
 
         struct DEntry {
             size_t pos;
@@ -71,6 +83,8 @@ namespace LTL {
 
         bool nexttrans(State &state, State& parent, DEntry &delem);
     };
+extern template class TarjanModelChecker<true>;
+extern template class TarjanModelChecker<false>;
 }
 
 #endif //VERIFYPN_TARJANMODELCHECKER_H
