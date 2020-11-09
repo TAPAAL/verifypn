@@ -20,6 +20,8 @@ namespace LTL {
         std::unique_ptr<ProductSuccessorGenerator> successorGenerator;
         const PetriEngine::PetriNet &net;
         PetriEngine::PQL::Condition_ptr formula;
+
+        size_t _discovered = 0;
     };
 }
 

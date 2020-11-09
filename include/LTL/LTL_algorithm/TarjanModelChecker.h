@@ -18,10 +18,11 @@
 
 namespace LTL {
 
+    template <bool SaveTrace>
     class TarjanModelChecker : public ModelChecker {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond)
-                : ModelChecker(net, cond), successorGenerator(net, cond), factory(net, successorGenerator.initial_buchi_state()),
+                : ModelChecker(net, cond), factory(net, successorGenerator->initial_buchi_state()),
                   seen(net, 0, (int) net.numberOfPlaces() + 1) {
             chash.fill(std::numeric_limits<idx_t>::max());
         }
@@ -31,45 +32,46 @@ namespace LTL {
     private:
         using State = LTL::Structures::ProductState;
         using idx_t = size_t;
+        static constexpr idx_t HashSz = 4096;
 
-        LTL::ProductSuccessorGenerator successorGenerator;
         LTL::Structures::ProductStateFactory factory;
 
         PetriEngine::Structures::StateSet seen;
         std::unordered_set<idx_t> store;
-        //PetriEngine::Structures::StateSet store;
 
-        static constexpr idx_t HashSz = 4096;
         std::array<idx_t, HashSz> chash;
-        inline idx_t hash_search(idx_t stateid) {
-            idx_t idx = chash[hash(stateid)];
-            while (idx != stateid && idx != std::numeric_limits<idx_t>::max()) {
-                idx = cstack[idx].next;
-            }
-            return idx;
-        }
 
-        inline idx_t hash(idx_t id) {
+        static inline idx_t hash(idx_t id) {
             return id % HashSz;
         }
 
-        struct CStack {
+        struct PlainCEntry {
             size_t lowlink;
             size_t stateid;
             size_t next = std::numeric_limits<idx_t>::max();
 
-            CStack(size_t lowlink, size_t stateid, size_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
+            PlainCEntry(size_t lowlink, size_t stateid, size_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
         };
 
-        struct DStack {
+        struct TracableCEntry : PlainCEntry {
+            idx_t lowsource = std::numeric_limits<size_t>::max();
+            uint32_t sourcetrans;
+
+            TracableCEntry(size_t lowlink, size_t stateid, size_t next) : PlainCEntry(lowlink, stateid, next) {}
+        };
+
+        using CEntry = std::conditional_t<SaveTrace,
+            TracableCEntry,
+            PlainCEntry>;
+
+        struct DEntry {
             size_t pos;
-            uint32_t nexttrans = -1;
-            std::optional<std::vector<size_t>> neighbors;
+            successor_info sucinfo;
         };
 
 
-        std::vector<CStack> cstack;
-        std::stack<DStack> dstack;
+        std::vector<CEntry> cstack;
+        std::stack<DEntry> dstack;
         std::stack<idx_t> astack;
         bool violation = false;
 
@@ -79,8 +81,10 @@ namespace LTL {
 
         void update(idx_t to);
 
-        bool nexttrans(State &state, DStack &delem);
+        bool nexttrans(State &state, State& parent, DEntry &delem);
     };
+extern template class TarjanModelChecker<true>;
+extern template class TarjanModelChecker<false>;
 }
 
 #endif //VERIFYPN_TARJANMODELCHECKER_H

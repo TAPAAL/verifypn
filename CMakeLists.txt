@@ -29,7 +29,7 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-    #add_compile_definitions(PRINTF_DEBUG)
+    add_compile_definitions(PRINTF_DEBUG)
 endif()
 
 if (VERIFYPN_Static)
@@ -59,7 +59,7 @@ else()
 endif ()
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -pedantic-errors -O3 -DNDEBUG")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-omit-frame-pointer -fsanitize=address ")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-omit-frame-pointer")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -O3 -DNDEBUG")
 if (VERIFYPN_Static AND NOT APPLE)
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -static")

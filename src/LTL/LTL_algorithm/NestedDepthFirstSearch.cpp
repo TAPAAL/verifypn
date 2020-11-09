@@ -20,100 +20,106 @@ namespace LTL {
 
     bool NestedDepthFirstSearch::isSatisfied() {
         dfs();
+#ifdef _PRINTF_DEBUG
+        std::cout << "discovered " << _discovered << " states." << std::endl;
+        std::cout << "mark1 size: " << mark1.size() << "\tmark2 size: " << mark2.size() << std::endl;
+#endif
         return !violation;
     }
 
     void NestedDepthFirstSearch::dfs() {
         std::stack<size_t> call_stack;
-
-        PetriEngine::Structures::StateSet states{net,0, (int)net.numberOfPlaces() + 1};
-        PetriEngine::Structures::DFSQueue todo{&states};
+        std::stack<StackEntry> todo;
 
         State working = factory.newState();
-        PQL::DistanceContext ctx{&net, working.marking()};
         State curState = factory.newState();
+
         {
             std::vector<State> initial_states;
             successorGenerator->makeInitialState(initial_states);
             for (auto &state : initial_states) {
                 auto res = states.add(state);
                 assert(res.first);
-                todo.push(res.second, ctx, formula);
+                todo.push(StackEntry{res.second, initial_suc_info});
+                _discovered++;
             }
         }
 
-        while (todo.top(curState)) {
-
-            if (!call_stack.empty() && states.lookup(curState).second == call_stack.top()) {
+        while (!todo.empty()) {
+            auto &top = todo.top();
+            states.decode(curState, top.id);
+            successorGenerator->prepare(&curState, top.sucinfo);
+            if (top.sucinfo.has_prev_state()) {
+                states.decode(working, top.sucinfo.last_state);
+            }
+            if (!successorGenerator->next(working, top.sucinfo)) {
+                // no successor
+                todo.pop();
                 if (successorGenerator->isAccepting(curState)) {
                     seed = &curState;
                     ndfs(curState);
-                    if (violation)
-                        return;
+                    if (violation) return;
                 }
-                todo.pop(curState);
-                call_stack.pop();
             } else {
-                call_stack.push(states.add(curState).second);
-                if (!mark1.add(curState).first) {
-                    continue;
-                }
-                successorGenerator->prepare(&curState);
 #ifdef PRINTF_DEBUG
-                std::cerr << "curState:\n";
-                dump_state(curState);
+                dump_state(working);
 #endif
-                while (successorGenerator->next(working)) {
-#ifdef PRINTF_DEBUG
-                    std::cerr << "working:\n";
-                    dump_state(working);
-#endif
-                    auto r = states.add(working);
-                    todo.push(r.second, ctx, formula);
+                auto[_, stateid] = states.add(working);
+                auto[it, is_new] = mark1.insert(stateid);
+                top.sucinfo.last_state = stateid;
+                if (is_new) {
+                    _discovered++;
+                    todo.push(StackEntry{stateid, initial_suc_info});
                 }
             }
         }
     }
 
 
-    void NestedDepthFirstSearch::ndfs(State& state) {
-        PetriEngine::Structures::StateSet states{net, 0, (int)net.numberOfPlaces() + 1};
-        PetriEngine::Structures::DFSQueue todo{&states};
+    void NestedDepthFirstSearch::ndfs(State &state) {
+#ifdef PRINTF_DEBUG
+        std::cerr << "ENTERING NDFS" << std::endl;
+#endif
+        std::stack<StackEntry> todo;
 
         State working = factory.newState();
         State curState = factory.newState();
 
-        PQL::DistanceContext ctx{&net, state.marking()};
+        todo.push(StackEntry{states.add(state).second, initial_suc_info});
 
-        todo.push(states.add(state).second, ctx, formula);
-
-        while (todo.pop(curState)) {
-            if (!mark2.add(curState).first) {
-                continue;
+        while (!todo.empty()) {
+            auto &top = todo.top();
+            states.decode(curState, top.id);
+            successorGenerator->prepare(&curState, top.sucinfo);
+            if (top.sucinfo.has_prev_state()) {
+                states.decode(working, top.sucinfo.last_state);
             }
-
-            successorGenerator->prepare(&curState);
+            if (!successorGenerator->next(working, top.sucinfo)) {
+                todo.pop();
+            } else {
 #ifdef PRINTF_DEBUG
-            std::cerr << "curState:\n";
-            dump_state(curState);
-#endif
-            while (successorGenerator->next(working)) {
-#ifdef PRINTF_DEBUG
-                std::cerr << "working:\n";
                 dump_state(working);
 #endif
                 if (working == *seed) {
-#ifdef PRINTF_DEBUG
+#ifdef _PRINTF_DEBUG
                     std::cerr << "seed:\n  "; dump_state(*seed);
                     std::cerr << "working:\n  "; dump_state(working);
 #endif
                     violation = true;
                     return;
                 }
-                auto r = states.add(working);
-                todo.push(r.second, ctx, formula);
+                auto[_, stateid] = states.add(working);
+                auto[it, is_new] = mark2.insert(stateid);
+                top.sucinfo.last_state = stateid;
+                if (is_new) {
+                    _discovered++;
+                    todo.push(StackEntry{stateid, initial_suc_info});
+                }
+
             }
         }
-
+#ifdef PRINTF_DEBUG
+        std::cerr << "LEAVING NDFS" << std::endl;
+#endif
     }
 }

@@ -18,7 +18,7 @@
 namespace LTL {
     class BuchiSuccessorGenerator {
     public:
-        BuchiSuccessorGenerator(Structures::BuchiAutomaton automaton)
+        explicit BuchiSuccessorGenerator(Structures::BuchiAutomaton automaton)
                 : aut(std::move(automaton)) {
         }
 
@@ -31,7 +31,7 @@ namespace LTL {
         bool next(size_t &state, bdd &cond) {
             if (!succ->done()) {
                 state = aut.buchi->state_number(succ->dst());
-#ifdef PRINTF_DEBUG
+#ifdef _PRINTF_DEBUG
                 std::cerr << "buchi state " << state << std::endl;
 #endif
                 cond = succ->cond();
