@@ -3304,6 +3304,77 @@ namespace PetriEngine {
             }, stats, context, nested, negated, initrw);
         }
 
+        Condition_ptr
+        UntilCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                     bool initrw) {
+            return initialMarkingRW([&]() -> Condition_ptr {
+                auto b = _cond2->pushNegation(stats, context, true, false, initrw);
+                auto a = _cond1->pushNegation(stats, context, true, false, initrw);
+
+            }, stats, context, nested, negated, initrw);
+        }
+
+        Condition_ptr XCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return XCondition(std::make_shared<NotCondition>(_cond)).pushNegation(
+                    stats, context, nested, !negated, initrw);
+        }
+
+        Condition_ptr FCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return initialMarkingRW([&]() -> Condition_ptr {
+                auto a = _cond->pushNegation(stats, context, true, false, initrw);
+
+                if(!a->isTemporal())
+                {
+                    auto res = std::make_shared<EFCondition>(a);
+                    if(negated) return std::make_shared<NotCondition>(res);
+                    return res;
+                }
+
+                if (dynamic_cast<FCondition*>(a.get())) {
+                    if (negated) a = std::make_shared<NotCondition>(a);
+                    return a;
+                }
+                else if (auto cond = dynamic_cast<UntilCondition*>(a.get())) {
+                    a = FCondition((*cond)[1]).pushNegation(stats, context, nested, negated, initrw);
+                    return a;
+                }
+                else if (auto cond = dynamic_cast<OrCondition*>(a.get())) {
+                    if(!cond->isTemporal())
+                    {
+                        Condition_ptr b = std::make_shared<EFCondition>(a);
+                        if(negated) b = std::make_shared<NotCondition>(b);
+                        return b;
+                    }
+                    std::vector<Condition_ptr> distributed;
+                    for (auto& i: *cond) {
+                        distributed.push_back(std::make_shared<FCondition>(i));
+                    }
+                    return makeOr(distributed)->pushNegation(stats, context, nested, negated, initrw);
+                }
+                else {
+                    Condition_ptr b = std::make_shared<FCondition>(a);
+                    if (negated) b = std::make_shared<NotCondition>(b);
+                    return b;
+                }
+            }, stats, context, nested, negated, initrw);
+        }
+
+        Condition_ptr ACondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return ECondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
+        }
+
+        Condition_ptr ECondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return ACondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
+        }
+
+        Condition_ptr GCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return FCondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
+        }
         
         Condition_ptr pushAnd(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children, bool initrw)
         {
@@ -4093,8 +4164,6 @@ namespace PetriEngine {
             }
             return false;
         }
-
-
     } // PQL
 } // PetriEngine
 
