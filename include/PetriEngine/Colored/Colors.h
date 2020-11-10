@@ -195,6 +195,10 @@ namespace PetriEngine {
                 interval.addRange(Reachability::range_t(0, size()-1));
                 return interval;
             }
+
+            virtual void getColortypes(std::vector<ColorType *> &colorTypes){
+                colorTypes.push_back(this);
+            }
             
             virtual const Color& operator[] (size_t index) {
                 return _colors[index];
@@ -286,6 +290,12 @@ namespace PetriEngine {
                     interval.addRange(Reachability::range_t(0, ct->size()-1));
                 }                
                 return interval;
+            }
+
+            void getColortypes(std::vector<ColorType *> &colorTypes) override{
+                for(auto ct : constituents){
+                    ct->getColortypes(colorTypes);
+                }
             }
 
             bool containsTypes(const std::vector<const ColorType*>& types) const {

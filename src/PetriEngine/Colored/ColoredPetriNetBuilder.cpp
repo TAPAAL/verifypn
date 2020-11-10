@@ -39,19 +39,24 @@ namespace PetriEngine {
             
             Reachability::rangeInterval_t placeConstraints;
             Colored::ColorFixpoint colorFixpoint = {placeConstraints, !tokens.empty(), (uint32_t) type->productSize()};
-            uint32_t index = 0;
+            
 
-            for (auto colorPair : tokens) {
-                Reachability::interval_t tokenConstraints;
-                colorPair.first->getColorConstraints(&tokenConstraints, &index);
+            if(tokens.size() == type->size()){
+                colorFixpoint.constraints.addInterval(type->getFullInterval());
+            } else {
+                uint32_t index = 0;
+                for (auto colorPair : tokens) {
+                    Reachability::interval_t tokenConstraints;
+                    colorPair.first->getColorConstraints(&tokenConstraints, &index);
 
-                colorFixpoint.constraints.addInterval(tokenConstraints);
-                index = 0;
+                    colorFixpoint.constraints.addInterval(tokenConstraints);
+                    index = 0;
+                }
+                
+                colorFixpoint.constraints.mergeIntervals();
             }
-            
-            colorFixpoint.constraints.mergeIntervals();          
-            _placeColorFixpoints.push_back(colorFixpoint);
-            
+         
+            _placeColorFixpoints.push_back(colorFixpoint);            
         }
     }
 
@@ -184,7 +189,7 @@ namespace PetriEngine {
         
         auto end = std::chrono::high_resolution_clock::now();
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
-        //printPlaceTable();
+        printPlaceTable();
         //We should not need to keep colors in places after we have found fixpoint
         _placeColorFixpoints.clear();
     }
@@ -202,8 +207,9 @@ namespace PetriEngine {
         
         std::set<Colored::Variable *> transitionVars;
         std::unordered_map<string, std::set<uint32_t>> varGuardPositions;
+        std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifierMap;
         if (transition.guard != nullptr) {
-            transition.guard->getVariables(transitionVars, varGuardPositions);
+            transition.guard->getVariables(transitionVars, varGuardPositions, varModifierMap);
         }
         
         for (auto& arc : transition.input_arcs) {
@@ -222,7 +228,8 @@ namespace PetriEngine {
                 bool succes = true;
                 std::set<Colored::Variable *> variables;
                 std::unordered_map<string, std::set<uint32_t>> varPositions;
-                arc.expr->getVariables(variables, varPositions);
+                std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifierMap;
+                arc.expr->getVariables(variables, varPositions, varModifierMap);
 
                 //std::cout << "Found " << variables.size() << " vars out here" << std::endl;
 
@@ -306,7 +313,8 @@ namespace PetriEngine {
                 
             std::set<Colored::Variable *> variables;
             std::unordered_map<string, std::set<uint32_t>> varPositions;
-            arc.expr->getVariables(variables, varPositions);
+            std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifierMap;
+            arc.expr->getVariables(variables, varPositions, varModifierMap);
 
             std::unordered_map<const Colored::Color*, std::vector<uint32_t>> constantMap;
             uint32_t index = 0;
@@ -417,6 +425,12 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
+
+        // std::cout << "Transition " << transition.name << std::endl;
+        // for(auto varInterval : transition.variableIntervals){
+        //     varInterval.second.print();
+        // }
+
         BindingGenerator gen(transition, _colors);
         size_t i = 0;
         for (auto b : gen) {

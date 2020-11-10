@@ -72,6 +72,33 @@ namespace PetriEngine {
                 return true;
             }
         };
+
+        struct ValueBranch {
+            std::vector<ValueBranch *> _children;
+            uint32_t _value;
+
+            ValueBranch() {
+            }
+
+            ValueBranch(uint32_t value) : _value(value) {
+            };
+
+            ValueBranch(std::vector<ValueBranch *> children, uint32_t value) :  _children(children), _value(value) {
+            };
+
+            bool isLeafNode(){
+                return _children.empty();
+            }
+
+            std::vector<ValueBranch *> getChildren(){
+                return _children;
+            }
+
+            uint32_t& getValue(){
+                return _value;
+            }
+
+        };
     }
 }
 
