@@ -752,7 +752,6 @@ namespace PetriEngine {
             void mergeIntervals() {
                 interval_t prevConstraints;
                 std::set<uint32_t> rangesToRemove;
-
                 if(_ranges.empty()){
                     return;
                 }
@@ -778,7 +777,6 @@ namespace PetriEngine {
                                 break;
                             }
                         }
-
                         if(overlap) {
                             for(uint32_t l = 0; l < interval.size(); l++) {
                                 interval[l] |= otherInterval[l];
@@ -787,7 +785,6 @@ namespace PetriEngine {
                         }  
                     }
                 }
-
                 for (auto i = rangesToRemove.rbegin(); i != rangesToRemove.rend(); ++i) {
                     _ranges.erase(_ranges.begin() + *i);
                 }

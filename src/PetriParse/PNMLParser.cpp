@@ -66,8 +66,9 @@ void PNMLParser::parse(ifstream& xml,
     }
     parseElement(root);
 
+
     //Add all the transition
-    for (auto & transition : transitions)
+    for (auto & transition : transitions) 
         if (!isColored) {
             builder->addTransition(transition.id, transition.x, transition.y);
         } else {
@@ -116,7 +117,6 @@ void PNMLParser::parse(ifstream& xml,
                     target.id.c_str());
         }
     }
-
     for(Arc& inhibitor : inhibarcs)
     {
         NodeName source = id2name[inhibitor.source];
@@ -353,8 +353,8 @@ PetriEngine::Colored::NumberOfExpression_ptr PNMLParser::parseNumberOfExpression
 }
 
 void PNMLParser::parseElement(rapidxml::xml_node<>* element) {
-    
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
+
         if (strcmp(it->name(), "place") == 0) {
             parsePlace(it);
         } else if (strcmp(it->name(),"transition") == 0) {
@@ -402,13 +402,14 @@ void PNMLParser::parseQueries(rapidxml::xml_node<>* element) {
 void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
     double x = 0, y = 0;
     string id(element->first_attribute("id")->value());
-    
+
     auto initial = element->first_attribute("initialMarking");
     long long initialMarking = 0;
     PetriEngine::Colored::Multiset hlinitialMarking;
     PetriEngine::Colored::ColorType* type = nullptr;
     if(initial)
          initialMarking = atoll(initial->value());
+    
 
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
         // name element is ignored
@@ -426,7 +427,6 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
             type = parseUserSort(it);
         }
     }
-    
     if(initialMarking > std::numeric_limits<int>::max())
     {
         std::cerr << "Number of tokens in " << id << " exceeded " << std::numeric_limits<int>::max() << std::endl;

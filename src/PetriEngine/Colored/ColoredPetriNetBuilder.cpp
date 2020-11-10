@@ -36,20 +36,24 @@ namespace PetriEngine {
                 _placeFixpointQueue.emplace_back(next);
             }
 
-            
             Reachability::rangeInterval_t placeConstraints;
             Colored::ColorFixpoint colorFixpoint = {placeConstraints, !tokens.empty(), (uint32_t) type->productSize()};
-            uint32_t index = 0;
 
-            for (auto colorPair : tokens) {
-                Reachability::interval_t tokenConstraints;
-                colorPair.first->getColorConstraints(&tokenConstraints, &index);
+            if(tokens.size() == type->size()){
+                colorFixpoint.constraints.addInterval(type->getFullInterval());
+            } else {
+                uint32_t index = 0;
+                for (auto colorPair : tokens) {
+                    Reachability::interval_t tokenConstraints;
+                    colorPair.first->getColorConstraints(&tokenConstraints, &index);
 
-                colorFixpoint.constraints.addInterval(tokenConstraints);
-                index = 0;
+                    colorFixpoint.constraints.addInterval(tokenConstraints);
+                    index = 0;
+                }
+
+                colorFixpoint.constraints.mergeIntervals();
             }
-            
-            colorFixpoint.constraints.mergeIntervals();          
+
             _placeColorFixpoints.push_back(colorFixpoint);
             
         }
