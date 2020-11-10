@@ -404,7 +404,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         for (int i = 1; i < argc; i++) {
             std::cout << argv[i] << " ";
         }
-        filename = argv[4];
+        filename = argv[5];
         generated_filename += argv[4];
         generated_filename += argv[5];
         generated_filename += argv[6];

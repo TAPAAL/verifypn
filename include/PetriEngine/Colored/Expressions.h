@@ -175,7 +175,6 @@ namespace PetriEngine {
                 auto varInterval = varIntervals->find(_variable->name);
                 
                 if (varInterval == varIntervals->end()){
-                    std::cout << "Could not find intervals for: " << _variable->name << std::endl;
                     Reachability::interval_t interval = _variable->colorType->getFullInterval();
                     Reachability::rangeInterval_t rangeInterval;
                     rangeInterval.addInterval(interval);                
@@ -322,13 +321,16 @@ namespace PetriEngine {
             }
 
             Reachability::rangeInterval_t getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+                //We need this so we know where to count from i.e. we ignore the colortypes that are already added
+                int beforeSize = colortypes->size();
                 auto nestedInterval = _color->getOutputIntervals(varIntervals, colortypes);
                 Reachability::rangeInterval_t newIntervals;
-                
-                for(uint32_t i = 0;  i < nestedInterval.size(); i++) {
+
+                for(uint32_t i = beforeSize;  i < nestedInterval.size(); i++) {
                     Reachability::interval_t newInterval;
                     auto interval = &nestedInterval[i];
                     for(auto& range : interval->_ranges) {
+                        
                         if(range._upper < colortypes->operator[](i)->size()-1){
                             range._upper++;
                             newInterval.addRange(range);
@@ -404,10 +406,12 @@ namespace PetriEngine {
             }
             
             Reachability::rangeInterval_t getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+                //We need this so we know where to count from i.e. we ignore the colortypes that are already added
+                int beforeSize = colortypes->size();
                 auto nestedInterval = _color->getOutputIntervals(varIntervals, colortypes);
                 Reachability::rangeInterval_t newIntervals;
                 
-                for(uint32_t i = 0;  i < nestedInterval.size(); i++) {
+                for(uint32_t i = beforeSize;  i < nestedInterval.size(); i++) {
                     Reachability::interval_t newInterval;
                     auto interval = &nestedInterval[i];
                     for(auto& range : interval->_ranges) {
@@ -1669,12 +1673,10 @@ namespace PetriEngine {
             }
 
             void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const {
-                for(auto color : *_sort) {
-                    constantMap[&color].push_back(index);
+                for (size_t i = 0; i < _sort->size(); i++) {
+                    constantMap[&(*_sort)[i]].push_back(index);
                 }
             }
-
-            
 
             size_t size() const {
                 return  _sort->size();

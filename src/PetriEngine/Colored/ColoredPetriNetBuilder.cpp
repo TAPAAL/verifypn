@@ -424,7 +424,7 @@ namespace PetriEngine {
             //Print all bindings
             // std::cout << transition.name << std::endl;
             // for (auto test : b){
-            //     std::cout << "Binding '" << test.first << "\t" << *test.second << "' in bindingds." << std::endl;
+            //     std::cout << "Binding '" << test.first << "\t" << test.second->getId() << "' in bindingds." << std::endl;
             // }
             // std::cout << std::endl;
             
@@ -629,7 +629,9 @@ namespace PetriEngine {
         for (auto& b : _bindings) {
             std::vector<uint32_t> colorIds;
             b.second->getTupleId(&colorIds);
-            if (colorIds != _transition.variableIntervals[b.first]._ranges.getLowerIds()) return false;
+            for(int i = 0; i < colorIds.size(); i++){
+                if (colorIds[i] != _transition.variableIntervals[b.first]._ranges.getLowerIds()[i]) return false;
+            }
         }
         return true;
     }

@@ -626,6 +626,7 @@ namespace PetriEngine {
                     bool rangeEnd = true;
                     for (uint32_t i = 0; i < _ranges[j].size(); i++) {
                         auto range =  _ranges[j][i];
+
                         if (range._upper != ids[i]) {
                             rangeEnd = false;
                         }
@@ -638,7 +639,6 @@ namespace PetriEngine {
                         }
                     }
                 }
-
                 return interval_t();
             }
 
