@@ -102,8 +102,10 @@ namespace LTL {
 #ifdef PRINTF_DEBUG
                 dump_state(working);
 #endif
-                if (is_weak && !successorGenerator->isAccepting(working))
+                if (shortcircuitweak && is_weak && !successorGenerator->isAccepting(working)) {
+                    weakskip = true;
                     continue;
+                }
                 if (working == *seed) {
 #ifdef _PRINTF_DEBUG
                     std::cerr << "seed:\n  "; dump_state(*seed);

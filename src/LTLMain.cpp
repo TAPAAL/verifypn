@@ -258,6 +258,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 options.isltl = true;
                 i++;
             }
+        } else if (strcmp(argv[i], "--weak") == 0) {
+            options.shortcircuitweak = true;
         }
 
         else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
@@ -496,7 +498,7 @@ ReturnValue LTLMain(options_t options) {
             std::unique_ptr<LTL::ModelChecker> modelChecker;
             switch (options.ltlalgorithm) {
                 case LTL::Algorithm::NDFS:
-                    modelChecker = std::make_unique<LTL::NestedDepthFirstSearch>(*net, negated_formula);
+                    modelChecker = std::make_unique<LTL::NestedDepthFirstSearch>(*net, negated_formula, options.shortcircuitweak);
                     break;
                 case LTL::Algorithm::Tarjan:
                     if (options.trace)
@@ -507,7 +509,7 @@ ReturnValue LTLMain(options_t options) {
             }
 
             bool satisfied = negate_answer ^ modelChecker->isSatisfied();
-            std::cout  << "FORMULA " << query.id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << (options.ltlalgorithm == LTL::Algorithm::NDFS ? " NDFS" : " TARJAN") << std::endl;
+            std::cout  << "FORMULA " << query.id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << (options.ltlalgorithm == LTL::Algorithm::NDFS ? " NDFS" : " TARJAN") << (modelChecker->weakskip ? " WEAK_SKIP" : "") << std::endl;
         }
     }
     return SuccessCode;

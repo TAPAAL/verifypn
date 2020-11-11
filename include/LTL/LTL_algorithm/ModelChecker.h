@@ -16,6 +16,7 @@ namespace LTL {
         virtual bool isSatisfied() = 0;
         
         virtual ~ModelChecker() = default;
+        bool weakskip = false;
     protected:
         std::unique_ptr<ProductSuccessorGenerator> successorGenerator;
         const PetriEngine::PetriNet &net;

@@ -41,6 +41,7 @@ struct options_t {
     // LTL Specific options
     bool isltl = false;
     LTL::Algorithm ltlalgorithm = LTL::Algorithm::NDFS;
+    bool shortcircuitweak = false;
 
     std::string query_out_file;
     std::string model_out_file;
