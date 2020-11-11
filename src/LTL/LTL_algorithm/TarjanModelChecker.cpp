@@ -61,7 +61,7 @@ namespace LTL {
                     std::vector<DEntry> rev;
                     auto sz = dstack.size();
                     // dump stack to vector to allow iteration
-                    for (int i = 0; i < sz; ++i) {
+                    for (size_t i = 0; i < sz; ++i) {
                         rev.push_back(dstack.top());
                         dstack.pop();
                     }

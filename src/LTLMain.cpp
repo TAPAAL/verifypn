@@ -2,8 +2,6 @@
 #include <string>
 #include <cstring>
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <map>
 #include <memory>
 #include <utility>
@@ -473,6 +471,14 @@ ReturnValue LTLMain(options_t options) {
         std::cerr << "Error parsing the query file" << std::endl;
         return ErrorCode;
     }
+    std::vector<Condition_ptr> queries;
+    std::vector<std::string> querynames;
+    for (QueryItem& item : parser.queries) {
+        if (item.query == nullptr) continue;
+        queries.push_back(item.query);
+        querynames.push_back(item.id);
+    }
+
     ColoredPetriNetBuilder cpnBuilder;
 
     if ((v = parseModel(cpnBuilder, model_file)) != ContinueCode) {
@@ -486,6 +492,173 @@ ReturnValue LTLMain(options_t options) {
         std::cerr << "Error performing context analysis" << std::endl;
         return v;
     }
+
+    //----------------------- Query Simplification -----------------------//
+    bool alldone = options.queryReductionTimeout > 0;
+    PetriNetBuilder b2(builder);
+    std::unique_ptr<PetriNet> qnet(b2.makePetriNet(false));
+    MarkVal* qm0 = qnet->makeInitialMarking();
+    ResultPrinter p2(&b2, &options, querynames);
+
+    if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), parser.queries) != ContinueCode)
+    {
+        std::cerr << "Could not analyze the queries" << std::endl;
+        return ErrorCode;
+    }
+
+    if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout == 0)
+    {
+        // Conflicting flags "-s OverApprox" and "-q 0"
+        std::cerr << "Conflicting flags '-s OverApprox' and '-q 0'" << std::endl;
+        return ErrorCode;
+    }
+
+    // simplification. We always want to do negation-push and initial marking check.
+    {
+        // simplification. We always want to do negation-push and initial marking check.
+        std::vector<LPCache> caches(options.cores);
+        std::atomic<uint32_t> to_handle(queries.size());
+        auto begin = std::chrono::high_resolution_clock::now();
+        auto end = std::chrono::high_resolution_clock::now();
+        std::vector<bool> hadTo(queries.size(), true);
+
+
+        do
+        {
+            auto qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / ( 1 + (to_handle / options.cores));
+            if((to_handle <= options.cores || options.cores == 1) && to_handle > 0)
+                qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / to_handle;
+            std::atomic<uint32_t> cnt(0);
+#ifdef VERIFYPN_MC_Simplification
+
+            std::vector<std::thread> threads;
+#endif
+            std::vector<std::stringstream> tstream(queries.size());
+            uint32_t old = to_handle;
+            for(size_t c = 0; c < std::min<uint32_t>(options.cores, old); ++c)
+            {
+#ifdef VERIFYPN_MC_Simplification
+                threads.push_back(std::thread([&,c](){
+#else
+                auto simplify = [&,c](){
+#endif
+                    auto& out = tstream[c];
+                    auto& cache = caches[c];
+                    QueryPrinter printer{out};
+                    while(true)
+                    {
+                        auto i = cnt++;
+                        if(i >= queries.size()) return;
+                        if(!hadTo[i]) continue;
+                        hadTo[i] = false;
+                        negstat_t stats;
+                        EvaluationContext context(qm0, qnet.get());
+                        if(options.printstatistics && options.queryReductionTimeout > 0)
+                        {
+                            out << "\nQuery before reduction: ";
+                            queries[i]->visit(printer);
+                            out << std::endl;
+                        }
+
+#ifndef VERIFYPN_MC_Simplification
+                        qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);
+#endif
+                        // this is used later, we already know that this is a plain reachability (or AG)
+                        bool wasAGCPNApprox = dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
+                        int preSize=queries[i]->formulaSize();
+                        queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false, true)
+                                ->pushNegation(stats, context, false, false, true);
+                        wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
+                        if(options.queryReductionTimeout > 0 && options.printstatistics)
+                        {
+                            out << "RWSTATS PRE:";
+                            stats.print(out);
+                            out << std::endl;
+                        }
+
+                        if (options.queryReductionTimeout > 0 && qt > 0)
+                        {
+                            SimplificationContext simplificationContext(qm0, qnet.get(), qt,
+                                                                        options.lpsolveTimeout, &cache);
+                            try {
+                                negstat_t stats;
+                                queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false, true);
+                                wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
+                                if(options.printstatistics)
+                                {
+                                    out << "RWSTATS POST:";
+                                    stats.print(out);
+                                    out << std::endl;
+                                }
+                            } catch (std::bad_alloc& ba){
+                                std::cerr << "Query reduction failed." << std::endl;
+                                std::cerr << "Exception information: " << ba.what() << std::endl;
+
+                                delete[] qm0;
+                                std::exit(ErrorCode);
+                            }
+
+                            if(options.printstatistics)
+                            {
+                                out << "\nQuery after reduction: ";
+                                queries[i]->toString(out);
+                                out << std::endl;
+                            }
+                            if(simplificationContext.timeout()){
+                                if(options.printstatistics)
+                                    out << "Query reduction reached timeout.\n";
+                                hadTo[i] = true;
+                            } else {
+                                if(options.printstatistics)
+                                    out << "Query reduction finished after " << simplificationContext.getReductionTime() << " seconds.\n";
+                                --to_handle;
+                            }
+                        }
+                        else if(options.printstatistics)
+                        {
+                            out << "Skipping linear-programming (-q 0)" << std::endl;
+                        }
+                        if(options.cpnOverApprox && wasAGCPNApprox)
+                        {
+                            if(queries[i]->isTriviallyTrue())
+                                queries[i] = std::make_shared<BooleanCondition>(false);
+                            else if(queries[i]->isTriviallyFalse())
+                                queries[i] = std::make_shared<BooleanCondition>(true);
+                            queries[i]->setInvariant(wasAGCPNApprox);
+                        }
+
+
+                        if(options.printstatistics)
+                        {
+                            int postSize=queries[i]->formulaSize();
+                            double redPerc = preSize-postSize == 0 ? 0 : ((double)(preSize-postSize)/(double)preSize)*100;
+                            out << "Query size reduced from " << preSize << " to " << postSize << " nodes ( " << redPerc << " percent reduction).\n";
+                        }
+                    }
+                }
+#ifdef VERIFYPN_MC_Simplification
+                ));
+#else
+                ;
+                simplify();
+#endif
+            }
+#ifndef VERIFYPN_MC_Simplification
+            std::cout << tstream[0].str() << std::endl;
+            break;
+#else
+            for(size_t i = 0; i < std::min<uint32_t>(options.cores, old); ++i)
+            {
+                threads[i].join();
+                std::cout << tstream[i].str();
+                std::cout << std::endl;
+            }
+#endif
+            end = std::chrono::high_resolution_clock::now();
+
+        } while(std::any_of(hadTo.begin(), hadTo.end(), [](auto a) { return a;}) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.queryReductionTimeout && to_handle > 0);
+    }
+
     for (const auto &query : parser.queries) {
         if (query.query) {
             auto[negated_formula, negate_answer] = to_ltl(query.query);
