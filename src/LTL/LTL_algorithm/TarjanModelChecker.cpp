@@ -13,7 +13,7 @@ namespace LTL {
     inline void _dump_state(const LTL::Structures::ProductState &state) {
         std::cerr << "marking: ";
         std::cerr << state.marking()[0];
-        for (int i = 1; i < state.size(); ++i) {
+        for (size_t i = 1; i < state.size(); ++i) {
             std::cerr << ", " << state.marking()[i];
         }
         std::cerr << std::endl;

@@ -33,6 +33,7 @@
 #include "LTL/LTLValidator.h"
 #include "LTL/LTL_algorithm/NestedDepthFirstSearch.h"
 #include "LTL/LTL_algorithm/TarjanModelChecker.h"
+#include "LTL/Simplification/SpotToPQL.h"
 #include "LTL/LTL.h"
 
 using namespace PetriEngine;
@@ -475,6 +476,7 @@ ReturnValue LTLMain(options_t options) {
     std::vector<std::string> querynames;
     for (QueryItem& item : parser.queries) {
         if (item.query == nullptr) continue;
+
         queries.push_back(item.query);
         querynames.push_back(item.id);
     }
@@ -566,6 +568,7 @@ ReturnValue LTLMain(options_t options) {
                         // this is used later, we already know that this is a plain reachability (or AG)
                         bool wasAGCPNApprox = dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
                         int preSize=queries[i]->formulaSize();
+                        queries[i] = LTL::simplify(queries[i]);
                         queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false, true)
                                 ->pushNegation(stats, context, false, false, true);
                         wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;

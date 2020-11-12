@@ -23,6 +23,10 @@ namespace LTL {
      */
     class FormulaToSpotSyntax : public PetriEngine::PQL::QueryPrinter {
     protected:
+        void _accept(const ACondition *condition) override;
+
+        void _accept(const ECondition *condition) override;
+
         void _accept(const PetriEngine::PQL::NotCondition *element) override;
 
         void _accept(const PetriEngine::PQL::AndCondition *element) override;
@@ -72,7 +76,7 @@ namespace LTL {
             return std::end(ap_info);
         }
 
-        const APInfo &getAPInfo() const {
+        const APInfo &apInfo() const {
             return ap_info;
         }
 
@@ -185,16 +189,33 @@ namespace LTL {
         //make_atomic_prop(element->shared_from_this());
     }
 
-    BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query) {
+    void FormulaToSpotSyntax::_accept(const ACondition *condition) {
+        condition->operator[](0)->visit(*this);
+    }
+
+    void FormulaToSpotSyntax::_accept(const ECondition *condition) {
+        condition->operator[](0)->visit(*this);
+    }
+
+    std::pair<spot::formula, APInfo> to_spot_formula(const Condition_ptr& query) {
         std::stringstream ss;
         FormulaToSpotSyntax spotConverter{ss};
         query->visit(spotConverter);
+        std::string s = ss.str();
+        if (s.at(0) == 'E' || s.at(0) == 'A') {
+            s = s.substr(2);
+        }
         const std::string spotFormula = "!(" + ss.str() + ")";
+        auto spot_formula = spot::parse_formula(spotFormula);
 #ifdef PRINTF_DEBUG
         std::cerr << "ORIG FORMULA: \n  " << ss.str() << std::endl;
         std::cerr << "SPOT FORMULA: \n  " << spotFormula << std::endl;
 #endif
-        spot::formula formula = spot::parse_formula(spotFormula);
+        return std::make_pair(spot_formula, spotConverter.apInfo());
+    }
+
+    BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query) {
+        auto [formula, apinfo] = to_spot_formula(query);
         spot::translator translator;
         translator.set_type(spot::postprocessor::BA);
         translator.set_pref(spot::postprocessor::Complete);
@@ -206,9 +227,9 @@ namespace LTL {
         std::unordered_map<int, AtomicProposition> ap_map;
         // bind PQL expressions to the atomic proposition IDs used by spot.
         // the resulting map can be indexed using variables mentioned on edges of the created Büchi automaton.
-        for (const auto &apinfo : spotConverter) {
-            int varnum = automaton->register_ap(apinfo.text);
-            ap_map[varnum] = apinfo;
+        for (const auto &info : apinfo) {
+            int varnum = automaton->register_ap(info.text);
+            ap_map[varnum] = info;
         }
 #ifdef PRINTF_DEBUG
         automaton->get_dict()->dump(std::cerr);

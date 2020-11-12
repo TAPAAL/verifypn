@@ -10,24 +10,26 @@
 
 #include "PetriParse/QueryParser.h"
 #include "PetriEngine/PQL/QueryPrinter.h"
-//#include "BuchiSuccessorGenerator.h"
 
 #include <iostream>
 #include <string>
 
+#include <spot/tl/formula.hh>
+
 namespace LTL {
-    class BuchiSuccessorGenerator;
-    std::string toSpotFormat(const QueryItem &query);
-    void toSpotFormat(const QueryItem &query, std::ostream &os);
-
-    BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query);
-
     struct AtomicProposition {
         Condition_ptr expression;
         std::string text;
     };
 
     using APInfo = std::vector<AtomicProposition>;
+    std::string toSpotFormat(const QueryItem &query);
+    void toSpotFormat(const QueryItem &query, std::ostream &os);
+    std::pair<spot::formula, APInfo> to_spot_formula(const Condition_ptr& query);
+
+    class BuchiSuccessorGenerator;
+    BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query);
+
 }
 
 #endif //VERIFYPN_LTLTOBUCHI_H
