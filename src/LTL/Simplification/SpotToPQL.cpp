@@ -14,6 +14,7 @@
 #include <spot/tl/formula.hh>
 #include <spot/tl/simplify.hh>
 #include <spot/tl/unabbrev.hh>
+//#include <spot/tl/print.hh>
 
 namespace LTL {
     using std::make_shared;
@@ -23,9 +24,9 @@ namespace LTL {
         switch (formula.kind()) {
 
             case spot::op::ff:
-                return BooleanCondition::TRUE_CONSTANT;
-            case spot::op::tt:
                 return BooleanCondition::FALSE_CONSTANT;
+            case spot::op::tt:
+                return BooleanCondition::TRUE_CONSTANT;
             case spot::op::ap: {
                 auto it = std::find_if(std::begin(apinfo), std::end(apinfo),
                                        [&](const AtomicProposition &info) {

@@ -21,80 +21,6 @@ namespace LTL {
     /**
      * Formula serializer to SPOT-compatible syntax.
      */
-    class FormulaToSpotSyntax : public PetriEngine::PQL::QueryPrinter {
-    protected:
-        void _accept(const ACondition *condition) override;
-
-        void _accept(const ECondition *condition) override;
-
-        void _accept(const PetriEngine::PQL::NotCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::AndCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::OrCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::LessThanCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::LessThanOrEqualCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::GreaterThanCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::GreaterThanOrEqualCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::EqualCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::NotEqualCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::FireableCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::BooleanCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::LiteralExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::PlusExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::MultiplyExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::MinusExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::SubtractExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::IdentifierExpr *element) override;
-
-    public:
-
-        explicit FormulaToSpotSyntax(std::ostream &os = std::cout)
-                : PetriEngine::PQL::QueryPrinter(os) {}
-
-        auto begin() const {
-            return std::begin(ap_info);
-        }
-
-        auto end() const {
-            return std::end(ap_info);
-        }
-
-        const APInfo &apInfo() const {
-            return ap_info;
-        }
-
-    private:
-        APInfo ap_info;
-        bool is_quoted = false;
-
-        void make_atomic_prop(const Condition_constptr &element) {
-            auto cond = const_cast<Condition *>(element.get())->shared_from_this();
-            std::stringstream ss;
-            ss << "\"";
-            QueryPrinter _printer{ss};
-            cond->visit(_printer);
-            ss << "\"";
-            os << ss.str();
-            ap_info.push_back(AtomicProposition{cond, ss.str().substr(1, ss.str().size() - 2)});
-        }
-    };
 
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotCondition *element) {
@@ -140,6 +66,10 @@ namespace LTL {
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotEqualCondition *element) {
+        make_atomic_prop(element->shared_from_this());
+    }
+
+    void FormulaToSpotSyntax::_accept(const CompareConjunction *element) {
         make_atomic_prop(element->shared_from_this());
     }
 
@@ -201,11 +131,10 @@ namespace LTL {
         std::stringstream ss;
         FormulaToSpotSyntax spotConverter{ss};
         query->visit(spotConverter);
-        std::string s = ss.str();
-        if (s.at(0) == 'E' || s.at(0) == 'A') {
-            s = s.substr(2);
+        std::string spotFormula = ss.str();
+        if (spotFormula.at(0) == 'E' || spotFormula.at(0) == 'A') {
+            spotFormula = spotFormula.substr(2);
         }
-        const std::string spotFormula = "!(" + ss.str() + ")";
         auto spot_formula = spot::parse_formula(spotFormula);
 #ifdef PRINTF_DEBUG
         std::cerr << "ORIG FORMULA: \n  " << ss.str() << std::endl;
@@ -216,6 +145,7 @@ namespace LTL {
 
     BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query) {
         auto [formula, apinfo] = to_spot_formula(query);
+        formula = spot::formula::Not(formula);
         spot::translator translator;
         translator.set_type(spot::postprocessor::BA);
         translator.set_pref(spot::postprocessor::Complete);

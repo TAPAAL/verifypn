@@ -519,7 +519,7 @@ ReturnValue LTLMain(options_t options) {
 #endif
                     auto &out = tstream[c];
                     auto &cache = caches[c];
-                    QueryPrinter printer{out};
+                    LTL::FormulaToSpotSyntax printer{out};
                     while (true) {
                         auto i = cnt++;
                         if (i >= queries.size()) return;
@@ -528,6 +528,7 @@ ReturnValue LTLMain(options_t options) {
                         negstat_t stats;
                         EvaluationContext context(qm0, qnet.get());
                         if (options.printstatistics && options.queryReductionTimeout > 0) {
+                            out << '\n' << querynames[i];
                             out << "\nQuery before reduction: ";
                             queries[i]->visit(printer);
                             out << std::endl;
@@ -542,6 +543,11 @@ ReturnValue LTLMain(options_t options) {
                         bool wasAGCPNApprox = dynamic_cast<NotCondition *>(queries[i].get()) != nullptr;
                         int preSize = queries[i]->formulaSize();
                         queries[i] = LTL::simplify(queries[i]);
+                        if (options.printstatistics) {
+                            out << "\nQuery after Spot: ";
+                            queries[i]->visit(printer);
+                            out << std::endl;
+                        }
                         queries[i] = Condition::initialMarkingRW([&]() { return queries[i]; }, stats, context, false,
                                                                  false, true)
                                 ->pushNegation(stats, context, false, false, true);
@@ -557,11 +563,13 @@ ReturnValue LTLMain(options_t options) {
                                                                         options.lpsolveTimeout, &cache);
                             try {
                                 negstat_t stats;
-                                queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats,
-                                                                                                                 context,
-                                                                                                                 false,
-                                                                                                                 false,
-                                                                                                                 true);
+                                auto f = queries[i]->simplify(simplificationContext);
+                                queries[i] = f.formula;
+                                queries[i] = queries[i]->pushNegation(stats,
+                                                                      context,
+                                                                      false,
+                                                                      false,
+                                                                      true);
                                 wasAGCPNApprox |= dynamic_cast<NotCondition *>(queries[i].get()) != nullptr;
                                 if (options.printstatistics) {
                                     out << "RWSTATS POST:";
@@ -643,11 +651,11 @@ ReturnValue LTLMain(options_t options) {
         bool satisfied;
         if (query->isTriviallyTrue()) {
             satisfied = true;
-        }
-        else if (query->isTriviallyFalse()) {
+            //std::cout << "trivially true" << std::endl;
+        } else if (query->isTriviallyFalse()) {
             satisfied = false;
-        }
-        else {
+            //std::cout << "trivially false" << std::endl;
+        } else {
             auto[negated_formula, negate_answer] = to_ltl(query);
             if (!negated_formula) {
                 std::cerr << "Query file " << qfilename << " contained non-LTL formula";

@@ -588,7 +588,7 @@ namespace PetriEngine {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
-            Result evaluate(const EvaluationContext& context) override;
+            //Result evaluate(const EvaluationContext& context) override;
 
             bool isReachability(uint32_t depth) const override {
                 // TODO implement
