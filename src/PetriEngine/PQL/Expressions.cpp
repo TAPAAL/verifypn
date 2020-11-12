@@ -3404,7 +3404,7 @@ namespace PetriEngine {
                     return b;
                 }
 
-                auto c = std::make_shared<EUCondition>(a, b);
+                auto c = std::make_shared<UntilCondition>(a, b);
                 if(negated) return std::make_shared<NotCondition>(c);
                 return c;
             }, stats, context, nested, negated, initrw);
