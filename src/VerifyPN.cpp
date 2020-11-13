@@ -754,13 +754,6 @@ int main(int argc, char* argv[]) {
         return ErrorCode;
     }
 
-    if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout == 0)
-    { 
-        // Conflicting flags "-s OverApprox" and "-q 0"
-        std::cerr << "Conflicting flags '-s OverApprox' and '-q 0'" << std::endl;
-        return ErrorCode;
-    }
-
     // simplification. We always want to do negation-push and initial marking check.
     {
         // simplification. We always want to do negation-push and initial marking check.
