@@ -24,6 +24,7 @@
 #include <iostream>
 #include <cassert>
 
+//#include "ColoredNetStructures.h"
 #include "../TAR/range.h"
 
 namespace PetriEngine {
@@ -332,9 +333,36 @@ namespace PetriEngine {
             ColorType* colorType;
         };
 
+        struct ColorFixpoint {
+            Reachability::rangeInterval_t constraints;
+            bool inQueue;
+            uint32_t productSize;
+
+            bool constainsColor(std::pair<const PetriEngine::Colored::Color *const, std::vector<uint32_t>> constPair) {
+                std::unordered_map<uint32_t, bool> contained;
+                for(auto interval : constraints._ranges) {
+                    for(uint32_t id : constPair.second){
+                        
+                        if(contained[id] != true){
+                            contained[id] = interval[id].contains(constPair.first->getId());
+                        }                        
+                    }
+                }
+
+                for(auto pair : contained){
+                    if (!pair.second){
+                        return false;
+                    }
+                }
+                return true;
+            }
+        };
+
         struct VariableInterval {
             Colored::Variable *_variable;
             Reachability::rangeInterval_t _ranges;
+            std::unordered_map<Colored::ColorFixpoint *, std::set<uint32_t>> _parentPlaceIndexMap;
+            
 
             VariableInterval() {
             }
@@ -374,7 +402,51 @@ namespace PetriEngine {
                 std::cout << "Variable " << _variable->name << std::endl;
                 _ranges.print();
             }
+
+            Reachability::rangeInterval_t getPlaceRestriction(){
+                auto placeIterator = _parentPlaceIndexMap.begin();
+                Reachability::rangeInterval_t combinedRangeInterval;
+
+                while(placeIterator != _parentPlaceIndexMap.end()){
+                    Reachability::rangeInterval_t tempRangeInterval;
+                    if(placeIterator->first->constraints.size() == 0){
+                        //if one of the places that the variable depends on is empty, 
+                        // then there are no valid bindings for the variable
+                        break;
+                    }
+                    for(uint32_t index : placeIterator.operator*().second){
+                        if(combinedRangeInterval.size() == 0){
+                            for(auto interval : placeIterator.operator*().first->constraints._ranges){
+                                Reachability::interval_t newInterval;
+                                for(uint32_t i = index; i < index + _variable->colorType->productSize(); i++){
+                                    newInterval.addRange(interval[i]);
+                                }
+                                tempRangeInterval.addInterval(newInterval); 
+                            }
+                        } else {
+                            for(auto interval : combinedRangeInterval._ranges){
+                                for(auto otherInterval : placeIterator.operator*().first->constraints._ranges){
+                                    Reachability::interval_t newInterval;
+                                    for(uint32_t i = index; i < index + _variable->colorType->productSize(); i++){
+                                        newInterval.addRange(otherInterval[i]);
+                                    }
+                                    newInterval.constrain(interval);
+                                    if(newInterval.isSound()){                                        
+                                        tempRangeInterval.addInterval(newInterval);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    combinedRangeInterval = tempRangeInterval;  
+                    placeIterator++;                  
+                }
+                return combinedRangeInterval;
+            }
+
         };
+        
     }
 }
 

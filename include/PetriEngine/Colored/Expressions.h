@@ -650,6 +650,9 @@ namespace PetriEngine {
                         //comparing vars
                         for(auto varPositions : varRightPositions) {
                             if(varPositions.second.find(index) != varPositions.second.end()) {
+                                if(varIntervals->count(varPositions.first) == 0){
+                                    continue;
+                                }
                                 auto otherVar = &varIntervals->operator[](varPositions.first);
                                 if(otherVar->size() == 0) {
                                     continue;
@@ -672,10 +675,12 @@ namespace PetriEngine {
                         uint32_t value = restrictionvector.back() + leftModifier;
                         auto ctSize = varInterval->_variable->colorType->size();
                         uint32_t finalVal = value % ctSize;
-                        if(varInterval->operator[](0).getFirst()._lower > finalVal -1){
-                            varInterval->operator[](0).getFirst().invalidate();
-                        } else {
-                            varInterval->operator[](0).getFirst()._upper =  std::min(finalVal-1, varInterval->operator[](0).getFirst()._upper);
+                        for(auto& interval : varInterval->_ranges._ranges){
+                            if(interval.getFirst()._lower > finalVal -1){
+                                interval.getFirst().invalidate();
+                            } else {
+                                interval.getFirst()._upper =  std::max(finalVal-1, interval.getFirst()._upper);
+                            }
                         }
                         
                     } else if (restrictionvector.size() > 1){
@@ -702,6 +707,9 @@ namespace PetriEngine {
                         //comparing vars
                         for(auto varPositions : varLeftPositions) {
                             if(varPositions.second.find(index) != varPositions.second.end()) {
+                                if(varIntervals->count(varPositions.first) == 0){
+                                    continue;
+                                }
                                 auto otherVar = &varIntervals->operator[](varPositions.first);
                                 if(otherVar->size() == 0) {
                                     continue;
@@ -724,12 +732,13 @@ namespace PetriEngine {
                         int32_t value = restrictionvector.back() + rightmodifier;
                         auto ctSize = varInterval->_variable->colorType->size();
                         uint32_t finalVal = value % ctSize;
-                        if(varInterval->operator[](0).getFirst()._upper < finalVal + 1){
-                            varInterval->operator[](0).getFirst().invalidate();
-                        } else {
-                            varInterval->operator[](0).getFirst()._lower =  std::max(finalVal+1, varInterval->operator[](0).getFirst()._lower);
+                        for(auto& interval : varInterval->_ranges._ranges){
+                            if(interval.getFirst()._upper < finalVal + 1){
+                                interval.getFirst().invalidate();
+                            } else {
+                                interval.getFirst()._lower =  std::max(finalVal+1, interval.getFirst()._lower);
+                            }
                         }
-                        
                     } else if (restrictionvector.size() > 1) {
                         auto ct = (Colored::ProductType *) varInterval->_variable->colorType;
                         auto constituentSizes = ct->getConstituentsSizes();
@@ -808,6 +817,9 @@ namespace PetriEngine {
                         //comparing vars
                         for(auto varPositions : varRightPositions) {
                             if(varPositions.second.find(index) != varPositions.second.end()) {
+                                if(varIntervals->count(varPositions.first) == 0){
+                                    continue;
+                                }
                                 auto otherVar = &varIntervals->operator[](varPositions.first);
                                 if(otherVar->size() == 0) {
                                     continue;
@@ -831,10 +843,12 @@ namespace PetriEngine {
                         int32_t value = restrictionvector.back() + leftModifier;
                         auto ctSize = varInterval->_variable->colorType->size();
                         uint32_t finalVal = value % ctSize;
-                        if(varInterval->operator[](0).getFirst()._upper < finalVal+1){
-                            varInterval->operator[](0).getFirst().invalidate();
-                        } else {
-                            varInterval->operator[](0).getFirst()._lower =  std::max(finalVal+1, varInterval->operator[](0).getFirst()._lower);
+                        for(auto& interval : varInterval->_ranges._ranges){
+                            if(interval.getFirst()._upper < finalVal+1){
+                                interval.getFirst().invalidate();
+                            } else {
+                                interval.getFirst()._lower =  std::max(finalVal+1, interval.getFirst()._lower);
+                            }
                         }
                         
                     } else if (restrictionvector.size() > 1) {
@@ -860,7 +874,9 @@ namespace PetriEngine {
                         //comparing vars
                         for(auto varPositions : varLeftPositions) {
                             if(varPositions.second.find(index) != varPositions.second.end()) {
-
+                                if(varIntervals->count(varPositions.first) == 0){
+                                    continue;
+                                }
                                 auto otherVar = &varIntervals->operator[](varPositions.first);
                                 if(otherVar->size() == 0) {
                                     continue;
@@ -883,10 +899,12 @@ namespace PetriEngine {
                         uint32_t value = restrictionvector.back() + rightmodifier;
                         auto ctSize = varInterval->_variable->colorType->size();
                         uint32_t finalVal = value % ctSize;
-                        if(finalVal == 0 || varInterval->operator[](0).getFirst()._lower > finalVal - 1 ){
-                            varInterval->operator[](0).getFirst().invalidate();
-                        } else {
-                            varInterval->operator[](0).getFirst()._upper =  std::min(finalVal-1, varInterval->operator[](0).getFirst()._upper);
+                        for(auto& interval : varInterval->_ranges._ranges){
+                            if(finalVal == 0 || interval.getFirst()._lower > finalVal - 1){
+                                interval.getFirst().invalidate();
+                            } else {
+                                interval.getFirst()._upper =  std::max(finalVal-1, interval.getFirst()._upper);
+                            }
                         }
                         
                     } else if (restrictionvector.size() > 1){
@@ -981,6 +999,9 @@ namespace PetriEngine {
                         //comparing vars
                         for(auto varPositions : varRightPositions) {
                             if(varPositions.second.find(index) != varPositions.second.end()) {
+                                if(varIntervals->count(varPositions.first) == 0){
+                                    continue;
+                                }
                                 auto otherVar = &varIntervals->operator[](varPositions.first);
                                 if(otherVar->size() == 0) {
                                     continue;
@@ -1003,10 +1024,12 @@ namespace PetriEngine {
                         uint32_t value = restrictionvector.back() + leftModifier;
                         auto ctSize = varInterval->_variable->colorType->size();
                         uint32_t finalVal = value % ctSize;
-                        if(varInterval->operator[](0).getFirst()._lower > finalVal){
-                            varInterval->operator[](0).getFirst().invalidate();
-                        } else {
-                            varInterval->operator[](0).getFirst()._upper =  std::min(finalVal, varInterval->operator[](0).getFirst()._upper);
+                        for(auto& interval : varInterval->_ranges._ranges){
+                            if(interval.getFirst()._lower > finalVal ){
+                                interval.getFirst().invalidate();
+                            } else {
+                                interval.getFirst()._upper =  std::max(finalVal, interval.getFirst()._upper);
+                            }
                         }
                         
                     } else if (restrictionvector.size() > 1){
@@ -1032,6 +1055,9 @@ namespace PetriEngine {
                         //comparing vars
                         for(auto varPositions : varLeftPositions) {
                             if(varPositions.second.find(index) != varPositions.second.end()) {
+                                if(varIntervals->count(varPositions.first) == 0){
+                                    continue;
+                                }
                                 auto otherVar = &varIntervals->operator[](varPositions.first);
                                 if(otherVar->size() == 0) {
                                     continue;
@@ -1054,10 +1080,12 @@ namespace PetriEngine {
                         int32_t value = restrictionvector.back() + rightmodifier;
                         auto ctSize = varInterval->_variable->colorType->size();
                         uint32_t finalVal = value % ctSize;
-                        if(varInterval->operator[](0).getFirst()._upper < finalVal){
-                            varInterval->operator[](0).getFirst().invalidate();
-                        } else {
-                            varInterval->operator[](0).getFirst()._lower =  std::max(finalVal, varInterval->operator[](0).getFirst()._lower);
+                        for(auto& interval : varInterval->_ranges._ranges){
+                            if(interval.getFirst()._upper < finalVal){
+                                interval.getFirst().invalidate();
+                            } else {
+                                interval.getFirst()._lower =  std::max(finalVal, interval.getFirst()._lower);
+                            }
                         }
                         
                     } else if (restrictionvector.size() > 1) {
@@ -1136,6 +1164,9 @@ namespace PetriEngine {
                         //comparing vars
                         for(auto varPositions : varRightPositions) {
                             if(varPositions.second.find(index) != varPositions.second.end()) {
+                                if(varIntervals->count(varPositions.first) == 0){
+                                    continue;
+                                }
                                 auto otherVar = &varIntervals->operator[](varPositions.first);
                                 if(otherVar->size() == 0) {
                                     continue;
@@ -1159,10 +1190,12 @@ namespace PetriEngine {
                         int32_t value = restrictionvector.back() + leftModifier;
                         auto ctSize = varInterval->_variable->colorType->size();
                         uint32_t finalVal = value % ctSize;
-                        if(varInterval->operator[](0).getFirst()._upper < finalVal){
-                            varInterval->operator[](0).getFirst().invalidate();
-                        } else {
-                            varInterval->operator[](0).getFirst()._lower =  std::max(finalVal, varInterval->operator[](0).getFirst()._lower);
+                        for(auto& interval : varInterval->_ranges._ranges){
+                            if(interval.getFirst()._upper < finalVal){
+                                interval.getFirst().invalidate();
+                            } else {
+                                interval.getFirst()._lower =  std::max(finalVal, interval.getFirst()._lower);
+                            }
                         }
                         
                     } else if (restrictionvector.size() > 1) {
@@ -1188,6 +1221,9 @@ namespace PetriEngine {
                         //comparing vars
                         for(auto varPositions : varLeftPositions) {
                             if(varPositions.second.find(index) != varPositions.second.end()) {
+                                if(varIntervals->count(varPositions.first) == 0){
+                                    continue;
+                                }
                                 auto otherVar = &varIntervals->operator[](varPositions.first);
                                 if(otherVar->size() == 0) {
                                     continue;
@@ -1210,10 +1246,12 @@ namespace PetriEngine {
                         uint32_t value = restrictionvector.back() + rightmodifier;
                         auto ctSize = varInterval->_variable->colorType->size();
                         uint32_t finalVal = value % ctSize;
-                        if(varInterval->operator[](0).getFirst()._lower > finalVal){
-                            varInterval->operator[](0).getFirst().invalidate();
-                        } else {
-                            varInterval->operator[](0).getFirst()._upper =  std::min(finalVal, varInterval->operator[](0).getFirst()._upper);
+                        for(auto& interval : varInterval->_ranges._ranges){
+                            if(interval.getFirst()._lower > finalVal){
+                                interval.getFirst().invalidate();
+                            } else {
+                                interval.getFirst()._upper =  std::max(finalVal, interval.getFirst()._upper);
+                            }
                         }
                         
                     } else if (restrictionvector.size() > 1){
@@ -1275,6 +1313,10 @@ namespace PetriEngine {
                         //comparing vars;
                         for(auto varPositions : varRightPositions) {
                             if(varPositions.second.find(index) != varPositions.second.end()) {
+                                if(varIntervals->count(varPositions.first) == 0){
+                                    continue;
+                                }
+
                                 auto otherVar = &varIntervals->operator[](varPositions.first);
                                 if(otherVar->size() == 0) {
                                     continue;
@@ -1337,6 +1379,9 @@ namespace PetriEngine {
                         //comparing vars
                         for(auto varPositions : varLeftPositions) {
                             if(varPositions.second.find(index) != varPositions.second.end()) {
+                                if(varIntervals->count(varPositions.first) == 0){
+                                    continue;
+                                }
                                 auto otherVar = &varIntervals->operator[](varPositions.first);
                                 if(otherVar->size() == 0) {
                                     continue;

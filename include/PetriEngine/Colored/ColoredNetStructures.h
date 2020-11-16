@@ -48,30 +48,8 @@ namespace PetriEngine {
             Multiset marking;
         };
 
-        struct ColorFixpoint {
-            Reachability::rangeInterval_t constraints;
-            bool inQueue;
-            uint32_t productSize;
+        
 
-            bool constainsColor(std::pair<const PetriEngine::Colored::Color *const, std::vector<uint32_t>> constPair) {
-                std::unordered_map<uint32_t, bool> contained;
-                for(auto interval : constraints._ranges) {
-                    for(uint32_t id : constPair.second){
-                        
-                        if(contained[id] != true){
-                            contained[id] = interval[id].contains(constPair.first->getId());
-                        }                        
-                    }
-                }
-
-                for(auto pair : contained){
-                    if (!pair.second){
-                        return false;
-                    }
-                }
-                return true;
-            }
-        };
     }
 }
 

@@ -191,6 +191,8 @@ namespace PetriEngine {
         std::string arcToString(Colored::Arc& arc) const ;
 
         void printPlaceTable();
+
+        void setupTransitionVars();
         
         void addArc(const std::string& place,
                 const std::string& transition,

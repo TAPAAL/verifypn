@@ -70,8 +70,12 @@ namespace PetriEngine {
                 _lower = min();
             }
 
+            uint32_t size(){
+                return 1 + _upper - _lower;
+            }
+
             void invalidate() {
-                //hack setting range invalid to have it removed upon merge
+                //hack setting range invalid
                 _lower = 1;
                 _upper = 0;
             }
@@ -443,6 +447,17 @@ namespace PetriEngine {
                 return _ranges.size();
             }
 
+            uint32_t intervalCombinations(){
+                uint32_t product = 1;
+                for(auto range : _ranges){
+                    product *= range.size();
+                }
+                if(_ranges.empty()){
+                    return 0;
+                }
+                return product;
+            }
+
             bool isSound(){
                 for(auto range: _ranges) {
                     if(!range.isSound()){
@@ -576,6 +591,43 @@ namespace PetriEngine {
                 }
                 return ids;
             }
+
+            bool equals(interval_t other){
+                if(other.size() != size()){
+                    return false;
+                }
+                for(uint32_t i = 0; i < size(); i++){
+                    auto comparisonRes = _ranges[i].compare(other[i]);
+                    if(!comparisonRes.first || !comparisonRes.second){
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            bool constains(interval_t other){
+                if(other.size() != size()){
+                    return false;
+                }
+                for(uint32_t i = 0; i < size(); i++){
+                    if(!_ranges[i].compare(other[i]).first){
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            void constrain(interval_t other){
+                for(uint32_t i = 0; i < _ranges.size(); i++){
+                    _ranges[i] &= other._ranges[i];
+                }
+            }
+
+            void print() {
+                for(auto range : _ranges){
+                    std::cout << " " << range._lower << "-" << range._upper << " ";
+                }
+            }
         };
 
         struct rangeInterval_t {
@@ -597,6 +649,14 @@ namespace PetriEngine {
 
             size_t size() {
                 return _ranges.size();
+            }
+
+            uint32_t intervalCombinations(){
+                uint32_t res = 0;
+                for(auto interval : _ranges){
+                    res += interval.intervalCombinations();
+                }
+                return res;
             }
 
             bool hasValidIntervals(){
@@ -737,16 +797,23 @@ namespace PetriEngine {
 
             void print() {
                 for (auto interval : _ranges){
-                    std::cout << "[ ";
-                    for(auto range : interval._ranges){
-                        std::cout << range._lower << "-" << range._upper << " ";
-                    }
+                    std::cout << "[";
+                    interval.print();
                     std::cout << "]" << std::endl;
                 }
             }
 
             std::vector<uint32_t> getLowerIds(){
                 return _ranges[0].getLowerIds();
+            }
+
+            bool contains(interval_t interval){
+                for(auto localInterval : _ranges){
+                    if(localInterval.constains(interval)){
+                        return true;
+                    }
+                }
+                return false;
             }
 
             void mergeIntervals() {
