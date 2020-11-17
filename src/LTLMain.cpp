@@ -36,6 +36,9 @@
 #include "LTL/Simplification/SpotToPQL.h"
 #include "LTL/LTL.h"
 
+#include <spot/twaalgos/contains.hh>
+#include <spot/tl/print.hh>
+
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
@@ -331,7 +334,7 @@ ReturnValue parseOptions(int argc, char *argv[], options_t &options) {
     }
     //Print parameters
     if (options.printstatistics) {
-        std::cout << std::endl << "Parameters: ";
+        std::cout << std::endl << "Parameters: \n  ";
         for (int i = 1; i < argc; i++) {
             std::cout << argv[i] << " ";
         }
@@ -463,7 +466,7 @@ ReturnValue LTLMain(options_t options) {
     }
     auto strippedBuilder = cpnBuilder.stripColors(); //TODO can we trivially handle colors or do we need to strip?
     PetriNetBuilder builder(strippedBuilder);
-    std::unique_ptr<PetriNet> net{builder.makePetriNet()};
+    std::unique_ptr<PetriNet> net{builder.makePetriNet(false)};
     if ((v = contextAnalysis(cpnBuilder, builder, net.get(), parser.queries)) != ContinueCode) {
         std::cerr << "Error performing context analysis" << std::endl;
         return v;
@@ -519,7 +522,7 @@ ReturnValue LTLMain(options_t options) {
 #endif
                     auto &out = tstream[c];
                     auto &cache = caches[c];
-                    LTL::FormulaToSpotSyntax printer{out};
+                    QueryPrinter printer{out};
                     while (true) {
                         auto i = cnt++;
                         if (i >= queries.size()) return;
@@ -548,9 +551,24 @@ ReturnValue LTLMain(options_t options) {
                             queries[i]->visit(printer);
                             out << std::endl;
                         }
+
+                        // FIXME rewrite rules still incorrect, but might be redundant.
+                        /*auto [reduced, _] = LTL::to_spot_formula(queries[i]);
                         queries[i] = Condition::initialMarkingRW([&]() { return queries[i]; }, stats, context, false,
-                                                                 false, true)
-                                ->pushNegation(stats, context, false, false, true);
+                                                                 false, false)
+                                ->pushNegation(stats, context, false, false, false);
+                        auto [postreduced, __] = LTL::to_spot_formula(queries[i]);
+                        if (!spot::are_equivalent(reduced, postreduced)) {
+                            stats.print(std::cout);
+                            std::cout << "Not equivalent!\n";
+                            std::cout << querynames[i] << std::endl;
+                            std::cout << "BEFORE:\n  ";
+                            spot::print_psl(std::cout, reduced);
+                  ½          std::cout << "\nAFTER:\n  ";
+                            spot::print_psl(std::cout, postreduced);
+                            std::cout << std::endl;
+                            exit(EXIT_FAILURE);
+                        }*/
                         wasAGCPNApprox |= dynamic_cast<NotCondition *>(queries[i].get()) != nullptr;
                         if (options.queryReductionTimeout > 0 && options.printstatistics) {
                             out << "RWSTATS PRE:";
@@ -565,11 +583,12 @@ ReturnValue LTLMain(options_t options) {
                                 negstat_t stats;
                                 auto f = queries[i]->simplify(simplificationContext);
                                 queries[i] = f.formula;
-                                queries[i] = queries[i]->pushNegation(stats,
+                                // FIXME rewrite rules still incorrect, but might be redundant.
+                                /*queries[i] = queries[i]->pushNegation(stats,
                                                                       context,
                                                                       false,
                                                                       false,
-                                                                      true);
+                                                                      true);*/
                                 wasAGCPNApprox |= dynamic_cast<NotCondition *>(queries[i].get()) != nullptr;
                                 if (options.printstatistics) {
                                     out << "RWSTATS POST:";
@@ -586,7 +605,8 @@ ReturnValue LTLMain(options_t options) {
 
                             if (options.printstatistics) {
                                 out << "\nQuery after reduction: ";
-                                queries[i]->toString(out);
+                                queries[i]->visit(printer);
+                                //queries[i]->toString(out);
                                 out << std::endl;
                             }
                             if (simplificationContext.timeout()) {

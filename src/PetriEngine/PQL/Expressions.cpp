@@ -725,22 +725,22 @@ namespace PetriEngine {
         }
 
         Condition::Result ACondition::evaluate(const EvaluationContext& context) {
-            if (_cond->evaluate(context) == RFALSE) return RFALSE;
+            //if (_cond->evaluate(context) == RFALSE) return RFALSE;
             return RUNKNOWN;
         }
 
         Condition::Result ECondition::evaluate(const EvaluationContext& context) {
-            if (_cond->evaluate(context) == RTRUE) return RTRUE;
+            //if (_cond->evaluate(context) == RTRUE) return RTRUE;
             return RUNKNOWN;
         }
 
         Condition::Result FCondition::evaluate(const EvaluationContext& context) {
-            if (_cond->evaluate(context) == RTRUE) return RTRUE;
+            //if (_cond->evaluate(context) == RTRUE) return RTRUE;
             return RUNKNOWN;
         }
 
         Condition::Result GCondition::evaluate(const EvaluationContext& context) {
-            if (_cond->evaluate(context) == RFALSE) return RFALSE;
+            //if (_cond->evaluate(context) == RFALSE) return RFALSE;
             return RUNKNOWN;
         }
 
@@ -2288,6 +2288,7 @@ namespace PetriEngine {
         Retval UntilCondition::simplify(SimplificationContext& context) const {
             bool neg = context.negated();
             context.setNegate(false);
+
             Retval r2 = _cond2->simplify(context);
             if(r2.formula->isTriviallyTrue() || !r2.neglps->satisfiable(context))
             {
@@ -2314,7 +2315,7 @@ namespace PetriEngine {
                     return Retval(std::make_shared<NotCondition>(r2.formula));
                 } else {
                     return Retval(std::make_shared<NotCondition>(
-                            std::make_shared<AUCondition>(r1.formula, r2.formula)));
+                            std::make_shared<UntilCondition>(r1.formula, r2.formula)));
                 }
             } else {
                 if(r1.formula->isTriviallyTrue() || !r1.neglps->satisfiable(context)){
@@ -2324,28 +2325,6 @@ namespace PetriEngine {
                 } else {
                     return Retval(std::make_shared<UntilCondition>(r1.formula, r2.formula));
                 }
-            }
-            assert(false);
-            Retval ret2 = _cond2->simplify(context);
-            if (ret2.formula->isTriviallyTrue() || !ret2.neglps->satisfiable(context)) {
-                return context.negated() ?
-                    Retval(BooleanCondition::TRUE_CONSTANT) :
-                    Retval(BooleanCondition::FALSE_CONSTANT);
-            }
-            Retval ret1 = _cond1->simplify(context);
-            if (ret1.formula->isTriviallyTrue() || !ret1.neglps->satisfiable(context)) {
-                Condition_ptr ret = std::make_shared<FCondition>(ret2.formula);
-                if (context.negated()) ret = std::make_shared<NotCondition>(ret);
-                return Retval{ret};
-            }
-            else if (ret1.formula->isTriviallyFalse() || !ret1.lps->satisfiable(context)) {
-                if (context.negated()) {
-                    return Retval{std::make_shared<NotCondition>(ret2.formula)};
-                }
-                return ret2;
-            }
-            else {
-                return Retval(std::make_shared<UntilCondition>(ret1.formula, ret2.formula));
             }
         }
 
@@ -3444,7 +3423,7 @@ namespace PetriEngine {
                     static_assert(negstat_t::nrules >= 35);
                     ++stats[34];
                     if (negated)
-                        b = std::make_shared<NotCondition>(b);
+                        return std::make_shared<NotCondition>(b);
                     return b;
                 }
 
@@ -3468,8 +3447,8 @@ namespace PetriEngine {
         Condition_ptr FCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
                                                bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-                auto a = _cond->pushNegation(stats, context, true, false, initrw);
 
+                auto a = _cond->pushNegation(stats, context, true, false, initrw);
                 if(!a->isTemporal())
                 {
                     auto res = std::make_shared<FCondition>(a);
