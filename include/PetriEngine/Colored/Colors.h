@@ -348,13 +348,13 @@ namespace PetriEngine {
         };
 
         struct ColorFixpoint {
-            Reachability::rangeInterval_t constraints;
+            Reachability::intervalTuple_t constraints;
             bool inQueue;
             uint32_t productSize;
 
             bool constainsColor(std::pair<const PetriEngine::Colored::Color *const, std::vector<uint32_t>> constPair) {
                 std::unordered_map<uint32_t, bool> contained;
-                for(auto interval : constraints._ranges) {
+                for(auto interval : constraints._intervals) {
                     for(uint32_t id : constPair.second){
                         
                         if(contained[id] != true){
@@ -374,7 +374,7 @@ namespace PetriEngine {
 
         struct VariableInterval {
             Colored::Variable *_variable;
-            Reachability::rangeInterval_t _ranges;
+            Reachability::intervalTuple_t _intervalTuple;
             std::unordered_map<Colored::ColorFixpoint *, std::pair<std::set<uint32_t>, int32_t>> _parentPlaceIndexMap;
             
 
@@ -384,48 +384,48 @@ namespace PetriEngine {
             VariableInterval(Colored::Variable *variable) : _variable(variable) {
             };
 
-            VariableInterval(Colored::Variable *variable,  Reachability::rangeInterval_t ranges) : _variable(variable), _ranges(ranges) {
+            VariableInterval(Colored::Variable *variable,  Reachability::intervalTuple_t ranges) : _variable(variable), _intervalTuple(ranges) {
             };
 
             size_t size() {
-                return _ranges.size();
+                return _intervalTuple.size();
             }
 
             Reachability::interval_t& operator[] (size_t index) {
-                return _ranges[index];
+                return _intervalTuple[index];
             }
             
             Reachability::interval_t& operator[] (int index) {
-                return _ranges[index];
+                return _intervalTuple[index];
             }
             
             Reachability::interval_t& operator[] (uint32_t index) {
-                assert(index < _ranges.size());
-                return _ranges[index];
+                assert(index < _intervalTuple.size());
+                return _intervalTuple[index];
             }
 
             Reachability::interval_t& back(){
-                return _ranges.back();
+                return _intervalTuple.back();
             }
 
             bool hasValidIntervals(){
-                return _ranges.hasValidIntervals();
+                return _intervalTuple.hasValidIntervals();
             }
 
             void print() {
                 std::cout << "Variable " << _variable->name << std::endl;
-                _ranges.print();
+                _intervalTuple.print();
             }
 
-            Reachability::rangeInterval_t getPlaceRestriction(std::vector<std::pair<uint32_t, int32_t>> varModifiers){
+            Reachability::intervalTuple_t getPlaceRestriction(std::vector<std::pair<uint32_t, int32_t>> varModifiers){
                 auto placeIterator = _parentPlaceIndexMap.begin();
-                Reachability::rangeInterval_t combinedRangeInterval;
+                Reachability::intervalTuple_t combinedRangeInterval;
 
                 std::vector<Colored::ColorType *> varColorTypes;
                 _variable->colorType->getColortypes(varColorTypes);
 
                 while(placeIterator != _parentPlaceIndexMap.end()){
-                    Reachability::rangeInterval_t tempRangeInterval;
+                    Reachability::intervalTuple_t tempRangeInterval;
                     if(placeIterator->first->constraints.size() == 0){
                         //if one of the places that the variable depends on is empty, 
                         // then there are no valid bindings for the variable
@@ -435,7 +435,7 @@ namespace PetriEngine {
                     for(uint32_t index : placeIterator.operator*().second.first){                        
                         if(combinedRangeInterval.size() == 0){
                             
-                            for(auto interval : placeIterator.operator*().first->constraints._ranges){
+                            for(auto interval : placeIterator.operator*().first->constraints._intervals){
                                 std::vector<Reachability::interval_t> newIntervals;
                                 std::vector<Reachability::interval_t> tempIntervals;
                                 std::vector<Reachability::interval_t> collectedIntervals;
@@ -507,8 +507,8 @@ namespace PetriEngine {
                                 
                             }
                         } else {
-                            for(auto interval : combinedRangeInterval._ranges){
-                                for(auto otherInterval : placeIterator.operator*().first->constraints._ranges){
+                            for(auto interval : combinedRangeInterval._intervals){
+                                for(auto otherInterval : placeIterator.operator*().first->constraints._intervals){
                                     uint32_t j = 0;
                                     std::vector<Reachability::interval_t> newIntervals;
                                     std::vector<Reachability::interval_t> tempIntervals;
