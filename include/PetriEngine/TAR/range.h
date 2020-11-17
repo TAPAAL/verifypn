@@ -17,6 +17,7 @@
 #include <limits>
 #include <iostream>
 #include <vector>
+#include <set>
 
 namespace PetriEngine {
     namespace Reachability {
@@ -56,9 +57,27 @@ namespace PetriEngine {
                 return no_lower() && no_upper();
             }
 
+            bool isSound() {
+                return _lower <= _upper;
+            }
+
+            bool contains(uint32_t id){
+                return _lower <= id && id <= _upper;
+            }
+
             void free() {
                 _upper = max();
                 _lower = min();
+            }
+
+            uint32_t size(){
+                return 1 + _upper - _lower;
+            }
+
+            void invalidate() {
+                //hack setting range invalid
+                _lower = 1;
+                _upper = 0;
             }
 
             std::ostream& print(std::ostream& os) const {
@@ -413,6 +432,443 @@ namespace PetriEngine {
                 }
                 return false;
             }
+        };
+
+        struct interval_t {
+            std::vector<Reachability::range_t> _ranges;
+
+            interval_t() {
+            }
+
+            interval_t(std::vector<Reachability::range_t> ranges) : _ranges(ranges) {
+            }
+
+            size_t size(){
+                return _ranges.size();
+            }
+
+            uint32_t intervalCombinations(){
+                uint32_t product = 1;
+                for(auto range : _ranges){
+                    product *= range.size();
+                }
+                if(_ranges.empty()){
+                    return 0;
+                }
+                return product;
+            }
+
+            bool isSound(){
+                for(auto range: _ranges) {
+                    if(!range.isSound()){
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            void addRange(range_t newRange) {
+                _ranges.push_back(newRange);
+                // uint32_t vecIndex = 0;
+                // std::vector<uint32_t> _rangesToRemove;
+                // for (uint32_t i = 0; i < _ranges.size(); i++) {
+                //     Reachability::range_t range = _ranges[i];
+                //     if(newRange._lower < range._lower && newRange._upper > range._upper) {
+                //         range._lower = newRange._lower;
+                //         range._upper = newRange._upper;
+                //         return;
+                //     } else if (newRange._lower >= range._lower && newRange._lower <= range._upper) {
+                //         range._upper = std::max(newRange._upper, range._upper);
+                //         return;
+                //     } else if (newRange._upper >= range._lower && newRange._upper <= range._upper) {
+                //         range._lower = std::min(newRange._lower, range._lower);
+                        
+                //         if(range._lower < _ranges[i-1]._lower){
+                //             _rangesToRemove.push_back(i-1);
+                //         }
+                //         return;
+                //     } else if (newRange._upper >= range._lower-2 && newRange._lower < range._lower) {
+                //         range._lower = newRange._lower;
+                //         return;
+                //     } else if (newRange._lower <= range._upper+2 && newRange._upper > range._upper){
+                //         range._upper = newRange._upper;
+                //         return;
+                //     }
+
+                //     if(newRange._lower > range._lower) {
+                //         vecIndex++;
+                //     }
+                // }
+
+                // for(auto index: _rangesToRemove) {
+                //     _ranges.erase(_ranges.begin() + index);
+                // }
+
+                // _ranges.insert(_ranges.begin() + vecIndex, newRange);
+            }
+
+            void addRange(range_t newRange, uint32_t index){
+                _ranges.insert(_ranges.begin() + index, newRange);
+            }
+
+            void addRange(uint32_t l, uint32_t u) {
+                // uint32_t vecIndex = 0;
+                // std::vector<uint32_t> _rangesToRemove;
+                // for (uint32_t i = 0; i < _ranges.size(); i++) {
+                //     Reachability::range_t range = _ranges[i];
+                //     if(l < range._lower && u > range._upper) {
+                //         range._lower = l;
+                //         range._upper = u;
+                //         return;
+                //     } else if (l >= range._lower && l <= range._upper) {
+                //         range._upper = std::max(u, range._upper);
+                //         return;
+                //     } else if (u >= range._lower && u <= range._upper) {
+                //         range._lower = std::min(l, range._lower);
+                        
+                //         if(range._lower < _ranges[i-1]._lower){
+                //             _rangesToRemove.push_back(i-1);
+                //         }
+                //         return;
+                //     } else if (u >= range._lower-2 && l < range._lower) {
+                //         range._lower = l;
+                //         return;
+                //     } else if (l <= range._upper+2 && u > range._upper){
+                //         range._upper = u;
+                //         return;
+                //     }
+
+                //     if(l > range._lower) {
+                //         vecIndex++;
+                //     }
+                // }
+
+                // for(auto index: _rangesToRemove) {
+                //     _ranges.erase(_ranges.begin() + index);
+                // }
+
+                // _ranges.insert(_ranges.begin() + vecIndex,Reachability::range_t(l, u));
+                _ranges.push_back(Reachability::range_t(l, u));
+            }
+
+            void addRange(uint32_t lower, uint32_t upper, uint32_t index){
+                _ranges.insert(_ranges.begin() + index, Reachability::range_t(lower, upper));
+            }
+
+            range_t& operator[] (size_t index) {
+                return _ranges[index];
+            }
+            
+            range_t& operator[] (int index) {
+                return _ranges[index];
+            }
+            
+            range_t& operator[] (uint32_t index) {
+                assert(index < _ranges.size());
+                return _ranges[index];
+            }
+
+            range_t& getFirst() {
+                return _ranges[0];
+            }
+
+            range_t& getLast() {
+                return _ranges.back();
+            }
+
+            std::vector<uint32_t> getLowerIds(){
+                std::vector<uint32_t> ids;
+                for(auto range : _ranges){
+                    ids.push_back(range._lower);
+                }
+                return ids;
+            }
+
+            std::vector<uint32_t> getUpperIds(){
+                std::vector<uint32_t> ids;
+                for(auto range : _ranges){
+                    ids.push_back(range._upper);
+                }
+                return ids;
+            }
+
+            bool equals(interval_t other){
+                if(other.size() != size()){
+                    return false;
+                }
+                for(uint32_t i = 0; i < size(); i++){
+                    auto comparisonRes = _ranges[i].compare(other[i]);
+                    if(!comparisonRes.first || !comparisonRes.second){
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            bool constains(interval_t other){
+                if(other.size() != size()){
+                    return false;
+                }
+                for(uint32_t i = 0; i < size(); i++){
+                    if(!_ranges[i].compare(other[i]).first){
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            void constrain(interval_t other){
+                for(uint32_t i = 0; i < _ranges.size(); i++){
+                    _ranges[i] &= other._ranges[i];
+                }
+            }
+
+            void print() {
+                for(auto range : _ranges){
+                    std::cout << " " << range._lower << "-" << range._upper << " ";
+                }
+            }
+        };
+
+        struct intervalTuple_t {
+            std::vector<interval_t> _intervals;
+
+            intervalTuple_t() {
+            }
+
+            intervalTuple_t(std::vector<interval_t> ranges) :  _intervals(ranges) {
+            };
+
+            interval_t& getLower(){
+                return _intervals[0];
+            }
+
+            interval_t& back() {
+                return _intervals.back();
+            }
+
+            size_t size() {
+                return _intervals.size();
+            }
+
+            uint32_t intervalCombinations(){
+                uint32_t res = 0;
+                for(auto interval : _intervals){
+                    res += interval.intervalCombinations();
+                }
+                return res;
+            }
+
+            bool hasValidIntervals(){
+                for(auto interval : _intervals) {
+                    if(interval.isSound()){
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            interval_t& operator[] (size_t index) {
+                return _intervals[index];
+            }
+            
+            interval_t& operator[] (int index) {
+                return _intervals[index];
+            }
+            
+            interval_t& operator[] (uint32_t index) {
+                assert(index < _intervals.size());
+                return _intervals[index];
+            }
+
+            interval_t isRangeEnd(std::vector<uint32_t> ids) {
+                for (uint32_t j = 0; j < _intervals.size(); j++) {
+                    bool rangeEnd = true;
+                    for (uint32_t i = 0; i < _intervals[j].size(); i++) {
+                        auto range =  _intervals[j][i];
+                        if (range._upper != ids[i]) {
+                            rangeEnd = false;
+                        }
+                    }
+                    if(rangeEnd) {
+                        if(j+1 != _intervals.size()) {
+                            return _intervals[j+1];
+                        } else {
+                            return getLower();
+                        }
+                    }
+                }
+
+                return interval_t();
+            }
+
+            void addInterval(interval_t interval) {
+                uint32_t vecIndex = 0;
+
+                if(!_intervals.empty()) {
+                    assert(_intervals[0].size() == interval.size());
+                } else {
+                    _intervals.push_back(interval);
+                    return;
+                }
+
+                for (auto localInterval : _intervals) {
+                    bool contained = true;
+                    bool foundPlace = true;
+
+                    for(uint32_t k = 0; k < interval.size(); k++){
+                        if(interval[k]._lower < localInterval[k]._lower){
+                            foundPlace = true;
+                            break;
+                        } else if (interval[k]._lower > localInterval[k]._lower){
+                            break;
+                        }
+                    }
+
+                    if(foundPlace) break;
+
+                    for (uint32_t i = 0; i < interval.size(); i++) {
+                        auto range = interval[i];
+                        auto constraint = localInterval[i];
+
+                        auto result = constraint.compare(range);
+
+                        if(!result.first) {
+                            contained = false;
+                            break;
+                        }
+                    }
+
+                    if(contained) {
+                        return;
+                    }
+                    vecIndex++;
+                }
+
+                _intervals.insert(_intervals.begin() + vecIndex, interval);
+            }
+
+            void constrainLower(std::vector<uint32_t> values) {
+                uint32_t i = 0;
+                bool done = false;
+                while(!done) {
+                    bool updated = false;
+                    for(uint32_t j = 0; j < values.size(); j++){
+                        if(_intervals[i][j]._lower <= values[j]){
+                            _intervals[i][j]._lower = values[j];
+                            updated = true;
+                        }                        
+                    }
+                    done = !updated || i == _intervals.size()-1;
+                    i++;
+                }
+                mergeIntervals();
+            }
+
+            void constrainUpper(std::vector<uint32_t> values) {
+                uint32_t i = _intervals.size()-1;
+                bool done = false;
+                while(!done) {
+                    bool updated = false;
+                    for(uint32_t j = 0; j < values.size(); j++){
+                        if(_intervals[i][j]._upper >= values[j]){
+                            _intervals[i][j]._upper = values[j];
+                            updated = true;
+                        }                        
+                    }
+
+                    done = !updated || i == 0;
+                    i--;
+                }
+                mergeIntervals();
+            }
+
+            void expandLower(std::vector<uint32_t> values) {
+                for(uint32_t i = 0; i < values.size(); i++) {
+                    _intervals[0][i]._lower = std::min(values[i],_intervals[0][i]._lower);
+                }
+            }
+
+            void expandUpper(std::vector<uint32_t> values) {
+                for(uint32_t i = 0; i < values.size(); i++) {
+                    _intervals[0][i]._upper = std::max(values[i],_intervals[0][i]._upper);
+                }
+            }
+
+            void print() {
+                for (auto interval : _intervals){
+                    std::cout << "[";
+                    interval.print();
+                    std::cout << "]" << std::endl;
+                }
+            }
+
+            std::vector<uint32_t> getLowerIds(){
+                return _intervals[0].getLowerIds();
+            }
+
+            bool contains(interval_t interval){
+                for(auto localInterval : _intervals){
+                    if(localInterval.constains(interval)){
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            void mergeIntervals() {
+                interval_t prevConstraints;
+                std::set<uint32_t> rangesToRemove;
+                if(_intervals.empty()){
+                    return;
+                }
+
+                for (uint32_t i = 0; i < _intervals.size(); i++) {
+                    auto& interval = _intervals[i];
+                    if(!interval.isSound()){
+                        rangesToRemove.insert(i);
+                        continue;
+                    }   
+                    for(uint32_t j = i+1; j < _intervals.size(); j++){
+                        auto otherInterval = _intervals[j];
+
+                        if(!otherInterval.isSound()){
+                            continue;
+                        }   
+
+                        uint32_t diff = 1;
+                        bool overlap = true;
+                        for(uint32_t k = 0; k < interval.size(); k++) {
+
+                            if(interval[k]._lower > otherInterval[k]._upper  ||otherInterval[k]._lower > interval[k]._upper){
+                                if(interval[k]._lower > otherInterval[k]._upper +diff  ||otherInterval[k]._lower > interval[k]._upper +diff) {                                
+                                    overlap = false;
+                                    break;
+                                } else {
+                                    diff--;
+                                }                                
+                            }
+
+                            // if(interval[k]._lower > otherInterval[k]._upper +1  ||otherInterval[k]._lower > interval[k]._upper +1) {
+                            //     overlap = false;
+                            //     break;
+                            // }
+                        }
+                        if(overlap) {
+                            for(uint32_t l = 0; l < interval.size(); l++) {
+                                interval[l] |= otherInterval[l];
+                            }
+                            rangesToRemove.insert(j);
+                        }  
+                    }
+                }
+                for (auto i = rangesToRemove.rbegin(); i != rangesToRemove.rend(); ++i) {
+                    _intervals.erase(_intervals.begin() + *i);
+                }
+                if(!rangesToRemove.empty()){
+                    mergeIntervals();
+                }
+            }    
         };
     }
 }

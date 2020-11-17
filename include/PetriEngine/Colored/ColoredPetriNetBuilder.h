@@ -12,7 +12,7 @@
 #include <unordered_map>
 
 #include "ColoredNetStructures.h"
-#include "Patterns.h"
+//#include "Patterns.h"
 #include "../AbstractPetriNetBuilder.h"
 #include "../PetriNetBuilder.h"
 
@@ -41,6 +41,7 @@ namespace PetriEngine {
         Colored::PatternSet _patterns;
         Colored::Transition &_transition;
         bool _isDone;
+        bool _noValidBindings;
         
         bool eval();
         
@@ -190,6 +191,8 @@ namespace PetriEngine {
         std::string arcToString(Colored::Arc& arc) const ;
 
         void printPlaceTable();
+
+        void setupTransitionVars();
         
         void addArc(const std::string& place,
                 const std::string& transition,
@@ -206,6 +209,12 @@ namespace PetriEngine {
         void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name, bool input);
     };
     
+    //Used for checking if a variable is inside either a succ or pred expression
+    enum ExpressionType {
+        None,
+        Pred,
+        Succ
+    };
  
 
 }

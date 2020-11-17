@@ -16,9 +16,11 @@
 
 #include <vector>
 #include <set>
+#include <assert.h>
 #include "Colors.h"
 #include "Expressions.h"
 #include "Multiset.h"
+#include "../TAR/range.h"
 
 namespace PetriEngine {
     namespace Colored {
@@ -44,25 +46,6 @@ namespace PetriEngine {
             std::string name;
             ColorType* type;
             Multiset marking;
-        };
-
-        struct ColorFixpoint {
-            std::vector<std::pair<uint32_t, uint32_t>> constraints;
-            bool inQueue;
-
-            bool constainsColor(const Color *color) {
-                std::vector<uint32_t> colorIdVector;
-                color->getTupleId(&colorIdVector);
-                for (uint32_t i = 0; i < colorIdVector.size(); i++) {
-                    auto colorId = colorIdVector[i];
-                    auto constraintsPair = constraints[i];
-                    if (colorId < constraintsPair.first || colorId > constraintsPair.second){
-                        return false;
-                    }                         
-                }
-
-                return true;
-            }
         };
     }
 }

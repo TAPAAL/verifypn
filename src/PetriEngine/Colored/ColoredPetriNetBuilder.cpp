@@ -36,17 +36,24 @@ namespace PetriEngine {
                 _placeFixpointQueue.emplace_back(next);
             }
 
-            std::vector<std::pair<uint32_t, uint32_t>> placeConstraints;
-            uint32_t index = 0;
+            Reachability::intervalTuple_t placeConstraints;
+            Colored::ColorFixpoint colorFixpoint = {placeConstraints, !tokens.empty(), (uint32_t) type->productSize()};
 
-            for (auto colorPair : tokens) {
-                colorPair.first->getColorConstraints(&placeConstraints, &index);
-                index = 0;
+            if(tokens.size() == type->size()){
+                colorFixpoint.constraints.addInterval(type->getFullInterval());
+            } else {
+                uint32_t index = 0;
+                for (auto colorPair : tokens) {
+                    Reachability::interval_t tokenConstraints;
+                    colorPair.first->getColorConstraints(&tokenConstraints, &index);
+
+                    colorFixpoint.constraints.addInterval(tokenConstraints);
+                    index = 0;
+                }
+                colorFixpoint.constraints.mergeIntervals();
             }
-            Colored::ColorFixpoint colorFixpoint = {placeConstraints, !tokens.empty()};
-
-            _placeColorFixpoints.push_back(colorFixpoint);
-            
+         
+            _placeColorFixpoints.push_back(colorFixpoint);            
         }
     }
 
@@ -128,14 +135,18 @@ namespace PetriEngine {
             auto placeColorFixpoint = _placeColorFixpoints[placeID];
             std::cout << "Place: " << place.name << " in queue: " << placeColorFixpoint.inQueue  << " with colortype " << place.type->getName() << std::endl;
             
-            uint32_t index = 0;
+            //uint32_t index = 0;
 
             // for (auto color : *place.type) {
             //     std::cout << "Color " << color.toString() << " has index " << index << std::endl;
             //     index++;
             // }
-            for(auto fixpointPair : placeColorFixpoint.constraints) {
-                    std::cout << fixpointPair.first << "-" << fixpointPair.second << std::endl;
+            for(auto fixpointPair : placeColorFixpoint.constraints._intervals) {
+                std::cout << "[";
+                for(auto range : fixpointPair._ranges) {
+                    std::cout << range._lower << "-" << range._upper << ", ";
+                }
+                std::cout << "]"<< std::endl;                    
             }
 
             std::cout << std::endl;
@@ -147,6 +158,8 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::computePlaceColorFixpoint() {
 
         auto start = std::chrono::high_resolution_clock::now();
+
+        setupTransitionVars();
         
         while(!_placeFixpointQueue.empty()){
             uint32_t currentPlaceId = _placeFixpointQueue.back();
@@ -157,15 +170,9 @@ namespace PetriEngine {
             for (uint32_t transitionId : connectedTransitions) {
                 Colored::Transition& transition = _transitions[transitionId];
                 if (transition.considered) break;
-                bool transitionActivated = true;
+                bool transitionActivated = true;               
 
-
-                
                 processInputArcs(transition, currentPlaceId, transitionActivated);
-
-                /*if(transition.name == "I_free"){
-                    cout << "transition activated: " << transitionActivated << " for place " << _places[currentPlaceId].name << endl;
-                }*/
                 
                 if (transitionActivated) {
                     processOutputArcs(transition);
@@ -175,117 +182,114 @@ namespace PetriEngine {
         
         auto end = std::chrono::high_resolution_clock::now();
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
-        //printPlaceTable();
+        printPlaceTable();
         //We should not need to keep colors in places after we have found fixpoint
         _placeColorFixpoints.clear();
     }
 
+    void ColoredPetriNetBuilder::setupTransitionVars(){
+        for(auto& transition : _transitions){
+            for(auto arc : transition.input_arcs){
+                std::set<Colored::Variable *> variables;
+                std::unordered_map<string, std::set<uint32_t>> varPositions;
+                PetriEngine::Colored::ColorFixpoint& colorfixpoint = _placeColorFixpoints[arc.place];
+                std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifierMap;
+                arc.expr->getVariables(variables, varPositions, varModifierMap);
+
+                for (auto var: variables){
+                    auto varIndexes = varPositions[var->name];
+                    int32_t varModifier = 0;
+                    for (auto varPair : varModifierMap[var]){
+                        if(std::abs(varPair.second) > std::abs(varModifier)){
+                            varModifier = varPair.second;
+                        }
+                    }
+
+                    if (transition.variableIntervals.count(var->name) == 0){
+                        Reachability::intervalTuple_t newRangeInterval;
+                        Colored::VariableInterval newVarInterval(var, newRangeInterval);
+                        newVarInterval._parentPlaceIndexMap[&colorfixpoint] = std::make_pair(varIndexes,varModifier);
+                        transition.variableIntervals[var->name] = newVarInterval;
+                    } else {
+                        transition.variableIntervals[var->name]._parentPlaceIndexMap[&colorfixpoint] = std::make_pair(varIndexes,varModifier);
+                    }
+                }                    
+            }
+        }
+    }
+
     void ColoredPetriNetBuilder::processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, bool &transitionActivated) {
-
-        PetriEngine::Colored::ColorFixpoint& colorfixpoint = _placeColorFixpoints[currentPlaceId];
-        colorfixpoint.inQueue = false;
-
-        bool curPlaceArcProcessed = false;
+        _placeColorFixpoints[currentPlaceId].inQueue = false;
         
         std::set<Colored::Variable *> transitionVars;
         std::unordered_map<string, std::set<uint32_t>> varGuardPositions;
+        std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifierMap;
         if (transition.guard != nullptr) {
-            transition.guard->getVariables(transitionVars, varGuardPositions);
+            transition.guard->getVariables(transitionVars, varGuardPositions, varModifierMap);
         }
         
         for (auto& arc : transition.input_arcs) {
-            /*if(transition.name == "I_free"){
-                std::cout << "Arc " << arc.place << "->" << transition.name << " with expr: " << arc.expr->toString() << std::endl;
-
-            }*/
-
-            //Once we have considered the arc connecting to the current place 
             //we can break if transitions are not activated
-            if (!transitionActivated && curPlaceArcProcessed) {
+            if (!transitionActivated) {
                 break;
             }
 
-            if (arc.place == currentPlaceId) {
-                bool succes = true;
-                std::set<Colored::Variable *> variables;
-                std::unordered_map<string, std::set<uint32_t>> varPositions;
-                arc.expr->getVariables(variables, varPositions);
+            PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];
+            bool succes = true;
+            std::set<Colored::Variable *> variables;
+            std::unordered_map<string, std::set<uint32_t>> varPositions;
+            std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifierMap;
+            arc.expr->getVariables(variables, varPositions, varModifierMap);                          
 
-                //std::cout << "Found " << variables.size() << " vars out here" << std::endl;
+            for (auto var : variables) {
 
-                if (!variables.empty()) {                            
+                if (transition.guard != nullptr && transitionVars.find(var) != transitionVars.end()) {
+                    for(auto transitionVar : transitionVars){
+                        if (transition.variableIntervals.count(transitionVar->name) != 0) {
+                            auto varModifiers = varModifierMap[transitionVar];
+                            transition.variableIntervals[transitionVar->name]._intervalTuple = transition.variableIntervals[transitionVar->name].getPlaceRestriction(varModifiers);
+                        }                                
+                    }
+                    transition.guard->restrictVar(&transition.variableIntervals[var->name], &transition.variableIntervals);
+                } else {                    
+                    transition.variableIntervals[var->name]._intervalTuple = transition.variableIntervals[var->name].getPlaceRestriction(varModifierMap[var]);
+                }                        
 
-                    for (auto var : variables) {
-                        //std::cout << "Found " << var->name << " for transition " << transition.name << std::endl;
-                        
-                        auto varIndexes = varPositions[var->name];
-                        Colored::VariableInterval varInterval;
+                if (!transition.variableIntervals[var->name].hasValidIntervals()) {
+                    //If the arc connected to the place under consideration cannot be activated,
+                    //then there is no reason to keep checking
+                    transition.variableIntervals[var->name]._intervalTuple.mergeIntervals();
+                    transitionActivated = false; 
+                    succes = false;
+                    break;
+                }
 
-                        // find way to not always compute the guard
-                        Colored::VariableInterval guardVarInterval = {var, 0, (uint32_t) var->colorType->size()-1};
+                transition.variableIntervals[var->name]._intervalTuple.mergeIntervals();
+            }
 
-                        if (transition.guard != nullptr && transitionVars.find(var) != transitionVars.end()) {
-                            transition.guard->restrictVar(&guardVarInterval);
-                            //std::cout << "variable " << var->name << " with range [" << guardVarInterval.interval_lower << "," << guardVarInterval.interval_upper << "] in colortype " << var->colorType->getName() << endl;  
-                        } 
-
-                        if (transition.variableIntervals.count(var->name) == 0) {
-                            transition.variableIntervals[var->name] = guardVarInterval;
-                        } 
-
-                        varInterval = transition.variableIntervals[var->name];                                                        
-
-                        for (uint32_t index : varIndexes) {
-                            if (varInterval.interval_lower < colorfixpoint.constraints[index].first) {
-                                varInterval.interval_lower = colorfixpoint.constraints[index].first;
-                            } else if (colorfixpoint.constraints[index].first >= guardVarInterval.interval_lower) {
-                                varInterval.interval_lower = colorfixpoint.constraints[index].first;
-                            }
-
-                            if (varInterval.interval_upper > colorfixpoint.constraints[index].second) {
-                                varInterval.interval_upper = colorfixpoint.constraints[index].second;
-                            } else if (colorfixpoint.constraints[index].second <= guardVarInterval.interval_upper){
-                                varInterval.interval_upper = colorfixpoint.constraints[index].second;
-                            }
-
-                            if (varInterval.interval_upper < colorfixpoint.constraints[index].first || 
-                            varInterval.interval_lower > colorfixpoint.constraints[index].second) {
-                                //If the arc connected to the place under consideration cannot be activated,
-                                //then there is no reason to keep checking
-                                //cout << "could not activate arc " << endl;
-                                transitionActivated = false;
-                                succes = false;
-                                break;
-                            }
-                        }
-                        transition.variableIntervals[var->name] = varInterval;                              
-                    } 
-                }                           
-
-                std::set<const Colored::Color*> colors = arc.expr->getConstants();
+            //Only consider constants if the variables had valid bindings
+            if(succes){
+                std::unordered_map<const Colored::Color*, std::vector<uint32_t>> constantMap;
+                uint32_t index = 0;
+                arc.expr->getConstants(constantMap, index);
                 
-                    for (auto color : colors) {
-                    if(!colorfixpoint.constainsColor(color)) {
+                for (auto constPair : constantMap) {
+                    if(!curCFP.constainsColor(constPair)) {
                         //If the arc connected to the place under consideration cannot be activated,
                         //then there is no reason to keep checking
-                         //cout << "could not activate arc in these corlors " << endl;
                         transitionActivated = false;
                         succes = false;
                         break;
-                    } 
+                    }
                 }
-                arc.activatable = succes;                                    
-                
-                curPlaceArcProcessed = true;
-            } else if (!arc.activatable) {
-                transitionActivated = false;
-            }                
+            }                           
+            arc.activatable = succes;                                               
         }
     }
 
     void ColoredPetriNetBuilder::processOutputArcs(Colored::Transition& transition) {
         bool transitionHasVarOutArcs = false;
-        //cout << transition.name << " activated " << endl;
+
         for (auto& arc : transition.output_arcs) {
             Colored::ColorFixpoint& placeFixpoint = _placeColorFixpoints[arc.place];
 
@@ -293,67 +297,65 @@ namespace PetriEngine {
             //lower bounds should grow when more colors are added and as we cannot remove colors this
             //can be checked by summing the differences
             uint32_t colorsBefore = 0;
-            for (auto constraint : placeFixpoint.constraints) {
-                colorsBefore += 1+  constraint.second - constraint.first;
+            for (auto interval : placeFixpoint.constraints._intervals) {
+                for(auto range: interval._ranges) {
+                    colorsBefore += 1+  range._upper - range._lower;
+                }                
             }
                 
             std::set<Colored::Variable *> variables;
             std::unordered_map<string, std::set<uint32_t>> varPositions;
-            arc.expr->getVariables(variables, varPositions);
+            std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifierMap;
+            arc.expr->getVariables(variables, varPositions, varModifierMap);
 
-            std::set<const Colored::Color*> colors = arc.expr->getConstants();
+            std::unordered_map<const Colored::Color*, std::vector<uint32_t>> constantMap;
+            uint32_t index = 0;
+            arc.expr->getConstants(constantMap, index);            
 
             if (!variables.empty()) {
                 transitionHasVarOutArcs = true;
 
                 auto intervals = arc.expr->getOutputIntervals(&transition.variableIntervals);
 
-                for(uint32_t i = 0; i < intervals.size(); i++){
-                    auto intervalPair = intervals[i];
-                    if (i >= placeFixpoint.constraints.size()) {
-                        placeFixpoint.constraints.emplace_back(intervalPair);
-                    } else {
-                        auto fixpointPair = &placeFixpoint.constraints[i];
-                        if (intervalPair.first < fixpointPair->first) {
-                            fixpointPair->first = intervalPair.first;
-                        }
-                        if(intervalPair.second > fixpointPair->second) {
-                            fixpointPair->second = intervalPair.second;
-                        }
-                    }
-                }                          
+                for(auto interval : intervals._intervals){
+                    placeFixpoint.constraints.addInterval(interval);    
+                }
+                                      
             }
 
-            for(auto color: colors) {
+            for(auto color: constantMap) {
                 std::vector<uint32_t> idVector;
-                color->getTupleId(&idVector);
-                for (uint32_t i = 0; i < idVector.size(); i++) {
-                    uint32_t id = idVector[i];
-                    if (i >= placeFixpoint.constraints.size()) {
-                        placeFixpoint.constraints.emplace_back(std::make_pair(id,id));
-                    } else {
-                        auto intervalPair = &placeFixpoint.constraints[i];
-                        if ( id < intervalPair->first) {
-                            intervalPair->first = id;
-                        }
-                        if (id > intervalPair->second) {
-                            intervalPair->second = id;
-                        }
-                    }
+                Reachability::interval_t interval;
+                color.first->getTupleId(&idVector);
+
+                if(idVector.size() != placeFixpoint.productSize){
+                    //If we are looking at a color wich is only part of a product, we will not add it here
+                    // It is added during getting output intervals of arcs
+                    continue;
                 }
+
+                for(auto id : idVector) {
+                    interval.addRange(id, id);
+                }
+
+                placeFixpoint.constraints.addInterval(interval);
             }
+
+            
+            placeFixpoint.constraints.mergeIntervals();           
 
             if (!placeFixpoint.inQueue) {
                 uint32_t colorsAfter = 0;
-                for (auto constraint : placeFixpoint.constraints) {
-                    colorsAfter += 1 + constraint.second - constraint.first;
+                for (auto interval : placeFixpoint.constraints._intervals) {
+                    for(auto range : interval._ranges) {
+                        colorsAfter += 1 + range._upper - range._lower;
+                    }                    
                 }
                 if (colorsAfter > colorsBefore) {
-
                     _placeFixpointQueue.push_back(arc.place);
                     placeFixpoint.inQueue = true;
                 }
-            }                     
+            }                   
         }
 
         //If there are no variables among the out arcs of a transition 
@@ -370,7 +372,9 @@ namespace PetriEngine {
             //for (auto& place : _places) {
             //    unfoldPlace(place);
             //}
-            cout << "unfolding" << std::endl;
+
+            std::cout << "Unfolding" << std::endl;
+
             for (auto& transition : _transitions) {
                 unfoldTransition(transition);
             }
@@ -413,11 +417,13 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
+        
         BindingGenerator gen(transition, _colors);
         size_t i = 0;
         for (auto b : gen) {
 
             //Print all bindings
+            // std::cout << transition.name << std::endl;
             // for (auto test : b){
             //     std::cout << "Binding '" << test.first << "\t" << *test.second << "' in bindingds." << std::endl;
             // }
@@ -445,7 +451,7 @@ namespace PetriEngine {
             if (color.second == 0) {
                 continue;
             }
-            PetriEngine::Colored::Place place = _places[arc.place];
+            PetriEngine::Colored::Place& place = _places[arc.place];
             const std::string& pName = _ptplacenames[place.name][color.first->getId()];
             if (pName.empty()) {
                 
@@ -543,6 +549,7 @@ namespace PetriEngine {
         : _colorTypes(colorTypes), _transition(transition)
     {
         _isDone = false;
+        _noValidBindings = false;
         _expr = _transition.guard;
         std::set<Colored::Variable*> variables;
         if (_expr != nullptr) {
@@ -561,11 +568,15 @@ namespace PetriEngine {
         
         
         for (auto var : variables) {
-            auto color = &var->colorType->operator[](_transition.variableIntervals[var->name].interval_lower);
+            if(_transition.variableIntervals[var->name]._intervalTuple._intervals.empty()){
+                _noValidBindings = true;
+                break;
+            }
+            auto color = var->colorType->getColor(_transition.variableIntervals[var->name]._intervalTuple.getLowerIds());
             _bindings[var->name] = color;
         }
         
-        if (!eval())
+        if (!_noValidBindings && !eval())
             nextBinding();
     }
 
@@ -579,19 +590,20 @@ namespace PetriEngine {
     }
 
     Colored::ExpressionContext::BindingMap& BindingGenerator::nextBinding() {
-            
-            
         bool test = false;
         while (!test) {
             
             for (auto& _binding : _bindings) {
                 auto varInterval = _transition.variableIntervals[_binding.first];
+                std::vector<uint32_t> colorIds;
+                _binding.second->getTupleId(&colorIds);
+                auto nextIntervalBinding = varInterval._intervalTuple.isRangeEnd(colorIds);
 
-                if (_binding.second->getId() == varInterval.interval_upper){
-                    _binding.second = &_binding.second->getColorType()->operator[](varInterval.interval_lower);
-                } else {
+                if (nextIntervalBinding.size() == 0){
                     _binding.second = &_binding.second->operator++();
-                    break;
+                    break;                    
+                } else {
+                    _binding.second = _binding.second->getColorType()->getColor(nextIntervalBinding.getLowerIds());
                 }
             }
             
@@ -616,21 +628,26 @@ namespace PetriEngine {
 
     bool BindingGenerator::isInitial() const {
         for (auto& b : _bindings) {
-            if (b.second->getId() != _transition.variableIntervals[b.first].interval_lower) return false;
+            std::vector<uint32_t> colorIds;
+            b.second->getTupleId(&colorIds);
+            if (colorIds != _transition.variableIntervals[b.first]._intervalTuple.getLowerIds()) return false;
         }
         return true;
     }
 
-    bool BindingGenerator::isFinal() const {
-        for (auto& b : _bindings) {
-            if (b.second->getId() != _transition.variableIntervals[b.first].interval_upper) {
-                return false;
-            }
-        }
-        return true;
-    }
+    // bool BindingGenerator::isFinal() const {
+    //     for (auto& b : _bindings) {
+    //         if (b.second->getId() != _transition.variableIntervals[b.first].getLower()) {
+    //             return false;
+    //         }
+    //     }
+    //     return true;
+    // }
 
     BindingGenerator::Iterator BindingGenerator::begin() {
+        if(_noValidBindings){
+            return {nullptr};
+        }
         return {this};
     }
 
