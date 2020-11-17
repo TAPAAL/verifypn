@@ -273,7 +273,11 @@ namespace PetriEngine {
             }
 
             virtual size_t productSize() {
-                return constituents.size();
+                size_t size = 0;
+                for (auto ct : constituents){
+                    size += ct->productSize();
+                }
+                return size;
             }
 
             std::vector<size_t> getConstituentsSizes() override{

@@ -170,7 +170,7 @@ namespace PetriEngine {
             void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *, std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 variables.insert(_variable);
                 varPositions[_variable->name].insert(*index);
-                varModifierMap[_variable].push_back(make_pair(*index, 0));
+                varModifierMap[_variable].push_back(std::make_pair(*index, 0));
             }
 
             Reachability::rangeInterval_t getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
@@ -192,7 +192,7 @@ namespace PetriEngine {
 
                 for(auto ct : varColorTypes){
                     colortypes->push_back(ct);
-                }
+                }              
                 
                 return varInterval->second._ranges;
             }
@@ -326,8 +326,8 @@ namespace PetriEngine {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = *index;
                 _color->getVariables(variables, varPositions, varModifierMap, index);
-                for(auto varModifierPair : varModifierMap){
-                    for(auto idModPair : varModifierPair.second){
+                for(auto& varModifierPair : varModifierMap){
+                    for(auto& idModPair : varModifierPair.second){
                         if(idModPair.first <= *index && idModPair.first >= indexBefore){
                             idModPair.second--;
                         } 
@@ -341,18 +341,36 @@ namespace PetriEngine {
                 
                 for(uint32_t i = 0;  i < nestedInterval.size(); i++) {
                     Reachability::interval_t newInterval;
+                    std::vector<Reachability::interval_t> tempIntervals;
                     auto interval = &nestedInterval[i];
-                    for(auto& range : interval->_ranges) {
-                        if(range._upper < colortypes->operator[](i)->size()-1){
+                    for(uint32_t j = 0; j < interval->_ranges.size(); j++) {
+                        auto& range = interval->operator[](j);
+                        range._lower++;
+                        if(range._upper < colortypes->operator[](j)->size()-1){
                             range._upper++;
-                            newInterval.addRange(range);
+
+                            if(tempIntervals.empty()){
+                                newInterval.addRange(range);
+                                tempIntervals.push_back(newInterval);
+                            } else {
+                                for(auto tempInterval : tempIntervals){
+                                    tempInterval.addRange(range);
+                                }
+                            }                            
                         } else {
-                            newInterval.addRange(0,0);
+                            if(tempIntervals.empty()){
+                                auto intervalCopy = newInterval;
+                                newInterval.addRange(range);
+                                intervalCopy.addRange(0,0);
+                                tempIntervals.push_back(newInterval);
+                                tempIntervals.push_back(intervalCopy);
+                            }
                         }
                     }
 
-                    newIntervals.addInterval(newInterval);
-                      
+                    for(auto tempInterval : tempIntervals){
+                        newIntervals.addInterval(tempInterval);
+                    }                   
                 }
                 newIntervals.mergeIntervals();
                 return newIntervals;
@@ -403,8 +421,8 @@ namespace PetriEngine {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = *index;
                 _color->getVariables(variables, varPositions, varModifierMap, index);
-                for(auto varModifierPair : varModifierMap){
-                    for(auto idModPair : varModifierPair.second){
+                for(auto& varModifierPair : varModifierMap){
+                    for(auto& idModPair : varModifierPair.second){
                         if(idModPair.first <= *index && idModPair.first >= indexBefore){
                             idModPair.second++;
                         } 
@@ -418,18 +436,45 @@ namespace PetriEngine {
                 
                 for(uint32_t i = 0;  i < nestedInterval.size(); i++) {
                     Reachability::interval_t newInterval;
+                    std::vector<Reachability::interval_t> tempIntervals;
+
                     auto interval = &nestedInterval[i];
-                    for(auto& range : interval->_ranges) {
+                    for(uint32_t j = 0; j < interval->_ranges.size(); j++) {
+                        auto& range = interval->operator[](j);
+                        range._upper--;
                         if(range._lower > 0){
-                            range._upper--;
-                            newInterval.addRange(range);
+                            range._lower--;
+                            if(tempIntervals.empty()){
+                                newInterval.addRange(range);
+                                tempIntervals.push_back(newInterval);
+                            } else {
+                                for(auto tempInterval : tempIntervals){
+                                    tempInterval.addRange(range);
+                                }
+                            }
+                            
                         } else {
-                            auto size = colortypes->operator[](i)->size()-1;
-                            newInterval.addRange(size, size);
+                            range._lower = 0;
+                            auto size = colortypes->operator[](j)->size()-1;
+                            if(tempIntervals.empty()){
+                                auto intervalCopy = newInterval;
+                                newInterval.addRange(range);
+                                intervalCopy.addRange(size,size);
+                                tempIntervals.push_back(newInterval);
+                                tempIntervals.push_back(intervalCopy);
+
+                            } else {
+                                for (auto tempInterval : tempIntervals){
+                                    tempInterval.addRange(range);
+                                    tempInterval.addRange(size, size);
+                                }
+                            }                            
                         }
                     }
 
-                    newIntervals.addInterval(newInterval);
+                    for(auto tempInterval : tempIntervals){
+                        newIntervals.addInterval(tempInterval);
+                    }                    
                 }
                                
                 newIntervals.mergeIntervals();

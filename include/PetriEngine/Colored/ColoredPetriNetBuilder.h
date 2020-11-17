@@ -196,6 +196,11 @@ namespace PetriEngine {
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
                 bool input);
+
+        void collectVarPlaceRestrictions(Colored::VariableInterval &guardVarInterval, 
+                                         PetriEngine::Colored::ColorFixpoint& colorfixpoint, 
+                                         std::set<uint32_t> varIndexes, 
+                                         std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>> varModifierMap);
        
         void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, bool &transitionActivated);
         void processOutputArcs(Colored::Transition& transition);

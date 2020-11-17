@@ -173,7 +173,7 @@ namespace PetriEngine {
                 if (transition.considered) break;
                 bool transitionActivated = true;
 
-
+                std::cout << "Transition " << transition.name << std::endl;
                 
                 processInputArcs(transition, currentPlaceId, transitionActivated);
 
@@ -238,22 +238,14 @@ namespace PetriEngine {
                     for (auto var : variables) {
                         //std::cout << "Found " << var->name << " for transition " << transition.name << std::endl;
                         
-                        auto varIndexes = varPositions[var->name];
+                        auto varIndexes = varPositions[var->name];                        
 
                         // find way to not always compute the guard
                         // Right now we are not maintaining place constraints from other places using the same variable
                         Reachability::rangeInterval_t guardRangeInterval;
                         Colored::VariableInterval guardVarInterval(var, guardRangeInterval);                                                      
 
-                        for (uint32_t index : varIndexes) {
-                            for(auto placeInterval : colorfixpoint.constraints._ranges){
-                                Reachability::interval_t newInterval;
-                                for(uint32_t i = index; i < index + var->colorType->productSize(); i++){
-                                    newInterval.addRange(placeInterval[i]);
-                                }
-                                guardVarInterval._ranges.addInterval(newInterval);
-                            }
-                        }
+                        collectVarPlaceRestrictions(guardVarInterval, colorfixpoint, varIndexes, varModifierMap);
 
                         if (transition.guard != nullptr && transitionVars.find(var) != transitionVars.end()) {
                             transition.guard->restrictVar(&guardVarInterval, &transition.variableIntervals);
@@ -371,6 +363,94 @@ namespace PetriEngine {
         if(!transitionHasVarOutArcs) {
             transition.considered = true;
         }
+    }
+
+    void ColoredPetriNetBuilder::collectVarPlaceRestrictions(Colored::VariableInterval &guardVarInterval, PetriEngine::Colored::ColorFixpoint& colorfixpoint, std::set<uint32_t> varIndexes, std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>> varModifierMap){
+        int32_t varModifier = 0;
+        for (auto varPair : varModifierMap[guardVarInterval._variable]){
+            if(std::abs(varPair.second) > std::abs(varModifier)){
+                varModifier = varPair.second;
+            }
+        }
+        std::cout << "Found varmodifier: " << varModifier << std::endl; 
+
+        std::vector<Colored::ColorType *> varColorTypes;
+        guardVarInterval._variable->colorType->getColortypes(varColorTypes);
+        
+        for (uint32_t index : varIndexes) {
+            for(auto placeInterval : colorfixpoint.constraints._ranges){
+                std::vector<Reachability::interval_t> newIntervals;
+                std::vector<Reachability::interval_t> tempIntervals;
+                std::vector<Reachability::interval_t> collectedIntervals;
+                uint32_t j = 0;
+                for(uint32_t i = index; i < index + guardVarInterval._variable->colorType->productSize(); i++){
+                    if((int32_t) placeInterval[i]._lower + varModifier < 0){
+                        placeInterval[i]._lower = 0;
+                        auto underflow = std::abs((int32_t) placeInterval[i]._lower + varModifier);
+                        Reachability::range_t newRange = Reachability::range_t(varColorTypes[j]->size()-(1+ underflow), varColorTypes[j]->size()-1);
+                        tempIntervals = newIntervals;
+
+                        if(tempIntervals.empty()){
+                            Reachability::interval_t newInterval;
+                            newInterval.addRange(newRange);
+                            tempIntervals.push_back(newInterval);
+                        } else {
+                            for(auto& interval : tempIntervals){
+                                interval.addRange(newRange);
+                            }
+                        }
+                        for (auto interval : tempIntervals){
+                            collectedIntervals.push_back(interval);
+                        }                                        
+                    } else {
+                        placeInterval[i]._lower += varModifier;
+                    }
+                    if(placeInterval[i]._upper + varModifier > varColorTypes[j]->size()-1){
+                        placeInterval[i]._upper = varColorTypes[j]->size()-1;
+                        auto overflow = placeInterval[i]._upper + varModifier + 1 - varColorTypes[j]->size();
+                        Reachability::range_t newRange = Reachability::range_t(0, overflow);
+                        tempIntervals = newIntervals;
+
+                        if(tempIntervals.empty()){
+                            Reachability::interval_t newInterval;
+                            newInterval.addRange(newRange);
+                            tempIntervals.push_back(newInterval);
+                        } else {
+                            for(auto& interval : tempIntervals){
+                                interval.addRange(newRange);
+                            }
+                        }
+                        for (auto interval : tempIntervals){
+                            collectedIntervals.push_back(interval);
+                        }    
+                    } else {
+                        placeInterval[i]._upper += varModifier;
+                    }
+
+                    if(newIntervals.empty()){
+                        Reachability::interval_t newInterval;
+                        newInterval.addRange(placeInterval[i]);
+                        newIntervals.push_back(newInterval);
+                    } else {
+                        for(auto& interval : newIntervals){
+                            interval.addRange(placeInterval[i]);
+                        }
+                    }
+
+                    for (auto interval : collectedIntervals){
+                        newIntervals.push_back(interval);
+                    }  
+                    
+                    j++;
+                }
+                for (auto newInterval : newIntervals){
+                    guardVarInterval._ranges.addInterval(newInterval);
+                }                                
+            }
+        }
+
+        std::cout << "Found interval for var: " << std::endl;
+        guardVarInterval.print();
     }
 
     PetriNetBuilder& ColoredPetriNetBuilder::unfold() {
