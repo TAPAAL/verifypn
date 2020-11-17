@@ -89,12 +89,18 @@ private:
     PetriEngine::Colored::AllExpression_ptr parseAllExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::ColorType* parseUserSort(rapidxml::xml_node<>* element);
     PetriEngine::Colored::NumberOfExpression_ptr parseNumberOfExpression(rapidxml::xml_node<>* element);
+    void collectColorsInTuple(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>>& collectedColors);
+    PetriEngine::Colored::ArcExpression_ptr constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors);
     void parseTransportArc(rapidxml::xml_node<>* element);
     void parseValue(rapidxml::xml_node<>* element, std::string& text);
     uint32_t parseNumberConstant(rapidxml::xml_node<>* element);
     void parsePosition(rapidxml::xml_node<>* element, double& x, double& y);
     void parseQueries(rapidxml::xml_node<>* element);
     const PetriEngine::Colored::Color* findColor(const char* name) const;
+    const PetriEngine::Colored::Color* findColorForIntRange(const char* value, uint32_t start, uint32_t end) const;
+
+    std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> cartesianProduct(std::vector<PetriEngine::Colored::ColorExpression_ptr> rightVector, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftVector);
+    std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> cartesianProduct(std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> rightVector, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftVector);
     PetriEngine::AbstractPetriNetBuilder* builder;
     NodeNameMap id2name;
     ArcList arcs;
