@@ -357,7 +357,11 @@ PetriEngine::Colored::GuardExpression_ptr PNMLParser::parseGuardExpression(rapid
     } else if (strcmp(element->name(), "or") == 0) {
         auto left = element->first_node();
         auto right = left->next_sibling();
-        return std::make_shared<PetriEngine::Colored::OrExpression>(parseGuardExpression(left), parseGuardExpression(right));
+        auto parentOr = std::make_shared<PetriEngine::Colored::OrExpression>(parseGuardExpression(left), parseGuardExpression(right));
+        for (auto it = right->next_sibling(); it; it = it->next_sibling()) {
+            parentOr = std::make_shared<PetriEngine::Colored::OrExpression>(parentOr, parseGuardExpression(it));
+        }
+        return parentOr;
     } else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {
         return parseGuardExpression(element->first_node());
     }
@@ -378,6 +382,13 @@ PetriEngine::Colored::ColorExpression_ptr PNMLParser::parseColorExpression(rapid
         return std::make_shared<PetriEngine::Colored::SuccessorExpression>(parseColorExpression(element->first_node()));
     } else if (strcmp(element->name(), "predecessor") == 0) {
         return std::make_shared<PetriEngine::Colored::PredecessorExpression>(parseColorExpression(element->first_node()));
+    } else if (strcmp(element->name(), "finiteintrangeconstant") == 0){
+        auto value = element->first_attribute("value")->value();
+        auto intRangeElement = element->first_node("finiteintrange");
+        uint32_t start = (uint32_t)atoll(intRangeElement->first_attribute("start")->value());
+        uint32_t end = (uint32_t)atoll(intRangeElement->first_attribute("end")->value());
+        return std::make_shared<PetriEngine::Colored::UserOperatorExpression>(findColorForIntRange(value, start,end));
+
     } else if (strcmp(element->name(), "tuple") == 0) {
         std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
@@ -712,5 +723,17 @@ const PetriEngine::Colored::Color* PNMLParser::findColor(const char* name) const
             return col;
     }
     printf("Could not find color: %s\nCANNOT_COMPUTE\n", name);
+    exit(ErrorCode);
+}
+
+const PetriEngine::Colored::Color* PNMLParser::findColorForIntRange(const char* value, uint32_t start, uint32_t end) const{
+    for (const auto& elem : colorTypes) {
+        auto col = (*elem.second)[value];
+        if (col){
+            if((*elem.second).operator[](0).getId() == (start -1) && (*elem.second).operator[]((*elem.second).size()-1).getId() == end -1)
+                return col;
+        }
+    }
+    printf("Could not find color: %s\nCANNOT_COMPUTE\n", value);
     exit(ErrorCode);
 }
