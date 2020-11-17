@@ -209,6 +209,12 @@ namespace PetriEngine {
         void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name, bool input);
     };
     
+    //Used for checking if a variable is inside either a succ or pred expression
+    enum ExpressionType {
+        None,
+        Pred,
+        Succ
+    };
  
 
 }
