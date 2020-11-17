@@ -370,7 +370,7 @@ namespace PetriEngine {
             //for (auto& place : _places) {
             //    unfoldPlace(place);
             //}
-
+            cout << "unfolding" << std::endl;
             for (auto& transition : _transitions) {
                 unfoldTransition(transition);
             }
