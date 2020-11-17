@@ -47,9 +47,6 @@ namespace PetriEngine {
             ColorType* type;
             Multiset marking;
         };
-
-        
-
     }
 }
 
