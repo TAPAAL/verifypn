@@ -70,8 +70,12 @@ namespace PetriEngine {
                 _lower = min();
             }
 
+            uint32_t size(){
+                return 1 + _upper - _lower;
+            }
+
             void invalidate() {
-                //hack setting range invalid to have it removed upon merge
+                //hack setting range invalid
                 _lower = 1;
                 _upper = 0;
             }
@@ -443,6 +447,17 @@ namespace PetriEngine {
                 return _ranges.size();
             }
 
+            uint32_t intervalCombinations(){
+                uint32_t product = 1;
+                for(auto range : _ranges){
+                    product *= range.size();
+                }
+                if(_ranges.empty()){
+                    return 0;
+                }
+                return product;
+            }
+
             bool isSound(){
                 for(auto range: _ranges) {
                     if(!range.isSound()){
@@ -576,31 +591,76 @@ namespace PetriEngine {
                 }
                 return ids;
             }
-        };
 
-        struct rangeInterval_t {
-            std::vector<interval_t> _ranges;
-
-            rangeInterval_t() {
+            bool equals(interval_t other){
+                if(other.size() != size()){
+                    return false;
+                }
+                for(uint32_t i = 0; i < size(); i++){
+                    auto comparisonRes = _ranges[i].compare(other[i]);
+                    if(!comparisonRes.first || !comparisonRes.second){
+                        return false;
+                    }
+                }
+                return true;
             }
 
-            rangeInterval_t(std::vector<interval_t> ranges) :  _ranges(ranges) {
+            bool constains(interval_t other){
+                if(other.size() != size()){
+                    return false;
+                }
+                for(uint32_t i = 0; i < size(); i++){
+                    if(!_ranges[i].compare(other[i]).first){
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            void constrain(interval_t other){
+                for(uint32_t i = 0; i < _ranges.size(); i++){
+                    _ranges[i] &= other._ranges[i];
+                }
+            }
+
+            void print() {
+                for(auto range : _ranges){
+                    std::cout << " " << range._lower << "-" << range._upper << " ";
+                }
+            }
+        };
+
+        struct intervalTuple_t {
+            std::vector<interval_t> _intervals;
+
+            intervalTuple_t() {
+            }
+
+            intervalTuple_t(std::vector<interval_t> ranges) :  _intervals(ranges) {
             };
 
             interval_t& getLower(){
-                return _ranges[0];
+                return _intervals[0];
             }
 
             interval_t& back() {
-                return _ranges.back();
+                return _intervals.back();
             }
 
             size_t size() {
-                return _ranges.size();
+                return _intervals.size();
+            }
+
+            uint32_t intervalCombinations(){
+                uint32_t res = 0;
+                for(auto interval : _intervals){
+                    res += interval.intervalCombinations();
+                }
+                return res;
             }
 
             bool hasValidIntervals(){
-                for(auto interval : _ranges) {
+                for(auto interval : _intervals) {
                     if(interval.isSound()){
                         return true;
                     }
@@ -609,31 +669,30 @@ namespace PetriEngine {
             }
 
             interval_t& operator[] (size_t index) {
-                return _ranges[index];
+                return _intervals[index];
             }
             
             interval_t& operator[] (int index) {
-                return _ranges[index];
+                return _intervals[index];
             }
             
             interval_t& operator[] (uint32_t index) {
-                assert(index < _ranges.size());
-                return _ranges[index];
+                assert(index < _intervals.size());
+                return _intervals[index];
             }
 
             interval_t isRangeEnd(std::vector<uint32_t> ids) {
-                for (uint32_t j = 0; j < _ranges.size(); j++) {
+                for (uint32_t j = 0; j < _intervals.size(); j++) {
                     bool rangeEnd = true;
-                    for (uint32_t i = 0; i < _ranges[j].size(); i++) {
-                        auto range =  _ranges[j][i];
-
+                    for (uint32_t i = 0; i < _intervals[j].size(); i++) {
+                        auto range =  _intervals[j][i];
                         if (range._upper != ids[i]) {
                             rangeEnd = false;
                         }
                     }
                     if(rangeEnd) {
-                        if(j+1 != _ranges.size()) {
-                            return _ranges[j+1];
+                        if(j+1 != _intervals.size()) {
+                            return _intervals[j+1];
                         } else {
                             return getLower();
                         }
@@ -645,14 +704,14 @@ namespace PetriEngine {
             void addInterval(interval_t interval) {
                 uint32_t vecIndex = 0;
 
-                if(!_ranges.empty()) {
-                    assert(_ranges[0].size() == interval.size());
+                if(!_intervals.empty()) {
+                    assert(_intervals[0].size() == interval.size());
                 } else {
-                    _ranges.push_back(interval);
+                    _intervals.push_back(interval);
                     return;
                 }
 
-                for (auto localInterval : _ranges) {
+                for (auto localInterval : _intervals) {
                     bool contained = true;
                     bool foundPlace = true;
 
@@ -685,7 +744,7 @@ namespace PetriEngine {
                     vecIndex++;
                 }
 
-                _ranges.insert(_ranges.begin() + vecIndex, interval);
+                _intervals.insert(_intervals.begin() + vecIndex, interval);
             }
 
             void constrainLower(std::vector<uint32_t> values) {
@@ -694,25 +753,25 @@ namespace PetriEngine {
                 while(!done) {
                     bool updated = false;
                     for(uint32_t j = 0; j < values.size(); j++){
-                        if(_ranges[i][j]._lower <= values[j]){
-                            _ranges[i][j]._lower = values[j];
+                        if(_intervals[i][j]._lower <= values[j]){
+                            _intervals[i][j]._lower = values[j];
                             updated = true;
                         }                        
                     }
-                    done = !updated || i == _ranges.size()-1;
+                    done = !updated || i == _intervals.size()-1;
                     i++;
                 }
                 mergeIntervals();
             }
 
             void constrainUpper(std::vector<uint32_t> values) {
-                uint32_t i = _ranges.size()-1;
+                uint32_t i = _intervals.size()-1;
                 bool done = false;
                 while(!done) {
                     bool updated = false;
                     for(uint32_t j = 0; j < values.size(); j++){
-                        if(_ranges[i][j]._upper >= values[j]){
-                            _ranges[i][j]._upper = values[j];
+                        if(_intervals[i][j]._upper >= values[j]){
+                            _intervals[i][j]._upper = values[j];
                             updated = true;
                         }                        
                     }
@@ -725,60 +784,75 @@ namespace PetriEngine {
 
             void expandLower(std::vector<uint32_t> values) {
                 for(uint32_t i = 0; i < values.size(); i++) {
-                    _ranges[0][i]._lower = std::min(values[i],_ranges[0][i]._lower);
+                    _intervals[0][i]._lower = std::min(values[i],_intervals[0][i]._lower);
                 }
             }
 
             void expandUpper(std::vector<uint32_t> values) {
                 for(uint32_t i = 0; i < values.size(); i++) {
-                    _ranges[0][i]._upper = std::max(values[i],_ranges[0][i]._upper);
+                    _intervals[0][i]._upper = std::max(values[i],_intervals[0][i]._upper);
                 }
             }
 
             void print() {
-                for (auto interval : _ranges){
-                    std::cout << "[ ";
-                    for(auto range : interval._ranges){
-                        std::cout << range._lower << "-" << range._upper << " ";
-                    }
+                for (auto interval : _intervals){
+                    std::cout << "[";
+                    interval.print();
                     std::cout << "]" << std::endl;
                 }
             }
 
             std::vector<uint32_t> getLowerIds(){
-                return _ranges[0].getLowerIds();
+                return _intervals[0].getLowerIds();
+            }
+
+            bool contains(interval_t interval){
+                for(auto localInterval : _intervals){
+                    if(localInterval.constains(interval)){
+                        return true;
+                    }
+                }
+                return false;
             }
 
             void mergeIntervals() {
                 interval_t prevConstraints;
                 std::set<uint32_t> rangesToRemove;
-
-                if(_ranges.empty()){
+                if(_intervals.empty()){
                     return;
                 }
 
-                for (uint32_t i = 0; i < _ranges.size(); i++) {
-                    auto& interval = _ranges[i];
+                for (uint32_t i = 0; i < _intervals.size(); i++) {
+                    auto& interval = _intervals[i];
                     if(!interval.isSound()){
                         rangesToRemove.insert(i);
                         continue;
                     }   
-                    for(uint32_t j = i+1; j < _ranges.size(); j++){
-                        auto otherInterval = _ranges[j];
+                    for(uint32_t j = i+1; j < _intervals.size(); j++){
+                        auto otherInterval = _intervals[j];
 
                         if(!otherInterval.isSound()){
                             continue;
                         }   
 
+                        uint32_t diff = 1;
                         bool overlap = true;
                         for(uint32_t k = 0; k < interval.size(); k++) {
 
-                            if(interval[k]._lower > otherInterval[k]._upper +1  ||otherInterval[k]._lower > interval[k]._upper +1) {
-                                overlap = false;
-                                break;
+                            if(interval[k]._lower > otherInterval[k]._upper  ||otherInterval[k]._lower > interval[k]._upper){
+                                if(interval[k]._lower > otherInterval[k]._upper +diff  ||otherInterval[k]._lower > interval[k]._upper +diff) {                                
+                                    overlap = false;
+                                    break;
+                                } else {
+                                    diff--;
+                                }                                
                             }
-                        }
 
+                            // if(interval[k]._lower > otherInterval[k]._upper +1  ||otherInterval[k]._lower > interval[k]._upper +1) {
+                            //     overlap = false;
+                            //     break;
+                            // }
+                        }
                         if(overlap) {
                             for(uint32_t l = 0; l < interval.size(); l++) {
                                 interval[l] |= otherInterval[l];
@@ -787,9 +861,8 @@ namespace PetriEngine {
                         }  
                     }
                 }
-
                 for (auto i = rangesToRemove.rbegin(); i != rangesToRemove.rend(); ++i) {
-                    _ranges.erase(_ranges.begin() + *i);
+                    _intervals.erase(_intervals.begin() + *i);
                 }
                 if(!rangesToRemove.empty()){
                     mergeIntervals();

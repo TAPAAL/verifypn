@@ -66,8 +66,9 @@ void PNMLParser::parse(ifstream& xml,
     }
     parseElement(root);
 
+
     //Add all the transition
-    for (auto & transition : transitions)
+    for (auto & transition : transitions) 
         if (!isColored) {
             builder->addTransition(transition.id, transition.x, transition.y);
         } else {
@@ -116,7 +117,6 @@ void PNMLParser::parse(ifstream& xml,
                     target.id.c_str());
         }
     }
-
     for(Arc& inhibitor : inhibarcs)
     {
         NodeName source = id2name[inhibitor.source];
@@ -183,12 +183,19 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
                 ((PetriEngine::Colored::ProductType*)ct)->addType(colorTypes[it->first_attribute("declaration")->value()]);
             }
         }
+    } else if (strcmp(type->name(), "finiteintrange") == 0) {
+        uint32_t start = (uint32_t)atoll(type->first_attribute("start")->value());
+        uint32_t end = (uint32_t)atoll(type->first_attribute("end")->value());
+
+
+        for (int i = start; i<=end;i++) {
+            ct->addColor(to_string(i).c_str());
+        }
     } else {
         for (auto it = type->first_node(); it; it = it->next_sibling()) {
             auto id = it->first_attribute("id");
             assert(id != nullptr);
             ct->addColor(id->value());
-            
         }
     }
 
@@ -209,10 +216,6 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml:
         return std::make_shared<PetriEngine::Colored::AddExpression>(std::move(constituents));
     } else if (strcmp(element->name(), "subtract") == 0) {
         auto left = element->first_node();
-        //Quick hack to parse pnml created by tapaal, maybe remove
-        /*if (strcmp(left->name(), "subterm") == 0) {
-            left = left->first_node();
-        }*/
         auto right = left->next_sibling();
         auto res = std::make_shared<PetriEngine::Colored::SubtractExpression>(parseArcExpression(left), parseArcExpression(right));
         auto next = right;
@@ -228,10 +231,94 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml:
         return parseNumberOfExpression(element->parent());
     } else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {
         return parseArcExpression(element->first_node());
+    } else if (strcmp(element->name(), "tuple") == 0) {
+        std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors;
+        collectColorsInTuple(element, collectedColors);
+        auto expr = constructAddExpressionFromTupleExpression(element, collectedColors);
+        std::cout << expr->toString() << std::endl;
+        return expr;
     }
     printf("Could not parse '%s' as an arc expression\n", element->name());
     assert(false);
     return nullptr;
+}
+PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors){
+    auto initCartesianSet = cartesianProduct(collectedColors[0], collectedColors[1]);
+    for(int i = 2; i < collectedColors.size(); i++){
+        initCartesianSet = cartesianProduct(initCartesianSet, collectedColors[i]);
+    }
+    std::vector<PetriEngine::Colored::NumberOfExpression_ptr> numberOfExpressions;
+    for(auto set : initCartesianSet){
+        std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;
+        for (auto color : set) {
+            colors.push_back(color);
+        }
+        std::shared_ptr<PetriEngine::Colored::TupleExpression> tupleExpr = std::make_shared<PetriEngine::Colored::TupleExpression>(std::move(colors));
+        tupleExpr->setColorType(tupleExpr->getColorType(colorTypes));
+        std::vector<PetriEngine::Colored::ColorExpression_ptr> placeholderVector;
+        placeholderVector.push_back(tupleExpr);
+        numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(placeholderVector),1));
+    }
+    std::vector<PetriEngine::Colored::ArcExpression_ptr> constituents;
+    for (auto expr : numberOfExpressions) {
+        constituents.push_back(expr);
+    }
+    return std::make_shared<PetriEngine::Colored::AddExpression>(std::move(constituents));
+}
+
+std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> PNMLParser::cartesianProduct(std::vector<PetriEngine::Colored::ColorExpression_ptr> rightSet, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftSet){
+    std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> returnSet;
+    for(auto expr : rightSet){
+        for(auto expr2 : leftSet){
+            std::vector<PetriEngine::Colored::ColorExpression_ptr> toAdd;
+            toAdd.push_back(expr);
+            toAdd.push_back(expr2);
+            returnSet.push_back(toAdd);
+        }
+    }
+    return returnSet;
+}
+std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> PNMLParser::cartesianProduct(std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> rightSet, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftSet){
+    std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> returnSet;
+    for(auto set : rightSet){
+        for(auto expr2 : leftSet){
+            set.push_back(expr2);
+            returnSet.push_back(set);
+        }
+    }
+    return returnSet;
+}
+
+void PNMLParser::collectColorsInTuple(rapidxml::xml_node<>* element, std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>>& collectedColors){
+    if (strcmp(element->name(), "tuple") == 0) {
+        for (auto it = element->first_node(); it; it = it->next_sibling()) {
+            collectColorsInTuple(it->first_node(), collectedColors);
+        }
+    } else if (strcmp(element->name(), "all") == 0) {
+        std::vector<PetriEngine::Colored::ColorExpression_ptr> expressionsToAdd;
+        auto expr = parseAllExpression(element);
+        std::unordered_map<const Colored::Color*, std::vector<uint32_t>> constantMap;
+        uint32_t index = 0;
+        expr->getConstants(constantMap, index);
+        for(auto color : constantMap){
+            std::cout << "all expr " << color.first->toString() << std::endl;
+            expressionsToAdd.push_back(std::make_shared<PetriEngine::Colored::UserOperatorExpression>(color.first));
+        }
+        collectedColors.push_back(expressionsToAdd);
+        return;
+    } else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {
+        collectColorsInTuple(element->first_node(), collectedColors);
+    } else if (strcmp(element->name(), "userOperator") == 0 || strcmp(element->name(), "dotconstant") == 0 || strcmp(element->name(), "variable") == 0 
+                    || strcmp(element->name(), "successor") == 0 || strcmp(element->name(), "predecessor") == 0) {
+        std::vector<PetriEngine::Colored::ColorExpression_ptr> expressionsToAdd;
+        auto color = parseColorExpression(element);
+        expressionsToAdd.push_back(color);
+        collectedColors.push_back(expressionsToAdd);
+        return;
+    } else{
+        printf("Could not parse '%s' as an arc expression\n", element->name());
+        return;
+    }
 }
 
 PetriEngine::Colored::GuardExpression_ptr PNMLParser::parseGuardExpression(rapidxml::xml_node<>* element) {
@@ -268,7 +355,11 @@ PetriEngine::Colored::GuardExpression_ptr PNMLParser::parseGuardExpression(rapid
     } else if (strcmp(element->name(), "or") == 0) {
         auto left = element->first_node();
         auto right = left->next_sibling();
-        return std::make_shared<PetriEngine::Colored::OrExpression>(parseGuardExpression(left), parseGuardExpression(right));
+        auto parentOr = std::make_shared<PetriEngine::Colored::OrExpression>(parseGuardExpression(left), parseGuardExpression(right));
+        for (auto it = right->next_sibling(); it; it = it->next_sibling()) {
+            parentOr = std::make_shared<PetriEngine::Colored::OrExpression>(parentOr, parseGuardExpression(it));
+        }
+        return parentOr;
     } else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {
         return parseGuardExpression(element->first_node());
     }
@@ -289,6 +380,13 @@ PetriEngine::Colored::ColorExpression_ptr PNMLParser::parseColorExpression(rapid
         return std::make_shared<PetriEngine::Colored::SuccessorExpression>(parseColorExpression(element->first_node()));
     } else if (strcmp(element->name(), "predecessor") == 0) {
         return std::make_shared<PetriEngine::Colored::PredecessorExpression>(parseColorExpression(element->first_node()));
+    } else if (strcmp(element->name(), "finiteintrangeconstant") == 0){
+        auto value = element->first_attribute("value")->value();
+        auto intRangeElement = element->first_node("finiteintrange");
+        uint32_t start = (uint32_t)atoll(intRangeElement->first_attribute("start")->value());
+        uint32_t end = (uint32_t)atoll(intRangeElement->first_attribute("end")->value());
+        return std::make_shared<PetriEngine::Colored::UserOperatorExpression>(findColorForIntRange(value, start,end));
+
     } else if (strcmp(element->name(), "tuple") == 0) {
         std::vector<PetriEngine::Colored::ColorExpression_ptr> colors;
         for (auto it = element->first_node(); it; it = it->next_sibling()) {
@@ -353,8 +451,8 @@ PetriEngine::Colored::NumberOfExpression_ptr PNMLParser::parseNumberOfExpression
 }
 
 void PNMLParser::parseElement(rapidxml::xml_node<>* element) {
-    
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
+
         if (strcmp(it->name(), "place") == 0) {
             parsePlace(it);
         } else if (strcmp(it->name(),"transition") == 0) {
@@ -402,13 +500,13 @@ void PNMLParser::parseQueries(rapidxml::xml_node<>* element) {
 void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
     double x = 0, y = 0;
     string id(element->first_attribute("id")->value());
-    
     auto initial = element->first_attribute("initialMarking");
     long long initialMarking = 0;
     PetriEngine::Colored::Multiset hlinitialMarking;
     PetriEngine::Colored::ColorType* type = nullptr;
     if(initial)
          initialMarking = atoll(initial->value());
+    
 
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
         // name element is ignored
@@ -426,7 +524,6 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
             type = parseUserSort(it);
         }
     }
-    
     if(initialMarking > std::numeric_limits<int>::max())
     {
         std::cerr << "Number of tokens in " << id << " exceeded " << std::numeric_limits<int>::max() << std::endl;
@@ -624,5 +721,17 @@ const PetriEngine::Colored::Color* PNMLParser::findColor(const char* name) const
             return col;
     }
     printf("Could not find color: %s\nCANNOT_COMPUTE\n", name);
+    exit(ErrorCode);
+}
+
+const PetriEngine::Colored::Color* PNMLParser::findColorForIntRange(const char* value, uint32_t start, uint32_t end) const{
+    for (const auto& elem : colorTypes) {
+        auto col = (*elem.second)[value];
+        if (col){
+            if((*elem.second).operator[](0).getId() == (start -1) && (*elem.second).operator[]((*elem.second).size()-1).getId() == end -1)
+                return col;
+        }
+    }
+    printf("Could not find color: %s\nCANNOT_COMPUTE\n", value);
     exit(ErrorCode);
 }

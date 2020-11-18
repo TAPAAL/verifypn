@@ -24,6 +24,7 @@
 #include <iostream>
 #include <cassert>
 
+//#include "ColoredNetStructures.h"
 #include "../TAR/range.h"
 
 namespace PetriEngine {
@@ -195,6 +196,10 @@ namespace PetriEngine {
                 interval.addRange(Reachability::range_t(0, size()-1));
                 return interval;
             }
+
+            virtual void getColortypes(std::vector<ColorType *> &colorTypes){
+                colorTypes.push_back(this);
+            }
             
             virtual const Color& operator[] (size_t index) {
                 return _colors[index];
@@ -269,7 +274,11 @@ namespace PetriEngine {
             }
 
             virtual size_t productSize() {
-                return constituents.size();
+                size_t size = 0;
+                for (auto ct : constituents){
+                    size += ct->productSize();
+                }
+                return size;
             }
 
             std::vector<size_t> getConstituentsSizes() override{
@@ -286,6 +295,12 @@ namespace PetriEngine {
                     interval.addRange(Reachability::range_t(0, ct->size()-1));
                 }                
                 return interval;
+            }
+
+            void getColortypes(std::vector<ColorType *> &colorTypes) override{
+                for(auto ct : constituents){
+                    ct->getColortypes(colorTypes);
+                }
             }
 
             bool containsTypes(const std::vector<const ColorType*>& types) const {
@@ -332,9 +347,36 @@ namespace PetriEngine {
             ColorType* colorType;
         };
 
+        struct ColorFixpoint {
+            Reachability::intervalTuple_t constraints;
+            bool inQueue;
+            uint32_t productSize;
+
+            bool constainsColor(std::pair<const PetriEngine::Colored::Color *const, std::vector<uint32_t>> constPair) {
+                std::unordered_map<uint32_t, bool> contained;
+                for(auto interval : constraints._intervals) {
+                    for(uint32_t id : constPair.second){
+                        
+                        if(contained[id] != true){
+                            contained[id] = interval[id].contains(constPair.first->getId());
+                        }                        
+                    }
+                }
+
+                for(auto pair : contained){
+                    if (!pair.second){
+                        return false;
+                    }
+                }
+                return true;
+            }
+        };
+
         struct VariableInterval {
             Colored::Variable *_variable;
-            Reachability::rangeInterval_t _ranges;
+            Reachability::intervalTuple_t _intervalTuple;
+            std::unordered_map<Colored::ColorFixpoint *, std::pair<std::set<uint32_t>, int32_t>> _parentPlaceIndexMap;
+            
 
             VariableInterval() {
             }
@@ -342,39 +384,215 @@ namespace PetriEngine {
             VariableInterval(Colored::Variable *variable) : _variable(variable) {
             };
 
-            VariableInterval(Colored::Variable *variable,  Reachability::rangeInterval_t ranges) : _variable(variable), _ranges(ranges) {
+            VariableInterval(Colored::Variable *variable,  Reachability::intervalTuple_t ranges) : _variable(variable), _intervalTuple(ranges) {
             };
 
             size_t size() {
-                return _ranges.size();
+                return _intervalTuple.size();
             }
 
             Reachability::interval_t& operator[] (size_t index) {
-                return _ranges[index];
+                return _intervalTuple[index];
             }
             
             Reachability::interval_t& operator[] (int index) {
-                return _ranges[index];
+                return _intervalTuple[index];
             }
             
             Reachability::interval_t& operator[] (uint32_t index) {
-                assert(index < _ranges.size());
-                return _ranges[index];
+                assert(index < _intervalTuple.size());
+                return _intervalTuple[index];
             }
 
             Reachability::interval_t& back(){
-                return _ranges.back();
+                return _intervalTuple.back();
             }
 
             bool hasValidIntervals(){
-                return _ranges.hasValidIntervals();
+                return _intervalTuple.hasValidIntervals();
             }
 
             void print() {
                 std::cout << "Variable " << _variable->name << std::endl;
-                _ranges.print();
+                _intervalTuple.print();
             }
+
+            Reachability::intervalTuple_t getPlaceRestriction(std::vector<std::pair<uint32_t, int32_t>> varModifiers){
+                auto placeIterator = _parentPlaceIndexMap.begin();
+                Reachability::intervalTuple_t combinedRangeInterval;
+
+                std::vector<Colored::ColorType *> varColorTypes;
+                _variable->colorType->getColortypes(varColorTypes);
+
+                while(placeIterator != _parentPlaceIndexMap.end()){
+                    Reachability::intervalTuple_t tempRangeInterval;
+                    if(placeIterator->first->constraints.size() == 0){
+                        //if one of the places that the variable depends on is empty, 
+                        // then there are no valid bindings for the variable
+                        break;
+                    }
+
+                    for(uint32_t index : placeIterator.operator*().second.first){                        
+                        if(combinedRangeInterval.size() == 0){
+                            
+                            for(auto interval : placeIterator.operator*().first->constraints._intervals){
+                                std::vector<Reachability::interval_t> newIntervals;
+                                std::vector<Reachability::interval_t> tempIntervals;
+                                std::vector<Reachability::interval_t> collectedIntervals;
+                                uint32_t j = 0;
+                                for(uint32_t i = index; i < index + _variable->colorType->productSize(); i++){
+                                    if((int32_t) interval[i]._lower + placeIterator->second.second < 0){
+                                        interval[i]._lower = 0;
+                                        auto underflow = std::abs((int32_t) interval[i]._lower + placeIterator->second.second);
+                                        Reachability::range_t newRange = Reachability::range_t(varColorTypes[j]->size()-(1+ underflow), varColorTypes[j]->size()-1);
+                                        tempIntervals = newIntervals;
+
+                                        if(tempIntervals.empty()){
+                                            Reachability::interval_t newInterval;
+                                            newInterval.addRange(newRange);
+                                            tempIntervals.push_back(newInterval);
+                                        } else {
+                                            for(auto& interval : tempIntervals){
+                                                interval.addRange(newRange);
+                                            }
+                                        }
+                                        for (auto interval : tempIntervals){
+                                            collectedIntervals.push_back(interval);
+                                        }                                        
+                                    } else {
+                                        interval[i]._lower += placeIterator->second.second;
+                                    }
+                                    if(interval[i]._upper + placeIterator->second.second > varColorTypes[j]->size()-1){
+                                        interval[i]._upper = varColorTypes[j]->size()-1;
+                                        auto overflow = interval[i]._upper + placeIterator->second.second + 1 - varColorTypes[j]->size();
+                                        Reachability::range_t newRange = Reachability::range_t(0, overflow);
+                                        tempIntervals = newIntervals;
+
+                                        if(tempIntervals.empty()){
+                                            Reachability::interval_t newInterval;
+                                            newInterval.addRange(newRange);
+                                            tempIntervals.push_back(newInterval);
+                                        } else {
+                                            for(auto& interval : tempIntervals){
+                                                interval.addRange(newRange);
+                                            }
+                                        }
+                                        for (auto interval : tempIntervals){
+                                            collectedIntervals.push_back(interval);
+                                        }    
+                                    } else {
+                                        interval[i]._upper += placeIterator->second.second;
+                                    }
+
+                                    if(newIntervals.empty()){
+                                        Reachability::interval_t newInterval;
+                                        newInterval.addRange(interval[i]);
+                                        newIntervals.push_back(newInterval);
+                                    } else {
+                                        for(auto& interval : newIntervals){
+                                            interval.addRange(interval[i]);
+                                        }
+                                    }
+
+                                    for (auto interval : collectedIntervals){
+                                        newIntervals.push_back(interval);
+                                    }
+
+                                    j++;
+                                }
+
+                                for (auto interval : newIntervals){
+                                    tempRangeInterval.addInterval(interval); 
+                                }
+                                
+                            }
+                        } else {
+                            for(auto interval : combinedRangeInterval._intervals){
+                                for(auto otherInterval : placeIterator.operator*().first->constraints._intervals){
+                                    uint32_t j = 0;
+                                    std::vector<Reachability::interval_t> newIntervals;
+                                    std::vector<Reachability::interval_t> tempIntervals;
+                                    std::vector<Reachability::interval_t> collectedIntervals;
+                                    for(uint32_t i = index; i < index + _variable->colorType->productSize(); i++){
+                                        if((int32_t) otherInterval[i]._lower + placeIterator->second.second < 0){
+                                            otherInterval[i]._lower = 0;
+                                            auto underflow = std::abs((int32_t) otherInterval[i]._lower + placeIterator->second.second);
+                                            Reachability::range_t newRange = Reachability::range_t(varColorTypes[j]->size()-(1+ underflow), varColorTypes[j]->size()-1);
+                                            tempIntervals = newIntervals;
+
+                                            if(tempIntervals.empty()){
+                                                Reachability::interval_t newInterval;
+                                                newInterval.addRange(newRange);
+                                                tempIntervals.push_back(newInterval);
+                                            } else {
+                                                for(auto& tempInterval : tempIntervals){
+                                                    tempInterval.addRange(newRange);
+                                                }
+                                            }
+                                            for (auto cInterval : tempIntervals){
+                                                collectedIntervals.push_back(cInterval);
+                                            }                                        
+                                        } else {
+                                            otherInterval[i]._lower += placeIterator->second.second;
+                                        }
+                                        if(otherInterval[i]._upper + placeIterator->second.second > varColorTypes[j]->size()-1){
+                                            otherInterval[i]._upper = varColorTypes[j]->size()-1;
+                                            auto overflow = otherInterval[i]._upper + placeIterator->second.second + 1 - varColorTypes[j]->size();
+                                            Reachability::range_t newRange = Reachability::range_t(0, overflow);
+                                            tempIntervals = newIntervals;
+
+                                            if(tempIntervals.empty()){
+                                                Reachability::interval_t newInterval;
+                                                newInterval.addRange(newRange);
+                                                tempIntervals.push_back(newInterval);
+                                            } else {
+                                                for(auto& tempInterval : tempIntervals){
+                                                    tempInterval.addRange(newRange);
+                                                }
+                                            }
+                                            for (auto tempInterval : tempIntervals){
+                                                collectedIntervals.push_back(tempInterval);
+                                            }    
+                                        } else {
+                                            otherInterval[i]._upper += placeIterator->second.second;
+                                        }
+
+                                        if(newIntervals.empty()){
+                                            Reachability::interval_t newInterval;
+                                            newInterval.addRange(otherInterval[i]);
+                                            newIntervals.push_back(newInterval);
+                                        } else {
+                                            for(auto& newInterval : newIntervals){
+                                                newInterval.addRange(otherInterval[i]);
+                                            }
+                                        }
+
+                                        for (auto cInterval : collectedIntervals){
+                                            newIntervals.push_back(cInterval);
+                                        }
+                                        j++;
+                                    }
+
+                                    for (auto newInterval : newIntervals){
+                                        newInterval.constrain(interval);
+                                        if(newInterval.isSound()){                                        
+                                            tempRangeInterval.addInterval(newInterval);
+                                        }
+                                    }                                                  
+                                }
+                            }
+                        }
+                    }
+
+                    combinedRangeInterval = tempRangeInterval;  
+                    placeIterator++;                  
+                }
+
+                return combinedRangeInterval;
+            }
+
         };
+        
     }
 }
 

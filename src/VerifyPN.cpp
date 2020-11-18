@@ -259,8 +259,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         }
         else if (strcmp(argv[i], "--output-stats") == 0)
         {
-            options.output_stats = true;
-            
+            options.output_stats = std::string(argv[++i]);            
         }
         else if (strcmp(argv[i], "--write-simplified") == 0)
         {
@@ -404,10 +403,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         for (int i = 1; i < argc; i++) {
             std::cout << argv[i] << " ";
         }
-        filename = argv[5];
-        generated_filename += argv[4];
-        generated_filename += argv[5];
-        generated_filename += argv[6];
         std::cout << std::endl;
     }
     
@@ -435,6 +430,19 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
     if (!options.modelfile && !options.statespaceexploration) {
         fprintf(stderr, "Argument Error: No query-file provided\n");
         return ErrorCode;
+    }
+
+    if(!options.output_stats.empty()){
+        filename = options.modelfile;
+        
+        generated_filename += options.modelfile;
+        generated_filename += options.queryfile;
+        generated_filename.erase(std::remove(generated_filename.begin(), generated_filename.end(), '/'), generated_filename.end());
+        for(auto num : options.querynumbers){
+            generated_filename += to_string(num +1);
+        }
+        generated_filename = options.output_stats + "/" + generated_filename;
+        generated_filename += ".csv";
     }
     
     return ContinueCode;
@@ -601,18 +609,12 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
                 builder.getUnfoldedArcCount() << " arcs" << std::endl;
         std::cout << "Unfolded in " << builder.getUnfoldTime() << " seconds" << std::endl;
 
-        if(options.output_stats){
-            generated_filename.erase(std::remove(generated_filename.begin(), generated_filename.end(), '/'), generated_filename.end());
-            generated_filename = "cfp-stats/cfp244-" + generated_filename;
-            generated_filename += ".csv";
+        if(!options.output_stats.empty()){
             std::ofstream log(generated_filename, std::ios_base::app | std::ios_base::out);
             std::ostringstream strs;
             strs << filename << "," << builder.getPlaceCount() << "," << builder.getTransitionCount() << "," << builder.getArcCount() << "," << builder.getUnfoldedPlaceCount() << "," << builder.getUnfoldedTransitionCount() << "," << builder.getUnfoldedArcCount() << "," << builder.getUnfoldTime() << "," << builder.getFixpointTime() << "\n";
-
             std::string str = strs.str();
-
             log <<  str;
-            
         }
 
     //}

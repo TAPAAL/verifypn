@@ -28,7 +28,7 @@ struct options_t {
     uint32_t siphontrapTimeout = 0;
     uint32_t siphonDepth = 0;
     uint32_t cores = 1;
-    bool output_stats = false;
+    string output_stats;
 
     //CTL Specific options
     bool gamemode = false;
