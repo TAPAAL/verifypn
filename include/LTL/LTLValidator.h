@@ -146,31 +146,24 @@ namespace LTL {
         }
 
         void _accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) override {
-            Visitor::_accept(element);
         }
 
         void _accept(const PetriEngine::PQL::FireableCondition *element) override {
-            Visitor::_accept(element);
         }
 
         void _accept(const PetriEngine::PQL::UpperBoundsCondition *element) override {
-            Visitor::_accept(element);
         }
 
         void _accept(const PetriEngine::PQL::LivenessCondition *element) override {
-            Visitor::_accept(element);
         }
 
         void _accept(const PetriEngine::PQL::KSafeCondition *element) override {
-            Visitor::_accept(element);
         }
 
         void _accept(const PetriEngine::PQL::QuasiLivenessCondition *element) override {
-            Visitor::_accept(element);
         }
 
         void _accept(const PetriEngine::PQL::StableMarkingCondition *element) override {
-            Visitor::_accept(element);
         }
 
         void _accept(const PetriEngine::PQL::BooleanCondition *element) override {}
