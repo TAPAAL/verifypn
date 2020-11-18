@@ -177,7 +177,6 @@ namespace PetriEngine {
                 auto varInterval = varIntervals->find(_variable->name);
                 
                 if (varInterval == varIntervals->end()){
-                    std::cout << "Could not find intervals for: " << _variable->name << std::endl;
                     Reachability::interval_t interval = _variable->colorType->getFullInterval();
                     Reachability::intervalTuple_t rangeInterval;
                     rangeInterval.addInterval(interval);                
@@ -1700,8 +1699,6 @@ namespace PetriEngine {
                     constantMap[&(*_sort)[i]].push_back(index);
                 }
             }
-
-            
 
             size_t size() const {
                 return  _sort->size();
