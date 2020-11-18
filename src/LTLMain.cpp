@@ -466,11 +466,11 @@ ReturnValue LTLMain(options_t options) {
     }
     auto strippedBuilder = cpnBuilder.stripColors(); //TODO can we trivially handle colors or do we need to strip?
     PetriNetBuilder builder(strippedBuilder);
-    std::unique_ptr<PetriNet> net{builder.makePetriNet(false)};
-    if ((v = contextAnalysis(cpnBuilder, builder, net.get(), parser.queries)) != ContinueCode) {
+    //std::unique_ptr<PetriNet> net{builder.makePetriNet(false)};
+    /*if ((v = contextAnalysis(cpnBuilder, builder, net.get(), parser.queries)) != ContinueCode) {
         std::cerr << "Error performing context analysis" << std::endl;
         return v;
-    }
+    }*/
 
     //----------------------- Query Simplification -----------------------//
     bool alldone = options.queryReductionTimeout > 0;
@@ -553,18 +553,18 @@ ReturnValue LTLMain(options_t options) {
                         }
 
                         // FIXME rewrite rules still incorrect, but might be redundant.
-                        /*auto [reduced, _] = LTL::to_spot_formula(queries[i]);
+                        auto [reduced, _] = LTL::to_spot_formula(queries[i]);
                         queries[i] = Condition::initialMarkingRW([&]() { return queries[i]; }, stats, context, false,
                                                                  false, false)
                                 ->pushNegation(stats, context, false, false, false);
-                        auto [postreduced, __] = LTL::to_spot_formula(queries[i]);
+                       /* auto [postreduced, __] = LTL::to_spot_formula(queries[i]);
                         if (!spot::are_equivalent(reduced, postreduced)) {
                             stats.print(std::cout);
                             std::cout << "Not equivalent!\n";
                             std::cout << querynames[i] << std::endl;
                             std::cout << "BEFORE:\n  ";
                             spot::print_psl(std::cout, reduced);
-                  ½          std::cout << "\nAFTER:\n  ";
+                            std::cout << "\nAFTER:\n  ";
                             spot::print_psl(std::cout, postreduced);
                             std::cout << std::endl;
                             exit(EXIT_FAILURE);
@@ -584,11 +584,11 @@ ReturnValue LTLMain(options_t options) {
                                 auto f = queries[i]->simplify(simplificationContext);
                                 queries[i] = f.formula;
                                 // FIXME rewrite rules still incorrect, but might be redundant.
-                                /*queries[i] = queries[i]->pushNegation(stats,
+                                queries[i] = queries[i]->pushNegation(stats,
                                                                       context,
                                                                       false,
                                                                       false,
-                                                                      true);*/
+                                                                      true);
                                 wasAGCPNApprox |= dynamic_cast<NotCondition *>(queries[i].get()) != nullptr;
                                 if (options.printstatistics) {
                                     out << "RWSTATS POST:";
@@ -665,6 +665,8 @@ ReturnValue LTLMain(options_t options) {
                  std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() <
                  options.queryReductionTimeout && to_handle > 0);
     }
+
+    auto net = std::unique_ptr<PetriNet>(builder.makePetriNet());
 
     for (int i = 0; i < queries.size(); ++i) {
         auto query = queries[i];
