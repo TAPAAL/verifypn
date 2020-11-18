@@ -508,7 +508,7 @@ ReturnValue LTLMain(options_t options) {
     auto strippedBuilder = cpnBuilder.stripColors(); //TODO can we trivially handle colors or do we need to strip?
     PetriNetBuilder builder(strippedBuilder);
     builder.sort();
-    std::unique_ptr<PetriNet> net{builder.makePetriNet()};
+    std::unique_ptr<PetriNet> net{builder.makePetriNet(false)};
     if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode){
         std::cerr << "Error performing context analysis" << std::endl;
         return v;
