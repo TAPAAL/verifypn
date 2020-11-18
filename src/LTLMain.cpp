@@ -258,8 +258,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 options.isltl = true;
                 i++;
             }
-        } else if (strcmp(argv[i], "--weak") == 0) {
-            options.shortcircuitweak = true;
         }
 
         else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
@@ -498,7 +496,7 @@ ReturnValue LTLMain(options_t options) {
             std::unique_ptr<LTL::ModelChecker> modelChecker;
             switch (options.ltlalgorithm) {
                 case LTL::Algorithm::NDFS:
-                    modelChecker = std::make_unique<LTL::NestedDepthFirstSearch>(*net, negated_formula, options.shortcircuitweak);
+                    modelChecker = std::make_unique<LTL::NestedDepthFirstSearch>(*net, negated_formula, true);
                     break;
                 case LTL::Algorithm::Tarjan:
                     if (options.trace)
