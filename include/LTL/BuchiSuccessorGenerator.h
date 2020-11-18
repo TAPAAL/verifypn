@@ -53,6 +53,10 @@ namespace LTL {
             return aut.ap_info.at(i).expression;
         }
 
+        [[nodiscard]] bool is_weak() const {
+            return (bool) aut.buchi->prop_weak();
+        }
+
     private:
         Structures::BuchiAutomaton aut;
         std::unique_ptr<spot::twa_succ_iterator> succ;
