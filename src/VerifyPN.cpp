@@ -441,7 +441,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         for(auto num : options.querynumbers){
             generated_filename += to_string(num +1);
         }
-        generated_filename = options.output_stats + "/" + generated_filename;
+        generated_filename = options.output_stats + "/file" + generated_filename;
         generated_filename += ".csv";
     }
     
@@ -619,6 +619,8 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
 
     //}
 }
+
+
 
 std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
     bool cont = false;    

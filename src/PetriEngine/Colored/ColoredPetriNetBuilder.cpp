@@ -182,7 +182,7 @@ namespace PetriEngine {
         
         auto end = std::chrono::high_resolution_clock::now();
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
-        printPlaceTable();
+        //printPlaceTable();
         //We should not need to keep colors in places after we have found fixpoint
         _placeColorFixpoints.clear();
     }
@@ -261,11 +261,13 @@ namespace PetriEngine {
                 if (!transition.variableIntervals[var->name].hasValidIntervals()) {
                     //If the arc connected to the place under consideration cannot be activated,
                     //then there is no reason to keep checking
-                    //transition.variableIntervals[var->name]._intervalTuple.mergeIntervals();
+                    transition.variableIntervals[var->name]._intervalTuple.mergeIntervals();
                     transitionActivated = false; 
                     succes = false;
                     break;
                 }
+                transition.variableIntervals[var->name]._intervalTuple.mergeIntervals();
+
             }
 
             //Only consider constants if the variables had valid bindings
@@ -424,12 +426,11 @@ namespace PetriEngine {
         for (auto b : gen) {
 
             //Print all bindings
-            // std::cout << transition.name << std::endl;
+            //std::cout << transition.name << std::endl;
             // for (auto test : b){
             //     std::cout << "Binding '" << test.first << "\t" << test.second->getId() << "' in bindingds." << std::endl;
             // }
             // std::cout << std::endl;
-            
             
             std::string name = transition.name + "_" + std::to_string(i++);
             _ptBuilder.addTransition(name, 0.0, 0.0);
@@ -613,11 +614,10 @@ namespace PetriEngine {
                 break;
             }      
             test = eval();
-            /*if(_transition.name == "Start"){
-                for (auto& _binding : _bindings){
-                    cout << "color " << _binding.second->getColorName() << " for " << _binding.first << " is " << test << endl;
-                }                
-            }*/         
+            // for (auto& _binding : _bindings){
+            //     cout << "color " << _binding.second->getColorName() << " for " << _binding.first << " is " << test << endl;
+            // }                
+                
         }
         
         return _bindings;
