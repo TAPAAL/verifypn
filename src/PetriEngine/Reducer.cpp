@@ -1565,8 +1565,8 @@ namespace PetriEngine {
         }
         return continueReductions;
     }
-        
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reduction) {
+
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
@@ -1623,7 +1623,7 @@ namespace PetriEngine {
         else
         {
             const char* rnames = "ABCDEFGHIJ";
-            for(int i = reduction.size() - 1; i > 0; --i)
+            for(int i = reduction.size() - 1; i >= 0; --i)
             {
                 if(next_safe)
                 {
