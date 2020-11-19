@@ -156,6 +156,8 @@ ReturnValue parseOptions(int argc, char *argv[], options_t &options) {
                 fprintf(stderr, "Argument Error: Invalid reduction timeout argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        } else if (strcmp(argv[i], "--no-query-reduction") == 0 || strcmp(argv[i], "-Q") == 0) {
+            options.use_query_reductions = false;
         } else if (strcmp(argv[i], "--seed-offset") == 0) {
             if (sscanf(argv[++i], "%u", &options.seed_offset) != 1) {
                 fprintf(stderr, "Argument Error: Invalid seed offset argument \"%s\"\n", argv[i]);
@@ -372,15 +374,13 @@ ReturnValue parseOptions(int argc, char *argv[], options_t &options) {
 
 
 ReturnValue contextAnalysis(ColoredPetriNetBuilder &cpnBuilder, PetriNetBuilder &builder, const PetriNet *net,
-                            vector<QueryItem> queries) {
+                            vector<std::shared_ptr<Condition>> queries) {
     //Context analysis
     ColoredAnalysisContext context(builder.getPlaceNames(), builder.getTransitionNames(), net,
                                    cpnBuilder.getUnfoldedPlaceNames(), cpnBuilder.getUnfoldedTransitionNames(),
                                    cpnBuilder.isColored());
     for (auto &q : queries) {
-        if (q.id.empty())
-            continue;
-        q.query->analyze(context);
+        q->analyze(context);
 
         //Print errors if any
         if (context.errors().size() > 0) {
@@ -479,7 +479,7 @@ ReturnValue LTLMain(options_t options) {
     MarkVal *qm0 = qnet->makeInitialMarking();
     ResultPrinter p2(&b2, &options, querynames);
 
-    if (queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), parser.queries) != ContinueCode) {
+    if (queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode) {
         std::cerr << "Could not analyze the queries" << std::endl;
         return ErrorCode;
     }
@@ -491,6 +491,7 @@ ReturnValue LTLMain(options_t options) {
     }
 
     // simplification. We always want to do negation-push and initial marking check.
+    if (options.use_query_reductions)
     {
         // simplification. We always want to do negation-push and initial marking check.
         std::vector<LPCache> caches(options.cores);
@@ -545,7 +546,7 @@ ReturnValue LTLMain(options_t options) {
                         // this is used later, we already know that this is a plain reachability (or AG)
                         bool wasAGCPNApprox = dynamic_cast<NotCondition *>(queries[i].get()) != nullptr;
                         int preSize = queries[i]->formulaSize();
-                        //queries[i] = LTL::simplify(queries[i]);
+                        queries[i] = LTL::simplify(queries[i]);
                         if (options.printstatistics) {
                             out << "\nQuery after Spot: ";
                             queries[i]->visit(printer);
@@ -553,9 +554,9 @@ ReturnValue LTLMain(options_t options) {
                         }
 
                         // FIXME rewrite rules still incorrect, but might be redundant.
-                        /*queries[i] = Condition::initialMarkingRW([&]() { return queries[i]; }, stats, context, false,
+                        queries[i] = Condition::initialMarkingRW([&]() { return queries[i]; }, stats, context, false,
                                                                  false, false)
-                                ->pushNegation(stats, context, false, false, false);*/
+                                ->pushNegation(stats, context, false, false, false);
 
                         wasAGCPNApprox |= dynamic_cast<NotCondition *>(queries[i].get()) != nullptr;
                         if (options.queryReductionTimeout > 0 && options.printstatistics) {
@@ -572,14 +573,15 @@ ReturnValue LTLMain(options_t options) {
                                                                         options.lpsolveTimeout, &cache);
                             try {
                                 negstat_t stats;
-                                //auto f = queries[i]->simplify(simplificationContext);
-                                //queries[i] = f.formula;
+                                auto f = queries[i]->simplify(simplificationContext);
+                                queries[i] = f.formula;
+
                                 // FIXME rewrite rules still incorrect, but might be redundant.
-                                /*queries[i] = queries[i]->pushNegation(stats,
+                                queries[i] = queries[i]->pushNegation(stats,
                                                                       context,
                                                                       false,
                                                                       false,
-                                                                      true);*/
+                                                                      true);
                                 wasAGCPNApprox |= dynamic_cast<NotCondition *>(queries[i].get()) != nullptr;
                                 if (options.printstatistics) {
                                     out << "RWSTATS POST:";
@@ -659,11 +661,12 @@ ReturnValue LTLMain(options_t options) {
 
     auto net = std::unique_ptr<PetriNet>(builder.makePetriNet());
     // Assign indexes
-    if (queries.size() == 0 || contextAnalysis(cpnBuilder, builder, net.get(), parser.queries) != ContinueCode) {
+    if (queries.size() == 0 || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
         std::cerr << "An error occurred while assigning indexes" << std::endl;
         return ErrorCode;
     }
     for (int i = 0; i < queries.size(); ++i) {
+        LTL::FormulaToSpotSyntax printer{std::cout};
         auto query = queries[i];
         bool satisfied;
         if (query->isTriviallyTrue()) {
@@ -674,6 +677,7 @@ ReturnValue LTLMain(options_t options) {
             //std::cout << "trivially false" << std::endl;
         } else {
             auto[negated_formula, negate_answer] = to_ltl(query);
+
             if (!negated_formula) {
                 std::cerr << "Query file " << qfilename << " contained non-LTL formula";
                 return ErrorCode;

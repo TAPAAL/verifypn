@@ -3447,7 +3447,6 @@ namespace PetriEngine {
         Condition_ptr FCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
                                                bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-
                 auto a = _cond->pushNegation(stats, context, true, false, initrw);
                 if(!a->isTemporal())
                 {

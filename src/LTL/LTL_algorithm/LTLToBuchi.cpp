@@ -70,6 +70,17 @@ namespace LTL {
     }
 
     void FormulaToSpotSyntax::_accept(const CompareConjunction *element) {
+        /*bool first = true;
+        static auto has_lower = [](const CompareConjunction::cons_t &cons) { return cons._lower != 0; };
+        static auto has_upper = [](const CompareConjunction::cons_t &cons) { return cons._upper != std::numeric_limits<uint32_t>::max(); };
+
+        std::vector<Condition_ptr> conds;
+        for (auto cons : element->constraints()) {
+            if (has_lower(cons)) {
+                conds.push_back(std::make_shared<LessT>)
+            }
+        }*/
+
         make_atomic_prop(element->shared_from_this());
     }
 
@@ -154,6 +165,7 @@ namespace LTL {
         automaton->get_graph().dump_storage(std::cerr);
         spot::print_dot(std::cerr, automaton);
 #endif
+#undef PRINTF_DEBUG
         std::unordered_map<int, AtomicProposition> ap_map;
         // bind PQL expressions to the atomic proposition IDs used by spot.
         // the resulting map can be indexed using variables mentioned on edges of the created Büchi automaton.
