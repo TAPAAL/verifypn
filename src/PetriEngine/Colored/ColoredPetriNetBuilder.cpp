@@ -254,17 +254,18 @@ namespace PetriEngine {
                 } else {                    
                     transition.variableIntervals[var->name]._intervalTuple = transition.variableIntervals[var->name].getPlaceRestriction(varModifierMap[var]);
                 }                        
-
+                
+                for(auto transitionVar : transitionVars){
+                    transition.variableIntervals[transitionVar->name]._intervalTuple.mergeIntervals();
+                }
                 if (!transition.variableIntervals[var->name].hasValidIntervals()) {
                     //If the arc connected to the place under consideration cannot be activated,
                     //then there is no reason to keep checking
-                    transition.variableIntervals[var->name]._intervalTuple.mergeIntervals();
+                    //transition.variableIntervals[var->name]._intervalTuple.mergeIntervals();
                     transitionActivated = false; 
                     succes = false;
                     break;
                 }
-
-                transition.variableIntervals[var->name]._intervalTuple.mergeIntervals();
             }
 
             //Only consider constants if the variables had valid bindings
