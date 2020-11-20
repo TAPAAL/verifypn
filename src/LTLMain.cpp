@@ -516,7 +516,7 @@ ReturnValue LTLMain(options_t options) {
 
     //--------------------- Apply Net Reduction ---------------//
 
-    std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Unknown);
+    std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::CTL);
     ResultPrinter printer(&builder, &options, querynames);
 
     if (options.enablereduction > 0) {
