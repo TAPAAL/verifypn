@@ -530,18 +530,13 @@ ReturnValue LTLMain(options_t options) {
     printStats(builder, options);
 
     net = std::unique_ptr<PetriNet>(builder.makePetriNet());
-    {
-        std::fstream fs;
-        fs.open("tmp.pnml", std::fstream::out | std::fstream::trunc);
-        net->toXML(fs);
-        fs.close();
-    }
+
     if(!options.model_out_file.empty())
-    // {
-    //     fstream file;
-    //     file.open(options.model_out_file, std::ios::out);
-    //     net->toXML(file);
-    // }
+     {
+         fstream file;
+         file.open(options.model_out_file, std::ios::out);
+         net->toXML(file);
+     }
 
     //--------------------- Verify LTL queries ---------------//
 
