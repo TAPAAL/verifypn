@@ -116,7 +116,6 @@ namespace PetriEngine {
         arc.transition = t;
         assert(expr != nullptr);
         arc.expr = std::move(expr);
-        arc.activatable = false;
         arc.input = input;
         input? _transitions[t].input_arcs.push_back(std::move(arc)): _transitions[t].output_arcs.push_back(std::move(arc));
     }
@@ -191,99 +190,154 @@ namespace PetriEngine {
         for(auto& transition : _transitions){
             for(auto arc : transition.input_arcs){
                 std::set<Colored::Variable *> variables;
-                std::unordered_map<string, std::set<uint32_t>> varPositions;
-                PetriEngine::Colored::ColorFixpoint& colorfixpoint = _placeColorFixpoints[arc.place];
-                std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifierMap;
-                arc.expr->getVariables(variables, varPositions, varModifierMap);
+                std::unordered_map<uint32_t, Colored::Variable *> varPositions;
+                std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifiersMap;
+                std::unordered_map<Colored::Variable *, std::pair<uint32_t, int32_t>> varIndexModMap;
+                arc.expr->getVariables(variables, varPositions, varModifiersMap);
 
-                for (auto var: variables){
-                    auto varIndexes = varPositions[var->name];
-                    int32_t varModifier = 0;
-                    for (auto varPair : varModifierMap[var]){
-                        if(std::abs(varPair.second) > std::abs(varModifier)){
-                            varModifier = varPair.second;
+                for(auto varModifierPair : varModifiersMap){
+                    int32_t varModifier = (*varModifierPair.second.begin()).second;
+
+                    uint32_t firstIndex = 0;
+                    for(auto pair : varPositions){
+                        if (pair.second == varModifierPair.first){
+                            firstIndex = pair.first;
+                            break;
                         }
                     }
+                    varIndexModMap[varModifierPair.first] = std::make_pair(firstIndex, varModifier);
+                }
 
-                    if (transition.variableIntervals.count(var->name) == 0){
-                        Reachability::intervalTuple_t newRangeInterval;
-                        Colored::VariableInterval newVarInterval(var, newRangeInterval);
-                        newVarInterval._parentPlaceIndexMap[&colorfixpoint] = std::make_pair(varIndexes,varModifier);
-                        transition.variableIntervals[var->name] = newVarInterval;
-                    } else {
-                        transition.variableIntervals[var->name]._parentPlaceIndexMap[&colorfixpoint] = std::make_pair(varIndexes,varModifier);
-                    }
-                }                    
+                Reachability::intervalTuple_t newRangeInterval;
+                Colored::ArcIntervals newArcInterval(&_placeColorFixpoints[arc.place], varIndexModMap, newRangeInterval);
+                transition.inputArcIntervals[&arc] = newArcInterval;               
             }
         }
     }
 
+
+
     void ColoredPetriNetBuilder::processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, bool &transitionActivated) {
         _placeColorFixpoints[currentPlaceId].inQueue = false;
-        
-        std::set<Colored::Variable *> transitionVars;
-        std::unordered_map<string, std::set<uint32_t>> varGuardPositions;
-        std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifierMap;
-        if (transition.guard != nullptr) {
-            transition.guard->getVariables(transitionVars, varGuardPositions, varModifierMap);
-        }
+        std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap;
         
         for (auto& arc : transition.input_arcs) {
-            //we can break if transitions are not activated
-            if (!transitionActivated) {
-                break;
-            }
-
             PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];
             bool succes = true;
-            std::set<Colored::Variable *> variables;
-            std::unordered_map<string, std::set<uint32_t>> varPositions;
-            std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifierMap;
-            arc.expr->getVariables(variables, varPositions, varModifierMap);                          
 
-            for (auto var : variables) {
+            Colored::ArcIntervals arcInterval = transition.inputArcIntervals[&arc];
 
-                if (transition.guard != nullptr && transitionVars.find(var) != transitionVars.end()) {
-                    for(auto transitionVar : transitionVars){
-                        if (transition.variableIntervals.count(transitionVar->name) != 0) {
-                            auto varModifiers = varModifierMap[transitionVar];
-                            transition.variableIntervals[transitionVar->name]._intervalTuple = transition.variableIntervals[transitionVar->name].getPlaceRestriction(varModifiers);
-                        }                                
+            uint32_t index = 0;
+
+            arc.expr->getArcIntervals(arcInterval, curCFP, &index);  
+        }
+
+        if(getVarIntervals(transition.inputArcIntervals, variableMap)){
+            if(transition.guard != nullptr) {
+                transition.guard->restrictVars(variableMap);
+
+                for(auto varPair : variableMap){
+                    if(!varPair.second.hasValidIntervals()){
+                        transitionActivated = false; 
+                        return;
                     }
-                    transition.guard->restrictVar(&transition.variableIntervals[var->name], &transition.variableIntervals);
-                } else {                    
-                    transition.variableIntervals[var->name]._intervalTuple = transition.variableIntervals[var->name].getPlaceRestriction(varModifierMap[var]);
-                }                        
-
-                if (!transition.variableIntervals[var->name].hasValidIntervals()) {
-                    //If the arc connected to the place under consideration cannot be activated,
-                    //then there is no reason to keep checking
-                    transition.variableIntervals[var->name]._intervalTuple.mergeIntervals();
-                    transitionActivated = false; 
-                    succes = false;
-                    break;
                 }
-
-                transition.variableIntervals[var->name]._intervalTuple.mergeIntervals();
             }
+        } else {
+            transitionActivated = false;
+        }                                            
+    }
 
-            //Only consider constants if the variables had valid bindings
-            if(succes){
-                std::unordered_map<const Colored::Color*, std::vector<uint32_t>> constantMap;
-                uint32_t index = 0;
-                arc.expr->getConstants(constantMap, index);
-                
-                for (auto constPair : constantMap) {
-                    if(!curCFP.constainsColor(constPair)) {
-                        //If the arc connected to the place under consideration cannot be activated,
-                        //then there is no reason to keep checking
-                        transitionActivated = false;
-                        succes = false;
-                        break;
+    //could be expanded to handle when a variable apears multiple times on an arc and with different modifiers
+    bool ColoredPetriNetBuilder::getVarIntervals(std::unordered_map<Colored::Arc*, Colored::ArcIntervals> arcIntervalsMap, std::unordered_map<Colored::Variable *, std::pair<Reachability::intervalTuple_t, std::set<Colored::Variable *>>>& variableMap){
+        for(auto arcIntervals : arcIntervalsMap){
+            for(auto pair : arcIntervals.second._varIndexModMap){
+                auto varPosition = pair.second.first;
+                auto varModifier = pair.second.second;
+                if(variableMap.count(pair.first) == 0){                    
+                    Reachability::intervalTuple_t varIntervalTuple;
+                    for (auto interval : arcIntervals.second._intervalTuple._intervals){                        
+                        for(auto varInterval : getIntervalsFromInterval(interval, varPosition, varModifier, pair.first)){
+                            varIntervalTuple.addInterval(varInterval);
+                        }                        
                     }
+                    
+                    variableMap[pair.first] = std::make_pair(varIntervalTuple, arcIntervals.second.getVariables());
+                } else {
+                    for (auto varInterval : variableMap[pair.first].first._intervals){
+                        Reachability::intervalTuple_t newIntervalTuple;
+                        for(auto interval : arcIntervals.second._intervalTuple._intervals){
+                            auto varIntervals = getIntervalsFromInterval(interval, varPosition, varModifier, pair.first);
+
+                            for (auto arcVarInterval : varIntervals){
+                                auto overlappingInterval = arcVarInterval.getOverlap(varInterval);
+
+                                if(overlappingInterval.isSound()){
+                                    newIntervalTuple.addInterval(overlappingInterval);
+                                }
+                            }
+                            //handle variable connection
+                            //if we find that this variable cannot be bound to an interval
+                            //the values of other vars that are only available when this var is in the given interval
+                            //should also not be included.
+                            //active flag on intervals?
+                            
+                        }
+                        auto connectedVars = variableMap[pair.first].second;
+                        for(auto var : arcIntervals.second.getVariables()){
+                            connectedVars.insert(var);
+                        }
+                        newIntervalTuple.mergeIntervals();
+                        variableMap[pair.first] = std::make_pair(newIntervalTuple, connectedVars);
+                    }
+
                 }
-            }                           
-            arc.activatable = succes;                                               
+                //If we do not find any valid intervals for an arc, then we can stop as there will not be any intervals
+                //which are valid for all arcs
+                if(!variableMap[pair.first].hasValidIntervals()){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    std::vector<Reachability::interval_t> ColoredPetriNetBuilder::getIntervalsFromInterval(Reachability::interval_t interval, uint32_t varPosition, int32_t varModifier, Colored::Variable * var){
+        std::vector<Reachability::interval_t> varIntervals;
+        Reachability::interval_t firstVarInterval;
+        varIntervals.push_back(firstVarInterval);
+        for(uint32_t i = varPosition; i < varPosition + var->colorType->productSize(); i++){
+            int32_t lower = (int32_t) interval[i]._lower + varModifier;
+            uint32_t upper = interval[i]._upper + varModifier;
+
+            if(lower < 0){
+                std::vector<Reachability::interval_t> newIntervals;
+                for (auto varInterval : varIntervals){
+                    Reachability::interval_t newVarInterval = varInterval;                                    
+                    varInterval.addRange(0, upper);
+                    newVarInterval.addRange(var->colorType->size() - 1 - lower, var->colorType->size() -1);
+                    newIntervals.push_back(newVarInterval);
+                }
+
+                varIntervals.insert(varIntervals.end(), newIntervals.begin(), newIntervals.end());
+                
+
+            } else if(upper >= var->colorType->size()){
+                std::vector<Reachability::interval_t> newIntervals;
+                for (auto varInterval : varIntervals){
+                    Reachability::interval_t newVarInterval = varInterval;                                    
+                    varInterval.addRange(lower, var->colorType->size() - 1);
+                    newVarInterval.addRange(0, upper % var->colorType->size());
+                    newIntervals.push_back(newVarInterval);
+                }
+
+                varIntervals.insert(varIntervals.end(), newIntervals.begin(), newIntervals.end());
+            } else {
+                for (auto varInterval : varIntervals){
+                    varInterval.addRange((uint32_t)lower, upper);
+                }
+            }
+            
         }
     }
 
@@ -304,11 +358,11 @@ namespace PetriEngine {
             }
                 
             std::set<Colored::Variable *> variables;
-            std::unordered_map<string, std::set<uint32_t>> varPositions;
+            std::unordered_map<uint32_t, Colored::Variable *> varPositions;
             std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifierMap;
             arc.expr->getVariables(variables, varPositions, varModifierMap);
 
-            std::unordered_map<const Colored::Color*, std::vector<uint32_t>> constantMap;
+            std::unordered_map<uint32_t, const Colored::Color*> constantMap;
             uint32_t index = 0;
             arc.expr->getConstants(constantMap, index);            
 

@@ -76,28 +76,38 @@ namespace PetriEngine {
         public:
             Expression() {}
         
-            virtual void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const {}
+            virtual void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const {}
 
-            virtual void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap) const {
+            virtual void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap) const {
                 uint32_t index = 0;
                 getVariables(variables, varPositions, varModifierMap, &index);
             }
 
+            virtual void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions) const {
+                std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>> varModifierMap;
+                uint32_t index = 0;
+                getVariables(variables, varPositions, varModifierMap, &index);
+            }
+
+            virtual bool isTuple() const {
+                return false;
+            }
+
 
             virtual void getVariables(std::set<Variable*>& variables) const {
-                std::unordered_map<std::string, std::set<uint32_t>> varPositions;
+                std::unordered_map<uint32_t, Colored::Variable *> varPositions;
                 std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>> varModifierMap;
 
                 getVariables(variables, varPositions, varModifierMap);
             }
 
-            virtual Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, PetriEngine::Colored::VariableInterval> *varIntervals) const {
+            virtual Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, PetriEngine::Colored::ArcIntervals> *varIntervals) const {
                 std::vector<Colored::ColorType *> colortypes;
                 
                 return getOutputIntervals(varIntervals, &colortypes);
             }
 
-            virtual Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, PetriEngine::Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const {
+            virtual Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, PetriEngine::Colored::ArcIntervals> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const {
                 return Reachability::intervalTuple_t();
             }
 
@@ -120,9 +130,11 @@ namespace PetriEngine {
             
             virtual const Color* eval(ExpressionContext& context) const = 0;
 
-            virtual void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const = 0;
+            virtual void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const = 0;
 
             virtual bool getVariableRestriction(int32_t index, std::vector<uint32_t> * restrictionValue, uint32_t *intervalSize) const = 0;
+
+            virtual void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const = 0;
 
             virtual ColorType* getColorType(std::unordered_map<std::string,Colored::ColorType*>& colorTypes) const = 0;
         };
@@ -139,9 +151,16 @@ namespace PetriEngine {
                 return true;
             }
 
-            void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const override {
+            void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const override {
+                if (arcIntervals._intervalTuple._intervals.empty()) {
+                    //We can add all place tokens when considering the dot constant as, that must be present
+                    arcIntervals._intervalTuple = cfp.constraints;
+                }
+            }
+
+            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
                 const Color *dotColor = DotConstant::dotConstant();
-                constantMap[dotColor].push_back(index);
+                constantMap[index] = dotColor;
             }
             ColorType* getColorType(std::unordered_map<std::string,Colored::ColorType*>& colorTypes) const override{
                 return DotConstant::dotConstant()->getColorType();
@@ -167,13 +186,13 @@ namespace PetriEngine {
                 return false;
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *, std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *, std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 variables.insert(_variable);
-                varPositions[_variable->name].insert(*index);
+                varPositions[*index] = _variable;
                 varModifierMap[_variable].push_back(std::make_pair(*index, 0));
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 auto varInterval = varIntervals->find(_variable->name);
                 
                 if (varInterval == varIntervals->end()){
@@ -181,7 +200,7 @@ namespace PetriEngine {
                     Reachability::interval_t interval = _variable->colorType->getFullInterval();
                     Reachability::intervalTuple_t rangeInterval;
                     rangeInterval.addInterval(interval);                
-                    varIntervals->insert(std::make_pair(_variable->name, Colored::VariableInterval(_variable, rangeInterval)));
+                    varIntervals->insert(std::make_pair(_variable->name, Colored::ArcIntervals(_variable, rangeInterval)));
                 }
 
                 varInterval = varIntervals->find(_variable->name);
@@ -197,7 +216,14 @@ namespace PetriEngine {
                 return varInterval->second._intervalTuple;
             }
 
-            void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const override {
+            void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const override {
+                if (arcIntervals._intervalTuple._intervals.empty()){
+                    //As variables does not restrict the values before the guard we include all tokens
+                    arcIntervals._intervalTuple = cfp.constraints;
+                }
+            }
+
+            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
             }
 
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
@@ -239,6 +265,27 @@ namespace PetriEngine {
                 return true;
             }
 
+            void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const override {
+                if(arcIntervals._intervalTuple._intervals.empty()){
+                    for (auto interval : cfp.constraints._intervals){
+                        if(interval[*index].contains(_userOperator->getId())){
+                            arcIntervals._intervalTuple.addInterval(interval);
+                        }
+                    }
+                } else {
+                    std::vector<Reachability::interval_t> intervalsToRemove;
+                    for (auto interval : arcIntervals._intervalTuple._intervals){
+                        if(!interval[*index].contains(_userOperator->getId())){
+                            intervalsToRemove.push_back(interval);
+                        }
+                    }
+
+                    for(auto interval : intervalsToRemove){
+                        arcIntervals._intervalTuple.removeInterval(interval);
+                    }
+                }
+            }
+
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
 
                 Colored::Pattern pattern(
@@ -254,14 +301,14 @@ namespace PetriEngine {
                 return _userOperator->toString();
             }
 
-            void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const override {
-                constantMap[_userOperator].push_back(index);
+            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
+                constantMap[index] = _userOperator;
             }
             ColorType* getColorType(std::unordered_map<std::string,Colored::ColorType*>& colorTypes) const override{
                 return _userOperator->getColorType();
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 Reachability::interval_t interval;
                 Reachability::intervalTuple_t rangeInterval;
                  
@@ -322,7 +369,7 @@ namespace PetriEngine {
                 return &++(*_color->eval(context));
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = *index;
                 _color->getVariables(variables, varPositions, varModifierMap, index);
@@ -335,7 +382,11 @@ namespace PetriEngine {
                 }                
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+            void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const override {
+                _color->getArcIntervals(arcIntervals, cfp, index);
+            }
+
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 //store the number of colortyps already in colortypes vector and use that as offset when indexing it
                 auto colortypesBefore = colortypes->size();
 
@@ -396,7 +447,7 @@ namespace PetriEngine {
                 return false;
             }
 
-            void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const override {
+            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
                 return _color->getConstants(constantMap, index);
             }
 
@@ -421,7 +472,7 @@ namespace PetriEngine {
                 return &--(*_color->eval(context));
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = *index;
                 _color->getVariables(variables, varPositions, varModifierMap, index);
@@ -433,8 +484,12 @@ namespace PetriEngine {
                     }                   
                 } 
             }
+
+            void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const override {
+                _color->getArcIntervals(arcIntervals, cfp, index);
+            }
             
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 //store the number of colortyps already in colortypes vector and use that as offset when indexing it
                 auto colortypesBefore = colortypes->size();
 
@@ -503,7 +558,7 @@ namespace PetriEngine {
                 return false;
             }
 
-            void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const override {
+            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
                 return _color->getConstants(constantMap, index);
             }
 
@@ -543,7 +598,11 @@ namespace PetriEngine {
                 return col;
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+            bool isTuple() const override {
+                return true;
+            }
+
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 Reachability::intervalTuple_t intervals;
                 Reachability::intervalTuple_t intervalHolder;
                 
@@ -572,8 +631,16 @@ namespace PetriEngine {
                 }
                 return intervals;
             }
+
+            void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const override {
+                Reachability::intervalTuple_t resTuple;
+                for (auto expr : _colors) {
+                    expr->getArcIntervals(arcIntervals, cfp, index);
+                    (*index)++;
+                }
+            }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 for (auto elem : _colors) {
                     elem->getVariables(variables, varPositions, varModifierMap, index);
                     (*index)++;
@@ -620,7 +687,7 @@ namespace PetriEngine {
 
             }
 
-            void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const override {
+            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
                 for (auto elem : _colors) {
                     elem->getConstants(constantMap, index);
                     index++;
@@ -652,7 +719,7 @@ namespace PetriEngine {
             
             virtual bool eval(ExpressionContext& context) const = 0;
 
-            virtual void restrictVar(Colored::VariableInterval *varInterval, std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const = 0;
+            virtual void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const = 0;
         };
 
         typedef std::shared_ptr<GuardExpression> GuardExpression_ptr;
@@ -667,148 +734,136 @@ namespace PetriEngine {
                 return _left->eval(context) < _right->eval(context);
             }
 
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
-            void restrictVar(Colored::VariableInterval *varInterval, std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
-                std::unordered_map<Colored::Variable *,std::vector<std::pair<uint32_t, int32_t>>>  varModifierMapLeft;
-                std::unordered_map<Colored::Variable *,std::vector<std::pair<uint32_t, int32_t>>>  varModifierMapRight;
+            void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
+                _left->restrictVars(variableMap);
+                _right->restrictVars(variableMap);
+                std::set<Variable *> leftVars;
+                std::set<Variable *> rightVars;
+                std::unordered_map<uint32_t, Colored::Variable *> varPositionsL;
+                std::unordered_map<uint32_t, Colored::Variable *> varPositionsR;
+                std::unordered_map<uint32_t, const Color*> constantMapL;
+                std::unordered_map<uint32_t, const Color*> constantMapR;
                 uint32_t index = 0;
-                std::set<Variable *> vars;
-                std::unordered_map<std::string, std::set<uint32_t>> varLeftPositions, varRightPositions;
-                std::string varName = varInterval->_variable->name;
-                _left->getVariables(vars, varLeftPositions,  varModifierMapLeft, &index);
-                _right->getVariables(vars, varRightPositions,  varModifierMapRight, &index);
-                uint32_t intervalSize = 0;
-                std::vector<uint32_t> restrictionvector;
+                _left->getVariables(leftVars, varPositionsL);
+                _right->getVariables(rightVars, varPositionsR);
+                _left->getConstants(constantMapL, index);
+                index = 0;
+                _right->getConstants(constantMapR, index);
 
-                for (auto index : varLeftPositions[varName]) {
-                    bool succes = _right->getVariableRestriction(index, &restrictionvector, &intervalSize);
-                    int32_t modifier = 0;
-                    for(auto idModifierPair : varModifierMapLeft[varInterval->_variable]){
-                        if(idModifierPair.first == index){
-                            modifier = idModifierPair.second;
-                        }
-                    }
-                    if (!succes) {
-                        //comparing vars
-                        for(auto varPositions : varRightPositions) {
-                            if(varPositions.second.find(index) != varPositions.second.end()) {
-                                if(varIntervals->count(varPositions.first) == 0){
-                                    continue;
-                                }
-                                auto otherVar = &varIntervals->operator[](varPositions.first);
-                                if(otherVar->size() == 0) {
-                                    continue;
-                                }
+                if(leftVars.empty() && rightVars.empty()){
+                    return;
+                }
 
-                                auto rightMaxVec = otherVar->back().getUpperIds();
-
-                                for(auto& interval : varInterval->_intervalTuple._intervals){
-                                    if (interval.size() != rightMaxVec.size()) {
-                                        std::cout << "Interval sizes of variables does not match";
-                                    }
-                                    for(uint32_t i = 0; i < interval.size(); i++) {
-                                        //hope that other direction is handled by right side
-                                        interval[i]._upper = std::min(interval[i]._upper, rightMaxVec[i]-1);
-                                    }
-                                }
-                            }
-                        }
-                    } else if(restrictionvector.size() == 1) {
-                        uint32_t value = restrictionvector.back() + modifier;
-                        auto ctSize = varInterval->_variable->colorType->size();
-                        uint32_t finalVal = value % ctSize;
-                        for(auto& interval : varInterval->_intervalTuple._intervals){
-                            if(interval.getFirst()._lower > finalVal -1){
-                                interval.getFirst().invalidate();
-                            } else {
-                                interval.getFirst()._upper =  std::max(finalVal-1, interval.getFirst()._upper);
-                            }
-                        }
+                for(auto varPositionPair : varPositionsL){
+                    uint32_t index = varPositionPair.first;
+                    if(varPositionsR.count(index)){
+                        //comparing vars of same size
+                        if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
                         
-                    } else if (restrictionvector.size() > 1){
-                        auto ct = (Colored::ProductType *) varInterval->_variable->colorType;
-                        auto constituentSizes = ct->getConstituentsSizes();
-                        for (auto& interval : varInterval->_intervalTuple._intervals){
-                            for(uint32_t i = 0; i < interval.size(); i++){
-                                auto value = restrictionvector[i]+modifier;
-                                uint32_t finalVal = value % constituentSizes[i];
-                                if(interval[i]._lower > finalVal-1) {
-                                    interval[i].invalidate();
+                            leftTupleInterval->constrainUpper(rightTupleInterval->getUpperIds(), true);
+                            rightTupleInterval->constrainLower(leftTupleInterval->getLowerIds(), true);
+                        } else if(varPositionPair.second->colorType->productSize() > varPositionsR[index]->colorType->productSize()){
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                            std::vector<uint32_t> leftLowerVec(leftTupleInterval->getLowerIds().begin(), leftTupleInterval->getLowerIds().begin() + rightTupleInterval->tupleSize());
+                            
+
+                            auto idVec = rightTupleInterval->getUpperIds();
+                            index += varPositionsR[index]->colorType->productSize();
+                            while(idVec.size() < leftTupleInterval->tupleSize()){
+                                if(varPositionsR.count(index)){
+                                    auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                    auto ids = rightTupleInterval.getUpperIds();
+                                    idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                    index += varPositionsR[index]->colorType->productSize();
                                 } else {
-                                    interval[i]._upper = std::min(finalVal-1, interval[i]._upper);
+                                    auto oldSize = idVec.size();
+                                    constantMapR[index]->getTupleId(&idVec);                                    
+                                    index+= idVec.size() - oldSize;
                                 }
                             }
-                        }
-                    }
-                }
 
-                for(auto index : varRightPositions[varName]) {
-                    bool sucess = _left->getVariableRestriction(index, &restrictionvector, &intervalSize);
-                    int32_t modifier = 0;
-                    for(auto idModifierPair : varModifierMapRight[varInterval->_variable]){
-                        if(idModifierPair.first == index){
-                            modifier = idModifierPair.second;
-                        }
-                    }
-                    
-                    if (!sucess) {
-                        //comparing vars
-                        for(auto varPositions : varLeftPositions) {
-                            if(varPositions.second.find(index) != varPositions.second.end()) {
-                                if(varIntervals->count(varPositions.first) == 0){
-                                    continue;
-                                }
-                                auto otherVar = &varIntervals->operator[](varPositions.first);
-                                if(otherVar->size() == 0) {
-                                    continue;
-                                }
+                            leftTupleInterval->constrainUpper(idVec, true);
+                            rightTupleInterval->constrainLower(leftLowerVec, true);
+                        } else {
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                            std::vector<uint32_t> rightUpperVec(rightTupleInterval->getUpperIds().begin(), rightTupleInterval->getUpperIds().begin() + leftTupleInterval->tupleSize());
+                            
 
-                                auto leftMinVec = otherVar->operator[](0).getLowerIds();
-
-                                for(auto& interval : varInterval->_intervalTuple._intervals){
-                                    if (interval.size() != leftMinVec.size()) {
-                                        std::cout << "Interval sizes of variables does not match";
-                                    }
-                                    for(uint32_t i = 0; i < interval.size(); i++) {
-                                        //hope that other direction is handled by right side
-                                        interval[i]._lower = std::max(interval[i]._lower, leftMinVec[i]+1);
-                                    }
+                            auto idVec = leftTupleInterval->getLowerIds();
+                            index += varPositionsL[index]->colorType->productSize();
+                            while(idVec.size() < rightTupleInterval->tupleSize()){
+                                if(varPositionsL.count(index)){
+                                    auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                    auto ids = leftTupleInterval.getLowerIds();
+                                    idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                    index += varPositionsL[index]->colorType->productSize();
+                                } else {
+                                    auto oldSize = idVec.size();
+                                    constantMapL[index]->getTupleId(&idVec);
+                                    index+= idVec.size() - oldSize;
                                 }
                             }
+
+                            leftTupleInterval->constrainUpper(rightUpperVec, true);
+                            rightTupleInterval->constrainLower(idVec, true);
                         }
-                    } else if(restrictionvector.size() == 1) {
-                        int32_t value = restrictionvector.back() + modifier;
-                        auto ctSize = varInterval->_variable->colorType->size();
-                        uint32_t finalVal = value % ctSize;
-                        for(auto& interval : varInterval->_intervalTuple._intervals){
-                            if(interval.getFirst()._upper < finalVal + 1){
-                                interval.getFirst().invalidate();
+                    } else {
+                        auto rightColor = constantMapL[index];
+                        auto leftTupleInterval = &variableMap[varPositionPair.second];
+                        std::vector<uint32_t> idVec;
+                        rightColor->getTupleId(&idVec);
+
+                        index += idVec.size();
+                        while(idVec.size() < leftTupleInterval->tupleSize()){
+                            if(varPositionsR.count(index)){
+                                auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                auto ids = rightTupleInterval.getUpperIds();
+                                idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                index += varPositionsR[index]->colorType->productSize();
                             } else {
-                                interval.getFirst()._lower =  std::max(finalVal+1, interval.getFirst()._lower);
+                                auto oldSize = idVec.size();
+                                constantMapR[index]->getTupleId(&idVec);
+                                index+= idVec.size() - oldSize;
                             }
                         }
-                    } else if (restrictionvector.size() > 1) {
-                        auto ct = (Colored::ProductType *) varInterval->_variable->colorType;
-                        auto constituentSizes = ct->getConstituentsSizes();
-                        for (auto& interval : varInterval->_intervalTuple._intervals){
-                            for(uint32_t i = 0; i < interval.size(); i++){
-                                int32_t value = restrictionvector[i]+modifier;
-                                uint32_t finalVal = value % constituentSizes[i];
-                                if(interval[i]._upper < finalVal+1) {
-                                    interval[i].invalidate();
-                                } else {
-                                    interval[i]._lower = std::max(finalVal+1, interval[i]._lower);
-                                }
-                            }
-                        }
+                        leftTupleInterval->constrainUpper(idVec, true);
                     }
                 }
 
-                
+                for(auto varPositionPair : varPositionsR){
+                    uint32_t index = varPositionPair.first;
+
+                    if(constantMapL.count(index)){
+                        auto leftColor = constantMapL[index];
+                        auto rightTupleInterval = &variableMap[varPositionPair.second];
+                        std::vector<uint32_t> idVec;
+                        leftColor->getTupleId(&idVec);
+
+                        index += idVec.size();
+                        while(idVec.size() < rightTupleInterval->tupleSize()){
+                            if(varPositionsL.count(index)){
+                                auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                auto ids = leftTupleInterval.getLowerIds();
+                                idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                index += varPositionsL[index]->colorType->productSize();
+                            } else {
+                                auto oldSize = idVec.size();
+                                constantMapL[index]->getTupleId(&idVec);
+                                index+= idVec.size() - oldSize;
+                            }
+                        }
+                        rightTupleInterval->constrainUpper(idVec, true);
+                    }
+                }
             }
             
             std::string toString() const override {
@@ -831,145 +886,134 @@ namespace PetriEngine {
                 return _left->eval(context) > _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
-            void restrictVar(Colored::VariableInterval *varInterval, std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
-                std::unordered_map<Colored::Variable *,std::vector<std::pair<uint32_t, int32_t>>>  varModifierMapLeft;
-                std::unordered_map<Colored::Variable *,std::vector<std::pair<uint32_t, int32_t>>>  varModifierMapRight;
+            void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
+                _left->restrictVars(variableMap);
+                _right->restrictVars(variableMap);
+                std::set<Variable *> leftVars;
+                std::set<Variable *> rightVars;
+                std::unordered_map<uint32_t, Colored::Variable *> varPositionsL;
+                std::unordered_map<uint32_t, Colored::Variable *> varPositionsR;
+                std::unordered_map<uint32_t, const Color*> constantMapL;
+                std::unordered_map<uint32_t, const Color*> constantMapR;
                 uint32_t index = 0;
-                std::set<Variable *> vars;
-                std::unordered_map<std::string, std::set<uint32_t>> varLeftPositions, varRightPositions;
-                std::string varName = varInterval->_variable->name;
-                _left->getVariables(vars, varLeftPositions,  varModifierMapLeft, &index);
-                _right->getVariables(vars, varRightPositions,  varModifierMapRight, &index);
-                uint32_t intervalSize = 0;
-                std::vector<uint32_t> restrictionvector;
-                for (auto index : varLeftPositions[varName]) {
-                    bool succes = _right->getVariableRestriction(index, &restrictionvector, &intervalSize);
-                    int32_t modifier = 0;
-                    for(auto idModifierPair : varModifierMapLeft[varInterval->_variable]){
-                        if(idModifierPair.first == index){
-                            modifier = idModifierPair.second;
-                        }
-                    }
-                    
-                    if(!succes) {
-                        //comparing vars
-                        for(auto varPositions : varRightPositions) {
-                            if(varPositions.second.find(index) != varPositions.second.end()) {
-                                if(varIntervals->count(varPositions.first) == 0){
-                                    continue;
-                                }
-                                auto otherVar = &varIntervals->operator[](varPositions.first);
-                                if(otherVar->size() == 0) {
-                                    continue;
-                                }
+                _left->getVariables(leftVars, varPositionsL);
+                _right->getVariables(rightVars, varPositionsR);
+                _left->getConstants(constantMapL, index);
+                index = 0;
+                _right->getConstants(constantMapR, index);
 
-                                auto rightMinVec = otherVar->operator[](0).getLowerIds();
+                if(leftVars.empty() && rightVars.empty()){
+                    return;
+                }
 
-                                for(auto& interval : varInterval->_intervalTuple._intervals){
-                                    if (interval.size() != rightMinVec.size()) {
-                                        std::cout << "Interval sizes of variables does not match";
-                                    }
-                                    for(uint32_t i = 0; i < interval.size(); i++) {
-                                        //hope that other direction is handled by right side
-                                        interval[i]._lower = std::max(interval[i]._lower, rightMinVec[i]+1);
-                                    }
-                                }
-
-                            }
-                        }
-                    } else if(restrictionvector.size() == 1) {
-                        int32_t value = restrictionvector.back() + modifier;
-                        auto ctSize = varInterval->_variable->colorType->size();
-                        uint32_t finalVal = value % ctSize;
-                        for(auto& interval : varInterval->_intervalTuple._intervals){
-                            if(interval.getFirst()._upper < finalVal+1){
-                                interval.getFirst().invalidate();
-                            } else {
-                                interval.getFirst()._lower =  std::max(finalVal+1, interval.getFirst()._lower);
-                            }
-                        }
+                for(auto varPositionPair : varPositionsL){
+                    uint32_t index = varPositionPair.first;
+                    if(varPositionsR.count(index)){
+                        //comparing vars of same size
+                        if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
                         
-                    } else if (restrictionvector.size() > 1) {
-                        auto ct = (Colored::ProductType *) varInterval->_variable->colorType;
-                        auto constituentSizes = ct->getConstituentsSizes();
-                        for (auto& interval : varInterval->_intervalTuple._intervals){
-                            for(uint32_t i = 0; i < interval.size(); i++){
-                                int32_t value = restrictionvector[i]+modifier;
-                                uint32_t finalVal = value % constituentSizes[i];
-                                if(interval[i]._upper < finalVal+1) {
-                                    interval[i].invalidate();
+                            leftTupleInterval->constrainLower(rightTupleInterval->getLowerIds(), true);
+                            rightTupleInterval->constrainUpper(leftTupleInterval->getUpperIds(), true);
+                        } else if(varPositionPair.second->colorType->productSize() > varPositionsR[index]->colorType->productSize()){
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                            std::vector<uint32_t> leftUpperVec(leftTupleInterval->getUpperIds().begin(), leftTupleInterval->getUpperIds().begin() + rightTupleInterval->tupleSize());
+                            
+
+                            auto idVec = rightTupleInterval->getLowerIds();
+                            index += varPositionsR[index]->colorType->productSize();
+                            while(idVec.size() < leftTupleInterval->tupleSize()){
+                                if(varPositionsR.count(index)){
+                                    auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                    auto ids = rightTupleInterval.getLowerIds();
+                                    idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                    index += varPositionsR[index]->colorType->productSize();
                                 } else {
-                                    interval[i]._lower = std::max(finalVal+1, interval[i]._lower);
+                                    auto oldSize = idVec.size();
+                                    constantMapR[index]->getTupleId(&idVec);                                    
+                                    index+= idVec.size() - oldSize;
                                 }
                             }
+
+                            leftTupleInterval->constrainLower(idVec, true);
+                            rightTupleInterval->constrainUpper(leftUpperVec, true);
+                        } else {
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                            std::vector<uint32_t> rightLowerVec(rightTupleInterval->getLowerIds().begin(), rightTupleInterval->getLowerIds().begin() + leftTupleInterval->tupleSize());
+                            
+
+                            auto idVec = leftTupleInterval->getUpperIds();
+                            index += varPositionsL[index]->colorType->productSize();
+                            while(idVec.size() < rightTupleInterval->tupleSize()){
+                                if(varPositionsL.count(index)){
+                                    auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                    auto ids = leftTupleInterval.getUpperIds();
+                                    idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                    index += varPositionsL[index]->colorType->productSize();
+                                } else {
+                                    auto oldSize = idVec.size();
+                                    constantMapL[index]->getTupleId(&idVec);
+                                    index+= idVec.size() - oldSize;
+                                }
+                            }
+
+                            leftTupleInterval->constrainLower(rightLowerVec, true);
+                            rightTupleInterval->constrainUpper(idVec, true);
                         }
+                    } else {
+                        auto rightColor = constantMapL[index];
+                        auto leftTupleInterval = &variableMap[varPositionPair.second];
+                        std::vector<uint32_t> idVec;
+                        rightColor->getTupleId(&idVec);
+
+                        index += idVec.size();
+                        while(idVec.size() < leftTupleInterval->tupleSize()){
+                            if(varPositionsR.count(index)){
+                                auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                auto ids = rightTupleInterval.getLowerIds();
+                                idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                index += varPositionsR[index]->colorType->productSize();
+                            } else {
+                                auto oldSize = idVec.size();
+                                constantMapR[index]->getTupleId(&idVec);
+                                index+= idVec.size() - oldSize;
+                            }
+                        }
+                        leftTupleInterval->constrainLower(idVec, true);
                     }
                 }
-                for (auto index : varRightPositions[varName]) {
-                    bool succes = _left->getVariableRestriction(index, &restrictionvector, &intervalSize);
-                    int32_t modifier = 0;
-                    for(auto idModifierPair : varModifierMapRight[varInterval->_variable]){
-                        if(idModifierPair.first == index){
-                            modifier = idModifierPair.second;
-                        }
-                    }
-                    
-                    if (!succes) {
-                        //comparing vars
-                        for(auto varPositions : varLeftPositions) {
-                            if(varPositions.second.find(index) != varPositions.second.end()) {
-                                if(varIntervals->count(varPositions.first) == 0){
-                                    continue;
-                                }
-                                auto otherVar = &varIntervals->operator[](varPositions.first);
-                                if(otherVar->size() == 0) {
-                                    continue;
-                                }
 
-                                auto leftMaxVec = otherVar->back().getUpperIds();
+                for(auto varPositionPair : varPositionsR){
+                    uint32_t index = varPositionPair.first;
 
-                                for(auto& interval : varInterval->_intervalTuple._intervals){
-                                    if (interval.size() != leftMaxVec.size()) {
-                                        std::cout << "Interval sizes of variables does not match";
-                                    }
-                                    for(uint32_t i = 0; i < interval.size(); i++) {
-                                        //hope that other direction is handled by right side
-                                        interval[i]._upper = std::min(interval[i]._upper, leftMaxVec[i]-1);
-                                    }
-                                }
-                            }
-                        }
-                    } else if(restrictionvector.size() == 1) {
-                        uint32_t value = restrictionvector.back() + modifier;
-                        auto ctSize = varInterval->_variable->colorType->size();
-                        uint32_t finalVal = value % ctSize;
-                        for(auto& interval : varInterval->_intervalTuple._intervals){
-                            if(finalVal == 0 || interval.getFirst()._lower > finalVal - 1){
-                                interval.getFirst().invalidate();
+                    if(constantMapL.count(index)){
+                        auto leftColor = constantMapL[index];
+                        auto rightTupleInterval = &variableMap[varPositionPair.second];
+                        std::vector<uint32_t> idVec;
+                        leftColor->getTupleId(&idVec);
+
+                        index += idVec.size();
+                        while(idVec.size() < rightTupleInterval->tupleSize()){
+                            if(varPositionsL.count(index)){
+                                auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                auto ids = leftTupleInterval.getUpperIds();
+                                idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                index += varPositionsL[index]->colorType->productSize();
                             } else {
-                                interval.getFirst()._upper =  std::max(finalVal-1, interval.getFirst()._upper);
+                                auto oldSize = idVec.size();
+                                constantMapL[index]->getTupleId(&idVec);
+                                index+= idVec.size() - oldSize;
                             }
                         }
-                        
-                    } else if (restrictionvector.size() > 1){
-                        auto ct = (Colored::ProductType *) varInterval->_variable->colorType;
-                        auto constituentSizes = ct->getConstituentsSizes();
-                        for (auto& interval : varInterval->_intervalTuple._intervals){
-                            for(uint32_t i = 0; i < interval.size(); i++){
-                                auto value = restrictionvector[i]+modifier;
-                                uint32_t finalVal = value % constituentSizes[i];
-                                if(finalVal == 0 || interval[i]._lower > finalVal-1) {
-                                    interval[i].invalidate();
-                                } else {
-                                    interval[i]._upper = std::min(finalVal-1, interval[i]._upper);
-                                }
-                            }
-                        }
+                        rightTupleInterval->constrainUpper(idVec, true);
                     }
                 }
             }
@@ -994,144 +1038,134 @@ namespace PetriEngine {
                 return _left->eval(context) <= _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
-            void restrictVar(Colored::VariableInterval *varInterval, std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
-                std::unordered_map<Colored::Variable *,std::vector<std::pair<uint32_t, int32_t>>>  varModifierMapLeft;
-                std::unordered_map<Colored::Variable *,std::vector<std::pair<uint32_t, int32_t>>>  varModifierMapRight;
+            void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
+                _left->restrictVars(variableMap);
+                _right->restrictVars(variableMap);
+                std::set<Variable *> leftVars;
+                std::set<Variable *> rightVars;
+                std::unordered_map<uint32_t, Colored::Variable *> varPositionsL;
+                std::unordered_map<uint32_t, Colored::Variable *> varPositionsR;
+                std::unordered_map<uint32_t, const Color*> constantMapL;
+                std::unordered_map<uint32_t, const Color*> constantMapR;
                 uint32_t index = 0;
-                std::set<Variable *> vars;
-                std::unordered_map<std::string, std::set<uint32_t>> varLeftPositions, varRightPositions;
-                std::string varName = varInterval->_variable->name;
-                _left->getVariables(vars, varLeftPositions,  varModifierMapLeft, &index);
-                _right->getVariables(vars, varRightPositions,  varModifierMapRight, &index);
-                uint32_t intervalSize = 0;
-                std::vector<uint32_t> restrictionvector;
-                for (auto index : varLeftPositions[varName]) {
-                    bool succes = _right->getVariableRestriction(index, &restrictionvector, &intervalSize);
-                    int32_t modifier = 0;
-                    for(auto idModifierPair : varModifierMapLeft[varInterval->_variable]){
-                        if(idModifierPair.first == index){
-                            modifier = idModifierPair.second;
-                        }
-                    }
+                _left->getVariables(leftVars, varPositionsL);
+                _right->getVariables(rightVars, varPositionsR);
+                _left->getConstants(constantMapL, index);
+                index = 0;
+                _right->getConstants(constantMapR, index);
 
-                    if (!succes) {
-                        //comparing vars
-                        for(auto varPositions : varRightPositions) {
-                            if(varPositions.second.find(index) != varPositions.second.end()) {
-                                if(varIntervals->count(varPositions.first) == 0){
-                                    continue;
-                                }
-                                auto otherVar = &varIntervals->operator[](varPositions.first);
-                                if(otherVar->size() == 0) {
-                                    continue;
-                                }
+                if(leftVars.empty() && rightVars.empty()){
+                    return;
+                }
 
-                                auto rightMaxVec = otherVar->back().getUpperIds();
-
-                                for(auto& interval : varInterval->_intervalTuple._intervals){
-                                    if (interval.size() != rightMaxVec.size()) {
-                                        std::cout << "Interval sizes of variables does not match";
-                                    }
-                                    for(uint32_t i = 0; i < interval.size(); i++) {
-                                        //hope that other direction is handled by right side
-                                        interval[i]._upper = std::min(interval[i]._upper, rightMaxVec[i]);
-                                    }
-                                }
-                            }
-                        }
-                    } else if(restrictionvector.size() == 1) {
-                        uint32_t value = restrictionvector.back() + modifier;
-                        auto ctSize = varInterval->_variable->colorType->size();
-                        uint32_t finalVal = value % ctSize;
-                        for(auto& interval : varInterval->_intervalTuple._intervals){
-                            if(interval.getFirst()._lower > finalVal ){
-                                interval.getFirst().invalidate();
-                            } else {
-                                interval.getFirst()._upper =  std::max(finalVal, interval.getFirst()._upper);
-                            }
-                        }
+                for(auto varPositionPair : varPositionsL){
+                    uint32_t index = varPositionPair.first;
+                    if(varPositionsR.count(index)){
+                        //comparing vars of same size
+                        if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
                         
-                    } else if (restrictionvector.size() > 1){
-                        auto ct = (Colored::ProductType *) varInterval->_variable->colorType;
-                        auto constituentSizes = ct->getConstituentsSizes();
-                        for (auto& interval : varInterval->_intervalTuple._intervals){
-                            for(uint32_t i = 0; i < interval.size(); i++){
-                                auto value = restrictionvector[i]+modifier;
-                                uint32_t finalVal = value % constituentSizes[i];
-                                if(interval[i]._lower > finalVal) {
-                                    interval[i].invalidate();
+                            leftTupleInterval->constrainUpper(rightTupleInterval->getUpperIds(), false);
+                            rightTupleInterval->constrainLower(leftTupleInterval->getLowerIds(), false);
+                        } else if(varPositionPair.second->colorType->productSize() > varPositionsR[index]->colorType->productSize()){
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                            std::vector<uint32_t> leftLowerVec(leftTupleInterval->getLowerIds().begin(), leftTupleInterval->getLowerIds().begin() + rightTupleInterval->tupleSize());
+                            
+
+                            auto idVec = rightTupleInterval->getUpperIds();
+                            index += varPositionsR[index]->colorType->productSize();
+                            while(idVec.size() < leftTupleInterval->tupleSize()){
+                                if(varPositionsR.count(index)){
+                                    auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                    auto ids = rightTupleInterval.getUpperIds();
+                                    idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                    index += varPositionsR[index]->colorType->productSize();
                                 } else {
-                                    interval[i]._upper = std::min(finalVal, interval[i]._upper);
+                                    auto oldSize = idVec.size();
+                                    constantMapR[index]->getTupleId(&idVec);                                    
+                                    index+= idVec.size() - oldSize;
                                 }
                             }
+
+                            leftTupleInterval->constrainUpper(idVec, false);
+                            rightTupleInterval->constrainLower(leftLowerVec, false);
+                        } else {
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                            std::vector<uint32_t> rightUpperVec(rightTupleInterval->getUpperIds().begin(), rightTupleInterval->getUpperIds().begin() + leftTupleInterval->tupleSize());
+                            
+
+                            auto idVec = leftTupleInterval->getLowerIds();
+                            index += varPositionsL[index]->colorType->productSize();
+                            while(idVec.size() < rightTupleInterval->tupleSize()){
+                                if(varPositionsL.count(index)){
+                                    auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                    auto ids = leftTupleInterval.getLowerIds();
+                                    idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                    index += varPositionsL[index]->colorType->productSize();
+                                } else {
+                                    auto oldSize = idVec.size();
+                                    constantMapL[index]->getTupleId(&idVec);
+                                    index+= idVec.size() - oldSize;
+                                }
+                            }
+
+                            leftTupleInterval->constrainUpper(rightUpperVec, false);
+                            rightTupleInterval->constrainLower(idVec, false);
                         }
+                    } else {
+                        auto rightColor = constantMapL[index];
+                        auto leftTupleInterval = &variableMap[varPositionPair.second];
+                        std::vector<uint32_t> idVec;
+                        rightColor->getTupleId(&idVec);
+
+                        index += idVec.size();
+                        while(idVec.size() < leftTupleInterval->tupleSize()){
+                            if(varPositionsR.count(index)){
+                                auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                auto ids = rightTupleInterval.getUpperIds();
+                                idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                index += varPositionsR[index]->colorType->productSize();
+                            } else {
+                                auto oldSize = idVec.size();
+                                constantMapR[index]->getTupleId(&idVec);
+                                index+= idVec.size() - oldSize;
+                            }
+                        }
+                        leftTupleInterval->constrainUpper(idVec, false);
                     }
                 }
-                for (auto index : varRightPositions[varName]) {
-                    bool succes = _left->getVariableRestriction(index, &restrictionvector, &intervalSize);
-                    int32_t modifier = 0;
-                    for(auto idModifierPair : varModifierMapRight[varInterval->_variable]){
-                        if(idModifierPair.first == index){
-                            modifier = idModifierPair.second;
-                        }
-                    }
-                    
-                    if(!succes) {
-                        //comparing vars
-                        for(auto varPositions : varLeftPositions) {
-                            if(varPositions.second.find(index) != varPositions.second.end()) {
-                                if(varIntervals->count(varPositions.first) == 0){
-                                    continue;
-                                }
-                                auto otherVar = &varIntervals->operator[](varPositions.first);
-                                if(otherVar->size() == 0) {
-                                    continue;
-                                }
 
-                                auto leftMinVec = otherVar->operator[](0).getLowerIds();
+                for(auto varPositionPair : varPositionsR){
+                    uint32_t index = varPositionPair.first;
 
-                                for(auto& interval : varInterval->_intervalTuple._intervals){
-                                    if (interval.size() != leftMinVec.size()) {
-                                        std::cout << "Interval sizes of variables does not match";
-                                    }
-                                    for(uint32_t i = 0; i < interval.size(); i++) {
-                                        //hope that other direction is handled by right side
-                                        interval[i]._lower = std::max(interval[i]._lower, leftMinVec[i]);
-                                    }
-                                }
-                            }
-                        }
-                    } else if(restrictionvector.size() == 1) {
-                        int32_t value = restrictionvector.back() + modifier;
-                        auto ctSize = varInterval->_variable->colorType->size();
-                        uint32_t finalVal = value % ctSize;
-                        for(auto& interval : varInterval->_intervalTuple._intervals){
-                            if(interval.getFirst()._upper < finalVal){
-                                interval.getFirst().invalidate();
+                    if(constantMapL.count(index)){
+                        auto leftColor = constantMapL[index];
+                        auto rightTupleInterval = &variableMap[varPositionPair.second];
+                        std::vector<uint32_t> idVec;
+                        leftColor->getTupleId(&idVec);
+
+                        index += idVec.size();
+                        while(idVec.size() < rightTupleInterval->tupleSize()){
+                            if(varPositionsL.count(index)){
+                                auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                auto ids = leftTupleInterval.getLowerIds();
+                                idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                index += varPositionsL[index]->colorType->productSize();
                             } else {
-                                interval.getFirst()._lower =  std::max(finalVal, interval.getFirst()._lower);
+                                auto oldSize = idVec.size();
+                                constantMapL[index]->getTupleId(&idVec);
+                                index+= idVec.size() - oldSize;
                             }
                         }
-                        
-                    } else if (restrictionvector.size() > 1) {
-                        auto ct = (Colored::ProductType *) varInterval->_variable->colorType;
-                        auto constituentSizes = ct->getConstituentsSizes();
-                        for (auto& interval : varInterval->_intervalTuple._intervals){
-                            for(uint32_t i = 0; i < interval.size(); i++){
-                                int32_t value = restrictionvector[i]+modifier;
-                                uint32_t finalVal = value % constituentSizes[i];
-                                if(interval[i]._upper < finalVal) {
-                                    interval[i].invalidate();
-                                } else {
-                                    interval[i]._lower = std::max(finalVal, interval[i]._lower);
-                                }
-                            }
-                        }
+                        rightTupleInterval->constrainUpper(idVec, false);
                     }
                 }
             }
@@ -1156,145 +1190,134 @@ namespace PetriEngine {
                 return _left->eval(context) >= _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
-            void restrictVar(Colored::VariableInterval *varInterval, std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
-                std::unordered_map<Colored::Variable *,std::vector<std::pair<uint32_t, int32_t>>>  varModifierMapLeft;
-                std::unordered_map<Colored::Variable *,std::vector<std::pair<uint32_t, int32_t>>>  varModifierMapRight;
+            void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
+                _left->restrictVars(variableMap);
+                _right->restrictVars(variableMap);
+                std::set<Variable *> leftVars;
+                std::set<Variable *> rightVars;
+                std::unordered_map<uint32_t, Colored::Variable *> varPositionsL;
+                std::unordered_map<uint32_t, Colored::Variable *> varPositionsR;
+                std::unordered_map<uint32_t, const Color*> constantMapL;
+                std::unordered_map<uint32_t, const Color*> constantMapR;
                 uint32_t index = 0;
-                std::set<Variable *> vars;
-                std::unordered_map<std::string, std::set<uint32_t>> varLeftPositions, varRightPositions;
-                std::string varName = varInterval->_variable->name;
-                _left->getVariables(vars, varLeftPositions,  varModifierMapLeft, &index);
-                _right->getVariables(vars, varRightPositions,  varModifierMapRight, &index);
-                uint32_t intervalSize = 0;
-                std::vector<uint32_t> restrictionvector;
-                for (auto index : varLeftPositions[varName]) {
-                    bool succes = _right->getVariableRestriction(index, &restrictionvector, &intervalSize);
-                    int32_t modifier = 0;
-                    for(auto idModifierPair : varModifierMapLeft[varInterval->_variable]){
-                        if(idModifierPair.first == index){
-                            modifier = idModifierPair.second;
-                        }
-                    }
-                    
-                    if (!succes) {
-                        //comparing vars
-                        for(auto varPositions : varRightPositions) {
-                            if(varPositions.second.find(index) != varPositions.second.end()) {
-                                if(varIntervals->count(varPositions.first) == 0){
-                                    continue;
-                                }
-                                auto otherVar = &varIntervals->operator[](varPositions.first);
-                                if(otherVar->size() == 0) {
-                                    continue;
-                                }
+                _left->getVariables(leftVars, varPositionsL);
+                _right->getVariables(rightVars, varPositionsR);
+                _left->getConstants(constantMapL, index);
+                index = 0;
+                _right->getConstants(constantMapR, index);
+.
+                if(leftVars.empty() && rightVars.empty()){
+                    return;
+                }
 
-                                auto rightMinVec = otherVar->operator[](0).getLowerIds();
-
-                                for(auto& interval : varInterval->_intervalTuple._intervals){
-                                    if (interval.size() != rightMinVec.size()) {
-                                        std::cout << "Interval sizes of variables does not match";
-                                    }
-                                    for(uint32_t i = 0; i < interval.size(); i++) {
-                                        //hope that other direction is handled by right side
-                                        interval[i]._lower = std::max(interval[i]._lower, rightMinVec[i]);
-                                    }
-                                }
-
-                            }
-                        }
-                    }else if(restrictionvector.size() == 1) {
-                        int32_t value = restrictionvector.back() + modifier;
-                        auto ctSize = varInterval->_variable->colorType->size();
-                        uint32_t finalVal = value % ctSize;
-                        for(auto& interval : varInterval->_intervalTuple._intervals){
-                            if(interval.getFirst()._upper < finalVal){
-                                interval.getFirst().invalidate();
-                            } else {
-                                interval.getFirst()._lower =  std::max(finalVal, interval.getFirst()._lower);
-                            }
-                        }
+                for(auto varPositionPair : varPositionsL){
+                    uint32_t index = varPositionPair.first;
+                    if(varPositionsR.count(index)){
+                        //comparing vars of same size
+                        if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
                         
-                    } else if (restrictionvector.size() > 1) {
-                        auto ct = (Colored::ProductType *) varInterval->_variable->colorType;
-                        auto constituentSizes = ct->getConstituentsSizes();
-                        for (auto& interval : varInterval->_intervalTuple._intervals){
-                            for(uint32_t i = 0; i < interval.size(); i++){
-                                int32_t value = restrictionvector[i]+modifier;
-                                uint32_t finalVal = value % constituentSizes[i];
-                                if(interval[i]._upper < finalVal) {
-                                    interval[i].invalidate();
+                            leftTupleInterval->constrainLower(rightTupleInterval->getLowerIds(), false);
+                            rightTupleInterval->constrainUpper(leftTupleInterval->getUpperIds(), false);
+                        } else if(varPositionPair.second->colorType->productSize() > varPositionsR[index]->colorType->productSize()){
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                            std::vector<uint32_t> leftUpperVec(leftTupleInterval->getUpperIds().begin(), leftTupleInterval->getUpperIds().begin() + rightTupleInterval->tupleSize());
+                            
+
+                            auto idVec = rightTupleInterval->getLowerIds();
+                            index += varPositionsR[index]->colorType->productSize();
+                            while(idVec.size() < leftTupleInterval->tupleSize()){
+                                if(varPositionsR.count(index)){
+                                    auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                    auto ids = rightTupleInterval.getLowerIds();
+                                    idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                    index += varPositionsR[index]->colorType->productSize();
                                 } else {
-                                    interval[i]._lower = std::max(finalVal, interval[i]._lower);
+                                    auto oldSize = idVec.size();
+                                    constantMapR[index]->getTupleId(&idVec);                                    
+                                    index+= idVec.size() - oldSize;
                                 }
                             }
+
+                            leftTupleInterval->constrainLower(idVec, false);
+                            rightTupleInterval->constrainUpper(leftUpperVec, false);
+                        } else {
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                            std::vector<uint32_t> rightLowerVec(rightTupleInterval->getLowerIds().begin(), rightTupleInterval->getLowerIds().begin() + leftTupleInterval->tupleSize());
+                            
+
+                            auto idVec = leftTupleInterval->getUpperIds();
+                            index += varPositionsL[index]->colorType->productSize();
+                            while(idVec.size() < rightTupleInterval->tupleSize()){
+                                if(varPositionsL.count(index)){
+                                    auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                    auto ids = leftTupleInterval.getUpperIds();
+                                    idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                    index += varPositionsL[index]->colorType->productSize();
+                                } else {
+                                    auto oldSize = idVec.size();
+                                    constantMapL[index]->getTupleId(&idVec);
+                                    index+= idVec.size() - oldSize;
+                                }
+                            }
+
+                            leftTupleInterval->constrainLower(rightLowerVec, false);
+                            rightTupleInterval->constrainUpper(idVec, false);
                         }
+                    } else {
+                        auto rightColor = constantMapL[index];
+                        auto leftTupleInterval = &variableMap[varPositionPair.second];
+                        std::vector<uint32_t> idVec;
+                        rightColor->getTupleId(&idVec);
+
+                        index += idVec.size();
+                        while(idVec.size() < leftTupleInterval->tupleSize()){
+                            if(varPositionsR.count(index)){
+                                auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                auto ids = rightTupleInterval.getLowerIds();
+                                idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                index += varPositionsR[index]->colorType->productSize();
+                            } else {
+                                auto oldSize = idVec.size();
+                                constantMapR[index]->getTupleId(&idVec);
+                                index+= idVec.size() - oldSize;
+                            }
+                        }
+                        leftTupleInterval->constrainLower(idVec, false);
                     }
                 }
-                for (auto index : varRightPositions[varName]) {
-                    bool succes = _left->getVariableRestriction(index, &restrictionvector, &intervalSize);
-                    int32_t modifier = 0;
-                    for(auto idModifierPair : varModifierMapRight[varInterval->_variable]){
-                        if(idModifierPair.first == index){
-                            modifier = idModifierPair.second;
-                        }
-                    }
-                    
-                    if (!succes) {
-                        //comparing vars
-                        for(auto varPositions : varLeftPositions) {
-                            if(varPositions.second.find(index) != varPositions.second.end()) {
-                                if(varIntervals->count(varPositions.first) == 0){
-                                    continue;
-                                }
-                                auto otherVar = &varIntervals->operator[](varPositions.first);
-                                if(otherVar->size() == 0) {
-                                    continue;
-                                }
 
-                                auto leftMaxVec = otherVar->back().getUpperIds();
+                for(auto varPositionPair : varPositionsR){
+                    uint32_t index = varPositionPair.first;
 
-                                for(auto& interval : varInterval->_intervalTuple._intervals){
-                                    if (interval.size() != leftMaxVec.size()) {
-                                        std::cout << "Interval sizes of variables does not match";
-                                    }
-                                    for(uint32_t i = 0; i < interval.size(); i++) {
-                                        //hope that other direction is handled by right side
-                                        interval[i]._upper = std::min(interval[i]._upper, leftMaxVec[i]);
-                                    }
-                                }
-                            }
-                        }
-                    } else if(restrictionvector.size() == 1) {
-                        uint32_t value = restrictionvector.back() + modifier;
-                        auto ctSize = varInterval->_variable->colorType->size();
-                        uint32_t finalVal = value % ctSize;
-                        for(auto& interval : varInterval->_intervalTuple._intervals){
-                            if(interval.getFirst()._lower > finalVal){
-                                interval.getFirst().invalidate();
+                    if(constantMapL.count(index)){
+                        auto leftColor = constantMapL[index];
+                        auto rightTupleInterval = &variableMap[varPositionPair.second];
+                        std::vector<uint32_t> idVec;
+                        leftColor->getTupleId(&idVec);
+
+                        index += idVec.size();
+                        while(idVec.size() < rightTupleInterval->tupleSize()){
+                            if(varPositionsL.count(index)){
+                                auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                auto ids = leftTupleInterval.getUpperIds();
+                                idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                index += varPositionsL[index]->colorType->productSize();
                             } else {
-                                interval.getFirst()._upper =  std::max(finalVal, interval.getFirst()._upper);
+                                auto oldSize = idVec.size();
+                                constantMapL[index]->getTupleId(&idVec);
+                                index+= idVec.size() - oldSize;
                             }
                         }
-                        
-                    } else if (restrictionvector.size() > 1){
-                        auto ct = (Colored::ProductType *) varInterval->_variable->colorType;
-                        auto constituentSizes = ct->getConstituentsSizes();
-                        for (auto& interval : varInterval->_intervalTuple._intervals){
-                            for(uint32_t i = 0; i < interval.size(); i++){
-                                auto value = restrictionvector[i]+modifier;
-                                uint32_t finalVal = value % constituentSizes[i];
-                                if(interval[i]._lower > finalVal) {
-                                    interval[i].invalidate();
-                                } else {
-                                    interval[i]._upper = std::min(finalVal, interval[i]._upper);
-                                }
-                            }
-                        }
+                        rightTupleInterval->constrainUpper(idVec, false);
                     }
                 }
             }
@@ -1318,166 +1341,155 @@ namespace PetriEngine {
                 return _left->eval(context) == _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
-            void restrictVar(Colored::VariableInterval *varInterval, std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
-                std::unordered_map<Colored::Variable *,std::vector<std::pair<uint32_t, int32_t>>>  varModifierMapLeft;
-                std::unordered_map<Colored::Variable *,std::vector<std::pair<uint32_t, int32_t>>>  varModifierMapRight;
+            void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
+                _left->restrictVars(variableMap);
+                _right->restrictVars(variableMap);
+                std::set<Variable *> leftVars;
+                std::set<Variable *> rightVars;
+                std::unordered_map<uint32_t, Colored::Variable *> varPositionsL;
+                std::unordered_map<uint32_t, Colored::Variable *> varPositionsR;
+                std::unordered_map<uint32_t, const Color*> constantMapL;
+                std::unordered_map<uint32_t, const Color*> constantMapR;
                 uint32_t index = 0;
-                std::set<Variable *> vars;
-                std::unordered_map<std::string, std::set<uint32_t>> varLeftPositions, varRightPositions;
-                std::string varName = varInterval->_variable->name;
-                _left->getVariables(vars, varLeftPositions,  varModifierMapLeft, &index);
-                _right->getVariables(vars, varRightPositions,  varModifierMapRight, &index);
-                uint32_t intervalSize = 0;
+                _left->getVariables(leftVars, varPositionsL);
+                _right->getVariables(rightVars, varPositionsR);
+                _left->getConstants(constantMapL, index);
+                index = 0;
+                _right->getConstants(constantMapR, index);
 
-                std::vector<uint32_t> restrictionvector;
-                for (auto index : varLeftPositions[varName]) {
-                    bool succes = _right->getVariableRestriction(index, &restrictionvector, &intervalSize);
-                    int32_t modifier = 0;
-                    for(auto idModifierPair : varModifierMapLeft[varInterval->_variable]){
-                        if(idModifierPair.first == index){
-                            modifier = idModifierPair.second;
-                        }
-                    }
+                if(leftVars.empty() && rightVars.empty()){
+                    return;
+                }
 
-                    if (!succes) {
-                        //comparing vars;
-                        for(auto varPositions : varRightPositions) {
-                            if(varPositions.second.find(index) != varPositions.second.end()) {
-                                if(varIntervals->count(varPositions.first) == 0){
-                                    continue;
-                                }
+                for(auto varPositionPair : varPositionsL){
+                    uint32_t index = varPositionPair.first;
+                    if(varPositionsR.count(index)){
+                        //comparing vars of same size
+                        if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
+                            Reachability::intervalTuple_t newIntervalTuple;
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                            for(auto leftInterval : leftTupleInterval->_intervals){
+                                for(auto rightInterval : rightTupleInterval->_intervals){
+                                    auto intervalOverlap = leftInterval.getOverlap(rightInterval);
 
-                                auto otherVar = &varIntervals->operator[](varPositions.first);
-                                if(otherVar->size() == 0) {
-                                    continue;
-                                }
-
-                                for(auto& interval : varInterval->_intervalTuple._intervals){
-                                    for(auto& otherInterval : otherVar->_intervalTuple._intervals){
-                                        for(uint32_t j = 0; j < interval.size(); j++){
-                                            Reachability::range_t oldRange = interval[j];
-                                            Reachability::range_t otherOldRange = otherInterval[j];
-                                            interval[j] &= otherInterval[j];
-                                            otherInterval[j] &= interval[j];
-
-                                            if(varInterval->size() == 1 && !interval[j].isSound()){
-                                                interval[j] = oldRange;
-                                            }
-                                            if(otherInterval.size() == 1 && !otherInterval[j].isSound()){
-                                                otherInterval[j] = otherOldRange;
-                                            }
-                                        }
+                                    if(intervalOverlap.isSound()){
+                                        newIntervalTuple.addInterval(intervalOverlap);
                                     }
                                 }
-                                varInterval->_intervalTuple.mergeIntervals();
-                                otherVar->_intervalTuple.mergeIntervals();
                             }
-                        }
                         
-                    } else if(restrictionvector.size() == 1) {
-                        auto ctSize = varInterval->_variable->colorType->size();
-                        auto value = restrictionvector.back() + modifier;
-                        auto finalVal = value % ctSize;
-                        for(auto& interval : varInterval->_intervalTuple._intervals){
-                            if(interval.getFirst().contains(finalVal)){
-                                interval.getFirst() &= finalVal;
-                            } else {
-                                interval.getFirst().invalidate();
-                            }                            
-                        }
-                    } else if (restrictionvector.size() > 1) {
-                        //handle tuple vars
-                        auto ct = (Colored::ProductType *) varInterval->_variable->colorType;
-                        auto constituentSizes = ct->getConstituentsSizes();
-                        for (auto& interval : varInterval->_intervalTuple._intervals){
-                            for(uint32_t i = 0; i < interval.size(); i++){
-                                auto value = restrictionvector[i]+modifier;
-                                auto finalVal = value % constituentSizes[i];
-                                if(interval[i].contains(finalVal)){
-                                    interval[i] &= finalVal;
+                            *leftTupleInterval = newIntervalTuple;
+                            *rightTupleInterval = newIntervalTuple;
+                        } else if(varPositionPair.second->colorType->productSize() > varPositionsR[index]->colorType->productSize()){
+                            auto leftTupleInterval = &variableMap[varPositionPair.second];
+                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                            std::vector<Reachability::interval_t> resizedLeftIntervals;
+                            for(auto interval : leftTupleInterval->_intervals){
+                                Reachability::interval_t resizedInterval;
+                                for(uint32_t i = 0; i < varPositionsR[index]->colorType->productSize(); i++){
+                                    resizedInterval.addRange(interval[i]);
+                                }
+                                resizedLeftIntervals.push_back(resizedInterval);
+                            }
+                            
+
+                            auto intervalVec = rightTupleInterval->_intervals;
+                            index += varPositionsR[index]->colorType->productSize();
+                            while(intervalVec.size() < leftTupleInterval->tupleSize()){
+                                if(varPositionsR.count(index)){
+                                    auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                    intervalVec.insert(intervalVec.end(), rightTupleInterval._intervals.begin(), rightTupleInterval._intervals.end());
+                                    index += varPositionsR[index]->colorType->productSize();
                                 } else {
-                                    interval[i].invalidate();
-                                    break;
-                                }                                
+                                    std::vector<uint32_t> colorIdVec;
+                                    constantMapR[index]->getTupleId(&colorIdVec);
+                                    for(auto id : colorIdVec){
+                                        for(auto interval : intervalVec){
+                                            interval.addRange(id,id);
+                                        }
+                                    }                                   
+                                    index+= idVec.size() - oldSize;
+                                }
+                            }
+
+                            leftTupleInterval.constrainLower(idVec, false);
+                            rightTupleInterval.constrainUpper(leftUpperVec, false);
+                        } else {
+                            auto leftTupleInterval = variableMap[varPositionPair.second];
+                            auto rightTupleInterval = variableMap[varPositionsR[index]];
+                            std::vector<uint32_t> rightLowerVec(rightTupleInterval.getLowerIds().begin(), rightTupleInterval.getLowerIds().begin() + leftTupleInterval.tupleSize());
+                            
+
+                            auto idVec = leftTupleInterval.getUpperIds();
+                            index += varPositionsL[index]->colorType->productSize();
+                            while(idVec.size() < rightTupleInterval.tupleSize()){
+                                if(varPositionsL.count(index)){
+                                    auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                    auto ids = leftTupleInterval.getUpperIds();
+                                    idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                    index += varPositionsL[index]->colorType->productSize();
+                                } else {
+                                    auto oldSize = idVec.size();
+                                    constantMapL[index]->getTupleId(&idVec);
+                                    index+= idVec.size() - oldSize;
+                                }
+                            }
+
+                            leftTupleInterval.constrainLower(rightLowerVec, false);
+                            rightTupleInterval.constrainUpper(idVec, false);
+                        }
+                    } else {
+                        auto rightColor = constantMapL[index];
+                        auto leftTupleInterval = variableMap[varPositionPair.second];
+                        std::vector<uint32_t> idVec;
+                        rightColor->getTupleId(&idVec);
+
+                        index += idVec.size();
+                        while(idVec.size() < leftTupleInterval.tupleSize()){
+                            if(varPositionsR.count(index)){
+                                auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                auto ids = rightTupleInterval.getLowerIds();
+                                idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                index += varPositionsR[index]->colorType->productSize();
+                            } else {
+                                auto oldSize = idVec.size();
+                                constantMapR[index]->getTupleId(&idVec);
+                                index+= idVec.size() - oldSize;
                             }
                         }
+                        leftTupleInterval.constrainLower(idVec, false);
                     }
                 }
-                for (auto index : varRightPositions[varName]) {
-                    bool succes = _left->getVariableRestriction(index, &restrictionvector, &intervalSize);
-                    int32_t modifier = 0;
-                    for(auto idModifierPair : varModifierMapRight[varInterval->_variable]){
-                        if(idModifierPair.first == index){
-                            modifier = idModifierPair.second;
-                        }
-                    }
 
-                    if (!succes) {
-                        //comparing vars
-                        for(auto varPositions : varLeftPositions) {
-                            if(varPositions.second.find(index) != varPositions.second.end()) {
-                                if(varIntervals->count(varPositions.first) == 0){
-                                    continue;
-                                }
-                                auto otherVar = &varIntervals->operator[](varPositions.first);
-                                if(otherVar->size() == 0) {
-                                    continue;
-                                }
+                for(auto varPositionPair : varPositionsR){
+                    uint32_t index = varPositionPair.first;
 
-                                for(auto& interval : varInterval->_intervalTuple._intervals){
-                                    for(auto& otherInterval : otherVar->_intervalTuple._intervals){
-                                        for(uint32_t j = 0; j < interval.size(); j++){
-                                            Reachability::range_t oldRange = interval[j];
-                                            Reachability::range_t otherOldRange = otherInterval[j];
-                                            interval[j] &= otherInterval[j];
-                                            otherInterval[j] &= interval[j];
+                    if(constantMapL.count(index)){
+                        auto leftColor = constantMapL[index];
+                        auto rightTupleInterval = variableMap[varPositionPair.second];
+                        std::vector<uint32_t> idVec;
+                        leftColor->getTupleId(&idVec);
 
-                                            if(!interval[j].isSound()){
-                                                interval[j] = oldRange;
-                                            }
-                                            if(!otherInterval[j].isSound()){
-                                                otherInterval[j] = otherOldRange;
-                                            }
-                                        }
-                                    }
-                                }
-                                varInterval->_intervalTuple.mergeIntervals();
-                                otherVar->_intervalTuple.mergeIntervals();
-
-                            }
-                        }
-                    } else if(restrictionvector.size() == 1) {
-                        auto ctSize = varInterval->_variable->colorType->size();
-                        auto value = restrictionvector.back() + modifier;
-                        auto finalVal = value % ctSize;
-                        for(auto& interval : varInterval->_intervalTuple._intervals){
-                            if(interval.getFirst().contains(finalVal)){
-                                interval.getFirst() &= finalVal;
+                        index += idVec.size();
+                        while(idVec.size() < rightTupleInterval.tupleSize()){
+                            if(varPositionsL.count(index)){
+                                auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                auto ids = leftTupleInterval.getUpperIds();
+                                idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                index += varPositionsL[index]->colorType->productSize();
                             } else {
-                                interval.getFirst().invalidate();
-                            }                           
-                        }
-                    } else if (restrictionvector.size() > 1) {
-                        //handle tuple vars
-                        auto ct = (Colored::ProductType *) varInterval->_variable->colorType;
-                        auto constituentSizes = ct->getConstituentsSizes();
-                        for (auto& interval : varInterval->_intervalTuple._intervals){
-                            for(uint32_t i = 0; i < interval.size(); i++){
-                                auto value = restrictionvector[i]+modifier;
-                                auto finalVal = value % constituentSizes[i];
-                                if(interval[i].contains(finalVal)){
-                                    interval[i] &= finalVal;
-                                } else {
-                                    interval[i].invalidate();
-                                    break;
-                                }                                 
+                                auto oldSize = idVec.size();
+                                constantMapL[index]->getTupleId(&idVec);
+                                index+= idVec.size() - oldSize;
                             }
                         }
+                        rightTupleInterval.constrainUpper(idVec, false);
                     }
                 }
             }
@@ -1501,12 +1513,12 @@ namespace PetriEngine {
                 return _left->eval(context) != _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
-            void restrictVar(Colored::VariableInterval *varInterval, std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+            void restrictVar(Colored::ArcIntervals *varInterval, std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals) const override {
                 /*int32_t leftModifier = 0, rightmodifier = 0;
                 int32_t varIndexLeft = _left->getVariableIndex(varInterval->varaible, &leftModifier);
                 int32_t varIndexRight = _right->getVariableIndex(varInterval->varaible, &rightmodifier);
@@ -1570,7 +1582,7 @@ namespace PetriEngine {
                 return !_expr->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _expr->getVariables(variables, varPositions, varModifierMap);
             }
 
@@ -1579,7 +1591,7 @@ namespace PetriEngine {
                 return res;
             }
 
-            void restrictVar(Colored::VariableInterval *varInterval, std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+            void restrictVar(Colored::ArcIntervals *varInterval, std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals) const override {
                 Reachability::intervalTuple_t fullInterval;
                 Reachability::interval_t interval = varInterval->_variable->colorType->getFullInterval();
                 
@@ -1601,12 +1613,12 @@ namespace PetriEngine {
                 return _left->eval(context) && _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
-            void restrictVar(Colored::VariableInterval *varInterval,std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
+            void restrictVar(Colored::ArcIntervals *varInterval,std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals) const override {
                 _left->restrictVar(varInterval, varIntervals);
                 _right->restrictVar(varInterval, varIntervals);
             }
@@ -1636,13 +1648,13 @@ namespace PetriEngine {
                 return _left->eval(context) || _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
-            void restrictVar(Colored::VariableInterval *varInterval, std::unordered_map<std::string, Colored::VariableInterval> *varIntervals) const override {
-                Colored::VariableInterval varIntervalCopy = Colored::VariableInterval {varInterval->_variable, varInterval->_intervalTuple};
+            void restrictVar(Colored::ArcIntervals *varInterval, std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals) const override {
+                Colored::ArcIntervals varIntervalCopy = Colored::ArcIntervals {varInterval->_variable, varInterval->_intervalTuple};
                 _left->restrictVar(varInterval, varIntervals);
                 _right->restrictVar(&varIntervalCopy, varIntervals);
 
@@ -1673,7 +1685,9 @@ namespace PetriEngine {
             virtual void expressionType() override {
                 std::cout << "ArcExpression" << std::endl;
             }
-            virtual void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const = 0;
+            virtual void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const = 0;
+
+            virtual void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const = 0;
 
             virtual uint32_t weight() const = 0;
         };
@@ -1695,13 +1709,34 @@ namespace PetriEngine {
                 return colors;
             }
 
-            void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const {
+            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const {
                 for (size_t i = 0; i < _sort->size(); i++) {
-                    constantMap[&(*_sort)[i]].push_back(index);
+                    constantMap[index] = &(*_sort)[i];
                 }
             }
 
-            
+            void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const {
+                Reachability::range_t fullRange(0, _sort->size()-1);
+                std::vector<Reachability::interval_t> intervalsForRemoval;
+                
+                if(arcIntervals._intervalTuple._intervals.empty()){
+                    for(auto interval : cfp.constraints._intervals){
+                        if(interval[*index].compare(fullRange).first){
+                            arcIntervals._intervalTuple.addInterval(interval);
+                        }
+                    }
+                } else {
+                    for(auto interval : arcIntervals._intervalTuple._intervals){
+                        if(!interval[*index].compare(fullRange).first){
+                            intervalsForRemoval.push_back(interval);
+                        }
+                    }
+
+                    for (auto interval : intervalsForRemoval){
+                        arcIntervals._intervalTuple.removeInterval(interval);
+                    }
+                }
+            }
 
             size_t size() const {
                 return  _sort->size();
@@ -1753,7 +1788,7 @@ namespace PetriEngine {
                 return Multiset(col);
             }
 
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 if (_all != nullptr)
                     return;
                 for (auto elem : _color) {
@@ -1762,7 +1797,19 @@ namespace PetriEngine {
                 }
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+            void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const override {
+                if (_all != nullptr) {
+                    _all->getArcIntervals(arcIntervals, cfp, index);
+                }
+                uint32_t i = 0;
+                for (auto elem : _color) {
+                    (*index) += i;
+                    elem->getArcIntervals(arcIntervals, cfp, index);
+                    i++;
+                }
+            }
+
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 Reachability::intervalTuple_t intervals;
                 if (_all == nullptr) {
                     for (auto elem : _color) {
@@ -1782,7 +1829,7 @@ namespace PetriEngine {
 
             }
 
-            void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const override {
+            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
                 if (_all != nullptr)
                     _all->getConstants(constantMap, index);
                 else for (auto elem : _color) {
@@ -1852,13 +1899,41 @@ namespace PetriEngine {
                 return ms;
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 for (auto elem : _constituents) {
                     elem->getVariables(variables, varPositions, varModifierMap);
                 }
+            }
+
+            void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const override {
+                for (auto elem : _constituents) {
+                    uint32_t newIndex = 0;
+                    Colored::ArcIntervals newArcIntervals;
+                    std::vector<Reachability::interval_t> intervalsForRemoval;
+                    elem->getArcIntervals(newArcIntervals, cfp, &newIndex);
+                    if(arcIntervals._intervalTuple._intervals.empty()){
+                        arcIntervals._intervalTuple = newArcIntervals._intervalTuple;
+                    } else {
+                        for (auto interval : arcIntervals._intervalTuple._intervals){
+                            bool inBoth = false;
+                            for (auto newInterval : newArcIntervals._intervalTuple._intervals){
+                                if(interval.equals(newInterval)){
+                                    inBoth = true;
+                                }
+                            }
+                            if(!inBoth){
+                                intervalsForRemoval.push_back(interval);
+                            }
+                        }
+
+                        for(auto interval : intervalsForRemoval){
+                            arcIntervals._intervalTuple.removeInterval(interval);
+                        }
+                    }
+                }
             }            
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 Reachability::intervalTuple_t intervals;
                 
                 for (auto elem : _constituents) {
@@ -1877,7 +1952,7 @@ namespace PetriEngine {
                 return intervals;
             }
 
-            void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const override {
+            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
                 uint32_t indexCopy = index;
                 for (auto elem : _constituents) {
                     uint32_t localIndex = indexCopy;
@@ -1921,19 +1996,25 @@ namespace PetriEngine {
                 return _left->eval(context) - _right->eval(context);
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+            void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const override {
+                _left->getArcIntervals(arcIntervals, cfp, index);
+                //The part that is subtracted, does not need to have tokens in the place, so we can ignore it
+                //_right->getArcIntervals(arcIntervals, cfp, &rightIndex);
+            }
+
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 //We could maybe reduce the intervals slightly by checking if the upper or lower bound is being subtracted
                 auto leftIntervals = _left->getOutputIntervals(varIntervals, colortypes);
 
                 return leftIntervals;
             }   
 
-            void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const override {
+            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
                 uint32_t rIndex = index;
                 _left->getConstants(constantMap, index);
                 _right->getConstants(constantMap, rIndex);
@@ -1971,15 +2052,19 @@ namespace PetriEngine {
                 return _expr->eval(context) * _scalar;
             }
             
-            void getVariables(std::set<Variable*>& variables, std::unordered_map<std::string, std::set<uint32_t>>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
+            void getVariables(std::set<Variable*>& variables, std::unordered_map<uint32_t, Colored::Variable *>& varPositions, std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _expr->getVariables(variables, varPositions,varModifierMap);
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::VariableInterval> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
+            void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const override {
+                _expr ->getArcIntervals(arcIntervals, cfp, index);
+            }
+
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals, std::vector<Colored::ColorType *> *colortypes) const override {
                 return _expr->getOutputIntervals(varIntervals, colortypes);
             }
 
-            void getConstants(std::unordered_map<const Color*, std::vector<uint32_t>> &constantMap, uint32_t &index) const override {
+            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
                 _expr->getConstants(constantMap, index);
             }
 

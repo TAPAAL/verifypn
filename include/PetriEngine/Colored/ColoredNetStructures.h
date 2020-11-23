@@ -29,7 +29,6 @@ namespace PetriEngine {
             uint32_t place;
             uint32_t transition;
             ArcExpression_ptr expr;
-            bool activatable;
             bool input;
         };
         
@@ -38,7 +37,7 @@ namespace PetriEngine {
             GuardExpression_ptr guard;
             std::vector<Arc> input_arcs;
             std::vector<Arc> output_arcs;
-            std::unordered_map<std::string, Colored::VariableInterval> variableIntervals;
+            std::unordered_map<Arc*, Colored::ArcIntervals> inputArcIntervals;
             bool considered;
         };
         

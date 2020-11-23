@@ -592,6 +592,14 @@ namespace PetriEngine {
                 return ids;
             }
 
+            std::vector<uint32_t> getUpperIds(){
+                std::vector<uint32_t> ids;
+                for(auto range : _ranges){
+                    ids.push_back(range._upper);
+                }
+                return ids;
+            }
+
             bool equals(interval_t other){
                 if(other.size() != size()){
                     return false;
@@ -605,7 +613,7 @@ namespace PetriEngine {
                 return true;
             }
 
-            bool constains(interval_t other){
+            bool contains(interval_t other){
                 if(other.size() != size()){
                     return false;
                 }
@@ -621,6 +629,19 @@ namespace PetriEngine {
                 for(uint32_t i = 0; i < _ranges.size(); i++){
                     _ranges[i] &= other._ranges[i];
                 }
+            }
+
+            interval_t getOverlap(interval_t other){
+                interval_t overlapInterval;
+                if(size() != other.size()){
+                    return overlapInterval;
+                }
+
+                for(uint32_t i = 0; i < size(); i++){
+                    overlapInterval.addRange(_ranges[i] &= other[i]);
+                }
+
+                return overlapInterval;
             }
 
             void print() {
@@ -649,6 +670,10 @@ namespace PetriEngine {
 
             size_t size() {
                 return _intervals.size();
+            }
+
+            size_t tupleSize() {
+                return _intervals[0].size();
             }
 
             uint32_t intervalCombinations(){
@@ -748,37 +773,30 @@ namespace PetriEngine {
                 _intervals.insert(_intervals.begin() + vecIndex, interval);
             }
 
-            void constrainLower(std::vector<uint32_t> values) {
-                uint32_t i = 0;
-                bool done = false;
-                while(!done) {
-                    bool updated = false;
+            void constrainLower(std::vector<uint32_t> values, bool strict) {
+                for(uint32_t i = 0; i < _intervals.size(); i++) {
                     for(uint32_t j = 0; j < values.size(); j++){
-                        if(_intervals[i][j]._lower <= values[j]){
+                        if(strict && _intervals[i][j]._lower <= values[j]){
+                            _intervals[i][j]._lower = values[j]+1;
+                        } 
+                        else if(!strict && _intervals[i][j]._lower < values[j]){
                             _intervals[i][j]._lower = values[j];
-                            updated = true;
-                        }                        
+                        }                          
                     }
-                    done = !updated || i == _intervals.size()-1;
-                    i++;
                 }
                 mergeIntervals();
             }
 
-            void constrainUpper(std::vector<uint32_t> values) {
-                uint32_t i = _intervals.size()-1;
-                bool done = false;
-                while(!done) {
-                    bool updated = false;
+            void constrainUpper(std::vector<uint32_t> values, bool strict) {
+                for(uint32_t i = 0; i < _intervals.size(); i++) {
                     for(uint32_t j = 0; j < values.size(); j++){
-                        if(_intervals[i][j]._upper >= values[j]){
+                        if(strict && _intervals[i][j]._upper >= values[j]){
+                            _intervals[i][j]._upper = values[j]-1;
+                        } 
+                        else if(!strict && _intervals[i][j]._upper > values[j]){
                             _intervals[i][j]._upper = values[j];
-                            updated = true;
                         }                        
                     }
-
-                    done = !updated || i == 0;
-                    i--;
                 }
                 mergeIntervals();
             }
@@ -807,13 +825,26 @@ namespace PetriEngine {
                 return _intervals[0].getLowerIds();
             }
 
+            std::vector<uint32_t> getUpperIds(){
+                return _intervals.back().getUpperIds();
+            }
+
             bool contains(interval_t interval){
                 for(auto localInterval : _intervals){
-                    if(localInterval.constains(interval)){
+                    if(localInterval.contains(interval)){
                         return true;
                     }
                 }
                 return false;
+            }
+
+            void removeInterval(interval_t interval) {
+                for (uint32_t i = 0; i < _intervals.size(); i++) {
+                    if(interval.equals(_intervals[i])){
+                        _intervals.erase(_intervals.begin() + i);
+                        return;
+                    }
+                }
             }
 
             void mergeIntervals() {
