@@ -453,7 +453,7 @@ namespace PetriEngine {
             if (color.second == 0) {
                 continue;
             }
-            PetriEngine::Colored::Place& place = _places[arc.place];
+            const PetriEngine::Colored::Place& place = _places[arc.place];
             const std::string& pName = _ptplacenames[place.name][color.first->getId()];
             if (pName.empty()) {
                 
