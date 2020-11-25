@@ -169,7 +169,11 @@ namespace PetriEngine {
             for (uint32_t transitionId : connectedTransitions) {
                 Colored::Transition& transition = _transitions[transitionId];
                 if (transition.considered) break;
-                bool transitionActivated = true;               
+                bool transitionActivated = true;
+
+                for(auto arcIntervals : transition.inputArcIntervals){
+                    arcIntervals.second.resetIntervals();
+                }            
 
                 processInputArcs(transition, currentPlaceId, transitionActivated);
                 
@@ -249,53 +253,57 @@ namespace PetriEngine {
     }
 
     //could be expanded to handle when a variable apears multiple times on an arc and with different modifiers
-    bool ColoredPetriNetBuilder::getVarIntervals(std::unordered_map<Colored::Arc*, Colored::ArcIntervals> arcIntervalsMap, std::unordered_map<Colored::Variable *, std::pair<Reachability::intervalTuple_t, std::set<Colored::Variable *>>>& variableMap){
-        for(auto arcIntervals : arcIntervalsMap){
-            for(auto pair : arcIntervals.second._varIndexModMap){
-                auto varPosition = pair.second.first;
-                auto varModifier = pair.second.second;
-                if(variableMap.count(pair.first) == 0){                    
-                    Reachability::intervalTuple_t varIntervalTuple;
-                    for (auto interval : arcIntervals.second._intervalTuple._intervals){                        
-                        for(auto varInterval : getIntervalsFromInterval(interval, varPosition, varModifier, pair.first)){
-                            varIntervalTuple.addInterval(varInterval);
+    bool ColoredPetriNetBuilder::getVarIntervals(std::unordered_map<Colored::Arc*, Colored::ArcIntervals> arcIntervalsMap, std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t>& variableMap){
+        bool stabilized = false;
+        while(!stabilized){
+            stabilized = true;
+            for(auto arcIntervals : arcIntervalsMap){
+                for(auto pair : arcIntervals.second._varIndexModMap){
+                    auto varPosition = pair.second.first;
+                    auto varModifier = pair.second.second;
+                    if(variableMap.count(pair.first) == 0){                    
+                        Reachability::intervalTuple_t varIntervalTuple;
+                        for (auto interval : arcIntervals.second._intervalTuple._intervals){                        
+                            for(auto varInterval : getIntervalsFromInterval(interval, varPosition, varModifier, pair.first)){
+                                varIntervalTuple.addInterval(varInterval);
+                            }                        
                         }                        
-                    }
-                    
-                    variableMap[pair.first] = std::make_pair(varIntervalTuple, arcIntervals.second.getVariables());
-                } else {
-                    for (auto varInterval : variableMap[pair.first].first._intervals){
-                        Reachability::intervalTuple_t newIntervalTuple;
+                        variableMap[pair.first] = varIntervalTuple;
+                    } else {     
+                        std::vector<Reachability::interval_t> unusedIntervals; 
                         for(auto interval : arcIntervals.second._intervalTuple._intervals){
+                            bool intervalUsed = false;
+                            Reachability::intervalTuple_t newIntervalTuple;
                             auto varIntervals = getIntervalsFromInterval(interval, varPosition, varModifier, pair.first);
 
                             for (auto arcVarInterval : varIntervals){
-                                auto overlappingInterval = arcVarInterval.getOverlap(varInterval);
+                                for (auto varInterval : variableMap[pair.first]._intervals){
+                                    auto overlappingInterval = arcVarInterval.getOverlap(varInterval);
 
-                                if(overlappingInterval.isSound()){
-                                    newIntervalTuple.addInterval(overlappingInterval);
+                                    if(overlappingInterval.isSound()){
+                                        intervalUsed = true;
+                                        newIntervalTuple.addInterval(overlappingInterval);
+                                    }
                                 }
                             }
-                            //handle variable connection
-                            //if we find that this variable cannot be bound to an interval
-                            //the values of other vars that are only available when this var is in the given interval
-                            //should also not be included.
-                            //active flag on intervals?
-                            
-                        }
-                        auto connectedVars = variableMap[pair.first].second;
-                        for(auto var : arcIntervals.second.getVariables()){
-                            connectedVars.insert(var);
-                        }
-                        newIntervalTuple.mergeIntervals();
-                        variableMap[pair.first] = std::make_pair(newIntervalTuple, connectedVars);
-                    }
+                            if(!intervalUsed){
+                                stabilized = false;
+                                unusedIntervals.push_back(interval);
+                            }
 
-                }
-                //If we do not find any valid intervals for an arc, then we can stop as there will not be any intervals
-                //which are valid for all arcs
-                if(!variableMap[pair.first].hasValidIntervals()){
-                    return false;
+                            newIntervalTuple.mergeIntervals();
+                            variableMap[pair.first] = newIntervalTuple;
+                        }
+
+                        for(auto unusedInterval : unusedIntervals){
+                            arcIntervals.second._intervalTuple.removeInterval(unusedInterval);
+                        }                        
+                    }
+                    //If we do not find any valid intervals for an arc, then we can stop as there will not be any intervals
+                    //which are valid for all arcs
+                    if(!variableMap[pair.first].hasValidIntervals()){
+                        return false;
+                    }
                 }
             }
         }
@@ -362,7 +370,7 @@ namespace PetriEngine {
             std::unordered_map<Colored::Variable *, std::vector<std::pair<uint32_t, int32_t>>>  varModifierMap;
             arc.expr->getVariables(variables, varPositions, varModifierMap);
 
-            std::unordered_map<uint32_t, const Colored::Color*> constantMap;
+            std::unordered_map<uint32_t, std::vector<const Colored::Color*>> constantMap;
             uint32_t index = 0;
             arc.expr->getConstants(constantMap, index);            
 
@@ -377,24 +385,25 @@ namespace PetriEngine {
                                       
             }
 
-            for(auto color: constantMap) {
-                std::vector<uint32_t> idVector;
-                Reachability::interval_t interval;
-                color.first->getTupleId(&idVector);
+            for(auto constPair: constantMap) {
+                for(auto color : constPair.second){
+                    std::vector<uint32_t> idVector;
+                    Reachability::interval_t interval;
+                    color->getTupleId(&idVector);
 
-                if(idVector.size() != placeFixpoint.productSize){
-                    //If we are looking at a color wich is only part of a product, we will not add it here
-                    // It is added during getting output intervals of arcs
-                    continue;
-                }
+                    if(idVector.size() != placeFixpoint.productSize){
+                        //If we are looking at a color wich is only part of a product, we will not add it here
+                        // It is added during getting output intervals of arcs
+                        continue;
+                    }
 
-                for(auto id : idVector) {
-                    interval.addRange(id, id);
-                }
+                    for(auto id : idVector) {
+                        interval.addRange(id, id);
+                    }
 
-                placeFixpoint.constraints.addInterval(interval);
+                    placeFixpoint.constraints.addInterval(interval);
+                }                
             }
-
             
             placeFixpoint.constraints.mergeIntervals();           
 

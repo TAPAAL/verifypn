@@ -137,6 +137,7 @@ namespace PetriEngine {
             virtual void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const = 0;
 
             virtual ColorType* getColorType(std::unordered_map<std::string,Colored::ColorType*>& colorTypes) const = 0;
+
         };
         
         class DotConstantExpression : public ColorExpression {
@@ -448,7 +449,10 @@ namespace PetriEngine {
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
-                return _color->getConstants(constantMap, index);
+                _color->getConstants(constantMap, index);
+                for(auto& constIndexPair : constantMap){
+                    constIndexPair.second = &constIndexPair.second->operator++();
+                }
             }
 
             std::string toString() const override {
@@ -559,7 +563,10 @@ namespace PetriEngine {
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
-                return _color->getConstants(constantMap, index);
+                _color->getConstants(constantMap, index);
+                for(auto& constIndexPair : constantMap){
+                    constIndexPair.second = &constIndexPair.second->operator--();
+                }
             }
 
             std::string toString() const override {
@@ -740,17 +747,17 @@ namespace PetriEngine {
             }
 
             void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
-                _left->restrictVars(variableMap);
-                _right->restrictVars(variableMap);
-                std::set<Variable *> leftVars;
-                std::set<Variable *> rightVars;
+                std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>> varModifierMapL;
+                std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>> varModifierMapR;
                 std::unordered_map<uint32_t, Colored::Variable *> varPositionsL;
                 std::unordered_map<uint32_t, Colored::Variable *> varPositionsR;
                 std::unordered_map<uint32_t, const Color*> constantMapL;
                 std::unordered_map<uint32_t, const Color*> constantMapR;
+                std::set<Variable *> leftVars;
+                std::set<Variable *> rightVars;
                 uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL);
-                _right->getVariables(rightVars, varPositionsR);
+                _left->getVariables(leftVars, varPositionsL, varModifierMapL);
+                _right->getVariables(rightVars, varPositionsR, varModifierMapR);
                 _left->getConstants(constantMapL, index);
                 index = 0;
                 _right->getConstants(constantMapR, index);
@@ -762,24 +769,50 @@ namespace PetriEngine {
                 for(auto varPositionPair : varPositionsL){
                     uint32_t index = varPositionPair.first;
                     if(varPositionsR.count(index)){
+                        auto leftTupleIntervalVal = variableMap[varPositionPair.second];
+                        auto rightTupleIntervalVal = variableMap[varPositionsR[index]];
+                        auto leftTupleInterval = &variableMap[varPositionPair.second];
+                        auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                        int32_t leftVarModifier;
+                        int32_t rightVarModifier;
+                        for(auto idModPair : varModifierMapL[varPositionPair.second]){
+                            if(idModPair.first == index){
+                                leftVarModifier = idModPair.second;
+                                break;
+                            }
+                        }
+
+                        for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                            if(idModPair.first == index){
+                                rightVarModifier = idModPair.second;
+                                break;
+                            }
+                        }
+
+                        leftTupleIntervalVal.applyModifier(leftVarModifier, varPositionPair.second->colorType);
+                        rightTupleIntervalVal.applyModifier(rightVarModifier, varPositionsR[index]->colorType);
+
                         //comparing vars of same size
                         if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                        
-                            leftTupleInterval->constrainUpper(rightTupleInterval->getUpperIds(), true);
-                            rightTupleInterval->constrainLower(leftTupleInterval->getLowerIds(), true);
+                            leftTupleInterval->constrainUpper(rightTupleIntervalVal.getUpperIds(), true);
+                            rightTupleInterval->constrainLower(leftTupleIntervalVal.getLowerIds(), true);
                         } else if(varPositionPair.second->colorType->productSize() > varPositionsR[index]->colorType->productSize()){
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                            std::vector<uint32_t> leftLowerVec(leftTupleInterval->getLowerIds().begin(), leftTupleInterval->getLowerIds().begin() + rightTupleInterval->tupleSize());
+                            std::vector<uint32_t> leftLowerVec(leftTupleIntervalVal.getLowerIds().begin(), leftTupleIntervalVal.getLowerIds().begin() + rightTupleInterval->tupleSize());
                             
 
-                            auto idVec = rightTupleInterval->getUpperIds();
+                            auto idVec = rightTupleIntervalVal.getUpperIds();
                             index += varPositionsR[index]->colorType->productSize();
                             while(idVec.size() < leftTupleInterval->tupleSize()){
                                 if(varPositionsR.count(index)){
                                     auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                    int32_t rightVarMod;
+                                    for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                                        if(idModPair.first == index){
+                                            rightVarMod = idModPair.second;
+                                            break;
+                                        }
+                                    }
+                                    rightTupleInterval.applyModifier(rightVarMod, varPositionsR[index]->colorType);
                                     auto ids = rightTupleInterval.getUpperIds();
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsR[index]->colorType->productSize();
@@ -793,16 +826,21 @@ namespace PetriEngine {
                             leftTupleInterval->constrainUpper(idVec, true);
                             rightTupleInterval->constrainLower(leftLowerVec, true);
                         } else {
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                            std::vector<uint32_t> rightUpperVec(rightTupleInterval->getUpperIds().begin(), rightTupleInterval->getUpperIds().begin() + leftTupleInterval->tupleSize());
+                            std::vector<uint32_t> rightUpperVec(rightTupleIntervalVal.getUpperIds().begin(), rightTupleIntervalVal.getUpperIds().begin() + leftTupleInterval->tupleSize());
                             
-
-                            auto idVec = leftTupleInterval->getLowerIds();
+                            auto idVec = leftTupleIntervalVal.getLowerIds();
                             index += varPositionsL[index]->colorType->productSize();
                             while(idVec.size() < rightTupleInterval->tupleSize()){
                                 if(varPositionsL.count(index)){
                                     auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                    int32_t leftVarMod;
+                                    for(auto idModPair : varModifierMapL[varPositionsL[index]]){
+                                        if(idModPair.first == index){
+                                            leftVarMod = idModPair.second;
+                                            break;
+                                        }
+                                    }
+                                    leftTupleInterval.applyModifier(leftVarMod, varPositionsL[index]->colorType);
                                     auto ids = leftTupleInterval.getLowerIds();
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsL[index]->colorType->productSize();
@@ -826,6 +864,14 @@ namespace PetriEngine {
                         while(idVec.size() < leftTupleInterval->tupleSize()){
                             if(varPositionsR.count(index)){
                                 auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                int32_t rightVarMod;
+                                for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                                    if(idModPair.first == index){
+                                        rightVarMod = idModPair.second;
+                                        break;
+                                    }
+                                }
+                                rightTupleInterval.applyModifier(rightVarMod, varPositionsR[index]->colorType);
                                 auto ids = rightTupleInterval.getUpperIds();
                                 idVec.insert(idVec.end(), ids.begin(), ids.end());
                                 index += varPositionsR[index]->colorType->productSize();
@@ -852,6 +898,14 @@ namespace PetriEngine {
                         while(idVec.size() < rightTupleInterval->tupleSize()){
                             if(varPositionsL.count(index)){
                                 auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                int32_t leftVarMod;
+                                for(auto idModPair : varModifierMapL[varPositionsL[index]]){
+                                    if(idModPair.first == index){
+                                        leftVarMod = idModPair.second;
+                                        break;
+                                    }
+                                }
+                                leftTupleInterval.applyModifier(leftVarMod, varPositionsL[index]->colorType);
                                 auto ids = leftTupleInterval.getLowerIds();
                                 idVec.insert(idVec.end(), ids.begin(), ids.end());
                                 index += varPositionsL[index]->colorType->productSize();
@@ -892,17 +946,17 @@ namespace PetriEngine {
             }
 
             void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
-                _left->restrictVars(variableMap);
-                _right->restrictVars(variableMap);
-                std::set<Variable *> leftVars;
-                std::set<Variable *> rightVars;
+                std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>> varModifierMapL;
+                std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>> varModifierMapR;
                 std::unordered_map<uint32_t, Colored::Variable *> varPositionsL;
                 std::unordered_map<uint32_t, Colored::Variable *> varPositionsR;
                 std::unordered_map<uint32_t, const Color*> constantMapL;
                 std::unordered_map<uint32_t, const Color*> constantMapR;
+                std::set<Variable *> leftVars;
+                std::set<Variable *> rightVars;
                 uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL);
-                _right->getVariables(rightVars, varPositionsR);
+                _left->getVariables(leftVars, varPositionsL, varModifierMapL);
+                _right->getVariables(rightVars, varPositionsR, varModifierMapR);
                 _left->getConstants(constantMapL, index);
                 index = 0;
                 _right->getConstants(constantMapR, index);
@@ -914,24 +968,49 @@ namespace PetriEngine {
                 for(auto varPositionPair : varPositionsL){
                     uint32_t index = varPositionPair.first;
                     if(varPositionsR.count(index)){
+                        auto leftTupleIntervalVal = variableMap[varPositionPair.second];
+                        auto rightTupleIntervalVal = variableMap[varPositionsR[index]];
+                        auto leftTupleInterval = &variableMap[varPositionPair.second];
+                        auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                        int32_t leftVarModifier;
+                        int32_t rightVarModifier;
+                        for(auto idModPair : varModifierMapL[varPositionPair.second]){
+                            if(idModPair.first == index){
+                                leftVarModifier = idModPair.second;
+                                break;
+                            }
+                        }
+
+                        for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                            if(idModPair.first == index){
+                                rightVarModifier = idModPair.second;
+                                break;
+                            }
+                        }
+
+                        leftTupleIntervalVal.applyModifier(leftVarModifier, varPositionPair.second->colorType);
+                        rightTupleIntervalVal.applyModifier(rightVarModifier, varPositionsR[index]->colorType);
                         //comparing vars of same size
-                        if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                        
-                            leftTupleInterval->constrainLower(rightTupleInterval->getLowerIds(), true);
-                            rightTupleInterval->constrainUpper(leftTupleInterval->getUpperIds(), true);
+                        if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){                     
+                            leftTupleInterval->constrainLower(rightTupleIntervalVal.getLowerIds(), true);
+                            rightTupleInterval->constrainUpper(leftTupleIntervalVal.getUpperIds(), true);
                         } else if(varPositionPair.second->colorType->productSize() > varPositionsR[index]->colorType->productSize()){
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                            std::vector<uint32_t> leftUpperVec(leftTupleInterval->getUpperIds().begin(), leftTupleInterval->getUpperIds().begin() + rightTupleInterval->tupleSize());
+                            std::vector<uint32_t> leftUpperVec(leftTupleIntervalVal.getUpperIds().begin(), leftTupleIntervalVal.getUpperIds().begin() + rightTupleInterval->tupleSize());
                             
 
-                            auto idVec = rightTupleInterval->getLowerIds();
+                            auto idVec = rightTupleIntervalVal.getLowerIds();
                             index += varPositionsR[index]->colorType->productSize();
                             while(idVec.size() < leftTupleInterval->tupleSize()){
                                 if(varPositionsR.count(index)){
                                     auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                    int32_t rightVarMod;
+                                    for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                                        if(idModPair.first == index){
+                                            rightVarMod = idModPair.second;
+                                            break;
+                                        }
+                                    }
+                                    rightTupleInterval.applyModifier(rightVarMod, varPositionsR[index]->colorType);
                                     auto ids = rightTupleInterval.getLowerIds();
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsR[index]->colorType->productSize();
@@ -945,16 +1024,21 @@ namespace PetriEngine {
                             leftTupleInterval->constrainLower(idVec, true);
                             rightTupleInterval->constrainUpper(leftUpperVec, true);
                         } else {
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                            std::vector<uint32_t> rightLowerVec(rightTupleInterval->getLowerIds().begin(), rightTupleInterval->getLowerIds().begin() + leftTupleInterval->tupleSize());
+                            std::vector<uint32_t> rightLowerVec(rightTupleIntervalVal.getLowerIds().begin(), rightTupleIntervalVal.getLowerIds().begin() + leftTupleInterval->tupleSize());
                             
-
-                            auto idVec = leftTupleInterval->getUpperIds();
+                            auto idVec = leftTupleIntervalVal.getUpperIds();
                             index += varPositionsL[index]->colorType->productSize();
                             while(idVec.size() < rightTupleInterval->tupleSize()){
                                 if(varPositionsL.count(index)){
                                     auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                    int32_t leftVarMod;
+                                    for(auto idModPair : varModifierMapL[varPositionsL[index]]){
+                                        if(idModPair.first == index){
+                                            leftVarMod = idModPair.second;
+                                            break;
+                                        }
+                                    }
+                                    leftTupleInterval.applyModifier(leftVarMod, varPositionsL[index]->colorType);
                                     auto ids = leftTupleInterval.getUpperIds();
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsL[index]->colorType->productSize();
@@ -978,6 +1062,14 @@ namespace PetriEngine {
                         while(idVec.size() < leftTupleInterval->tupleSize()){
                             if(varPositionsR.count(index)){
                                 auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                int32_t rightVarMod;
+                                for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                                    if(idModPair.first == index){
+                                        rightVarMod = idModPair.second;
+                                        break;
+                                    }
+                                }
+                                rightTupleInterval.applyModifier(rightVarMod, varPositionsR[index]->colorType);
                                 auto ids = rightTupleInterval.getLowerIds();
                                 idVec.insert(idVec.end(), ids.begin(), ids.end());
                                 index += varPositionsR[index]->colorType->productSize();
@@ -1004,6 +1096,14 @@ namespace PetriEngine {
                         while(idVec.size() < rightTupleInterval->tupleSize()){
                             if(varPositionsL.count(index)){
                                 auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                int32_t leftVarMod;
+                                for(auto idModPair : varModifierMapL[varPositionsL[index]]){
+                                    if(idModPair.first == index){
+                                        leftVarMod = idModPair.second;
+                                        break;
+                                    }
+                                }
+                                leftTupleInterval.applyModifier(leftVarMod, varPositionsL[index]->colorType);
                                 auto ids = leftTupleInterval.getUpperIds();
                                 idVec.insert(idVec.end(), ids.begin(), ids.end());
                                 index += varPositionsL[index]->colorType->productSize();
@@ -1044,17 +1144,17 @@ namespace PetriEngine {
             }
 
             void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
-                _left->restrictVars(variableMap);
-                _right->restrictVars(variableMap);
-                std::set<Variable *> leftVars;
-                std::set<Variable *> rightVars;
+                std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>> varModifierMapL;
+                std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>> varModifierMapR;
                 std::unordered_map<uint32_t, Colored::Variable *> varPositionsL;
                 std::unordered_map<uint32_t, Colored::Variable *> varPositionsR;
                 std::unordered_map<uint32_t, const Color*> constantMapL;
                 std::unordered_map<uint32_t, const Color*> constantMapR;
+                std::set<Variable *> leftVars;
+                std::set<Variable *> rightVars;
                 uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL);
-                _right->getVariables(rightVars, varPositionsR);
+                _left->getVariables(leftVars, varPositionsL, varModifierMapL);
+                _right->getVariables(rightVars, varPositionsR, varModifierMapR);
                 _left->getConstants(constantMapL, index);
                 index = 0;
                 _right->getConstants(constantMapR, index);
@@ -1066,24 +1166,48 @@ namespace PetriEngine {
                 for(auto varPositionPair : varPositionsL){
                     uint32_t index = varPositionPair.first;
                     if(varPositionsR.count(index)){
-                        //comparing vars of same size
-                        if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                        
-                            leftTupleInterval->constrainUpper(rightTupleInterval->getUpperIds(), false);
-                            rightTupleInterval->constrainLower(leftTupleInterval->getLowerIds(), false);
-                        } else if(varPositionPair.second->colorType->productSize() > varPositionsR[index]->colorType->productSize()){
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                            std::vector<uint32_t> leftLowerVec(leftTupleInterval->getLowerIds().begin(), leftTupleInterval->getLowerIds().begin() + rightTupleInterval->tupleSize());
-                            
+                        auto leftTupleIntervalVal = variableMap[varPositionPair.second];
+                        auto rightTupleIntervalVal = variableMap[varPositionsR[index]];
+                        auto leftTupleInterval = &variableMap[varPositionPair.second];
+                        auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                        int32_t leftVarModifier;
+                        int32_t rightVarModifier;
+                        for(auto idModPair : varModifierMapL[varPositionPair.second]){
+                            if(idModPair.first == index){
+                                leftVarModifier = idModPair.second;
+                                break;
+                            }
+                        }
 
-                            auto idVec = rightTupleInterval->getUpperIds();
+                        for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                            if(idModPair.first == index){
+                                rightVarModifier = idModPair.second;
+                                break;
+                            }
+                        }
+
+                        leftTupleIntervalVal.applyModifier(leftVarModifier, varPositionPair.second->colorType);
+                        rightTupleIntervalVal.applyModifier(rightVarModifier, varPositionsR[index]->colorType);
+                        //comparing vars of same size
+                        if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){                        
+                            leftTupleInterval->constrainUpper(rightTupleIntervalVal.getUpperIds(), false);
+                            rightTupleInterval->constrainLower(leftTupleIntervalVal.getLowerIds(), false);
+                        } else if(varPositionPair.second->colorType->productSize() > varPositionsR[index]->colorType->productSize()){
+                            std::vector<uint32_t> leftLowerVec(leftTupleIntervalVal.getLowerIds().begin(), leftTupleIntervalVal.getLowerIds().begin() + rightTupleInterval->tupleSize());
+                            
+                            auto idVec = rightTupleIntervalVal.getUpperIds();
                             index += varPositionsR[index]->colorType->productSize();
                             while(idVec.size() < leftTupleInterval->tupleSize()){
                                 if(varPositionsR.count(index)){
                                     auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                    int32_t rightVarMod;
+                                    for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                                        if(idModPair.first == index){
+                                            rightVarMod = idModPair.second;
+                                            break;
+                                        }
+                                    }
+                                    rightTupleInterval.applyModifier(rightVarMod, varPositionsR[index]->colorType);
                                     auto ids = rightTupleInterval.getUpperIds();
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsR[index]->colorType->productSize();
@@ -1097,16 +1221,22 @@ namespace PetriEngine {
                             leftTupleInterval->constrainUpper(idVec, false);
                             rightTupleInterval->constrainLower(leftLowerVec, false);
                         } else {
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                            std::vector<uint32_t> rightUpperVec(rightTupleInterval->getUpperIds().begin(), rightTupleInterval->getUpperIds().begin() + leftTupleInterval->tupleSize());
+                            std::vector<uint32_t> rightUpperVec(rightTupleIntervalVal.getUpperIds().begin(), rightTupleIntervalVal.getUpperIds().begin() + leftTupleInterval->tupleSize());
                             
 
-                            auto idVec = leftTupleInterval->getLowerIds();
+                            auto idVec = leftTupleIntervalVal.getLowerIds();
                             index += varPositionsL[index]->colorType->productSize();
                             while(idVec.size() < rightTupleInterval->tupleSize()){
                                 if(varPositionsL.count(index)){
                                     auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                    int32_t leftVarMod;
+                                    for(auto idModPair : varModifierMapL[varPositionsL[index]]){
+                                        if(idModPair.first == index){
+                                            leftVarMod = idModPair.second;
+                                            break;
+                                        }
+                                    }
+                                    leftTupleInterval.applyModifier(leftVarMod, varPositionsL[index]->colorType);
                                     auto ids = leftTupleInterval.getLowerIds();
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsL[index]->colorType->productSize();
@@ -1130,6 +1260,14 @@ namespace PetriEngine {
                         while(idVec.size() < leftTupleInterval->tupleSize()){
                             if(varPositionsR.count(index)){
                                 auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                int32_t rightVarMod;
+                                for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                                    if(idModPair.first == index){
+                                        rightVarMod = idModPair.second;
+                                        break;
+                                    }
+                                }
+                                rightTupleInterval.applyModifier(rightVarMod, varPositionsR[index]->colorType);
                                 auto ids = rightTupleInterval.getUpperIds();
                                 idVec.insert(idVec.end(), ids.begin(), ids.end());
                                 index += varPositionsR[index]->colorType->productSize();
@@ -1156,6 +1294,14 @@ namespace PetriEngine {
                         while(idVec.size() < rightTupleInterval->tupleSize()){
                             if(varPositionsL.count(index)){
                                 auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                int32_t leftVarMod;
+                                for(auto idModPair : varModifierMapL[varPositionsL[index]]){
+                                    if(idModPair.first == index){
+                                        leftVarMod = idModPair.second;
+                                        break;
+                                    }
+                                }
+                                leftTupleInterval.applyModifier(leftVarMod, varPositionsL[index]->colorType);
                                 auto ids = leftTupleInterval.getLowerIds();
                                 idVec.insert(idVec.end(), ids.begin(), ids.end());
                                 index += varPositionsL[index]->colorType->productSize();
@@ -1196,21 +1342,21 @@ namespace PetriEngine {
             }
 
             void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
-                _left->restrictVars(variableMap);
-                _right->restrictVars(variableMap);
-                std::set<Variable *> leftVars;
-                std::set<Variable *> rightVars;
+                std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>> varModifierMapL;
+                std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>> varModifierMapR;
                 std::unordered_map<uint32_t, Colored::Variable *> varPositionsL;
                 std::unordered_map<uint32_t, Colored::Variable *> varPositionsR;
                 std::unordered_map<uint32_t, const Color*> constantMapL;
                 std::unordered_map<uint32_t, const Color*> constantMapR;
+                std::set<Variable *> leftVars;
+                std::set<Variable *> rightVars;
                 uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL);
-                _right->getVariables(rightVars, varPositionsR);
+                _left->getVariables(leftVars, varPositionsL, varModifierMapL);
+                _right->getVariables(rightVars, varPositionsR, varModifierMapR);
                 _left->getConstants(constantMapL, index);
                 index = 0;
                 _right->getConstants(constantMapR, index);
-.
+
                 if(leftVars.empty() && rightVars.empty()){
                     return;
                 }
@@ -1218,24 +1364,49 @@ namespace PetriEngine {
                 for(auto varPositionPair : varPositionsL){
                     uint32_t index = varPositionPair.first;
                     if(varPositionsR.count(index)){
+                        auto leftTupleIntervalVal = variableMap[varPositionPair.second];
+                        auto rightTupleIntervalVal = variableMap[varPositionsR[index]];
+                        auto leftTupleInterval = &variableMap[varPositionPair.second];
+                        auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                        int32_t leftVarModifier;
+                        int32_t rightVarModifier;
+                        for(auto idModPair : varModifierMapL[varPositionPair.second]){
+                            if(idModPair.first == index){
+                                leftVarModifier = idModPair.second;
+                                break;
+                            }
+                        }
+
+                        for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                            if(idModPair.first == index){
+                                rightVarModifier = idModPair.second;
+                                break;
+                            }
+                        }
+
+                        leftTupleIntervalVal.applyModifier(leftVarModifier, varPositionPair.second->colorType);
+                        rightTupleIntervalVal.applyModifier(rightVarModifier, varPositionsR[index]->colorType);
                         //comparing vars of same size
-                        if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                        
-                            leftTupleInterval->constrainLower(rightTupleInterval->getLowerIds(), false);
-                            rightTupleInterval->constrainUpper(leftTupleInterval->getUpperIds(), false);
+                        if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){                        
+                            leftTupleInterval->constrainLower(rightTupleIntervalVal.getLowerIds(), false);
+                            rightTupleInterval->constrainUpper(leftTupleIntervalVal.getUpperIds(), false);
                         } else if(varPositionPair.second->colorType->productSize() > varPositionsR[index]->colorType->productSize()){
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                            std::vector<uint32_t> leftUpperVec(leftTupleInterval->getUpperIds().begin(), leftTupleInterval->getUpperIds().begin() + rightTupleInterval->tupleSize());
+                            std::vector<uint32_t> leftUpperVec(leftTupleIntervalVal.getUpperIds().begin(), leftTupleIntervalVal.getUpperIds().begin() + rightTupleInterval->tupleSize());
                             
 
-                            auto idVec = rightTupleInterval->getLowerIds();
+                            auto idVec = rightTupleIntervalVal.getLowerIds();
                             index += varPositionsR[index]->colorType->productSize();
                             while(idVec.size() < leftTupleInterval->tupleSize()){
                                 if(varPositionsR.count(index)){
                                     auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                    int32_t rightVarMod;
+                                    for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                                        if(idModPair.first == index){
+                                            rightVarMod = idModPair.second;
+                                            break;
+                                        }
+                                    }
+                                    rightTupleInterval.applyModifier(rightVarMod, varPositionsR[index]->colorType);
                                     auto ids = rightTupleInterval.getLowerIds();
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsR[index]->colorType->productSize();
@@ -1249,16 +1420,22 @@ namespace PetriEngine {
                             leftTupleInterval->constrainLower(idVec, false);
                             rightTupleInterval->constrainUpper(leftUpperVec, false);
                         } else {
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                            std::vector<uint32_t> rightLowerVec(rightTupleInterval->getLowerIds().begin(), rightTupleInterval->getLowerIds().begin() + leftTupleInterval->tupleSize());
+                            std::vector<uint32_t> rightLowerVec(rightTupleIntervalVal.getLowerIds().begin(), rightTupleIntervalVal.getLowerIds().begin() + leftTupleInterval->tupleSize());
                             
 
-                            auto idVec = leftTupleInterval->getUpperIds();
+                            auto idVec = leftTupleIntervalVal.getUpperIds();
                             index += varPositionsL[index]->colorType->productSize();
                             while(idVec.size() < rightTupleInterval->tupleSize()){
                                 if(varPositionsL.count(index)){
                                     auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                    int32_t leftVarMod;
+                                    for(auto idModPair : varModifierMapL[varPositionsL[index]]){
+                                        if(idModPair.first == index){
+                                            leftVarMod = idModPair.second;
+                                            break;
+                                        }
+                                    }
+                                    leftTupleInterval.applyModifier(leftVarMod, varPositionsL[index]->colorType);
                                     auto ids = leftTupleInterval.getUpperIds();
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsL[index]->colorType->productSize();
@@ -1282,6 +1459,14 @@ namespace PetriEngine {
                         while(idVec.size() < leftTupleInterval->tupleSize()){
                             if(varPositionsR.count(index)){
                                 auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                int32_t rightVarMod;
+                                for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                                    if(idModPair.first == index){
+                                        rightVarMod = idModPair.second;
+                                        break;
+                                    }
+                                }
+                                rightTupleInterval.applyModifier(rightVarMod, varPositionsR[index]->colorType);
                                 auto ids = rightTupleInterval.getLowerIds();
                                 idVec.insert(idVec.end(), ids.begin(), ids.end());
                                 index += varPositionsR[index]->colorType->productSize();
@@ -1308,6 +1493,14 @@ namespace PetriEngine {
                         while(idVec.size() < rightTupleInterval->tupleSize()){
                             if(varPositionsL.count(index)){
                                 auto leftTupleInterval = variableMap[varPositionsL[index]];
+                                int32_t leftVarMod;
+                                for(auto idModPair : varModifierMapL[varPositionsL[index]]){
+                                    if(idModPair.first == index){
+                                        leftVarMod = idModPair.second;
+                                        break;
+                                    }
+                                }
+                                leftTupleInterval.applyModifier(leftVarMod, varPositionsL[index]->colorType);
                                 auto ids = leftTupleInterval.getUpperIds();
                                 idVec.insert(idVec.end(), ids.begin(), ids.end());
                                 index += varPositionsL[index]->colorType->productSize();
@@ -1347,17 +1540,17 @@ namespace PetriEngine {
             }
 
             void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
-                _left->restrictVars(variableMap);
-                _right->restrictVars(variableMap);
-                std::set<Variable *> leftVars;
-                std::set<Variable *> rightVars;
+                std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>> varModifierMapL;
+                std::unordered_map<Variable *,std::vector<std::pair<uint32_t, int32_t>>> varModifierMapR;
                 std::unordered_map<uint32_t, Colored::Variable *> varPositionsL;
                 std::unordered_map<uint32_t, Colored::Variable *> varPositionsR;
                 std::unordered_map<uint32_t, const Color*> constantMapL;
                 std::unordered_map<uint32_t, const Color*> constantMapR;
+                std::set<Variable *> leftVars;
+                std::set<Variable *> rightVars;
                 uint32_t index = 0;
-                _left->getVariables(leftVars, varPositionsL);
-                _right->getVariables(rightVars, varPositionsR);
+                _left->getVariables(leftVars, varPositionsL, varModifierMapL);
+                _right->getVariables(rightVars, varPositionsR, varModifierMapR);
                 _left->getConstants(constantMapL, index);
                 index = 0;
                 _right->getConstants(constantMapR, index);
@@ -1369,13 +1562,33 @@ namespace PetriEngine {
                 for(auto varPositionPair : varPositionsL){
                     uint32_t index = varPositionPair.first;
                     if(varPositionsR.count(index)){
+                        auto leftTupleIntervalVal = variableMap[varPositionPair.second];
+                        auto rightTupleIntervalVal = variableMap[varPositionsR[index]];
+                        auto leftTupleInterval = &variableMap[varPositionPair.second];
+                        auto rightTupleInterval = &variableMap[varPositionsR[index]];
+                        int32_t leftVarModifier;
+                        int32_t rightVarModifier;
+                        for(auto idModPair : varModifierMapL[varPositionPair.second]){
+                            if(idModPair.first == index){
+                                leftVarModifier = idModPair.second;
+                                break;
+                            }
+                        }
+
+                        for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                            if(idModPair.first == index){
+                                rightVarModifier = idModPair.second;
+                                break;
+                            }
+                        }
+
+                        leftTupleIntervalVal.applyModifier(leftVarModifier, varPositionPair.second->colorType);
+                        rightTupleIntervalVal.applyModifier(rightVarModifier, varPositionsR[index]->colorType);
                         //comparing vars of same size
                         if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
                             Reachability::intervalTuple_t newIntervalTuple;
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
-                            for(auto leftInterval : leftTupleInterval->_intervals){
-                                for(auto rightInterval : rightTupleInterval->_intervals){
+                            for(auto leftInterval : leftTupleIntervalVal._intervals){
+                                for(auto rightInterval : rightTupleIntervalVal._intervals){
                                     auto intervalOverlap = leftInterval.getOverlap(rightInterval);
 
                                     if(intervalOverlap.isSound()){
@@ -1386,84 +1599,188 @@ namespace PetriEngine {
                         
                             *leftTupleInterval = newIntervalTuple;
                             *rightTupleInterval = newIntervalTuple;
+                            leftTupleInterval->applyModifier(-leftVarModifier, varPositionPair.second->colorType);
+                            rightTupleInterval->applyModifier(-rightVarModifier, varPositionsR[index]->colorType);
                         } else if(varPositionPair.second->colorType->productSize() > varPositionsR[index]->colorType->productSize()){
-                            auto leftTupleInterval = &variableMap[varPositionPair.second];
-                            auto rightTupleInterval = &variableMap[varPositionsR[index]];
                             std::vector<Reachability::interval_t> resizedLeftIntervals;
-                            for(auto interval : leftTupleInterval->_intervals){
+                            for(auto interval : leftTupleIntervalVal._intervals){
                                 Reachability::interval_t resizedInterval;
                                 for(uint32_t i = 0; i < varPositionsR[index]->colorType->productSize(); i++){
                                     resizedInterval.addRange(interval[i]);
                                 }
                                 resizedLeftIntervals.push_back(resizedInterval);
                             }
-                            
 
-                            auto intervalVec = rightTupleInterval->_intervals;
-                            index += varPositionsR[index]->colorType->productSize();
+                            auto intervalVec = rightTupleIntervalVal._intervals;
+                            uint32_t i = index;
+                            i += varPositionsR[index]->colorType->productSize();
                             while(intervalVec.size() < leftTupleInterval->tupleSize()){
-                                if(varPositionsR.count(index)){
-                                    auto rightTupleInterval = variableMap[varPositionsR[index]];
+                                if(varPositionsR.count(i)){
+                                    auto rightTupleInterval = variableMap[varPositionsR[i]];
+                                    int32_t rightVarMod;
+                                    for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                                        if(idModPair.first == index){
+                                            rightVarMod = idModPair.second;
+                                            break;
+                                        }
+                                    }
+                                    rightTupleInterval.applyModifier(rightVarMod, varPositionsR[index]->colorType);
                                     intervalVec.insert(intervalVec.end(), rightTupleInterval._intervals.begin(), rightTupleInterval._intervals.end());
-                                    index += varPositionsR[index]->colorType->productSize();
+                                    i += varPositionsR[i]->colorType->productSize();
                                 } else {
                                     std::vector<uint32_t> colorIdVec;
-                                    constantMapR[index]->getTupleId(&colorIdVec);
+                                    constantMapR[i]->getTupleId(&colorIdVec);
                                     for(auto id : colorIdVec){
                                         for(auto interval : intervalVec){
                                             interval.addRange(id,id);
                                         }
                                     }                                   
-                                    index+= idVec.size() - oldSize;
+                                    i+= colorIdVec.size();
                                 }
                             }
 
-                            leftTupleInterval.constrainLower(idVec, false);
-                            rightTupleInterval.constrainUpper(leftUpperVec, false);
+                            Reachability::intervalTuple_t newIntervalTupleR;
+                            for(auto leftInterval : resizedLeftIntervals){
+                                for(auto rightInterval : rightTupleIntervalVal._intervals){
+                                    auto intervalOverlap = leftInterval.getOverlap(rightInterval);
+
+                                    if(intervalOverlap.isSound()){
+                                        newIntervalTupleR.addInterval(intervalOverlap);
+                                    }
+                                }
+                            }
+
+                            Reachability::intervalTuple_t newIntervalTupleL;
+                            for(auto leftInterval : leftTupleIntervalVal._intervals){
+                                for(auto rightInterval : intervalVec){
+                                    auto intervalOverlap = leftInterval.getOverlap(rightInterval);
+
+                                    if(intervalOverlap.isSound()){
+                                        newIntervalTupleL.addInterval(intervalOverlap);
+                                    }
+                                }
+                            }
+                            newIntervalTupleL.applyModifier(-leftVarModifier, varPositionPair.second->colorType);
+                            newIntervalTupleR.applyModifier(-rightVarModifier, varPositionsR[index]->colorType);
+
+                            *leftTupleInterval = newIntervalTupleL;
+                            *rightTupleInterval = newIntervalTupleR;
                         } else {
-                            auto leftTupleInterval = variableMap[varPositionPair.second];
-                            auto rightTupleInterval = variableMap[varPositionsR[index]];
-                            std::vector<uint32_t> rightLowerVec(rightTupleInterval.getLowerIds().begin(), rightTupleInterval.getLowerIds().begin() + leftTupleInterval.tupleSize());
-                            
+                            std::vector<Reachability::interval_t> resizedRightIntervals;
+                            for(auto interval : rightTupleIntervalVal._intervals){
+                                Reachability::interval_t resizedInterval;
+                                for(uint32_t i = 0; i < varPositionsL[index]->colorType->productSize(); i++){
+                                    resizedInterval.addRange(interval[i]);
+                                }
+                                resizedRightIntervals.push_back(resizedInterval);
+                            }
 
-                            auto idVec = leftTupleInterval.getUpperIds();
-                            index += varPositionsL[index]->colorType->productSize();
-                            while(idVec.size() < rightTupleInterval.tupleSize()){
-                                if(varPositionsL.count(index)){
-                                    auto leftTupleInterval = variableMap[varPositionsL[index]];
-                                    auto ids = leftTupleInterval.getUpperIds();
-                                    idVec.insert(idVec.end(), ids.begin(), ids.end());
-                                    index += varPositionsL[index]->colorType->productSize();
+                            auto intervalVec = leftTupleIntervalVal._intervals;
+                            uint32_t i = index;
+                            i += varPositionsL[index]->colorType->productSize();
+                            while(intervalVec.size() < rightTupleInterval->tupleSize()){
+                                if(varPositionsL.count(i)){
+                                    auto leftTupleInterval = variableMap[varPositionsL[i]];
+                                    int32_t leftVarMod;
+                                    for(auto idModPair : varModifierMapL[varPositionsL[index]]){
+                                        if(idModPair.first == index){
+                                            leftVarMod = idModPair.second;
+                                            break;
+                                        }
+                                    }
+                                    leftTupleInterval.applyModifier(leftVarMod, varPositionsL[index]->colorType);
+                                    intervalVec.insert(intervalVec.end(), leftTupleInterval._intervals.begin(), leftTupleInterval._intervals.end());
+                                    i += varPositionsL[i]->colorType->productSize();
                                 } else {
-                                    auto oldSize = idVec.size();
-                                    constantMapL[index]->getTupleId(&idVec);
-                                    index+= idVec.size() - oldSize;
+                                    std::vector<uint32_t> colorIdVec;
+                                    constantMapL[i]->getTupleId(&colorIdVec);
+                                    for(auto id : colorIdVec){
+                                        for(auto interval : intervalVec){
+                                            interval.addRange(id,id);
+                                        }
+                                    }                                   
+                                    i+= colorIdVec.size();
                                 }
                             }
 
-                            leftTupleInterval.constrainLower(rightLowerVec, false);
-                            rightTupleInterval.constrainUpper(idVec, false);
+                            Reachability::intervalTuple_t newIntervalTupleL;
+                            for(auto rightInterval : resizedRightIntervals){
+                                for(auto leftInterval : leftTupleIntervalVal._intervals){
+                                    auto intervalOverlap = leftInterval.getOverlap(rightInterval);
+
+                                    if(intervalOverlap.isSound()){
+                                        newIntervalTupleL.addInterval(intervalOverlap);
+                                    }
+                                }
+                            }
+
+                            Reachability::intervalTuple_t newIntervalTupleR;
+                            for(auto rightInterval : rightTupleIntervalVal._intervals){
+                                for(auto leftInterval : intervalVec){
+                                    auto intervalOverlap = leftInterval.getOverlap(rightInterval);
+
+                                    if(intervalOverlap.isSound()){
+                                        newIntervalTupleR.addInterval(intervalOverlap);
+                                    }
+                                }
+                            }
+
+                            newIntervalTupleL.applyModifier(-leftVarModifier, varPositionPair.second->colorType);
+                            newIntervalTupleR.applyModifier(-rightVarModifier, varPositionsR[index]->colorType);
+
+                            *leftTupleInterval = newIntervalTupleL;
+                            *rightTupleInterval = newIntervalTupleR;
                         }
                     } else {
                         auto rightColor = constantMapL[index];
-                        auto leftTupleInterval = variableMap[varPositionPair.second];
+                        auto leftTupleInterval = &variableMap[varPositionPair.second];
                         std::vector<uint32_t> idVec;
                         rightColor->getTupleId(&idVec);
 
+                        std::vector<Reachability::interval_t> intervals;
+                        Reachability::interval_t interval;
+                        for(auto id : idVec){                            
+                            interval.addRange(id,id);
+                        } 
+                        intervals.push_back(interval);
+                        
                         index += idVec.size();
-                        while(idVec.size() < leftTupleInterval.tupleSize()){
+                        while(intervals.size() < leftTupleInterval->tupleSize()){
                             if(varPositionsR.count(index)){
                                 auto rightTupleInterval = variableMap[varPositionsR[index]];
-                                auto ids = rightTupleInterval.getLowerIds();
-                                idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                int32_t rightVarMod;
+                                for(auto idModPair : varModifierMapR[varPositionsR[index]]){
+                                    if(idModPair.first == index){
+                                        rightVarMod = idModPair.second;
+                                        break;
+                                    }
+                                }
+                                rightTupleInterval.applyModifier(rightVarMod, varPositionsR[index]->colorType);
+                                intervals.insert(intervals.end(), rightTupleInterval._intervals.begin(), rightTupleInterval._intervals.end());
                                 index += varPositionsR[index]->colorType->productSize();
                             } else {
-                                auto oldSize = idVec.size();
-                                constantMapR[index]->getTupleId(&idVec);
-                                index+= idVec.size() - oldSize;
+                                std::vector<uint32_t> colorIdVec;
+                                constantMapR[index]->getTupleId(&colorIdVec);
+                                for(auto id : colorIdVec){
+                                    for(auto interval : intervals){
+                                        interval.addRange(id,id);
+                                    }
+                                }                                   
+                                index+= colorIdVec.size();
                             }
                         }
-                        leftTupleInterval.constrainLower(idVec, false);
+
+                        Reachability::intervalTuple_t newIntervalTupleL;
+                        for(auto leftInterval : leftTupleInterval->_intervals){
+                            for(auto rightInterval : intervals){
+                                auto intervalOverlap = leftInterval.getOverlap(rightInterval);
+
+                                if(intervalOverlap.isSound()){
+                                    newIntervalTupleL.addInterval(intervalOverlap);
+                                }
+                            }
+                        }
+                        *leftTupleInterval = newIntervalTupleL;
                     }
                 }
 
@@ -1472,24 +1789,54 @@ namespace PetriEngine {
 
                     if(constantMapL.count(index)){
                         auto leftColor = constantMapL[index];
-                        auto rightTupleInterval = variableMap[varPositionPair.second];
+                        auto rightTupleInterval = &variableMap[varPositionPair.second];
                         std::vector<uint32_t> idVec;
                         leftColor->getTupleId(&idVec);
 
+                        std::vector<Reachability::interval_t> intervals;
+                        Reachability::interval_t interval;
+                        for(auto id : idVec){                            
+                            interval.addRange(id,id);
+                        } 
+                        intervals.push_back(interval);
+
                         index += idVec.size();
-                        while(idVec.size() < rightTupleInterval.tupleSize()){
+                        while(intervals.size() < rightTupleInterval->tupleSize()){
                             if(varPositionsL.count(index)){
                                 auto leftTupleInterval = variableMap[varPositionsL[index]];
-                                auto ids = leftTupleInterval.getUpperIds();
-                                idVec.insert(idVec.end(), ids.begin(), ids.end());
+                                int32_t leftVarMod;
+                                for(auto idModPair : varModifierMapL[varPositionsL[index]]){
+                                    if(idModPair.first == index){
+                                        leftVarMod = idModPair.second;
+                                        break;
+                                    }
+                                }
+                                leftTupleInterval.applyModifier(leftVarMod, varPositionsL[index]->colorType);
+                                intervals.insert(intervals.end(), leftTupleInterval._intervals.begin(), leftTupleInterval._intervals.end());
                                 index += varPositionsL[index]->colorType->productSize();
                             } else {
-                                auto oldSize = idVec.size();
-                                constantMapL[index]->getTupleId(&idVec);
-                                index+= idVec.size() - oldSize;
+                                std::vector<uint32_t> colorIdVec;
+                                constantMapL[index]->getTupleId(&colorIdVec);
+                                for(auto id : colorIdVec){
+                                    for(auto interval : intervals){
+                                        interval.addRange(id,id);
+                                    }
+                                }                                   
+                                index+= colorIdVec.size();
                             }
                         }
-                        rightTupleInterval.constrainUpper(idVec, false);
+
+                        Reachability::intervalTuple_t newIntervalTupleR;
+                        for(auto rightInterval : rightTupleInterval->_intervals){
+                            for(auto leftInterval : intervals){
+                                auto intervalOverlap = leftInterval.getOverlap(rightInterval);
+
+                                if(intervalOverlap.isSound()){
+                                    newIntervalTupleR.addInterval(intervalOverlap);
+                                }
+                            }
+                        }
+                        *rightTupleInterval = newIntervalTupleR;
                     }
                 }
             }
@@ -1518,49 +1865,7 @@ namespace PetriEngine {
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
-            void restrictVar(Colored::ArcIntervals *varInterval, std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals) const override {
-                /*int32_t leftModifier = 0, rightmodifier = 0;
-                int32_t varIndexLeft = _left->getVariableIndex(varInterval->varaible, &leftModifier);
-                int32_t varIndexRight = _right->getVariableIndex(varInterval->varaible, &rightmodifier);
-                uint32_t intervalSize = 0;
-                std::vector<uint32_t> restrictionvector;
-                if(varIndexLeft > -1) {
-                    bool succes = _right->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if (!succes) {
-                        //comparing vars
-                    } else if(restrictionvector.size() == 1) {
-                        if (restrictionvector.back() == varInterval->interval_lower) {
-                            varInterval->interval_lower += 1 + leftModifier;                            
-                        } else if (restrictionvector.back() == varInterval->interval_upper) {
-                            varInterval->interval_upper += -1 + leftModifier;
-                        } else {
-                            varInterval->interval_lower = 0;
-                            varInterval->interval_upper = varInterval->varaible->colorType->size()-1;
-                        }
-                    } else if (restrictionvector.size() > 1) {
-                        //handle tuple vars
-                    }
-                }
-                if (varIndexRight > -1) {
-                    bool succes = _left->getVariableRestriction(varIndexLeft, &restrictionvector, &intervalSize);
-                    if (!succes) {
-                        //comparing vars
-                    } else if(restrictionvector.size() == 1) {
-                        if(restrictionvector.size() == 1) {
-                            if (restrictionvector.back() == varInterval->interval_lower) {
-                                varInterval->interval_lower++;                            
-                            } else if (restrictionvector.back() == varInterval->interval_upper) {
-                                varInterval->interval_upper--;
-                            } else {
-                                varInterval->interval_lower = 0;
-                                varInterval->interval_upper = varInterval->varaible->colorType->size()-1;
-                            }
-                        }
-                    } else if (restrictionvector.size() > 1) {
-                        //handle tuple vars
-                    }
-                }
-                */
+            void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
                //this is whatever for now
             }
 
@@ -1591,13 +1896,16 @@ namespace PetriEngine {
                 return res;
             }
 
-            void restrictVar(Colored::ArcIntervals *varInterval, std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals) const override {
-                Reachability::intervalTuple_t fullInterval;
-                Reachability::interval_t interval = varInterval->_variable->colorType->getFullInterval();
-                
-                fullInterval.addInterval(interval);
-                
-                varInterval->_intervalTuple = fullInterval;
+            void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
+                std::set<Colored::Variable *> variables;
+                _expr->getVariables(variables);
+
+                for(auto var : variables){
+                    auto fullInterval = var->colorType->getFullInterval();
+                    Reachability::intervalTuple_t fullTuple;
+                    fullTuple.addInterval(fullInterval);
+                    variableMap[var] = fullTuple;
+                }
             }
             
             NotExpression(GuardExpression_ptr&& expr) : _expr(std::move(expr)) {}
@@ -1618,9 +1926,9 @@ namespace PetriEngine {
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
-            void restrictVar(Colored::ArcIntervals *varInterval,std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals) const override {
-                _left->restrictVar(varInterval, varIntervals);
-                _right->restrictVar(varInterval, varIntervals);
+            void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override {
+                _left->restrictVars(variableMap);
+                _right->restrictVars(variableMap);
             }
             
             void getPatterns(PatternSet& patterns, std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
@@ -1653,17 +1961,16 @@ namespace PetriEngine {
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
-            void restrictVar(Colored::ArcIntervals *varInterval, std::unordered_map<std::string, Colored::ArcIntervals> *varIntervals) const override {
-                Colored::ArcIntervals varIntervalCopy = Colored::ArcIntervals {varInterval->_variable, varInterval->_intervalTuple};
-                _left->restrictVar(varInterval, varIntervals);
-                _right->restrictVar(&varIntervalCopy, varIntervals);
+            void restrictVars(std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t> variableMap) const override{
+                auto varMapCopy = variableMap;
+                _left->restrictVars(variableMap);
+                _right->restrictVars(varMapCopy);
 
 
-                for(auto copyInterval : varIntervalCopy._intervalTuple._intervals){
-                    varInterval->_intervalTuple.addInterval(copyInterval);
+                for(auto pair : varMapCopy){
+                    variableMap[pair.first]._intervals.insert(variableMap[pair.first]._intervals.end(), pair.second._intervals.begin(), pair.second._intervals.end());
+                    variableMap[pair.first].mergeIntervals();
                 }
-                
-                varInterval->_intervalTuple.mergeIntervals();
             }
 
             std::string toString() const override {
@@ -1685,7 +1992,7 @@ namespace PetriEngine {
             virtual void expressionType() override {
                 std::cout << "ArcExpression" << std::endl;
             }
-            virtual void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const = 0;
+            virtual void getConstants(std::unordered_map<uint32_t, std::vector<const Color*>> &constantMap, uint32_t &index) const = 0;
 
             virtual void getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const = 0;
 
@@ -1709,9 +2016,9 @@ namespace PetriEngine {
                 return colors;
             }
 
-            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const {
+            void getConstants(std::unordered_map<uint32_t, std::vector<const Color*>> &constantMap, uint32_t &index) const {
                 for (size_t i = 0; i < _sort->size(); i++) {
-                    constantMap[index] = &(*_sort)[i];
+                    constantMap[index].push_back(&(*_sort)[i]);
                 }
             }
 
@@ -1829,11 +2136,15 @@ namespace PetriEngine {
 
             }
 
-            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
+            void getConstants(std::unordered_map<uint32_t, std::vector<const Color*>> &constantMap, uint32_t &index) const override {
                 if (_all != nullptr)
                     _all->getConstants(constantMap, index);
                 else for (auto elem : _color) {
-                    elem->getConstants(constantMap, index);
+                    std::unordered_map<uint32_t, const Color*> elemMap;
+                    elem->getConstants(elemMap, index);
+                    for(auto pair : elemMap){
+                        constantMap[pair.first].push_back(pair.second);
+                    }
                     index++;//not sure if index should be increased here, but no number expression have multiple elements
                 }
             }
@@ -1952,7 +2263,7 @@ namespace PetriEngine {
                 return intervals;
             }
 
-            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
+            void getConstants(std::unordered_map<uint32_t, std::vector<const Color*>> &constantMap, uint32_t &index) const override {
                 uint32_t indexCopy = index;
                 for (auto elem : _constituents) {
                     uint32_t localIndex = indexCopy;
@@ -2014,7 +2325,7 @@ namespace PetriEngine {
                 return leftIntervals;
             }   
 
-            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
+            void getConstants(std::unordered_map<uint32_t, std::vector<const Color*>> &constantMap, uint32_t &index) const override {
                 uint32_t rIndex = index;
                 _left->getConstants(constantMap, index);
                 _right->getConstants(constantMap, rIndex);
@@ -2064,7 +2375,7 @@ namespace PetriEngine {
                 return _expr->getOutputIntervals(varIntervals, colortypes);
             }
 
-            void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
+            void getConstants(std::unordered_map<uint32_t, std::vector<const Color*>> &constantMap, uint32_t &index) const override {
                 _expr->getConstants(constantMap, index);
             }
 

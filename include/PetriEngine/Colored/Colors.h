@@ -434,6 +434,10 @@ namespace PetriEngine {
                 return res;
             }
 
+            void resetIntervals(){
+                _intervalTuple = _source->constraints;
+            }
+
             uint32_t getVarPosition(Colored::Variable * var){
 
                 for (auto varIdModPair : _varIndexModMap){

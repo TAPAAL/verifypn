@@ -199,7 +199,7 @@ namespace PetriEngine {
                 const Colored::ArcExpression_ptr& expr,
                 bool input);
 
-        bool ColoredPetriNetBuilder::getVarIntervals(std::unordered_map<Colored::Arc*, Colored::ArcIntervals> arcIntervalsMap, std::unordered_map<Colored::Variable *, std::pair<Reachability::intervalTuple_t, std::set<Colored::Variable *>>>& variableMap);
+        bool ColoredPetriNetBuilder::getVarIntervals(std::unordered_map<Colored::Arc*, Colored::ArcIntervals> arcIntervalsMap, std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t>& variableMap);
        
         std::vector<Reachability::interval_t> getIntervalsFromInterval(Reachability::interval_t interval, uint32_t varPosition, int32_t varModifier, Colored::Variable * var);
         void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, bool &transitionActivated);

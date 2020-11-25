@@ -829,6 +829,47 @@ namespace PetriEngine {
                 return _intervals.back().getUpperIds();
             }
 
+            void applyModifier(int32_t modifier, Colored::ColorType *ct){
+                auto sizes = ct->getConstituentsSizes();
+                std::vector<interval_t> collectedIntervals;
+
+                for(auto interval : _intervals){
+                    std::vector<interval_t> newIntervals;
+                    newIntervals.push_back(interval);
+                    for(uint32_t i = 0; i < interval.size(); i++){
+                        std::vector<interval_t> tempIntervals;
+                        for(auto& interval1 : newIntervals){
+                            int32_t lower = ((int32_t)interval1[i]._lower + modifier);
+                            int32_t upper = ((int32_t)interval1[i]._upper + modifier);
+                            if(lower < 0){
+                                auto newInterval = interval1;
+                                interval1[i]._lower = 0;
+                                interval1[i]._upper = upper % sizes[i];
+
+                                newInterval[i]._lower = lower % sizes[i];
+                                newInterval[i]._upper = sizes[i]-1;
+                                tempIntervals.push_back(newInterval);
+                            } else if (upper >= sizes[i]){
+                                auto newInterval = interval1;
+                                interval1[i]._lower = lower % sizes[i];
+                                interval1[i]._upper = sizes[i]-1;
+
+                                newInterval[i]._lower = 0;
+                                newInterval[i]._upper = upper % sizes[i];
+                                tempIntervals.push_back(newInterval);
+                            }else {
+                                interval[i]._lower = lower % sizes[i];
+                                interval[i]._upper = upper % sizes[i];
+                            }
+                        }
+                        newIntervals.insert(newIntervals.end(), tempIntervals.begin(), tempIntervals.end());                                                
+                    }
+                    collectedIntervals.insert(collectedIntervals.end(), newIntervals.begin(), newIntervals.end());
+                }
+
+                _intervals = collectedIntervals;
+            }
+
             bool contains(interval_t interval){
                 for(auto localInterval : _intervals){
                     if(localInterval.contains(interval)){
