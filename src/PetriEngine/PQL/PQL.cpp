@@ -67,7 +67,7 @@ namespace PetriEngine {
         }
 
         void Condition::toString(std::ostream &os) {
-            QueryPrinter printer{std::cout};
+            QueryPrinter printer{os};
             this->visit(printer);
         }
 

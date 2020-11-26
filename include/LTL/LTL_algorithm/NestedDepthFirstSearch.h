@@ -19,9 +19,9 @@ using namespace PetriEngine;
 namespace LTL {
     class NestedDepthFirstSearch : public ModelChecker {
     public:
-        NestedDepthFirstSearch(const PetriNet &net, PetriEngine::PQL::Condition_ptr ptr)
+        NestedDepthFirstSearch(const PetriNet &net, PetriEngine::PQL::Condition_ptr ptr, const bool shortcircuitweak)
                 : ModelChecker(net, ptr), factory{net, successorGenerator->initial_buchi_state()},
-                states(net, 0, (int)net.numberOfPlaces() + 1) {}
+                states(net, 0, (int)net.numberOfPlaces() + 1), shortcircuitweak(shortcircuitweak) {}
 
         bool isSatisfied() override;
 
@@ -32,8 +32,6 @@ namespace LTL {
         PetriEngine::Structures::StateSet states;
         std::set<size_t> mark1;
         std::set<size_t> mark2;
-        //PetriEngine::Structures::StateSet mark1;
-        //PetriEngine::Structures::StateSet mark2;
 
         struct StackEntry {
             size_t id;
@@ -42,6 +40,8 @@ namespace LTL {
 
         State *seed;
         bool violation = false;
+        bool is_weak = false;
+        const bool shortcircuitweak;
 
         void dfs();
 

@@ -227,18 +227,22 @@ namespace PetriEngine::PQL {
         ctlQuery = std::make_shared<NotCondition>(ctlQuery);
     }
 
+    template<typename T>
+    void AsCTL::_acceptNary(const T *element) {
+        std::vector<Condition_ptr> children;
+        for (auto operand : *element){
+            operand->visit(*this);
+            children.push_back(ctlQuery);
+        }
+        ctlQuery = std::make_shared<T>(children);
+    }
+
     void AsCTL::_accept(const AndCondition *element) {
-        (*element)[0]->visit(*this);
-        Condition_ptr first = ctlQuery;
-        (*element)[1]->visit(*this);
-        ctlQuery = std::make_shared<AndCondition>(first, ctlQuery);
+        AsCTL::_acceptNary(element);
     }
 
     void AsCTL::_accept(const OrCondition *element) {
-        (*element)[0]->visit(*this);
-        Condition_ptr first = ctlQuery;
-        (*element)[1]->visit(*this);
-        ctlQuery = std::make_shared<OrCondition>(first, ctlQuery);
+        AsCTL::_acceptNary(element);
     }
 
     std::pair<Expr_ptr, Expr_ptr> AsCTL::compareCondition(const CompareCondition *element){
@@ -369,7 +373,7 @@ namespace PetriEngine::PQL {
     }
 
     void AsCTL::_accept(const ECondition *condition) {
-        auto child = dynamic_cast<SimpleQuantifierCondition*>((*condition)[0].get());
+        auto child = dynamic_cast<QuantifierCondition*>((*condition)[0].get());
         switch (child->getPath()) {
             case Path::G:
                 (*child)[0]->visit(*this);

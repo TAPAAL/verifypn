@@ -19,6 +19,8 @@ namespace LTL {
 #endif
 
     bool NestedDepthFirstSearch::isSatisfied() {
+        is_weak = successorGenerator->is_weak();
+        std::cerr << "Is weak: " << is_weak << std::endl;
         dfs();
 #ifdef _PRINTF_DEBUG
         std::cout << "discovered " << _discovered << " states." << std::endl;
@@ -91,6 +93,10 @@ namespace LTL {
             if (!successorGenerator->next(working, top.sucinfo)) {
                 todo.pop();
             } else {
+                if (shortcircuitweak && is_weak && !successorGenerator->isAccepting(working)) {
+                    weakskip = true;
+                    continue;
+                }
                 if (working == *seed) {
 #ifdef _PRINTF_DEBUG
                     std::cerr << "seed:\n  "; dump_state(*seed);

@@ -556,7 +556,7 @@ ReturnValue LTLMain(options_t options) {
         std::unique_ptr<LTL::ModelChecker> modelChecker;
         switch (options.ltlalgorithm) {
             case LTL::Algorithm::NDFS:
-                modelChecker = std::make_unique<LTL::NestedDepthFirstSearch>(*net, negated_formula);
+                    modelChecker = std::make_unique<LTL::NestedDepthFirstSearch>(*net, negated_formula, true);
                 break;
             case LTL::Algorithm::Tarjan:
               if (options.trace)
@@ -567,7 +567,8 @@ ReturnValue LTLMain(options_t options) {
         }
 
         bool satisfied = negate_answer ^ modelChecker->isSatisfied();
-        std::cout  << "FORMULA " << id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << (options.ltlalgorithm == LTL::Algorithm::NDFS ? " NDFS" : " TARJAN") << std::endl;
+            std::cout  << "FORMULA " << id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << (options.ltlalgorithm == LTL::Algorithm::NDFS ? " NDFS" : " TARJAN") << (modelChecker->weakskip ? " WEAK_SKIP" : "") << std::endl;
+        }
     }
     return SuccessCode;
 }
