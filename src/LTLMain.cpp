@@ -567,8 +567,7 @@ ReturnValue LTLMain(options_t options) {
         }
 
         bool satisfied = negate_answer ^ modelChecker->isSatisfied();
-            std::cout  << "FORMULA " << id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << (options.ltlalgorithm == LTL::Algorithm::NDFS ? " NDFS" : " TARJAN") << (modelChecker->weakskip ? " WEAK_SKIP" : "") << std::endl;
-        }
+        std::cout  << "FORMULA " << id << (satisfied ? " TRUE" : " FALSE")  << " TECHNIQUES EXPLICIT" << (options.ltlalgorithm == LTL::Algorithm::NDFS ? " NDFS" : " TARJAN") << (modelChecker->weakskip ? " WEAK_SKIP" : "") << std::endl;
     }
     return SuccessCode;
 }
