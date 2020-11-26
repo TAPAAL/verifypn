@@ -1565,9 +1565,7 @@ namespace PetriEngine {
         }
         return continueReductions;
     }
-    void Reducer::Reduce(QueryPlaceAnalysisContext &context, int enablereduction, bool reconstructTrace, int timeout,
-                         bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t> &reduction,
-                         bool ltl, bool ctl) {
+    void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reduction) {
 
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
@@ -1598,8 +1596,7 @@ namespace PetriEngine {
                         changed = false;
                         while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
-                        if(!ctl || !next_safe)
-                            while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
+                        while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
                         if(!next_safe)
                         {
                             while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
@@ -1630,14 +1627,14 @@ namespace PetriEngine {
             {
                 if(next_safe)
                 {
-                    if(reduction[i] != 2 && reduction[i] != 4 && (!ltl || reduction[i] != 5))
+                    if(reduction[i] != 2 && reduction[i] != 4 && reduction[i] != 5)
                     {
-                        std::cerr << "Skipping Rule" << rnames[reduction[i]] << " due to NEXT operator in p!ctlroposition" << std::endl;
+                        std::cerr << "Skipping Rule" << rnames[reduction[i]] << " due to NEXT operator in proposition" << std::endl;
                         reduction.erase(reduction.begin() + i);
 			continue;
                     }
                 }
-                if(ctl && !remove_loops && reduction[i] == 5)
+                if(!remove_loops && reduction[i] == 6)
                 {
                     std::cerr << "Skipping Rule" << rnames[reduction[i]] << " as proposition is loop sensitive" << std::endl;
                     reduction.erase(reduction.begin() + i);
