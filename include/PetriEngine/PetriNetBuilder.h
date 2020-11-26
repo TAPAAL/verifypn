@@ -29,6 +29,8 @@
 #include "Reducer.h"
 #include "NetStructures.h"
 #include "Reachability/ReachabilityResult.h"
+#include "PQL/CTLVisitor.h"
+#include "LTL/LTLValidator.h"
 namespace PetriEngine {
     /** Builder for building engine representations of PetriNets */
     class PetriNetBuilder : public AbstractPetriNetBuilder {
