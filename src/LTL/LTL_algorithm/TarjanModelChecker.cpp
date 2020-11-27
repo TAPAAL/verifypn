@@ -22,6 +22,7 @@ namespace LTL {
     template<bool SaveTrace>
     bool TarjanModelChecker<SaveTrace>::isSatisfied() {
         is_weak = successorGenerator->is_weak();
+        std::cerr << "Is weak: " << is_weak << std::endl;
         std::vector<State> initial_states;
         successorGenerator->makeInitialState(initial_states);
         State working = factory.newState();
