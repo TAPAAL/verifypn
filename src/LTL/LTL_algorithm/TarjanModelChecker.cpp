@@ -21,6 +21,7 @@ namespace LTL {
 
     template<bool SaveTrace>
     bool TarjanModelChecker<SaveTrace>::isSatisfied() {
+        is_weak = successorGenerator->is_weak();
         std::vector<State> initial_states;
         successorGenerator->makeInitialState(initial_states);
         State working = factory.newState();
@@ -128,10 +129,14 @@ namespace LTL {
         dstack.pop();
         if (cstack[p].lowlink == p) {
             while (cstack.size() > p) {
-                auto h = hash(cstack.back().stateid);
-                store.insert(cstack.back().stateid);
-                chash[h] = cstack.back().next;
-                cstack.pop_back();
+                popCStack();
+            }
+        } else if (is_weak) {
+            State state = factory.newState();
+            seen.decode(state, cstack[p].stateid);
+            if(!successorGenerator->isAccepting(state)){
+                popCStack();
+                weakskip = true;
             }
         }
         if (!astack.empty() && p == astack.top()) {
@@ -140,6 +145,14 @@ namespace LTL {
         if (!dstack.empty()) {
             update(p);
         }
+    }
+
+    template<bool SaveTrace>
+    void TarjanModelChecker<SaveTrace>::popCStack(){
+        auto h = hash(cstack.back().stateid);
+        store.insert(cstack.back().stateid);
+        chash[h] = cstack.back().next;
+        cstack.pop_back();
     }
 
     template<bool SaveTrace>

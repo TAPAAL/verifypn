@@ -500,9 +500,9 @@ ReturnValue LTLMain(options_t options) {
                     break;
                 case LTL::Algorithm::Tarjan:
                     if (options.trace)
-                        modelChecker = std::make_unique<LTL::TarjanModelChecker<true>>(*net, negated_formula);
+                        modelChecker = std::make_unique<LTL::TarjanModelChecker<true>>(*net, negated_formula, true);
                     else
-                        modelChecker = std::make_unique<LTL::TarjanModelChecker<false>>(*net, negated_formula);
+                        modelChecker = std::make_unique<LTL::TarjanModelChecker<false>>(*net, negated_formula, true);
                     break;
             }
 
