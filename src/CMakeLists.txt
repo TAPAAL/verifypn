@@ -15,6 +15,9 @@ add_dependencies(verifyltl-${ARCH_TYPE} glpk-ext spot-ext)
 
 target_link_libraries(verifyltl-${ARCH_TYPE} CTL LTL PetriEngine PetriParse glpk spot)
 
+add_executable(query-analyze-${ARCH_TYPE} QueryAnalyser.cpp)
+target_link_libraries(query-analyze-${ARCH_TYPE} CTL LTL PetriEngine PetriParse)
+
 # add_executable(parse-benchmark-asctl ParseOnly.cpp)
 
  #target_link_libraries(parse-benchmark-asctl PetriEngine PetriParse)

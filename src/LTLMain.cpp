@@ -553,7 +553,6 @@ ReturnValue LTLMain(options_t options) {
                             out << std::endl;
                         }
 
-                        // FIXME rewrite rules still incorrect, but might be redundant.
                         queries[i] = Condition::initialMarkingRW([&]() { return queries[i]; }, stats, context, false,
                                                                  false, false)
                                 ->pushNegation(stats, context, false, false, false);
@@ -576,7 +575,6 @@ ReturnValue LTLMain(options_t options) {
                                 auto f = queries[i]->simplify(simplificationContext);
                                 queries[i] = f.formula;
 
-                                // FIXME rewrite rules still incorrect, but might be redundant.
                                 queries[i] = queries[i]->pushNegation(stats,
                                                                       context,
                                                                       false,
