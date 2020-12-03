@@ -271,14 +271,14 @@ namespace PetriEngine {
 
             Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t> varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
                 Reachability::interval_t interval;
-                Reachability::intervalTuple_t rangeInterval;
+                Reachability::intervalTuple_t tupleInterval;
                  
                 colortypes->push_back(_userOperator->getColorType());
                 auto colorId = _userOperator->getId();
                 
                 interval.addRange(colorId, colorId);
-                rangeInterval.addInterval(interval);
-                return rangeInterval;
+                tupleInterval.addInterval(interval);
+                return tupleInterval;
             }
 
             UserOperatorExpression(const Color* userOperator)
@@ -362,45 +362,39 @@ namespace PetriEngine {
                         auto& range = interval->operator[](j);
                         size_t ctSize = colortypes->operator[](j+ colortypesBefore)->size();
                         
+                        range._upper = (range._upper + 1)%ctSize;
+                        range._lower = (range._lower + 1)/ctSize;
                         
-                        if(range._upper < ctSize-1 && range._lower < ctSize - 1){
-                            range._upper++;
-                            range._lower++;
-                            if(tempIntervals.empty()){
-                                newInterval.addRange(range);
-                                tempIntervals.push_back(newInterval);
-                            } else {
-                                for(auto& tempInterval : tempIntervals){
-                                    tempInterval.addRange(range);
-                                }
-                            }                            
-                        } else if(range._lower < ctSize - 1) {
+                        if(range._upper < range._lower ){
                             
-                            range._lower++;
                             if(tempIntervals.empty()){
                                 auto intervalCopy = newInterval;
-                                newInterval.addRange(range);
-                                intervalCopy.addRange(0,0);
+                                newInterval._siblingIntervals.insert(&intervalCopy);
+                                intervalCopy._siblingIntervals.insert(&newInterval);
+                                newInterval.addRange(range._lower, ctSize-1);
+                                intervalCopy.addRange(0,range._upper);
                                 tempIntervals.push_back(newInterval);
                                 tempIntervals.push_back(intervalCopy);
                             } else {
                                 std::vector<Reachability::interval_t> newTempIntervals;
-                                for (auto tempInterval : tempIntervals){
+                                for(auto tempInterval : tempIntervals){
                                     auto intervalCopy = tempInterval;
-                                    tempInterval.addRange(range);                                    
-                                    intervalCopy.addRange(0, 0);
-                                    newTempIntervals.push_back(tempInterval);
+                                    tempInterval._siblingIntervals.insert(&intervalCopy);
+                                    intervalCopy._siblingIntervals.insert(&tempInterval);
+                                    tempInterval.addRange(range._lower, ctSize-1);
+                                    intervalCopy.addRange(0,range._upper);
                                     newTempIntervals.push_back(intervalCopy);
+                                    newTempIntervals.push_back(tempInterval);
                                 }
                                 tempIntervals = newTempIntervals;
-                            }
+                            }                            
                         } else {
                             if(tempIntervals.empty()){
-                                newInterval.addRange(0,0);
+                                newInterval.addRange(range);
                                 tempIntervals.push_back(newInterval);
                             } else {
                                 for (auto& tempInterval : tempIntervals){ 
-                                    tempInterval.addRange(0,0);
+                                    tempInterval.addRange(range);
                                 }
                             }
                         }
@@ -474,26 +468,18 @@ namespace PetriEngine {
                     auto interval = &nestedInterval[i];
                     for(uint32_t j = 0; j < interval->_ranges.size(); j++) {
                         auto& range = interval->operator[](j);
+                        auto ctSize = colortypes->operator[](j + colortypesBefore)->size()-1;
                         
-                        if(range._upper > 0 && range._lower > 0){
-                            range._lower--;
-                            range._upper--;
-                            if(tempIntervals.empty()){
-                                newInterval.addRange(range);
-                                tempIntervals.push_back(newInterval);
-                            } else {
-                                for(auto& tempInterval : tempIntervals){
-                                    tempInterval.addRange(range);
-                                }
-                            }
-                        } else if(range._upper > 0){
-                            range._upper--;
-                            range._lower = 0;
-                            auto size = colortypes->operator[](j + colortypesBefore)->size()-1;
+                        range._lower = (range._lower -1)%ctSize;
+                        range._upper = (range._upper -1)&ctSize;
+
+                        if(range._upper < range._lower ){
                             if(tempIntervals.empty()){
                                 auto intervalCopy = newInterval;
-                                newInterval.addRange(range);
-                                intervalCopy.addRange(size,size);
+                                newInterval._siblingIntervals.insert(&intervalCopy);
+                                intervalCopy._siblingIntervals.insert(&newInterval);
+                                newInterval.addRange(range._lower, ctSize-1);
+                                intervalCopy.addRange(0,range._upper);
                                 tempIntervals.push_back(newInterval);
                                 tempIntervals.push_back(intervalCopy);
 
@@ -501,17 +487,16 @@ namespace PetriEngine {
                                 std::vector<Reachability::interval_t> newTempIntervals;
                                 for (auto tempInterval : tempIntervals){
                                     auto intervalCopy = tempInterval;
-                                    tempInterval.addRange(range);
-                                    intervalCopy.addRange(size, size);
+                                    tempInterval._siblingIntervals.insert(&intervalCopy);
+                                    intervalCopy._siblingIntervals.insert(&tempInterval);
+                                    tempInterval.addRange(range._lower, ctSize-1);
+                                    intervalCopy.addRange(0, range._upper);
                                     newTempIntervals.push_back(tempInterval);
                                     newTempIntervals.push_back(intervalCopy);
                                 }
                                 tempIntervals = newTempIntervals;
                             }                            
-                        } else {
-                            auto size = colortypes->operator[](j + colortypesBefore)->size()-1;
-                            range._lower = size;
-                            range._upper = size;
+                        } else {                            
                             if(tempIntervals.empty()){
                                 newInterval.addRange(range);
                                 tempIntervals.push_back(newInterval);
@@ -1979,14 +1964,21 @@ namespace PetriEngine {
                         for(auto leftInterval : leftTupleInterval->_intervals){
                             bool leftIntervalUsed = false;
                             for(auto rightInterval : intervals){
+                                std::cout << "Getting overlap of " << std::endl;
+                                leftInterval.print();
+                                std::cout << std::endl << "and" << std::endl;
+                                rightInterval.print();
+                                std::cout << std::endl;
                                 auto intervalOverlap = leftInterval.getOverlap(rightInterval);
 
                                 if(intervalOverlap.isSound()){
+                                    std::cout << "overlap valid" << std::endl;
                                     leftIntervalUsed = true;
                                     newIntervalTupleL.addInterval(intervalOverlap);
                                 }
                             }
                             if(!leftIntervalUsed){
+                                std::cout << "setting inactive" << std::endl;
                                 leftInterval.setInactive();
                             }
                         }
@@ -2188,6 +2180,13 @@ namespace PetriEngine {
 
             void restrictVars(std::unordered_map<const Colored::Variable *, Reachability::intervalTuple_t>& variableMap) const override{
                 auto varMapCopy = variableMap;
+                for(auto pair : variableMap){
+                    for(uint32_t i = 0; i < pair.second.size(); i++){
+                        pair.second[i]._siblingIntervals.insert(&varMapCopy[pair.first][i]);
+                        varMapCopy[pair.first][i]._siblingIntervals.insert(&pair.second[i]);
+                    }
+                }
+
                 _left->restrictVars(variableMap);
                 _right->restrictVars(varMapCopy);
 

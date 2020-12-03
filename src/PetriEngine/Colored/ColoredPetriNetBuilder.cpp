@@ -234,7 +234,9 @@ namespace PetriEngine {
         for (auto arc : transition.input_arcs) {
             std::cout << "has arc "<< arc.expr.get()->toString() << std::endl;
             PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];
-            
+            std::cout << "Cur place point " << std::endl;
+            curCFP.constraints.print();
+
             Colored::ArcIntervals& arcInterval = _arcIntervals[transitionId][arc.place];
             uint32_t index = 0;
             arcInterval._intervalTuple._intervals.clear();
@@ -260,8 +262,10 @@ namespace PetriEngine {
                 transition.guard->restrictVars(transition.variableMap);
 
                 for(auto varPair : transition.variableMap){
-                    varPair.second.removeInactiveIntervals();
+                    //varPair.second.removeInactiveIntervals();
                     if(!varPair.second.hasValidIntervals()){
+                        std::cout << "Could not find valid intervals for " << varPair.first->name << std::endl;
+                        varPair.second.print();
                         transitionActivated = false; 
                         return;
                     }
@@ -281,31 +285,28 @@ namespace PetriEngine {
             stabilized = true;
             for(auto& arcIntervals : _arcIntervals[transitionId]){
                 for(auto pair : arcIntervals.second._varIndexModMap){
-                    std::cout << "Considering " << pair.first->name << std::endl;
-                    std::cout << "Arc is  " << std::endl;
-                    arcIntervals.second.print();
                     auto varPosition = pair.second.first;
                     auto varModifier = pair.second.second;
-                    if(variableMap.count(pair.first) == 0){                    
+                    if(variableMap.count(pair.first) == 0){                  
                         Reachability::intervalTuple_t varIntervalTuple;
-                        for (auto& interval : arcIntervals.second._intervalTuple._intervals){   
+                        for (auto& interval : arcIntervals.second._intervalTuple._intervals){
                             Reachability::intervalTuple_t intervals;
                             intervals._intervals = getIntervalsFromInterval(interval, varPosition, varModifier, pair.first); 
                             intervals.mergeIntervals();
-                            //std::cout << "Intervals" << std::endl;
-                            //intervals.print();
+                            // std::cout << "Intervals" << std::endl;
+                            // intervals.print();
                                                 
                             for(auto varInterval : intervals._intervals){
                                 // std::cout << "Interval: ";
                                 // varInterval.print();
                                 // std::cout << std::endl;
-                                varInterval._parentIntervals.insert(&interval);
+                                varInterval._parentIntervals[arcIntervals.first].insert(&interval);
                                 varIntervalTuple.addInterval(varInterval);
                             }                        
                         }
                         varIntervalTuple.mergeIntervals();                  
                         variableMap[pair.first] = varIntervalTuple;
-                    } else {     
+                    } else {    
                         std::vector<Reachability::interval_t> unusedIntervals; 
                         Reachability::intervalTuple_t collectedIntervalTuple;
                         for(auto& interval : arcIntervals.second._intervalTuple._intervals){
@@ -334,7 +335,7 @@ namespace PetriEngine {
                                         // std::cout << std::endl;
                                         intervalUsed = true;
                                         overlappingInterval._parentIntervals = varInterval._parentIntervals;
-                                        overlappingInterval._parentIntervals.insert(&interval);
+                                        overlappingInterval._parentIntervals[arcIntervals.first].insert(&interval);
                                         newIntervalTuple.addInterval(overlappingInterval);
                                     }
                                 }
@@ -377,54 +378,27 @@ namespace PetriEngine {
         Reachability::interval_t firstVarInterval;
         varIntervals.push_back(firstVarInterval);
         for(uint32_t i = varPosition; i < varPosition + var->colorType->productSize(); i++){
-            int32_t lower = (int32_t) interval[i]._lower + varModifier;
-            int32_t upper = interval[i]._upper + varModifier;
+            std::vector<Colored::ColorType*> varColorTypes;
+            var->colorType->getColortypes(varColorTypes);
+            auto ctSize = varColorTypes[i - varPosition]->size();
+            uint32_t lower = (interval[i]._lower + varModifier) % ctSize;
+            uint32_t upper = (interval[i]._upper + varModifier) % ctSize;
 
-            if(lower < 0 && upper < 0){
-                for (auto& varInterval : varIntervals){
-                    varInterval.addRange(var->colorType->size() - 1 + lower, var->colorType->size() - 1 + upper);
-                }
-            } else if(lower < 0){
+            if(lower > upper ){
                 std::vector<Reachability::interval_t> newIntervals;
                 for (auto& varInterval : varIntervals){
-                    Reachability::interval_t newVarInterval = varInterval;                                    
+                    Reachability::interval_t newVarInterval = varInterval; 
+                    newVarInterval._siblingIntervals.insert(&varInterval);
+                    varInterval._siblingIntervals.insert(&newVarInterval);                                   
                     varInterval.addRange(0, upper);
-                    newVarInterval.addRange(var->colorType->size() - 1 + lower, var->colorType->size() -1);
-                    newIntervals.push_back(newVarInterval);
-                }
-
-                varIntervals.insert(varIntervals.end(), newIntervals.begin(), newIntervals.end());
-            } else if(upper >= (int32_t)var->colorType->size() && lower >= (int32_t)var->colorType->size()) {
-                uint32_t newLower = lower % var->colorType->size();
-                uint32_t newUpper = upper % var->colorType->size();
-                if(newLower <= newUpper){
-                    for (auto& varInterval : varIntervals){
-                        varInterval.addRange(newLower, newUpper);
-                    }
-                } else {
-                    std::vector<Reachability::interval_t> newIntervals;
-                    for (auto& varInterval : varIntervals){
-                        Reachability::interval_t newVarInterval = varInterval;
-                        varInterval.addRange(newLower, var->colorType->size() - 1);
-                        newVarInterval.addRange(0, newUpper);
-                        newIntervals.push_back(newVarInterval);
-                    }
-                    varIntervals.insert(varIntervals.end(), newIntervals.begin(), newIntervals.end());
-                }
-                
-            } else if((uint32_t)upper >= var->colorType->size()){
-                std::vector<Reachability::interval_t> newIntervals;
-                for (auto& varInterval : varIntervals){
-                    Reachability::interval_t newVarInterval = varInterval;                                    
-                    varInterval.addRange(lower, var->colorType->size() - 1);
-                    newVarInterval.addRange(0, upper % var->colorType->size());
+                    newVarInterval.addRange(lower, ctSize -1);
                     newIntervals.push_back(newVarInterval);
                 }
 
                 varIntervals.insert(varIntervals.end(), newIntervals.begin(), newIntervals.end());
             } else {
                 for (auto& varInterval : varIntervals){
-                    varInterval.addRange((uint32_t)lower, upper);
+                    varInterval.addRange(lower, upper);
                 }
             }            
         }
@@ -444,9 +418,11 @@ namespace PetriEngine {
             //can be checked by summing the differences
             uint32_t colorsBefore = 0;
             for (auto interval : placeFixpoint.constraints._intervals) {
+                uint32_t intervalColors = 1;
                 for(auto range: interval._ranges) {
-                    colorsBefore += 1+  range._upper - range._lower;
-                }                
+                    intervalColors *= 1+  range._upper - range._lower;
+                }  
+                colorsBefore += intervalColors;              
             }
                 
             std::set<const Colored::Variable *> variables;
@@ -455,21 +431,22 @@ namespace PetriEngine {
             if (!variables.empty()) {
                 transitionHasVarOutArcs = true;
             }
-
             auto intervals = arc.expr->getOutputIntervals(transition.variableMap);
 
             for(auto interval : intervals._intervals){
                 placeFixpoint.constraints.addInterval(interval);    
             }
             
-            placeFixpoint.constraints.mergeIntervals();           
+            placeFixpoint.constraints.mergeIntervals();    
 
             if (!placeFixpoint.inQueue) {
                 uint32_t colorsAfter = 0;
                 for (auto interval : placeFixpoint.constraints._intervals) {
-                    for(auto range : interval._ranges) {
-                        colorsAfter += 1 + range._upper - range._lower;
-                    }                    
+                    uint32_t intervalColors = 1;
+                    for(auto range: interval._ranges) {
+                        intervalColors *= 1+  range._upper - range._lower;
+                    }  
+                    colorsAfter += intervalColors;                        
                 }
                 if (colorsAfter > colorsBefore) {
                     _placeFixpointQueue.push_back(arc.place);
