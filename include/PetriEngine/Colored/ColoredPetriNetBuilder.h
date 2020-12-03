@@ -165,6 +165,7 @@ namespace PetriEngine {
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
         std::unordered_map<std::string,uint32_t> _transitionnames;
+        std::unordered_map<uint32_t, std::unordered_map<uint32_t, Colored::ArcIntervals>> _arcIntervals;
         std::unordered_map<uint32_t,std::vector<uint32_t>> _placePostTransitionMap;
         std::unordered_map<uint32_t,BindingGenerator> _bindings;
         PTPlaceMap _ptplacenames;
@@ -192,17 +193,17 @@ namespace PetriEngine {
 
         void printPlaceTable();
 
-        void setupTransitionVars();
+        std::unordered_map<uint32_t, Colored::ArcIntervals> setupTransitionVars(Colored::Transition transition);
         
         void addArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
                 bool input);
 
-        bool ColoredPetriNetBuilder::getVarIntervals(std::unordered_map<Colored::Arc*, Colored::ArcIntervals> arcIntervalsMap, std::unordered_map<Colored::Variable *, Reachability::intervalTuple_t>& variableMap);
+        bool getVarIntervals(std::unordered_map<const Colored::Variable *, Reachability::intervalTuple_t>& variableMap, uint32_t transitionId);
        
-        std::vector<Reachability::interval_t> getIntervalsFromInterval(Reachability::interval_t interval, uint32_t varPosition, int32_t varModifier, Colored::Variable * var);
-        void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, bool &transitionActivated);
+        std::vector<Reachability::interval_t> getIntervalsFromInterval(Reachability::interval_t interval, uint32_t varPosition, int32_t varModifier, const Colored::Variable * var);
+        void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated);
         void processOutputArcs(Colored::Transition& transition);
         
         void unfoldPlace(Colored::Place& place);

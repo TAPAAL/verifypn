@@ -416,7 +416,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
             parseValue(it, text);
             initialMarking = atoll(text.c_str());
         } else if (strcmp(it->name(),"hlinitialMarking") == 0) {
-            std::unordered_map<std::string, const PetriEngine::Colored::Color*> binding;
+            std::unordered_map<const PetriEngine::Colored::Variable*, const PetriEngine::Colored::Color*> binding;
             PetriEngine::Colored::ExpressionContext context {binding, colorTypes};
             hlinitialMarking = parseArcExpression(it->first_node("structure"))->eval(context);
         } else if (strcmp(it->name(), "type") == 0) {

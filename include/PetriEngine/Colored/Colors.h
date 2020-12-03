@@ -373,7 +373,7 @@ namespace PetriEngine {
         };
 
         struct ArcIntervals {
-            std::unordered_map<Colored::Variable *, std::pair<uint32_t, int32_t>> _varIndexModMap;
+            std::unordered_map<const Colored::Variable *, std::pair<uint32_t, int32_t>> _varIndexModMap;
             Reachability::intervalTuple_t _intervalTuple;
             Colored::ColorFixpoint * _source;
             //are these arc intervals or something seperate
@@ -386,10 +386,10 @@ namespace PetriEngine {
             ArcIntervals(Colored::ColorFixpoint * source) : _source(source){
             }
 
-            ArcIntervals(Colored::ColorFixpoint * source, std::unordered_map<Colored::Variable *, std::pair<uint32_t, int32_t>> varIndexModMap) : _source(source), _varIndexModMap(varIndexModMap) {
+            ArcIntervals(Colored::ColorFixpoint * source, std::unordered_map<const Colored::Variable *, std::pair<uint32_t, int32_t>> varIndexModMap) : _varIndexModMap(varIndexModMap), _source(source) {
             };
 
-            ArcIntervals(Colored::ColorFixpoint * source, std::unordered_map<Colored::Variable *, std::pair<uint32_t, int32_t>> varIndexModMap,  Reachability::intervalTuple_t ranges) : _source(source), _varIndexModMap(varIndexModMap), _intervalTuple(ranges) {
+            ArcIntervals(Colored::ColorFixpoint * source, std::unordered_map<const Colored::Variable *, std::pair<uint32_t, int32_t>> varIndexModMap,  Reachability::intervalTuple_t ranges) : _varIndexModMap(varIndexModMap), _intervalTuple(ranges), _source(source) {
             };
 
             size_t size() {
@@ -426,8 +426,8 @@ namespace PetriEngine {
                 return false;
             }
 
-            std::set<Colored::Variable *> getVariables(){
-                std::set<Colored::Variable *> res;
+            std::set<const Colored::Variable *> getVariables(){
+                std::set<const Colored::Variable *> res;
                 for (auto varModPair : _varIndexModMap){
                     res.insert(varModPair.first);
                 }
