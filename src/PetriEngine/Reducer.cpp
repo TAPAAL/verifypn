@@ -1631,7 +1631,7 @@ namespace PetriEngine {
                     {
                         std::cerr << "Skipping Rule" << rnames[reduction[i]] << " due to NEXT operator in proposition" << std::endl;
                         reduction.erase(reduction.begin() + i);
-			continue;
+			            continue;
                     }
                 }
                 if(!remove_loops && reduction[i] == 5)

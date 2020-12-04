@@ -124,14 +124,16 @@ namespace PetriEngine {
         template<typename T, bool K>
         Condition_ptr makeLog(const std::vector<Condition_ptr>& conds, bool aggressive)
         {
-            if(conds.size() == 0) return BooleanCondition::getShared(K);
+            if(conds.size() == 0)
+                return BooleanCondition::getShared(K);
             if(conds.size() == 1) return conds[0];
 
             std::vector<Condition_ptr> cnds;
             for(auto& c : conds) tryMerge<T>(cnds, c, aggressive);
             auto res = std::make_shared<T>(cnds);
             if(res->singular()) return *res->begin();
-            if(res->empty()) return BooleanCondition::getShared(K);
+            if(res->empty())
+                return BooleanCondition::getShared(K);
             return res;
         }
         
@@ -722,6 +724,29 @@ namespace PetriEngine {
             return RUNKNOWN;
         }
 
+        Condition::Result ACondition::evaluate(const EvaluationContext& context) {
+            //if (_cond->evaluate(context) == RFALSE) return RFALSE;
+            return RUNKNOWN;
+        }
+
+        Condition::Result ECondition::evaluate(const EvaluationContext& context) {
+            //if (_cond->evaluate(context) == RTRUE) return RTRUE;
+            return RUNKNOWN;
+        }
+
+        Condition::Result FCondition::evaluate(const EvaluationContext& context) {
+            //if (_cond->evaluate(context) == RTRUE) return RTRUE;
+            return RUNKNOWN;
+        }
+
+        Condition::Result GCondition::evaluate(const EvaluationContext& context) {
+            //if (_cond->evaluate(context) == RFALSE) return RFALSE;
+            return RUNKNOWN;
+        }
+
+/*        Condition::Result XCondition::evaluate(const EvaluationContext& context) {
+            return _cond->evaluate(context);
+        }*/
 
         Condition::Result UntilCondition::evaluate(const EvaluationContext& context) {
             auto r2 = _cond2->evaluate(context);
@@ -2090,7 +2115,7 @@ namespace PetriEngine {
                 return Retval(std::make_shared<AXCondition>(r.formula));
             }
         }
-        
+
         Retval simplifyEF(Retval& r, SimplificationContext& context){
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)){
                 return Retval(BooleanCondition::TRUE_CONSTANT);
@@ -2130,7 +2155,20 @@ namespace PetriEngine {
                 return Retval(std::make_shared<AGCondition>(r.formula));
             }
         }
-        
+
+        template <typename Quantifier>
+        Retval simplifySimpleQuant(Retval& r, SimplificationContext& context) {
+            static_assert(is_base_of_v<SimpleQuantifierCondition, Quantifier>);
+            if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)) {
+                return Retval(BooleanCondition::TRUE_CONSTANT);
+            } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)) {
+                return Retval(BooleanCondition::FALSE_CONSTANT);
+            } else {
+                return Retval(std::make_shared<Quantifier>(r.formula));
+            }
+        }
+
+
         Retval EXCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
             return context.negated() ? simplifyAX(r, context) : simplifyEX(r, context);
@@ -2221,7 +2259,7 @@ namespace PetriEngine {
                 context.setNegate(neg);
                 return neg ? 
                             Retval(BooleanCondition::TRUE_CONSTANT) :
-                            Retval(BooleanCondition::FALSE_CONSTANT);                
+                            Retval(BooleanCondition::FALSE_CONSTANT);
             }
             Retval r1 = _cond1->simplify(context);
             context.setNegate(neg);
@@ -2246,7 +2284,77 @@ namespace PetriEngine {
                 }
             }
         }
-        
+
+        Retval UntilCondition::simplify(SimplificationContext& context) const {
+            bool neg = context.negated();
+            context.setNegate(false);
+
+            Retval r2 = _cond2->simplify(context);
+            if(r2.formula->isTriviallyTrue() || !r2.neglps->satisfiable(context))
+            {
+                context.setNegate(neg);
+                return neg ?
+                       Retval(BooleanCondition::FALSE_CONSTANT) :
+                       Retval(BooleanCondition::TRUE_CONSTANT);
+            }
+            else if(r2.formula->isTriviallyFalse() || !r2.lps->satisfiable(context))
+            {
+                context.setNegate(neg);
+                return neg ?
+                       Retval(BooleanCondition::TRUE_CONSTANT) :
+                       Retval(BooleanCondition::FALSE_CONSTANT);
+            }
+            Retval r1 = _cond1->simplify(context);
+            context.setNegate(neg);
+
+            if(context.negated()){
+                if(r1.formula->isTriviallyTrue() || !r1.neglps->satisfiable(context)){
+                    return Retval(std::make_shared<NotCondition>(
+                            std::make_shared<FCondition>(r2.formula)));
+                } else if(r1.formula->isTriviallyFalse() || !r1.lps->satisfiable(context)){
+                    return Retval(std::make_shared<NotCondition>(r2.formula));
+                } else {
+                    return Retval(std::make_shared<NotCondition>(
+                            std::make_shared<UntilCondition>(r1.formula, r2.formula)));
+                }
+            } else {
+                if(r1.formula->isTriviallyTrue() || !r1.neglps->satisfiable(context)){
+                    return Retval(std::make_shared<FCondition>(r2.formula));
+                } else if(r1.formula->isTriviallyFalse() || !r1.lps->satisfiable(context)){
+                    return r2;
+                } else {
+                    return Retval(std::make_shared<UntilCondition>(r1.formula, r2.formula));
+                }
+            }
+        }
+
+        Retval ECondition::simplify(SimplificationContext& context) const {
+            assert(false);
+            Retval r = _cond->simplify(context);
+            return context.negated() ? simplifySimpleQuant<ACondition>(r, context) : simplifySimpleQuant<ECondition>(r, context);
+        }
+
+        Retval ACondition::simplify(SimplificationContext& context) const {
+            assert(false);
+            Retval r = _cond->simplify(context);
+            return context.negated() ? simplifySimpleQuant<ECondition>(r, context) : simplifySimpleQuant<ACondition>(r, context);
+        }
+
+        Retval FCondition::simplify(SimplificationContext& context) const {
+            Retval r = _cond->simplify(context);
+            return context.negated() ? simplifySimpleQuant<GCondition>(r, context) : simplifySimpleQuant<FCondition>(r, context);
+        }
+
+        Retval GCondition::simplify(SimplificationContext& context) const {
+            Retval r = _cond->simplify(context);
+            return context.negated() ? simplifySimpleQuant<FCondition>(r, context) : simplifySimpleQuant<GCondition>(r, context);
+        }
+
+        Retval XCondition::simplify(SimplificationContext& context) const {
+            Retval r = _cond->simplify(context);
+            return simplifySimpleQuant<XCondition>(r, context);
+        }
+
         AbstractProgramCollection_ptr mergeLps(std::vector<AbstractProgramCollection_ptr>&& lps)
         {
             if(lps.size() == 0) return nullptr;
@@ -3027,7 +3135,7 @@ namespace PetriEngine {
             {
                 if(a == BooleanCondition::TRUE_CONSTANT) 
                 { ++stats[6]; return a;}
-                if(a == BooleanCondition::FALSE_CONSTANT)  
+                if(a == BooleanCondition::FALSE_CONSTANT)
                 { ++stats[7]; return DeadlockCondition::DEADLOCK; }
                 a = std::make_shared<AXCondition>(a);
             }
@@ -3304,6 +3412,94 @@ namespace PetriEngine {
             }, stats, context, nested, negated, initrw);
         }
 
+        Condition_ptr
+        UntilCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                     bool initrw) {
+            return initialMarkingRW([&]() -> Condition_ptr {
+                auto b = _cond2->pushNegation(stats, context, true, false, initrw);
+                auto a = _cond1->pushNegation(stats, context, true, false, initrw);
+
+                if (auto cond = dynamic_pointer_cast<FCondition>(b)) {
+                    static_assert(negstat_t::nrules >= 35);
+                    ++stats[34];
+                    if (negated)
+                        return std::make_shared<NotCondition>(b);
+                    return b;
+                }
+
+                auto c = std::make_shared<UntilCondition>(a, b);
+                if(negated) return std::make_shared<NotCondition>(c);
+                return c;
+            }, stats, context, nested, negated, initrw);
+        }
+
+        Condition_ptr XCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return initialMarkingRW([&]() -> Condition_ptr {
+               auto res = _cond->pushNegation(stats, context, true, negated, initrw);
+               if (res == BooleanCondition::TRUE_CONSTANT || res == BooleanCondition::FALSE_CONSTANT) {
+                   return res;
+               }
+               return std::make_shared<XCondition>(res);
+            }, stats, context, nested, negated, initrw);
+        }
+
+        Condition_ptr FCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return initialMarkingRW([&]() -> Condition_ptr {
+                auto a = _cond->pushNegation(stats, context, true, false, initrw);
+                if(!a->isTemporal())
+                {
+                    auto res = std::make_shared<FCondition>(a);
+                    if(negated) return std::make_shared<NotCondition>(res);
+                    return res;
+                }
+
+                if (dynamic_cast<FCondition*>(a.get())) {
+                    ++stats[31];
+                    if (negated) a = std::make_shared<NotCondition>(a);
+                    return a;
+                }
+                else if (auto cond = dynamic_cast<UntilCondition*>(a.get())) {
+                    ++stats[32];
+                    return FCondition((*cond)[1]).pushNegation(stats, context, nested, negated, initrw);
+                }
+                else if (auto cond = dynamic_cast<OrCondition*>(a.get())) {
+                    if(!cond->isTemporal())
+                    {
+                        Condition_ptr b = std::make_shared<FCondition>(a);
+                        if(negated) b = std::make_shared<NotCondition>(b);
+                        return b;
+                    }
+                    ++stats[33];
+                    std::vector<Condition_ptr> distributed;
+                    for (auto& i: *cond) {
+                        distributed.push_back(std::make_shared<FCondition>(i));
+                    }
+                    return makeOr(distributed)->pushNegation(stats, context, nested, negated, initrw);
+                }
+                else {
+                    Condition_ptr b = std::make_shared<FCondition>(a);
+                    if (negated) b = std::make_shared<NotCondition>(b);
+                    return b;
+                }
+            }, stats, context, nested, negated, initrw);
+        }
+
+        Condition_ptr ACondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return ECondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
+        }
+
+        Condition_ptr ECondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return std::make_shared<ECondition>(_cond->pushNegation(stats, context, nested, !negated, initrw));
+        }
+
+        Condition_ptr GCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return FCondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
+        }
         
         Condition_ptr pushAnd(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children, bool initrw)
         {
@@ -3329,7 +3525,8 @@ namespace PetriEngine {
                     other.emplace_back(n);
                 }
             }         
-            if(nef.size() + other.size() == 0) return BooleanCondition::TRUE_CONSTANT;
+            if(nef.size() + other.size() == 0)
+                return BooleanCondition::TRUE_CONSTANT;
             if(nef.size() + other.size() == 1) 
             { 
                 return nef.size() == 0 ? 
@@ -3365,7 +3562,8 @@ namespace PetriEngine {
                     other.emplace_back(n);
                 }
             }
-            if(nef.size() + other.size() == 0) return BooleanCondition::FALSE_CONSTANT;
+            if(nef.size() + other.size() == 0)
+                return BooleanCondition::FALSE_CONSTANT;
             if(nef.size() + other.size() == 1) { return nef.size() == 0 ? other[0] : std::make_shared<EFCondition>(nef[0]);}
             if(nef.size() != 0) other.push_back(
                     std::make_shared<EFCondition>(
@@ -3465,7 +3663,8 @@ namespace PetriEngine {
 
         Condition_ptr LessThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
+            if(isTrivial())
+                return BooleanCondition::getShared(evaluate(context) xor negated);
             if(negated) return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<LessThanCondition>(_expr1, _expr2);
             }, stats, context, nested, negated, initrw);
@@ -3474,7 +3673,8 @@ namespace PetriEngine {
         
         Condition_ptr GreaterThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
+            if(isTrivial())
+                return BooleanCondition::getShared(evaluate(context) xor negated);
             if(negated) return std::make_shared<LessThanCondition>(_expr1, _expr2);
             else        return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated, initrw);
@@ -3483,7 +3683,8 @@ namespace PetriEngine {
         
         Condition_ptr LessThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
+            if(isTrivial())
+                return BooleanCondition::getShared(evaluate(context) xor negated);
             if(negated) return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
             else        return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated, initrw);
@@ -3492,7 +3693,8 @@ namespace PetriEngine {
         
         Condition_ptr GreaterThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
+            if(isTrivial())
+                return BooleanCondition::getShared(evaluate(context) xor negated);
             if(negated) return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
             else        return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
             }, stats, context, nested, negated, initrw);
@@ -3500,7 +3702,8 @@ namespace PetriEngine {
                 
         Condition_ptr pushEqual(CompareCondition* org, bool negated, bool noteq, const EvaluationContext& context)
         {
-            if(org->isTrivial()) return BooleanCondition::getShared(org->evaluate(context) xor negated);
+            if(org->isTrivial())
+                return BooleanCondition::getShared(org->evaluate(context) xor negated);
             for(auto i : {0,1})
             {
                 if((*org)[i]->placeFree() && (*org)[i]->evaluate(context) == 0)
@@ -3644,7 +3847,7 @@ namespace PetriEngine {
         void SimpleQuantifierCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
             _cond->findInteresting(generator, negated);
         }
-        
+
         void UntilCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
             _cond1->findInteresting(generator, negated);
             _cond1->findInteresting(generator, !negated);
@@ -4093,8 +4296,6 @@ namespace PetriEngine {
             }
             return false;
         }
-
-
     } // PQL
 } // PetriEngine
 

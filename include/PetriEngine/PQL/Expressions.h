@@ -400,7 +400,7 @@ namespace PetriEngine {
         class QuantifierCondition : public Condition
         {
         public:
-            virtual bool isTemporal() const override { return true;}
+            bool isTemporal() const override { return true;}
             CTLType getQueryType() const override { return CTLType::PATHQEURY; }
             virtual const Condition_ptr& operator[] (size_t i) const = 0;
         };
@@ -422,7 +422,7 @@ namespace PetriEngine {
             void toBinary(std::ostream& out) const override;
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
-            virtual bool containsNext() const override { return _cond->containsNext(); }
+            bool containsNext() const override { return _cond->containsNext(); }
             bool nestedDeadlock() const override { return _cond->nestedDeadlock(); }
         private:
             virtual std::string op() const = 0;
@@ -434,10 +434,10 @@ namespace PetriEngine {
         class ECondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            Retval simplify(SimplificationContext& context) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+
+            Result evaluate(const EvaluationContext& context) override;
+
+            Retval simplify(SimplificationContext& context) const override;
 
             bool isReachability(uint32_t depth) const override {
                 // TODO implement
@@ -447,10 +447,7 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void toXML(std::ostream&, uint32_t tabs) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -462,7 +459,7 @@ namespace PetriEngine {
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
             bool containsNext() const override { return true; }
-            virtual bool isLoopSensitive() const override { return true; }
+            bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
         private:
             std::string op() const override;
@@ -471,10 +468,10 @@ namespace PetriEngine {
       class ACondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            Retval simplify(SimplificationContext& context) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+
+            Result evaluate(const EvaluationContext& context) override;
+
+            Retval simplify(SimplificationContext& context) const override;
             bool isReachability(uint32_t depth) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -483,10 +480,7 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void toXML(std::ostream&, uint32_t tabs) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -498,55 +492,72 @@ namespace PetriEngine {
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
             bool containsNext() const override { return true; }
-            virtual bool isLoopSensitive() const override { return true; }
+            bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
         private:
             std::string op() const override;
         };
 
       class GCondition : public SimpleQuantifierCondition {
-        public:
-            using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            Retval simplify(SimplificationContext& context) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
-            bool isReachability(uint32_t depth) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
-            Condition_ptr prepareForReachability(bool negated) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
-            void toXML(std::ostream&, uint32_t tabs) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
-            Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
-            Path getPath() const override             { return Path::G; }
-            uint32_t distance(DistanceContext& context) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
-            bool containsNext() const override { return _cond->containsNext(); }
-            virtual bool isLoopSensitive() const override { return true; }
-            void visit(Visitor&) const override;
-        private:
-            std::string op() const override;
-        };
+      public:
+          using SimpleQuantifierCondition::SimpleQuantifierCondition;
+
+          Result evaluate(const EvaluationContext &context) override;
+
+          bool isReachability(uint32_t depth) const override {
+              // TODO implement
+              assert(false);
+              std::cerr << "TODO implement" << std::endl;
+              exit(0);
+          }
+
+          Condition_ptr prepareForReachability(bool negated) const override {
+              // TODO implement
+              assert(false);
+              std::cerr << "TODO implement" << std::endl;
+              exit(0);
+          }
+
+          Condition_ptr
+          pushNegation(negstat_t &, const EvaluationContext &context, bool nested, bool negated, bool initrw) override;
+
+          Retval simplify(SimplificationContext &context) const override;
+
+          void toXML(std::ostream &, uint32_t tabs) const override {
+              // TODO implement
+              assert(false);
+              std::cerr << "TODO implement" << std::endl;
+              exit(0);
+          }
+
+          Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
+
+          Path getPath() const override { return Path::G; }
+
+          uint32_t distance(DistanceContext &context) const override {
+              // TODO implement
+              assert(false);
+              std::cerr << "TODO implement" << std::endl;
+              exit(0);
+          }
+
+          bool containsNext() const override { return _cond->containsNext(); }
+
+          bool isLoopSensitive() const override { return true; }
+
+          void visit(Visitor &) const override;
+
+      private:
+          std::string op() const override;
+      };
 
       class FCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            Retval simplify(SimplificationContext& context) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+
+            Result evaluate(const EvaluationContext& context) override;
+
+            Retval simplify(SimplificationContext& context) const override;
             bool isReachability(uint32_t depth) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -555,10 +566,7 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void toXML(std::ostream&, uint32_t tabs) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -570,7 +578,7 @@ namespace PetriEngine {
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
             bool containsNext() const override { return _cond->containsNext(); }
-            virtual bool isLoopSensitive() const override { return true; }
+            bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
         private:
             std::string op() const override;
@@ -579,10 +587,7 @@ namespace PetriEngine {
         class XCondition : public SimpleQuantifierCondition {
         public:
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
-            Retval simplify(SimplificationContext& context) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+
             bool isReachability(uint32_t depth) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -591,10 +596,8 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+            Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -606,7 +609,7 @@ namespace PetriEngine {
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
             bool containsNext() const override { return true; }
-            virtual bool isLoopSensitive() const override { return true; }
+            bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
         private:
             std::string op() const override;
@@ -764,14 +767,9 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            Retval simplify(SimplificationContext& context) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            Retval simplify(SimplificationContext& context) const override;
+            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+
             void toXML(std::ostream&, uint32_t tabs) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
