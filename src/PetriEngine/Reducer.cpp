@@ -1634,7 +1634,7 @@ namespace PetriEngine {
 			continue;
                     }
                 }
-                if(!remove_loops && reduction[i] == 6)
+                if(!remove_loops && reduction[i] == 5)
                 {
                     std::cerr << "Skipping Rule" << rnames[reduction[i]] << " as proposition is loop sensitive" << std::endl;
                     reduction.erase(reduction.begin() + i);
