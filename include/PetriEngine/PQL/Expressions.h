@@ -458,8 +458,11 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            bool containsNext() const override { return true; }
-            bool isLoopSensitive() const override { return true; }
+            bool isLoopSensitive() const override {
+                // Other LTL Loop sensitivity depend on the outermost quantifier being an A,
+                // so if it is an E we disable loop sensitive reductions.
+                return true;
+            }
             void visit(Visitor&) const override;
         private:
             std::string op() const override;
@@ -491,8 +494,6 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            bool containsNext() const override { return true; }
-            bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
         private:
             std::string op() const override;
@@ -541,8 +542,6 @@ namespace PetriEngine {
               exit(0);
           }
 
-          bool containsNext() const override { return _cond->containsNext(); }
-
           bool isLoopSensitive() const override { return true; }
 
           void visit(Visitor &) const override;
@@ -577,7 +576,6 @@ namespace PetriEngine {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
-            bool containsNext() const override { return _cond->containsNext(); }
             bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
         private:

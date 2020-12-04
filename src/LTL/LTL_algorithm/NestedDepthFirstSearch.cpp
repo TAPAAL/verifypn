@@ -63,9 +63,6 @@ namespace LTL {
                     if (violation) return;
                 }
             } else {
-#ifdef PRINTF_DEBUG
-                dump_state(working);
-#endif
                 auto[_, stateid] = states.add(working);
                 auto[it, is_new] = mark1.insert(stateid);
                 top.sucinfo.last_state = stateid;
@@ -79,9 +76,6 @@ namespace LTL {
 
 
     void NestedDepthFirstSearch::ndfs(State &state) {
-#ifdef PRINTF_DEBUG
-        std::cerr << "ENTERING NDFS" << std::endl;
-#endif
         std::stack<StackEntry> todo;
 
         State working = factory.newState();
@@ -99,9 +93,6 @@ namespace LTL {
             if (!successorGenerator->next(working, top.sucinfo)) {
                 todo.pop();
             } else {
-#ifdef PRINTF_DEBUG
-                dump_state(working);
-#endif
                 if (shortcircuitweak && is_weak && !successorGenerator->isAccepting(working)) {
                     weakskip = true;
                     continue;
@@ -124,8 +115,5 @@ namespace LTL {
 
             }
         }
-#ifdef PRINTF_DEBUG
-        std::cerr << "LEAVING NDFS" << std::endl;
-#endif
     }
 }

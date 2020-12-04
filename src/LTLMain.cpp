@@ -43,6 +43,25 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
 
+void printStats(PetriNetBuilder &builder, options_t &options) {
+    if (options.printstatistics) {
+        if (options.enablereduction != 0) {
+
+            std::cout << "Size of net before structural reductions: " <<
+                      builder.numberOfPlaces() << " places, " <<
+                      builder.numberOfTransitions() << " transitions" << std::endl;
+            std::cout << "Size of net after structural reductions: " <<
+                      builder.numberOfPlaces() - builder.RemovedPlaces() << " places, " <<
+                      builder.numberOfTransitions() - builder.RemovedTransitions() << " transitions" << std::endl;
+            std::cout << "Structural reduction finished after " << builder.getReductionTime() <<
+                      " seconds" << std::endl;
+
+            std::cout << "\nNet reduction is enabled.\n";
+            builder.printStats(std::cout);
+        }
+    }
+}
+
 std::vector<std::string> explode(std::string const &s) {
     std::vector<std::string> result;
     std::istringstream iss(s);
@@ -449,14 +468,14 @@ ReturnValue LTLMain(options_t options) {
         std::cerr << "Error parsing the query file" << std::endl;
         return ErrorCode;
     }
-    std::vector<Condition_ptr> queries;
     std::vector<std::string> querynames;
-    for (QueryItem &item : parser.queries) {
-        if (item.query == nullptr) continue;
-
-        queries.push_back(item.query);
-        querynames.push_back(item.id);
+    std::vector<Condition_ptr> queries;
+    for (int i = 0; i < parser.queries.size(); i++) {
+        if (options.querynumbers.count(i) == 0) continue;
+        querynames.push_back(parser.queries[i].id);
+        queries.push_back(parser.queries[i].query);
     }
+
 
     ColoredPetriNetBuilder cpnBuilder;
 
@@ -468,6 +487,7 @@ ReturnValue LTLMain(options_t options) {
     PetriNetBuilder builder(strippedBuilder);
     //std::unique_ptr<PetriNet> net{builder.makePetriNet(false)};
     /*if ((v = contextAnalysis(cpnBuilder, builder, net.get(), parser.queries)) != ContinueCode) {
+    if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode){
         std::cerr << "Error performing context analysis" << std::endl;
         return v;
     }*/
@@ -656,12 +676,45 @@ ReturnValue LTLMain(options_t options) {
                  options.queryReductionTimeout && to_handle > 0);
     }
 
-    auto net = std::unique_ptr<PetriNet>(builder.makePetriNet());
+   /* auto net = std::unique_ptr<PetriNet>(builder.makePetriNet());
     // Assign indexes
     if (queries.size() == 0 || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
         std::cerr << "An error occurred while assigning indexes" << std::endl;
         return ErrorCode;
+    }*/
+
+    //--------------------- Apply Net Reduction ---------------//
+    builder.sort();
+
+    std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::CTL);
+    ResultPrinter printer(&builder, &options, querynames);
+
+    if (options.enablereduction > 0) {
+
+        // Compute how many times each place appears in the query
+        builder.startTimer();
+        builder.reduce(queries, results, options.enablereduction, options.trace, nullptr, options.reductionTimeout,
+                       options.reductions);
+        printer.setReducer(builder.getReducer());
     }
+
+    printStats(builder, options);
+
+    auto net = std::unique_ptr<PetriNet>(builder.makePetriNet());
+
+    if (!options.model_out_file.empty()) {
+        fstream file;
+        file.open(options.model_out_file, std::ios::out);
+        net->toXML(file);
+    }
+
+    //--------------------- Verify LTL queries ---------------//
+
+    if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode) {
+        std::cerr << "Error performing context analysis" << std::endl;
+        return v;
+    }
+
     for (int i = 0; i < queries.size(); ++i) {
         LTL::FormulaToSpotSyntax printer{std::cout};
         auto query = queries[i];
@@ -698,7 +751,6 @@ ReturnValue LTLMain(options_t options) {
                   (satisfied ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT" <<
                   (options.ltlalgorithm == LTL::Algorithm::NDFS ? " NDFS" : " TARJAN") <<
                   (weakskip ? " WEAK_SKIP" : "") << std::endl;
-
     }
 
     return SuccessCode;
