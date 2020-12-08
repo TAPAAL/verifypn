@@ -279,93 +279,75 @@ namespace PetriEngine {
 
     //could be expanded to handle when a variable apears multiple times on an arc with different modifiers
     bool ColoredPetriNetBuilder::getVarIntervals(std::unordered_map<const Colored::Variable *, Reachability::intervalTuple_t>& variableMap, uint32_t transitionId){
-        bool stabilized = false;
-        
-        while(!stabilized){
-            stabilized = true;
-            for(auto& arcIntervals : _arcIntervals[transitionId]){
-                for(auto pair : arcIntervals.second._varIndexModMap){
-                    auto varPosition = pair.second.first;
-                    auto varModifier = pair.second.second;
-                    if(variableMap.count(pair.first) == 0){                  
-                        Reachability::intervalTuple_t varIntervalTuple;
-                        for(uint32_t i = 0; i < arcIntervals.second._intervalTuple._intervals.size(); i++){
-                            auto interval = &arcIntervals.second._intervalTuple._intervals[i];
-                            if(!interval->_active){
-                                continue;
-                            }
-                            auto intervals = getIntervalsFromInterval(interval, varPosition, varModifier, pair.first); 
-                                                
-                            for(auto varInterval : intervals){
-                                // std::cout << "Interval: ";
-                                // varInterval.print();
-                                // std::cout << std::endl;
-                                varInterval._parentIntervals[arcIntervals.first].insert(interval);
-                                varIntervalTuple.addInterval(varInterval);
-                            }                        
+        for(auto& arcIntervals : _arcIntervals[transitionId]){
+            for(auto pair : arcIntervals.second._varIndexModMap){
+                auto varPosition = pair.second.first;
+                auto varModifier = pair.second.second;
+                if(variableMap.count(pair.first) == 0){                  
+                    Reachability::intervalTuple_t varIntervalTuple;
+                    for(uint32_t i = 0; i < arcIntervals.second._intervalTuple._intervals.size(); i++){
+                        auto interval = &arcIntervals.second._intervalTuple._intervals[i];
+                        if(!interval->_active){
+                            continue;
                         }
-                        varIntervalTuple.mergeIntervals();                  
-                        variableMap[pair.first] = varIntervalTuple;
-                    } else {    
-                        std::vector<uint32_t> unusedIntervals; 
-                        Reachability::intervalTuple_t collectedIntervalTuple;
-                        for(uint32_t i = 0; i < arcIntervals.second._intervalTuple._intervals.size(); i++){
-                            auto interval = &arcIntervals.second._intervalTuple._intervals[i];
-                            if(!interval->_active){
-                                continue;
-                            }
-                            bool intervalUsed = false;
-                            Reachability::intervalTuple_t newIntervalTuple;
-                            auto varIntervals = getIntervalsFromInterval(interval, varPosition, varModifier, pair.first);
 
-                            for (auto arcVarInterval : varIntervals){
-                                for (auto varInterval : variableMap[pair.first]._intervals){
-                                    // std::cout << "Arc Interval: ";
-                                    // arcVarInterval.print();
-                                    // std::cout << std::endl;
-                                    // std::cout << "Stored Interval: ";
-                                    // varInterval.print();
-                                    // std::cout << std::endl;
-                                    auto overlappingInterval = arcVarInterval.getOverlap(varInterval);
-                                    
-
-                                    if(overlappingInterval.isSound()){
-                                        // std::cout << "Found sound Interval: ";
-                                        // overlappingInterval.print();
-                                        // std::cout << std::endl;
-                                        intervalUsed = true;
-                                        overlappingInterval._parentIntervals = varInterval._parentIntervals;
-                                        overlappingInterval._parentIntervals[arcIntervals.first].insert(interval);
-                                        newIntervalTuple.addInterval(overlappingInterval);
-                                    }
-                                }
-                            }
-                            if(!intervalUsed){
-                                stabilized = false;
-                                unusedIntervals.push_back(i);
-                            }
-                            for(auto newInterval : newIntervalTuple._intervals){
-                                collectedIntervalTuple.addInterval(newInterval);
-                            }                            
-                        }
-                        // std::cout << "Collected intervals before are" << std::endl;
-                        // collectedIntervalTuple.print();
-                        collectedIntervalTuple.mergeIntervals();
-                        // std::cout << "Collected intervals are" << std::endl;
-                        // collectedIntervalTuple.print();
-                        variableMap[pair.first] = collectedIntervalTuple;
-
-                        for(auto unusedInterval : unusedIntervals){
-                            arcIntervals.second._intervalTuple._intervals[unusedInterval]._active = false;
+                        auto intervals = getIntervalsFromInterval(interval, varPosition, varModifier, pair.first); 
+                                            
+                        for(auto varInterval : intervals){                 
+                            varInterval._parentIntervals[arcIntervals.first].add(interval);
+                            varIntervalTuple.addInterval(varInterval);
                         }                        
                     }
-                    //If we do not find any valid intervals for an arc, then we can stop as there will not be any intervals
-                    //which are valid for all arcs
-                    if(!variableMap[pair.first].hasValidIntervals()){
-                        std::cout << "Did not find valid intervals for " << pair.first->name << std::endl;
-                        variableMap[pair.first].print();
-                        return false;
+                    varIntervalTuple.mergeIntervals();                  
+                    variableMap[pair.first] = varIntervalTuple;
+                } else {    
+                    std::vector<uint32_t> unusedIntervals; 
+                    Reachability::intervalTuple_t collectedIntervalTuple;
+                    for(uint32_t i = 0; i < arcIntervals.second._intervalTuple._intervals.size(); i++){
+                        auto interval = &arcIntervals.second._intervalTuple._intervals[i];
+                        if(!interval->_active){
+                            continue;
+                        }
+                        bool intervalUsed = false;
+                        Reachability::intervalTuple_t newIntervalTuple;
+                        auto varIntervals = getIntervalsFromInterval(interval, varPosition, varModifier, pair.first);
+
+                        for (auto arcVarInterval : varIntervals){
+                            for (auto varInterval : variableMap[pair.first]._intervals){
+                                auto overlappingInterval = arcVarInterval.getOverlap(varInterval);
+                                
+                                if(overlappingInterval.isSound()){                                    
+                                    intervalUsed = true;
+                                    overlappingInterval._parentIntervals = varInterval._parentIntervals;
+                                    overlappingInterval._siblingIntervals = varInterval._siblingIntervals;
+                                    for(auto sibling : arcVarInterval._siblingIntervals){
+                                        overlappingInterval._siblingIntervals.push_back(sibling);
+                                    }
+                                    overlappingInterval._parentIntervals[arcIntervals.first].add(interval);
+                                    newIntervalTuple.addInterval(overlappingInterval);
+                                }
+                            }
+                        }
+                        if(!intervalUsed){
+                            unusedIntervals.push_back(i);
+                        }
+                        for(auto newInterval : newIntervalTuple._intervals){
+                            collectedIntervalTuple.addInterval(newInterval);
+                        }                            
                     }
+                    collectedIntervalTuple.mergeIntervals();
+                    variableMap[pair.first] = collectedIntervalTuple;
+
+                    for(auto unusedInterval : unusedIntervals){
+                        arcIntervals.second._intervalTuple._intervals[unusedInterval]._active = false;
+                    }                        
+                }
+                //If we do not find any valid intervals for an arc, then we can stop as there will not be any intervals
+                //which are valid for all arcs
+                if(!variableMap[pair.first].hasValidIntervals()){
+                    std::cout << "Did not find valid intervals for " << pair.first->name << std::endl;
+                    variableMap[pair.first].print();
+                    return false;
                 }
             }
         }
@@ -380,15 +362,17 @@ namespace PetriEngine {
             std::vector<Colored::ColorType*> varColorTypes;
             var->colorType->getColortypes(varColorTypes);
             auto ctSize = varColorTypes[i - varPosition]->size();
-            uint32_t lower = (interval->operator[](i)._lower + varModifier) % ctSize;
-            uint32_t upper = (interval->operator[](i)._upper + varModifier) % ctSize;
+            int32_t lower_val = ctSize + (interval->operator[](i)._lower + varModifier);
+            int32_t upper_val = ctSize + (interval->operator[](i)._upper + varModifier);
+            uint32_t lower = lower_val % ctSize;
+            uint32_t upper = upper_val % ctSize;
 
             if(lower > upper ){
                 std::vector<Reachability::interval_t> newIntervals;
                 for (auto& varInterval : varIntervals){
                     Reachability::interval_t newVarInterval = varInterval; 
-                    newVarInterval._siblingIntervals.insert(&varInterval);
-                    varInterval._siblingIntervals.insert(&newVarInterval);                                   
+                    newVarInterval._siblingIntervals.push_back(&varInterval);
+                    varInterval._siblingIntervals.push_back(&newVarInterval);                                   
                     varInterval.addRange(0, upper);
                     newVarInterval.addRange(lower, ctSize -1);
                     newIntervals.push_back(newVarInterval);

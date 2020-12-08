@@ -23,6 +23,21 @@
 namespace PetriEngine {
     namespace Reachability {
 
+        struct interval_t;
+
+        struct intervalVec {
+            std::vector<interval_t *> intervalPointers;
+
+            void add(interval_t *interval_ptr){
+                for(auto ptr : intervalPointers){
+                    if(ptr == interval_ptr){
+                        return;
+                    }
+                }
+                intervalPointers.push_back(interval_ptr);
+            }
+        };
+
         struct range_t {
 
             static inline uint32_t min() {
@@ -437,8 +452,8 @@ namespace PetriEngine {
 
         struct interval_t {
             std::vector<Reachability::range_t> _ranges;
-            std::unordered_map<uint32_t,std::set<interval_t *>> _parentIntervals;
-            std::set<interval_t *> _siblingIntervals;
+            std::unordered_map<uint32_t,intervalVec> _parentIntervals;
+            std::vector<interval_t *> _siblingIntervals;
             bool _active = true;
 
             interval_t() {
@@ -461,7 +476,7 @@ namespace PetriEngine {
                 }
                 if(!activeSiblings){
                     for(auto parent : _parentIntervals){
-                        for(auto interval : parent.second){
+                        for(auto interval : parent.second.intervalPointers){
                             std::cout << "Marking parent as inactive: ";
                             interval->print();
                             std::cout << std::endl << std::endl;
@@ -490,12 +505,14 @@ namespace PetriEngine {
                 }
                 for(auto parent_ptr : _parentIntervals){
                     bool activeParentInterval = false;
-                    for (auto pInterval : parent_ptr.second){
+                    for (auto pInterval : parent_ptr.second.intervalPointers){
                         if(pInterval->_active){
                             activeParentInterval = true;
+                            break;
                         }
                     }
                     if(!activeParentInterval){
+                        std::cout << "Place " << parent_ptr.first << " not active " << std::endl;
                         return false;
                     }                                      
                 }
@@ -661,9 +678,10 @@ namespace PetriEngine {
             bool parentIntervalsActive(){
                 for(auto pIntervals : _parentIntervals){
                     bool activePInterval = false;
-                    for(auto interval : pIntervals.second){
+                    for(auto interval : pIntervals.second.intervalPointers){
                         if(interval->_active){
                             activePInterval = true;
+                            break;
                         }
                     }
                     if(!activePInterval){
@@ -873,7 +891,7 @@ namespace PetriEngine {
                 for (auto interval : _intervals){
                     std::cout << "[";
                     interval.print();
-                    std::cout << "]" << std::endl;
+                    std::cout << "]\t" << interval._active << std::endl;
                 }
             }
 
@@ -894,11 +912,13 @@ namespace PetriEngine {
                     for(uint32_t i = 0; i < interval.size(); i++){
                         std::vector<interval_t> tempIntervals;
                         for(auto& interval1 : newIntervals){
-                            uint32_t lower = (interval1[i]._lower + modifier)% sizes[i];
-                            uint32_t upper = (interval1[i]._upper + modifier)% sizes[i];
+                            int32_t lower_val = sizes[i] + (interval1[i]._lower + modifier);
+                            int32_t upper_val = sizes[i] + (interval1[i]._upper + modifier);
+                            uint32_t lower = lower_val % sizes[i];
+                            uint32_t upper = upper_val % sizes[i];
                             if(lower > upper){
                                 auto newInterval = interval1;
-                                newInterval._siblingIntervals.insert(&interval1);
+                                newInterval._siblingIntervals.push_back(&interval1);
 
                                 interval1[i]._lower = 0;
                                 interval1[i]._upper = upper;
@@ -906,7 +926,7 @@ namespace PetriEngine {
                                 newInterval[i]._lower = lower;
                                 newInterval[i]._upper = sizes[i]-1;
                                 tempIntervals.push_back(newInterval);
-                                interval1._siblingIntervals.insert(&*tempIntervals.end());
+                                interval1._siblingIntervals.push_back(&*tempIntervals.end());
                             }else {
                                 interval[i]._lower = lower;
                                 interval[i]._upper = upper;
@@ -944,6 +964,7 @@ namespace PetriEngine {
             }
 
             void mergeIntervals() {
+                uint32_t dist = 0;
                 std::set<uint32_t> rangesToRemove;
                 if(_intervals.empty()){
                     return;
@@ -963,7 +984,7 @@ namespace PetriEngine {
                             continue;
                         }   
 
-                        uint32_t diff = 1;
+                        uint32_t diff = dist;
                         bool overlap = true;
 
                         if(overlap){
@@ -984,15 +1005,15 @@ namespace PetriEngine {
                         
                         if(overlap) {
                             for(uint32_t l = 0; l < interval.size(); l++) {
-                                //std::cout << "Combining " << interval[l]._lower << "-" << interval[l]._upper << " and " << otherInterval[l]._lower << "-" << otherInterval[l]._upper << std::endl;                               
                                 interval[l] |= otherInterval[l];
-                                //std::cout << "It became " << interval[l]._lower << "-" << interval[l]._upper << std::endl;
                             }
-                            for(auto pInterval : otherInterval._parentIntervals){
-                                interval._parentIntervals.insert(pInterval); 
+                            for(auto placePIntervals : otherInterval._parentIntervals){
+                                for(auto pInterval : placePIntervals.second.intervalPointers){
+                                    interval._parentIntervals[placePIntervals.first].add(pInterval); 
+                                }                                
                             }
                             for(auto sibling : otherInterval._siblingIntervals){
-                                interval._siblingIntervals.insert(sibling);
+                                interval._siblingIntervals.push_back(sibling);
                             }
                             rangesToRemove.insert(j);
                         }  
@@ -1001,7 +1022,7 @@ namespace PetriEngine {
                 for (auto i = rangesToRemove.rbegin(); i != rangesToRemove.rend(); ++i) {
                     _intervals.erase(_intervals.begin() + *i);
                 }
-                if(!rangesToRemove.empty()){
+                if(!rangesToRemove.empty() && dist > 0){
                     mergeIntervals();
                 }
             }    

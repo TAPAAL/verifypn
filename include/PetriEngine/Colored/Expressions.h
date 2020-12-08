@@ -362,15 +362,17 @@ namespace PetriEngine {
                         auto& range = interval->operator[](j);
                         size_t ctSize = colortypes->operator[](j+ colortypesBefore)->size();
                         
-                        range._upper = (range._upper + 1)%ctSize;
-                        range._lower = (range._lower + 1)/ctSize;
+                        int32_t lower_val = ctSize +(range._lower +1);
+                        int32_t upper_val = ctSize +(range._upper +1);
+                        range._lower = lower_val % ctSize;
+                        range._upper = upper_val % ctSize;
                         
                         if(range._upper < range._lower ){
                             
                             if(tempIntervals.empty()){
                                 auto intervalCopy = newInterval;
-                                newInterval._siblingIntervals.insert(&intervalCopy);
-                                intervalCopy._siblingIntervals.insert(&newInterval);
+                                newInterval._siblingIntervals.push_back(&intervalCopy);
+                                intervalCopy._siblingIntervals.push_back(&newInterval);
                                 newInterval.addRange(range._lower, ctSize-1);
                                 intervalCopy.addRange(0,range._upper);
                                 tempIntervals.push_back(newInterval);
@@ -379,8 +381,8 @@ namespace PetriEngine {
                                 std::vector<Reachability::interval_t> newTempIntervals;
                                 for(auto tempInterval : tempIntervals){
                                     auto intervalCopy = tempInterval;
-                                    tempInterval._siblingIntervals.insert(&intervalCopy);
-                                    intervalCopy._siblingIntervals.insert(&tempInterval);
+                                    tempInterval._siblingIntervals.push_back(&intervalCopy);
+                                    intervalCopy._siblingIntervals.push_back(&tempInterval);
                                     tempInterval.addRange(range._lower, ctSize-1);
                                     intervalCopy.addRange(0,range._upper);
                                     newTempIntervals.push_back(intervalCopy);
@@ -470,14 +472,16 @@ namespace PetriEngine {
                         auto& range = interval->operator[](j);
                         auto ctSize = colortypes->operator[](j + colortypesBefore)->size()-1;
                         
-                        range._lower = (range._lower -1)%ctSize;
-                        range._upper = (range._upper -1)&ctSize;
+                        int32_t lower_val = ctSize +(range._lower -1);
+                        int32_t upper_val = ctSize +(range._upper -1);
+                        range._lower = lower_val % ctSize;
+                        range._upper = upper_val % ctSize;
 
                         if(range._upper < range._lower ){
                             if(tempIntervals.empty()){
                                 auto intervalCopy = newInterval;
-                                newInterval._siblingIntervals.insert(&intervalCopy);
-                                intervalCopy._siblingIntervals.insert(&newInterval);
+                                newInterval._siblingIntervals.push_back(&intervalCopy);
+                                intervalCopy._siblingIntervals.push_back(&newInterval);
                                 newInterval.addRange(range._lower, ctSize-1);
                                 intervalCopy.addRange(0,range._upper);
                                 tempIntervals.push_back(newInterval);
@@ -487,8 +491,8 @@ namespace PetriEngine {
                                 std::vector<Reachability::interval_t> newTempIntervals;
                                 for (auto tempInterval : tempIntervals){
                                     auto intervalCopy = tempInterval;
-                                    tempInterval._siblingIntervals.insert(&intervalCopy);
-                                    intervalCopy._siblingIntervals.insert(&tempInterval);
+                                    tempInterval._siblingIntervals.push_back(&intervalCopy);
+                                    intervalCopy._siblingIntervals.push_back(&tempInterval);
                                     tempInterval.addRange(range._lower, ctSize-1);
                                     intervalCopy.addRange(0, range._upper);
                                     newTempIntervals.push_back(tempInterval);
@@ -764,7 +768,7 @@ namespace PetriEngine {
                                     }
 
                                     for(auto& id : idVec){
-                                        id = (id + leftVarMod) % varPositionPair.second->colorType->size();
+                                        id = (varPositionPair.second->colorType->size()+(id + leftVarMod)) & varPositionPair.second->colorType->size();
                                     }                                   
                                     index+= idVec.size() - oldSize;
                                 }
@@ -804,7 +808,8 @@ namespace PetriEngine {
                                     }
 
                                     for(auto& id : idVec){
-                                        id = (id + rightVarMod) % varPositionsR[oldIndex]->colorType->size();
+                                        int32_t val = varPositionsR[oldIndex]->colorType->size() + (id + rightVarMod);
+                                        id = val % varPositionsR[oldIndex]->colorType->size();
                                     }
                                     index+= idVec.size() - oldSize;
                                 }
@@ -846,7 +851,8 @@ namespace PetriEngine {
                                 }
 
                                 for(auto& id : idVec){
-                                    id = (id + leftVarMod) % varPositionPair.second->colorType->size();
+                                    int32_t val = varPositionPair.second->colorType->size() + (id + leftVarMod);
+                                    id = val % varPositionPair.second->colorType->size();
                                 }
                                 index+= idVec.size() - oldSize;
                             }
@@ -891,7 +897,8 @@ namespace PetriEngine {
                                 }
 
                                 for(auto& id : idVec){
-                                    id = (id + rightVarMod) % varPositionPair.second->colorType->size();
+                                    int32_t val = varPositionPair.second->colorType->size() + (id + rightVarMod);
+                                    id = val % varPositionPair.second->colorType->size();
                                 }
                                 index+= idVec.size() - oldSize;
                             }
@@ -1013,7 +1020,8 @@ namespace PetriEngine {
                                     }
 
                                     for(auto& id : idVec){
-                                        id = (id + leftVarMod) % varPositionPair.second->colorType->size();
+                                        int32_t val = varPositionPair.second->colorType->size() + (id + leftVarMod);
+                                        id = val % varPositionPair.second->colorType->size();
                                     }                                   
                                     index+= idVec.size() - oldSize;
                                 }
@@ -1053,7 +1061,8 @@ namespace PetriEngine {
                                     }
 
                                     for(auto& id : idVec){
-                                        id = (id + rightVarMod) % varPositionsR[oldIndex]->colorType->size();
+                                        int32_t val = varPositionsR[oldIndex]->colorType->size() + (id + rightVarMod);
+                                        id = val % varPositionsR[oldIndex]->colorType->size();
                                     }
                                     index+= idVec.size() - oldSize;
                                 }
@@ -1095,7 +1104,8 @@ namespace PetriEngine {
                                 }
 
                                 for(auto& id : idVec){
-                                    id = (id + leftVarMod) % varPositionPair.second->colorType->size();
+                                    int32_t val = varPositionPair.second->colorType->size() + (id + leftVarMod);
+                                    id = val % varPositionPair.second->colorType->size();
                                 }
                                 index+= idVec.size() - oldSize;
                             }
@@ -1140,7 +1150,8 @@ namespace PetriEngine {
                                 }
 
                                 for(auto& id : idVec){
-                                    id = (id + rightVarMod) % varPositionPair.second->colorType->size();
+                                    int32_t val = varPositionPair.second->colorType->size() + (id + rightVarMod);
+                                    id = val % varPositionPair.second->colorType->size();
                                 }
                                 index+= idVec.size() - oldSize;
                             }
@@ -1255,7 +1266,8 @@ namespace PetriEngine {
                                     }
 
                                     for(auto& id : idVec){
-                                        id = (id + leftVarMod) % varPositionPair.second->colorType->size();
+                                        int32_t val = varPositionPair.second->colorType->size() + (id + leftVarMod);
+                                        id = val % varPositionPair.second->colorType->size();
                                     }                                  
                                     index+= idVec.size() - oldSize;
                                 }
@@ -1296,7 +1308,8 @@ namespace PetriEngine {
                                     }
 
                                     for(auto& id : idVec){
-                                        id = (id + rightVarMod) % varPositionsR[oldIndex]->colorType->size();
+                                        int32_t val = varPositionsR[oldIndex]->colorType->size() + (id + rightVarMod);
+                                        id = val % varPositionsR[oldIndex]->colorType->size();
                                     }
                                     index+= idVec.size() - oldSize;
                                 }
@@ -1338,7 +1351,8 @@ namespace PetriEngine {
                                 }
 
                                 for(auto& id : idVec){
-                                    id = (id + leftVarMod) % varPositionPair.second->colorType->size();
+                                    int32_t val = varPositionPair.second->colorType->size() + (id + leftVarMod);
+                                    id = val % varPositionPair.second->colorType->size();
                                 }
                                 index+= idVec.size() - oldSize;
                             }
@@ -1383,7 +1397,8 @@ namespace PetriEngine {
                                 }
 
                                 for(auto& id : idVec){
-                                    id = (id + rightVarMod) % varPositionPair.second->colorType->size();
+                                    int32_t val = varPositionPair.second->colorType->size() + (id + rightVarMod);
+                                    id = val % varPositionPair.second->colorType->size();
                                 }
                                 index+= idVec.size() - oldSize;
                             }
@@ -1499,7 +1514,8 @@ namespace PetriEngine {
                                     }
 
                                     for(auto& id : idVec){
-                                        id = (id + leftVarMod) % varPositionPair.second->colorType->size();
+                                        int32_t val = varPositionPair.second->colorType->size() + (id + leftVarMod);
+                                        id = val % varPositionPair.second->colorType->size();
                                     }                                    
                                     index+= idVec.size() - oldSize;
                                 }
@@ -1540,7 +1556,8 @@ namespace PetriEngine {
                                     }
 
                                     for(auto& id : idVec){
-                                        id = (id + rightVarMod) % varPositionsR[oldIndex]->colorType->size();
+                                        int32_t val = varPositionsR[oldIndex]->colorType->size() + (id + rightVarMod);
+                                        id = val % varPositionsR[oldIndex]->colorType->size();
                                     }
                                     index+= idVec.size() - oldSize;
                                 }
@@ -1581,7 +1598,8 @@ namespace PetriEngine {
                                 }
 
                                 for(auto& id : idVec){
-                                    id = (id + leftVarMod) % varPositionPair.second->colorType->size();
+                                    int32_t val = varPositionPair.second->colorType->size() + (id + leftVarMod);
+                                    id = val % varPositionPair.second->colorType->size();
                                 }
                                 
                                 index+= idVec.size() - oldSize;
@@ -1627,7 +1645,8 @@ namespace PetriEngine {
                                 }
 
                                 for(auto& id : idVec){
-                                    id = (id + rightVarMod) % varPositionPair.second->colorType->size();
+                                    int32_t val = varPositionPair.second->colorType->size() + (id + rightVarMod);
+                                    id = val % varPositionPair.second->colorType->size();
                                 }
                                 index+= idVec.size() - oldSize;
                             }
@@ -1776,7 +1795,8 @@ namespace PetriEngine {
                                     }
                                     for(auto id : colorIdVec){
                                         for(auto interval : intervalVec){
-                                            auto colorVal = (id + leftVarModifier) % varPositionPair.second->colorType->size(); 
+                                            int32_t val = varPositionPair.second->colorType->size() + (id + leftVarModifier);
+                                            auto colorVal = val % varPositionPair.second->colorType->size(); 
                                             interval.addRange(colorVal,colorVal);
                                         }
                                     }                                    
@@ -1858,7 +1878,8 @@ namespace PetriEngine {
                                     }
                                     for(auto id : colorIdVec){
                                         for(auto interval : intervalVec){
-                                            auto colorVal = (id + rightVarModifier) % varPositionsR[index]->colorType->size(); 
+                                            int32_t val = varPositionsR[index]->colorType->size() + (id + rightVarModifier);
+                                            auto colorVal = val % varPositionsR[index]->colorType->size(); 
                                             interval.addRange(colorVal,colorVal);
                                         }
                                     }                                   
@@ -1921,7 +1942,8 @@ namespace PetriEngine {
                         std::vector<Reachability::interval_t> intervals;
                         Reachability::interval_t interval;
                         for(auto id : idVec){  
-                            auto colorVal = (id + leftVarModifier) % varPositionPair.second->colorType->size();                          
+                            int32_t val = varPositionPair.second->colorType->size() + (id + leftVarModifier);
+                            auto colorVal = val % varPositionPair.second->colorType->size();                          
                             interval.addRange(colorVal,colorVal);
                         } 
                         intervals.push_back(interval);
@@ -1952,7 +1974,8 @@ namespace PetriEngine {
                                 }
                                 for(auto id : colorIdVec){
                                     for(auto interval : intervals){
-                                        auto colorVal = (id + leftVarModifier) % varPositionPair.second->colorType->size(); 
+                                        int32_t val = varPositionPair.second->colorType->size() + (id + leftVarModifier);
+                                        auto colorVal = val % varPositionPair.second->colorType->size(); 
                                         interval.addRange(colorVal,colorVal);
                                     }
                                 }                                   
@@ -2005,7 +2028,8 @@ namespace PetriEngine {
                         std::vector<Reachability::interval_t> intervals;
                         Reachability::interval_t interval;
                         for(auto id : idVec){          
-                            auto colorVal = (id + rightVarModifier) % varPositionPair.second->colorType->size();                  
+                            int32_t val = varPositionPair.second->colorType->size() + (id + rightVarModifier);
+                            auto colorVal = val % varPositionPair.second->colorType->size();                  
                             interval.addRange(colorVal,colorVal);
                         } 
                         intervals.push_back(interval);
@@ -2036,7 +2060,8 @@ namespace PetriEngine {
                                 }
                                 for(auto id : colorIdVec){
                                     for(auto interval : intervals){
-                                        auto colorVal = (id + rightVarModifier) % varPositionPair.second->colorType->size(); 
+                                        int32_t val = varPositionPair.second->colorType->size() + (id + rightVarModifier);
+                                        auto colorVal = val % varPositionPair.second->colorType->size(); 
                                         interval.addRange(colorVal,colorVal);
                                     }
                                 }                                   
@@ -2182,8 +2207,8 @@ namespace PetriEngine {
                 auto varMapCopy = variableMap;
                 for(auto pair : variableMap){
                     for(uint32_t i = 0; i < pair.second.size(); i++){
-                        pair.second[i]._siblingIntervals.insert(&varMapCopy[pair.first][i]);
-                        varMapCopy[pair.first][i]._siblingIntervals.insert(&pair.second[i]);
+                        pair.second[i]._siblingIntervals.push_back(&varMapCopy[pair.first][i]);
+                        varMapCopy[pair.first][i]._siblingIntervals.push_back(&pair.second[i]);
                     }
                 }
 
