@@ -439,10 +439,7 @@ namespace PetriEngine {
 
             Retval simplify(SimplificationContext& context) const override;
 
-            bool isReachability(uint32_t depth) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -475,10 +472,7 @@ namespace PetriEngine {
             Result evaluate(const EvaluationContext& context) override;
 
             Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -506,10 +500,9 @@ namespace PetriEngine {
           Result evaluate(const EvaluationContext &context) override;
 
           bool isReachability(uint32_t depth) const override {
-              // TODO implement
-              assert(false);
-              std::cerr << "TODO implement" << std::endl;
-              exit(0);
+              // This could potentially be a reachability formula if the parent is an A.
+              // This case is however already handled by ACondition.
+              return false;
           }
 
           Condition_ptr prepareForReachability(bool negated) const override {
@@ -557,10 +550,11 @@ namespace PetriEngine {
             Result evaluate(const EvaluationContext& context) override;
 
             Retval simplify(SimplificationContext& context) const override;
-            bool isReachability(uint32_t depth) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+          bool isReachability(uint32_t depth) const override {
+              // This could potentially be a reachability formula if the parent is an E.
+              // This case is however already handled by ECondition.
+              return false;
+          }
             Condition_ptr prepareForReachability(bool negated) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
@@ -587,8 +581,7 @@ namespace PetriEngine {
             using SimpleQuantifierCondition::SimpleQuantifierCondition;
 
             bool isReachability(uint32_t depth) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
+                return false;
             }
             Condition_ptr prepareForReachability(bool negated) const override {
                 // TODO implement
