@@ -7,8 +7,8 @@
 #include <utility>
 
 namespace LTL {
-    ModelChecker::ModelChecker(const PetriEngine::PetriNet& net, PetriEngine::PQL::Condition_ptr condition)
-        : net(net), formula(condition)
+    ModelChecker::ModelChecker(const PetriEngine::PetriNet& net, PetriEngine::PQL::Condition_ptr condition, const bool shortcircuitweak)
+        : net(net), formula(condition), shortcircuitweak(shortcircuitweak)
     {
 
         successorGenerator = std::make_unique<ProductSuccessorGenerator>(net, condition);
