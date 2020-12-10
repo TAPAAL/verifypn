@@ -2994,6 +2994,28 @@ namespace PetriEngine {
         bool AFCondition::isReachability(uint32_t depth) const {
             return false;
         }
+
+        bool ECondition::isReachability(uint32_t depth) const {
+            if (depth != 0) {
+                return false;
+            }
+
+            if (auto cond = dynamic_cast<FCondition*>(_cond.get())) {
+                // EF is a reachability formula so skip checking the F.
+                return cond[0].isReachability(depth + 1);
+            }
+            return _cond->isReachability(depth + 1);
+        }
+
+        bool ACondition::isReachability(uint32_t depth) const {
+            if (depth != 0) {
+                return false;
+            }
+            if (auto cond = dynamic_cast<GCondition*>(_cond.get())) {
+                return cond[0].isReachability(depth + 1);
+            }
+            return _cond->isReachability(depth + 1);
+        }
         
         bool UntilCondition::isReachability(uint32_t depth) const {
             return false;

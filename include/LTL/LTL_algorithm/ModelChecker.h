@@ -12,7 +12,7 @@
 namespace LTL {
     class ModelChecker {
     public:
-        ModelChecker(const PetriEngine::PetriNet& net, PetriEngine::PQL::Condition_ptr);
+        ModelChecker(const PetriEngine::PetriNet& net, PetriEngine::PQL::Condition_ptr, const bool shortcircuitweak);
         virtual bool isSatisfied() = 0;
         
         virtual ~ModelChecker() = default;
@@ -23,6 +23,8 @@ namespace LTL {
         PetriEngine::PQL::Condition_ptr formula;
 
         size_t _discovered = 0;
+        const bool shortcircuitweak;
+        bool is_weak = false;
     };
 }
 
