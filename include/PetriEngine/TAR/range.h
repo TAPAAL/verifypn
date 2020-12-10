@@ -459,6 +459,8 @@ namespace PetriEngine {
             interval_t() {
             }
 
+            ~interval_t(){}
+
             interval_t(std::vector<Reachability::range_t> ranges) : _ranges(ranges) {
             }
 
@@ -477,9 +479,6 @@ namespace PetriEngine {
                 if(!activeSiblings){
                     for(auto parent : _parentIntervals){
                         for(auto interval : parent.second.intervalPointers){
-                            std::cout << "Marking parent as inactive: ";
-                            interval->print();
-                            std::cout << std::endl << std::endl;
                             interval->_active = false;
                         }                        
                     }
@@ -512,7 +511,6 @@ namespace PetriEngine {
                         }
                     }
                     if(!activeParentInterval){
-                        std::cout << "Place " << parent_ptr.first << " not active " << std::endl;
                         return false;
                     }                                      
                 }
@@ -691,6 +689,24 @@ namespace PetriEngine {
                 return true;
             }
 
+            bool overlappingParents(interval_t other){
+                for(auto parent : _parentIntervals) {
+                    if(other._parentIntervals.count(parent.first) == 0){
+                        continue;
+                    } else {
+                        for(auto parentInterval : parent.second.intervalPointers){
+                            for(auto otherInterval : other._parentIntervals[parent.first].intervalPointers){
+                                if(parentInterval == otherInterval){
+                                    return true;
+                                }
+                            }
+                        }
+                        return false;
+                    }
+                }
+                return true;
+            }
+
             interval_t getOverlap(interval_t other){
                 interval_t overlapInterval;
                 if(size() != other.size()){
@@ -715,13 +731,16 @@ namespace PetriEngine {
         struct intervalTuple_t {
             std::vector<interval_t> _intervals;
 
+            ~intervalTuple_t() {
+            }
+
             intervalTuple_t() {
             }
 
             intervalTuple_t(std::vector<interval_t> ranges) :  _intervals(ranges) {
             };
 
-            interval_t& getLower(){
+            interval_t& getFirst(){
                 return _intervals[0];
             }
 
@@ -793,7 +812,7 @@ namespace PetriEngine {
                         if(j+1 != _intervals.size()) {
                             return _intervals[j+1];
                         } else {
-                            return getLower();
+                            return getFirst();
                         }
                     }
                 }
@@ -827,10 +846,10 @@ namespace PetriEngine {
                     if(foundPlace) break;
 
                     for (uint32_t i = 0; i < interval.size(); i++) {
-                        auto range = interval[i];
-                        auto constraint = localInterval[i];
+                        auto range = &interval[i];
+                        auto constraint = &localInterval[i];
 
-                        auto result = constraint.compare(range);
+                        auto result = constraint->compare(*range);
 
                         if(!result.first) {
                             contained = false;
@@ -896,11 +915,31 @@ namespace PetriEngine {
             }
 
             std::vector<uint32_t> getLowerIds(){
-                return _intervals[0].getLowerIds();
+                std::vector<uint32_t> ids;
+                for(auto interval : _intervals){
+                    if(ids.empty()){
+                        ids = interval.getLowerIds();
+                    } else {
+                        for(uint32_t i = 0; i < ids.size(); i++){
+                            ids[i] = std::min(ids[i], interval[i]._lower);
+                        }
+                    }
+                }
+                return ids;
             }
 
             std::vector<uint32_t> getUpperIds(){
-                return _intervals.back().getUpperIds();
+                std::vector<uint32_t> ids;
+                for(auto interval : _intervals){
+                    if(ids.empty()){
+                        ids = interval.getUpperIds();
+                    } else {
+                        for(uint32_t i = 0; i < ids.size(); i++){
+                            ids[i] = std::max(ids[i], interval[i]._upper);
+                        }
+                    }
+                }
+                return ids;
             }
 
             void applyModifier(int32_t modifier, std::vector<size_t> sizes){

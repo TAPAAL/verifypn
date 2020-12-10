@@ -234,8 +234,11 @@ namespace PetriEngine {
         for (auto arc : transition.input_arcs) {
             std::cout << "has arc "<< arc.expr.get()->toString() << std::endl;
             PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];
-            //std::cout << "Cur place point " << std::endl;
-            //curCFP.constraints.print();
+            for(auto& interval : curCFP.constraints._intervals){
+                interval._parentIntervals.clear();
+            }
+            // std::cout << "Cur place point " << arc.place << std::endl;
+            // curCFP.constraints.print();
 
             Colored::ArcIntervals& arcInterval = _arcIntervals[transitionId][arc.place];
             uint32_t index = 0;
@@ -246,11 +249,12 @@ namespace PetriEngine {
                 transitionActivated = false;
                 return;
             }
+            
             for(auto& interval : arcInterval._intervalTuple._intervals){
                 interval._active = true;
             }  
         }
-
+        std::cout << "Processing var intervals" << std::endl;
         if(getVarIntervals(transition.variableMap, transitionId)){
             std::cout << transition.name << " var intervals" << std::endl;
             for (auto& pair : transition.variableMap){
@@ -259,6 +263,7 @@ namespace PetriEngine {
                 pair.second.print();
             }
             if(transition.guard != nullptr) {
+                std::cout << "Restricting by guard" << std::endl;
                 transition.guard->restrictVars(transition.variableMap);
 
                 for(auto varPair : transition.variableMap){
@@ -279,44 +284,56 @@ namespace PetriEngine {
 
     //could be expanded to handle when a variable apears multiple times on an arc with different modifiers
     bool ColoredPetriNetBuilder::getVarIntervals(std::unordered_map<const Colored::Variable *, Reachability::intervalTuple_t>& variableMap, uint32_t transitionId){
+        bool res = false;        
         for(auto& arcIntervals : _arcIntervals[transitionId]){
-            for(auto pair : arcIntervals.second._varIndexModMap){
-                auto varPosition = pair.second.first;
-                auto varModifier = pair.second.second;
-                if(variableMap.count(pair.first) == 0){                  
-                    Reachability::intervalTuple_t varIntervalTuple;
-                    for(uint32_t i = 0; i < arcIntervals.second._intervalTuple._intervals.size(); i++){
-                        auto interval = &arcIntervals.second._intervalTuple._intervals[i];
-                        if(!interval->_active){
-                            continue;
-                        }
-
+            std::unordered_map<const Colored::Variable *, Reachability::intervalTuple_t> localVarMap;
+            bool foundInterval = false;
+            
+            for(uint32_t i = 0; i < arcIntervals.second._intervalTuple._intervals.size(); i++){
+                auto interval = &arcIntervals.second._intervalTuple._intervals[i];
+                if(!interval->_active){
+                    continue;
+                }
+                res = true;
+                bool intervalUsedByAll = true;
+                
+                for(auto pair : arcIntervals.second._varIndexModMap){                    
+                    auto& varPosition = pair.second.first;
+                    auto& varModifier = pair.second.second;
+                    if(variableMap.count(pair.first) == 0){                  
+                        Reachability::intervalTuple_t varIntervalTuple;
+                        
                         auto intervals = getIntervalsFromInterval(interval, varPosition, varModifier, pair.first); 
                                             
-                        for(auto varInterval : intervals){                 
+                        for(auto varInterval : intervals){              
                             varInterval._parentIntervals[arcIntervals.first].add(interval);
                             varIntervalTuple.addInterval(varInterval);
                         }                        
-                    }
-                    varIntervalTuple.mergeIntervals();                  
-                    variableMap[pair.first] = varIntervalTuple;
-                } else {    
-                    std::vector<uint32_t> unusedIntervals; 
-                    Reachability::intervalTuple_t collectedIntervalTuple;
-                    for(uint32_t i = 0; i < arcIntervals.second._intervalTuple._intervals.size(); i++){
-                        auto interval = &arcIntervals.second._intervalTuple._intervals[i];
-                        if(!interval->_active){
-                            continue;
-                        }
-                        bool intervalUsed = false;
+                        
+                        varIntervalTuple.mergeIntervals();
+                        for(auto newInterval : varIntervalTuple._intervals){
+                            localVarMap[pair.first].addInterval(newInterval);
+                        }           
+                    } else {   
+                        bool intervalUsed = false;           
                         Reachability::intervalTuple_t newIntervalTuple;
+
+                        //If we do not find any valid intervals for an arc, then we can stop as there will not be any intervals
+                        //which are valid for all arcs
+                        if(!variableMap[pair.first].hasValidIntervals()){
+                            std::cout << "Did not find valid intervals for " << pair.first->name << std::endl;
+                            variableMap[pair.first].print();
+                            return false;
+                        }
+
                         auto varIntervals = getIntervalsFromInterval(interval, varPosition, varModifier, pair.first);
 
                         for (auto arcVarInterval : varIntervals){
                             for (auto varInterval : variableMap[pair.first]._intervals){
+                                
                                 auto overlappingInterval = arcVarInterval.getOverlap(varInterval);
                                 
-                                if(overlappingInterval.isSound()){                                    
+                                if(overlappingInterval.isSound()){                                
                                     intervalUsed = true;
                                     overlappingInterval._parentIntervals = varInterval._parentIntervals;
                                     overlappingInterval._siblingIntervals = varInterval._siblingIntervals;
@@ -329,29 +346,35 @@ namespace PetriEngine {
                             }
                         }
                         if(!intervalUsed){
-                            unusedIntervals.push_back(i);
+                            std::cout << "Could not use interval: ";
+                            interval->print();
+                            std::cout << std::endl;
+                            interval->_active = false;
+                            intervalUsedByAll = false;
                         }
                         for(auto newInterval : newIntervalTuple._intervals){
-                            collectedIntervalTuple.addInterval(newInterval);
+                            localVarMap[pair.first].addInterval(newInterval);
                         }                            
+                        localVarMap[pair.first].mergeIntervals();                      
                     }
-                    collectedIntervalTuple.mergeIntervals();
-                    variableMap[pair.first] = collectedIntervalTuple;
-
-                    for(auto unusedInterval : unusedIntervals){
-                        arcIntervals.second._intervalTuple._intervals[unusedInterval]._active = false;
-                    }                        
                 }
-                //If we do not find any valid intervals for an arc, then we can stop as there will not be any intervals
-                //which are valid for all arcs
-                if(!variableMap[pair.first].hasValidIntervals()){
-                    std::cout << "Did not find valid intervals for " << pair.first->name << std::endl;
-                    variableMap[pair.first].print();
-                    return false;
+
+                if(intervalUsedByAll){
+                    foundInterval = true;
                 }
             }
+
+            if(!foundInterval){
+                std::cout << "Did not use any interval from place " << arcIntervals.first << std::endl;
+                return false;
+            }
+
+            for(auto varIntervalPair : localVarMap){
+                variableMap[varIntervalPair.first] = varIntervalPair.second;                            
+            }            
+            localVarMap.clear(); //maybe not needed
         }
-        return true;
+        return res;
     }
 
     std::vector<Reachability::interval_t> ColoredPetriNetBuilder::getIntervalsFromInterval(Reachability::interval_t *interval, uint32_t varPosition, int32_t varModifier, const Colored::Variable * var){
@@ -414,12 +437,15 @@ namespace PetriEngine {
             if (!variables.empty()) {
                 transitionHasVarOutArcs = true;
             }
+            std::cout << "getting output interval" << std::endl;
             auto intervals = arc.expr->getOutputIntervals(transition.variableMap);
+
+            std::cout << "Out intervals for place " << arc.place << ": " << std::endl;
+            intervals.print();
 
             for(auto interval : intervals._intervals){
                 placeFixpoint.constraints.addInterval(interval);    
             }
-            
             placeFixpoint.constraints.mergeIntervals();    
 
             if (!placeFixpoint.inQueue) {
@@ -645,7 +671,7 @@ namespace PetriEngine {
         }
         std::cout << "Vars for " << _transition.name << " are bound to" << std::endl;
         for (auto& pair : _transition.variableMap){
-            pair.second.mergeIntervals();
+            //pair.second.mergeIntervals();
             std::cout << pair.first->name << std::endl;
             pair.second.print();
         }
@@ -687,6 +713,9 @@ namespace PetriEngine {
                     break;                    
                 } else {
                     _binding.second = _binding.second->getColorType()->getColor(nextIntervalBinding.getLowerIds());
+                    if(!nextIntervalBinding.equals(varInterval.getFirst())){
+                        break;
+                    }                
                 }
             }
             
@@ -695,11 +724,7 @@ namespace PetriEngine {
                 break;
             }      
             test = eval();
-            /*if(_transition.name == "Start"){
-                for (auto& _binding : _bindings){
-                    cout << "color " << _binding.second->getColorName() << " for " << _binding.first << " is " << test << endl;
-                }                
-            }*/         
+        
         }
         
         return _bindings;
@@ -713,7 +738,7 @@ namespace PetriEngine {
         for (auto& b : _bindings) {
             std::vector<uint32_t> colorIds;
             b.second->getTupleId(&colorIds);
-            if (colorIds != _transition.variableMap[b.first].getLowerIds()) return false;
+            if (colorIds != _transition.variableMap[b.first].getFirst().getLowerIds()) return false;
         }
         return true;
     }

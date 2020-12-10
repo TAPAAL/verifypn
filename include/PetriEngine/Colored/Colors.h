@@ -379,7 +379,7 @@ namespace PetriEngine {
             //are these arc intervals or something seperate
             //std::unordered_map<Colored::ColorFixpoint *, std::pair<std::set<uint32_t>, int32_t>> _parentPlaceIndexMap;
             
-
+            ~ArcIntervals() {_varIndexModMap.clear();}
             ArcIntervals() {
             }
 

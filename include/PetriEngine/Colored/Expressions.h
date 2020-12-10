@@ -579,6 +579,9 @@ namespace PetriEngine {
                         for(auto nested_interval : nested_intervals._intervals){
                             Reachability::intervalTuple_t newIntervals;
                             for(auto interval : intervals._intervals){
+                                if(!interval.overlappingParents(nested_interval)){
+                                    continue;
+                                }
                                 for(auto nestedRange : nested_interval._ranges) {
                                     interval.addRange(nestedRange);    
                                 }
@@ -594,7 +597,6 @@ namespace PetriEngine {
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index) const override {
-                Reachability::intervalTuple_t resTuple;
                 for (auto expr : _colors) {
                     bool res = expr->getArcIntervals(arcIntervals, cfp, index);
                     if(!res){
@@ -2475,30 +2477,49 @@ namespace PetriEngine {
                 for (auto elem : _constituents) {
                     uint32_t newIndex = 0;
                     Colored::ArcIntervals newArcIntervals;
-                    std::vector<Reachability::interval_t> intervalsForRemoval;
+                    std::vector<uint32_t> intervalsForRemoval;
+                    std::vector<Reachability::interval_t> newIntervals;
                     if(!elem->getArcIntervals(newArcIntervals, cfp, &newIndex)){
                         return false;
                     }
+
                     if(arcIntervals._intervalTuple._intervals.empty()){
                         arcIntervals._intervalTuple = newArcIntervals._intervalTuple;
                     } else {
-                        for (auto interval : arcIntervals._intervalTuple._intervals){
+                        //check if the vars can be bound to the same value in both intervals
+                        for (uint32_t i = 0; i < arcIntervals._intervalTuple._intervals.size(); i++){
+                            auto interval = &arcIntervals._intervalTuple._intervals[i];
                             bool inBoth = false;
                             for (auto newInterval : newArcIntervals._intervalTuple._intervals){
-                                if(interval.equals(newInterval)){
+                                bool matchesVars = true;
+                                for(auto IdModPair : arcIntervals._varIndexModMap){
+                                    uint32_t index = IdModPair.second.first;
+                                    if(!(interval->operator[](index)._lower == newInterval[index]._lower && interval->operator[](index)._upper == newInterval[index]._upper)){
+                                        matchesVars = false;
+                                        break;
+                                    }
+                                }
+                                if(matchesVars){
                                     inBoth = true;
+                                    newIntervals.push_back(newInterval);
+                                    break;
                                 }
                             }
                             if(!inBoth){
-                                intervalsForRemoval.push_back(interval);
+                                intervalsForRemoval.push_back(i);
                             }
                         }
 
                         for(auto interval : intervalsForRemoval){
                             arcIntervals._intervalTuple.removeInterval(interval);
                         }
+
+                        for(auto interval : newIntervals){
+                            arcIntervals._intervalTuple.addInterval(interval);
+                        }
                     }
                 }
+                arcIntervals._intervalTuple.mergeIntervals();
                 return true;
             }            
 
