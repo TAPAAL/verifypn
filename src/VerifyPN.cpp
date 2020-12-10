@@ -765,7 +765,7 @@ int main(int argc, char* argv[]) {
     MarkVal* qm0 = qnet->makeInitialMarking();
     ResultPrinter p2(&b2, &options, querynames);
 
-    if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
+    if(queries.empty() || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
     {
         std::cerr << "Could not analyze the queries" << std::endl;
         return ErrorCode;

@@ -81,6 +81,7 @@ namespace PetriEngine {
                     os << "(" << cons._upper << " >= " << cons._name << ")";
                 first = false;
             }
+            os << ")";
         }
 
         void QueryPrinter::_accept(const UnfoldedUpperBoundsCondition *element) {

@@ -1565,8 +1565,8 @@ namespace PetriEngine {
         }
         return continueReductions;
     }
-        
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reduction) {
+
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
@@ -1596,9 +1596,9 @@ namespace PetriEngine {
                         changed = false;
                         while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
-                        if(!next_safe) 
+                        while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
+                        if(!next_safe)
                         {
-                            while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
                             while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                             if(!remove_loops) 
                                 while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
@@ -1623,15 +1623,15 @@ namespace PetriEngine {
         else
         {
             const char* rnames = "ABCDEFGHIJ";
-            for(int i = reduction.size() - 1; i > 0; --i)
+            for(int i = reduction.size() - 1; i >= 0; --i)
             {
                 if(next_safe)
                 {
-                    if(reduction[i] != 2 && reduction[i] != 4)
+                    if(reduction[i] != 2 && reduction[i] != 4 && reduction[i] != 5)
                     {
                         std::cerr << "Skipping Rule" << rnames[reduction[i]] << " due to NEXT operator in proposition" << std::endl;
                         reduction.erase(reduction.begin() + i);
-			continue;
+			            continue;
                     }
                 }
                 if(!remove_loops && reduction[i] == 5)

@@ -21,76 +21,6 @@ namespace LTL {
     /**
      * Formula serializer to SPOT-compatible syntax.
      */
-    class FormulaToSpotSyntax : public PetriEngine::PQL::QueryPrinter {
-    protected:
-        void _accept(const PetriEngine::PQL::NotCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::AndCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::OrCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::LessThanCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::LessThanOrEqualCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::GreaterThanCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::GreaterThanOrEqualCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::EqualCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::NotEqualCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::FireableCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::BooleanCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::LiteralExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::PlusExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::MultiplyExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::MinusExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::SubtractExpr *element) override;
-
-        void _accept(const PetriEngine::PQL::IdentifierExpr *element) override;
-
-    public:
-
-        explicit FormulaToSpotSyntax(std::ostream &os = std::cout)
-                : PetriEngine::PQL::QueryPrinter(os) {}
-
-        auto begin() const {
-            return std::begin(ap_info);
-        }
-
-        auto end() const {
-            return std::end(ap_info);
-        }
-
-        const APInfo &getAPInfo() const {
-            return ap_info;
-        }
-
-    private:
-        APInfo ap_info;
-        bool is_quoted = false;
-
-        void make_atomic_prop(const Condition_constptr &element) {
-            auto cond = const_cast<Condition *>(element.get())->shared_from_this();
-            std::stringstream ss;
-            ss << "\"";
-            QueryPrinter _printer{ss};
-            cond->visit(_printer);
-            ss << "\"";
-            os << ss.str();
-            ap_info.push_back(AtomicProposition{cond, ss.str().substr(1, ss.str().size() - 2)});
-        }
-    };
 
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotCondition *element) {
@@ -136,6 +66,10 @@ namespace LTL {
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotEqualCondition *element) {
+        make_atomic_prop(element->shared_from_this());
+    }
+
+    void FormulaToSpotSyntax::_accept(const CompareConjunction *element) {
         make_atomic_prop(element->shared_from_this());
     }
 
@@ -185,16 +119,33 @@ namespace LTL {
         //make_atomic_prop(element->shared_from_this());
     }
 
-    BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query) {
+    void FormulaToSpotSyntax::_accept(const ACondition *condition) {
+        condition->operator[](0)->visit(*this);
+    }
+
+    void FormulaToSpotSyntax::_accept(const ECondition *condition) {
+        condition->operator[](0)->visit(*this);
+    }
+
+    std::pair<spot::formula, APInfo> to_spot_formula(const Condition_ptr& query) {
         std::stringstream ss;
         FormulaToSpotSyntax spotConverter{ss};
         query->visit(spotConverter);
-        const std::string spotFormula = "!(" + ss.str() + ")";
+        std::string spotFormula = ss.str();
+        if (spotFormula.at(0) == 'E' || spotFormula.at(0) == 'A') {
+            spotFormula = spotFormula.substr(2);
+        }
+        auto spot_formula = spot::parse_formula(spotFormula);
 #ifdef PRINTF_DEBUG
         std::cerr << "ORIG FORMULA: \n  " << ss.str() << std::endl;
         std::cerr << "SPOT FORMULA: \n  " << spotFormula << std::endl;
 #endif
-        spot::formula formula = spot::parse_formula(spotFormula);
+        return std::make_pair(spot_formula, spotConverter.apInfo());
+    }
+
+    BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query) {
+        auto [formula, apinfo] = to_spot_formula(query);
+        formula = spot::formula::Not(formula);
         spot::translator translator;
         translator.set_type(spot::postprocessor::BA);
         translator.set_pref(spot::postprocessor::Complete);
@@ -206,9 +157,9 @@ namespace LTL {
         std::unordered_map<int, AtomicProposition> ap_map;
         // bind PQL expressions to the atomic proposition IDs used by spot.
         // the resulting map can be indexed using variables mentioned on edges of the created Büchi automaton.
-        for (const auto &apinfo : spotConverter) {
-            int varnum = automaton->register_ap(apinfo.text);
-            ap_map[varnum] = apinfo;
+        for (const auto &info : apinfo) {
+            int varnum = automaton->register_ap(info.text);
+            ap_map[varnum] = info;
         }
 #ifdef PRINTF_DEBUG
         automaton->get_dict()->dump(std::cerr);
