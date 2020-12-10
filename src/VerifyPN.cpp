@@ -44,7 +44,6 @@
 #include <memory>
 #include <utility>
 #include <functional>
-#include <LTL/LTLValidator.h>
 
 #ifdef VERIFYPN_MC_Simplification
 #include <thread>
@@ -75,6 +74,10 @@
 #include "LTL/LTL_algorithm/ModelChecker.h"
 #include "LTL/LTL_algorithm/NestedDepthFirstSearch.h"
 #include "LTL/LTL_algorithm/TarjanModelChecker.h"
+#include "LTL/LTLValidator.h"
+#include "LTL/Simplification/SpotToPQL.h"
+
+#include <atomic>
 
 using namespace std;
 using namespace PetriEngine;
@@ -757,6 +760,52 @@ std::pair<Condition_ptr, bool> to_ltl(const Condition_ptr &formula) {
     return std::make_pair(converted, should_negate);
 }
 
+Condition_ptr simplify_ltl_query(Condition_ptr query,
+                                 bool printstats,
+                                 const EvaluationContext &evalContext,
+                                 SimplificationContext& simplificationContext,
+                                 std::ostream& out = std::cout)
+{
+    assert(dynamic_pointer_cast<SimpleQuantifierCondition>(query) != nullptr);
+    bool wasACond = dynamic_pointer_cast<ACondition>(query) != nullptr;
+    auto cond = (dynamic_pointer_cast<SimpleQuantifierCondition>(query))->operator[](0);
+    cond = LTL::simplify(cond);
+    negstat_t stats;
+    cond = Condition::initialMarkingRW([&](){ return cond; }, stats, evalContext, false, false, true)
+            ->pushNegation(stats, evalContext, false, false, true);
+
+    if (printstats) {
+        out << "RWSTATS PRE:";
+        stats.print(out);
+        out << std::endl;
+    }
+
+    try {
+        cond = (cond->simplify(simplificationContext)).formula->pushNegation(stats, evalContext, false, false, true);
+    }
+    catch (std::bad_alloc &ba) {
+        std::cerr << "Query reduction failed." << std::endl;
+        std::cerr << "Exception information: " << ba.what() << std::endl;
+
+        std::exit(ErrorCode);
+    }
+
+    if(printstats)
+    {
+        out << "RWSTATS POST:";
+        stats.print(out);
+        out << std::endl;
+    }
+
+    if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
+        return cond;
+    }
+    if (wasACond) {
+        return std::make_shared<ACondition>(cond);
+    }
+    else return std::make_shared<ECondition>(cond);
+}
+
 int main(int argc, char* argv[]) {
 
     options_t options;
@@ -883,6 +932,7 @@ int main(int argc, char* argv[]) {
 #endif
                     auto& out = tstream[c];
                     auto& cache = caches[c];
+                    LTL::FormulaToSpotSyntax printer{out};
                     while(true)
                     {
                     auto i = cnt++;
@@ -891,6 +941,7 @@ int main(int argc, char* argv[]) {
                     hadTo[i] = false;
                     negstat_t stats;
                     EvaluationContext context(qm0, qnet.get());
+
                     if(options.printstatistics && options.queryReductionTimeout > 0)
                     {
                         out << "\nQuery before reduction: ";
@@ -904,6 +955,14 @@ int main(int argc, char* argv[]) {
                     // this is used later, we already know that this is a plain reachability (or AG)
                     bool wasAGCPNApprox = dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
                     int preSize=queries[i]->formulaSize();
+
+                    if (options.logic == TemporalLogic::LTL) {
+                        SimplificationContext simplificationContext(qm0, qnet.get(), qt,
+                                                                    options.lpsolveTimeout, &cache);
+                        queries[i] = simplify_ltl_query(queries[i], options.printstatistics,
+                                           context, simplificationContext, out);
+                        continue;
+                    }
                     queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false, true)
                                             ->pushNegation(stats, context, false, false, true);
                     wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
@@ -913,7 +972,12 @@ int main(int argc, char* argv[]) {
                         out << "RWSTATS PRE:";
                         stats.print(out);
                         out << std::endl;
+
+                        out << "\nQuery after rewrite: ";
+                        queries[i]->visit(printer);
+                        out << std::endl;
                     }
+
 
                     if (options.queryReductionTimeout > 0 && qt > 0)
                     {
@@ -1139,16 +1203,16 @@ int main(int argc, char* argv[]) {
                     break;
                 case LTL::Algorithm::Tarjan:
                     if (options.trace)
-                        modelChecker = std::make_unique<LTL::TarjanModelChecker<true>>(*net, negated_formula);
+                        modelChecker = std::make_unique<LTL::TarjanModelChecker<true>>(*net, negated_formula, options.ltluseweak);
                     else
-                        modelChecker = std::make_unique<LTL::TarjanModelChecker<false>>(*net, negated_formula);
+                        modelChecker = std::make_unique<LTL::TarjanModelChecker<false>>(*net, negated_formula, options.ltluseweak);
                     break;
             }
             satisfied = negate_answer ^ modelChecker->isSatisfied();
             std::cout << "FORMULA " << querynames[qid] <<
                       (satisfied ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT" <<
                       (options.ltlalgorithm == LTL::Algorithm::NDFS ? " NDFS" : " TARJAN") <<
-                      (modelChecker->weakskip ? " WEAK_SKIP" : "") << std::endl;
+                      (modelChecker->isweak() ? " WEAK_SKIP" : "") << std::endl;
         }
     }
 

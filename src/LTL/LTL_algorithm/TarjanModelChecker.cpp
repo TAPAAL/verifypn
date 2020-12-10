@@ -132,12 +132,11 @@ namespace LTL {
             while (cstack.size() > p) {
                 popCStack();
             }
-        } else if (is_weak) {
+        } else if (shortcircuitweak && is_weak) {
             State state = factory.newState();
             seen.decode(state, cstack[p].stateid);
             if(!successorGenerator->isAccepting(state)){
                 popCStack();
-                weakskip = true;
             }
         }
         if (!astack.empty() && p == astack.top()) {

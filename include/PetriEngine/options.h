@@ -47,7 +47,7 @@ struct options_t {
 
     // LTL Specific options
     bool usedltl = false;
-    LTL::Algorithm ltlalgorithm = LTL::Algorithm::NDFS;
+    LTL::Algorithm ltlalgorithm = LTL::Algorithm::Tarjan;
     bool ltluseweak = true;
 
     std::string query_out_file;

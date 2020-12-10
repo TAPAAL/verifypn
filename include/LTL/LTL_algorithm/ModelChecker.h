@@ -16,7 +16,7 @@ namespace LTL {
         virtual bool isSatisfied() = 0;
         
         virtual ~ModelChecker() = default;
-        bool weakskip = false;
+        [[nodiscard]] bool isweak() const { return is_weak; }
     protected:
         std::unique_ptr<ProductSuccessorGenerator> successorGenerator;
         const PetriEngine::PetriNet &net;
@@ -24,6 +24,7 @@ namespace LTL {
 
         size_t _discovered = 0;
         const bool shortcircuitweak;
+        bool weakskip = false;
         bool is_weak = false;
     };
 }

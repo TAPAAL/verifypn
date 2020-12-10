@@ -136,6 +136,11 @@ namespace LTL {
     }
 
     PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr& formula) {
+        if (auto e = dynamic_pointer_cast<ECondition>(formula); e != nullptr) {
+            return std::make_shared<ECondition>(simplify((*e)[0]));
+        } else if (auto a = dynamic_pointer_cast<ACondition>(formula); a != nullptr) {
+            return std::make_shared<ACondition>(simplify((*a)[0]));
+        }
         auto[f, apinfo] = LTL::to_spot_formula(formula);
         spot::tl_simplifier simplifier{3};
         f = simplifier.simplify(f);

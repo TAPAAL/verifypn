@@ -2329,13 +2329,11 @@ namespace PetriEngine {
         }
 
         Retval ECondition::simplify(SimplificationContext& context) const {
-            assert(false);
             Retval r = _cond->simplify(context);
             return context.negated() ? simplifySimpleQuant<ACondition>(r, context) : simplifySimpleQuant<ECondition>(r, context);
         }
 
         Retval ACondition::simplify(SimplificationContext& context) const {
-            assert(false);
             Retval r = _cond->simplify(context);
             return context.negated() ? simplifySimpleQuant<ECondition>(r, context) : simplifySimpleQuant<ACondition>(r, context);
         }
@@ -3515,7 +3513,8 @@ namespace PetriEngine {
 
         Condition_ptr ECondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
                                                bool initrw) {
-            return std::make_shared<ECondition>(_cond->pushNegation(stats, context, nested, !negated, initrw));
+            auto _sub = _cond->pushNegation(stats, context, nested, !negated, initrw);
+            return negated ? (Condition_ptr)std::make_shared<ACondition>(_sub) : (Condition_ptr)std::make_shared<ECondition>(_sub);
         }
 
         Condition_ptr GCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,

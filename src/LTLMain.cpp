@@ -38,6 +38,7 @@
 
 #include <spot/twaalgos/contains.hh>
 #include <spot/tl/print.hh>
+#include <atomic>
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -238,23 +239,20 @@ ReturnValue parseOptions(int argc, char *argv[], options_t &options) {
                     fprintf(stderr, "Argument Error: Invalid ctl-algorithm type \"%s\"\n", argv[i + 1]);
                     return ErrorCode;
                 }
-                options.isctl = true;
-                options.isltl = false;
+                options.logic = TemporalLogic::CTL;
                 i++;
 
             }
         } else if (strcmp(argv[i], "-ltl") == 0) {
+            options.logic = TemporalLogic::LTL;
             if (argc > i + 1) {
                 if (strcmp(argv[i + 1], "ndfs") == 0) {
                     options.ltlalgorithm = LTL::Algorithm::NDFS;
                 } else if (strcmp(argv[i + 1], "tarjan") == 0) {
                     options.ltlalgorithm = LTL::Algorithm::Tarjan;
                 } else {
-                    fprintf(stderr, "Argument Error: Invalid ltl-algorithm type \"%s\"\n", argv[i + 1]);
-                    return ErrorCode;
+                    continue;
                 }
-                options.isctl = false;
-                options.isltl = true;
                 i++;
             }
         } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0) {
@@ -577,6 +575,7 @@ ReturnValue LTLMain(options_t options) {
                                 ->pushNegation(stats, context, false, false, false);
 
                         wasAGCPNApprox |= dynamic_cast<NotCondition *>(queries[i].get()) != nullptr;
+
                         if (options.queryReductionTimeout > 0 && options.printstatistics) {
                             out << "RWSTATS PRE:";
                             stats.print(out);
@@ -745,7 +744,7 @@ ReturnValue LTLMain(options_t options) {
                     break;
             }
             satisfied = negate_answer ^ modelChecker->isSatisfied();
-            weakskip = modelChecker->weakskip;
+            weakskip = modelChecker->isweak();
         }
         std::cout << "FORMULA " << querynames[i] <<
                   (satisfied ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT" <<

@@ -94,7 +94,6 @@ namespace LTL {
                 todo.pop();
             } else {
                 if (shortcircuitweak && is_weak && !successorGenerator->isAccepting(working)) {
-                    weakskip = true;
                     continue;
                 }
                 if (working == *seed) {
