@@ -31,8 +31,9 @@ namespace LTL {
 
     private:
         using State = LTL::Structures::ProductState;
-        using idx_t = size_t;
-        static constexpr idx_t HashSz = 4096;
+        using idx_t = uint32_t;
+        // 64 MB hash table
+        static constexpr idx_t HashSz = 16777216;
 
         LTL::Structures::ProductStateFactory factory;
 
@@ -40,24 +41,25 @@ namespace LTL {
         std::unordered_set<idx_t> store;
 
         std::array<idx_t, HashSz> chash;
+        static_assert(sizeof(chash) == (1U << 26U));
 
         static inline idx_t hash(idx_t id) {
             return id % HashSz;
         }
 
         struct PlainCEntry {
-            size_t lowlink;
-            size_t stateid;
-            size_t next = std::numeric_limits<idx_t>::max();
+            idx_t lowlink;
+            idx_t stateid;
+            idx_t next = std::numeric_limits<idx_t>::max();
 
-            PlainCEntry(size_t lowlink, size_t stateid, size_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
+            PlainCEntry(idx_t lowlink, idx_t stateid, idx_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
         };
 
         struct TracableCEntry : PlainCEntry {
-            idx_t lowsource = std::numeric_limits<size_t>::max();
+            idx_t lowsource = std::numeric_limits<idx_t>::max();
             uint32_t sourcetrans;
 
-            TracableCEntry(size_t lowlink, size_t stateid, size_t next) : PlainCEntry(lowlink, stateid, next) {}
+            TracableCEntry(idx_t lowlink, idx_t stateid, idx_t next) : PlainCEntry(lowlink, stateid, next) {}
         };
 
         using CEntry = std::conditional_t<SaveTrace,
@@ -65,7 +67,7 @@ namespace LTL {
             PlainCEntry>;
 
         struct DEntry {
-            size_t pos;
+            idx_t pos;
             successor_info sucinfo;
         };
 

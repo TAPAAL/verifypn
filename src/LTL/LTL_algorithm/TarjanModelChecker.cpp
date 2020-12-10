@@ -26,7 +26,7 @@ namespace LTL {
         State working = factory.newState();
         State parent = factory.newState();
         for (auto &state : initial_states) {
-            auto res = seen.add(state);
+            const auto res = seen.add(state);
             if (res.first) {
                 push(state);
             }
@@ -36,7 +36,7 @@ namespace LTL {
                     pop();
                     continue;
                 }
-                idx_t stateid = seen.add(working).second;
+                const idx_t stateid = seen.add(working).second;
                 dtop.sucinfo.last_state = stateid;
 
                 // lookup successor in 'hash' table
@@ -61,7 +61,7 @@ namespace LTL {
                     std::vector<DEntry> rev;
                     auto sz = dstack.size();
                     // dump stack to vector to allow iteration
-                    for (size_t i = 0; i < sz; ++i) {
+                    for (idx_t i = 0; i < sz; ++i) {
                         rev.push_back(dstack.top());
                         dstack.pop();
                     }
@@ -124,7 +124,7 @@ namespace LTL {
 
     template<bool SaveTrace>
     void TarjanModelChecker<SaveTrace>::pop() {
-        const size_t p = dstack.top().pos;
+        const auto p = dstack.top().pos;
         dstack.pop();
         if (cstack[p].lowlink == p) {
             while (cstack.size() > p) {
