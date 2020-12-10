@@ -12,6 +12,10 @@
 #include "../LTL/LTL.h"
 
 
+enum class TemporalLogic {
+    CTL, LTL
+};
+
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
@@ -32,16 +36,19 @@ struct options_t {
     uint32_t siphonDepth = 0;
     uint32_t cores = 1;
 
+    TemporalLogic logic = TemporalLogic::CTL;
+    bool noreach = false;
     //CTL Specific options
     bool gamemode = false;
-    bool isctl = false;
+    bool usedctl = false;
     CTL::CTLAlgorithmType ctlalgorithm = CTL::CZero;
     bool tar = false;
     uint32_t binary_query_io = 0;
 
     // LTL Specific options
-    bool isltl = false;
+    bool usedltl = false;
     LTL::Algorithm ltlalgorithm = LTL::Algorithm::NDFS;
+    bool ltluseweak = true;
 
     std::string query_out_file;
     std::string model_out_file;
@@ -118,14 +125,14 @@ struct options_t {
         optionsOut += ",LPSolve_Timeout=" + std::to_string(lpsolveTimeout);
         
 
-        if (isctl) {
+        if (usedctl) {
             if (ctlalgorithm == CTL::CZero) {
                 optionsOut += ",CTLAlgorithm=CZERO";
             } else {
                 optionsOut += ",CTLAlgorithm=LOCAL";
             }
         }
-        else if (isltl) {
+        else if (usedltl) {
             switch (ltlalgorithm) {
 
                 case LTL::Algorithm::NDFS:
