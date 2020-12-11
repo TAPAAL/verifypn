@@ -5,7 +5,7 @@
  * Created on 14/10/2020
  */
 
-#include "LTL/LTL_algorithm/TarjanModelChecker.h"
+#include "LTL/Algorithm/TarjanModelChecker.h"
 
 #undef PRINTF_DEBUG
 namespace LTL {
@@ -21,8 +21,7 @@ namespace LTL {
 
     template<bool SaveTrace>
     bool TarjanModelChecker<SaveTrace>::isSatisfied() {
-        is_weak = successorGenerator->is_weak();
-        std::cerr << "Is weak: " << is_weak << std::endl;
+        is_weak = successorGenerator->is_weak() && shortcircuitweak;
         std::vector<State> initial_states;
         successorGenerator->makeInitialState(initial_states);
         State working = factory.newState();
@@ -137,7 +136,6 @@ namespace LTL {
             seen.decode(state, cstack[p].stateid);
             if(!successorGenerator->isAccepting(state)){
                 popCStack();
-                weakskip = true;
             }
         }
         if (!astack.empty() && p == astack.top()) {

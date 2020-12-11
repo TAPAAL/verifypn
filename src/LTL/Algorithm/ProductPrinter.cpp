@@ -2,7 +2,7 @@
 // Created by simwir on 09/10/2020.
 //
 
-#include "LTL/LTL_algorithm/ProductPrinter.h"
+#include "LTL/Algorithm/ProductPrinter.h"
 
 namespace LTL::ProductPrinter {
     using trans = std::pair<size_t, size_t>;

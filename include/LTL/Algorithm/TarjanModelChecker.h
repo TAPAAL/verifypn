@@ -9,7 +9,7 @@
 #define VERIFYPN_TARJANMODELCHECKER_H
 
 
-#include "LTL/LTL_algorithm/ModelChecker.h"
+#include "LTL/Algorithm/ModelChecker.h"
 #include "LTL/Structures/ProductStateFactory.h"
 #include "PetriEngine/Structures/StateSet.h"
 
@@ -31,7 +31,7 @@ namespace LTL {
 
     private:
         using State = LTL::Structures::ProductState;
-        using idx_t = uint32_t;
+        using idx_t = size_t;
         // 64 MB hash table
         static constexpr idx_t HashSz = 16777216;
 
@@ -41,7 +41,7 @@ namespace LTL {
         std::unordered_set<idx_t> store;
 
         std::array<idx_t, HashSz> chash;
-        static_assert(sizeof(chash) == (1U << 26U));
+        static_assert(sizeof(chash) == (1U << 27U));
 
         static inline idx_t hash(idx_t id) {
             return id % HashSz;
@@ -57,7 +57,7 @@ namespace LTL {
 
         struct TracableCEntry : PlainCEntry {
             idx_t lowsource = std::numeric_limits<idx_t>::max();
-            uint32_t sourcetrans;
+            idx_t sourcetrans;
 
             TracableCEntry(idx_t lowlink, idx_t stateid, idx_t next) : PlainCEntry(lowlink, stateid, next) {}
         };

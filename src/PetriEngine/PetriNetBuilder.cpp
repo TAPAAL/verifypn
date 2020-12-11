@@ -450,10 +450,11 @@ namespace PetriEngine {
         for(uint32_t i = 0; i < queries.size(); ++i)
         {
             if(results[i] == Reachability::ResultPrinter::Unknown ||
-               results[i] == Reachability::ResultPrinter::CTL )
+               results[i] == Reachability::ResultPrinter::CTL ||
+               results[i] == Reachability::ResultPrinter::LTL)
             {
                 queries[i]->analyze(placecontext);
-                all_reach &= (results[i] != Reachability::ResultPrinter::CTL);
+                all_reach &= (results[i] != Reachability::ResultPrinter::CTL && results[i] != Reachability::ResultPrinter::LTL);
                 remove_loops &= !queries[i]->isLoopSensitive();
                 // There is a deadlock somewhere, if it is not alone, we cannot reduce.
                 // this has similar problems as nested next.                        

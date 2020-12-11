@@ -1,7 +1,7 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 
-add_subdirectory(LTL_algorithm)
+add_subdirectory(Algorithm)
 add_subdirectory(Simplification)
 
 add_library(LTL ${HEADER_FILES} _LTL.cpp)

@@ -67,12 +67,10 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::ACondition *condition) override {
             setBad();
-            std::cerr << "found ACondition" << std::endl;
         }
 
         void _accept(const PetriEngine::PQL::ECondition *condition) override {
             setBad();
-            std::cerr << "found ECondition" << std::endl;
         }
 
         void _accept(const PetriEngine::PQL::NotCondition *element) override {
