@@ -7,7 +7,7 @@
 
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/ProductSuccessorGenerator.h"
-#include "LTL/LTL_algorithm/ProductPrinter.h"
+#include "LTL/Algorithm/ProductPrinter.h"
 
 namespace LTL {
     class ModelChecker {

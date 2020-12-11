@@ -5,7 +5,7 @@
  * Created on 14/10/2020
  */
 
-#include "LTL/LTL_algorithm/TarjanModelChecker.h"
+#include "LTL/Algorithm/TarjanModelChecker.h"
 
 #undef PRINTF_DEBUG
 namespace LTL {

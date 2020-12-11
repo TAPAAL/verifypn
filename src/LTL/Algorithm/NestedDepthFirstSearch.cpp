@@ -2,7 +2,7 @@
 // Created by Simon Mejlby Virenfeldt on 25/09/2020.
 //
 
-#include "LTL/LTL_algorithm/NestedDepthFirstSearch.h"
+#include "LTL/Algorithm/NestedDepthFirstSearch.h"
 
 namespace LTL {
 
@@ -19,7 +19,7 @@ namespace LTL {
 #endif
 
     bool NestedDepthFirstSearch::isSatisfied() {
-        is_weak = successorGenerator->is_weak();
+        is_weak = successorGenerator->is_weak() && shortcircuitweak;
         dfs();
 #ifdef _PRINTF_DEBUG
         std::cout << "discovered " << _discovered << " states." << std::endl;
@@ -92,7 +92,7 @@ namespace LTL {
             if (!successorGenerator->next(working, top.sucinfo)) {
                 todo.pop();
             } else {
-                if (shortcircuitweak && is_weak && !successorGenerator->isAccepting(working)) {
+                if (is_weak && !successorGenerator->isAccepting(working)) {
                     continue;
                 }
                 if (working == *seed) {

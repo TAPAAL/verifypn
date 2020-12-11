@@ -445,7 +445,7 @@ namespace PetriEngine {
     {
         QueryPlaceAnalysisContext placecontext(getPlaceNames(), getTransitionNames(), net);
         bool all_reach = true;
-        bool remove_loops = false;
+        bool remove_loops = true;
         bool contains_next = false;
         for(uint32_t i = 0; i < queries.size(); ++i)
         {

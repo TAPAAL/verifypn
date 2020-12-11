@@ -2329,11 +2329,13 @@ namespace PetriEngine {
         }
 
         Retval ECondition::simplify(SimplificationContext& context) const {
+            assert(false);
             Retval r = _cond->simplify(context);
             return context.negated() ? simplifySimpleQuant<ACondition>(r, context) : simplifySimpleQuant<ECondition>(r, context);
         }
 
         Retval ACondition::simplify(SimplificationContext& context) const {
+            assert(false);
             Retval r = _cond->simplify(context);
             return context.negated() ? simplifySimpleQuant<ECondition>(r, context) : simplifySimpleQuant<ACondition>(r, context);
         }
@@ -3078,7 +3080,17 @@ namespace PetriEngine {
         Condition_ptr AFCondition::prepareForReachability(bool negated) const {
             return NULL;
         }
-        
+
+        Condition_ptr ACondition::prepareForReachability(bool negated) const {
+            auto g = dynamic_pointer_cast<GCondition>(_cond);
+            return g ? AGCondition((*g)[0]).prepareForReachability(negated) : nullptr;
+        }
+
+        Condition_ptr ECondition::prepareForReachability(bool negated) const {
+            auto f = dynamic_pointer_cast<FCondition>(_cond);
+            return f ? EFCondition((*f)[0]).prepareForReachability(negated) : nullptr;
+        }
+
         Condition_ptr UntilCondition::prepareForReachability(bool negated) const {
             return NULL;
         }
@@ -3508,11 +3520,15 @@ namespace PetriEngine {
 
         Condition_ptr ACondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
                                                bool initrw) {
+            assert(false);
+            return nullptr;
             return ECondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
         }
 
         Condition_ptr ECondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
                                                bool initrw) {
+            assert(false);
+            return nullptr;
             auto _sub = _cond->pushNegation(stats, context, nested, !negated, initrw);
             return negated ? (Condition_ptr)std::make_shared<ACondition>(_sub) : (Condition_ptr)std::make_shared<ECondition>(_sub);
         }

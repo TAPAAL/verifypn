@@ -30,10 +30,6 @@
 
 #include "CTL/CTLEngine.h"
 #include "PetriEngine/PQL/Expressions.h"
-#include "LTL/LTLValidator.h"
-#include "LTL/LTL_algorithm/NestedDepthFirstSearch.h"
-#include "LTL/LTL_algorithm/TarjanModelChecker.h"
-#include "LTL/Simplification/SpotToPQL.h"
 #include "LTL/LTL.h"
 
 #include <spot/twaalgos/contains.hh>

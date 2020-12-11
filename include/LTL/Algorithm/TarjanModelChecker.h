@@ -9,7 +9,7 @@
 #define VERIFYPN_TARJANMODELCHECKER_H
 
 
-#include "LTL/LTL_algorithm/ModelChecker.h"
+#include "LTL/Algorithm/ModelChecker.h"
 #include "LTL/Structures/ProductStateFactory.h"
 #include "PetriEngine/Structures/StateSet.h"
 

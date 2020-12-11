@@ -71,11 +71,7 @@
 #include "CTL/CTLEngine.h"
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
-#include "LTL/LTL_algorithm/ModelChecker.h"
-#include "LTL/LTL_algorithm/NestedDepthFirstSearch.h"
-#include "LTL/LTL_algorithm/TarjanModelChecker.h"
-#include "LTL/LTLValidator.h"
-#include "LTL/Simplification/SpotToPQL.h"
+#include "LTL/LTL.h"
 
 #include <atomic>
 
@@ -315,8 +311,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 }
                 else {
                     continue;
-                    /*fprintf(stderr, "Argument Error: Invalid ltl-algorithm type \"%s\"\n", argv[i + 1]);
-                    return ErrorCode;*/
                 }
                 i++;
             }
@@ -733,33 +727,6 @@ std::vector<Condition_ptr> getLTLQueries(const vector<Condition_ptr>& ctlStarQue
     return ltlQueries;
 }
 
-/**
- * Converts a formula on the form A f, E f or f into just f, assuming f is an LTL formula.
- * In the case E f, not f is returned, and in this case the model checking result should be negated
- * (indicated by bool in return value)
- * @param formula - a formula on the form A f, E f or f
- * @return @code(ltl_formula, should_negate) - ltl_formula is the formula f if it is a valid LTL formula, nullptr otherwise.
- * should_negate indicates whether the returned formula is negated (in the case the parameter was E f)
- */
-std::pair<Condition_ptr, bool> to_ltl(const Condition_ptr &formula) {
-    LTL::LTLValidator validator;
-    bool should_negate = false;
-    Condition_ptr converted;
-    if (auto _formula = dynamic_cast<ECondition *>(formula.get())) {
-        converted = std::make_shared<NotCondition>((*_formula)[0]);
-        should_negate = true;
-    } else if (auto _formula = dynamic_cast<ACondition *>(formula.get())) {
-        converted = (*_formula)[0];
-    } else {
-        converted = formula;
-    }
-    converted->visit(validator);
-    if (validator.bad()) {
-        converted = nullptr;
-    }
-    return std::make_pair(converted, should_negate);
-}
-
 Condition_ptr simplify_ltl_query(Condition_ptr query,
                                  bool printstats,
                                  const EvaluationContext &evalContext,
@@ -975,14 +942,9 @@ int main(int argc, char* argv[]) {
                                             ->pushNegation(stats, context, false, false, true);
                     wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
 
-                    if(options.queryReductionTimeout > 0 && options.printstatistics)
-                    {
+                    if(options.queryReductionTimeout > 0 && options.printstatistics) {
                         out << "RWSTATS PRE:";
                         stats.print(out);
-                        out << std::endl;
-
-                        out << "\nQuery after rewrite: ";
-                        queries[i]->visit(printer);
                         out << std::endl;
                     }
 
@@ -1208,7 +1170,7 @@ int main(int argc, char* argv[]) {
         for (auto qid : ltl_ids) {
             bool satisfied = false, weakskip = false;
 
-            auto[negated_formula, negate_answer] = to_ltl(queries[qid]);
+            auto[negated_formula, negate_answer] = LTL::to_ltl(queries[qid]);
             std::unique_ptr<LTL::ModelChecker> modelChecker;
             switch (options.ltlalgorithm) {
                 case LTL::Algorithm::NDFS:

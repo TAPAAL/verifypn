@@ -440,10 +440,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const override;
 
             bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void toXML(std::ostream&, uint32_t tabs) const override {
                 // TODO implement
@@ -473,10 +470,7 @@ namespace PetriEngine {
 
             Retval simplify(SimplificationContext& context) const override;
             bool isReachability(uint32_t depth) const override;
-            Condition_ptr prepareForReachability(bool negated) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void toXML(std::ostream&, uint32_t tabs) const override {
                 // TODO implement

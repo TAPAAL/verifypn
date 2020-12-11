@@ -2,7 +2,7 @@
 // Created by Simon Mejlby Virenfeldt on 25/09/2020.
 //
 
-#include "LTL/LTL_algorithm/ModelChecker.h"
+#include "LTL/Algorithm/ModelChecker.h"
 
 #include <utility>
 
