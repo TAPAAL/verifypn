@@ -368,7 +368,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -noweak                            Disable optimizations for weak Büchi automata when doing \n"
                     "                                     LTL model checking. Not recommended."
                     "  -noreach                           Force use of CTL/LTL engine, even when queries are reachability.\n"
-                    "                                     Not recommended as reachability engine is faster."
+                    "                                     Not recommended since the reachability engine is faster."
                     "  -c, --cpn-overapproximation        Over approximate query on Colored Petri Nets (CPN only)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
 #ifdef VERIFYPN_MC_Simplification
@@ -797,6 +797,14 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         out << std::endl;
     }
 
+    //cond = LTL::simplify(cond);
+
+    if (printstats) {
+        out << "\nQuery after reduction: ";
+        cond->toString(out);
+        out << std::endl;
+    }
+
     if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
         return cond;
     }
@@ -1192,6 +1200,11 @@ int main(int argc, char* argv[]) {
     //----------------------- Verify LTL queries -----------------------//
 
     if (!ltl_ids.empty()) {
+        if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode) {
+            std::cerr << "Error performing context analysis" << std::endl;
+            return v;
+        }
+
         for (auto qid : ltl_ids) {
             bool satisfied = false, weakskip = false;
 
@@ -1212,7 +1225,8 @@ int main(int argc, char* argv[]) {
             std::cout << "FORMULA " << querynames[qid] <<
                       (satisfied ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT" <<
                       (options.ltlalgorithm == LTL::Algorithm::NDFS ? " NDFS" : " TARJAN") <<
-                      (modelChecker->isweak() ? " WEAK_SKIP" : "") << std::endl;
+                      (modelChecker->isweak() ? " WEAK_SKIP" : "") <<
+                      (queries[qid]->isReachability(0) ? "REACHABILITY" : "") << std::endl;
         }
     }
 

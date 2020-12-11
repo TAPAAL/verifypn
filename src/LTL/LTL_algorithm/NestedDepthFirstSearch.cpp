@@ -20,7 +20,6 @@ namespace LTL {
 
     bool NestedDepthFirstSearch::isSatisfied() {
         is_weak = successorGenerator->is_weak();
-        std::cerr << "Is weak: " << is_weak << std::endl;
         dfs();
 #ifdef _PRINTF_DEBUG
         std::cout << "discovered " << _discovered << " states." << std::endl;

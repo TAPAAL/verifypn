@@ -21,8 +21,7 @@ namespace LTL {
 
     template<bool SaveTrace>
     bool TarjanModelChecker<SaveTrace>::isSatisfied() {
-        is_weak = successorGenerator->is_weak();
-        std::cerr << "Is weak: " << is_weak << std::endl;
+        is_weak = successorGenerator->is_weak() && shortcircuitweak;
         std::vector<State> initial_states;
         successorGenerator->makeInitialState(initial_states);
         State working = factory.newState();
@@ -132,7 +131,7 @@ namespace LTL {
             while (cstack.size() > p) {
                 popCStack();
             }
-        } else if (shortcircuitweak && is_weak) {
+        } else if (is_weak) {
             State state = factory.newState();
             seen.decode(state, cstack[p].stateid);
             if(!successorGenerator->isAccepting(state)){
