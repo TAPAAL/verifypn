@@ -932,6 +932,7 @@ int main(int argc, char* argv[]) {
                     int preSize=queries[i]->formulaSize();
 
                     if (options.logic == TemporalLogic::LTL) {
+                        if (options.queryReductionTimeout == 0) continue;
                         SimplificationContext simplificationContext(qm0, qnet.get(), qt,
                                                                     options.lpsolveTimeout, &cache);
                         queries[i] = simplify_ltl_query(queries[i], options.printstatistics,
