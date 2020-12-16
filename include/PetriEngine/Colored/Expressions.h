@@ -143,6 +143,18 @@ namespace PetriEngine {
                 return !cfp.constraints._intervals.empty();
             }
 
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t> varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
+                Reachability::interval_t interval;
+                Reachability::intervalTuple_t tupleInterval;
+                const Color *dotColor = DotConstant::dotConstant();
+                 
+                colortypes->push_back(dotColor->getColorType());
+                
+                interval.addRange(dotColor->getId(), dotColor->getId());
+                tupleInterval.addInterval(interval);
+                return tupleInterval;
+            }
+
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
                 const Color *dotColor = DotConstant::dotConstant();
                 constantMap[index] = dotColor;
