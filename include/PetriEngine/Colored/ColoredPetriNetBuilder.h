@@ -58,7 +58,7 @@ namespace PetriEngine {
 
         Colored::ExpressionContext::BindingMap& nextBinding();
         Colored::ExpressionContext::BindingMap& currentBinding();
-        bool isInitial();
+        bool isInitial() const;
         Iterator begin();
         Iterator end();
     };

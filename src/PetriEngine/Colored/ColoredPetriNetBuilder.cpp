@@ -698,14 +698,6 @@ namespace PetriEngine {
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
         }
-        std::cout << "Transition " << _transition.name << std::endl;
-        for(auto varMap : _transition.variableMap){
-            std::cout << "var set:" << std::endl;
-            for(auto pair : varMap){
-                std::cout << pair.first->name << std::endl;
-                pair.second.print();
-            }
-        }
         
         for (auto var : variables) {
             if(_transition.variableMap.empty() || _transition.variableMap[_nextIndex][var]._intervals.empty()){
@@ -758,7 +750,7 @@ namespace PetriEngine {
             }
             if(next){
                 _nextIndex++;
-                if(_nextIndex >= _transition.variableMap.size()){
+                if(isInitial()){
                     _isDone = true;
                     break;
                 }
@@ -766,11 +758,7 @@ namespace PetriEngine {
                     _binding.second =  _binding.second->getColorType()->getColor(_transition.variableMap[_nextIndex][_binding.first].getFirst().getLowerIds());
                 }
             }
-            
-            // if (isInitial()) {
-            //     _isDone = true;
-            //     break;
-            // }      
+                 
             test = eval();
         
         }
@@ -782,16 +770,8 @@ namespace PetriEngine {
         return _bindings;
     }
 
-    // bool BindingGenerator::isInitial() {        
-    //     for (auto b : _bindings) {
-    //         std::vector<uint32_t> colorIds;
-    //         b.second->getTupleId(&colorIds);
-    //         if (colorIds != _combinedVarIntervalMap[b.first].getFirst().getLowerIds()) return false;
-    //     }
-    //     return true;
-    // }
-     bool BindingGenerator::isInitial() {        
-        return _nextIndex == 0;
+    bool BindingGenerator::isInitial() const{        
+        return _nextIndex >= _transition.variableMap.size();
     }
 
     BindingGenerator::Iterator BindingGenerator::begin() {
