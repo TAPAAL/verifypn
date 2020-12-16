@@ -161,8 +161,6 @@ namespace PetriEngine {
             uint32_t currentPlaceId = _placeFixpointQueue.back();
             _placeFixpointQueue.pop_back();
             _placeColorFixpoints[currentPlaceId].inQueue = false;
-
-            std::cout << "Place " << _places[currentPlaceId].name << std::endl;
  
             std::vector<uint32_t> connectedTransitions = _placePostTransitionMap[currentPlaceId];
 
@@ -172,7 +170,6 @@ namespace PetriEngine {
                 bool transitionActivated = true;
                 //maybe this can be avoided with a better implementation
                 transition.variableMap.clear();
-                std::cout << "Transition " << transition.name << " with id " << transitionId << std::endl;
 
                 if(!_arcIntervals.count(transitionId)){
                     _arcIntervals[transitionId] = setupTransitionVars(transition);
@@ -193,7 +190,7 @@ namespace PetriEngine {
         
         auto end = std::chrono::high_resolution_clock::now();
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
-        printPlaceTable();
+        //printPlaceTable();
         //We should not need to keep colors in places after we have found fixpoint
         _placeColorFixpoints.clear();
     }
@@ -216,7 +213,6 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals) {
         for (auto arc : transition.input_arcs) {
-            std::cout << "has arc "<< arc.expr.get()->toString() << std::endl;
             PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];
             curCFP.constraints.restrict(max_intervals);
             // std::cout << "Cur place point " << arc.place << std::endl;
@@ -232,7 +228,6 @@ namespace PetriEngine {
                 return;
             } 
         }
-        std::cout << "Processing var intervals" << std::endl;
         if(getVarIntervals(transition.variableMap, transitionId)){
             // std::cout << transition.name << " var intervals" << std::endl;
             // for (auto pair : transition.variableMap){
@@ -243,7 +238,6 @@ namespace PetriEngine {
             //     }
             // }
             if(transition.guard != nullptr) {
-                std::cout << "Restricting by guard" << std::endl;
                 transition.guard->restrictVars(transition.variableMap);
                 std::vector<uint32_t> invalidIds;
 
@@ -452,8 +446,6 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::processOutputArcs(Colored::Transition& transition) {
         bool transitionHasVarOutArcs = false;
 
-        std::cout << transition.name << " activated" << std::endl;
-
         for (auto& arc : transition.output_arcs) {
             Colored::ColorFixpoint& placeFixpoint = _placeColorFixpoints[arc.place];
 
@@ -475,14 +467,9 @@ namespace PetriEngine {
             if (!variables.empty()) {
                 transitionHasVarOutArcs = true;
             }
-            std::cout << "getting output interval" << std::endl;
             auto intervals = arc.expr->getOutputIntervals(transition.variableMap);
 
-            intervals.simplify();
-
-            std::cout << "Out intervals for place " << arc.place << ": " << std::endl;
-            intervals.print();
-            
+            intervals.simplify();            
 
             for(auto interval : intervals._intervals){
                 placeFixpoint.constraints.addInterval(interval);    
