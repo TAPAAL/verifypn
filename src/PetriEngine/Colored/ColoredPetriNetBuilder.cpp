@@ -559,7 +559,7 @@ namespace PetriEngine {
             //Print all bindings
             // std::cout << transition.name << std::endl;
             // for (auto test : b){
-            //     std::cout << "Binding '" << test.first << "\t" << *test.second << "' in bindingds." << std::endl;
+            //     std::cout << "Binding '" << test.first << "\t" << test.second->getId() << "' in bindingds." << std::endl;
             // }
             // std::cout << std::endl;
             

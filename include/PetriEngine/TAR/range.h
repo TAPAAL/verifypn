@@ -744,7 +744,6 @@ namespace PetriEngine {
                         }
                     }
                 }
-
                 return interval_t();
             }
 
