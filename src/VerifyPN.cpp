@@ -730,15 +730,14 @@ std::vector<Condition_ptr> getLTLQueries(const vector<Condition_ptr>& ctlStarQue
 Condition_ptr simplify_ltl_query(Condition_ptr query,
                                  bool printstats,
                                  const EvaluationContext &evalContext,
-                                 SimplificationContext& simplificationContext,
-                                 std::ostream& out = std::cout)
-{
+                                 SimplificationContext &simplificationContext,
+                                 std::ostream &out = std::cout) {
     assert(dynamic_pointer_cast<SimpleQuantifierCondition>(query) != nullptr);
     bool wasACond = dynamic_pointer_cast<ACondition>(query) != nullptr;
-    auto cond = (dynamic_pointer_cast<SimpleQuantifierCondition>(query))->operator[](0);
+    auto cond = (*dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
     cond = LTL::simplify(cond);
     negstat_t stats;
-    cond = Condition::initialMarkingRW([&](){ return cond; }, stats, evalContext, false, false, true)
+    cond = Condition::initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true)
             ->pushNegation(stats, evalContext, false, false, true);
 
     if (printstats) {
@@ -757,29 +756,22 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         std::exit(ErrorCode);
     }
 
-    if(printstats)
-    {
+    cond = Condition::initialMarkingRW([&]() { return LTL::simplify(cond); }, stats, evalContext, false, false, true);
+
+    if (printstats) {
         out << "RWSTATS POST:";
         stats.print(out);
         out << std::endl;
     }
-
-    //cond = LTL::simplify(cond);
-
-    if (printstats) {
-        out << "\nQuery after reduction: ";
-        cond->toString(out);
-        out << std::endl;
-    }
-
     if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
         return cond;
-    }
-    if (wasACond) {
+    } else if (wasACond) {
         return std::make_shared<ACondition>(cond);
+    } else {
+        return std::make_shared<ECondition>(cond);
     }
-    else return std::make_shared<ECondition>(cond);
 }
+
 
 int main(int argc, char* argv[]) {
 

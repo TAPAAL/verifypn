@@ -3002,7 +3002,7 @@ namespace PetriEngine {
 
             if (auto cond = dynamic_cast<FCondition*>(_cond.get())) {
                 // EF is a reachability formula so skip checking the F.
-                return cond[0].isReachability(depth + 1);
+                return (*cond)[0]->isReachability(depth + 1);
             }
             return _cond->isReachability(depth + 1);
         }
@@ -3012,7 +3012,7 @@ namespace PetriEngine {
                 return false;
             }
             if (auto cond = dynamic_cast<GCondition*>(_cond.get())) {
-                return cond[0].isReachability(depth + 1);
+                return (*cond)[0]->isReachability(depth + 1);
             }
             return _cond->isReachability(depth + 1);
         }
