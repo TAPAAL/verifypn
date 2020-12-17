@@ -98,6 +98,11 @@ namespace PetriEngine {
                     if (c.first == color->getId())
                         return c.second;
                 }
+            } else if (type == nullptr){
+                for (auto c : _set) {
+                    if (c.first == color->getId())
+                        return c.second;
+                }
             }
 
             return 0;

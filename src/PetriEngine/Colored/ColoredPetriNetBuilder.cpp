@@ -132,13 +132,7 @@ namespace PetriEngine {
             auto placeID = _placenames[place.name];
             auto placeColorFixpoint = _placeColorFixpoints[placeID];
             std::cout << "Place: " << place.name << " in queue: " << placeColorFixpoint.inQueue  << " with colortype " << place.type->getName() << std::endl;
-            
-            //uint32_t index = 0;
 
-            // for (auto color : *place.type) {
-            //     std::cout << "Color " << color.toString() << " has index " << index << std::endl;
-            //     index++;
-            // }
             for(auto fixpointPair : placeColorFixpoint.constraints._intervals) {
                 std::cout << "[";
                 for(auto range : fixpointPair._ranges) {
@@ -166,7 +160,7 @@ namespace PetriEngine {
 
             for (uint32_t transitionId : connectedTransitions) {
                 Colored::Transition& transition = _transitions[transitionId];
-                if (transition.considered) break;
+                if (transition.considered) continue;
                 bool transitionActivated = true;
                 //maybe this can be avoided with a better implementation
                 transition.variableMaps.clear();
@@ -544,9 +538,11 @@ namespace PetriEngine {
     //Ideally, orphan places should just be translated to a constant in the query
     void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place) {
         if(_ptplacenames.count(place.name) <= 0){
+            
             std::string name = place.name + "_" + std::to_string(place.marking.size());
             _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
             _ptplacenames[place.name][0] = std::move(name);
+            std::cout << "Creating orphan place " << name << std::endl;
         }
         
         //++_nptplaces;

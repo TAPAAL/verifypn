@@ -446,6 +446,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
     if(!options.output_stats.empty()){
         filename = options.modelfile;
         
+        generated_filename += "model";
         generated_filename += options.modelfile;
         generated_filename += options.queryfile;
         generated_filename.erase(std::remove(generated_filename.begin(), generated_filename.end(), '/'), generated_filename.end());
