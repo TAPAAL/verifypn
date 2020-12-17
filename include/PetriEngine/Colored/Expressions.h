@@ -744,8 +744,7 @@ namespace PetriEngine {
                     return;
                 }
 
-                for(uint32_t j = 0; j < variableMap.size(); j++){
-                    auto& varMap = variableMap[j];
+                for(auto& varMap : variableMap){
                     for(auto varPositionPair : varPositionsL){
                         uint32_t index = varPositionPair.first;
                         if(varPositionsR.count(index)){
@@ -761,14 +760,14 @@ namespace PetriEngine {
                             auto rightTupleInterval = &varMap[varPositionsR[index]];
                             int32_t leftVarModifier;
                             int32_t rightVarModifier;
-                            for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                            for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                 if(idModPair.first == index){
                                     leftVarModifier = idModPair.second;
                                     break;
                                 }
                             }
 
-                            for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                            for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                 if(idModPair.first == index){
                                     rightVarModifier = idModPair.second;
                                     break;
@@ -792,7 +791,7 @@ namespace PetriEngine {
                                     if(varPositionsR.count(index)){
                                         auto rightTupleInterval = varMap[varPositionsR[index]];
                                         int32_t rightVarMod;
-                                        for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                                        for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                             if(idModPair.first == index){
                                                 rightVarMod = idModPair.second;
                                                 break;
@@ -806,7 +805,7 @@ namespace PetriEngine {
                                         auto oldSize = idVec.size();
                                         constantMapR[index]->getTupleId(&idVec); 
                                         int32_t leftVarMod;
-                                        for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                                        for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                             if(idModPair.first == index){
                                                 leftVarMod = idModPair.second;
                                                 break;
@@ -832,7 +831,7 @@ namespace PetriEngine {
                                     if(varPositionsL.count(index)){
                                         auto leftTupleInterval = varMap[varPositionsL[index]];
                                         int32_t leftVarMod;
-                                        for(auto idModPair : varModifierMapL[varPositionsL[index]][j]){
+                                        for(auto idModPair : varModifierMapL[varPositionsL[index]].back()){
                                             if(idModPair.first == index){
                                                 leftVarMod = idModPair.second;
                                                 break;
@@ -846,7 +845,7 @@ namespace PetriEngine {
                                         auto oldSize = idVec.size();
                                         constantMapL[index]->getTupleId(&idVec);
                                         int32_t rightVarMod;
-                                        for(auto idModPair : varModifierMapR[varPositionsR[oldIndex]][j]){
+                                        for(auto idModPair : varModifierMapR[varPositionsR[oldIndex]].back()){
                                             if(idModPair.first == index){
                                                 rightVarMod = idModPair.second;
                                                 break;
@@ -875,7 +874,7 @@ namespace PetriEngine {
                                 if(varPositionsR.count(index)){
                                     auto rightTupleInterval = varMap[varPositionsR[index]];
                                     int32_t rightVarMod;
-                                    for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                                    for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                         if(idModPair.first == index){
                                             rightVarMod = idModPair.second;
                                             break;
@@ -889,7 +888,7 @@ namespace PetriEngine {
                                     auto oldSize = idVec.size();
                                     constantMapR[index]->getTupleId(&idVec);
                                     int32_t leftVarMod;
-                                    for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                                    for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                         if(idModPair.first == index){
                                             leftVarMod = idModPair.second;
                                             break;
@@ -921,7 +920,7 @@ namespace PetriEngine {
                                 if(varPositionsL.count(index)){
                                     auto leftTupleInterval = varMap[varPositionsL[index]];
                                     int32_t leftVarMod;
-                                    for(auto idModPair : varModifierMapL[varPositionsL[index]][j]){
+                                    for(auto idModPair : varModifierMapL[varPositionsL[index]].back()){
                                         if(idModPair.first == index){
                                             leftVarMod = idModPair.second;
                                             break;
@@ -935,7 +934,7 @@ namespace PetriEngine {
                                     auto oldSize = idVec.size();
                                     constantMapL[index]->getTupleId(&idVec);
                                     int32_t rightVarMod;
-                                    for(auto idModPair : varModifierMapR[varPositionPair.second][j]){
+                                    for(auto idModPair : varModifierMapR[varPositionPair.second].back()){
                                         if(idModPair.first == index){
                                             rightVarMod = idModPair.second;
                                             break;
@@ -1000,8 +999,7 @@ namespace PetriEngine {
                     return;
                 }
 
-                for(uint32_t j = 0; j < variableMap.size(); j++){
-                    auto& varMap = variableMap[j];
+                for(auto& varMap : variableMap){
                     for(auto varPositionPair : varPositionsL){
                         uint32_t index = varPositionPair.first;
                         if(varPositionsR.count(index)){
@@ -1017,14 +1015,14 @@ namespace PetriEngine {
                             auto rightTupleInterval = &varMap[varPositionsR[index]];
                             int32_t leftVarModifier;
                             int32_t rightVarModifier;
-                            for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                            for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                 if(idModPair.first == index){
                                     leftVarModifier = idModPair.second;
                                     break;
                                 }
                             }
 
-                            for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                            for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                 if(idModPair.first == index){
                                     rightVarModifier = idModPair.second;
                                     break;
@@ -1047,7 +1045,7 @@ namespace PetriEngine {
                                     if(varPositionsR.count(index)){
                                         auto rightTupleInterval = varMap[varPositionsR[index]];
                                         int32_t rightVarMod;
-                                        for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                                        for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                             if(idModPair.first == index){
                                                 rightVarMod = idModPair.second;
                                                 break;
@@ -1061,7 +1059,7 @@ namespace PetriEngine {
                                         auto oldSize = idVec.size();
                                         constantMapR[index]->getTupleId(&idVec); 
                                         int32_t leftVarMod;
-                                        for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                                        for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                             if(idModPair.first == index){
                                                 leftVarMod = idModPair.second;
                                                 break;
@@ -1088,7 +1086,7 @@ namespace PetriEngine {
                                     if(varPositionsL.count(index)){
                                         auto leftTupleInterval = varMap[varPositionsL[index]];
                                         int32_t leftVarMod;
-                                        for(auto idModPair : varModifierMapL[varPositionsL[index]][j]){
+                                        for(auto idModPair : varModifierMapL[varPositionsL[index]].back()){
                                             if(idModPair.first == index){
                                                 leftVarMod = idModPair.second;
                                                 break;
@@ -1102,7 +1100,7 @@ namespace PetriEngine {
                                         auto oldSize = idVec.size();
                                         constantMapL[index]->getTupleId(&idVec);
                                         int32_t rightVarMod;
-                                        for(auto idModPair : varModifierMapR[varPositionsR[oldIndex]][j]){
+                                        for(auto idModPair : varModifierMapR[varPositionsR[oldIndex]].back()){
                                             if(idModPair.first == index){
                                                 rightVarMod = idModPair.second;
                                                 break;
@@ -1131,7 +1129,7 @@ namespace PetriEngine {
                                 if(varPositionsR.count(index)){
                                     auto rightTupleInterval = varMap[varPositionsR[index]];
                                     int32_t rightVarMod;
-                                    for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                                    for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                         if(idModPair.first == index){
                                             rightVarMod = idModPair.second;
                                             break;
@@ -1145,7 +1143,7 @@ namespace PetriEngine {
                                     auto oldSize = idVec.size();
                                     constantMapR[index]->getTupleId(&idVec);
                                     int32_t leftVarMod;
-                                    for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                                    for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                         if(idModPair.first == index){
                                             leftVarMod = idModPair.second;
                                             break;
@@ -1177,7 +1175,7 @@ namespace PetriEngine {
                                 if(varPositionsL.count(index)){
                                     auto leftTupleInterval = varMap[varPositionsL[index]];
                                     int32_t leftVarMod;
-                                    for(auto idModPair : varModifierMapL[varPositionsL[index]][j]){
+                                    for(auto idModPair : varModifierMapL[varPositionsL[index]].back()){
                                         if(idModPair.first == index){
                                             leftVarMod = idModPair.second;
                                             break;
@@ -1191,7 +1189,7 @@ namespace PetriEngine {
                                     auto oldSize = idVec.size();
                                     constantMapL[index]->getTupleId(&idVec);
                                     int32_t rightVarMod;
-                                    for(auto idModPair : varModifierMapR[varPositionPair.second][j]){
+                                    for(auto idModPair : varModifierMapR[varPositionPair.second].back()){
                                         if(idModPair.first == index){
                                             rightVarMod = idModPair.second;
                                             break;
@@ -1258,8 +1256,7 @@ namespace PetriEngine {
                     return;
                 }
 
-                for(uint32_t j = 0; j < variableMap.size(); j++){
-                    auto& varMap = variableMap[j];
+                for(auto& varMap : variableMap){
                     for(auto varPositionPair : varPositionsL){
                         uint32_t index = varPositionPair.first;
                         if(varPositionsR.count(index)){
@@ -1269,14 +1266,14 @@ namespace PetriEngine {
                             auto rightTupleInterval = &varMap[varPositionsR[index]];
                             int32_t leftVarModifier;
                             int32_t rightVarModifier;
-                            for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                            for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                 if(idModPair.first == index){
                                     leftVarModifier = idModPair.second;
                                     break;
                                 }
                             }
 
-                            for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                            for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                 if(idModPair.first == index){
                                     rightVarModifier = idModPair.second;
                                     break;
@@ -1298,7 +1295,7 @@ namespace PetriEngine {
                                     if(varPositionsR.count(index)){
                                         auto rightTupleInterval = varMap[varPositionsR[index]];
                                         int32_t rightVarMod;
-                                        for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                                        for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                             if(idModPair.first == index){
                                                 rightVarMod = idModPair.second;
                                                 break;
@@ -1312,7 +1309,7 @@ namespace PetriEngine {
                                         auto oldSize = idVec.size();
                                         constantMapR[index]->getTupleId(&idVec);  
                                         int32_t leftVarMod;
-                                        for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                                        for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                             if(idModPair.first == index){
                                                 leftVarMod = idModPair.second;
                                                 break;
@@ -1340,7 +1337,7 @@ namespace PetriEngine {
                                     if(varPositionsL.count(index)){
                                         auto leftTupleInterval = varMap[varPositionsL[index]];
                                         int32_t leftVarMod;
-                                        for(auto idModPair : varModifierMapL[varPositionsL[index]][j]){
+                                        for(auto idModPair : varModifierMapL[varPositionsL[index]].back()){
                                             if(idModPair.first == index){
                                                 leftVarMod = idModPair.second;
                                                 break;
@@ -1354,7 +1351,7 @@ namespace PetriEngine {
                                         auto oldSize = idVec.size();
                                         constantMapL[index]->getTupleId(&idVec);
                                         int32_t rightVarMod;
-                                        for(auto idModPair : varModifierMapR[varPositionsR[oldIndex]][j]){
+                                        for(auto idModPair : varModifierMapR[varPositionsR[oldIndex]].back()){
                                             if(idModPair.first == index){
                                                 rightVarMod = idModPair.second;
                                                 break;
@@ -1383,7 +1380,7 @@ namespace PetriEngine {
                                 if(varPositionsR.count(index)){
                                     auto rightTupleInterval = varMap[varPositionsR[index]];
                                     int32_t rightVarMod;
-                                    for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                                    for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                         if(idModPair.first == index){
                                             rightVarMod = idModPair.second;
                                             break;
@@ -1397,7 +1394,7 @@ namespace PetriEngine {
                                     auto oldSize = idVec.size();
                                     constantMapR[index]->getTupleId(&idVec);
                                     int32_t leftVarMod;
-                                    for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                                    for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                         if(idModPair.first == index){
                                             leftVarMod = idModPair.second;
                                             break;
@@ -1429,7 +1426,7 @@ namespace PetriEngine {
                                 if(varPositionsL.count(index)){
                                     auto leftTupleInterval = varMap[varPositionsL[index]];
                                     int32_t leftVarMod;
-                                    for(auto idModPair : varModifierMapL[varPositionsL[index]][j]){
+                                    for(auto idModPair : varModifierMapL[varPositionsL[index]].back()){
                                         if(idModPair.first == index){
                                             leftVarMod = idModPair.second;
                                             break;
@@ -1443,7 +1440,7 @@ namespace PetriEngine {
                                     auto oldSize = idVec.size();
                                     constantMapL[index]->getTupleId(&idVec);
                                     int32_t rightVarMod;
-                                    for(auto idModPair : varModifierMapR[varPositionPair.second][j]){
+                                    for(auto idModPair : varModifierMapR[varPositionPair.second].back()){
                                         if(idModPair.first == index){
                                             rightVarMod = idModPair.second;
                                             break;
@@ -1508,8 +1505,7 @@ namespace PetriEngine {
                     return;
                 }
 
-                for(uint32_t j = 0; j < variableMap.size(); j++){
-                    auto& varMap = variableMap[j];
+                for(auto& varMap : variableMap){
                     for(auto varPositionPair : varPositionsL){
                         uint32_t index = varPositionPair.first;
                         if(varPositionsR.count(index)){
@@ -1519,14 +1515,14 @@ namespace PetriEngine {
                             auto rightTupleInterval = &varMap[varPositionsR[index]];
                             int32_t leftVarModifier;
                             int32_t rightVarModifier;
-                            for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                            for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                 if(idModPair.first == index){
                                     leftVarModifier = idModPair.second;
                                     break;
                                 }
                             }
 
-                            for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                            for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                 if(idModPair.first == index){
                                     rightVarModifier = idModPair.second;
                                     break;
@@ -1549,7 +1545,7 @@ namespace PetriEngine {
                                     if(varPositionsR.count(index)){
                                         auto rightTupleInterval = varMap[varPositionsR[index]];
                                         int32_t rightVarMod;
-                                        for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                                        for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                             if(idModPair.first == index){
                                                 rightVarMod = idModPair.second;
                                                 break;
@@ -1563,7 +1559,7 @@ namespace PetriEngine {
                                         auto oldSize = idVec.size();
                                         constantMapR[index]->getTupleId(&idVec);
                                         int32_t leftVarMod;
-                                        for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                                        for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                             if(idModPair.first == index){
                                                 leftVarMod = idModPair.second;
                                                 break;
@@ -1591,7 +1587,7 @@ namespace PetriEngine {
                                     if(varPositionsL.count(index)){
                                         auto leftTupleInterval = varMap[varPositionsL[index]];
                                         int32_t leftVarMod;
-                                        for(auto idModPair : varModifierMapL[varPositionsL[index]][j]){
+                                        for(auto idModPair : varModifierMapL[varPositionsL[index]].back()){
                                             if(idModPair.first == index){
                                                 leftVarMod = idModPair.second;
                                                 break;
@@ -1605,7 +1601,7 @@ namespace PetriEngine {
                                         auto oldSize = idVec.size();
                                         constantMapL[index]->getTupleId(&idVec);
                                         int32_t rightVarMod;
-                                        for(auto idModPair : varModifierMapR[varPositionsR[oldIndex]][j]){
+                                        for(auto idModPair : varModifierMapR[varPositionsR[oldIndex]].back()){
                                             if(idModPair.first == index){
                                                 rightVarMod = idModPair.second;
                                                 break;
@@ -1633,7 +1629,7 @@ namespace PetriEngine {
                                 if(varPositionsR.count(index)){
                                     auto rightTupleInterval = varMap[varPositionsR[index]];
                                     int32_t rightVarMod;
-                                    for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                                    for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                         if(idModPair.first == index){
                                             rightVarMod = idModPair.second;
                                             break;
@@ -1647,7 +1643,7 @@ namespace PetriEngine {
                                     auto oldSize = idVec.size();
                                     constantMapR[index]->getTupleId(&idVec);
                                     int32_t leftVarMod;
-                                    for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                                    for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                         if(idModPair.first == index){
                                             leftVarMod = idModPair.second;
                                             break;
@@ -1680,7 +1676,7 @@ namespace PetriEngine {
                                 if(varPositionsL.count(index)){
                                     auto leftTupleInterval = varMap[varPositionsL[index]];
                                     int32_t leftVarMod;
-                                    for(auto idModPair : varModifierMapL[varPositionsL[index]][j]){
+                                    for(auto idModPair : varModifierMapL[varPositionsL[index]].back()){
                                         if(idModPair.first == index){
                                             leftVarMod = idModPair.second;
                                             break;
@@ -1694,7 +1690,7 @@ namespace PetriEngine {
                                     auto oldSize = idVec.size();
                                     constantMapL[index]->getTupleId(&idVec);
                                     int32_t rightVarMod;
-                                    for(auto idModPair : varModifierMapR[varPositionPair.second][j]){
+                                    for(auto idModPair : varModifierMapR[varPositionPair.second].back()){
                                         if(idModPair.first == index){
                                             rightVarMod = idModPair.second;
                                             break;
@@ -1760,9 +1756,7 @@ namespace PetriEngine {
                     return;
                 }
 
-
-                for(uint32_t j = 0; j < variableMap.size(); j++){
-                    auto& varMap = variableMap[j];
+                for(auto& varMap : variableMap){
                     for(auto varPositionPair : varPositionsL){
                         uint32_t index = varPositionPair.first;
                         if(varPositionsR.count(index)){
@@ -1772,14 +1766,14 @@ namespace PetriEngine {
                             auto rightTupleInterval = &varMap[varPositionsR[index]];
                             int32_t leftVarModifier;
                             int32_t rightVarModifier;
-                            for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                            for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                 if(idModPair.first == index){
                                     leftVarModifier = idModPair.second;
                                     break;
                                 }
                             }
 
-                            for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                            for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                 if(idModPair.first == index){
                                     rightVarModifier = idModPair.second;
                                     break;
@@ -1822,7 +1816,7 @@ namespace PetriEngine {
                                     if(varPositionsR.count(i)){
                                         auto rightTupleInterval = varMap[varPositionsR[i]];
                                         int32_t rightVarMod;
-                                        for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                                        for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                             if(idModPair.first == index){
                                                 rightVarMod = idModPair.second;
                                                 break;
@@ -1835,7 +1829,7 @@ namespace PetriEngine {
                                         std::vector<uint32_t> colorIdVec;
                                         constantMapR[i]->getTupleId(&colorIdVec);
                                         int32_t leftVarModifier;
-                                        for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                                        for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                             if(idModPair.first == index){
                                                 leftVarModifier = idModPair.second;
                                                 break;
@@ -1895,7 +1889,7 @@ namespace PetriEngine {
                                     if(varPositionsL.count(i)){
                                         auto leftTupleInterval = varMap[varPositionsL[i]];
                                         int32_t leftVarMod;
-                                        for(auto idModPair : varModifierMapL[varPositionsL[index]][j]){
+                                        for(auto idModPair : varModifierMapL[varPositionsL[index]].back()){
                                             if(idModPair.first == index){
                                                 leftVarMod = idModPair.second;
                                                 break;
@@ -1908,7 +1902,7 @@ namespace PetriEngine {
                                         std::vector<uint32_t> colorIdVec;
                                         constantMapL[i]->getTupleId(&colorIdVec);
                                         int32_t rightVarModifier;
-                                        for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                                        for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                             if(idModPair.first == index){
                                                 rightVarModifier = idModPair.second;
                                                 break;
@@ -1959,7 +1953,7 @@ namespace PetriEngine {
                             std::vector<uint32_t> idVec;
                             rightColor->getTupleId(&idVec);
                             int32_t leftVarModifier;
-                            for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                            for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                 if(idModPair.first == index){
                                     leftVarModifier = idModPair.second;
                                     break;
@@ -1980,7 +1974,7 @@ namespace PetriEngine {
                                 if(varPositionsR.count(index)){
                                     auto rightTupleInterval = varMap[varPositionsR[index]];
                                     int32_t rightVarMod;
-                                    for(auto idModPair : varModifierMapR[varPositionsR[index]][j]){
+                                    for(auto idModPair : varModifierMapR[varPositionsR[index]].back()){
                                         if(idModPair.first == index){
                                             rightVarMod = idModPair.second;
                                             break;
@@ -1993,7 +1987,7 @@ namespace PetriEngine {
                                     std::vector<uint32_t> colorIdVec;
                                     constantMapR[index]->getTupleId(&colorIdVec);
                                     int32_t leftVarModifier;
-                                    for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                                    for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                         if(idModPair.first == index){
                                             leftVarModifier = idModPair.second;
                                             break;
@@ -2033,7 +2027,7 @@ namespace PetriEngine {
                             std::vector<uint32_t> idVec;
                             leftColor->getTupleId(&idVec);
                             int32_t rightVarModifier;
-                            for(auto idModPair : varModifierMapR[varPositionPair.second][j]){
+                            for(auto idModPair : varModifierMapR[varPositionPair.second].back()){
                                 if(idModPair.first == index){
                                     rightVarModifier = idModPair.second;
                                     break;
@@ -2054,7 +2048,7 @@ namespace PetriEngine {
                                 if(varPositionsL.count(index)){
                                     auto leftTupleInterval = varMap[varPositionsL[index]];
                                     int32_t leftVarMod;
-                                    for(auto idModPair : varModifierMapL[varPositionsL[index]][j]){
+                                    for(auto idModPair : varModifierMapL[varPositionsL[index]].back()){
                                         if(idModPair.first == index){
                                             leftVarMod = idModPair.second;
                                             break;
@@ -2067,7 +2061,7 @@ namespace PetriEngine {
                                     std::vector<uint32_t> colorIdVec;
                                     constantMapL[index]->getTupleId(&colorIdVec);
                                     int32_t rightVarModifier;
-                                    for(auto idModPair : varModifierMapL[varPositionPair.second][j]){
+                                    for(auto idModPair : varModifierMapL[varPositionPair.second].back()){
                                         if(idModPair.first == index){
                                             rightVarModifier = idModPair.second;
                                             break;
@@ -2127,7 +2121,7 @@ namespace PetriEngine {
             }
 
             void restrictVars(std::vector<std::unordered_map<const Colored::Variable *, Reachability::intervalTuple_t>>& variableMap) const override {
-
+               //this is whatever for now
             }
 
             std::string toString() const override {
