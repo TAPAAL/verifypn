@@ -357,8 +357,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - local     Liu and Smolka's on-the-fly algorithm\n"
                     "                                     - czero     local with certain zero extension (default)\n"
                     "  -ltl [<type>]                      Verify LTL properties (default tarjan)\n"
-                    "                                     - ndfs      Nested depth first search algorithm"
-                    "                                     - tarjan    On-the-fly Tarjan's algorithm"
+                    "                                     - ndfs      Nested depth first search algorithm\n"
+                    "                                     - tarjan    On-the-fly Tarjan's algorithm\n"
                     "  -noweak                            Disable optimizations for weak Büchi automata when doing \n"
                     "                                     LTL model checking. Not recommended."
                     "  -noreach                           Force use of CTL/LTL engine, even when queries are reachability.\n"
@@ -756,7 +756,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         std::exit(ErrorCode);
     }
 
-    cond = Condition::initialMarkingRW([&]() { return LTL::simplify(cond); }, stats, evalContext, false, false, true);
+    cond = Condition::initialMarkingRW([&]() { return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true)); }, stats, evalContext, false, false, true);
 
     if (printstats) {
         out << "RWSTATS POST:";
