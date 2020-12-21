@@ -873,9 +873,9 @@ namespace PetriEngine {
             void applyModifier(int32_t modifier, std::vector<size_t> sizes){
                 std::vector<interval_t> collectedIntervals;
 
-                for(auto interval : _intervals){
+                for(auto& interval : _intervals){
                     std::vector<interval_t> newIntervals;
-                    newIntervals.push_back(interval);
+                    newIntervals.push_back(std::move(interval));
                     for(uint32_t i = 0; i < interval.size(); i++){
                         std::vector<interval_t> tempIntervals;
                         for(auto& interval1 : newIntervals){
@@ -891,7 +891,7 @@ namespace PetriEngine {
 
                                 newInterval[i]._lower = lower;
                                 newInterval[i]._upper = sizes[i]-1;
-                                tempIntervals.push_back(newInterval);
+                                tempIntervals.push_back(std::move(newInterval));
                             }else {
                                 interval[i]._lower = lower;
                                 interval[i]._upper = upper;
@@ -902,7 +902,7 @@ namespace PetriEngine {
                     collectedIntervals.insert(collectedIntervals.end(), newIntervals.begin(), newIntervals.end());
                 }
 
-                _intervals = collectedIntervals;
+                _intervals = std::move(collectedIntervals);
             }
 
             bool contains(interval_t interval){
@@ -996,6 +996,9 @@ namespace PetriEngine {
                         }
                         
                         if(overlap) {
+                            for(uint32_t l = 0; l < interval.size(); l++) {
+                                interval[l] |= otherInterval[l];
+                            }
                             rangesToRemove.insert(j);
                         }  
                     }
