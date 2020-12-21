@@ -123,7 +123,7 @@ namespace PetriEngine {
 
             virtual ColorType* getColorType(std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const = 0;
 
-            virtual Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t> varMap, std::vector<const Colored::ColorType *> *colortypes) const {
+            virtual Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>& varMap, std::vector<const Colored::ColorType *> *colortypes) const {
                 return Reachability::intervalTuple_t();
             }
 
@@ -143,7 +143,7 @@ namespace PetriEngine {
                 return !cfp.constraints._intervals.empty();
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t> varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>& varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
                 Reachability::interval_t interval;
                 Reachability::intervalTuple_t tupleInterval;
                 const Color *dotColor = DotConstant::dotConstant();
@@ -201,7 +201,7 @@ namespace PetriEngine {
                 }                
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t> varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>& varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
                 Reachability::intervalTuple_t varInterval;
                 
                 if (varMap.count(_variable) == 0){
@@ -305,7 +305,7 @@ namespace PetriEngine {
                 return _userOperator->getColorType();
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t> varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>& varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
                 Reachability::interval_t interval;
                 Reachability::intervalTuple_t tupleInterval;
                  
@@ -383,7 +383,7 @@ namespace PetriEngine {
                return _color->getArcIntervals(arcIntervals, cfp, index, modifier+1);
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t> varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>& varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
                 //store the number of colortyps already in colortypes vector and use that as offset when indexing it
                 auto colortypesBefore = colortypes->size();
 
@@ -497,7 +497,7 @@ namespace PetriEngine {
                 return _color->getArcIntervals(arcIntervals, cfp, index, modifier-1);
             }
             
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t> varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>& varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
                 //store the number of colortyps already in colortypes vector and use that as offset when indexing it
                 auto colortypesBefore = colortypes->size();
 
@@ -608,7 +608,7 @@ namespace PetriEngine {
                 return true;
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t> varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>& varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
                 Reachability::intervalTuple_t intervals;
                 Reachability::intervalTuple_t intervalHolder;
                 
@@ -2249,13 +2249,13 @@ namespace PetriEngine {
 
             virtual uint32_t weight() const = 0;
 
-            virtual Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>> varMapVec) const {
+            virtual Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>>& varMapVec) const {
                 std::vector<const Colored::ColorType *> colortypes;
                 
                 return getOutputIntervals(varMapVec, &colortypes);
             }
 
-            virtual Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>> varMapVec, std::vector<const Colored::ColorType *> *colortypes) const {
+            virtual Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const {
                 return Reachability::intervalTuple_t();
             }
         };
@@ -2283,7 +2283,7 @@ namespace PetriEngine {
                 }
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>> varMapVec, std::vector<const Colored::ColorType *> *colortypes) const {
+            Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const {
                 Reachability::intervalTuple_t newIntervalTuple;
                 newIntervalTuple.addInterval(_sort->getFullInterval());
                 return newIntervalTuple;
@@ -2387,11 +2387,11 @@ namespace PetriEngine {
                 return true;
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>> varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
                 Reachability::intervalTuple_t intervals;
                 if (_all == nullptr) {
                     for (auto elem : _color) {
-                        for(auto varMap : varMapVec){
+                        for(auto& varMap : varMapVec){
                             auto nestedIntervals = elem->getOutputIntervals(varMap, colortypes);
 
                             if (intervals._intervals.empty()) {
@@ -2552,7 +2552,7 @@ namespace PetriEngine {
                 return true;
             }            
 
-            Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>> varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
                 Reachability::intervalTuple_t intervals;
                 
                 for (auto elem : _constituents) {
@@ -2619,7 +2619,7 @@ namespace PetriEngine {
                 //_right->getArcIntervals(arcIntervals, cfp, &rightIndex);
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>> varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
                 //We could maybe reduce the intervals slightly by checking if the upper or lower bound is being subtracted
                 auto leftIntervals = _left->getOutputIntervals(varMapVec, colortypes);
 
@@ -2672,7 +2672,7 @@ namespace PetriEngine {
                return _expr ->getArcIntervals(arcIntervals, cfp, index, modifier);
             }
 
-            Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>> varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
+            Reachability::intervalTuple_t getOutputIntervals(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>>& varMapVec, std::vector<const Colored::ColorType *> *colortypes) const override {
                 return _expr->getOutputIntervals(varMapVec, colortypes);
             }
 

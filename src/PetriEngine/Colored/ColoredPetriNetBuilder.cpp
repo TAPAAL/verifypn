@@ -189,7 +189,7 @@ namespace PetriEngine {
         
         auto end = std::chrono::high_resolution_clock::now();
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
-        std::cout << "Total time " << totalinputtime << std::endl;
+        //std::cout << "Total time " << totalinputtime << std::endl;
         
         //printPlaceTable();
         //We should not need to keep colors in places after we have found fixpoint
@@ -242,10 +242,10 @@ namespace PetriEngine {
             //     }
             // }
             if(transition.guard != nullptr) {
-                auto startinput = std::chrono::high_resolution_clock::now();
+                //auto startinput = std::chrono::high_resolution_clock::now();
                 transition.guard->restrictVars(transition.variableMaps);
-                auto endinput = std::chrono::high_resolution_clock::now();
-                totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
+                //auto endinput = std::chrono::high_resolution_clock::now();
+                //totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
 
                 std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>> newVarmaps;
                 for(auto& varMap : transition.variableMaps){
@@ -750,7 +750,7 @@ namespace PetriEngine {
             arc.expr->getVariables(variables);
         }
 
-        //  std::cout << _transition.name << " varmap size " << _transition.variableMaps.size() << std::endl;
+        // std::cout << _transition.name << " varmap size " << _transition.variableMaps.size() << std::endl;
         // for(auto varMap : _transition.variableMaps){
         //     std::cout << "Var set:" << std::endl;
         //     for(auto pair : varMap){

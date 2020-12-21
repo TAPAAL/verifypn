@@ -188,7 +188,7 @@ namespace PetriEngine {
 
         double _time;
         double _fixPointCreationTime;
-        double totalinputtime = 0;
+        //double totalinputtime = 0;
 
         std::string arcToString(Colored::Arc& arc) const ;
 
