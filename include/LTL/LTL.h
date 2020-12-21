@@ -10,7 +10,7 @@
 
 namespace LTL {
     enum class Algorithm {
-        NDFS, Tarjan
+        NDFS, Tarjan, None=-1
     };
 
     std::pair<Condition_ptr, bool> to_ltl(const Condition_ptr &formula);

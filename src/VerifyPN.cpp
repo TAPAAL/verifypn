@@ -309,6 +309,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 else if(strcmp(argv[i + 1], "tarjan") == 0) {
                     options.ltlalgorithm = LTL::Algorithm::Tarjan;
                 }
+                else if (strcmp(argv[i + 1], "none") == 0) {
+                    options.ltlalgorithm = LTL::Algorithm::None;
+                }
                 else {
                     continue;
                 }
@@ -1154,7 +1157,7 @@ int main(int argc, char* argv[]) {
 
     //----------------------- Verify LTL queries -----------------------//
 
-    if (!ltl_ids.empty()) {
+    if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
         if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode) {
             std::cerr << "Error performing context analysis" << std::endl;
             return v;
