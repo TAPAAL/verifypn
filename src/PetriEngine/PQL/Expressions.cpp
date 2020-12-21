@@ -1649,7 +1649,7 @@ namespace PetriEngine {
             out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
             _cond->toBinary(out);
         }
-        
+
         void UntilCondition::toBinary(std::ostream& out) const
         {
             auto path = getPath();
@@ -1860,7 +1860,47 @@ namespace PetriEngine {
             _cond2->toXML(out,tabs+3);
             generateTabs(out,tabs+2) << "</reach>\n" ; generateTabs(out,tabs+1) << "</until>\n" ; generateTabs(out,tabs) << "</all-paths>\n";
         }
-        
+
+        void ACondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out, tabs) << "<all-paths>\n";
+            _cond->toXML(out, tabs+1);
+            generateTabs(out, tabs) << "</all-paths>\n";
+        }
+
+        void ECondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out, tabs) << "<exists-path>\n";
+            _cond->toXML(out, tabs+1);
+            generateTabs(out, tabs) << "</exists-path>\n";
+        }
+
+        void FCondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out, tabs) << "<finally>\n";
+            _cond->toXML(out, tabs+1);
+            generateTabs(out, tabs) << "</finally>\n";
+        }
+
+        void GCondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out, tabs) << "<globally>\n";
+            _cond->toXML(out, tabs+1);
+            generateTabs(out, tabs) << "</globally>\n";
+        }
+
+        void XCondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out, tabs) << "<next>\n";
+            _cond->toXML(out, tabs+1);
+            generateTabs(out, tabs) << "</next>\n";
+        }
+
+        void UntilCondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out,tabs) << "<until>\n" ; generateTabs(out,tabs+1) << "<before>\n";
+            _cond1->toXML(out,tabs+2);
+            generateTabs(out,tabs+1) << "</before>\n" ; generateTabs(out,tabs+1) << "<reach>\n";
+            _cond2->toXML(out,tabs+2);
+            generateTabs(out,tabs+1) << "</reach>\n" ; generateTabs(out,tabs) << "</until>\n" ;
+        }
+
+
+
         void AndCondition::toXML(std::ostream& out,uint32_t tabs) const {
             if(_conds.size() == 0)
             {
@@ -3524,6 +3564,7 @@ namespace PetriEngine {
             return nullptr;
             return ECondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
         }
+
 
         Condition_ptr ECondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
                                                bool initrw) {

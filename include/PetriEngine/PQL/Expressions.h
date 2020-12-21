@@ -442,10 +442,7 @@ namespace PetriEngine {
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
-            void toXML(std::ostream&, uint32_t tabs) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            void toXML(std::ostream&, uint32_t tabs) const override;
             Quantifier getQuantifier() const override { return Quantifier::E; }
             Path getPath() const override             { return Path::pError; }
             uint32_t distance(DistanceContext& context) const override {
@@ -472,18 +469,16 @@ namespace PetriEngine {
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
-            void toXML(std::ostream&, uint32_t tabs) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
-            Quantifier getQuantifier() const override { return Quantifier::E; }
+            void toXML(std::ostream&, uint32_t tabs) const override;
+            Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::pError; }
             uint32_t distance(DistanceContext& context) const override {
                 // TODO implement
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
             void visit(Visitor&) const override;
-        private:
+
+      private:
             std::string op() const override;
         };
 
@@ -511,12 +506,7 @@ namespace PetriEngine {
 
           Retval simplify(SimplificationContext &context) const override;
 
-          void toXML(std::ostream &, uint32_t tabs) const override {
-              // TODO implement
-              assert(false);
-              std::cerr << "TODO implement" << std::endl;
-              exit(0);
-          }
+          void toXML(std::ostream &, uint32_t tabs) const override;
 
           Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
 
@@ -554,10 +544,7 @@ namespace PetriEngine {
                 assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
             }
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
-            void toXML(std::ostream&, uint32_t tabs) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            void toXML(std::ostream&, uint32_t tabs) const override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override {
@@ -583,10 +570,7 @@ namespace PetriEngine {
             }
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             Retval simplify(SimplificationContext& context) const override;
-            void toXML(std::ostream&, uint32_t tabs) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            void toXML(std::ostream&, uint32_t tabs) const override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override {
@@ -755,10 +739,7 @@ namespace PetriEngine {
             Retval simplify(SimplificationContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
 
-            void toXML(std::ostream&, uint32_t tabs) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
-            }
+            void toXML(std::ostream&, uint32_t tabs) const override;
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
         private:
             virtual std::string op() const;
