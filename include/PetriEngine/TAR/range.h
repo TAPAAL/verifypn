@@ -19,6 +19,7 @@
 #include <vector>
 #include <set>
 #include <unordered_map>
+#include <chrono>
 
 namespace PetriEngine {
     namespace Reachability {
@@ -670,6 +671,7 @@ namespace PetriEngine {
 
         struct intervalTuple_t {
             std::vector<interval_t> _intervals;
+            double totalinputtime = 0;
 
             ~intervalTuple_t() {
             }
@@ -927,43 +929,61 @@ namespace PetriEngine {
                 _intervals.erase(_intervals.begin() + index); 
             }
 
-            void restrict(uint32_t k){
+            
+
+            double restrict(uint32_t k){
                 simplify();
                 if(k == 0){
-                    return;
+                    return 0;
                 }
+                totalinputtime = 0;
                 while (size() > k){
-                    closestIntervals currentBest = {0,0, UINT32_MAX};
-                    for (uint32_t i = 0; i < _intervals.size(); i++) {
-                        auto& interval = _intervals[i];
-                        for(uint32_t j = i+1; j < _intervals.size(); j++){
-                            auto otherInterval = _intervals[j];
-                            uint32_t dist = 0;
-                            for(uint32_t k = 0; k < interval.size(); k++) {
-                                dist += std::max((int32_t) otherInterval[k]._lower - interval[k]._upper, (int32_t) interval[k]._lower - otherInterval[k]._upper);
-                            }
-                            if(dist < currentBest.distance){
-                                currentBest.distance = dist;
-                                currentBest.intervalId1 = i;
-                                currentBest.intervalId2 = j;
-                            }
-                            //if the distance is 1 we cannot find any intervals that are closer so we stop searching
-                            if(currentBest.distance == 1){
-                                break;
-                            }
-                        }
-                        if(currentBest.distance == 1){
-                            break;
-                        }
-                    }
+                    auto startinput = std::chrono::high_resolution_clock::now();
+                    closestIntervals closestInterval = getClosestIntervals();
+                    auto endinput = std::chrono::high_resolution_clock::now();
+                    totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
 
-                    auto& interval = _intervals[currentBest.intervalId1]; 
-                    auto otherInterval = _intervals[currentBest.intervalId2]; 
+                    auto& interval = _intervals[closestInterval.intervalId1]; 
+                    auto otherInterval = _intervals[closestInterval.intervalId2]; 
                     for(uint32_t l = 0; l < interval.size(); l++) {
                         interval[l] |= otherInterval[l];
                     }
-                    _intervals.erase(_intervals.begin() + currentBest.intervalId2);
+                    _intervals.erase(_intervals.begin() + closestInterval.intervalId2);
                 }
+                simplify();
+                return totalinputtime;
+            }
+
+            closestIntervals getClosestIntervals(){
+                closestIntervals currentBest = {0,0, UINT32_MAX};
+                    for (uint32_t i = 0; i < _intervals.size()-1; i++) {
+                        auto interval = &_intervals[i];
+                        for(uint32_t j = i+1; j < _intervals.size(); j++){
+                            auto otherInterval = &_intervals[j];
+                            uint32_t dist = 0;
+                            
+                            for(uint32_t k = 0; k < interval->size(); k++) {
+                                int32_t val1 = otherInterval->operator[](k)._lower - interval->operator[](k)._upper;
+                                int32_t val2 = interval->operator[](k)._lower - otherInterval->operator[](k)._upper;
+                                dist += std::max(val1, val2);
+                                if(dist >= currentBest.distance){
+                                    break;
+                                }
+                            }
+                            
+                            if(dist < currentBest.distance){
+                                currentBest.distance = std::move(dist);
+                                currentBest.intervalId1 = i;
+                                currentBest.intervalId2 = j;
+
+                                //if the distance is 1 we cannot find any intervals that are closer so we stop searching
+                                if(currentBest.distance == 1){
+                                    return currentBest;
+                                }
+                            }                            
+                        }
+                    }
+                return currentBest;
             }
 
             void simplify() {
@@ -973,22 +993,22 @@ namespace PetriEngine {
                 }
 
                 for (uint32_t i = 0; i < _intervals.size(); i++) {
-                    auto& interval = _intervals[i];
-                    if(!interval.isSound()){
+                    auto interval = &_intervals[i];
+                    if(!interval->isSound()){
                         rangesToRemove.insert(i);
                         continue;
                     }   
                     for(uint32_t j = i+1; j < _intervals.size(); j++){
-                        auto otherInterval = _intervals[j];
+                        auto otherInterval = &_intervals[j];
 
-                        if(!otherInterval.isSound()){
+                        if(!otherInterval->isSound()){
                             continue;
                         }   
                         bool overlap = true;
 
                         if(overlap){
-                            for(uint32_t k = 0; k < interval.size(); k++) {                            
-                                if(interval[k]._lower > otherInterval[k]._upper  || otherInterval[k]._lower > interval[k]._upper) {
+                            for(uint32_t k = 0; k < interval->size(); k++) {                            
+                                if(interval->operator[](k)._lower > otherInterval->operator[](k)._upper  || otherInterval->operator[](k)._lower > interval->operator[](k)._upper) {
                                     overlap = false;
                                     break;
                                 }
@@ -996,8 +1016,8 @@ namespace PetriEngine {
                         }
                         
                         if(overlap) {
-                            for(uint32_t l = 0; l < interval.size(); l++) {
-                                interval[l] |= otherInterval[l];
+                            for(uint32_t l = 0; l < interval->size(); l++) {
+                                interval->operator[](l) |= otherInterval->operator[](l);
                             }
                             rangesToRemove.insert(j);
                         }  

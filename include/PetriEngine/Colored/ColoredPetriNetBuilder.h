@@ -173,6 +173,7 @@ namespace PetriEngine {
         uint32_t _nptplaces = 0;
         uint32_t _npttransitions = 0;
         uint32_t _nptarcs = 0;
+        uint32_t _mergesPerformed = 0;
         
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
@@ -188,7 +189,8 @@ namespace PetriEngine {
 
         double _time;
         double _fixPointCreationTime;
-        //double totalinputtime = 0;
+        double totalinputtime = 0;
+        double totalinputtime2 = 0;
 
         std::string arcToString(Colored::Arc& arc) const ;
 

@@ -2483,7 +2483,6 @@ namespace PetriEngine {
                 }
             }
 
-            //This most likely does not work in the current state
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index, int32_t modifier) const override {
                 for (auto elem : _constituents) {
                     uint32_t newIndex = 0;
@@ -2499,55 +2498,6 @@ namespace PetriEngine {
                     }
 
                     arcIntervals._intervalTupleVec.insert(arcIntervals._intervalTupleVec.end(), newArcIntervals._intervalTupleVec.begin(), newArcIntervals._intervalTupleVec.end());
-
-                    // if(arcIntervals._intervalTupleVec.empty()){
-                    //     arcIntervals._intervalTupleVec = newArcIntervals._intervalTupleVec;
-                    // } else {
-                    //     //check if the vars can be bound to the same value in both intervals
-                    //     for (uint32_t i = 0; i < arcIntervals._intervalTupleVec.size(); i++){
-                    //         for(uint32_t j = 0; j < arcIntervals._intervalTupleVec[i]._intervals.size(); j++){
-                    //             auto interval = &arcIntervals._intervalTupleVec[i]._intervals[j];
-                    //             bool inBoth = false;
-                    //             for(uint32_t k = 0; k < newArcIntervals._intervalTupleVec.size(); k++){
-                    //                 for (auto newInterval : newArcIntervals._intervalTupleVec[k]._intervals){
-                    //                     bool matchesVars = true;
-                    //                     for(auto varIdModPair : arcIntervals._varIndexModMap){
-                    //                         for(auto IdModPair1 : varIdModPair.second[i]){
-                    //                             uint32_t index1 = IdModPair1.first;
-                    //                             for(auto IdModPair2 : varIdModPair.second[arcIntervals._intervalTupleVec.size() + k]){
-                    //                                 uint32_t index2 = IdModPair2.first;
-                    //                                 if(!(interval->operator[](index1)._lower == newInterval[index2]._lower && interval->operator[](index1)._upper == newInterval[index2]._upper)){
-                    //                                     matchesVars = false;
-                    //                                     break;
-                    //                                 }
-                    //                                 if(!matchesVars){
-                    //                                     break;
-                    //                                 }
-                    //                             }                                                
-                    //                         }                                    
-                    //                     }
-                    //                     if(matchesVars){
-                    //                         inBoth = true;
-                    //                         newIntervals.push_back(newInterval);
-                    //                         break;
-                    //                     }
-                    //                 }
-                    //             }
-                                
-                    //             if(!inBoth){
-                    //                 intervalsForRemoval.push_back(i);
-                    //             }
-                    //         }                            
-                    //     }
-
-                    //     for(auto interval : intervalsForRemoval){
-                    //         for(auto& intervalTuple : arcIntervals._intervalTupleVec){
-                    //             intervalTuple.removeInterval(interval);
-                    //         }
-                    //     }
-                    //     Reachability::intervalTuple_t newIntervalTuple(newIntervals);
-                    //     arcIntervals._intervalTupleVec.push_back(newIntervalTuple);
-                    // }
                 }
                 return true;
             }            

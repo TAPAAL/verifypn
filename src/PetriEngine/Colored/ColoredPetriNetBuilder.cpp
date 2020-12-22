@@ -166,7 +166,7 @@ namespace PetriEngine {
                 //maybe this can be avoided with a better implementation
                 transition.variableMaps.clear();
 
-                //std::cout << "Transtition " << transition.name << std::endl;
+                // std::cout << "Transtition " << transition.name << std::endl;
 
                 if(!_arcIntervals.count(transitionId)){
                     _arcIntervals[transitionId] = setupTransitionVars(transition);
@@ -189,7 +189,8 @@ namespace PetriEngine {
         
         auto end = std::chrono::high_resolution_clock::now();
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
-        //std::cout << "Total time " << totalinputtime << std::endl;
+        // std::cout << "Total time " << totalinputtime << std::endl;
+        // std::cout << "Total time2 " << totalinputtime2 << std::endl;
         
         //printPlaceTable();
         //We should not need to keep colors in places after we have found fixpoint
@@ -216,8 +217,10 @@ namespace PetriEngine {
         
         for (auto arc : transition.input_arcs) {
             PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];
-            curCFP.constraints.restrict(max_intervals);
-            // std::cout << "Cur place point " << arc.place << std::endl;
+            
+            totalinputtime2 += curCFP.constraints.restrict(max_intervals);
+            
+            // std::cout << "Cur place point " << arc.place << " and arc expression " << arc.expr.get()->toString() << std::endl;
             // curCFP.constraints.print();
 
             Colored::ArcIntervals& arcInterval = _arcIntervals[transitionId][arc.place];
@@ -230,7 +233,7 @@ namespace PetriEngine {
                 return;
             } 
         }
-        
+        //std::cout << "Getting var intervals" << std::endl;
         if(getVarIntervals(transition.variableMaps, transitionId)){
             
             // std::cout << transition.name << " var intervals" << std::endl;
@@ -242,10 +245,9 @@ namespace PetriEngine {
             //     }
             // }
             if(transition.guard != nullptr) {
-                //auto startinput = std::chrono::high_resolution_clock::now();
+                //std::cout << "applying guard" << std::endl;
                 transition.guard->restrictVars(transition.variableMaps);
-                //auto endinput = std::chrono::high_resolution_clock::now();
-                //totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
+                
 
                 std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>> newVarmaps;
                 for(auto& varMap : transition.variableMaps){
@@ -278,8 +280,7 @@ namespace PetriEngine {
 
 
     bool ColoredPetriNetBuilder::getVarIntervals(std::vector<std::unordered_map<const Colored::Variable *, Reachability::intervalTuple_t>>& variableMaps, uint32_t transitionId){
-        for(auto& placeArcIntervals : _arcIntervals[transitionId]){
-            
+        for(auto& placeArcIntervals : _arcIntervals[transitionId]){            
             for(uint32_t j = 0; j < placeArcIntervals.second._intervalTupleVec.size(); j++){
                 uint32_t intervalTupleSize = placeArcIntervals.second._intervalTupleVec[j].size();
                 //If we have not found intervals for any place yet, we fill the intervals from this place
@@ -320,7 +321,6 @@ namespace PetriEngine {
                                     for (auto i = intervalsToRemove.rbegin(); i != intervalsToRemove.rend(); ++i) {
                                         varIntervals.removeInterval(*i);
                                     }
-
                                     
                                 }
                                                             
@@ -379,10 +379,12 @@ namespace PetriEngine {
                                                 intervalsToRemove.push_back(i);
                                             }                                    
                                         }                                                                                        
-
+                                        auto startinput = std::chrono::high_resolution_clock::now();
                                         for (auto i = intervalsToRemove.rbegin(); i != intervalsToRemove.rend(); ++i) {
                                             varIntervals.removeInterval(*i);
-                                        }                                         
+                                        }
+                                        auto endinput = std::chrono::high_resolution_clock::now();
+                                        totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;                                           
                                     }     
                                 }
 
@@ -512,8 +514,9 @@ namespace PetriEngine {
             if (!variables.empty()) {
                 transitionHasVarOutArcs = true;
             }
+            // std::cout << "Getting output intervals" << std::endl;
             auto intervals = arc.expr->getOutputIntervals(transition.variableMaps);
-
+            // std::cout << "now simplifying" << std::endl;
             intervals.simplify();
 
             // std::cout << "Output intervals for arc expr " << arc.expr.get()->toString() << std::endl;
@@ -522,7 +525,6 @@ namespace PetriEngine {
             for(auto interval : intervals._intervals){
                 placeFixpoint.constraints.addInterval(interval);    
             }
-  
 
             if (!placeFixpoint.inQueue) {
                 uint32_t colorsAfter = 0;
@@ -713,9 +715,11 @@ namespace PetriEngine {
     }
 
     BindingGenerator::Iterator& BindingGenerator::Iterator::operator++() {
-        _generator->nextBinding();
+        
         if (_generator->_isDone) {
             _generator = nullptr;
+        } else {    
+            _generator->nextBinding();
         }
         return *this;
     }
