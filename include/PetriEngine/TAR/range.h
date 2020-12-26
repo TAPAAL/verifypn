@@ -858,6 +858,42 @@ namespace PetriEngine {
                 return ids;
             }
 
+            std::vector<uint32_t> getLowerIds(int32_t modifier, std::vector<size_t> sizes){
+                std::vector<uint32_t> ids;
+                for(uint32_t j = 0; j < size(); j++){
+                    auto interval = &_intervals[j];
+                    if(ids.empty()){
+                        for(uint32_t i = 0; i < ids.size(); i++){
+                            int32_t lower_val = sizes[i] + (interval->operator[](i)._lower + modifier);
+                            int32_t upper_val = sizes[i] + (interval->operator[](i)._upper + modifier);
+                            uint32_t lower = lower_val % sizes[i];
+                            uint32_t upper = upper_val % sizes[i];
+                            if(lower > upper){
+                                ids.push_back(0);
+                            } else {
+                                ids.push_back(lower);
+                            }                            
+                        }
+                    } else {
+                        for(uint32_t i = 0; i < ids.size(); i++){
+                            if(ids[i] == 0){
+                                continue;
+                            }
+                            int32_t lower_val = sizes[i] + (interval->operator[](i)._lower + modifier);
+                            int32_t upper_val = sizes[i] + (interval->operator[](i)._upper + modifier);
+                            uint32_t lower = lower_val % sizes[i];
+                            uint32_t upper = upper_val % sizes[i];
+                            if(lower > upper){
+                                ids[i] = 0;
+                            } else {
+                                ids[i] = std::max(ids[i], lower);
+                            }                            
+                        }
+                    }
+                }
+                return ids;
+            }
+
             std::vector<uint32_t> getUpperIds(){
                 std::vector<uint32_t> ids;
                 for(auto interval : _intervals){
@@ -866,6 +902,42 @@ namespace PetriEngine {
                     } else {
                         for(uint32_t i = 0; i < ids.size(); i++){
                             ids[i] = std::max(ids[i], interval[i]._upper);
+                        }
+                    }
+                }
+                return ids;
+            }
+
+            std::vector<uint32_t> getUpperIds(int32_t modifier, std::vector<size_t> sizes){
+                std::vector<uint32_t> ids;
+                for(uint32_t j = 0; j < size(); j++){
+                    auto interval = &_intervals[j];
+                    if(ids.empty()){
+                        for(uint32_t i = 0; i < ids.size(); i++){
+                            int32_t lower_val = sizes[i] + (interval->operator[](i)._lower + modifier);
+                            int32_t upper_val = sizes[i] + (interval->operator[](i)._upper + modifier);
+                            uint32_t lower = lower_val % sizes[i];
+                            uint32_t upper = upper_val % sizes[i];
+                            if(lower > upper){
+                                ids.push_back(sizes[i]-1);
+                            } else {
+                                ids.push_back(upper);
+                            }                            
+                        }
+                    } else {
+                        for(uint32_t i = 0; i < ids.size(); i++){
+                            if(ids[i] == sizes[i]-1){
+                                continue;
+                            }
+                            int32_t lower_val = sizes[i] + (interval->operator[](i)._lower + modifier);
+                            int32_t upper_val = sizes[i] + (interval->operator[](i)._upper + modifier);
+                            uint32_t lower = lower_val % sizes[i];
+                            uint32_t upper = upper_val % sizes[i];
+                            if(lower > upper){
+                                ids[i] = sizes[i]-1;
+                            } else {
+                                ids[i] = std::max(ids[i], upper);
+                            }                            
                         }
                     }
                 }
@@ -931,27 +1003,24 @@ namespace PetriEngine {
 
             
 
-            double restrict(uint32_t k){
+            void restrict(uint32_t k){
                 simplify();
                 if(k == 0){
-                    return 0;
+                    return;
                 }
-                totalinputtime = 0;
-                while (size() > k){
-                    auto startinput = std::chrono::high_resolution_clock::now();
-                    closestIntervals closestInterval = getClosestIntervals();
-                    auto endinput = std::chrono::high_resolution_clock::now();
-                    totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
-
-                    auto& interval = _intervals[closestInterval.intervalId1]; 
-                    auto otherInterval = _intervals[closestInterval.intervalId2]; 
-                    for(uint32_t l = 0; l < interval.size(); l++) {
-                        interval[l] |= otherInterval[l];
+                
+                while (size() > k){                    
+                    closestIntervals closestInterval = getClosestIntervals();                    
+                    
+                    auto interval = &_intervals[closestInterval.intervalId1]; 
+                    auto otherInterval = &_intervals[closestInterval.intervalId2]; 
+                    for(uint32_t l = 0; l < interval->size(); l++) {
+                        interval->operator[](l) |= otherInterval->operator[](l);
                     }
                     _intervals.erase(_intervals.begin() + closestInterval.intervalId2);
+                    
                 }
                 simplify();
-                return totalinputtime;
             }
 
             closestIntervals getClosestIntervals(){

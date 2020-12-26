@@ -206,6 +206,7 @@ namespace PetriEngine {
         bool getVarIntervals(std::vector<std::unordered_map<const Colored::Variable *, Reachability::intervalTuple_t>>& variableMaps, uint32_t transitionId);
        
         std::vector<Reachability::interval_t> getIntervalsFromInterval(Reachability::interval_t *interval, uint32_t varPosition, int32_t varModifier, std::vector<Colored::ColorType*> varColorTypes);
+        void getArcVarIntervals(Reachability::intervalTuple_t& varIntervals, std::unordered_map<uint32_t, int32_t> modIndexMap, PetriEngine::Reachability::interval_t *interval, std::vector<Colored::ColorType*> varColorTypes);
         void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals);
         void processOutputArcs(Colored::Transition& transition);
         
