@@ -642,6 +642,70 @@ namespace PetriEngine {
                 }
             }
 
+            std::vector<interval_t> removeInterval(interval_t interval){
+                std::vector<interval_t> res;
+                //The interval should have the same upper and lower ids
+                auto ids = interval.getLowerIds();
+
+                for(uint32_t i = 0; i < size(); i++){
+                    if(_ranges[i]._lower < ids[i] && _ranges[i]._upper > ids[i]){
+                        if(res.empty()){
+                            interval_t newLowerInterval;
+                            interval_t newUpperInterval;
+                            newLowerInterval.addRange(_ranges[i]._lower, ids[i]-1);
+                            newUpperInterval.addRange(ids[i]+1, _ranges[i]._upper);
+
+                            res.push_back(newLowerInterval);
+                            res.push_back(newUpperInterval);
+                        } else {
+                            std::vector<interval_t> newIntervals;
+                            for(auto& interval : res){
+                                interval_t intervalCopy = interval;
+                                interval.addRange(_ranges[i]._lower, ids[i]-1);
+                                intervalCopy.addRange(ids[i]+1, _ranges[i]._upper);
+                                newIntervals.push_back(intervalCopy);
+                            }
+                            res.insert(res.end(), newIntervals.begin(), newIntervals.end());
+                        }
+                    } else if (_ranges[i]._lower < ids[i] && _ranges[i]._upper == ids[i]){
+                        if(res.empty()){
+                            interval_t newInterval;
+                            newInterval.addRange(_ranges[i]._lower, ids[i]-1);
+
+                            res.push_back(newInterval);
+                        } else {
+                            for(auto& interval : res){
+                                interval.addRange(_ranges[i]._lower, ids[i]-1);
+                            }
+                        }
+                    } else if (_ranges[i]._lower == ids[i] && _ranges[i]._upper > ids[i]) {
+                        if(res.empty()){
+                            interval_t newInterval;
+                            newInterval.addRange(ids[i]+1, _ranges[i]._upper);
+
+                            res.push_back(newInterval);
+                        } else {
+                            for(auto& interval : res){
+                                interval.addRange(ids[i]+1, _ranges[i]._upper);
+                            }
+                        }
+                    } else {
+                        if(res.empty()){
+                            interval_t newInterval;
+                            newInterval.addRange(_ranges[i]);
+
+                            res.push_back(newInterval);
+                        } else {
+                            for(auto& interval : res){
+                                interval.addRange(_ranges[i]);
+                            }
+                        }
+                    }
+                }
+
+                return res;
+            }
+
             interval_t getOverlap(interval_t other){
                 interval_t overlapInterval;
                 if(size() != other.size()){
@@ -696,6 +760,32 @@ namespace PetriEngine {
 
             size_t tupleSize() {
                 return _intervals[0].size();
+            }
+
+            void inEquality(intervalTuple_t &other){
+
+                if((size() > 1 || getFirst().intervalCombinations() > 1) && (other.size() > 1 || other.getFirst().intervalCombinations() > 1)){
+                    return;
+                } else if(size() > 1 || getFirst().intervalCombinations() > 1 ) {
+                    std::vector<interval_t> newIntervals;
+                    for(auto& interval : _intervals){
+                        auto remainingIntervals = interval.removeInterval(other.getFirst());
+                        
+                        newIntervals.insert(newIntervals.end(), remainingIntervals.begin(), remainingIntervals.end());
+                    }
+                } else if(other.size() > 1 || other.getFirst().intervalCombinations() > 1 ) {
+                    std::vector<interval_t> newIntervals;
+                    for(auto& interval : other._intervals){
+                        auto remainingIntervals = interval.removeInterval(getFirst());
+                        
+                        newIntervals.insert(newIntervals.end(), remainingIntervals.begin(), remainingIntervals.end());
+                    }
+                } else {
+                    if(getLowerIds() == other.getLowerIds()){
+                        other.getFirst().getFirst().invalidate();
+                        getFirst().getFirst().invalidate();
+                    }
+                }
             }
 
             uint32_t intervalCombinations(){

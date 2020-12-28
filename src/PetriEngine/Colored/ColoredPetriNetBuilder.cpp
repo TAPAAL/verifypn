@@ -157,6 +157,7 @@ namespace PetriEngine {
             _placeColorFixpoints[currentPlaceId].inQueue = false;
  
             std::vector<uint32_t> connectedTransitions = _placePostTransitionMap[currentPlaceId];
+            // std::cout << "Place " << _places[currentPlaceId].name << std::endl;
 
             for (uint32_t transitionId : connectedTransitions) {
                 
@@ -189,8 +190,8 @@ namespace PetriEngine {
         
         auto end = std::chrono::high_resolution_clock::now();
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
-        std::cout << "Total time " << totalinputtime << std::endl;
-        std::cout << "Total time2 " << totalinputtime2 << std::endl;
+        // std::cout << "Total time " << totalinputtime << std::endl;
+        // std::cout << "Total time2 " << totalinputtime2 << std::endl;
         
         //printPlaceTable();
         //We should not need to keep colors in places after we have found fixpoint
@@ -230,16 +231,16 @@ namespace PetriEngine {
             arcInterval._intervalTupleVec.clear();
 
             if(!arc.expr->getArcIntervals(arcInterval, curCFP, &index, 0)){
-                //std::cout << "Failed to get arc intervals" << std::endl;
+                std::cout << "Failed to get arc intervals" << std::endl;
                 transitionActivated = false;
                 return;
             } 
         }
-        auto startinput = std::chrono::high_resolution_clock::now();
+        // auto startinput = std::chrono::high_resolution_clock::now();
         // std::cout << "Getting var intervals" << std::endl;
         if(getVarIntervals(transition.variableMaps, transitionId)){
-            auto endinput = std::chrono::high_resolution_clock::now();
-            totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
+            // auto endinput = std::chrono::high_resolution_clock::now();
+            // totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
             // std::cout << transition.name << " var intervals" << std::endl;
             // for (auto pair : transition.variableMap){
             //     std::cout << "Var set:" << std::endl;
@@ -250,10 +251,10 @@ namespace PetriEngine {
             // }
             if(transition.guard != nullptr) {
                 // std::cout << "applying guard" << std::endl;
-                auto startinput2 = std::chrono::high_resolution_clock::now(); 
+                // auto startinput2 = std::chrono::high_resolution_clock::now(); 
                 transition.guard->restrictVars(transition.variableMaps);
-                auto endinput2 = std::chrono::high_resolution_clock::now();
-                totalinputtime2 += (std::chrono::duration_cast<std::chrono::microseconds>(endinput2 - startinput2).count())*0.000001;
+                // auto endinput2 = std::chrono::high_resolution_clock::now();
+                // totalinputtime2 += (std::chrono::duration_cast<std::chrono::microseconds>(endinput2 - startinput2).count())*0.000001;
                 
                 std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>> newVarmaps;
                 for(auto& varMap : transition.variableMaps){
@@ -278,8 +279,8 @@ namespace PetriEngine {
                 }
             }
         } else {
-            auto endinput = std::chrono::high_resolution_clock::now();
-            totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
+            // auto endinput = std::chrono::high_resolution_clock::now();
+            // totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
             std::cout << "getting var intervals failed " << std::endl;
             transitionActivated = false;
         }                                            
@@ -576,7 +577,7 @@ namespace PetriEngine {
             //Print all bindings
             // std::cout << transition.name << std::endl;
             // for (auto test : b){
-            //     std::cout << "Binding '" << test.first->name << "\t" << test.second->getId() << "' in bindingds." << std::endl;
+            //     std::cout << "Binding '" << test.first->name << "\t" << test.second->getColorName() << "' in bindings." << std::endl;
             // }
             // std::cout << std::endl;
             
@@ -748,9 +749,9 @@ namespace PetriEngine {
 
 
     bool BindingGenerator::eval() {
-        // std::cout << _transition.name << std::endl;
+        // std::cout << "testing for " << _transition.name << std::endl;
         // for (auto test : _bindings){
-        //     std::cout << "Binding '" << test.first->name << "\t" << test.second->getId() << "' in bindingds." << std::endl;
+        //     std::cout << "Binding '" << test.first->name << "\t" << test.second->getColorName() << "' in bindings." << std::endl;
         // }
         // std::cout << std::endl;
         if (_expr == nullptr)
@@ -809,7 +810,7 @@ namespace PetriEngine {
     }
 
     BindingGenerator::Iterator BindingGenerator::begin() {
-        if(_noValidBindings){
+        if(_noValidBindings || _isDone){
             return {nullptr};
         }
         return {this};
