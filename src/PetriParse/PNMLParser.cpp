@@ -356,6 +356,10 @@
 	    } else if (strcmp(element->name(), "or") == 0) {	
 	        auto left = element->first_node();	
 	        auto right = left->next_sibling();	
+			//There must only be one constituent
+			if(right == nullptr){
+				return parseGuardExpression(left);
+			}
 	        auto parentOr = std::make_shared<PetriEngine::Colored::OrExpression>(parseGuardExpression(left), parseGuardExpression(right));	
 	        for (auto it = right->next_sibling(); it; it = it->next_sibling()) {	
 	            parentOr = std::make_shared<PetriEngine::Colored::OrExpression>(parentOr, parseGuardExpression(it));	
