@@ -769,8 +769,8 @@ namespace PetriEngine {
                                     break;
                                 }
                             }
-                            auto leftIds = leftTupleInterval->getLowerIds(leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
-                            auto rightIds = rightTupleInterval->getUpperIds(rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
+                            auto leftIds = leftTupleInterval->getLowerIds(-leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
+                            auto rightIds = rightTupleInterval->getUpperIds(-rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
 
                             //comparing vars of same size
                             if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
@@ -792,7 +792,7 @@ namespace PetriEngine {
                                                 break;
                                             }
                                         }
-                                        auto ids = rightTupleInterval->getUpperIds(rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
+                                        auto ids = rightTupleInterval->getUpperIds(-rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
                                         idVec.insert(idVec.end(), ids.begin(), ids.end());
                                         index += varPositionsR[index]->colorType->productSize();
                                     } else {
@@ -831,7 +831,7 @@ namespace PetriEngine {
                                                 break;
                                             }
                                         }
-                                        auto ids = leftTupleInterval->getLowerIds(leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
+                                        auto ids = leftTupleInterval->getLowerIds(-leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
                                         idVec.insert(idVec.end(), ids.begin(), ids.end());
                                         index += varPositionsL[index]->colorType->productSize();
                                     } else {
@@ -873,7 +873,7 @@ namespace PetriEngine {
                                             break;
                                         }
                                     }
-                                    auto ids = rightTupleInterval->getUpperIds(rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
+                                    auto ids = rightTupleInterval->getUpperIds(-rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsR[index]->colorType->productSize();
                                 } else {
@@ -918,7 +918,7 @@ namespace PetriEngine {
                                             break;
                                         }
                                     }
-                                    auto ids = leftTupleInterval->getLowerIds(leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
+                                    auto ids = leftTupleInterval->getLowerIds(-leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsL[index]->colorType->productSize();
                                 } else {
@@ -1018,8 +1018,8 @@ namespace PetriEngine {
                                 }
                             }
 
-                            auto leftIds = leftTupleInterval->getUpperIds(leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
-                            auto rightIds = rightTupleInterval->getLowerIds(rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
+                            auto leftIds = leftTupleInterval->getUpperIds(-leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
+                            auto rightIds = rightTupleInterval->getLowerIds(-rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
                             //comparing vars of same size
                             if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){                     
                                 leftTupleInterval->constrainLower(rightIds, true);
@@ -1040,7 +1040,7 @@ namespace PetriEngine {
                                                 break;
                                             }
                                         }
-                                        auto ids = rightTupleInterval->getLowerIds(rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
+                                        auto ids = rightTupleInterval->getLowerIds(-rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
                                         idVec.insert(idVec.end(), ids.begin(), ids.end());
                                         index += varPositionsR[index]->colorType->productSize();
                                     } else {
@@ -1080,7 +1080,7 @@ namespace PetriEngine {
                                                 break;
                                             }
                                         }
-                                        auto ids = leftTupleInterval->getUpperIds(leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
+                                        auto ids = leftTupleInterval->getUpperIds(-leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
                                         idVec.insert(idVec.end(), ids.begin(), ids.end());
                                         index += varPositionsL[index]->colorType->productSize();
                                     } else {
@@ -1122,7 +1122,7 @@ namespace PetriEngine {
                                             break;
                                         }
                                     }
-                                    auto ids = rightTupleInterval->getLowerIds(rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
+                                    auto ids = rightTupleInterval->getLowerIds(-rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsR[index]->colorType->productSize();
                                 } else {
@@ -1167,7 +1167,7 @@ namespace PetriEngine {
                                             break;
                                         }
                                     }
-                                    auto ids = leftTupleInterval->getUpperIds(leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
+                                    auto ids = leftTupleInterval->getUpperIds(-leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsL[index]->colorType->productSize();
                                 } else {
@@ -1264,8 +1264,8 @@ namespace PetriEngine {
                             }
 
 
-                            auto leftIds = leftTupleInterval->getLowerIds(leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
-                            auto rightIds = rightTupleInterval->getUpperIds(rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
+                            auto leftIds = leftTupleInterval->getLowerIds(-leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
+                            auto rightIds = rightTupleInterval->getUpperIds(-rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
                             //comparing vars of same size
                             if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){                        
                                 leftTupleInterval->constrainUpper(rightIds, false);
@@ -1285,7 +1285,7 @@ namespace PetriEngine {
                                                 break;
                                             }
                                         }
-                                        auto ids = rightTupleInterval->getUpperIds(rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
+                                        auto ids = rightTupleInterval->getUpperIds(-rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
                                         idVec.insert(idVec.end(), ids.begin(), ids.end());
                                         index += varPositionsR[index]->colorType->productSize();
                                     } else {
@@ -1326,7 +1326,7 @@ namespace PetriEngine {
                                                 break;
                                             }
                                         }
-                                        auto ids = leftTupleInterval->getLowerIds(leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
+                                        auto ids = leftTupleInterval->getLowerIds(-leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
                                         idVec.insert(idVec.end(), ids.begin(), ids.end());
                                         index += varPositionsL[index]->colorType->productSize();
                                     } else {
@@ -1368,7 +1368,7 @@ namespace PetriEngine {
                                             break;
                                         }
                                     }
-                                    auto ids = rightTupleInterval->getUpperIds(rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
+                                    auto ids = rightTupleInterval->getUpperIds(-rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsR[index]->colorType->productSize();
                                 } else {
@@ -1413,7 +1413,7 @@ namespace PetriEngine {
                                             break;
                                         }
                                     }
-                                    auto ids = leftTupleInterval->getLowerIds(leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
+                                    auto ids = leftTupleInterval->getLowerIds(-leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsL[index]->colorType->productSize();
                                 } else {
@@ -1507,8 +1507,8 @@ namespace PetriEngine {
                                 }
                             }
 
-                            auto leftIds = leftTupleInterval->getUpperIds(leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
-                            auto rightIds = rightTupleInterval->getLowerIds(rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
+                            auto leftIds = leftTupleInterval->getUpperIds(-leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
+                            auto rightIds = rightTupleInterval->getLowerIds(-rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
                             //comparing vars of same size
                             if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){                        
                                 leftTupleInterval->constrainLower(rightIds, false);
@@ -1529,7 +1529,7 @@ namespace PetriEngine {
                                                 break;
                                             }
                                         }
-                                        auto ids = rightTupleInterval->getLowerIds(rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
+                                        auto ids = rightTupleInterval->getLowerIds(-rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
                                         idVec.insert(idVec.end(), ids.begin(), ids.end());
                                         index += varPositionsR[index]->colorType->productSize();
                                     } else {
@@ -1570,7 +1570,7 @@ namespace PetriEngine {
                                                 break;
                                             }
                                         }
-                                        auto ids = leftTupleInterval->getUpperIds(leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
+                                        auto ids = leftTupleInterval->getUpperIds(-leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
                                         idVec.insert(idVec.end(), ids.begin(), ids.end());
                                         index += varPositionsL[index]->colorType->productSize();
                                     } else {
@@ -1611,7 +1611,7 @@ namespace PetriEngine {
                                             break;
                                         }
                                     }
-                                    auto ids = rightTupleInterval->getLowerIds(rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
+                                    auto ids = rightTupleInterval->getLowerIds(-rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsR[index]->colorType->productSize();
                                 } else {
@@ -1657,7 +1657,7 @@ namespace PetriEngine {
                                             break;
                                         }
                                     }
-                                    auto ids = leftTupleInterval->getUpperIds(leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
+                                    auto ids = leftTupleInterval->getUpperIds(-leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
                                     idVec.insert(idVec.end(), ids.begin(), ids.end());
                                     index += varPositionsL[index]->colorType->productSize();
                                 } else {
@@ -1755,8 +1755,8 @@ namespace PetriEngine {
                                 }
                             }
 
-                            leftTupleIntervalVal.applyModifier(leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
-                            rightTupleIntervalVal.applyModifier(rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
+                            leftTupleIntervalVal.applyModifier(-leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
+                            rightTupleIntervalVal.applyModifier(-rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
                             //comparing vars of same size
                             if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
                                 Reachability::intervalTuple_t newIntervalTuple;
@@ -1772,8 +1772,8 @@ namespace PetriEngine {
                             
                                 *leftTupleInterval = newIntervalTuple;
                                 *rightTupleInterval = newIntervalTuple;
-                                leftTupleInterval->applyModifier(-leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
-                                rightTupleInterval->applyModifier(-rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
+                                leftTupleInterval->applyModifier(leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
+                                rightTupleInterval->applyModifier(rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
                             } else if(varPositionPair.second->colorType->productSize() > varPositionsR[index]->colorType->productSize()){
                                 std::vector<Reachability::interval_t> resizedLeftIntervals;
                                 for(auto interval : leftTupleIntervalVal._intervals){
@@ -1797,7 +1797,7 @@ namespace PetriEngine {
                                                 break;
                                             }
                                         }
-                                        rightTupleInterval.applyModifier(rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
+                                        rightTupleInterval.applyModifier(-rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
                                         intervalVec.insert(intervalVec.end(), rightTupleInterval._intervals.begin(), rightTupleInterval._intervals.end());
                                         i += varPositionsR[i]->colorType->productSize();
                                     } else {
@@ -1842,8 +1842,8 @@ namespace PetriEngine {
                                         }
                                     }
                                 }
-                                newIntervalTupleL.applyModifier(-leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
-                                newIntervalTupleR.applyModifier(-rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
+                                newIntervalTupleL.applyModifier(leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
+                                newIntervalTupleR.applyModifier(rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
 
                                 *leftTupleInterval = newIntervalTupleL;
                                 *rightTupleInterval = newIntervalTupleR;
@@ -1870,7 +1870,7 @@ namespace PetriEngine {
                                                 break;
                                             }
                                         }
-                                        leftTupleInterval.applyModifier(leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
+                                        leftTupleInterval.applyModifier(-leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
                                         intervalVec.insert(intervalVec.end(), leftTupleInterval._intervals.begin(), leftTupleInterval._intervals.end());
                                         i += varPositionsL[i]->colorType->productSize();
                                     } else {
@@ -1916,8 +1916,8 @@ namespace PetriEngine {
                                     }
                                 }
 
-                                newIntervalTupleL.applyModifier(-leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
-                                newIntervalTupleR.applyModifier(-rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
+                                newIntervalTupleL.applyModifier(leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
+                                newIntervalTupleR.applyModifier(rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
 
                                 *leftTupleInterval = newIntervalTupleL;
                                 *rightTupleInterval = newIntervalTupleR;
@@ -1955,7 +1955,7 @@ namespace PetriEngine {
                                             break;
                                         }
                                     }
-                                    rightTupleInterval.applyModifier(rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
+                                    rightTupleInterval.applyModifier(-rightVarMod, varPositionsR[index]->colorType->getConstituentsSizes());
                                     intervals.insert(intervals.end(), rightTupleInterval._intervals.begin(), rightTupleInterval._intervals.end());
                                     index += varPositionsR[index]->colorType->productSize();
                                 } else {
@@ -2029,7 +2029,7 @@ namespace PetriEngine {
                                             break;
                                         }
                                     }
-                                    leftTupleInterval.applyModifier(leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
+                                    leftTupleInterval.applyModifier(-leftVarMod, varPositionsL[index]->colorType->getConstituentsSizes());
                                     intervals.insert(intervals.end(), leftTupleInterval._intervals.begin(), leftTupleInterval._intervals.end());
                                     index += varPositionsL[index]->colorType->productSize();
                                 } else {
@@ -2532,10 +2532,16 @@ namespace PetriEngine {
                 _left->restrictVars(variableMap);
                 _right->restrictVars(varMapCopy);
 
-
-                for(auto pair : varMapCopy){
-                    variableMap.push_back(pair);
+                for(uint i = 0; i < variableMap.size(); i++){
+                    for(auto& varPair : varMapCopy[i]){
+                        for(auto& interval : varPair.second._intervals){
+                            variableMap[i][varPair.first].addInterval(std::move(interval));
+                        }
+                    }
                 }
+                // for(auto pair : varMapCopy){
+                //     variableMap.push_back(pair);
+                // }
             }
 
             std::string toString() const override {

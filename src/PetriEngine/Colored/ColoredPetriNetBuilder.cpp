@@ -235,6 +235,8 @@ namespace PetriEngine {
                 transitionActivated = false;
                 return;
             } 
+            // std::cout << "Arc interval " << std::endl;
+            // arcInterval.print();
         }
         // auto startinput = std::chrono::high_resolution_clock::now();
         // std::cout << "Getting var intervals" << std::endl;
@@ -242,7 +244,7 @@ namespace PetriEngine {
             // auto endinput = std::chrono::high_resolution_clock::now();
             // totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
             // std::cout << transition.name << " var intervals" << std::endl;
-            // for (auto pair : transition.variableMap){
+            // for (auto pair : transition.variableMaps){
             //     std::cout << "Var set:" << std::endl;
             //     for(auto varIntervalsPair : pair){
             //         std::cout << varIntervalsPair.first->name << std::endl;
@@ -575,7 +577,7 @@ namespace PetriEngine {
         for (auto b : gen) {
 
             //Print all bindings
-            // std::cout << transition.name << std::endl;
+            // std::cout << "Unfolding " << transition.name << " to the binding: "<< std::endl;
             // for (auto test : b){
             //     std::cout << "Binding '" << test.first->name << "\t" << test.second->getColorName() << "' in bindings." << std::endl;
             // }
@@ -700,14 +702,24 @@ namespace PetriEngine {
     Colored::ExpressionContext::BindingMap& BindingGenerator::Iterator::operator*() {
         return _generator->currentBinding();
     }
-        BindingGenerator::BindingGenerator(Colored::Transition& transition,
-            ColorTypeMap& colorTypes)
-        : _colorTypes(colorTypes), _transition(transition)
+    BindingGenerator::BindingGenerator(Colored::Transition& transition,
+        ColorTypeMap& colorTypes)
+    : _colorTypes(colorTypes), _transition(transition)
     {
         _isDone = false;
         _noValidBindings = false;
         _nextIndex = 0;
         _expr = _transition.guard;
+
+        //combine varmaps
+        // for(uint i = 1; i < _transition.variableMaps.size(); i++){
+        //     for(auto varPair : transition.variableMaps[i]){
+        //         for(auto interval : varPair.second._intervals){
+        //             transition.variableMaps[0][varPair.first].addInterval(interval);
+        //         }                
+        //     }
+        // }
+
         std::set<const Colored::Variable*> variables;
         if (_expr != nullptr) {
             _expr->getVariables(variables);
@@ -721,18 +733,18 @@ namespace PetriEngine {
             arc.expr->getVariables(variables);
         }
 
-        // std::cout << _transition.name << " varmap size " << _transition.variableMaps.size() << std::endl;
-        // for(auto varMap : _transition.variableMaps){
-        //     std::cout << "Var set:" << std::endl;
-        //     for(auto pair : varMap){
-        //         std::cout << pair.first->name << "\t";
-        //         for(auto interval : pair.second._intervals){
-        //             interval.print();
-        //             std::cout << " ";
-        //         }
-        //         std::cout << std::endl;
-        //     }
-        // }
+        std::cout << _transition.name << " varmap size " << _transition.variableMaps.size() << std::endl;
+        for(auto varMap : _transition.variableMaps){
+            std::cout << "Var set:" << std::endl;
+            for(auto pair : varMap){
+                std::cout << pair.first->name << "\t";
+                for(auto interval : pair.second._intervals){
+                    interval.print();
+                    std::cout << " ";
+                }
+                std::cout << std::endl;
+            }
+        }
         
         for (auto var : variables) {
             if(_transition.variableMaps.empty() || _transition.variableMaps[_nextIndex][var]._intervals.empty()){
