@@ -222,9 +222,11 @@ namespace PetriEngine {
             
             curCFP.constraints.restrict(max_intervals);
              
-            
-            // std::cout << "Cur place point " << arc.place << " and arc expression " << arc.expr.get()->toString() << std::endl;
+            // if(transition.name == "identity"){
+            //      std::cout << "Cur place point " << arc.place << " and arc expression " << arc.expr.get()->toString() << std::endl;
             // curCFP.constraints.print();
+            // }
+           
 
             Colored::ArcIntervals& arcInterval = _arcIntervals[transitionId][arc.place];
             uint32_t index = 0;
@@ -235,22 +237,28 @@ namespace PetriEngine {
                 transitionActivated = false;
                 return;
             } 
-            // std::cout << "Arc interval " << std::endl;
+            // if(transition.name == "identity"){
+            //     std::cout << "Arc interval " << std::endl;
             // arcInterval.print();
+            // }
+            
         }
         // auto startinput = std::chrono::high_resolution_clock::now();
         // std::cout << "Getting var intervals" << std::endl;
         if(getVarIntervals(transition.variableMaps, transitionId)){
             // auto endinput = std::chrono::high_resolution_clock::now();
             // totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
-            // std::cout << transition.name << " var intervals" << std::endl;
-            // for (auto pair : transition.variableMaps){
-            //     std::cout << "Var set:" << std::endl;
-            //     for(auto varIntervalsPair : pair){
-            //         std::cout << varIntervalsPair.first->name << std::endl;
-            //         varIntervalsPair.second.print();
+            // if(transition.name == "identity"){
+            //     std::cout << transition.name << " var intervals" << std::endl;
+            //     for (auto pair : transition.variableMaps){
+            //         std::cout << "Var set:" << std::endl;
+            //         for(auto varIntervalsPair : pair){
+            //             std::cout << varIntervalsPair.first->name << std::endl;
+            //             varIntervalsPair.second.print();
+            //         }
             //     }
             // }
+            
             if(transition.guard != nullptr) {
                 // std::cout << "applying guard" << std::endl;
                 // auto startinput2 = std::chrono::high_resolution_clock::now(); 
@@ -307,7 +315,7 @@ namespace PetriEngine {
                             std::vector<Colored::ColorType*> varColorTypes;
                             pair.first->colorType->getColortypes(varColorTypes);
                             getArcVarIntervals(varIntervals, pair.second[j], interval, varColorTypes); 
-                            
+
                             if(placeArcIntervals.second._intervalTupleVec.size() > 1 && pair.second[j].empty()){
                                 //The variable is not on this side of the add expression, so we add a full interval to compare against for the other side
                                 varIntervals.addInterval(pair.first->colorType->getFullInterval());
@@ -394,7 +402,7 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::getArcVarIntervals(Reachability::intervalTuple_t& varIntervals, std::unordered_map<uint32_t, int32_t> modIndexMap, PetriEngine::Reachability::interval_t *interval, std::vector<Colored::ColorType*> varColorTypes){
         for(auto& posModPair : modIndexMap){
             auto intervals = getIntervalsFromInterval(interval, posModPair.first, posModPair.second, varColorTypes);
-            
+
             if(varIntervals._intervals.empty()){
                 for(auto& interval : intervals){
                     varIntervals.addInterval(std::move(interval));
@@ -404,8 +412,9 @@ namespace PetriEngine {
                 for(uint32_t i = 0; i < varIntervals.size(); i++){
                     auto varInterval = &varIntervals[i];
                     for(auto& interval : intervals){
-                        if(varInterval->equals(std::move(interval))){ 
-                            newVarIntervals.addInterval(std::move(*varInterval));
+                        auto overlap = varInterval->getOverlap(std::move(interval));
+                        if(overlap.isSound()){ 
+                            newVarIntervals.addInterval(std::move(overlap));
                             break;
                         }                                                
                     }                                   
@@ -733,18 +742,21 @@ namespace PetriEngine {
             arc.expr->getVariables(variables);
         }
 
-        std::cout << _transition.name << " varmap size " << _transition.variableMaps.size() << std::endl;
-        for(auto varMap : _transition.variableMaps){
-            std::cout << "Var set:" << std::endl;
-            for(auto pair : varMap){
-                std::cout << pair.first->name << "\t";
-                for(auto interval : pair.second._intervals){
-                    interval.print();
-                    std::cout << " ";
+        if(_transition.name == "identity"){
+            std::cout << _transition.name << " varmap size " << _transition.variableMaps.size() << std::endl;
+            for(auto varMap : _transition.variableMaps){
+                std::cout << "Var set:" << std::endl;
+                for(auto pair : varMap){
+                    std::cout << pair.first->name << "\t";
+                    for(auto interval : pair.second._intervals){
+                        interval.print();
+                        std::cout << " ";
+                    }
+                    std::cout << std::endl;
                 }
-                std::cout << std::endl;
             }
         }
+        
         
         for (auto var : variables) {
             if(_transition.variableMaps.empty() || _transition.variableMaps[_nextIndex][var]._intervals.empty()){
