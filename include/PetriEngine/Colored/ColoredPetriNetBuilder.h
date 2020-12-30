@@ -15,87 +15,9 @@
 //#include "Patterns.h"
 #include "../AbstractPetriNetBuilder.h"
 #include "../PetriNetBuilder.h"
+#include "BindingGenerator.h"
 
 namespace PetriEngine {
-
-    typedef std::unordered_map<std::string, Colored::ColorType*> ColorTypeMap;
-    class BindingGenerator {
-    public:
-        class Iterator {
-        private:
-            BindingGenerator* _generator;
-                        
-        public:
-            Iterator(BindingGenerator* generator);
-            
-            bool operator==(Iterator& other);
-            bool operator!=(Iterator& other);
-            Iterator& operator++();
-            const Colored::ExpressionContext::BindingMap operator++(int);
-            Colored::ExpressionContext::BindingMap& operator*();
-        };
-    private:
-        Colored::GuardExpression_ptr _expr;
-        Colored::ExpressionContext::BindingMap _bindings;
-        ColorTypeMap& _colorTypes;
-        Colored::PatternSet _patterns;
-        Colored::Transition &_transition;
-        bool _isDone;
-        bool _noValidBindings;
-        uint32_t _nextIndex = 0;
-        
-        bool eval();
-        
-    public:
-        BindingGenerator(Colored::Transition& transition,
-                ColorTypeMap& colorTypes);
-
-        BindingGenerator(const BindingGenerator& ) = default;
-        
-        BindingGenerator operator= (const BindingGenerator& b) {
-            return BindingGenerator(b);
-        }
-
-        Colored::ExpressionContext::BindingMap& nextBinding();
-        Colored::ExpressionContext::BindingMap& currentBinding();
-        bool isInitial() const;
-        Iterator begin();
-        Iterator end();
-    };
-
-    class NaiveBindingGenerator {
-    public:
-        class Iterator {
-        private:
-            NaiveBindingGenerator* _generator;
-            
-        public:
-            Iterator(NaiveBindingGenerator* generator);
-            
-            bool operator==(Iterator& other);
-            bool operator!=(Iterator& other);
-            Iterator& operator++();
-            const Colored::ExpressionContext::BindingMap operator++(int);
-            Colored::ExpressionContext::BindingMap& operator*();
-        };
-    private:
-        Colored::GuardExpression_ptr _expr;
-        Colored::ExpressionContext::BindingMap _bindings;
-        ColorTypeMap& _colorTypes;
-        
-        bool eval();
-        
-    public:
-        NaiveBindingGenerator(Colored::Transition& transition,
-                const std::vector<Colored::Arc>& arcs,
-                ColorTypeMap& colorTypes);
-
-        Colored::ExpressionContext::BindingMap& nextBinding();
-        Colored::ExpressionContext::BindingMap& currentBinding();
-        bool isInitial() const;
-        Iterator begin();
-        Iterator end();
-    };
 
     class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
     public:
@@ -154,6 +76,10 @@ namespace PetriEngine {
             return _places.size();
         }
 
+        uint32_t getMaxIntervals() const {
+            return _maxIntervals;
+        }
+
         uint32_t getTransitionCount() const {
             return _transitions.size();
         }
@@ -194,20 +120,20 @@ namespace PetriEngine {
         
         PetriNetBuilder& unfold();
         PetriNetBuilder& stripColors();
-        void computePlaceColorFixpoint(uint32_t max_intervals);
+        void computePlaceColorFixpoint(uint32_t max_intervals, int32_t timeout);
         
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
         std::unordered_map<std::string,uint32_t> _transitionnames;
         std::unordered_map<uint32_t, std::unordered_map<uint32_t, Colored::ArcIntervals>> _arcIntervals;
         std::unordered_map<uint32_t,std::vector<uint32_t>> _placePostTransitionMap;
-        std::unordered_map<uint32_t,BindingGenerator> _bindings;
+        std::unordered_map<uint32_t,FixpointBindingGenerator> _bindings;
         PTPlaceMap _ptplacenames;
         PTTransitionMap _pttransitionnames;
         uint32_t _nptplaces = 0;
         uint32_t _npttransitions = 0;
         uint32_t _nptarcs = 0;
-        uint32_t _mergesPerformed = 0;
+        uint32_t _maxIntervals = 0;
         
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;

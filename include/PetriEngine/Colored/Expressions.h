@@ -24,7 +24,6 @@
 
 
 #include "Colors.h"
-#include "Patterns.h"
 #include "Multiset.h"
 #include "../errorcodes.h"
 

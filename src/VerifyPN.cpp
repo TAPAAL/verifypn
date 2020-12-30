@@ -157,6 +157,15 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid query reduction timeout argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
+        } else if (strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "--fixpoint") == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%d", &options.fixpointTimeout) != 1 || options.fixpointTimeout < 0) {
+                fprintf(stderr, "Argument Error: Invalid fixpoint timeout argument \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
         } else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--lpsolve-timeout") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -345,6 +354,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -d, --reduction-timeout <timeout>  Timeout for structural reductions in seconds (default 60)\n"
                     "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
                     "                                     write -q 0 to disable query reduction\n"
+                    "  -f, --fixpoint <timeout>           Color fixpoint timeout in seconds (default 10)\n"
+                    "                                     write -f 0 to disable fixpoint computation\n"
                     "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
                     "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds (default 0)\n"
@@ -361,7 +372,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -z <number of cores>               Number of cores to use (currently only query simplification)\n"
 #endif
                     "  -tar                               Enables Trace Abstraction Refinement for reachability properties\n"
-                    "  --max-intervals                    The max amount of intervals kept when computing the color fixpoint (defualt 0, which disables it)\n"
+                    "  --max-intervals <interval count>   The max amount of intervals kept when computing the color fixpoint (defualt 0, which disables it)\n"
                     "  --write-simplified <filename>      Outputs the queries to the given file after simplification\n"
                     "  --write-reduced <filename>         Outputs the model to the given file after structural reduction\n"
                     "  --binary-query-io <0,1,2,3>        Determines the input/output format of the query-file\n"
@@ -611,6 +622,7 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
         if (!builder.isColored() && !builder.isUnfolded())
             return;
         std::cout << "\nColor fixpoint computed in " << builder.getFixpointTime() << " seconds" << std::endl;
+        std::cout << "Max intervals used: " << builder.getMaxIntervals() << std::endl;
         std::cout << "Size of colored net: " <<
                 builder.getPlaceCount() << " places, " <<
                 builder.getTransitionCount() << " transitions, and " <<
@@ -620,6 +632,7 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
                 builder.getUnfoldedTransitionCount() << " transitions, and " <<
                 builder.getUnfoldedArcCount() << " arcs" << std::endl;
         std::cout << "Unfolded in " << builder.getUnfoldTime() << " seconds" << std::endl;
+        
 
         if(!options.output_stats.empty()){
             std::ofstream log(generated_filename, std::ios_base::app | std::ios_base::out);
@@ -781,7 +794,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    cpnBuilder.computePlaceColorFixpoint(options.max_intervals);
+    cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.fixpointTimeout);
     
     auto builder = options.cpnOverApprox ? cpnBuilder.stripColors() : cpnBuilder.unfold();
     printUnfoldingStats(cpnBuilder, options);
