@@ -63,6 +63,40 @@ namespace PetriEngine {
         Iterator end();
     };
 
+    class NaiveBindingGenerator {
+    public:
+        class Iterator {
+        private:
+            NaiveBindingGenerator* _generator;
+            
+        public:
+            Iterator(NaiveBindingGenerator* generator);
+            
+            bool operator==(Iterator& other);
+            bool operator!=(Iterator& other);
+            Iterator& operator++();
+            const Colored::ExpressionContext::BindingMap operator++(int);
+            Colored::ExpressionContext::BindingMap& operator*();
+        };
+    private:
+        Colored::GuardExpression_ptr _expr;
+        Colored::ExpressionContext::BindingMap _bindings;
+        ColorTypeMap& _colorTypes;
+        
+        bool eval();
+        
+    public:
+        NaiveBindingGenerator(Colored::Transition& transition,
+                const std::vector<Colored::Arc>& arcs,
+                ColorTypeMap& colorTypes);
+
+        Colored::ExpressionContext::BindingMap& nextBinding();
+        Colored::ExpressionContext::BindingMap& currentBinding();
+        bool isInitial() const;
+        Iterator begin();
+        Iterator end();
+    };
+
     class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
     public:
         typedef std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>> PTPlaceMap;
@@ -183,6 +217,7 @@ namespace PetriEngine {
         PetriNetBuilder _ptBuilder;
         bool _unfolded = false;
         bool _stripped = false;
+        bool _fixpointDone = false;
 
         std::vector<uint32_t> _placeFixpointQueue;
 

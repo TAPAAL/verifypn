@@ -150,8 +150,8 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::computePlaceColorFixpoint(uint32_t max_intervals) {
 
         auto start = std::chrono::high_resolution_clock::now();
-
-        while(!_placeFixpointQueue.empty()){
+        std::chrono::_V2::system_clock::time_point end = std::chrono::high_resolution_clock::now();
+        while(!_placeFixpointQueue.empty() && std::chrono::duration_cast<std::chrono::seconds>(end - start).count() < 10){
             uint32_t currentPlaceId = _placeFixpointQueue.back();
             _placeFixpointQueue.pop_back();
             _placeColorFixpoints[currentPlaceId].inQueue = false;
@@ -186,9 +186,12 @@ namespace PetriEngine {
                 }
                               
             }
+            end = std::chrono::high_resolution_clock::now();
         }
         
-        auto end = std::chrono::high_resolution_clock::now();
+        if(_placeFixpointQueue.empty()){
+            _fixpointDone = true;
+        }
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
         // std::cout << "Total time " << totalinputtime << std::endl;
         // std::cout << "Total time2 " << totalinputtime2 << std::endl;
@@ -537,7 +540,7 @@ namespace PetriEngine {
             //    unfoldPlace(place);
             //}
 
-            std::cout << "Unfolding" << std::endl;
+            std::cout << "Unfolding " << _fixpointDone << std::endl;
 
             for (auto& transition : _transitions) {
                 unfoldTransition(transition);
@@ -580,30 +583,56 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
-        
-        BindingGenerator gen(transition, _colors);
-        size_t i = 0;
-        for (auto b : gen) {
+        if(_fixpointDone){
+            BindingGenerator gen(transition, _colors);
+            size_t i = 0;
+            for (auto b : gen) {
 
-            //Print all bindings
-            // std::cout << "Unfolding " << transition.name << " to the binding: "<< std::endl;
-            // for (auto test : b){
-            //     std::cout << "Binding '" << test.first->name << "\t" << test.second->getColorName() << "' in bindings." << std::endl;
-            // }
-            // std::cout << std::endl;
-            
-            
-            std::string name = transition.name + "_" + std::to_string(i++);
-            _ptBuilder.addTransition(name, 0.0, 0.0);
-            _pttransitionnames[transition.name].push_back(name);
-            ++_npttransitions;
-            for (auto& arc : transition.input_arcs) {
-                unfoldArc(arc, b, name, true );
+                //Print all bindings
+                // std::cout << "Unfolding " << transition.name << " to the binding: "<< std::endl;
+                // for (auto test : b){
+                //     std::cout << "Binding '" << test.first->name << "\t" << test.second->getColorName() << "' in bindings." << std::endl;
+                // }
+                // std::cout << std::endl;
+                
+                
+                std::string name = transition.name + "_" + std::to_string(i++);
+                _ptBuilder.addTransition(name, 0.0, 0.0);
+                _pttransitionnames[transition.name].push_back(name);
+                ++_npttransitions;
+                for (auto& arc : transition.input_arcs) {
+                    unfoldArc(arc, b, name, true );
+                }
+                for (auto& arc : transition.output_arcs) {
+                    unfoldArc(arc, b, name, false);
+                }
             }
-            for (auto& arc : transition.output_arcs) {
-                unfoldArc(arc, b, name, false);
+        } else {
+            NaiveBindingGenerator gen(transition, _arcs, _colors);
+            size_t i = 0;
+            for (auto b : gen) {
+
+                //Print all bindings
+                // std::cout << "Unfolding " << transition.name << " to the binding: "<< std::endl;
+                // for (auto test : b){
+                //     std::cout << "Binding '" << test.first->name << "\t" << test.second->getColorName() << "' in bindings." << std::endl;
+                // }
+                // std::cout << std::endl;
+                
+                
+                std::string name = transition.name + "_" + std::to_string(i++);
+                _ptBuilder.addTransition(name, 0.0, 0.0);
+                _pttransitionnames[transition.name].push_back(name);
+                ++_npttransitions;
+                for (auto& arc : transition.input_arcs) {
+                    unfoldArc(arc, b, name, true );
+                }
+                for (auto& arc : transition.output_arcs) {
+                    unfoldArc(arc, b, name, false);
+                }
             }
         }
+        
     }
 
     void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName, bool input) {
@@ -841,6 +870,109 @@ namespace PetriEngine {
     }
 
     BindingGenerator::Iterator BindingGenerator::end() {
+        return {nullptr};
+    }
+
+
+
+
+    NaiveBindingGenerator::Iterator::Iterator(NaiveBindingGenerator* generator)
+            : _generator(generator)
+    {
+    }
+
+    bool NaiveBindingGenerator::Iterator::operator==(Iterator& other) {
+        return _generator == other._generator;
+    }
+
+    bool NaiveBindingGenerator::Iterator::operator!=(Iterator& other) {
+        return _generator != other._generator;
+    }
+
+    NaiveBindingGenerator::Iterator& NaiveBindingGenerator::Iterator::operator++() {
+        _generator->nextBinding();
+        if (_generator->isInitial()) _generator = nullptr;
+        return *this;
+    }
+
+    const Colored::ExpressionContext::BindingMap NaiveBindingGenerator::Iterator::operator++(int) {
+        auto prev = _generator->currentBinding();
+        ++*this;
+        return prev;
+    }
+
+    Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::Iterator::operator*() {
+        return _generator->currentBinding();
+    }
+
+    NaiveBindingGenerator::NaiveBindingGenerator(Colored::Transition& transition,
+            const std::vector<Colored::Arc>& arcs,
+            ColorTypeMap& colorTypes)
+        : _colorTypes(colorTypes)
+    {
+        _expr = transition.guard;
+        std::set<const Colored::Variable*> variables;
+        if (_expr != nullptr) {
+            _expr->getVariables(variables);
+        }
+        for (auto arc : transition.input_arcs) {
+            assert(arc.expr != nullptr);
+            arc.expr->getVariables(variables);
+        }
+        for (auto arc : transition.output_arcs) {
+            assert(arc.expr != nullptr);
+            arc.expr->getVariables(variables);
+        }
+        for (auto var : variables) {
+            _bindings[var] = &var->colorType->operator[](0);
+        }
+        
+        if (!eval())
+            nextBinding();
+    }
+
+    bool NaiveBindingGenerator::eval() {
+        if (_expr == nullptr)
+            return true;
+
+        Colored::ExpressionContext context {_bindings, _colorTypes};
+        return _expr->eval(context);
+    }
+
+    Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::nextBinding() {
+        bool test = false;
+        while (!test) {
+            for (auto& _binding : _bindings) {
+                _binding.second = &_binding.second->operator++();
+                if (_binding.second->getId() != 0) {
+                    break;
+                }
+            }
+
+            if (isInitial())
+                break;
+
+            test = eval();
+        }
+        return _bindings;
+    }
+
+    Colored::ExpressionContext::BindingMap& NaiveBindingGenerator::currentBinding() {
+        return _bindings;
+    }
+
+    bool NaiveBindingGenerator::isInitial() const {
+        for (auto& b : _bindings) {
+            if (b.second->getId() != 0) return false;
+        }
+        return true;
+    }
+
+    NaiveBindingGenerator::Iterator NaiveBindingGenerator::begin() {
+        return {this};
+    }
+
+    NaiveBindingGenerator::Iterator NaiveBindingGenerator::end() {
         return {nullptr};
     }
 
