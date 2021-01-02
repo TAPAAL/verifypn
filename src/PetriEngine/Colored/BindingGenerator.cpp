@@ -169,20 +169,19 @@ namespace PetriEngine {
             arc.expr->getVariables(variables);
         }
 
-        if(_transition.name == "identity"){
-            std::cout << _transition.name << " varmap size " << _transition.variableMaps.size() << std::endl;
-            for(auto varMap : _transition.variableMaps){
-                std::cout << "Var set:" << std::endl;
-                for(auto pair : varMap){
-                    std::cout << pair.first->name << "\t";
-                    for(auto interval : pair.second._intervals){
-                        interval.print();
-                        std::cout << " ";
-                    }
-                    std::cout << std::endl;
-                }
-            }
-        }
+        // std::cout << _transition.name << " varmap size " << _transition.variableMaps.size() << std::endl;
+        // for(auto varMap : _transition.variableMaps){
+        //     std::cout << "Var set:" << std::endl;
+        //     for(auto pair : varMap){
+        //         std::cout << pair.first->name << "\t";
+        //         for(auto interval : pair.second._intervals){
+        //             interval.print();
+        //             std::cout << " ";
+        //         }
+        //         std::cout << std::endl;
+        //     }
+        // }
+        
         
         
         for (auto var : variables) {
@@ -216,6 +215,7 @@ namespace PetriEngine {
         bool test = false;
         while (!test) {
             bool next = true;
+
             for (auto& _binding : _bindings) {
                 auto varInterval = _transition.variableMaps[_nextIndex][_binding.first];
                 std::vector<uint32_t> colorIds;
@@ -231,7 +231,7 @@ namespace PetriEngine {
                     if(!nextIntervalBinding.equals(varInterval.getFirst())){
                         next = false;
                         break;
-                    }                
+                    }              
                 }
             }
             if(next){

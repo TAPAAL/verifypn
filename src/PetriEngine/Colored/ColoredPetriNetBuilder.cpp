@@ -196,7 +196,7 @@ namespace PetriEngine {
         // std::cout << "Total time " << totalinputtime << std::endl;
         // std::cout << "Total time2 " << totalinputtime2 << std::endl;
         
-        //printPlaceTable();
+        // printPlaceTable();
         //We should not need to keep colors in places after we have found fixpoint
         _placeColorFixpoints.clear();
     }
@@ -274,10 +274,12 @@ namespace PetriEngine {
                 std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Reachability::intervalTuple_t>> newVarmaps;
                 for(auto& varMap : transition.variableMaps){
                     bool validVarMap = true;      
-                    for(auto varPair : varMap){
+                    for(auto& varPair : varMap){
                         if(!varPair.second.hasValidIntervals()){
                             validVarMap = false;
                             break;
+                        } else {
+                            varPair.second.simplify();
                         }
                     } 
                     if(validVarMap){

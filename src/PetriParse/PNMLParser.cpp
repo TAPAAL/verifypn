@@ -188,7 +188,7 @@
 	        uint32_t end = (uint32_t)atoll(type->first_attribute("end")->value());	
 		
 		
-	        for (int i = start; i<=end;i++) {	
+	        for (uint32_t i = start; i<=end;i++) {	
 	            ct->addColor(to_string(i).c_str());	
 	        }	
 	    } else {	
@@ -244,7 +244,7 @@
 	}	
 	PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors){	
 	    auto initCartesianSet = cartesianProduct(collectedColors[0], collectedColors[1]);	
-	    for(int i = 2; i < collectedColors.size(); i++){	
+	    for(uint32_t i = 2; i < collectedColors.size(); i++){	
 	        initCartesianSet = cartesianProduct(initCartesianSet, collectedColors[i]);	
 	    }	
 	    std::vector<PetriEngine::Colored::NumberOfExpression_ptr> numberOfExpressions;	

@@ -1100,10 +1100,10 @@ namespace PetriEngine {
                 }
                 
                 while (size() > k){                    
-                    closestIntervals closestInterval = getClosestIntervals();                    
-                    
+                    closestIntervals closestInterval = getClosestIntervals();                                        
                     auto interval = &_intervals[closestInterval.intervalId1]; 
                     auto otherInterval = &_intervals[closestInterval.intervalId2]; 
+
                     for(uint32_t l = 0; l < interval->size(); l++) {
                         interval->operator[](l) |= otherInterval->operator[](l);
                     }
@@ -1115,23 +1115,23 @@ namespace PetriEngine {
 
             closestIntervals getClosestIntervals(){
                 closestIntervals currentBest = {0,0, UINT32_MAX};
-                    for (uint32_t i = 0; i < _intervals.size()-1; i++) {
+                    for (uint32_t i = 0; i < size()-1; i++) {
                         auto interval = &_intervals[i];
-                        for(uint32_t j = i+1; j < _intervals.size(); j++){
+                        for(uint32_t j = i+1; j < size(); j++){
                             auto otherInterval = &_intervals[j];
                             uint32_t dist = 0;
                             
                             for(uint32_t k = 0; k < interval->size(); k++) {
                                 int32_t val1 = otherInterval->operator[](k)._lower - interval->operator[](k)._upper;
                                 int32_t val2 = interval->operator[](k)._lower - otherInterval->operator[](k)._upper;
-                                dist += std::max(val1, val2);
+                                dist += std::max(0, std::max(val1, val2));
                                 if(dist >= currentBest.distance){
                                     break;
                                 }
                             }
                             
                             if(dist < currentBest.distance){
-                                currentBest.distance = std::move(dist);
+                                currentBest.distance = dist;
                                 currentBest.intervalId1 = i;
                                 currentBest.intervalId2 = j;
 
@@ -1139,7 +1139,7 @@ namespace PetriEngine {
                                 if(currentBest.distance == 1){
                                     return currentBest;
                                 }
-                            }                            
+                            }                           
                         }
                     }
                 return currentBest;
