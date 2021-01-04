@@ -309,6 +309,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 else if(strcmp(argv[i + 1], "tarjan") == 0) {
                     options.ltlalgorithm = LTL::Algorithm::Tarjan;
                 }
+                else if(strcmp(argv[i + 1], "rndfs") == 0) {
+                    options.ltlalgorithm = LTL::Algorithm::RandomNDFS;
+                }
                 else if (strcmp(argv[i + 1], "none") == 0) {
                     options.ltlalgorithm = LTL::Algorithm::None;
                 }
@@ -1172,6 +1175,8 @@ int main(int argc, char* argv[]) {
                 case LTL::Algorithm::NDFS:
                     modelChecker = std::make_unique<LTL::NestedDepthFirstSearch>(*net, negated_formula, options.ltluseweak);
                     break;
+                case LTL::Algorithm::RandomNDFS:
+                    modelChecker = std::make_unique<LTL::RandomNDFS>(*net, negated_formula);
                 case LTL::Algorithm::Tarjan:
                     if (options.trace)
                         modelChecker = std::make_unique<LTL::TarjanModelChecker<true>>(*net, negated_formula, options.ltluseweak);

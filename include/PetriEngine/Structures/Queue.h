@@ -71,6 +71,7 @@ namespace PetriEngine {
             virtual ~RDFSQueue();
             
             virtual bool pop(Structures::State& state);
+            bool top(Structures::State& state) const;
             virtual void push(size_t id, PQL::DistanceContext&,
                 std::shared_ptr<PQL::Condition>& query);
         private:
