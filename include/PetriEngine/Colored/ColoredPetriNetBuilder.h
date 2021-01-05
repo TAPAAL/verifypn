@@ -76,10 +76,6 @@ namespace PetriEngine {
             return _places.size();
         }
 
-        uint32_t getMaxIntervals() const {
-            return _maxIntervals;
-        }
-
         uint32_t getTransitionCount() const {
             return _transitions.size();
         }
@@ -120,20 +116,18 @@ namespace PetriEngine {
         
         PetriNetBuilder& unfold();
         PetriNetBuilder& stripColors();
-        void computePlaceColorFixpoint(uint32_t max_intervals, int32_t timeout);
+        void computePlaceColorFixpoint();
         
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
         std::unordered_map<std::string,uint32_t> _transitionnames;
         std::unordered_map<uint32_t, std::unordered_map<uint32_t, Colored::ArcIntervals>> _arcIntervals;
         std::unordered_map<uint32_t,std::vector<uint32_t>> _placePostTransitionMap;
-        std::unordered_map<uint32_t,FixpointBindingGenerator> _bindings;
         PTPlaceMap _ptplacenames;
         PTTransitionMap _pttransitionnames;
         uint32_t _nptplaces = 0;
         uint32_t _npttransitions = 0;
         uint32_t _nptarcs = 0;
-        uint32_t _maxIntervals = 0;
         
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
@@ -141,9 +135,9 @@ namespace PetriEngine {
         std::vector<Colored::ColorFixpoint> _placeColorFixpoints;
         ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
+        std::unordered_map<uint32_t, std::vector<Colored::ExpressionContext::BindingMap>> _validBindings;
         bool _unfolded = false;
         bool _stripped = false;
-        bool _fixpointDone = false;
 
         std::vector<uint32_t> _placeFixpointQueue;
 
@@ -156,8 +150,6 @@ namespace PetriEngine {
         std::string arcToString(Colored::Arc& arc) const ;
 
         void printPlaceTable();
-
-        std::unordered_map<uint32_t, Colored::ArcIntervals> setupTransitionVars(Colored::Transition transition);
         
         void addArc(const std::string& place,
                 const std::string& transition,
@@ -166,10 +158,7 @@ namespace PetriEngine {
 
         bool getVarIntervals(std::vector<std::unordered_map<const Colored::Variable *, Reachability::intervalTuple_t>>& variableMaps, uint32_t transitionId);
        
-        std::vector<Reachability::interval_t> getIntervalsFromInterval(Reachability::interval_t *interval, uint32_t varPosition, int32_t varModifier, std::vector<Colored::ColorType*> varColorTypes);
-        void getArcVarIntervals(Reachability::intervalTuple_t& varIntervals, std::unordered_map<uint32_t, int32_t> modIndexMap, PetriEngine::Reachability::interval_t *interval, std::vector<Colored::ColorType*> varColorTypes);
-        void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals);
-        void processOutputArcs(Colored::Transition& transition);
+        void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId);
         
         void unfoldPlace(Colored::Place& place);
         void unfoldTransition(Colored::Transition& transition);

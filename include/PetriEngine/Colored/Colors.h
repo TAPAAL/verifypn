@@ -197,6 +197,14 @@ namespace PetriEngine {
                 return interval;
             }
 
+            virtual std::vector<const Color*> getColorSet(){
+                std::vector<const Color*> res;
+                for(auto& color: _colors){
+                    res.push_back(&color);
+                }
+                return res;
+            }
+
             virtual void getColortypes(std::vector<ColorType *> &colorTypes){
                 colorTypes.push_back(this);
             }
@@ -297,6 +305,14 @@ namespace PetriEngine {
                 return interval;
             }
 
+            std::vector<const Color*> getColorSet() override {
+                std::vector<const Color *> res;
+                for(uint16_t i = 0; i < size(); i++){
+                    res.push_back(&operator[](i));
+                }
+                return res;
+            }
+
             void getColortypes(std::vector<ColorType *> &colorTypes) override{
                 for(auto ct : constituents){
                     ct->getColortypes(colorTypes);
@@ -347,29 +363,23 @@ namespace PetriEngine {
             ColorType* colorType;
         };
 
-        struct ColorFixpoint {
-            Reachability::intervalTuple_t constraints;
-            bool inQueue;
-            uint32_t productSize;
+        struct ExprVariable {
+            const Variable * variable;
+            uint32_t index;
+            bool inTuple;
+        };
 
-            bool constainsColor(std::pair<const PetriEngine::Colored::Color *const, std::vector<uint32_t>> constPair) {
-                std::unordered_map<uint32_t, bool> contained;
-                for(auto interval : constraints._intervals) {
-                    for(uint32_t id : constPair.second){
-                        
-                        if(contained[id] != true){
-                            contained[id] = interval[id].contains(constPair.first->getId());
-                        }                        
-                    }
-                }
-
-                for(auto pair : contained){
-                    if (!pair.second){
-                        return false;
-                    }
-                }
-                return true;
+        struct cmpColorPointers {
+            bool operator() (const Color * a, const Color * b) const {
+                return a->getId() < b->getId();
             }
+        };
+
+        typedef std::set<const Color *, cmpColorPointers> ColorSet;
+
+        struct ColorFixpoint {
+            ColorSet colors;
+            bool inQueue;
         };
 
         struct ArcIntervals {
