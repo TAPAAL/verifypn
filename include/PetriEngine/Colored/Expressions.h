@@ -304,7 +304,7 @@ namespace PetriEngine {
                     for(auto color : colors){
                         if(color->operator[](*index)->getId() == _userOperator->getId()){
                             newColors.insert(color);
-                        }
+                        } 
                     }
                 } else {
                     if(colors.find(_userOperator) != colors.end()){
@@ -691,11 +691,20 @@ namespace PetriEngine {
                 Colored::ColorSet newColors;
                 for (auto expr : _colors) {
                     auto resColors = expr->findInputColors(colors, index, true);
+
                     if(newColors.empty()){
                         newColors = resColors;
                     } else {
                         Colored::ColorSet tempColors;
-                        std::set_intersection(newColors.begin(), newColors.end(), resColors.begin(), resColors.end(), std::inserter(tempColors,tempColors.begin()));
+
+                        for(auto newColor : newColors){
+                            for(auto color : resColors){
+                                if(newColor->getId() == color->getId()){
+                                    tempColors.insert(newColor);
+                                }
+                            }
+                        }
+
                         newColors = std::move(tempColors);
                     }
                     (*index)++;

@@ -221,10 +221,21 @@ namespace PetriEngine {
             //     auto res = arc.expr->eval(context);
             // }
             
+            // std::cout << "Colors in place: "<< std::endl;
+            // for(auto color : curCFP.colors){
+            //     std::cout << color->toString() << " ";
+            // }
+            // std::cout << std::endl << std::endl;
+
             
             uint32_t index = 0;
             auto arcColors = arc.expr->findInputColors(curCFP.colors, &index, false);
             index = 0;
+            // std::cout << "Arc colors for " << arc.expr.get()->toString() << std::endl;
+            // for(auto color : arcColors){
+            //     std::cout << color->getId() << " ";
+            // }
+            // std::cout << std::endl << std::endl;
 
             if(!arc.expr->createInputBindings(transition.variableMap, arcColors, &index, false)){
                 std::cout << "Failed to get arc intervals" << std::endl;
@@ -289,12 +300,15 @@ namespace PetriEngine {
         for(auto arc : transition.output_arcs){
             Colored::ColorFixpoint& placeFixpoint = _placeColorFixpoints[arc.place];
             size_t colorsBefore = placeFixpoint.colors.size();
+            // std::cout << "Colors for place: " << _places[arc.place].name << std::endl;
             for(auto binding : _validBindings[transitionId]){
                 Colored::ExpressionContext context {binding, _colors};
                 for(auto color : arc.expr->eval(context)){
+                    // std::cout << color.first->getId() << " ";
                     placeFixpoint.colors.insert(color.first);
                 }
             }
+            // std::cout << std::endl << std::endl;
             if(placeFixpoint.colors.size() > colorsBefore){
                 _placeFixpointQueue.push_back(arc.place);
                 placeFixpoint.inQueue = true;
