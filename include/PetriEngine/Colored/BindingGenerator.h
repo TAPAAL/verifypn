@@ -39,5 +39,48 @@ namespace PetriEngine {
         Iterator begin();
         Iterator end();
     };
-  
+
+
+    class FixpointBindingGenerator {
+    public:
+        class Iterator {
+        private:
+            FixpointBindingGenerator* _generator;
+                        
+        public:
+            Iterator(FixpointBindingGenerator* generator);
+            
+            bool operator==(Iterator& other);
+            bool operator!=(Iterator& other);
+            Iterator& operator++();
+            const Colored::ExpressionContext::BindingMap operator++(int);
+            Colored::ExpressionContext::BindingMap& operator*();
+        };
+    private:
+        Colored::GuardExpression_ptr _expr;
+        Colored::ExpressionContext::BindingMap _bindings;
+        ColorTypeMap& _colorTypes;
+        Colored::Transition &_transition;
+        bool _isDone;
+        bool _noValidBindings;
+        uint32_t _nextIndex = 0;
+        
+        bool eval();
+        
+    public:
+        FixpointBindingGenerator(Colored::Transition& transition,
+                ColorTypeMap& colorTypes);
+
+        FixpointBindingGenerator(const FixpointBindingGenerator& ) = default;
+        
+        FixpointBindingGenerator operator= (const FixpointBindingGenerator& b) {
+            return FixpointBindingGenerator(b);
+        }
+
+        Colored::ExpressionContext::BindingMap& nextBinding();
+        Colored::ExpressionContext::BindingMap& currentBinding();
+        bool isInitial() const;
+        Iterator begin();
+        Iterator end();
+    };    
 }

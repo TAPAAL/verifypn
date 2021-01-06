@@ -88,7 +88,9 @@ namespace PetriEngine {
         }
         
         const Color& Color::operator++ () const {
+            //std::cout << _colorName <<" " << _colorType->getName() << std::endl;
             if (_id >= _colorType->size() - 1) {
+                //std::cout << "inside if" << std::endl;
                 return (*_colorType)[0];
             }
             assert(_id + 1 < _colorType->size());
