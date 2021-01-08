@@ -13,6 +13,19 @@ namespace LTL {
     enum class Algorithm {
         NDFS, RandomNDFS, Tarjan, None=-1
     };
+    inline auto to_string(Algorithm alg) {
+        switch (alg) {
+            case Algorithm::NDFS:
+                return "NDFS";
+            case Algorithm::RandomNDFS:
+                return "RNDFS";
+            case Algorithm::Tarjan:
+                return "TARJAN";
+            default:
+                std::cerr << "to_string: Invalid LTL Algorithm " << static_cast<int>(alg) << '\n';
+                assert(false);
+        }
+    }
 
     std::pair<Condition_ptr, bool> to_ltl(const Condition_ptr &formula);
 }
