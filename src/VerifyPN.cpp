@@ -1186,7 +1186,7 @@ int main(int argc, char* argv[]) {
             }
             satisfied = negate_answer ^ modelChecker->isSatisfied();
             std::cout << "FORMULA " << querynames[qid] <<
-                      (satisfied ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT" <<
+                      (satisfied ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT " <<
                       LTL::to_string(options.ltlalgorithm) <<
                       (modelChecker->isweak() ? " WEAK_SKIP" : "") <<
                       (queries[qid]->isReachability(0) ? " REACHABILITY" : "") << std::endl;

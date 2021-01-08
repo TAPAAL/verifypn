@@ -21,6 +21,7 @@ namespace LTL {
                 return "RNDFS";
             case Algorithm::Tarjan:
                 return "TARJAN";
+            case Algorithm::None:
             default:
                 std::cerr << "to_string: Invalid LTL Algorithm " << static_cast<int>(alg) << '\n';
                 assert(false);
