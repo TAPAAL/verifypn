@@ -84,7 +84,7 @@ private:
     void parseDeclarations(rapidxml::xml_node<>* element);
     void parseNamedSort(rapidxml::xml_node<>* element);
     PetriEngine::Colored::ArcExpression_ptr parseArcExpression(rapidxml::xml_node<>* element);
-    PetriEngine::Colored::GuardExpression_ptr parseGuardExpression(rapidxml::xml_node<>* element, bool notFlag);
+    PetriEngine::Colored::GuardExpression_ptr parseGuardExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::ColorExpression_ptr parseColorExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::AllExpression_ptr parseAllExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::ColorType* parseUserSort(rapidxml::xml_node<>* element);

@@ -322,91 +322,51 @@
 	    }	
 	}	
 		
-	PetriEngine::Colored::GuardExpression_ptr PNMLParser::parseGuardExpression(rapidxml::xml_node<>* element, bool notFlag) {	
+	PetriEngine::Colored::GuardExpression_ptr PNMLParser::parseGuardExpression(rapidxml::xml_node<>* element) {	
 	    if (strcmp(element->name(), "lt") == 0 || strcmp(element->name(), "lessthan") == 0) {	
 	        auto left = element->first_node();	
 	        auto right = left->next_sibling();	
-			if(notFlag){
-				return std::make_shared<PetriEngine::Colored::GreaterThanEqExpression>(parseColorExpression(left), parseColorExpression(right));
-			} else {
-				return std::make_shared<PetriEngine::Colored::LessThanExpression>(parseColorExpression(left), parseColorExpression(right));
-			}	        	
+	        return std::make_shared<PetriEngine::Colored::LessThanExpression>(parseColorExpression(left), parseColorExpression(right));	
 	    } else if (strcmp(element->name(), "gt") == 0 || strcmp(element->name(), "greaterthan") == 0) {	
 	        auto left = element->first_node();	
-	        auto right = left->next_sibling();
-
-			if(notFlag){
-				return std::make_shared<PetriEngine::Colored::LessThanEqExpression>(parseColorExpression(left), parseColorExpression(right));
-			} else {
-				return std::make_shared<PetriEngine::Colored::GreaterThanExpression>(parseColorExpression(left), parseColorExpression(right));
-			}	        	
+	        auto right = left->next_sibling();	
+	        return std::make_shared<PetriEngine::Colored::GreaterThanExpression>(parseColorExpression(left), parseColorExpression(right));	
 	    } else if (strcmp(element->name(), "leq") == 0 || strcmp(element->name(), "lessthanorequal") == 0) {	
 	        auto left = element->first_node();	
 	        auto right = left->next_sibling();	
-
-			if(notFlag){
-				return std::make_shared<PetriEngine::Colored::GreaterThanExpression>(parseColorExpression(left), parseColorExpression(right));
-			} else {
-				return std::make_shared<PetriEngine::Colored::LessThanEqExpression>(parseColorExpression(left), parseColorExpression(right));
-			}	        	
+	        return std::make_shared<PetriEngine::Colored::LessThanEqExpression>(parseColorExpression(left), parseColorExpression(right));	
 	    } else if (strcmp(element->name(), "geq") == 0 || strcmp(element->name(), "greaterthanorequal") == 0) {	
 	        auto left = element->first_node();	
-	        auto right = left->next_sibling();
-
-			if(notFlag){
-				return std::make_shared<PetriEngine::Colored::LessThanExpression>(parseColorExpression(left), parseColorExpression(right));
-			} else {
-				return std::make_shared<PetriEngine::Colored::GreaterThanEqExpression>(parseColorExpression(left), parseColorExpression(right));
-			}	
+	        auto right = left->next_sibling();	
+	        return std::make_shared<PetriEngine::Colored::GreaterThanEqExpression>(parseColorExpression(left), parseColorExpression(right));	
 	    } else if (strcmp(element->name(), "eq") == 0 || strcmp(element->name(), "equality") == 0) {	
 	        auto left = element->first_node();	
 	        auto right = left->next_sibling();	
-			if(notFlag) {
-				return std::make_shared<PetriEngine::Colored::InequalityExpression>(parseColorExpression(left), parseColorExpression(right));
-			} else {
-				return std::make_shared<PetriEngine::Colored::EqualityExpression>(parseColorExpression(left), parseColorExpression(right));
-			}	
+	        return std::make_shared<PetriEngine::Colored::EqualityExpression>(parseColorExpression(left), parseColorExpression(right));	
 	    } else if (strcmp(element->name(), "neq") == 0 || strcmp(element->name(), "inequality") == 0) {	
 	        auto left = element->first_node();	
 	        auto right = left->next_sibling();	
-
-			if(notFlag){
-				return std::make_shared<PetriEngine::Colored::EqualityExpression>(parseColorExpression(left), parseColorExpression(right));
-			} else {
-				return std::make_shared<PetriEngine::Colored::InequalityExpression>(parseColorExpression(left), parseColorExpression(right));
-			}	        	
+	        return std::make_shared<PetriEngine::Colored::InequalityExpression>(parseColorExpression(left), parseColorExpression(right));	
 	    } else if (strcmp(element->name(), "not") == 0) {	
-	        return parseGuardExpression(element->first_node(), true);	
+	        return std::make_shared<PetriEngine::Colored::NotExpression>(parseGuardExpression(element->first_node()));	
 	    } else if (strcmp(element->name(), "and") == 0) {	
 	        auto left = element->first_node();	
-	        auto right = left->next_sibling();
-			if(notFlag){
-				return std::make_shared<PetriEngine::Colored::OrExpression>(parseGuardExpression(left, true), parseGuardExpression(right, true));
-			} else {
-				return std::make_shared<PetriEngine::Colored::AndExpression>(parseGuardExpression(left, false), parseGuardExpression(right, false));
-			}	        	
+	        auto right = left->next_sibling();	
+	        return std::make_shared<PetriEngine::Colored::AndExpression>(parseGuardExpression(left), parseGuardExpression(right));	
 	    } else if (strcmp(element->name(), "or") == 0) {	
 	        auto left = element->first_node();	
 	        auto right = left->next_sibling();	
 			//There must only be one constituent
 			if(right == nullptr){
-				return parseGuardExpression(left, notFlag);
+				return parseGuardExpression(left);
 			}
-			if(notFlag) {
-				auto parentAnd = std::make_shared<PetriEngine::Colored::AndExpression>(parseGuardExpression(left, true), parseGuardExpression(right, true));	
-				for (auto it = right->next_sibling(); it; it = it->next_sibling()) {	
-					parentAnd = std::make_shared<PetriEngine::Colored::AndExpression>(parentAnd, parseGuardExpression(it, true));	
-				}	
-				return parentAnd;
-			} else {
-				auto parentOr = std::make_shared<PetriEngine::Colored::OrExpression>(parseGuardExpression(left, false), parseGuardExpression(right, false));	
-				for (auto it = right->next_sibling(); it; it = it->next_sibling()) {	
-					parentOr = std::make_shared<PetriEngine::Colored::OrExpression>(parentOr, parseGuardExpression(it, false));	
-				}	
-				return parentOr;
-			}	        	
+	        auto parentOr = std::make_shared<PetriEngine::Colored::OrExpression>(parseGuardExpression(left), parseGuardExpression(right));	
+	        for (auto it = right->next_sibling(); it; it = it->next_sibling()) {	
+	            parentOr = std::make_shared<PetriEngine::Colored::OrExpression>(parentOr, parseGuardExpression(it));	
+	        }	
+	        return parentOr;	
 	    } else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {	
-	        return parseGuardExpression(element->first_node(), notFlag);	
+	        return parseGuardExpression(element->first_node());	
 	    }	
 	    	
 	    printf("Could not parse '%s' as a guard expression\n", element->name());	
@@ -711,7 +671,7 @@
 	        if (strcmp(it->name(), "graphics") == 0) {	
 	            parsePosition(it, t.x, t.y);	
 	        } else if (strcmp(it->name(), "condition") == 0) {	
-	            t.expr = parseGuardExpression(it->first_node("structure"), false);	
+	            t.expr = parseGuardExpression(it->first_node("structure"));	
 	        } else if (strcmp(it->name(), "conditions") == 0) {	
 	            std::cerr << "conditions not supported" << std::endl;	
 	            exit(ErrorCode);	

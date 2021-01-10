@@ -254,14 +254,14 @@ namespace PetriEngine {
             // auto endinput = std::chrono::high_resolution_clock::now();
             // totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
             // if(transition.name == "identity"){
-            //     std::cout << transition.name << " var intervals" << std::endl;
-            //     for (auto pair : transition.variableMaps){
-            //         std::cout << "Var set:" << std::endl;
-            //         for(auto varIntervalsPair : pair){
-            //             std::cout << varIntervalsPair.first->name << std::endl;
-            //             varIntervalsPair.second.print();
-            //         }
-            //     }
+                // std::cout << transition.name << " var intervals size " << transition.variableMaps.size() << std::endl;
+                // for (auto pair : transition.variableMaps){
+                //     std::cout << "Var set:" << std::endl;
+                //     for(auto varIntervalsPair : pair){
+                //         std::cout << varIntervalsPair.first->name << std::endl;
+                //         varIntervalsPair.second.print();
+                //     }
+                // }
             // }
             
             if(transition.guard != nullptr) {
@@ -521,7 +521,7 @@ namespace PetriEngine {
                     }  
                     colorsAfter += intervalColors;                        
                 }
-                // std::cout << "Colors before: " << colorsBefore << " and after: " << colorsAfter << " for place " << arc.place << std::endl;
+                // std::cout << "Colors before: " << colorsBefore << " and after: " << colorsAfter << " for place " <<  _places[arc.place].name << std::endl;
                 if (colorsAfter > colorsBefore) {
                     _placeFixpointQueue.push_back(arc.place);
                     placeFixpoint.inQueue = true;
@@ -572,6 +572,18 @@ namespace PetriEngine {
         
         //++_nptplaces;
         
+    }
+
+    //Handle places which has tokens in the initial marking, but where the tokens are never used
+    void ColoredPetriNetBuilder::unfoldTokenPlaces(Colored::Place& place){
+        for(auto token : place.marking){
+            if(_ptplacenames[place.name].count(token.first->getId()) == 0){
+                std::string name = place.name + "_" + std::to_string(token.first->getId());
+                _ptBuilder.addPlace(name, token.second, 0.0, 0.0);
+                _ptplacenames[place.name][token.first->getId()] = std::move(name);
+                ++_nptplaces;
+            }
+        }        
     }
 
     void ColoredPetriNetBuilder::unfoldPlace(Colored::Place& place) {

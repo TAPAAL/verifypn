@@ -323,7 +323,7 @@ namespace PetriEngine {
                 assert(ids.size() == constituents.size());
                 std::vector<const Color *> colors;
                 for(uint32_t i = 0; i < ids.size(); i++){
-                    colors.push_back(&constituents[i]->operator[](i));
+                    colors.push_back(&constituents[i]->operator[](ids[i]));
                 }
                 return getColor(colors);
             }
