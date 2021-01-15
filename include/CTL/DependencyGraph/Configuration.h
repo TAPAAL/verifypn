@@ -31,8 +31,8 @@ public:
 
     uint32_t owner = 0;
     uint32_t nsuccs = 0;
-    std::vector<Edge*> dependency_set;
     Assignment assignment = UNKNOWN;
+    std::vector<Edge*> dependency_set;   
 };
 
 
