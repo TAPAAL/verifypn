@@ -28,8 +28,8 @@ public:
     uint8_t status = 0;
     bool processed = false;
     bool is_negated = false;
-    int32_t refcnt = 0;
     bool handled = false;
+    int32_t refcnt = 0;
     uint32_t weight = 0;
 };
 }

@@ -16,4 +16,4 @@ STSolver.cpp
 SuccessorGenerator.cpp
 )
 
-target_link_libraries(PetriEngine PRIVATE Colored Structures Simplification Reachability PQL TAR)
+target_link_libraries(PetriEngine PRIVATE Colored Structures Simplification PQL Reachability TAR)

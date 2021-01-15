@@ -13,5 +13,5 @@ add_flex_bison_dependency(pql_lexer pql_parser)
 
 add_library(PQL ${BISON_pql_parser_OUTPUTS} ${FLEX_pql_lexer_OUTPUTS} Expressions.cpp PQL.cpp Contexts.cpp)
 add_dependencies(PQL glpk-ext)
-target_link_libraries(PQL Simplification Reachability glpk)
+target_link_libraries(PQL Simplification Reachability glpk PetriEngine)
 
