@@ -164,7 +164,20 @@ void Algorithm::CertainZeroFPA::finalAssign(DependencyGraph::Configuration *c, D
 
 void Algorithm::CertainZeroFPA::explore(Configuration *c)
 {
-    
+    if(c != vertex)
+    {
+        bool some_missing = false;
+        for(Edge* pred : c->dependency_set)
+        {
+            if(!pred->source->isDone())
+            {
+                some_missing = true;
+                break;
+            }
+        }
+        if(!some_missing) return; // no need to explore!
+    }
+
     c->assignment = ZERO;
 
     {
@@ -219,15 +232,5 @@ void Algorithm::CertainZeroFPA::explore(Configuration *c)
 
 void Algorithm::CertainZeroFPA::addDependency(Edge *e, Configuration *target)
 {
-    auto sDist = e->is_negated ? e->source->getDistance() + 1 : e->source->getDistance();
-    auto tDist = target->getDistance();
-
-    target->setDistance(std::max(sDist, tDist));
-    auto lb = std::lower_bound(std::begin(target->dependency_set), std::end(target->dependency_set), e);
-    if(lb == std::end(target->dependency_set) || *lb != e)
-    {
-        target->dependency_set.insert(lb, e);
-        assert(e->refcnt >= 0);
-        ++e->refcnt;
-    }
+    target->addDependency(e);
 }

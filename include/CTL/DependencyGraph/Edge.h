@@ -6,13 +6,14 @@
 #include <string>
 #include <algorithm>
 #include <cassert>
+#include <forward_list>
 
 namespace DependencyGraph {
 
 class Configuration;
 
 class Edge {
-    typedef std::vector<Configuration*> container;
+    typedef std::forward_list<Configuration*> container;
 public:
     Edge(){}
     Edge(Configuration &t_source) : source(&t_source) {}
@@ -20,11 +21,11 @@ public:
     void addTarget(Configuration* conf)
     {
         assert(conf);
-        targets.push_back(conf);
+        targets.push_front(conf);
     }
     
+    container targets;    
     Configuration* source;
-    container targets;
     uint8_t status = 0;
     bool processed = false;
     bool is_negated = false;
