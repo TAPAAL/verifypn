@@ -125,9 +125,10 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
         } else if (lastUndecided != nullptr) {
             if(only_assign) return;
             if(!e->processed) {
-                for (auto t : e->targets)
-                    if(!lastUndecided->isDone())
-                        addDependency(e, t);
+                if(!lastUndecided->isDone())
+                {
+                    for (auto t : e->targets) addDependency(e, t);
+                }
             }                 
             if (lastUndecided->assignment == UNKNOWN) {
                 explore(lastUndecided);
@@ -164,20 +165,6 @@ void Algorithm::CertainZeroFPA::finalAssign(DependencyGraph::Configuration *c, D
 
 void Algorithm::CertainZeroFPA::explore(Configuration *c)
 {
-    if(c != vertex)
-    {
-        bool some_missing = false;
-        for(Edge* pred : c->dependency_set)
-        {
-            if(!pred->source->isDone())
-            {
-                some_missing = true;
-                break;
-            }
-        }
-        if(!some_missing) return; // no need to explore!
-    }
-
     c->assignment = ZERO;
 
     {
