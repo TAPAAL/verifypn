@@ -4,6 +4,7 @@
 namespace DependencyGraph {
 
     void Configuration::addDependency(Edge* e) {
+        if(assignment == ONE) return;
         unsigned int sDist = e->is_negated ? e->source->getDistance() + 1 : e->source->getDistance();
         unsigned int tDist = getDistance();
 
