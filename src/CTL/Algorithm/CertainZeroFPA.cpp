@@ -86,6 +86,7 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
                 allOne = false;
                 if ((*it)->assignment == CZERO) {
                     hasCZero = true;
+                    assert(e->assignment == CZERO);
                     break;
                 }
                 else if(lastUndecided == nullptr)
@@ -96,6 +97,10 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
             pit = it;
             ++it;
         }
+    }
+    if(e->targets.empty())
+    {
+        assert(e->assignment == ONE);
     }
 
     if (e->is_negated) {
@@ -132,14 +137,14 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
         _processedEdges += 1;
         //Process hyper edge
         if (allOne) {
-            finalAssign(e->source, ONE);
+            finalAssign(e, ONE);
         } else if (hasCZero) {
             --e->source->nsuccs;
             e->handled = true;
             assert(e->refcnt > 0);
             if(only_assign) --e->refcnt;
             if (e->source->nsuccs == 0) {
-                finalAssign(e->source, CZERO);
+                finalAssign(e, CZERO);
             }
             if(e->refcnt == 0) {graph->release(e);}
 
@@ -173,14 +178,15 @@ void Algorithm::CertainZeroFPA::finalAssign(DependencyGraph::Configuration *c, D
     c->assignment = a;
     c->nsuccs = 0;
     for (DependencyGraph::Edge *e : c->dependency_set) {
-        if(e->source->isDone()) continue;
-        if(!e->is_negated || a == CZERO)
-        {
-            strategy->pushDependency(e);
-        }
-        else
-        {
-            strategy->pushNegation(e);
+        if(!e->source->isDone()) {
+            if(!e->is_negated || a == CZERO)
+            {
+                strategy->pushDependency(e);
+            }
+            else
+            {
+                strategy->pushNegation(e);
+            }
         }
         assert(e->refcnt > 0);
         --e->refcnt;

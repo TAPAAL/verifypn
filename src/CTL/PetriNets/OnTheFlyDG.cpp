@@ -187,7 +187,6 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                                         return false;
                                     }
                                     context.setMarking(mark.marking());
-                                    leftEdge->weight = 0;//std::min(leftEdge->weight, /*cond->distance(context)*/0);
                                     Configuration* c = createConfiguration(createMarking(mark), owner(mark, cond), cond);
                                     leftEdge->addTarget(c);
                                     return true;
@@ -243,7 +242,6 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                                 return false;
                             }
                             context.setMarking(mark.marking());
-                            e1->weight = 0;//std::min(e1->weight, /*cond->distance(context)*/0);
                             Configuration* c = createConfiguration(createMarking(mark), owner(mark, cond), cond);
                             e1->addTarget(c);
                             return true;
@@ -277,7 +275,6 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                             {
                                 allValid = Condition::RUNKNOWN;
                                 context.setMarking(mark.marking());
-                                e->weight = 0;//std::min(e->weight, /*cond->distance(context)*/0);
                                 Configuration* c = createConfiguration(createMarking(mark), v->getOwner(), (*cond)[0]);
                                 e->addTarget(c);
                             }
@@ -606,7 +603,6 @@ Edge* OnTheFlyDG::newEdge(Configuration &t_source, uint32_t weight)
     }
     assert(e->targets.empty());
     e->source = &t_source;
-    e->weight = weight;
     assert(e->refcnt == 0);
     ++e->refcnt;
     return e;

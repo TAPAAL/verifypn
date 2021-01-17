@@ -13,10 +13,6 @@ namespace DependencyGraph {
 
 class Edge;
 
-enum Assignment {
-    ONE = 1, UNKNOWN = 0, ZERO = -1, CZERO = -2
-};
-
 class Configuration
 {
 public:

@@ -11,6 +11,9 @@
 namespace DependencyGraph {
 
 class Configuration;
+enum Assignment {
+    ONE = 1, UNKNOWN = 0, ZERO = -1, CZERO = -2
+};
 
 class Edge {
     typedef std::forward_list<Configuration*> container;
@@ -31,7 +34,6 @@ public:
     bool is_negated = false;
     bool handled = false;
     int32_t refcnt = 0;
-    uint32_t weight = 0;
 };
 }
 #endif // EDGE_H
