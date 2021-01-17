@@ -53,6 +53,20 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
         if(e->refcnt == 0) graph->release(e);
         return;
     }
+
+    {
+        bool any = false;
+        size_t n = 0;
+        size_t k = 0;
+        for(Edge* deps : e->source->dependency_set)
+        {
+            ++k;
+            if(deps->source->isDone()) continue;
+            any = true;
+            ++n;
+        }
+        if(!any && e->source != vertex) return;
+    }
     
     bool allOne = true;
     bool hasCZero = false;
