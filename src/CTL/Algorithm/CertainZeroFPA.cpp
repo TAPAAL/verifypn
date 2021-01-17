@@ -54,7 +54,7 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
         return;
     }
 
-    {
+    /*{
         bool any = false;
         size_t n = 0;
         size_t k = 0;
@@ -66,7 +66,7 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
             ++n;
         }
         if(!any && e->source != vertex) return;
-    }
+    }*/
     
     bool allOne = true;
     bool hasCZero = false;
