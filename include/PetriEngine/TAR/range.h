@@ -1057,8 +1057,8 @@ namespace PetriEngine {
                                 newInterval[i]._upper = sizes[i]-1;
                                 tempIntervals.push_back(std::move(newInterval));
                             }else {
-                                interval[i]._lower = lower;
-                                interval[i]._upper = upper;
+                                interval1[i]._lower = lower;
+                                interval1[i]._upper = upper;
                             }
                         }
                         newIntervals.insert(newIntervals.end(), tempIntervals.begin(), tempIntervals.end());                                                

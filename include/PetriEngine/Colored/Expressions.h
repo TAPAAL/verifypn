@@ -1756,6 +1756,7 @@ namespace PetriEngine {
 
                             leftTupleIntervalVal.applyModifier(-leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
                             rightTupleIntervalVal.applyModifier(-rightVarModifier, varPositionsR[index]->colorType->getConstituentsSizes());
+
                             //comparing vars of same size
                             if(varPositionPair.second->colorType->productSize() == varPositionsR[index]->colorType->productSize()){
                                 Reachability::intervalTuple_t newIntervalTuple;
@@ -2531,16 +2532,26 @@ namespace PetriEngine {
                 _left->restrictVars(variableMap);
                 _right->restrictVars(varMapCopy);
 
-                for(uint i = 0; i < variableMap.size(); i++){
-                    for(auto& varPair : varMapCopy[i]){
-                        for(auto& interval : varPair.second._intervals){
-                            variableMap[i][varPair.first].addInterval(std::move(interval));
+                // for(uint i = 0; i < variableMap.size(); i++){
+                //     for(auto& varPair : varMapCopy[i]){
+                //         for(auto& interval : varPair.second._intervals){
+                //             variableMap[i][varPair.first].addInterval(std::move(interval));
+                //         }
+                //     }
+                // }
+
+                for (auto& varMap : varMapCopy){
+                    bool varMapValid = true;
+                    for(auto varPair : varMap){
+                        if(!varPair.second.hasValidIntervals()){
+                            varMapValid = false;
+                            break;
                         }
                     }
+                    if(varMapValid){
+                        variableMap.push_back(std::move(varMap));
+                    }
                 }
-                // for(auto pair : varMapCopy){
-                //     variableMap.push_back(pair);
-                // }
             }
 
             std::string toString() const override {

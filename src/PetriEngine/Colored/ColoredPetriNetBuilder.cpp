@@ -253,15 +253,15 @@ namespace PetriEngine {
         if(getVarIntervals(transition.variableMaps, transitionId)){
             // auto endinput = std::chrono::high_resolution_clock::now();
             // totalinputtime += (std::chrono::duration_cast<std::chrono::microseconds>(endinput - startinput).count())*0.000001;
-            // if(transition.name == "identity"){
-                // std::cout << transition.name << " var intervals size " << transition.variableMaps.size() << std::endl;
-                // for (auto pair : transition.variableMaps){
-                //     std::cout << "Var set:" << std::endl;
-                //     for(auto varIntervalsPair : pair){
-                //         std::cout << varIntervalsPair.first->name << std::endl;
-                //         varIntervalsPair.second.print();
-                //     }
-                // }
+            // if(transition.name == "Lose2"){
+            //     std::cout << transition.name << " var intervals size " << transition.variableMaps.size() << std::endl;
+            //     for (auto pair : transition.variableMaps){
+            //         std::cout << "Var set:" << std::endl;
+            //         for(auto varIntervalsPair : pair){
+            //             std::cout << varIntervalsPair.first->name << std::endl;
+            //             varIntervalsPair.second.print();
+            //         }
+            //     }
             // }
             
             if(transition.guard != nullptr) {
@@ -550,7 +550,9 @@ namespace PetriEngine {
                 unfoldTransition(transition);
             }
             for (auto& place : _places) {
-               handleOrphanPlace(place);
+               if(!handleOrphanPlace(place)){
+                   unfoldTokenPlaces(place);
+               }
             }
             _unfolded = true;
             auto end = std::chrono::high_resolution_clock::now();
@@ -562,16 +564,16 @@ namespace PetriEngine {
     //However, in queries asking about orphan places it cannot find these, as they have not been unfolded
     //so we make a placeholder place which just has tokens equal to the number of colored tokens
     //Ideally, orphan places should just be translated to a constant in the query
-    void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place) {
+    bool ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place) {
         if(_ptplacenames.count(place.name) <= 0){
             
             std::string name = place.name + "_" + std::to_string(place.marking.size());
             _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
             _ptplacenames[place.name][0] = std::move(name);
+            ++_nptplaces;
+            return true;
         }
-        
-        //++_nptplaces;
-        
+         return false;
     }
 
     //Handle places which has tokens in the initial marking, but where the tokens are never used

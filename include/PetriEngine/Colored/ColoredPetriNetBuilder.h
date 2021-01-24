@@ -173,7 +173,7 @@ namespace PetriEngine {
         
         void unfoldPlace(Colored::Place& place);
         void unfoldTransition(Colored::Transition& transition);
-        void handleOrphanPlace(Colored::Place& place);
+        bool handleOrphanPlace(Colored::Place& place);
         void unfoldTokenPlaces(Colored::Place& place);
 
         void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name, bool input);
