@@ -2539,17 +2539,38 @@ namespace PetriEngine {
                 //         }
                 //     }
                 // }
+                std::vector<uint32_t> validIndexes;
 
-                for (auto& varMap : varMapCopy){
+                for(uint i = 0; i < variableMap.size(); i++){
                     bool varMapValid = true;
+                    auto varMap = variableMap[i];
+                    auto varMapCpy = varMapCopy[i];
+
                     for(auto varPair : varMap){
                         if(!varPair.second.hasValidIntervals()){
                             varMapValid = false;
                             break;
                         }
                     }
+                    if(!varMapValid){
+                        continue;
+                    }
+                    for(auto varPair : varMapCpy){
+                        if(!varPair.second.hasValidIntervals()){
+                            varMapValid = false;
+                            break;
+                        }
+                    }
                     if(varMapValid){
-                        variableMap.push_back(std::move(varMap));
+                        validIndexes.push_back(i);
+                    }
+                }
+
+                for(auto index : validIndexes){
+                    for(auto& varPair : varMapCopy[index]){
+                        for(auto& interval : varPair.second._intervals){
+                            variableMap[index][varPair.first].addInterval(std::move(interval));
+                        }
                     }
                 }
             }

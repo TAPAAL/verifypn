@@ -196,7 +196,7 @@ namespace PetriEngine {
         // std::cout << "Total time " << totalinputtime << std::endl;
         // std::cout << "Total time2 " << totalinputtime2 << std::endl;
         
-        // printPlaceTable();
+        //printPlaceTable();
         //We should not need to keep colors in places after we have found fixpoint
         _placeColorFixpoints.clear();
     }
@@ -611,8 +611,7 @@ namespace PetriEngine {
                 // for (auto test : b){
                 //     std::cout << "Binding '" << test.first->name << "\t" << test.second->getColorName() << "' in bindings." << std::endl;
                 // }
-                // std::cout << std::endl;
-                
+                // std::cout << std::endl;                
                 
                 std::string name = transition.name + "_" + std::to_string(i++);
                 _ptBuilder.addTransition(name, 0.0, 0.0);
