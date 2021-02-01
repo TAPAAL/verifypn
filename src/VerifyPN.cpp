@@ -362,13 +362,15 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -ctl <type>                        Verify CTL properties\n"
                     "                                     - local     Liu and Smolka's on-the-fly algorithm\n"
                     "                                     - czero     local with certain zero extension (default)\n"
-                    "  -ltl [<type>]                      Verify LTL properties (default tarjan)\n"
+                    "  -ltl [<type>]                      Verify LTL properties (default tarjan). If omitted the queries are assumed to be CTL.\n"
                     "                                     - ndfs      Nested depth first search algorithm\n"
                     "                                     - tarjan    On-the-fly Tarjan's algorithm\n"
+                    "                                     - rndfs     NDFS with randomised search order. Less memory efficient compared to straigt ndfs.\n"
+                    "                                     - none      Run preprocessing steps only.\n"
                     "  -noweak                            Disable optimizations for weak Büchi automata when doing \n"
-                    "                                     LTL model checking. Not recommended."
+                    "                                     LTL model checking. Not recommended.\n"
                     "  -noreach                           Force use of CTL/LTL engine, even when queries are reachability.\n"
-                    "                                     Not recommended since the reachability engine is faster."
+                    "                                     Not recommended since the reachability engine is faster.\n"
                     "  -c, --cpn-overapproximation        Over approximate query on Colored Petri Nets (CPN only)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
 #ifdef VERIFYPN_MC_Simplification
