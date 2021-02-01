@@ -1,8 +1,18 @@
-/*
- * File:   BuchiSuccessorGenerator.h
- * Author: Nikolaj J. Ulrik <nikolaj@njulrik.dk>
+/* Copyright (C) 2020  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
+ *                     Simon M. Virenfeldt <simon@simwir.dk>
  *
- * Created on 24/09/2020
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef VERIFYPN_BUCHISUCCESSORGENERATOR_H
@@ -31,9 +41,6 @@ namespace LTL {
         bool next(size_t &state, bdd &cond) {
             if (!succ->done()) {
                 state = aut.buchi->state_number(succ->dst());
-#ifdef _PRINTF_DEBUG
-                std::cerr << "buchi state " << state << std::endl;
-#endif
                 cond = succ->cond();
                 succ->next();
                 return true;

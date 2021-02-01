@@ -97,9 +97,6 @@ namespace PetriEngine {
                 for (; _suc_tcounter != last; ++_suc_tcounter) {
 
                     if (!checkPreset(_suc_tcounter)) continue;
-#ifdef _PRINTF_DEBUG
-                    std::cerr << "trace: " << _net.transitionNames()[_suc_tcounter] << std::endl;
-#endif
                     memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
                     consumePreset(write, _suc_tcounter);
                     producePostset(write, _suc_tcounter);

@@ -1,30 +1,27 @@
-//
-// Created by Simon Mejlby Virenfeldt on 25/09/2020.
-//
+/* Copyright (C) 2020  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
+ *                     Simon M. Virenfeldt <simon@simwir.dk>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "LTL/Algorithm/NestedDepthFirstSearch.h"
 
 namespace LTL {
 
-#ifdef PRINTF_DEBUG
-    inline void dump_state(const LTL::Structures::ProductState &state, int nplaces=-1) {
-        if (nplaces == -1) nplaces = state.buchi_state_idx;
-        std::cerr << "marking: ";
-        std::cerr << state.marking()[0];
-        for (int i = 1; i <= nplaces; ++i) {
-            std::cerr << ", " << state.marking()[i];
-        }
-        std::cerr << std::endl;
-    }
-#endif
-
     bool NestedDepthFirstSearch::isSatisfied() {
         is_weak = successorGenerator->is_weak() && shortcircuitweak;
         dfs();
-#ifdef _PRINTF_DEBUG
-        std::cout << "discovered " << _discovered << " states." << std::endl;
-        std::cout << "mark1 size: " << mark1.size() << "\tmark2 size: " << mark2.size() << std::endl;
-#endif
         return !violation;
     }
 
@@ -96,10 +93,6 @@ namespace LTL {
                     continue;
                 }
                 if (working == *seed) {
-#ifdef _PRINTF_DEBUG
-                    std::cerr << "seed:\n  "; dump_state(*seed);
-                    std::cerr << "working:\n  "; dump_state(working);
-#endif
                     violation = true;
                     return;
                 }

@@ -91,6 +91,7 @@ namespace PetriEngine {
                 for (uint32_t i = 0; i < net.numberOfPlaces(); i++) {
                         os << _marking[i];
                 }
+                return os;
             }
 
             bool operator==(const State &rhs) const {

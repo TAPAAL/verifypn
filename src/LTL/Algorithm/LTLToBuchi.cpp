@@ -1,8 +1,18 @@
-/*
- * File:   LTLToBuchi.cpp
- * Author: Nikolaj J. Ulrik <nikolaj@njulrik.dk>
+/* Copyright (C) 2020  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
+ *                     Simon M. Virenfeldt <simon@simwir.dk>
  *
- * Created on 23/09/2020
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "LTL/LTLToBuchi.h"
@@ -136,10 +146,6 @@ namespace LTL {
             spotFormula = spotFormula.substr(2);
         }
         auto spot_formula = spot::parse_formula(spotFormula);
-#ifdef PRINTF_DEBUG
-        std::cerr << "ORIG FORMULA: \n  " << ss.str() << std::endl;
-        std::cerr << "SPOT FORMULA: \n  " << spotFormula << std::endl;
-#endif
         return std::make_pair(spot_formula, spotConverter.apInfo());
     }
 
@@ -150,10 +156,6 @@ namespace LTL {
         translator.set_type(spot::postprocessor::BA);
         translator.set_pref(spot::postprocessor::Complete);
         spot::twa_graph_ptr automaton = translator.run(formula);
-#ifdef PRINTF_DEBUG
-        automaton->get_graph().dump_storage(std::cerr);
-        spot::print_dot(std::cerr, automaton);
-#endif
         std::unordered_map<int, AtomicProposition> ap_map;
         // bind PQL expressions to the atomic proposition IDs used by spot.
         // the resulting map can be indexed using variables mentioned on edges of the created Büchi automaton.
@@ -161,9 +163,6 @@ namespace LTL {
             int varnum = automaton->register_ap(info.text);
             ap_map[varnum] = info;
         }
-#ifdef PRINTF_DEBUG
-        automaton->get_dict()->dump(std::cerr);
-#endif
 
         return BuchiSuccessorGenerator{Structures::BuchiAutomaton{std::move(automaton), std::move(ap_map)}};
     }

@@ -10,11 +10,6 @@ add_dependencies(verifypn-${ARCH_TYPE} glpk-ext spot-ext)
 
 target_link_libraries(verifypn-${ARCH_TYPE} PRIVATE CTL LTL PetriEngine PetriParse glpk spot)
 
-add_executable(verifyltl-${ARCH_TYPE} LTLMain.cpp)
-add_dependencies(verifyltl-${ARCH_TYPE} glpk-ext spot-ext)
-
-target_link_libraries(verifyltl-${ARCH_TYPE} CTL LTL PetriEngine PetriParse glpk spot)
-
 # add_executable(parse-benchmark-asctl ParseOnly.cpp)
 
  #target_link_libraries(parse-benchmark-asctl PetriEngine PetriParse)

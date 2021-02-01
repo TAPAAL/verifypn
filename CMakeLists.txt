@@ -28,10 +28,6 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
     set(VERIFYPN_Static OFF)
 endif()
 
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-    #add_compile_definitions(PRINTF_DEBUG)
-endif()
-
 if (VERIFYPN_Static)
     set(BUILD_SHARED_LIBS OFF)
     if (VERIFYPN_MC_Simplification)
