@@ -48,6 +48,7 @@
 #ifdef VERIFYPN_MC_Simplification
 #include <thread>
 #include <iso646.h>
+#include <mutex>
 #endif
 
 #include "PetriEngine/PQL/PQLParser.h"
@@ -735,6 +736,10 @@ std::vector<Condition_ptr> getLTLQueries(const vector<Condition_ptr>& ctlStarQue
     return ltlQueries;
 }
 
+#ifdef VERIFYPN_MC_Simplification
+std::mutex spot_mutex;
+#endif
+
 Condition_ptr simplify_ltl_query(Condition_ptr query,
                                  bool printstats,
                                  const EvaluationContext &evalContext,
@@ -743,7 +748,13 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
     assert(dynamic_pointer_cast<SimpleQuantifierCondition>(query) != nullptr);
     bool wasACond = dynamic_pointer_cast<ACondition>(query) != nullptr;
     auto cond = (*dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
-    cond = LTL::simplify(cond);
+
+    {
+#ifdef VERIFYPN_MC_Simplification
+        std::scoped_lock scopedLock{spot_mutex};
+#endif
+        cond = LTL::simplify(cond);
+    }
     negstat_t stats;
     cond = Condition::initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true)
             ->pushNegation(stats, evalContext, false, false, true);
