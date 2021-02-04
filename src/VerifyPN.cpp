@@ -775,11 +775,19 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         std::exit(ErrorCode);
     }
 
-    cond = Condition::initialMarkingRW([&]() { return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true)); }, stats, evalContext, false, false, true);
+    cond = Condition::initialMarkingRW([&]() {
+#ifdef VERIFYPN_MC_Simplification
+        std::scoped_lock scopedLock{spot_mutex};
+#endif
+        return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true));
+    }, stats, evalContext, false, false, true);
 
     if (printstats) {
         out << "RWSTATS POST:";
         stats.print(out);
+        out << std::endl;
+        out << "Query after reduction: ";
+        cond->toString(out);
         out << std::endl;
     }
     if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
