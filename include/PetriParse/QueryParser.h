@@ -7,7 +7,7 @@
 using namespace PetriEngine::PQL;
 
 struct QueryItem {
-    string id; // query name
+    std::string id; // query name
     Condition_ptr query;
 
     enum {

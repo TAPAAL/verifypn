@@ -31,6 +31,7 @@
 
 #include <memory>
 #include <vector>
+#include <PetriEngine/Stubborn/ReachabilityStubbornSet.h>
 
 
 namespace PetriEngine {
@@ -93,7 +94,16 @@ namespace PetriEngine {
             Structures::State _initial;
             AbstractHandler& _callback;
         };
-        
+
+        template <typename G>
+        inline G _makeSucGen(PetriNet &net, std::vector<PQL::Condition_ptr> &queries) {
+            return G{net, queries};
+        }
+        template <>
+        inline ReducingSuccessorGenerator _makeSucGen(PetriNet &net, std::vector<PQL::Condition_ptr> &queries) {
+            return ReducingSuccessorGenerator{net, queries, std::make_shared<ReachabilityStubbornSet>(net, queries)};
+        }
+
         template<typename Q, typename W, typename G>
         bool ReachabilitySearch::tryReach(   std::vector<std::shared_ptr<PQL::Condition> >& queries,
                                         std::vector<ResultPrinter::Result>& results, bool usequeries,
@@ -117,7 +127,7 @@ namespace PetriEngine {
             
             W states(_net, _kbound);    // stateset
             Q queue(&states);           // working queue
-            G generator(_net, queries); // successor generator
+            G generator = _makeSucGen<G>(_net, queries); // successor generator
             auto r = states.add(state);
             // this can fail due to reductions; we push tokens around and violate K
             if(r.first){ 
@@ -175,6 +185,7 @@ namespace PetriEngine {
             if(printstats) printStats(ss, &states);
             return false;
         }
+
 
     }
 } // Namespaces

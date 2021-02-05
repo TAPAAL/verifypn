@@ -26,8 +26,8 @@
 #include <memory>
 
 #include "../PetriNet.h"
-#include "../Structures/State.h"
-#include "../ReducingSuccessorGenerator.h"
+//#include "../Structures/State.h"
+//#include "../ReducingSuccessorGenerator.h"
 #include "../Simplification/LPCache.h"
 
 namespace PetriEngine {
@@ -118,9 +118,7 @@ namespace PetriEngine {
             /** Output the expression as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const = 0;
             virtual void toBinary(std::ostream&) const = 0;
-            /** Stubborn reduction: increasing and decreasing sets */
-            virtual void incr(ReducingSuccessorGenerator& generator) const = 0;
-            virtual void decr(ReducingSuccessorGenerator& generator) const = 0;
+
             /** Count size of the entire formula in number of nodes */
             virtual int formulaSize() const = 0;
             
@@ -196,7 +194,7 @@ namespace PetriEngine {
         };
         
         /** Base condition */
-        class Condition : public enable_shared_from_this<Condition> {
+    class Condition : public std::enable_shared_from_this<Condition> {
         public:
             enum Result {RUNKNOWN=-1,RFALSE=0,RTRUE=1};
         private:
@@ -232,9 +230,7 @@ namespace PetriEngine {
             virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
             virtual void toBinary(std::ostream& out) const = 0;
 
-            /** Find interesting transitions in stubborn reduction*/
-            virtual void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const = 0;
-            /** Checks if the condition is trivially true */
+        /** Checks if the condition is trivially true */
             bool isTriviallyTrue();
             /*** Checks if the condition is trivially false */
             bool isTriviallyFalse();

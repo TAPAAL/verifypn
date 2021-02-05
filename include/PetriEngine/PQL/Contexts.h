@@ -38,8 +38,8 @@ namespace PetriEngine {
         /** Context provided for context analysis */
         class AnalysisContext {
         protected:
-            const unordered_map<std::string, uint32_t>& _placeNames;
-            const unordered_map<std::string, uint32_t>& _transitionNames;
+            const std::unordered_map<std::string, uint32_t>& _placeNames;
+            const std::unordered_map<std::string, uint32_t>& _transitionNames;
             const PetriNet* _net;
             std::vector<ExprError> _errors;
         public:
@@ -176,7 +176,7 @@ namespace PetriEngine {
 
             SimplificationContext(const MarkVal* marking,
                     const PetriNet* net, uint32_t queryTimeout, uint32_t lpTimeout,
-                    LPCache* cache)
+                    Simplification::LPCache* cache)
                     : _queryTimeout(queryTimeout), _lpTimeout(lpTimeout) {
                 _negated = false;
                 _marking = marking;
@@ -223,7 +223,7 @@ namespace PetriEngine {
             
             uint32_t getLpTimeout() const;
             
-            LPCache* cache() const
+            Simplification::LPCache* cache() const
             {
                 return _cache;
             }
@@ -237,7 +237,7 @@ namespace PetriEngine {
             const PetriNet* _net;
             uint32_t _queryTimeout, _lpTimeout;
             std::chrono::high_resolution_clock::time_point _start;
-            LPCache* _cache;
+            Simplification::LPCache* _cache;
             mutable glp_prob* _base_lp = nullptr;
 
             glp_prob* buildBase() const;

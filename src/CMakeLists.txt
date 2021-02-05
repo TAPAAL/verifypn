@@ -5,7 +5,7 @@ add_subdirectory(LTL)
 add_subdirectory(PetriParse)
 add_subdirectory(PetriEngine)
 
-add_executable(verifypn-${ARCH_TYPE} VerifyPN.cpp)
+add_executable(verifypn-${ARCH_TYPE} VerifyPN.cpp PetriEngine/Stubborn/StubbornSet.cpp ../include/PetriEngine/Stubborn/StubbornSet.h PetriEngine/Stubborn/ReachabilityStubbornSet.cpp ../include/PetriEngine/Stubborn/ReachabilityStubbornSet.h PetriEngine/Stubborn/InterestingTransitionVisitor.cpp ../include/PetriEngine/Stubborn/InterestingTransitionVisitor.h)
 add_dependencies(verifypn-${ARCH_TYPE} glpk-ext spot-ext)
 
 target_link_libraries(verifypn-${ARCH_TYPE} PRIVATE CTL LTL PetriEngine PetriParse glpk spot)

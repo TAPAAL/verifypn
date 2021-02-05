@@ -129,6 +129,7 @@ namespace PetriEngine {
         friend class SuccessorGenerator;
         friend class ReducingSuccessorGenerator;
         friend class STSolver;
+        friend class StubbornSet;
     };
 
 } // PetriEngine

@@ -105,8 +105,7 @@ namespace PetriEngine {
             Member constraint(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             bool tk = false;
-            void incr(ReducingSuccessorGenerator& generator) const override;
-            void decr(ReducingSuccessorGenerator& generator) const override;
+
             void visit(Visitor& visitor) const override;
         protected:
             int apply(int v1, int v2) const override;
@@ -124,8 +123,7 @@ namespace PetriEngine {
             Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
-            void incr(ReducingSuccessorGenerator& generator) const override;
-            void decr(ReducingSuccessorGenerator& generator) const override;
+
             void toBinary(std::ostream&) const override;
             void visit(Visitor& visitor) const override;
         protected:
@@ -142,8 +140,7 @@ namespace PetriEngine {
             Expr::Types type() const override;
             Member constraint(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
-            void incr(ReducingSuccessorGenerator& generator) const override;
-            void decr(ReducingSuccessorGenerator& generator) const override;
+
             void visit(Visitor& visitor) const override;
         protected:
             int apply(int v1, int v2) const override;
@@ -164,8 +161,7 @@ namespace PetriEngine {
             Member constraint(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             void toBinary(std::ostream&) const override;
-            void incr(ReducingSuccessorGenerator& generator) const override;
-            void decr(ReducingSuccessorGenerator& generator) const override;
+
             void visit(Visitor& visitor) const override;
             int formulaSize() const override{
                 return _expr->formulaSize() + 1;
@@ -187,8 +183,7 @@ namespace PetriEngine {
             Expr::Types type() const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             void toBinary(std::ostream&) const override;
-            void incr(ReducingSuccessorGenerator& generator) const override;
-            void decr(ReducingSuccessorGenerator& generator) const override;
+
             void visit(Visitor& visitor) const override;
             int formulaSize() const override{
                 return 1;
@@ -217,12 +212,7 @@ namespace PetriEngine {
             void toXML(std::ostream& os, uint32_t tabs, bool tokencount = false) const override {
                 _compiled->toXML(os, tabs, tokencount);
             }
-            void incr(ReducingSuccessorGenerator& generator) const override {
-                _compiled->incr(generator);
-            }
-            void decr(ReducingSuccessorGenerator& generator) const override {
-                _compiled->decr(generator);
-            }
+
             int formulaSize() const override {
                 if(_compiled) return _compiled->formulaSize();
                 return 1;
@@ -241,7 +231,7 @@ namespace PetriEngine {
             }
             void visit(Visitor& visitor) const override;
 
-            const string &name() const {
+            const std::string &name() const {
                 return _name;
             }
 
@@ -269,8 +259,7 @@ namespace PetriEngine {
             Expr::Types type() const override;
             void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const override;
             void toBinary(std::ostream&) const override;
-            void incr(ReducingSuccessorGenerator& generator) const override;
-            void decr(ReducingSuccessorGenerator& generator) const override;
+
             int formulaSize() const override{
                 return 1;
             }
@@ -313,8 +302,7 @@ namespace PetriEngine {
 
             void toXML(std::ostream& out, uint32_t tabs) const override
             { _compiled->toXML(out, tabs); }
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override
-            { _compiled->findInteresting(generator, negated);}
+
             Quantifier getQuantifier() const override
             { return _compiled->getQuantifier(); }
             Path getPath() const override { return _compiled->getPath(); }
@@ -381,7 +369,7 @@ namespace PetriEngine {
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             void toBinary(std::ostream&) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             Quantifier getQuantifier() const override { return Quantifier::NEG; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::LOPERATOR; }
@@ -420,7 +408,7 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             void toBinary(std::ostream& out) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             virtual const Condition_ptr& operator[] (size_t i) const override { return _cond;}
             bool containsNext() const override { return _cond->containsNext(); }
             bool nestedDeadlock() const override { return _cond->nestedDeadlock(); }
@@ -713,7 +701,7 @@ namespace PetriEngine {
             void toBinary(std::ostream& out) const override;
             bool isReachability(uint32_t depth) const override;
             Condition_ptr prepareForReachability(bool negated) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             Result evalAndSet(const EvaluationContext& context) override;
 
             virtual const Condition_ptr& operator[] (size_t i) const override
@@ -883,7 +871,7 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             Quantifier getQuantifier() const override { return Quantifier::AND; }
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
         private:
@@ -907,7 +895,7 @@ namespace PetriEngine {
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             Quantifier getQuantifier() const override { return Quantifier::OR; }
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
         private:
@@ -998,7 +986,7 @@ namespace PetriEngine {
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
             void visit(Visitor&) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             Quantifier getQuantifier() const override { return _negated ? Quantifier::OR : Quantifier::AND; }
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             bool isNegated() const { return _negated; }
@@ -1082,7 +1070,7 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
@@ -1101,7 +1089,7 @@ namespace PetriEngine {
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
@@ -1119,7 +1107,7 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
@@ -1137,7 +1125,7 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
@@ -1155,7 +1143,7 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
@@ -1172,7 +1160,7 @@ namespace PetriEngine {
             using CompareCondition::CompareCondition;
             Retval simplify(SimplificationContext& context) const override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             uint32_t distance(DistanceContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void visit(Visitor&) const override;
@@ -1212,7 +1200,7 @@ namespace PetriEngine {
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             void toBinary(std::ostream&) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }
@@ -1243,7 +1231,7 @@ namespace PetriEngine {
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void toXML(std::ostream&, uint32_t tabs) const override;
             void toBinary(std::ostream&) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             static Condition_ptr DEADLOCK;
             Quantifier getQuantifier() const override { return Quantifier::DEADLOCK; }
             Path getPath() const override { return Path::pError; }
@@ -1308,7 +1296,7 @@ namespace PetriEngine {
         public:
             UpperBoundsCondition(const std::vector<std::string>& places) : _places(places)
             {}
-            const vector<std::string> &getPlaces() const {
+            const std::vector<std::string> &getPlaces() const {
                 return _places;
             }
         protected:
@@ -1368,7 +1356,7 @@ namespace PetriEngine {
             Condition_ptr prepareForReachability(bool negated) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
             void toXML(std::ostream&, uint32_t tabs) const override;
-            void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
+
             Quantifier getQuantifier() const override { return Quantifier::UPPERBOUNDS; }
             Path getPath() const override { return Path::pError; }
             CTLType getQueryType() const override { return CTLType::EVAL; }

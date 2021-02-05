@@ -16,6 +16,7 @@
 #include "range.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "TraceSet.h"
+#include "PetriEngine/SuccessorGenerator.h"
 
 #include <utility>
 #include <cinttypes>
