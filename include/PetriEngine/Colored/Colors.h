@@ -24,8 +24,7 @@
 #include <iostream>
 #include <cassert>
 
-//#include "ColoredNetStructures.h"
-#include "../TAR/range.h"
+#include "Intervals.h"
 
 namespace PetriEngine {
     namespace Colored {
@@ -50,7 +49,7 @@ namespace PetriEngine {
                 return _tuple.size() > 1;
             }
 
-            void getColorConstraints(Reachability::interval_t *constraintsVector, uint32_t *index) const;
+            void getColorConstraints(Colored::interval_t *constraintsVector, uint32_t *index) const;
             
             std::vector<const Color*> getTupleColors() const {
                 return _tuple;
@@ -191,8 +190,8 @@ namespace PetriEngine {
                 return result;
             }
 
-            virtual Reachability::interval_t getFullInterval(){
-                Reachability::interval_t interval;
+            virtual Colored::interval_t getFullInterval(){
+                Colored::interval_t interval;
                 interval.addRange(Reachability::range_t(0, size()-1));
                 return interval;
             }
@@ -289,8 +288,8 @@ namespace PetriEngine {
                 return result;
             }
 
-            Reachability::interval_t getFullInterval() override{
-                Reachability::interval_t interval;
+            Colored::interval_t getFullInterval() override{
+                Colored::interval_t interval;
                 for(auto ct : constituents) {
                     interval.addRange(Reachability::range_t(0, ct->size()-1));
                 }                
@@ -323,7 +322,7 @@ namespace PetriEngine {
                 assert(ids.size() == constituents.size());
                 std::vector<const Color *> colors;
                 for(uint32_t i = 0; i < ids.size(); i++){
-                    colors.push_back(&constituents[i]->operator[](ids[i]));
+                    colors.push_back(&constituents[i]->operator[](i));
                 }
                 return getColor(colors);
             }
@@ -348,7 +347,7 @@ namespace PetriEngine {
         };
 
         struct ColorFixpoint {
-            Reachability::intervalTuple_t constraints;
+            Colored::intervalTuple_t constraints;
             bool inQueue;
             uint32_t productSize;
 
@@ -371,10 +370,10 @@ namespace PetriEngine {
                 return true;
             }
         };
-
+        
         struct ArcIntervals {
             std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> _varIndexModMap;
-            std::vector<Reachability::intervalTuple_t> _intervalTupleVec;
+            std::vector<Colored::intervalTuple_t> _intervalTupleVec;
             Colored::ColorFixpoint * _source;
             
             ~ArcIntervals() {_varIndexModMap.clear();}
@@ -387,27 +386,27 @@ namespace PetriEngine {
             ArcIntervals(Colored::ColorFixpoint * source, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varIndexModMap) : _varIndexModMap(varIndexModMap), _source(source) {
             };
 
-            ArcIntervals(Colored::ColorFixpoint * source, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varIndexModMap,  std::vector<Reachability::intervalTuple_t> ranges) : _varIndexModMap(varIndexModMap), _intervalTupleVec(ranges), _source(source) {
+            ArcIntervals(Colored::ColorFixpoint * source, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varIndexModMap,  std::vector<Colored::intervalTuple_t> ranges) : _varIndexModMap(varIndexModMap), _intervalTupleVec(ranges), _source(source) {
             };
 
             size_t size() {
                 return _intervalTupleVec.size();
             }
 
-            Reachability::intervalTuple_t& operator[] (size_t index) {
+            Colored::intervalTuple_t& operator[] (size_t index) {
                 return _intervalTupleVec[index];
             }
             
-            Reachability::intervalTuple_t& operator[] (int index) {
+            Colored::intervalTuple_t& operator[] (int index) {
                 return _intervalTupleVec[index];
             }
             
-            Reachability::intervalTuple_t& operator[] (uint32_t index) {
+            Colored::intervalTuple_t& operator[] (uint32_t index) {
                 assert(index < _intervalTupleVec.size());
                 return _intervalTupleVec[index];
             }
 
-            Reachability::intervalTuple_t& back(){
+            Colored::intervalTuple_t& back(){
                 return _intervalTupleVec.back();
             }
 
@@ -437,19 +436,6 @@ namespace PetriEngine {
                 return res;
             }
 
-            // std::vector<uint32_t> getVarPositions(Colored::Variable * var){
-
-            //     for (auto varIdModPair : _varIndexModMap){
-            //         if(varIdModPair.first == var){
-            //             std::vector<uint32_t> positions;
-            //             for(auto IdModPair: varIdModPair.second){
-            //                 positions.push_back(IdModPair.first);
-            //             }
-            //             return positions;
-            //         }
-            //     }
-            // }
-
             void print() {
                 std::cout << "[ ";
                 for(auto varModifierPair : _varIndexModMap){
@@ -463,7 +449,6 @@ namespace PetriEngine {
                 }
             }
         };
-        
     }
 }
 

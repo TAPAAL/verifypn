@@ -802,7 +802,6 @@ int main(int argc, char* argv[]) {
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
     
-    
     //----------------------- Query Simplification -----------------------//
     bool alldone = options.queryReductionTimeout > 0;
     PetriNetBuilder b2(builder);
@@ -1051,7 +1050,6 @@ int main(int argc, char* argv[]) {
     
     if(alldone) return SuccessCode;
     
-    
     //----------------------- Verify CTL queries -----------------------//
     std::vector<size_t> ctl_ids;
     for(size_t i = 0; i < queries.size(); ++i)
@@ -1152,7 +1150,6 @@ int main(int argc, char* argv[]) {
                            options.printstatistics,
                            options.trace);
     }
-    
        
     return SuccessCode;
 }

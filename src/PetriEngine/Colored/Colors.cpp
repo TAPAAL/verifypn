@@ -109,7 +109,7 @@ namespace PetriEngine {
             return toString(this);
         }
 
-        void Color::getColorConstraints(Reachability::interval_t *constraintsVector, uint32_t *index) const {
+        void Color::getColorConstraints(Colored::interval_t *constraintsVector, uint32_t *index) const {
             if (this->isTuple()) {
                 for (const Color *color : _tuple) {
                     color->getColorConstraints(constraintsVector, index);
