@@ -21,7 +21,7 @@
 #include "LTL/Algorithm/ModelChecker.h"
 
 namespace LTL {
-    class StubbornTarjanModelChecker : public ModelChecker<PetriEngine::ReducingSuccessorGenerator> {
+    class StubbornTarjanModelChecker : public ModelChecker {
 
     };
 }
