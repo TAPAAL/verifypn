@@ -109,6 +109,14 @@ namespace PetriEngine {
                 return true;
             }
 
+            uint32_t getContainedColors(){
+                uint32_t colors = 1;
+                for(auto range: _ranges) {
+                    colors *= 1+  range._upper - range._lower;
+                }          
+                return colors;
+            }
+
             bool contains(interval_t other){
                 if(other.size() != size()){
                     return false;
@@ -245,6 +253,14 @@ namespace PetriEngine {
 
             size_t tupleSize() {
                 return _intervals[0].size();
+            }
+
+            uint32_t getContainedColors(){
+                uint32_t colors = 0;
+                for (auto interval : _intervals) {
+                    colors += interval.getContainedColors();              
+                }
+                return colors;
             }
 
             void inEquality(intervalTuple_t &other){

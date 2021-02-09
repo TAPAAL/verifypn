@@ -106,53 +106,6 @@ namespace PetriEngine {
                 }
             }
 
-            /*
-             void expandIntervalVec(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t> varMap,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> mainVarModifierMap,
-                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> otherVarModifierMap,
-                            std::unordered_map<uint32_t, const Colored::Variable *> varPositions,
-                            std::unordered_map<uint32_t, const Color*> constantMap,
-                            const Colored::Variable *otherVar, 
-                            std::vector<Colored::interval_t> &intervalVec, size_t targetSize, uint32_t index){
-
-                uint32_t i = index;
-                i += varPositions[index]->colorType->productSize();
-                while(intervalVec.size() < targetSize){
-                    if(varPositions.count(i)){
-                        auto rightTupleInterval = varMap[varPositions[i]];
-                        int32_t rightVarMod;
-                        for(auto idModPair : mainVarModifierMap[varPositions[index]].back()){
-                            if(idModPair.first == index){
-                                rightVarMod = idModPair.second;
-                                break;
-                            }
-                        }
-                        rightTupleInterval.applyModifier(-rightVarMod, varPositions[index]->colorType->getConstituentsSizes());
-                        intervalVec.insert(intervalVec.end(), rightTupleInterval._intervals.begin(), rightTupleInterval._intervals.end());
-                        i += varPositions[i]->colorType->productSize();
-                    } else {
-                        std::vector<uint32_t> colorIdVec;
-                        constantMap[i]->getTupleId(&colorIdVec);
-                        int32_t leftVarModifier;
-                        for(auto idModPair : otherVarModifierMap[otherVar].back()){
-                            if(idModPair.first == index){
-                                leftVarModifier = idModPair.second;
-                                break;
-                            }
-                        }
-                        for(auto id : colorIdVec){
-                            for(auto interval : intervalVec){
-                                int32_t val = otherVar->colorType->size() + (id + leftVarModifier);
-                                auto colorVal = val % otherVar->colorType->size(); 
-                                interval.addRange(colorVal,colorVal);
-                            }
-                        }                                    
-                        i+= colorIdVec.size();
-                    }
-                }
-            }
-            */
-
             void restrictDiagonal(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap,
                             std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMapL,
                             std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMapR,

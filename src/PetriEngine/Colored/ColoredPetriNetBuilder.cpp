@@ -155,7 +155,7 @@ namespace PetriEngine {
         while(!_placeFixpointQueue.empty()){
             uint32_t currentPlaceId = _placeFixpointQueue.back();
 
-            if(std::chrono::duration_cast<std::chrono::seconds>(end - reduceTimer).count() >= timeout){
+            if(timeout > 0 && std::chrono::duration_cast<std::chrono::seconds>(end - reduceTimer).count() >= timeout){
                 max_intervals = max_intervals/2;
                 if(max_intervals == 0){
                     max_intervals = 250;
@@ -211,9 +211,7 @@ namespace PetriEngine {
         return res;
     }
 
-
-
-    void ColoredPetriNetBuilder::processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals) {     
+    void ColoredPetriNetBuilder::getArcIntervals(Colored::Transition& transition, bool &transitionActivated, uint32_t max_intervals, uint32_t transitionId){
         for (auto arc : transition.input_arcs) {
             PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];     
             curCFP.constraints.restrict(max_intervals);
@@ -229,6 +227,13 @@ namespace PetriEngine {
                 transitionActivated = false;
                 return;
             }             
+        }
+    }
+
+    void ColoredPetriNetBuilder::processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals) {     
+        getArcIntervals(transition, transitionActivated, max_intervals, transitionId);
+        if(!transitionActivated){
+            return;
         }
 
         if(intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId])){            
@@ -249,7 +254,6 @@ namespace PetriEngine {
                         newVarmaps.push_back(std::move(varMap));
                     }                   
                 }
-
                 transition.variableMaps = std::move(newVarmaps);
 
                 if(transition.variableMaps.empty()){
@@ -269,18 +273,10 @@ namespace PetriEngine {
 
         for (auto& arc : transition.output_arcs) {
             Colored::ColorFixpoint& placeFixpoint = _placeColorFixpoints[arc.place];
-
             //used to check if colors are added to the place. The total distance between upper and
             //lower bounds should grow when more colors are added and as we cannot remove colors this
             //can be checked by summing the differences
-            uint32_t colorsBefore = 0;
-            for (auto interval : placeFixpoint.constraints._intervals) {
-                uint32_t intervalColors = 1;
-                for(auto range: interval._ranges) {
-                    intervalColors *= 1+  range._upper - range._lower;
-                }  
-                colorsBefore += intervalColors;              
-            }
+            uint32_t colorsBefore = placeFixpoint.constraints.getContainedColors();
                 
             std::set<const Colored::Variable *> variables;
             arc.expr->getVariables(variables);           
@@ -297,21 +293,14 @@ namespace PetriEngine {
             }
 
             if (!placeFixpoint.inQueue) {
-                uint32_t colorsAfter = 0;
-                for (auto interval : placeFixpoint.constraints._intervals) {
-                    uint32_t intervalColors = 1;
-                    for(auto range: interval._ranges) {
-                        intervalColors *= 1+  range._upper - range._lower;
-                    }  
-                    colorsAfter += intervalColors;                        
-                }
+                uint32_t colorsAfter = placeFixpoint.constraints.getContainedColors();
+
                 if (colorsAfter > colorsBefore) {
                     _placeFixpointQueue.push_back(arc.place);
                     placeFixpoint.inQueue = true;
                 }
             }                   
         }
-
         //If there are no variables among the out arcs of a transition 
         // and it has been activated, there is no reason to cosider it again
         if(!transitionHasVarOutArcs) {

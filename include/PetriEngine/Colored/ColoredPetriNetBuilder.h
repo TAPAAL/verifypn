@@ -133,7 +133,7 @@ namespace PetriEngine {
         uint32_t _npttransitions = 0;
         uint32_t _nptarcs = 0;
         uint32_t _maxIntervals = 0;
-        PetriEngine::IntervalGenerator intervalGenerator = PetriEngine::IntervalGenerator();
+        PetriEngine::IntervalGenerator intervalGenerator;
         
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
@@ -162,7 +162,8 @@ namespace PetriEngine {
                 const Colored::ArcExpression_ptr& expr,
                 bool input);
 
-       
+
+        void getArcIntervals(Colored::Transition& transition, bool &transitionActivated, uint32_t max_intervals, uint32_t transitionId);      
         void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals);
         void processOutputArcs(Colored::Transition& transition);
         

@@ -438,12 +438,10 @@ namespace PetriEngine {
                             }
                         }
                     }
-
                     for(auto tempInterval : tempIntervals){
                         newIntervals.addInterval(tempInterval);
                     }                   
                 }
-
                 return newIntervals;
             }
 
@@ -605,8 +603,7 @@ namespace PetriEngine {
 
             Colored::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>& varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
                 Colored::intervalTuple_t intervals;
-                Colored::intervalTuple_t intervalHolder;
-                
+                Colored::intervalTuple_t intervalHolder;                
 
                 for(auto colorExp : _colors) {
                     Colored::intervalTuple_t intervalHolder;
@@ -664,7 +661,6 @@ namespace PetriEngine {
                 }
                 std::cout << "COULD NOT FIND PRODUCT TYPE" << std::endl;
                 return nullptr;
-
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
@@ -789,7 +785,6 @@ namespace PetriEngine {
                 }
 
                 Colored::guardRestrictor guardRestrictor;
-
                 guardRestrictor.restrictDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, false, true);
             }
 
@@ -797,7 +792,6 @@ namespace PetriEngine {
                 std::string res = _left->toString() + " > " + _right->toString();
                 return res;
             }
-
             
             GreaterThanExpression(ColorExpression_ptr&& left, ColorExpression_ptr&& right)
                     : _left(std::move(left)), _right(std::move(right)) {}
@@ -839,7 +833,6 @@ namespace PetriEngine {
                 }
 
                 Colored::guardRestrictor guardRestrictor;
-
                 guardRestrictor.restrictDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, true, false); 
             }
 
@@ -889,7 +882,6 @@ namespace PetriEngine {
                 }
 
                 Colored::guardRestrictor guardRestrictor;
-
                 guardRestrictor.restrictDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, false, false);                
             }
             
@@ -1071,9 +1063,6 @@ namespace PetriEngine {
                         }
                     }
                 }
-                // for(auto pair : varMapCopy){
-                //     variableMap.push_back(pair);
-                // }
             }
 
             std::string toString() const override {
@@ -1142,36 +1131,32 @@ namespace PetriEngine {
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index, int32_t modifier) const {
-                //TODO: fix to work even if intervals are not merged
-                Reachability::range_t fullRange(0, _sort->size()-1);
-                
                 
                 if(arcIntervals._intervalTupleVec.empty()){
                     bool colorsInFixpoint = false;
                     Colored::intervalTuple_t newIntervalTuple;
-                    for(auto interval : cfp.constraints._intervals){
-                        if(interval[*index].compare(fullRange).first){
-                            colorsInFixpoint = true;
+                    cfp.constraints.simplify();
+                    if(cfp.constraints.getContainedColors() == _sort->size()){
+                        colorsInFixpoint = true;
+                        for(auto interval : cfp.constraints._intervals){                            
                             newIntervalTuple.addInterval(interval);
                         }
                     }
+                    
                     arcIntervals._intervalTupleVec.push_back(newIntervalTuple);
                     return colorsInFixpoint;
                 } else {
-                    for(auto& intervalTuple : arcIntervals._intervalTupleVec){
-                        std::vector<uint32_t> intervalsForRemoval;
-                        for(uint32_t i = 0; i < intervalTuple._intervals.size(); i++){
-                            if(!intervalTuple[i][*index].compare(fullRange).first){
-                                intervalsForRemoval.push_back(i);
-                            }
+                    std::vector<Colored::intervalTuple_t> newIntervalTupleVec;
+                    for(uint32_t i = 0; i < arcIntervals._intervalTupleVec.size(); i++){
+                        auto& intervalTuple = arcIntervals._intervalTupleVec[i];
+                        if(intervalTuple.getContainedColors() == _sort->size()){
+                            newIntervalTupleVec.push_back(intervalTuple);
                         }
+                    }
 
-                        for (auto i = intervalsForRemoval.rbegin(); i != intervalsForRemoval.rend(); ++i) {
-                            intervalTuple.removeInterval(*i);
-                        }
-                    }                   
-
-                    return !arcIntervals._intervalTupleVec[0]._intervals.empty();
+                    arcIntervals._intervalTupleVec = std::move(newIntervalTupleVec);
+               
+                    return !arcIntervals._intervalTupleVec.empty();
                 }
             }
 
