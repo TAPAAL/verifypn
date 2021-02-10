@@ -10,15 +10,15 @@
 namespace PetriEngine {
 
     void InterestingTransitionVisitor::_accept(const PQL::SimpleQuantifierCondition *element) {
-        element->visit(*this);
+        (*element)[0]->visit(*this);
     }
 
     void InterestingTransitionVisitor::_accept(const PQL::UntilCondition *element) {
-        element->visit(*this);
+        element->getCond1()->visit(*this);
         negate();
-        element->visit(*this);
+        element->getCond1()->visit(*this);
         negate();
-        element->visit(*this);
+        element->getCond2()->visit(*this);
     }
 
 

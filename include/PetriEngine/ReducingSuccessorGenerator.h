@@ -22,8 +22,14 @@ namespace PetriEngine {
 
         void setQuery(PQL::Condition *ptr) { _stubSet->setQuery(ptr); }
 
+        void prepare(const Structures::State *state);
+
+        bool next(Structures::State &write);
+
+        auto fired() const { return _current; }
     private:
         std::shared_ptr<StubbornSet> _stubSet;
+        uint32_t _current;
 
         std::vector<PQL::Condition *> _queries;
 

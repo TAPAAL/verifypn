@@ -1,32 +1,43 @@
-/*
- * File:   StubbornSet.cpp.cc
- * Author: Nikolaj J. Ulrik <nikolaj@njulrik.dk>
+/* Copyright (C) 2021  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
+ *                     Simon M. Virenfeldt <simon@simwir.dk>
  *
- * Created on 03/02/2021
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include <PetriEngine/Stubborn/InterestingTransitionVisitor.h>
 #include "PetriEngine/Stubborn/StubbornSet.h"
 #include "PetriEngine/PQL/Contexts.h"
 
 namespace PetriEngine {
-    size_t StubbornSet::next() {
+    uint32_t StubbornSet::next() {
         while (_tid < _net.numberOfTransitions()) {
-            if (_stubborn[_tid]) {
-                return _tid;
+            if (_stubborn[_tid] && _enabled[_tid]) {
+                return _tid++;
             }
             ++_tid;
         }
-        return std::numeric_limits<size_t>::max();
+        return std::numeric_limits<uint32_t>::max();
     }
 
     bool StubbornSet::checkPreset(uint32_t t) {
-        const TransPtr& ptr = transitions()[t];
+        const TransPtr &ptr = transitions()[t];
         uint32_t finv = ptr.inputs;
         uint32_t linv = ptr.outputs;
 
         for (; finv < linv; ++finv) {
-            const Invariant& inv = _net._invariants[finv];
+            const Invariant &inv = _net._invariants[finv];
             if (_parent->marking()[inv.place] < inv.tokens) {
                 if (!inv.inhibitor) {
                     return false;
@@ -106,15 +117,15 @@ namespace PetriEngine {
         }
     }
 
-    void StubbornSet::checkForInhibitor(){
-        _netContainsInhibitorArcs=false;
+    void StubbornSet::checkForInhibitor() {
+        _netContainsInhibitorArcs = false;
         for (uint32_t t = 0; t < _net._ntransitions; t++) {
-            const TransPtr& ptr = _net._transitions[t];
+            const TransPtr &ptr = _net._transitions[t];
             uint32_t finv = ptr.inputs;
             uint32_t linv = ptr.outputs;
             for (; finv < linv; finv++) { // Post set of places
                 if (_net._invariants[finv].inhibitor) {
-                    _netContainsInhibitorArcs=true;
+                    _netContainsInhibitorArcs = true;
                     return;
                 }
             }
@@ -122,16 +133,16 @@ namespace PetriEngine {
     }
 
     void StubbornSet::constructPrePost() {
-        std::vector<std::pair<std::vector<trans_t>, std::vector < trans_t>>> tmp_places(_net._nplaces);
+        std::vector<std::pair<std::vector<trans_t>, std::vector<trans_t>>> tmp_places(_net._nplaces);
 
         for (uint32_t t = 0; t < _net._ntransitions; t++) {
-            const TransPtr& ptr = _net._transitions[t];
+            const TransPtr &ptr = _net._transitions[t];
             uint32_t finv = ptr.inputs;
             uint32_t linv = ptr.outputs;
             for (; finv < linv; finv++) { // Post set of places
                 if (_net._invariants[finv].inhibitor) {
                     _inhibpost[_net._invariants[finv].place].push_back(t);
-                    _netContainsInhibitorArcs=true;
+                    _netContainsInhibitorArcs = true;
                 } else {
                     tmp_places[_net._invariants[finv].place].second.emplace_back(t, _net._invariants[finv].direction);
                 }
@@ -140,7 +151,7 @@ namespace PetriEngine {
             finv = linv;
             linv = _net._transitions[t + 1].inputs;
             for (; finv < linv; finv++) { // Pre set of places
-                if(_net._invariants[finv].direction > 0)
+                if (_net._invariants[finv].direction > 0)
                     tmp_places[_net._invariants[finv].place].first.emplace_back(t, _net._invariants[finv].direction);
             }
         }
@@ -156,8 +167,8 @@ namespace PetriEngine {
         uint32_t offset = 0;
         uint32_t p = 0;
         for (; p < _net._nplaces; ++p) {
-            auto& pre = tmp_places[p].first;
-            auto& post = tmp_places[p].second;
+            auto &pre = tmp_places[p].first;
+            auto &post = tmp_places[p].second;
 
             // keep things nice for caches
             std::sort(pre.begin(), pre.end());
@@ -189,7 +200,7 @@ namespace PetriEngine {
             uint32_t linv = _net._transitions[t].outputs;
 
             for (; finv < linv; finv++) {
-                const Invariant& inv = _net._invariants[finv];
+                const Invariant &inv = _net._invariants[finv];
                 uint32_t p = inv.place;
                 uint32_t ntrans = (_places.get()[p + 1].pre - _places.get()[p].post);
 
@@ -300,5 +311,6 @@ namespace PetriEngine {
     void StubbornSet::reset() {
         memset(_enabled.get(), false, sizeof(bool) * _net.numberOfTransitions());
         memset(_stubborn.get(), false, sizeof(bool) * _net.numberOfTransitions());
+        _tid = 0;
     }
 }

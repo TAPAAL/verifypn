@@ -25,6 +25,25 @@ namespace PetriEngine {
         _stubSet->reset();
     }
 
+
+    bool ReducingSuccessorGenerator::next(Structures::State &write) {
+        _current = _stubSet->next();
+        if (_current == std::numeric_limits<uint32_t>::max()) {
+            reset();
+            return false;
+        }
+        memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof(MarkVal));
+        consumePreset(write, _current);
+        producePostset(write, _current);
+        return true;
+    }
+
+    void ReducingSuccessorGenerator::prepare(const Structures::State *state) {
+        _parent = state;
+        _stubSet->prepare(state);
+    }
+
+
     /*void ReducingSuccessorGenerator::constructEnabled() {
         _ordering.clear();
         for (uint32_t p = 0; p < _net._nplaces; ++p) {
