@@ -19,12 +19,65 @@
 #include <memory>
 
 namespace PetriEngine {
-class SuccessorGenerator {
+    /**
+     * type holding sufficient information to resume successor generation for a state from a given point.
+     */
+    struct successor_info {
+        uint32_t pcounter;
+        uint32_t tcounter;
+        size_t buchi_state;
+        size_t last_state;
+
+        friend bool operator==(const successor_info &lhs, const successor_info &rhs) {
+            return lhs.pcounter == rhs.pcounter &&
+                   lhs.tcounter == rhs.tcounter &&
+                   lhs.buchi_state == rhs.buchi_state &&
+                   lhs.last_state == rhs.last_state;
+        }
+
+        friend bool operator!=(const successor_info &lhs, const successor_info &rhs) {
+            return !(rhs == lhs);
+        }
+
+        inline bool has_pcounter() const {
+            return pcounter != NoPCounter;
+        }
+
+        inline bool has_tcounter() const {
+            return tcounter != NoTCounter;
+        }
+
+        inline bool has_buchistate() const {
+            return buchi_state != NoBuchiState;
+        }
+
+        inline bool has_prev_state() const {
+            return last_state != NoLastState;
+        }
+
+        static constexpr auto NoPCounter = 0;
+        static constexpr auto NoTCounter = std::numeric_limits<uint32_t>::max();
+        static constexpr auto NoBuchiState = std::numeric_limits<size_t>::max();
+        static constexpr auto NoLastState = std::numeric_limits<size_t>::max();
+    };
+
+    constexpr successor_info initial_suc_info{
+            successor_info::NoPCounter,
+            successor_info::NoTCounter,
+            successor_info::NoBuchiState,
+            successor_info::NoLastState
+    };
+
+
+    class SuccessorGenerator {
 public:
     SuccessorGenerator(const PetriNet& net);
     SuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries);
+    SuccessorGenerator(const PetriNet& net, const std::shared_ptr<PQL::Condition> &query);
     virtual ~SuccessorGenerator();
     void prepare(const Structures::State* state);
+    void prepare(const Structures::State* state, const successor_info &sucinfo);
+    void getSuccInfo(successor_info &sucinfo);
     bool next(Structures::State& write);
     uint32_t fired()
     {

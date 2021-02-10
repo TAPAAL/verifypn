@@ -20,7 +20,8 @@
 namespace LTL::ProductPrinter {
     using trans = std::pair<size_t, size_t>;
     using State = LTL::Structures::ProductState;
-    void printProduct(ProductSuccessorGenerator &successorGenerator, std::ostream &os, const PetriEngine::PetriNet& net, Condition_ptr formula){
+    template<typename SuccessorGen>
+    void printProduct(ProductSuccessorGenerator<SuccessorGen> &successorGenerator, std::ostream &os, const PetriEngine::PetriNet& net, Condition_ptr formula){
         PetriEngine::Structures::StateSet states{net,0, (int)net.numberOfPlaces() + 1};
         PetriEngine::Structures::DFSQueue todo{&states};
         std::map<size_t, bool> discovered_states;

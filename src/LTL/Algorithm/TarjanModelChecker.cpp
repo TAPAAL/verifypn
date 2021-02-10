@@ -126,7 +126,7 @@ namespace LTL {
             cstack.back().lowsource = ctop;
         }
         chash[h] = ctop;
-        dstack.push(DEntry{ctop, initial_suc_info});
+        dstack.push(DEntry{ctop, PetriEngine::initial_suc_info});
         if (successorGenerator->isAccepting(state)) {
             astack.push(ctop);
         }

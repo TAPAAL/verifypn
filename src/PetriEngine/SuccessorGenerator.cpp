@@ -24,6 +24,11 @@ namespace PetriEngine {
     }
     SuccessorGenerator::SuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries) : SuccessorGenerator(net){}
 
+    SuccessorGenerator::SuccessorGenerator(const PetriNet &net, const std::shared_ptr<PQL::Condition> &query)
+                                           : SuccessorGenerator(net) {
+
+    }
+
     SuccessorGenerator::~SuccessorGenerator() {
     }
 
@@ -136,6 +141,18 @@ namespace PetriEngine {
             tindex = std::numeric_limits<uint32_t>::max();
         }
         return false;
+    }
+
+    void SuccessorGenerator::prepare(const Structures::State* state, const successor_info &sucinfo) {
+        prepare(state);
+        _suc_pcounter = sucinfo.pcounter;
+        _suc_tcounter = sucinfo.tcounter;
+
+    }
+
+    void SuccessorGenerator::getSuccInfo(successor_info &sucinfo) {
+        sucinfo.pcounter = _suc_pcounter;
+        sucinfo.tcounter = _suc_tcounter;
     }
 }
 

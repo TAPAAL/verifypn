@@ -50,6 +50,11 @@ namespace PetriEngine {
             }
         }
 
+        StubbornSet(const PetriEngine::PetriNet &net, const PQL::Condition_ptr &query)
+                : StubbornSet(net) {
+            _queries.push_back(query.get());
+        }
+
         virtual void prepare(const Structures::State *marking) = 0;
 
         uint32_t next();
@@ -62,7 +67,7 @@ namespace PetriEngine {
             return _parent->marking();
         }
 
-        uint32_t _current;
+        uint32_t _current = 0;
 
         void presetOf(uint32_t place, bool make_closure = false);
 
@@ -118,7 +123,7 @@ namespace PetriEngine {
 
         bool checkPreset(uint32_t t);
 
-        inline void addToStub(uint32_t t);
+        void addToStub(uint32_t t);
 
         void closure();
 

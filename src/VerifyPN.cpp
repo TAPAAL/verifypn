@@ -72,6 +72,7 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "LTL/LTL.h"
+#include "LTL/LTLMain.h"
 
 #include <atomic>
 
@@ -1169,29 +1170,7 @@ int main(int argc, char* argv[]) {
         }
 
         for (auto qid : ltl_ids) {
-            bool satisfied = false, weakskip = false;
-
-            auto[negated_formula, negate_answer] = LTL::to_ltl(queries[qid]);
-            std::unique_ptr<LTL::ModelChecker> modelChecker;
-            switch (options.ltlalgorithm) {
-                case LTL::Algorithm::NDFS:
-                    modelChecker = std::make_unique<LTL::NestedDepthFirstSearch>(*net, negated_formula, options.ltluseweak);
-                    break;
-                case LTL::Algorithm::RandomNDFS:
-                    modelChecker = std::make_unique<LTL::RandomNDFS>(*net, negated_formula);
-                case LTL::Algorithm::Tarjan:
-                    if (options.trace)
-                        modelChecker = std::make_unique<LTL::TarjanModelChecker<true>>(*net, negated_formula, options.ltluseweak);
-                    else
-                        modelChecker = std::make_unique<LTL::TarjanModelChecker<false>>(*net, negated_formula, options.ltluseweak);
-                    break;
-            }
-            satisfied = negate_answer ^ modelChecker->isSatisfied();
-            std::cout << "FORMULA " << querynames[qid] <<
-                      (satisfied ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT " <<
-                      LTL::to_string(options.ltlalgorithm) <<
-                      (modelChecker->isweak() ? " WEAK_SKIP" : "") <<
-                      (queries[qid]->isReachability(0) ? " REACHABILITY" : "") << std::endl;
+            LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
         }
     }
 

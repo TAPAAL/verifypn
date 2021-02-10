@@ -25,7 +25,8 @@
 #include "PetriEngine/PQL/Contexts.h"
 
 namespace LTL::ProductPrinter {
-    void printProduct(ProductSuccessorGenerator &successorGenerator, std::ostream &os, const PetriEngine::PetriNet &net,
+    template<typename SuccessorGen>
+    void printProduct(ProductSuccessorGenerator<SuccessorGen> &successorGenerator, std::ostream &os, const PetriEngine::PetriNet &net,
                       Condition_ptr formula);
 }
 #endif //VERIFYPN_PRODUCTPRINTER_H

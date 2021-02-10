@@ -18,11 +18,21 @@
 #ifndef VERIFYPN_STUBBORNTARJANMODELCHECKER_H
 #define VERIFYPN_STUBBORNTARJANMODELCHECKER_H
 
+#include "LTL/Stubborn/LTLStubbornSet.h"
 #include "LTL/Algorithm/ModelChecker.h"
 
 namespace LTL {
-    class StubbornTarjanModelChecker : public ModelChecker {
+    class StubbornTarjanModelChecker : public ModelChecker<PetriEngine::ReducingSuccessorGenerator> {
+    public:
+        StubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
+                : ModelChecker<PetriEngine::ReducingSuccessorGenerator>
+                          (net, query,
+                           PetriEngine::ReducingSuccessorGenerator{
+                                   net, std::make_shared<LTLStubbornSet>(net, query)}) {}
 
+        bool isSatisfied() override {
+            return false;
+        }
     };
 }
 

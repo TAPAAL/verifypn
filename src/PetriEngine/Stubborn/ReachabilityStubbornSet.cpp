@@ -21,6 +21,7 @@
 
 namespace PetriEngine {
     void ReachabilityStubbornSet::prepare(const Structures::State *state) {
+        reset();
         _parent = state;
         memset(_places_seen.get(), 0, _net.numberOfPlaces());
         constructEnabled();

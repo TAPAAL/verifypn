@@ -22,7 +22,7 @@ namespace PetriEngine {
 
     private:
         PetriEngine::StubbornSet &_stubborn;
-        bool negated;
+        bool negated = false;
 
         void negate() { negated = !negated; }
 

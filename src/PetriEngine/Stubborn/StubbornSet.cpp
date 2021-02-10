@@ -17,6 +17,8 @@
 
 
 #include <PetriEngine/Stubborn/InterestingTransitionVisitor.h>
+
+#include <memory>
 #include "PetriEngine/Stubborn/StubbornSet.h"
 #include "PetriEngine/PQL/Contexts.h"
 
@@ -24,7 +26,8 @@ namespace PetriEngine {
     uint32_t StubbornSet::next() {
         while (_tid < _net.numberOfTransitions()) {
             if (_stubborn[_tid] && _enabled[_tid]) {
-                return _tid++;
+                ++_tid;
+                return _tid-1;
             }
             ++_tid;
         }
@@ -158,12 +161,12 @@ namespace PetriEngine {
 
         // flatten
         size_t ntrans = 0;
-        for (auto p : tmp_places) {
+        for (const auto& p : tmp_places) {
             ntrans += p.first.size() + p.second.size();
         }
-        _transitions.reset(new trans_t[ntrans]);
+        _transitions = std::make_unique<trans_t[]>(ntrans);
 
-        _places.reset(new place_t[_net._nplaces + 1]);
+        _places = std::make_unique<place_t[]>(_net._nplaces + 1);
         uint32_t offset = 0;
         uint32_t p = 0;
         for (; p < _net._nplaces; ++p) {
@@ -311,6 +314,7 @@ namespace PetriEngine {
     void StubbornSet::reset() {
         memset(_enabled.get(), false, sizeof(bool) * _net.numberOfTransitions());
         memset(_stubborn.get(), false, sizeof(bool) * _net.numberOfTransitions());
+        _ordering.clear();
         _tid = 0;
     }
 }

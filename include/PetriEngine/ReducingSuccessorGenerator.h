@@ -15,9 +15,6 @@ namespace PetriEngine {
     public:
         ReducingSuccessorGenerator(const PetriNet &net, std::shared_ptr<StubbornSet> stubbornSet);
 
-        ReducingSuccessorGenerator(const PetriNet &net, std::vector<std::shared_ptr<PQL::Condition> > &queries,
-                                   std::shared_ptr<StubbornSet> stubbornSet);
-
         void reset();
 
         void setQuery(PQL::Condition *ptr) { _stubSet->setQuery(ptr); }
@@ -27,11 +24,12 @@ namespace PetriEngine {
         bool next(Structures::State &write);
 
         auto fired() const { return _current; }
+
     private:
         std::shared_ptr<StubbornSet> _stubSet;
         uint32_t _current;
 
-        std::vector<PQL::Condition *> _queries;
+        //std::vector<PQL::Condition *> _queries;
 
     };
 }

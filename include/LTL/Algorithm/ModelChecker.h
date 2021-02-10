@@ -23,15 +23,24 @@
 #include "LTL/Algorithm/ProductPrinter.h"
 
 namespace LTL {
+    template<typename SuccessorGen>
     class ModelChecker {
     public:
-        ModelChecker(const PetriEngine::PetriNet& net, PetriEngine::PQL::Condition_ptr, const bool shortcircuitweak);
+        ModelChecker(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &condition,
+                     const SuccessorGen &successorGen,
+                     bool shortcircuitweak = true)
+                : net(net), formula(condition), shortcircuitweak(shortcircuitweak) {
+            successorGenerator = std::make_unique<ProductSuccessorGenerator<SuccessorGen>>(net, condition, successorGen);
+        }
+
         virtual bool isSatisfied() = 0;
-        
+
         virtual ~ModelChecker() = default;
+
         [[nodiscard]] bool isweak() const { return is_weak; }
+
     protected:
-        std::unique_ptr<ProductSuccessorGenerator> successorGenerator;
+        std::unique_ptr<ProductSuccessorGenerator<SuccessorGen>> successorGenerator;
         const PetriEngine::PetriNet &net;
         PetriEngine::PQL::Condition_ptr formula;
 

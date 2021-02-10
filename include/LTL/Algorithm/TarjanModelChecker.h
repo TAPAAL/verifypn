@@ -22,6 +22,7 @@
 #include "LTL/Algorithm/ModelChecker.h"
 #include "LTL/Structures/ProductStateFactory.h"
 #include "PetriEngine/Structures/StateSet.h"
+#include "PetriEngine/SuccessorGenerator.h"
 
 #include <stack>
 #include <unordered_set>
@@ -29,10 +30,10 @@
 namespace LTL {
 
     template <bool SaveTrace>
-    class TarjanModelChecker : public ModelChecker {
+    class TarjanModelChecker : public ModelChecker<PetriEngine::SuccessorGenerator> {
     public:
-        TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond, const bool shortcircuitweak)
-                : ModelChecker(net, cond, shortcircuitweak), factory(net, successorGenerator->initial_buchi_state()),
+        TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond, const bool shortcircuitweak = true)
+                : ModelChecker(net, cond, PetriEngine::SuccessorGenerator{net, cond}, shortcircuitweak), factory(net, successorGenerator->initial_buchi_state()),
                   seen(net, 0, (int) net.numberOfPlaces() + 1) {
             chash.fill(std::numeric_limits<idx_t>::max());
         }
@@ -78,7 +79,7 @@ namespace LTL {
 
         struct DEntry {
             idx_t pos;
-            successor_info sucinfo;
+            PetriEngine::successor_info sucinfo;
         };
 
 

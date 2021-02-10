@@ -23,72 +23,59 @@
 #include "LTL/Structures/ProductState.h"
 #include "LTL/BuchiSuccessorGenerator.h"
 #include "LTL/LTLToBuchi.h"
+#include "LTL/Stubborn/LTLStubbornSet.h"
 
 
 namespace LTL {
-    /**
-     * type holding sufficient information to resume successor generation for a state from a given point.
-     */
-    struct successor_info {
-        uint32_t pcounter;
-        uint32_t tcounter;
-        size_t buchi_state;
-        size_t last_state;
 
-        friend bool operator==(const successor_info &lhs, const successor_info &rhs) {
-            return lhs.pcounter == rhs.pcounter &&
-                   lhs.tcounter == rhs.tcounter &&
-                   lhs.buchi_state == rhs.buchi_state &&
-                   lhs.last_state == rhs.last_state;
-        }
-
-        friend bool operator!=(const successor_info &lhs, const successor_info &rhs) {
-            return !(rhs == lhs);
-        }
-
-        inline bool has_pcounter() const {
-            return pcounter != NoPCounter;
-        }
-
-        inline bool has_tcounter() const {
-            return tcounter != NoTCounter;
-        }
-
-        inline bool has_buchistate() const {
-            return buchi_state != NoBuchiState;
-        }
-
-        inline bool has_prev_state() const {
-            return last_state != NoLastState;
-        }
-
-        static constexpr auto NoPCounter = 0;
-        static constexpr auto NoTCounter = std::numeric_limits<uint32_t>::max();
-        static constexpr auto NoBuchiState = std::numeric_limits<size_t>::max();
-        static constexpr auto NoLastState = std::numeric_limits<size_t>::max();
-    };
-
-    constexpr successor_info initial_suc_info{
-            successor_info::NoPCounter,
-            successor_info::NoTCounter,
-            successor_info::NoBuchiState,
-            successor_info::NoLastState
-    };
-
-    class ProductSuccessorGenerator : public PetriEngine::SuccessorGenerator {
+    template<class SuccessorGen>
+    class ProductSuccessorGenerator {
     public:
 
         ProductSuccessorGenerator(const PetriEngine::PetriNet &net,
-                                  const PetriEngine::PQL::Condition_ptr &cond)
-                : PetriEngine::SuccessorGenerator(net), buchi(makeBuchiAutomaton(cond)) {}
+                                  const PetriEngine::PQL::Condition_ptr &cond,
+                                  const SuccessorGen &successorGen)
+                : successorGenerator(successorGen), _net(net), buchi(makeBuchiAutomaton(cond)) {}
 
         [[nodiscard]] size_t initial_buchi_state() const { return buchi.initial_state_number(); };
 
-        void prepare(const LTL::Structures::ProductState *state);
+        void prepare(const LTL::Structures::ProductState *state) {
+            successorGenerator.prepare(state);
+            buchi.prepare(state->getBuchiState());
+            buchi_parent = state->getBuchiState();
+            fresh_marking = true;
+        }
 
-        bool next(LTL::Structures::ProductState &state);
+        bool next(LTL::Structures::ProductState &state) {
+            if (fresh_marking) {
+                fresh_marking = false;
+                if (!successorGenerator.next(state)) {
+                    // This is a fresh marking, so if there is no more successors for the state the state is deadlocked.
+                    // The semantics for deadlock is to just loop the marking so return true without changing the value of state.
+                    std::copy(successorGenerator.parent(), successorGenerator.parent() + state.buchi_state_idx + 1,
+                              state.marking());
+                }
+            }
+            if (next_buchi_succ(state)) {
+                return true;
+            }
+                // No valid transition in Büchi automaton for current marking;
+                // Try next marking(s) and see if we find a successor.
+            else {
+                while (successorGenerator.next(state)) {
+                    // reset buchi successors
+                    buchi.prepare(buchi_parent);
+                    if (next_buchi_succ(state)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
 
-        bool isAccepting(const LTL::Structures::ProductState &state);
+        bool isAccepting(const LTL::Structures::ProductState &state) {
+            return buchi.is_accepting(state.getBuchiState());
+        }
 
         void makeInitialState(std::vector<LTL::Structures::ProductState> &states) {
             auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces() + 1];
@@ -111,7 +98,24 @@ namespace LTL {
          * @param state the source state to generate successors from
          * @param sucinfo the point in the iteration to start from, as returned by `next`.
          */
-        void prepare(const LTL::Structures::ProductState *state, const successor_info &sucinfo);
+        void prepare(const LTL::Structures::ProductState *state, const PetriEngine::successor_info &sucinfo) {
+            successorGenerator.prepare(state, sucinfo);
+            buchi.prepare(state->getBuchiState());
+            buchi_parent = state->getBuchiState();
+            fresh_marking = sucinfo.pcounter == 0 && sucinfo.tcounter == std::numeric_limits<uint32_t>::max();
+            if (!fresh_marking) {
+                assert(sucinfo.buchi_state != std::numeric_limits<size_t>::max());
+                // spool Büchi successors until last state found.
+                // TODO is there perhaps a good way to avoid this, perhaps using raw edge vector?
+                // Caveat: it seems like there usually are not that many successors, so this is probably cheap regardless
+                size_t tmp;
+                while (buchi.next(tmp, cond)) {
+                    if (tmp == sucinfo.buchi_state) {
+                        break;
+                    }
+                }
+            }
+        }
 
         /**
          * compute the next successor from the last state that was sent to `prepare`.
@@ -120,23 +124,88 @@ namespace LTL {
          * @return `true` if a successor was successfully generated, `false` otherwise.
          * @warning do not use the same State for both prepare and next, this will cause wildly incorrect behaviour!
          */
-        bool next(Structures::ProductState &state, successor_info &sucinfo);
+        bool next(Structures::ProductState &state, PetriEngine::successor_info &sucinfo) {
+            if (fresh_marking) {
+                fresh_marking = false;
+                if (!successorGenerator.next(state)) {
+                    // This is a fresh marking, so if there are no more successors for the state the state is deadlocked.
+                    // The semantics for deadlock is to just loop the marking so return true without changing the value of state.
+                    std::copy(successorGenerator.parent(), successorGenerator.parent() + state.buchi_state_idx + 1,
+                              state.marking());
+                }
+            }
+            if (next_buchi_succ(state)) {
+                successorGenerator.getSuccInfo(sucinfo);
+                sucinfo.buchi_state = state.getBuchiState();
+                return true;
+            }
+                // No valid transition in Büchi automaton for current marking;
+                // Try next marking(s) and see if we find a successor.
+            else {
+                while (successorGenerator.next(state)) {
+                    // reset buchi successors
+                    buchi.prepare(buchi_parent);
+                    if (next_buchi_succ(state)) {
+                        successorGenerator.getSuccInfo(sucinfo);
+                        sucinfo.buchi_state = state.getBuchiState();
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
 
         [[nodiscard]] bool is_weak() const {
             return buchi.is_weak();
         }
 
+        size_t last_transition() { return successorGenerator.last_transition(); }
+
     private:
+        SuccessorGen successorGenerator;
+        const PetriEngine::PetriNet &_net;
+
         BuchiSuccessorGenerator buchi;
         bdd cond;
         size_t buchi_parent;
         bool fresh_marking = true;
 
-        bool guard_valid(const PetriEngine::Structures::State &state, bdd bdd);
+        bool guard_valid(const PetriEngine::Structures::State &state, bdd bdd) {
+            EvaluationContext ctx{state.marking(), &_net};
+            // IDs 0 and 1 are false and true atoms, respectively
+            while (bdd.id() > 1/*!(bdd == bddtrue || bdd == bddfalse)*/) {
+                // find variable to test, and test it
+                size_t var = bdd_var(bdd);
+                Condition::Result res = buchi.getExpression(var)->evaluate(ctx);
+                switch (res) {
+                    case Condition::RUNKNOWN:
+                        std::cerr << "Unexpected unknown answer from evaluating query!\n";
+                        assert(false);
+                        exit(1);
+                        break;
+                    case Condition::RFALSE:
+                        bdd = bdd_low(bdd);
+                        break;
+                    case Condition::RTRUE:
+                        bdd = bdd_high(bdd);
+                        break;
+                }
+            }
+            return bdd == bddtrue;
+        }
 
-        bool next_buchi_succ(LTL::Structures::ProductState &state);
+        bool next_buchi_succ(LTL::Structures::ProductState &state) {
+            size_t tmp;
+            while (buchi.next(tmp, cond)) {
+                if (guard_valid(state, cond)) {
+                    state.setBuchiState(tmp);
+                    return true;
+                }
+            }
+            return false;
+        }
     };
-
 }
 
 #endif //VERIFYPN_PRODUCTSUCCESSORGENERATOR_H

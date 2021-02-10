@@ -21,6 +21,7 @@
 #include "PetriEngine/Structures/State.h"
 
 namespace LTL {
+    template <class SuccessorGen>
     class ProductSuccessorGenerator;
 }
 namespace LTL::Structures {
@@ -67,6 +68,7 @@ namespace LTL::Structures {
             return !(rhs == *this);
         }
     private:
+        template <typename T>
         friend class LTL::ProductSuccessorGenerator;
         size_t buchi_state_idx;
     };

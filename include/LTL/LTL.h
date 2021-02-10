@@ -45,6 +45,7 @@ namespace LTL {
     }
 
     std::pair<Condition_ptr, bool> to_ltl(const Condition_ptr &formula);
+
 }
 
 #endif

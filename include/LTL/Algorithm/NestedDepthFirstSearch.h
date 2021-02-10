@@ -30,11 +30,11 @@
 using namespace PetriEngine;
 
 namespace LTL {
-    class NestedDepthFirstSearch : public ModelChecker {
+    class NestedDepthFirstSearch : public ModelChecker<PetriEngine::SuccessorGenerator> {
     public:
-        NestedDepthFirstSearch(const PetriNet &net, PetriEngine::PQL::Condition_ptr ptr, const bool shortcircuitweak)
-                : ModelChecker(net, ptr, shortcircuitweak), factory{net, successorGenerator->initial_buchi_state()},
-                states(net, 0, (int)net.numberOfPlaces() + 1) {}
+        NestedDepthFirstSearch(const PetriNet &net, const PetriEngine::PQL::Condition_ptr &query, const bool shortcircuitweak = true)
+                : ModelChecker(net, query, SuccessorGenerator{net, query}, shortcircuitweak), factory{net, successorGenerator->initial_buchi_state()},
+                  states(net, 0, (int)net.numberOfPlaces() + 1) {}
 
         bool isSatisfied() override;
 

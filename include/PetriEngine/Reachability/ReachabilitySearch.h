@@ -101,7 +101,7 @@ namespace PetriEngine {
         }
         template <>
         inline ReducingSuccessorGenerator _makeSucGen(PetriNet &net, std::vector<PQL::Condition_ptr> &queries) {
-            return ReducingSuccessorGenerator{net, queries, std::make_shared<ReachabilityStubbornSet>(net, queries)};
+            return ReducingSuccessorGenerator{net, std::make_shared<ReachabilityStubbornSet>(net, queries)};
         }
 
         template<typename Q, typename W, typename G>
