@@ -48,39 +48,39 @@ namespace LTL {
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<LessThanCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<UnfoldedFireableCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::FireableCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<FireableCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanOrEqualCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<LessThanOrEqualCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::GreaterThanCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<GreaterThanCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::GreaterThanOrEqualCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<GreaterThanOrEqualCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EqualCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<EqualCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotEqualCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<NotEqualCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const CompareConjunction *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<CompareConjunction>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::BooleanCondition *element) {

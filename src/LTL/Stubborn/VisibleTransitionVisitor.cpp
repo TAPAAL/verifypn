@@ -19,47 +19,59 @@
 
 namespace LTL {
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::NotCondition *element) {
-
+        (*element)[0]->visit(*this);
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::AndCondition *element) {
-
+        for (auto &cond : *element) {
+            cond->visit(*this);
+        }
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::OrCondition *element) {
-
+        for (auto &cond : *element) {
+            cond->visit(*this);
+        }
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::LessThanCondition *element) {
-
+        element->getExpr1()->visit(*this);
+        element->getExpr2()->visit(*this);
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::LessThanOrEqualCondition *element) {
-
+        element->getExpr1()->visit(*this);
+        element->getExpr2()->visit(*this);
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::GreaterThanCondition *element) {
-
+        element->getExpr1()->visit(*this);
+        element->getExpr2()->visit(*this);
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::GreaterThanOrEqualCondition *element) {
-
+        element->getExpr1()->visit(*this);
+        element->getExpr2()->visit(*this);
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::EqualCondition *element) {
-
+        element->getExpr1()->visit(*this);
+        element->getExpr2()->visit(*this);
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::NotEqualCondition *element) {
-
+        element->getExpr1()->visit(*this);
+        element->getExpr2()->visit(*this);
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::DeadlockCondition *element) {
-
+        // no-op
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::CompareConjunction *element) {
-
+        for (const auto &cons : *element) {
+            _places[cons._place] = true;
+        }
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::UnfoldedUpperBoundsCondition *element) {
@@ -67,7 +79,7 @@ namespace LTL {
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::UnfoldedIdentifierExpr *element) {
-
+        _places[element->offset()] = true;
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::LiteralExpr *element) {
@@ -75,18 +87,56 @@ namespace LTL {
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::PlusExpr *element) {
-
+        for (const auto &pid : element->places()) {
+            _places[pid.first] = true;
+        }
+        for (const auto &expr : element->expressions()) {
+            expr->visit(*this);
+        }
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::MultiplyExpr *element) {
-
+        for (const auto &pid : element->places()) {
+            _places[pid.first] = true;
+        }
+        for (const auto &expr : element->expressions()) {
+            expr->visit(*this);
+        }
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::MinusExpr *element) {
-
+        (*element)[0]->visit(*this);
     }
 
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::SubtractExpr *element) {
-
+        for (const auto &expr : element->expressions()) {
+            expr->visit(*this);
+        }
     }
+
+    void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::ACondition *condition) {
+        (*condition)[0]->visit(*this);
+    }
+
+    void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::ECondition *condition) {
+        (*condition)[0]->visit(*this);
+    }
+
+    void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::GCondition *condition) {
+        (*condition)[0]->visit(*this);
+    }
+
+    void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::FCondition *condition) {
+        (*condition)[0]->visit(*this);
+    }
+
+    void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::XCondition *condition) {
+        (*condition)[0]->visit(*this);
+    }
+
+    void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::UntilCondition *condition) {
+        condition->getCond1()->visit(*this);
+        condition->getCond2()->visit(*this);
+    }
+
 }

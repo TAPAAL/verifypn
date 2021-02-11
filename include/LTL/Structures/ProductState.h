@@ -62,7 +62,9 @@ namespace LTL::Structures {
                    getBuchiState() == rhs.getBuchiState();*/
         }
 
+
         size_t size() const { return buchi_state_idx + 1; }
+
 
         bool operator!=(const ProductState &rhs) const {
             return !(rhs == *this);

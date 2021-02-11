@@ -186,6 +186,8 @@ namespace LTL {
             seen.decode(state, delem.sucinfo.last_state);
         }
         auto res = successorGenerator->next(state, delem.sucinfo);
+        if (!res)
+            ++stats.expanded;
         return res;
     }
 

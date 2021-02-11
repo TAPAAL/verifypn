@@ -106,8 +106,7 @@ namespace LTL {
         APInfo ap_info;
         bool is_quoted = false;
 
-        void make_atomic_prop(const Condition_constptr &element) {
-            auto cond = const_cast<Condition *>(element.get())->shared_from_this();
+        void make_atomic_prop(const Condition_ptr &cond) {
             std::stringstream ss;
             ss << "\"";
             QueryPrinter _printer{ss};

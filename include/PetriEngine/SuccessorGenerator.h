@@ -77,9 +77,9 @@ public:
     virtual ~SuccessorGenerator();
     void prepare(const Structures::State* state);
     void prepare(const Structures::State* state, const successor_info &sucinfo);
-    void getSuccInfo(successor_info &sucinfo);
+    void getSuccInfo(successor_info &sucinfo) const;
     bool next(Structures::State& write);
-    uint32_t fired()
+    uint32_t fired() const
     {
         return _suc_tcounter -1;
     }

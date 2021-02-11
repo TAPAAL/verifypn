@@ -32,6 +32,21 @@ namespace LTL {
 
     }
 
+    uint32_t LTLStubbornSet::next() {
+        while (!_ordering.empty()) {
+            _current = _ordering.front();
+            _ordering.pop_front();
+            if (_stubborn[_current] && _enabled[_current]) {
+                return _current;
+            }
+            else {
+                _skipped.push_back(_current);
+            }
+        }
+        reset();
+        return std::numeric_limits<uint32_t>::max();
+    }
+
     void LTLStubbornSet::findKeyTransition() {
         // try to find invisible key transition first
         auto tkey = _ordering.front();
@@ -54,6 +69,7 @@ namespace LTL {
             auto inv = invariants()[finv];
             // TODO correct?
             presetOf(inv.place, true);
+            postsetOf(inv.place, false);
         }
     }
 
@@ -85,4 +101,30 @@ namespace LTL {
     void LTLStubbornSet::ensureRulesL() {
         static_assert(isRuleVPrime, "Plain rule V does not imply L1");
     }
+
+    void LTLStubbornSet::reset() {
+        StubbornSet::reset();
+        _skipped.clear();
+    }
+
+    void LTLStubbornSet::generateAll() {
+        // Ensure rule L2, forcing all visible transitions into the stubborn set when closing cycle.
+        for (uint32_t i = 0; i < _net.numberOfTransitions(); ++i) {
+            if (_visible[i]) {
+                addToStub(i);
+            }
+        }
+        // recompute entire set
+        closure();
+
+        // re-add previously non-stubborn, enabled transitions to order if they are now stubborn.
+        while (!_skipped.empty()) {
+            auto tid = _skipped.front();
+            if (_stubborn[tid])
+                _ordering.push_back(tid);
+            _skipped.pop_front();
+        }
+    }
+
+
 }

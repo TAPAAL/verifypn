@@ -19,7 +19,7 @@
 #define VERIFYPN_LTLSTUBBORNSET_H
 
 
-#include "PetriEngine/ReducingSuccessorGenerator.h"
+//#include "PetriEngine/ReducingSuccessorGenerator.h"
 #include "PetriEngine/Stubborn/StubbornSet.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/Stubborn/VisibleTransitionVisitor.h"
@@ -37,7 +37,7 @@ namespace LTL {
         }
 
         LTLStubbornSet(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &query)
-                : StubbornSet(net, query), _visible(new bool[net.numberOfTransitions()]) {
+                : StubbornSet(net, query), _visible(new bool[net.numberOfPlaces()]) {
             assert(!_netContainsInhibitorArcs);
             VisibleTransitionVisitor visible{_visible};
             query->visit(visible);
@@ -45,9 +45,14 @@ namespace LTL {
 
         void prepare(const PetriEngine::Structures::State *marking) override;
 
+        uint32_t next();
 
+        void reset();
+
+        void generateAll();
     private:
         std::unique_ptr<bool[]> _visible;
+        light_deque<uint32_t> _skipped;
         uint32_t _key;
 
         void findKeyTransition();

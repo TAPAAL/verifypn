@@ -19,6 +19,7 @@
 #define VERIFYPN_PRODUCTSUCCESSORGENERATOR_H
 
 #include "PetriEngine/SuccessorGenerator.h"
+#include "PetriEngine/ReducingSuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/Structures/ProductState.h"
 #include "LTL/BuchiSuccessorGenerator.h"
@@ -160,7 +161,15 @@ namespace LTL {
             return buchi.is_weak();
         }
 
-        size_t last_transition() { return successorGenerator.last_transition(); }
+        size_t last_transition() const { return successorGenerator.last_transition(); }
+
+        size_t fired() const { return successorGenerator.fired(); }
+
+        //template<typename T = std::enable_if_t<std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>, void>>
+        void generateAll() {
+            if constexpr (std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>)
+                successorGenerator.generateAll();
+        }
 
     private:
         SuccessorGen successorGenerator;
@@ -206,6 +215,9 @@ namespace LTL {
             return false;
         }
     };
+    extern template class ProductSuccessorGenerator<PetriEngine::SuccessorGenerator>;
+    extern template class ProductSuccessorGenerator<PetriEngine::ReducingSuccessorGenerator>;
 }
+
 
 #endif //VERIFYPN_PRODUCTSUCCESSORGENERATOR_H

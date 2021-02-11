@@ -32,15 +32,6 @@ namespace LTL {
         Algorithm algorithm = Algorithm::Tarjan;
     };
 
-    template<typename ModelChecker>
-    static bool verify(const PetriNet *net,
-                       const Condition_ptr &negatedQuery,
-                       Result &result) {
-        ModelChecker modelChecker{*net, negatedQuery};
-        result.satisfied = modelChecker.isSatisfied();
-        result.is_weak = modelChecker.isweak();
-    }
-
 /**
  * Converts a formula on the form A f, E f or f into just f, assuming f is an LTL formula.
  * In the case E f, not f is returned, and in this case the model checking result should be negated
@@ -68,11 +59,27 @@ namespace LTL {
         return std::make_pair(converted, should_negate);
     }
 
-    ReturnValue LTLMain(PetriNet *net,
+    template<typename Checker>
+    Result _verify(const PetriNet *net,
+                   Condition_ptr &negatedQuery,
+                   bool printstats) {
+        Result result;
+        auto modelChecker = std::make_unique<Checker>(*net, negatedQuery);
+        result.satisfied = modelChecker->isSatisfied();
+        result.is_weak = modelChecker->isweak();
+        if (printstats) {
+            modelChecker->printStats(std::cout);
+        }
+        return result;
+    }
+
+    ReturnValue LTLMain(const PetriNet *net,
                         const Condition_ptr &query,
                         const std::string &queryName,
                         const options_t &options) {
-        auto[negated_formula, negate_answer] = to_ltl(query);
+        auto res = to_ltl(query);
+        Condition_ptr negated_formula = res.first;
+        bool negate_answer = res.second;
 
         if (options.stubbornreduction && options.ltlalgorithm != Algorithm::Tarjan) {
             std::cerr << "Error: Stubborn reductions only supported for Tarjan's algorithm" << std::endl;
@@ -82,27 +89,31 @@ namespace LTL {
         Result result;
         switch (options.ltlalgorithm) {
             case Algorithm::NDFS:
-                verify<NestedDepthFirstSearch>(net, negated_formula, result);
+                result = _verify<NestedDepthFirstSearch>(net, negated_formula, options.printstatistics);
                 break;
             case Algorithm::RandomNDFS:
-                verify<RandomNDFS>(net, negated_formula, result);
+                result = _verify<RandomNDFS>(net, negated_formula, options.printstatistics);
                 break;
             case Algorithm::Tarjan:
-                if (options.stubbornreduction) {
-                    verify<StubbornTarjanModelChecker>(net, negated_formula, result);
+                if (options.stubbornreduction && !negated_formula->containsNext()) {
+                    std::cout << "Running stubborn version!" << std::endl;
+                    result = _verify<StubbornTarjanModelChecker>(net, negated_formula, options.printstatistics);
                 } else {
-                    verify<TarjanModelChecker<false>>(net, negated_formula, result);
+                    result = _verify<TarjanModelChecker<false>>(net, negated_formula, options.printstatistics);
                 }
                 break;
             case Algorithm::None:
                 assert(false);
                 std::cerr << "Error: cannot LTL verify with algorithm None";
         }
-        std::cout << "FORMULA " << queryName <<
-                  (result.satisfied ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT " <<
-                  LTL::to_string(options.ltlalgorithm) <<
-                  (result.is_weak ? " WEAK_SKIP" : "") <<
-                  /*(queries[qid]->isReachability(0) ? " REACHABILITY" : "") <<*/ std::endl;
+        std::cout << "FORMULA " << queryName
+                  << (result.satisfied ^ negate_answer ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT "
+                  << LTL::to_string(options.ltlalgorithm)
+                  << (result.is_weak ? " WEAK_SKIP" : "")
+                  << ((options.stubbornreduction && !negated_formula->containsNext()) ? " STUBBORN" : "")
+                  << std::endl;
+        /*(queries[qid]->isReachability(0) ? " REACHABILITY" : "") <<*/
 
+        return SuccessCode;
     }
 }

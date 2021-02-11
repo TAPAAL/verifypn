@@ -194,7 +194,7 @@ namespace PetriEngine {
         };
         
         /** Base condition */
-    class Condition : public std::enable_shared_from_this<Condition> {
+    class Condition {
         public:
             enum Result {RUNKNOWN=-1,RFALSE=0,RTRUE=1};
         private:

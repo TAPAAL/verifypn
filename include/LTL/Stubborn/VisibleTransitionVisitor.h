@@ -27,7 +27,7 @@ namespace LTL {
     class VisibleTransitionVisitor : public PetriEngine::PQL::Visitor {
     public:
         explicit VisibleTransitionVisitor(std::unique_ptr<bool[]> &visible)
-                : _visible(visible) {}
+                : _places(visible) {}
 
     protected:
         void _accept(const PetriEngine::PQL::NotCondition *element) override;
@@ -66,8 +66,20 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::SubtractExpr *element) override;
 
+        void _accept(const PetriEngine::PQL::ACondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::ECondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::GCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::FCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::XCondition *condition) override;
+
+        void _accept(const PetriEngine::PQL::UntilCondition *condition) override;
+
     private:
-        std::unique_ptr<bool[]> &_visible;
+        std::unique_ptr<bool[]> &_places;
     };
 }
 

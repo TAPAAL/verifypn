@@ -29,18 +29,23 @@
 
 namespace LTL {
 
-    template <bool SaveTrace>
+    template <bool SaveTrace = false>
     class TarjanModelChecker : public ModelChecker<PetriEngine::SuccessorGenerator> {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond, const bool shortcircuitweak = true)
-                : ModelChecker(net, cond, PetriEngine::SuccessorGenerator{net, cond}, shortcircuitweak), factory(net, successorGenerator->initial_buchi_state()),
+                : ModelChecker(net, cond, PetriEngine::SuccessorGenerator{net, cond}, shortcircuitweak),
+                factory(net, successorGenerator->initial_buchi_state()),
                   seen(net, 0, (int) net.numberOfPlaces() + 1) {
             chash.fill(std::numeric_limits<idx_t>::max());
         }
 
         bool isSatisfied() override;
 
-    private:
+        void printStats(ostream &os) override {
+            _printStats(os, seen);
+        }
+
+    protected:
         using State = LTL::Structures::ProductState;
         using idx_t = size_t;
         // 64 MB hash table
@@ -97,6 +102,7 @@ namespace LTL {
         bool nexttrans(State &state, State& parent, DEntry &delem);
 
         void popCStack();
+
     };
 extern template class TarjanModelChecker<true>;
 extern template class TarjanModelChecker<false>;

@@ -107,4 +107,12 @@ namespace LTL {
             }
         }
     }
+
+    void NestedDepthFirstSearch::printStats(ostream &os) {
+        std::cout << "STATS:\n"
+                  << "\tdiscovered states:          " << states.discovered() << std::endl
+                  << "\tmax tokens:                 " << states.maxTokens() << std::endl
+                  << "\texplored states:            " << mark1.size() << std::endl
+                  << "\texplored states (nested):   " << mark2.size() << std::endl;
+    }
 }

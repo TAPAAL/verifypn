@@ -38,6 +38,8 @@ namespace LTL {
 
         bool isSatisfied() override;
 
+        void printStats(ostream &os) override;
+
     private:
         using State = LTL::Structures::ProductState;
 

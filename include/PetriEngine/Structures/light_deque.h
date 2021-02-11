@@ -28,21 +28,23 @@ class light_deque
             _size = initial_size;
         }
         
-        void push_back(T& element)
+        void push_back(const T& element)
         {
             _data.get()[_back] = element;
             ++_back;
             if(_back == _size)
             {
-
-                unique_ptr<T[]> ndata(new T[_size*2]);
-                memcpy(ndata.get(), _data.get(), _size*sizeof(T));
-                _size *= 2;
-                _data.swap(ndata);
+                expand();
             }
-
         }
-        
+        void push_back(T&& element) {
+            _data.get()[_back] = element;
+            ++_back;
+            if(_back == _size) {
+                expand();
+            }
+        }
+
         bool empty()
         {
             return _front == _back;
@@ -70,6 +72,13 @@ class light_deque
         void clear()
         {
             _front = _back = 0;
+        }
+    private:
+        void expand() {
+            unique_ptr<T[]> ndata(new T[_size*2]);
+            memcpy(ndata.get(), _data.get(), _size*sizeof(T));
+            _size *= 2;
+            _data.swap(ndata);
         }
 };
 

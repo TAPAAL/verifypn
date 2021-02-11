@@ -150,7 +150,7 @@ namespace PetriEngine {
 
     }
 
-    void SuccessorGenerator::getSuccInfo(successor_info &sucinfo) {
+    void SuccessorGenerator::getSuccInfo(successor_info &sucinfo) const {
         sucinfo.pcounter = _suc_pcounter;
         sucinfo.tcounter = _suc_tcounter;
     }

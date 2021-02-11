@@ -24,13 +24,14 @@
 
 namespace PetriEngine {
     uint32_t StubbornSet::next() {
-        while (_tid < _net.numberOfTransitions()) {
-            if (_stubborn[_tid] && _enabled[_tid]) {
-                ++_tid;
-                return _tid-1;
+        while (!_ordering.empty()) {
+            _current = _ordering.front();
+            _ordering.pop_front();
+            if (_stubborn[_current] && _enabled[_current]) {
+                return _current;
             }
-            ++_tid;
         }
+        reset();
         return std::numeric_limits<uint32_t>::max();
     }
 

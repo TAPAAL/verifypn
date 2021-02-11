@@ -13,11 +13,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *//*
+ */
 
 
 #include "LTL/ProductSuccessorGenerator.h"
 
+/*
 namespace LTL {
     template<typename SuccessorGen>
     void ProductSuccessorGenerator<SuccessorGen>::prepare(const LTL::Structures::ProductState *state) {
@@ -155,3 +156,11 @@ namespace LTL {
 
 }
 */
+
+namespace LTL {
+    template
+    class ProductSuccessorGenerator<PetriEngine::SuccessorGenerator>;
+
+    template
+    class ProductSuccessorGenerator<PetriEngine::ReducingSuccessorGenerator>;
+}
