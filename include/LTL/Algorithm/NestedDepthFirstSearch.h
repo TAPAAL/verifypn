@@ -30,6 +30,7 @@
 using namespace PetriEngine;
 
 namespace LTL {
+    template <bool SaveTrace>
     class NestedDepthFirstSearch : public ModelChecker {
     public:
         NestedDepthFirstSearch(const PetriNet &net, PetriEngine::PQL::Condition_ptr ptr, const bool shortcircuitweak)
@@ -57,6 +58,7 @@ namespace LTL {
         void dfs();
 
         void ndfs(State &state);
+        void printStack(std::stack<StackEntry> &stack);
     };
 }
 
