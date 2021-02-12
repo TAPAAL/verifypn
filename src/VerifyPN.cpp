@@ -1195,9 +1195,11 @@ int main(int argc, char* argv[]) {
             switch (options.ltlalgorithm) {
                 case LTL::Algorithm::NDFS:
                     if (options.trace)
-                        modelChecker = std::make_unique<LTL::NestedDepthFirstSearch<true>>(*net, negated_formula, options.ltluseweak);
+                        modelChecker = std::make_unique<LTL::NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>
+                                (*net, negated_formula, options.ltluseweak);
                     else
-                        modelChecker = std::make_unique<LTL::NestedDepthFirstSearch<false>>(*net, negated_formula, options.ltluseweak);
+                        modelChecker = std::make_unique<LTL::NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>
+                                (*net, negated_formula, options.ltluseweak);
                     break;
                 case LTL::Algorithm::RandomNDFS:
                     modelChecker = std::make_unique<LTL::RandomNDFS>(*net, negated_formula);
