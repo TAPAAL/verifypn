@@ -104,36 +104,35 @@ namespace PetriEngine {
         void fillVarMaps(std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>> &variableMaps,
                                             Colored::ArcIntervals arcIntervals,
                                             uint32_t intervalTupleSize,
-                                            uint32_t tuplePos
-                                            )
-            {
-                for(uint32_t i = 0; i < intervalTupleSize; i++){
-                    std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t> localVarMap;
-                    bool validInterval = true;
-                    auto interval = &arcIntervals._intervalTupleVec[tuplePos]._intervals[i];
-                
-                    for(auto pair : arcIntervals._varIndexModMap){
-                        Colored::intervalTuple_t varIntervals;
-                        std::vector<Colored::ColorType*> varColorTypes;
-                        pair.first->colorType->getColortypes(varColorTypes);
-                        getArcVarIntervals(varIntervals, pair.second[tuplePos], interval, varColorTypes); 
+                                            uint32_t tuplePos)
+        {
+            for(uint32_t i = 0; i < intervalTupleSize; i++){
+                std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t> localVarMap;
+                bool validInterval = true;
+                auto interval = &arcIntervals._intervalTupleVec[tuplePos]._intervals[i];
+            
+                for(auto pair : arcIntervals._varIndexModMap){
+                    Colored::intervalTuple_t varIntervals;
+                    std::vector<Colored::ColorType*> varColorTypes;
+                    pair.first->colorType->getColortypes(varColorTypes);
+                    getArcVarIntervals(varIntervals, pair.second[tuplePos], interval, varColorTypes); 
 
-                        if(arcIntervals._intervalTupleVec.size() > 1 && pair.second[tuplePos].empty()){
-                            //The variable is not on this side of the add expression, so we add a full interval to compare against for the other side
-                            varIntervals.addInterval(pair.first->colorType->getFullInterval());
-                        } else if(varIntervals.size() < 1){
-                            //If any varinterval ends up empty then we were unable to use this arc interval
-                            validInterval = false;
-                            break;
-                        }
-                        localVarMap[pair.first] = varIntervals;
+                    if(arcIntervals._intervalTupleVec.size() > 1 && pair.second[tuplePos].empty()){
+                        //The variable is not on this side of the add expression, so we add a full interval to compare against for the other side
+                        varIntervals.addInterval(pair.first->colorType->getFullInterval());
+                    } else if(varIntervals.size() < 1){
+                        //If any varinterval ends up empty then we were unable to use this arc interval
+                        validInterval = false;
+                        break;
                     }
+                    localVarMap[pair.first] = varIntervals;
+                }
 
-                    if(validInterval){
-                        variableMaps.push_back(localVarMap);
-                    }                          
-                }  
-            }
+                if(validInterval){
+                    variableMaps.push_back(localVarMap);
+                }                          
+            }  
+        }
 
         bool getVarIntervals(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMaps, std::unordered_map<uint32_t, Colored::ArcIntervals> placeArcIntervals){
             for(auto& placeArcInterval : placeArcIntervals){            
@@ -142,8 +141,7 @@ namespace PetriEngine {
                     //If we have not found intervals for any place yet, we fill the intervals from this place
                     //Else we restrict the intervals we already found to only keep those that can also be matched in this place
                     if(variableMaps.empty()){                    
-                        
-                                            
+                        fillVarMaps(variableMaps, placeArcInterval.second, intervalTupleSize, j);                                            
                     } else {
                         std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>> newVarMapVec;
                         

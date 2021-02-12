@@ -150,15 +150,20 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::computePlaceColorFixpoint(uint32_t max_intervals, int32_t timeout) {
 
         auto start = std::chrono::high_resolution_clock::now();
-        auto reduceTimer = std::chrono::high_resolution_clock::now();;
         std::chrono::_V2::system_clock::time_point end = std::chrono::high_resolution_clock::now();
+        auto reduceTimer = std::chrono::high_resolution_clock::now();        
         while(!_placeFixpointQueue.empty()){
             uint32_t currentPlaceId = _placeFixpointQueue.back();
-
             if(timeout > 0 && std::chrono::duration_cast<std::chrono::seconds>(end - reduceTimer).count() >= timeout){
-                max_intervals = max_intervals/2;
-                if(max_intervals == 0){
+                switch (max_intervals)
+                {
+                case 0:
                     max_intervals = 250;
+                    break;
+                case 250:
+                default:
+                    max_intervals = 5;
+                    break;
                 }
                 reduceTimer = std::chrono::high_resolution_clock::now();
             }
