@@ -914,30 +914,13 @@ namespace PetriEngine {
         if(remove_loops)
         {
 
-            auto opt = relevant(placeInQuery, remove_consumers);
-            if (!opt) {
+            auto result = relevant(placeInQuery, remove_consumers);
+            if (!result) {
                 return false;
             }
-            auto[tseen, pseen] = opt.value();
+            auto[tseen, pseen] = result.value();
 
-            for(size_t t = 0; t < parent->numberOfTransitions(); ++t)
-            {
-                if(!tseen[t] && !parent->_transitions[t].skip)
-                {
-                    skipTransition(t);
-                    reduced = true;
-                }
-            }
-
-            for(size_t p = 0; p < parent->numberOfPlaces(); ++p)
-            {
-                if(!pseen[p] && !parent->_places[p].skip && placeInQuery[p] == 0)
-                {
-                    assert(placeInQuery[p] == 0);
-                    skipPlace(p);
-                    reduced = true;
-                }
-            }
+            reduced |= remove_irrelevant(placeInQuery, tseen, pseen);
             
             if(reduced)
                 ++_ruleI;
@@ -1492,9 +1475,14 @@ namespace PetriEngine {
             if (!tseen[t] && !transition.skip && !transition.inhib && transition.pre.size() == 1 &&
                 transition.post.size() == 1
                 && transition.pre[0].place == transition.post[0].place &&
-                transition.post[0].weight >= transition.pre[0].weight) {
+                transition.pre[0].weight == 1) {
                 auto p = transition.pre[0].place;
                 if (!pseen[p] && !parent->_places[p].inhib) {
+                    if (parent->initialMarking[p] >= transition.pre[0].weight){
+                        reduced |= remove_irrelevant(placeInQuery, tseen, pseen);
+                        _ruleK++;
+                        return reduced;
+                    }
                     for (auto t2 : parent->_places[p].consumers) {
                         auto transition2 = parent->_transitions[t2];
                         if (t != t2 && !tseen[t2] && !transition2.skip) {
@@ -1588,6 +1576,29 @@ namespace PetriEngine {
             }
         }
         return std::make_optional(std::pair(tseen, pseen));
+    }
+
+    bool Reducer::remove_irrelevant(const uint32_t* placeInQuery, const std::vector<bool> &tseen, const std::vector<bool> &pseen) {
+        bool reduced = false;
+        for(size_t t = 0; t < parent->numberOfTransitions(); ++t)
+        {
+            if(!tseen[t] && !parent->_transitions[t].skip)
+            {
+                skipTransition(t);
+                reduced = true;
+            }
+        }
+
+        for(size_t p = 0; p < parent->numberOfPlaces(); ++p)
+        {
+            if(!pseen[p] && !parent->_places[p].skip && placeInQuery[p] == 0)
+            {
+                assert(placeInQuery[p] == 0);
+                skipPlace(p);
+                reduced = true;
+            }
+        }
+        return reduced;
     }
 
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reduction) {

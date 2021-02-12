@@ -141,6 +141,7 @@ namespace PetriEngine {
         bool ReducebyRuleK(uint32_t* placeInQuery, bool remove_consumers);
 
         std::optional<std::pair<std::vector<bool>, std::vector<bool>>>relevant(const uint32_t* placeInQuery, bool remove_consumers);
+        bool remove_irrelevant(const uint32_t* placeInQuery, const std::vector<bool> &tseen, const std::vector<bool> &pseen);
 
         std::string getTransitionName(uint32_t transition);
         std::string getPlaceName(uint32_t place);
