@@ -46,6 +46,7 @@ namespace LTL {
                     pop();
                     continue;
                 }
+                ++stats.explored;
                 const idx_t stateid = seen.add(working).second;
                 dtop.sucinfo.last_state = stateid;
 

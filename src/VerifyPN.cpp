@@ -771,7 +771,12 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         out << "RWSTATS POST:";
         stats.print(out);
         out << std::endl;
+
+        out << "\nQuery after reduction: ";
+        cond->toString(out);
+        out << std::endl;
     }
+
     if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
         return cond;
     } else if (wasACond) {

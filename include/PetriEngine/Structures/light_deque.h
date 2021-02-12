@@ -27,7 +27,19 @@ class light_deque
             _data.reset(new T[initial_size]);
             _size = initial_size;
         }
-        
+
+        light_deque<T> &operator=(const light_deque<T> &other) {
+            _front = other._front;
+            _back = other._back;
+            _size = other.size();
+            _data.reset(new T[_size]);
+            memcpy(_data.get(), other._data.get(), _size * sizeof(T));
+            return *this;
+        }
+
+        light_deque(light_deque &&) noexcept = default;
+        light_deque &operator=(light_deque &&) noexcept = default;
+
         void push_back(const T& element)
         {
             _data.get()[_back] = element;
@@ -45,17 +57,17 @@ class light_deque
             }
         }
 
-        bool empty()
+        bool empty() const
         {
             return _front == _back;
         }
         
-        size_t size()
+        size_t size() const
         {
             return _back - _front;
         }
         
-        T front()
+        T front() const
         {
             return _data.get()[_front];
         }

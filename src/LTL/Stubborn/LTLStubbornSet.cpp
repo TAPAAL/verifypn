@@ -30,6 +30,20 @@ namespace LTL {
 
         ensureRulesL();
 
+#ifndef NDEBUG
+        std::vector<size_t> stubs;
+        for (auto i = 0; i < _net.numberOfTransitions(); ++i) {
+            if (_stubborn[i]) {
+                stubs.push_back(i);
+            }
+        }
+        if (stubs.empty()) return;
+        std::cerr << "Stubborn set is: \n  ";
+        for (auto i : stubs) {
+            std::cerr << _net.transitionNames()[i] << " ";
+        }
+        std::cerr << std::endl;
+#endif
     }
 
     uint32_t LTLStubbornSet::next() {

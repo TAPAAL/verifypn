@@ -25,7 +25,7 @@ namespace LTL {
         State working = factory.newState();
         State parent = factory.newState();
         for (auto &state : initial_states) {
-            const auto res = seen.add(state);
+            const auto res = seen.insertProductState(state);
             if (res.first) {
                 push(state);
             }
@@ -35,7 +35,7 @@ namespace LTL {
                     pop();
                     continue;
                 }
-                const idx_t stateid = seen.add(working).second;
+                const idx_t stateid = seen.insertProductState(working).second;
 
                 // lookup successor in 'hash' table
                 idx_t p = searchCStack(stateid);
@@ -67,7 +67,7 @@ namespace LTL {
      * @param state
      */
     void StubbornTarjanModelChecker::push(State &state) {
-        const auto res = seen.add(state);
+        const auto res = seen.insertProductState(state);
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(res.second);
         cstack.emplace_back(ctop, res.second, chash[h]);
@@ -87,7 +87,7 @@ namespace LTL {
             }
         } else if (is_weak) {
             State state = factory.newState();
-            seen.decode(state, cstack[p].stateid);
+            seen.retrieveProductState(state, cstack[p].stateid);
             if (!successorGenerator->isAccepting(state)) {
                 popCStack();
             }
@@ -123,8 +123,27 @@ namespace LTL {
             if (delem.expanded) {
                 return false;
             }
+            seen.retrieveProductState(parent, cstack[delem.pos].stateid);
             delem.expanded = true;
+            light_deque<size_t> successors;
             successorGenerator->prepare(&parent);
+            while (successorGenerator->next(state)) {
+                ++stats.explored;
+                auto res = seen.insertProductState(state);
+                // TODO search for repeat marking instead of repeat Büchi state.
+                if (searchCStack(res.second) != std::numeric_limits<idx_t>::max()) {
+                    successorGenerator->generateAll();
+                }
+                if (res.first) {
+                    successors.push_back(res.second);
+                }
+            }
+            delem.successors = successors;
+            if (!delem.successors.empty()) {
+                seen.retrieveProductState(state, delem.successors.front());
+                delem.successors.pop_front();
+            }
+            return true;
             idx_t lastgenerated = std::numeric_limits<idx_t>::max();
             while (true) {
                 if (successorGenerator->next(state)) {
@@ -132,7 +151,7 @@ namespace LTL {
                     if (lastgenerated != std::numeric_limits<idx_t>::max()) {
                         delem.successors.push_back(lastgenerated);
                     }
-                    auto res = seen.add(state);
+                    auto res = seen.insertProductState(state);
                     // don't explore previously visited states
                     if (res.first) lastgenerated = res.second;
                     auto p = searchCStack(res.second);
@@ -149,9 +168,8 @@ namespace LTL {
         } else {
             auto stateid = delem.successors.front();
             delem.successors.pop_front();
-            seen.decode(state, stateid);
+            seen.retrieveProductState(state, stateid);
             return true;
         }
-
     }
 }

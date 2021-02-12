@@ -21,6 +21,7 @@
 #include "LTL/Stubborn/LTLStubbornSet.h"
 #include "LTL/Algorithm/ModelChecker.h"
 #include "PetriEngine/Structures/light_deque.h"
+#include "LTL/Structures/ProductStateSet.h"
 
 namespace LTL {
     class StubbornTarjanModelChecker : public ModelChecker<PetriEngine::ReducingSuccessorGenerator> {
@@ -31,15 +32,20 @@ namespace LTL {
                            PetriEngine::ReducingSuccessorGenerator{
                                    net, std::make_shared<LTLStubbornSet>(net, query)}),
                   factory(net, successorGenerator->initial_buchi_state()),
-                  seen(net, 0, (int) net.numberOfPlaces() + 1) {
+                  seen(net, 0) {
             chash.fill(std::numeric_limits<idx_t>::max());
         }
 
         bool isSatisfied() override;
 
         void printStats(ostream &os) override {
-            _printStats(os, seen);
+            std::cout << "STATS:\n"
+                      << "\tdiscovered states: " << seen.size() << std::endl
+                      << "\texplored states:   " << stats.explored << std::endl
+                      << "\texpanded states:   " << stats.expanded << std::endl
+                      << "\tmax tokens:        " << seen.maxTokens() << std::endl;
         }
+
     private:
 
         using State = LTL::Structures::ProductState;
@@ -49,12 +55,16 @@ namespace LTL {
 
         LTL::Structures::ProductStateFactory factory;
 
-        PetriEngine::Structures::StateSet seen;
+        // TODO take number of Büchi states into account at construction time, perhaps implement pair-ID state set.
+        LTL::Structures::ProductStateSet<> seen;
         std::unordered_set<idx_t> store;
 
         std::array<idx_t, HashSz> chash;
 
         static inline idx_t hash(idx_t id) {
+            // Warning: Smarter hash function may violate cstack search for repeat markings
+            // unless the new hash also considers only the marking part of state ID.
+            // This should work since the marking ID is lower half of state ID.
             return id % HashSz;
         }
 
@@ -68,8 +78,8 @@ namespace LTL {
 
         struct DEntry {
             idx_t pos;
-            light_deque<idx_t> successors{64};
-            bool expanded=false;
+            light_deque<idx_t> successors{};
+            bool expanded = false;
         };
 
 
