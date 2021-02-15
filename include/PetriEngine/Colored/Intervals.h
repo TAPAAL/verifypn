@@ -4,6 +4,8 @@
 #include "../TAR/range.h"
 #include <set>
 #include <unordered_map>
+#include <chrono>
+
 
 namespace PetriEngine {
     namespace Colored {
@@ -606,23 +608,26 @@ namespace PetriEngine {
 
             
 
-            void restrict(uint32_t k){
+            void restrict(uint32_t k){              
                 simplify();
                 if(k == 0){
                     return;
                 }
                 
-                while (size() > k){                    
-                    closestIntervals closestInterval = getClosestIntervals();                                        
+                while (size() > k){ 
+                    closestIntervals closestInterval = getClosestIntervals();
                     auto interval = &_intervals[closestInterval.intervalId1]; 
                     auto otherInterval = &_intervals[closestInterval.intervalId2]; 
 
                     for(uint32_t l = 0; l < interval->size(); l++) {
                         interval->operator[](l) |= otherInterval->operator[](l);
                     }
+                    
                     _intervals.erase(_intervals.begin() + closestInterval.intervalId2);
                     
                 }
+
+                
                 simplify();
             }
 

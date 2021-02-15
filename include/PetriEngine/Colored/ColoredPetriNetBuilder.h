@@ -151,6 +151,8 @@ namespace PetriEngine {
         double _time;
         double _fixPointCreationTime;
 
+        double _timer;
+
         std::string arcToString(Colored::Arc& arc) const ;
 
         void printPlaceTable();

@@ -736,7 +736,7 @@ namespace PetriEngine {
                 }
                 Colored::guardRestrictor guardRestrictor;
 
-                guardRestrictor.restrictDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, true, true);
+                guardRestrictor.restrictDiagonal(variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, true, true);
             }
             
             std::string toString() const override {
@@ -785,7 +785,7 @@ namespace PetriEngine {
                 }
 
                 Colored::guardRestrictor guardRestrictor;
-                guardRestrictor.restrictDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, false, true);
+                guardRestrictor.restrictDiagonal(variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, false, true);
             }
 
             std::string toString() const override {
@@ -833,7 +833,7 @@ namespace PetriEngine {
                 }
 
                 Colored::guardRestrictor guardRestrictor;
-                guardRestrictor.restrictDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, true, false); 
+                guardRestrictor.restrictDiagonal(variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, true, false); 
             }
 
             std::string toString() const override {
@@ -882,7 +882,7 @@ namespace PetriEngine {
                 }
 
                 Colored::guardRestrictor guardRestrictor;
-                guardRestrictor.restrictDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR, false, false);                
+                guardRestrictor.restrictDiagonal(variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, false, false);                
             }
             
             std::string toString() const override {
@@ -931,7 +931,7 @@ namespace PetriEngine {
                 }
                 
                 Colored::guardRestrictor guardRestrictor;
-                guardRestrictor.restrictEquality(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, constantMapL, constantMapR);
+                guardRestrictor.restrictEquality(variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR);
             }
 
             std::string toString() const override {

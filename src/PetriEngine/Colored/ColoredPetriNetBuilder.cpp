@@ -166,6 +166,7 @@ namespace PetriEngine {
                     break;
                 }
                 reduceTimer = std::chrono::high_resolution_clock::now();
+                std::cout << "Changed max intervals to " << max_intervals << std::endl;
             }
             
             _placeFixpointQueue.pop_back();
@@ -197,7 +198,7 @@ namespace PetriEngine {
             _fixpointDone = true;
         }
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
-        
+        std::cout << "Timer took " << _timer << " seconds " << std::endl;
         // printPlaceTable();
         _placeColorFixpoints.clear();
     }
@@ -218,8 +219,12 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::getArcIntervals(Colored::Transition& transition, bool &transitionActivated, uint32_t max_intervals, uint32_t transitionId){
         for (auto arc : transition.input_arcs) {
-            PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];     
+            PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];   
+            
+  
             curCFP.constraints.restrict(max_intervals);
+
+            
 
             _maxIntervals = std::max(_maxIntervals, (uint32_t) curCFP.constraints.size());
            
@@ -236,14 +241,19 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals) {     
-        getArcIntervals(transition, transitionActivated, max_intervals, transitionId);
+        
+
+        getArcIntervals(transition, transitionActivated, max_intervals, transitionId);  
+
         if(!transitionActivated){
             return;
         }
-
-        if(intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId])){            
+        if(intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId])){              
             if(transition.guard != nullptr) {
-                transition.guard->restrictVars(transition.variableMaps);                
+                auto timerStart = std::chrono::high_resolution_clock::now();
+                transition.guard->restrictVars(transition.variableMaps); 
+                auto timerEnd = std::chrono::high_resolution_clock::now();
+                _timer += (std::chrono::duration_cast<std::chrono::microseconds>(timerEnd - timerStart).count())*0.000001;               
                 std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>> newVarmaps;
                 for(auto& varMap : transition.variableMaps){
                     bool validVarMap = true;      
