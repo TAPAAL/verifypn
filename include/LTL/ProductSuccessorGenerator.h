@@ -171,6 +171,10 @@ namespace LTL {
                 successorGenerator.generateAll();
         }
 
+#ifndef NDEBUG
+        size_t buchiStates() { return buchi.buchiStates(); }
+#endif
+
     private:
         SuccessorGen successorGenerator;
         const PetriEngine::PetriNet &_net;

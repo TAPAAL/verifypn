@@ -67,6 +67,8 @@ namespace LTL {
 
 
     };
+    template class ModelChecker<PetriEngine::SuccessorGenerator>;
+    template class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
 }
 
 #endif //VERIFYPN_MODELCHECKER_H

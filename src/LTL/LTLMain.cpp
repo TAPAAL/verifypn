@@ -97,7 +97,7 @@ namespace LTL {
             case Algorithm::Tarjan:
                 if (options.stubbornreduction && !negated_formula->containsNext()) {
                     std::cout << "Running stubborn version!" << std::endl;
-                    result = _verify<StubbornTarjanModelChecker>(net, negated_formula, options.printstatistics);
+                    result = _verify<StubbornTarjanModelChecker<ReducingSuccessorGenerator>>(net, negated_formula, options.printstatistics);
                 } else {
                     result = _verify<TarjanModelChecker<false>>(net, negated_formula, options.printstatistics);
                 }

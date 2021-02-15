@@ -51,7 +51,7 @@ namespace LTL::Structures {
         }
 
         bool operator==(const ProductState &rhs) const {
-            for (int i = 0; i <= buchi_state_idx; ++i) {
+            for (size_t i = 0; i <= buchi_state_idx; ++i) {
                 if (marking()[i] != rhs.marking()[i]) {
                     return false;
                 }

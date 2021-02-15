@@ -63,6 +63,9 @@ namespace LTL {
         [[nodiscard]] bool is_weak() const {
             return (bool) aut.buchi->prop_weak();
         }
+#ifndef NDEBUG
+        size_t buchiStates() { return aut.buchi->num_states(); }
+#endif
 
     private:
         Structures::BuchiAutomaton aut;

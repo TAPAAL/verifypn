@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_PRODUCTSTATESET_H
-#define VERIFYPN_PRODUCTSTATESET_H
+#ifndef VERIFYPN_BITPRODUCTSTATESET_H
+#define VERIFYPN_BITPRODUCTSTATESET_H
 
 #include "PetriEngine/Structures/StateSet.h"
 #include "LTL/Structures/ProductState.h"
@@ -30,7 +30,7 @@ namespace LTL::Structures {
  * @tparam nbits the number of bits to allocate for Büchi state. Defaults to 16-bit. Max is 32-bit.
  */
     template<uint8_t nbits = 16>
-    class ProductStateSet {
+    class BitProductStateSet {
     public:
         static_assert(nbits <= 32, "Only up to 2^32 Büchi states supported");
         using stateid_t = size_t;
@@ -45,7 +45,8 @@ namespace LTL::Structures {
 
         size_t getMarkingId(stateid_t id) { return id & markingMask; }
 
-        stateid_t getProductId(size_t markingId, size_t buchiState) {
+        stateid_t getProductId(size_t markingId, size_t buchiState)
+        {
             return (buchiState << buchiShift) | (markingMask & markingId);
         }
 
@@ -58,19 +59,28 @@ namespace LTL::Structures {
         std::unordered_set<stateid_t> states;
         static constexpr auto err_val = std::make_pair(false, std::numeric_limits<size_t>::max());
     public:
-        ProductStateSet(const PetriEngine::PetriNet &net, int kbound = 0)
-                : markings(net, kbound, net.numberOfPlaces()) {}
+        BitProductStateSet(const PetriEngine::PetriNet &net, int kbound = 0)
+                : markings(net, kbound, net.numberOfPlaces())
+        {
+#ifndef NDEBUG
+            std::cerr << "markingMask: " << markingMask << '\n';
+            std::cerr << "buchiMask:   " << buchiMask << std::endl;
+#endif
+        }
 
         /**
          * Insert a product state into the state set.
          * @param state the product state to insert.
          * @return pair of [success, ID]
          */
-        result_t insertProductState(const LTL::Structures::ProductState &state) {
+        result_t insertProductState(const LTL::Structures::ProductState &state)
+        {
             const auto[_, markingId] = markings.add(state);
             const stateid_t product_id = getProductId(markingId, state.getBuchiState());
 
             const auto[iter, is_new] = states.insert(product_id);
+            assert(iter != std::end(states));
+            return std::make_pair(is_new, product_id);
             if (is_new) {
                 return std::make_pair(true, product_id);
             } else {
@@ -84,7 +94,8 @@ namespace LTL::Structures {
          * @param state Output parameter to write product state to.
          * @return true if the state was successfully retrieved, false otherwise.
          */
-        bool retrieveProductState(LTL::Structures::ProductState &state, stateid_t id) {
+        bool retrieveProductState(LTL::Structures::ProductState &state, stateid_t id)
+        {
             const auto it = states.find(id);
             if (it == std::cend(states)) {
                 return false;
@@ -102,4 +113,4 @@ namespace LTL::Structures {
     };
 }
 
-#endif //VERIFYPN_PRODUCTSTATESET_H
+#endif //VERIFYPN_BITPRODUCTSTATESET_H

@@ -21,18 +21,21 @@
 #include "LTL/Stubborn/LTLStubbornSet.h"
 #include "LTL/Algorithm/ModelChecker.h"
 #include "PetriEngine/Structures/light_deque.h"
-#include "LTL/Structures/ProductStateSet.h"
+#include "LTL/Structures/BitProductStateSet.h"
 
 namespace LTL {
-    class StubbornTarjanModelChecker : public ModelChecker<PetriEngine::ReducingSuccessorGenerator> {
+    // template parameter for debugging purposes
+    template<typename SuccessorGen = PetriEngine::ReducingSuccessorGenerator>
+    class StubbornTarjanModelChecker : public ModelChecker<SuccessorGen> {
     public:
         StubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
-                : ModelChecker<PetriEngine::ReducingSuccessorGenerator>
+                : ModelChecker<SuccessorGen>
                           (net, query,
                            PetriEngine::ReducingSuccessorGenerator{
                                    net, std::make_shared<LTLStubbornSet>(net, query)}),
-                  factory(net, successorGenerator->initial_buchi_state()),
+                  factory(net, this->successorGenerator->initial_buchi_state()),
                   seen(net, 0) {
+            assert(this->successorGenerator->buchiStates() < 65535);
             chash.fill(std::numeric_limits<idx_t>::max());
         }
 
@@ -41,8 +44,8 @@ namespace LTL {
         void printStats(ostream &os) override {
             std::cout << "STATS:\n"
                       << "\tdiscovered states: " << seen.size() << std::endl
-                      << "\texplored states:   " << stats.explored << std::endl
-                      << "\texpanded states:   " << stats.expanded << std::endl
+                      << "\texplored states:   " << this->stats.explored << std::endl
+                      << "\texpanded states:   " << this->stats.expanded << std::endl
                       << "\tmax tokens:        " << seen.maxTokens() << std::endl;
         }
 
@@ -50,13 +53,13 @@ namespace LTL {
 
         using State = LTL::Structures::ProductState;
         using idx_t = size_t;
-        // 64 MB hash table
-        static constexpr idx_t HashSz = (1U << 28U);
+
+        static constexpr idx_t HashSz = (1U << 27U);
 
         LTL::Structures::ProductStateFactory factory;
 
         // TODO take number of Büchi states into account at construction time, perhaps implement pair-ID state set.
-        LTL::Structures::ProductStateSet<> seen;
+        LTL::Structures::BitProductStateSet<> seen;
         std::unordered_set<idx_t> store;
 
         std::array<idx_t, HashSz> chash;
@@ -88,7 +91,7 @@ namespace LTL {
         std::stack<idx_t> astack;
         bool violation = false;
 
-        void push(State &state);
+        void push(State &state, size_t stateid);
 
         void pop();
 
@@ -106,6 +109,8 @@ namespace LTL {
             return p;
         }
     };
+    template class StubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator>;
+    template class StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator>;
 }
 
 #endif //VERIFYPN_STUBBORNTARJANMODELCHECKER_H
