@@ -171,4 +171,8 @@ namespace LTL {
         }
         std::cerr << "\t</loop>" << std::endl << "</trace>" << std::endl;
     }
+
+
+    template class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
+    template class NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>;
 }

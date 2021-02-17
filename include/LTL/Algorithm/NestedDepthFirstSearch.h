@@ -66,8 +66,8 @@ namespace LTL {
         ostream & printTransition(size_t transition, uint indent, ostream &os = std::cerr);
 
     };
-    template class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
-    template class NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>;
+    extern template class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
+    extern template class NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>;
 }
 
 #endif //VERIFYPN_NESTEDDEPTHFIRSTSEARCH_H
