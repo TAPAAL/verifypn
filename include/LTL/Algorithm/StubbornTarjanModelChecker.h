@@ -35,7 +35,11 @@ namespace LTL {
                                    net, std::make_shared<LTLStubbornSet>(net, query)}),
                   factory(net, this->successorGenerator->initial_buchi_state()),
                   seen(net, 0) {
-            assert(this->successorGenerator->buchiStates() < 65535);
+            if (this->successorGenerator->buchiStates() > 65535) {
+                std::cout << "CANNOT_COMPUTE\n";
+                std::cout << "Too many Buchi states: " << this->successorGenerator->buchiStates() << std::endl;
+                exit(EXIT_FAILURE);
+            }
             chash.fill(std::numeric_limits<idx_t>::max());
         }
 
@@ -110,7 +114,7 @@ namespace LTL {
         }
     };
     template class StubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator>;
-    template class StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator>;
+    //template class StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator>;
 }
 
 #endif //VERIFYPN_STUBBORNTARJANMODELCHECKER_H

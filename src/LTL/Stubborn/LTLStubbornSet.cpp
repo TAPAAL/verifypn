@@ -30,7 +30,7 @@ namespace LTL {
 
         ensureRulesL();
 
-#ifndef NDEBUG
+/*#ifndef NDEBUG
         std::vector<size_t> stubs;
         for (auto i = 0; i < _net.numberOfTransitions(); ++i) {
             if (_stubborn[i]) {
@@ -43,7 +43,7 @@ namespace LTL {
             std::cerr << _net.transitionNames()[i] << " ";
         }
         std::cerr << std::endl;
-#endif
+#endif*/
     }
 
     uint32_t LTLStubbornSet::next() {
@@ -63,6 +63,7 @@ namespace LTL {
 
     void LTLStubbornSet::findKeyTransition() {
         // try to find invisible key transition first
+        assert(!_ordering.empty());
         auto tkey = _ordering.front();
         if (_visible[tkey]) {
             for (uint32_t tid = 0; tid < _net.numberOfTransitions(); ++tid) {
