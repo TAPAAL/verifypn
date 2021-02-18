@@ -18,14 +18,14 @@
 #include "LTL/Algorithm/NestedDepthFirstSearch.h"
 
 namespace LTL {
-    template <typename W>
+    template<typename W>
     bool NestedDepthFirstSearch<W>::isSatisfied() {
         is_weak = successorGenerator->is_weak() && shortcircuitweak;
         dfs();
         return !violation;
     }
 
-    template <typename W>
+    template<typename W>
     void NestedDepthFirstSearch<W>::dfs() {
         std::stack<size_t> call_stack;
         std::stack<StackEntry> todo;
@@ -89,7 +89,7 @@ namespace LTL {
         }
     }
 
-    template <typename W>
+    template<typename W>
     void NestedDepthFirstSearch<W>::ndfs(State &state) {
         std::stack<StackEntry> todo;
 
@@ -120,7 +120,7 @@ namespace LTL {
                         ptrie::uint trans = 0;
                         while (trans < std::numeric_limits<ptrie::uint>::max() - 1) {
                             auto[state, transition] = states.getHistory2(next);
-                            if (transition >= std::numeric_limits<ptrie::uint>::max() - 1){
+                            if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
                                 auto[_, transition] = states.getHistory(next);
                                 nested_transitions.push(transition);
                                 break;
@@ -162,12 +162,12 @@ namespace LTL {
     template<typename W>
     void NestedDepthFirstSearch<W>::printTrace(std::stack<size_t> &transitions) {
         std::cerr << "Trace:\n<trace>\n";
-        while(!transitions.empty()){
+        while (!transitions.empty()) {
             printTransition(transitions.top(), 1) << std::endl;
             transitions.pop();
         }
         std::cerr << "\t<loop>" << std::endl;
-        while(!nested_transitions.empty()){
+        while (!nested_transitions.empty()) {
             printTransition(nested_transitions.top(), 2) << std::endl;
             nested_transitions.pop();
         }
@@ -175,6 +175,9 @@ namespace LTL {
     }
 
 
-    template class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
-    template class NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>;
+    template
+    class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
+
+    template
+    class NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>;
 }

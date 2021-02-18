@@ -297,20 +297,18 @@ namespace PetriEngine {
                 return std::pair<size_t, size_t>(t.parent, t.transition);
             }
 
-            virtual void setHistory2(size_t id, size_t transition) override
-            {
-                traceable_t& t = _trie.get_data(id);
+            virtual void setHistory2(size_t id, size_t transition) override {
+                traceable_t &t = _trie.get_data(id);
                 t.parent2 = _parent;
                 t.transition2 = transition;
             }
 
-            virtual std::pair<size_t, size_t> getHistory2(size_t markingid) override
-            {
-                traceable_t& t = _trie.get_data(markingid);
+            virtual std::pair<size_t, size_t> getHistory2(size_t markingid) override {
+                traceable_t &t = _trie.get_data(markingid);
                 return std::pair<size_t, size_t>(t.parent2, t.transition2);
             }
 
-            void setParent(size_t id){
+            void setParent(size_t id) {
                 _parent = id;
             }
             
