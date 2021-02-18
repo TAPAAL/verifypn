@@ -11,57 +11,12 @@
 #include <vector>
 #include <unordered_map>
 
-#include "ColoredNetStructures.h"
-//#include "Patterns.h"
 #include "../AbstractPetriNetBuilder.h"
 #include "../PetriNetBuilder.h"
+#include "BindingGenerator.h"
+#include "IntervalGenerator.h"
 
 namespace PetriEngine {
-
-    typedef std::unordered_map<std::string, Colored::ColorType*> ColorTypeMap;
-    class BindingGenerator {
-    public:
-        class Iterator {
-        private:
-            BindingGenerator* _generator;
-                        
-        public:
-            Iterator(BindingGenerator* generator);
-            
-            bool operator==(Iterator& other);
-            bool operator!=(Iterator& other);
-            Iterator& operator++();
-            const Colored::ExpressionContext::BindingMap operator++(int);
-            Colored::ExpressionContext::BindingMap& operator*();
-        };
-    private:
-        Colored::GuardExpression_ptr _expr;
-        Colored::ExpressionContext::BindingMap _bindings;
-        ColorTypeMap& _colorTypes;
-        Colored::PatternSet _patterns;
-        Colored::Transition &_transition;
-        bool _isDone;
-        bool _noValidBindings;
-        
-        bool eval();
-        
-    public:
-        BindingGenerator(Colored::Transition& transition,
-                ColorTypeMap& colorTypes);
-
-        BindingGenerator(const BindingGenerator& ) = default;
-        
-        BindingGenerator operator= (const BindingGenerator& b) {
-            return BindingGenerator(b);
-        }
-
-        Colored::ExpressionContext::BindingMap& nextBinding();
-        Colored::ExpressionContext::BindingMap& currentBinding();
-        bool isInitial() const;
-        bool isFinal() const;
-        Iterator begin();
-        Iterator end();
-    };
 
     class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
     public:
@@ -120,6 +75,10 @@ namespace PetriEngine {
             return _places.size();
         }
 
+        uint32_t getMaxIntervals() const {
+            return _maxIntervals;
+        }
+
         uint32_t getTransitionCount() const {
             return _transitions.size();
         }
@@ -160,18 +119,21 @@ namespace PetriEngine {
         
         PetriNetBuilder& unfold();
         PetriNetBuilder& stripColors();
-        void computePlaceColorFixpoint();
+        void computePlaceColorFixpoint(uint32_t max_intervals, int32_t timeout);
         
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
         std::unordered_map<std::string,uint32_t> _transitionnames;
+        std::unordered_map<uint32_t, std::unordered_map<uint32_t, Colored::ArcIntervals>> _arcIntervals;
         std::unordered_map<uint32_t,std::vector<uint32_t>> _placePostTransitionMap;
-        std::unordered_map<uint32_t,BindingGenerator> _bindings;
+        std::unordered_map<uint32_t,FixpointBindingGenerator> _bindings;
         PTPlaceMap _ptplacenames;
         PTTransitionMap _pttransitionnames;
         uint32_t _nptplaces = 0;
         uint32_t _npttransitions = 0;
         uint32_t _nptarcs = 0;
+        uint32_t _maxIntervals = 0;
+        PetriEngine::IntervalGenerator intervalGenerator;
         
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
@@ -181,6 +143,7 @@ namespace PetriEngine {
         PetriNetBuilder _ptBuilder;
         bool _unfolded = false;
         bool _stripped = false;
+        bool _fixpointDone = false;
 
         std::vector<uint32_t> _placeFixpointQueue;
 
@@ -188,18 +151,22 @@ namespace PetriEngine {
         double _time;
         double _fixPointCreationTime;
 
+        double _timer;
+
         std::string arcToString(Colored::Arc& arc) const ;
 
         void printPlaceTable();
 
-        void setupTransitionVars();
+        std::unordered_map<uint32_t, Colored::ArcIntervals> setupTransitionVars(Colored::Transition transition);
         
         void addArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
                 bool input);
-       
-        void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, bool &transitionActivated);
+
+
+        void getArcIntervals(Colored::Transition& transition, bool &transitionActivated, uint32_t max_intervals, uint32_t transitionId);      
+        void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals);
         void processOutputArcs(Colored::Transition& transition);
         
         void unfoldPlace(Colored::Place& place);

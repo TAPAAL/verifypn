@@ -20,7 +20,6 @@
 #include "Colors.h"
 #include "Expressions.h"
 #include "Multiset.h"
-#include "../TAR/range.h"
 
 namespace PetriEngine {
     namespace Colored {
@@ -29,7 +28,6 @@ namespace PetriEngine {
             uint32_t place;
             uint32_t transition;
             ArcExpression_ptr expr;
-            bool activatable;
             bool input;
         };
         
@@ -38,7 +36,7 @@ namespace PetriEngine {
             GuardExpression_ptr guard;
             std::vector<Arc> input_arcs;
             std::vector<Arc> output_arcs;
-            std::unordered_map<std::string, Colored::VariableInterval> variableIntervals;
+            std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>> variableMaps;
             bool considered;
         };
         
