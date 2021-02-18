@@ -642,8 +642,18 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
             log <<  str;
         }
 
+        if(!options.output_stats.empty()){
+            std::ofstream log(generated_filename, std::ios_base::app | std::ios_base::out);
+            std::ostringstream strs;
+            strs << filename << "," << builder.getPlaceCount() << "," << builder.getTransitionCount() << "," << builder.getArcCount() << "," << builder.getUnfoldedPlaceCount() << "," << builder.getUnfoldedTransitionCount() << "," << builder.getUnfoldedArcCount() << "," << builder.getUnfoldTime() << "," << builder.getFixpointTime() << "\n";
+            std::string str = strs.str();
+            log <<  str;
+        }
+
     //}
 }
+
+
 
 std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
     bool cont = false;    
