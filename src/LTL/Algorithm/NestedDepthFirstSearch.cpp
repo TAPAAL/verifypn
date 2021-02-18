@@ -61,10 +61,12 @@ namespace LTL {
                         if constexpr (std::is_same_v<W, PetriEngine::Structures::TracableStateSet>) {
                             std::stack<size_t> transitions;
                             size_t next = top.id;
-                            while (next != 0) {
+                            states.decode(working, next);
+                            while (!successorGenerator->isInitialState(working)) {
                                 auto[parent, transition] = states.getHistory(next);
                                 next = parent;
                                 transitions.push(transition);
+                                states.decode(working, next);
                             }
                             printTrace(transitions);
                         }
