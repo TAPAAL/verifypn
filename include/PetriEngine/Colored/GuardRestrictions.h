@@ -12,9 +12,9 @@ namespace PetriEngine {
 
         struct guardRestrictor {
 
-            int32_t getVarModifier(std::unordered_map<uint32_t, int32_t> modPairMap, uint32_t index){
+            int32_t getVarModifier(std::unordered_map<uint32_t, int32_t> *modPairMap, uint32_t index){
                 int32_t modifier;
-                for(auto idModPair : modPairMap){
+                for(auto idModPair : *modPairMap){
                     if(idModPair.first == index){
                         modifier = idModPair.second;
                         break;
@@ -23,9 +23,9 @@ namespace PetriEngine {
                 return modifier;
             }
 
-            Colored::interval_t getIntervalFromIds(std::vector<uint32_t> idVec, uint32_t ctSize, int32_t modifier){
+            Colored::interval_t getIntervalFromIds(std::vector<uint32_t> *idVec, uint32_t ctSize, int32_t modifier){
                 Colored::interval_t interval;
-                for(auto id : idVec){          
+                for(auto id : *idVec){          
                     int32_t val = ctSize + (id + modifier);
                     auto colorVal = val % ctSize;                  
                     interval.addRange(colorVal,colorVal);
@@ -33,10 +33,10 @@ namespace PetriEngine {
                 return interval; 
             }
 
-            Colored::intervalTuple_t getIntervalOverlap(std::vector<Colored::interval_t> intervals1, std::vector<Colored::interval_t> intervals2){
+            Colored::intervalTuple_t getIntervalOverlap(std::vector<Colored::interval_t> *intervals1, std::vector<Colored::interval_t> *intervals2){
                 Colored::intervalTuple_t newIntervalTuple;
-                for(auto mainInterval : intervals1){
-                    for(auto otherInterval : intervals2){
+                for(auto mainInterval : *intervals1){
+                    for(auto otherInterval : *intervals2){
                         auto intervalOverlap = otherInterval.getOverlap(mainInterval);
 
                         if(intervalOverlap.isSound()){
@@ -57,14 +57,14 @@ namespace PetriEngine {
                 while(idVec.size() < targetSize){
                     if(varPositions->count(index)){
                         auto rightTupleInterval = &varMap->operator[](varPositions->operator[](index));
-                        int32_t rightVarMod = getVarModifier(mainVarModifierMap->operator[](varPositions->operator[](index)).back(), index);
+                        int32_t rightVarMod = getVarModifier(&mainVarModifierMap->operator[](varPositions->operator[](index)).back(), index);
                         auto ids = rightTupleInterval->getUpperIds(-rightVarMod, varPositions->operator[](index)->colorType->getConstituentsSizes());
                         idVec.insert(idVec.end(), ids.begin(), ids.end());
                         index += varPositions->operator[](index)->colorType->productSize();
                     } else {
                         auto oldSize = idVec.size();
                         constantMap->operator[](index)->getTupleId(&idVec); 
-                        int32_t leftVarMod = getVarModifier(otherVarModifierMap->operator[](otherVar).back(), index);
+                        int32_t leftVarMod = getVarModifier(&otherVarModifierMap->operator[](otherVar).back(), index);
 
                         for(auto& id : idVec){
                             id = (otherVar->colorType->size()+(id + leftVarMod)) % otherVar->colorType->size();
@@ -85,14 +85,14 @@ namespace PetriEngine {
                 while(intervalVec.size() < targetSize){
                     if(varPositions->count(index)){
                         auto rightTupleInterval = varMap[varPositions->operator[](index)];
-                        int32_t rightVarMod = getVarModifier(mainVarModifierMap->operator[](varPositions->operator[](index)).back(), index);
+                        int32_t rightVarMod = getVarModifier(&mainVarModifierMap->operator[](varPositions->operator[](index)).back(), index);
                         rightTupleInterval.applyModifier(-rightVarMod, varPositions->operator[](index)->colorType->getConstituentsSizes());
                         intervalVec.insert(intervalVec.end(), rightTupleInterval._intervals.begin(), rightTupleInterval._intervals.end());
                         index += varPositions->operator[](index)->colorType->productSize();
                     } else {
                         std::vector<uint32_t> colorIdVec;
                         constantMap->operator[](index)->getTupleId(&colorIdVec);
-                        int32_t leftVarModifier = getVarModifier(otherVarModifierMap->operator[](otherVar).back(), index);
+                        int32_t leftVarModifier = getVarModifier(&otherVarModifierMap->operator[](otherVar).back(), index);
 
                         for(auto id : colorIdVec){
                             for(auto& interval : intervalVec){
@@ -127,8 +127,8 @@ namespace PetriEngine {
                             }
                             auto leftTupleInterval = &varMap[varPositionPair.second];
                             auto rightTupleInterval = &varMap[varPositionsR->operator[](index)];
-                            int32_t leftVarModifier = getVarModifier(varModifierMapL->operator[](varPositionPair.second).back(), index);
-                            int32_t rightVarModifier = getVarModifier(varModifierMapR->operator[](varPositionsR->operator[](index)).back(), index);
+                            int32_t leftVarModifier = getVarModifier(&varModifierMapL->operator[](varPositionPair.second).back(), index);
+                            int32_t rightVarModifier = getVarModifier(&varModifierMapR->operator[](varPositionsR->operator[](index)).back(), index);
 
                             auto leftIds = leftTupleInterval->getLowerIds(-leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
                             auto rightIds = rightTupleInterval->getUpperIds(-rightVarModifier, varPositionsR->operator[](index)->colorType->getConstituentsSizes());
@@ -225,14 +225,14 @@ namespace PetriEngine {
                             auto rightTupleIntervalVal = varMap[varPositionsR->operator[](index)];
                             auto leftTupleInterval = &varMap[varPositionPair.second];
                             auto rightTupleInterval = &varMap[varPositionsR->operator[](index)];
-                            int32_t leftVarModifier = getVarModifier(varModifierMapL->operator[](varPositionPair.second).back(), index);
-                            int32_t rightVarModifier = getVarModifier(varModifierMapR->operator[](varPositionsR->operator[](index)).back(), index);
+                            int32_t leftVarModifier = getVarModifier(&varModifierMapL->operator[](varPositionPair.second).back(), index);
+                            int32_t rightVarModifier = getVarModifier(&varModifierMapR->operator[](varPositionsR->operator[](index)).back(), index);
 
                             leftTupleIntervalVal.applyModifier(-leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
                             rightTupleIntervalVal.applyModifier(-rightVarModifier, varPositionsR->operator[](index)->colorType->getConstituentsSizes());
                             //comparing vars of same size
                             if(varPositionPair.second->colorType->productSize() == varPositionsR->operator[](index)->colorType->productSize()){
-                                Colored::intervalTuple_t newIntervalTuple = getIntervalOverlap(leftTupleIntervalVal._intervals, rightTupleIntervalVal._intervals);
+                                Colored::intervalTuple_t newIntervalTuple = getIntervalOverlap(&leftTupleIntervalVal._intervals, &rightTupleIntervalVal._intervals);
                             
                                 *leftTupleInterval = newIntervalTuple;
                                 *rightTupleInterval = newIntervalTuple;
@@ -244,8 +244,8 @@ namespace PetriEngine {
 
                                 expandIntervalVec(varMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR, varPositionPair.second, intervalVec, leftTupleInterval->tupleSize(), index + varPositionsR->operator[](index)->colorType->productSize());
 
-                                Colored::intervalTuple_t newIntervalTupleR = getIntervalOverlap(rightTupleIntervalVal._intervals, resizedLeftIntervals);
-                                Colored::intervalTuple_t newIntervalTupleL = getIntervalOverlap(leftTupleIntervalVal._intervals, intervalVec);
+                                Colored::intervalTuple_t newIntervalTupleR = getIntervalOverlap(&rightTupleIntervalVal._intervals, &resizedLeftIntervals);
+                                Colored::intervalTuple_t newIntervalTupleL = getIntervalOverlap(&leftTupleIntervalVal._intervals, &intervalVec);
 
                                 newIntervalTupleL.applyModifier(leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
                                 newIntervalTupleR.applyModifier(rightVarModifier, varPositionsR->operator[](index)->colorType->getConstituentsSizes());
@@ -258,8 +258,8 @@ namespace PetriEngine {
 
                                 expandIntervalVec(varMap, varModifierMapR, varModifierMapL, varPositionsL, constantMapL, varPositionsR->operator[](index), intervalVec, rightTupleInterval->tupleSize(), index + varPositionsL->operator[](index)->colorType->productSize());
 
-                                Colored::intervalTuple_t newIntervalTupleL = getIntervalOverlap(leftTupleIntervalVal._intervals, resizedRightIntervals);
-                                Colored::intervalTuple_t newIntervalTupleR = getIntervalOverlap(rightTupleIntervalVal._intervals, intervalVec);
+                                Colored::intervalTuple_t newIntervalTupleL = getIntervalOverlap(&leftTupleIntervalVal._intervals, &resizedRightIntervals);
+                                Colored::intervalTuple_t newIntervalTupleR = getIntervalOverlap(&rightTupleIntervalVal._intervals, &intervalVec);
 
                                 newIntervalTupleL.applyModifier(leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
                                 newIntervalTupleR.applyModifier(rightVarModifier, varPositionsR->operator[](index)->colorType->getConstituentsSizes());
@@ -272,14 +272,14 @@ namespace PetriEngine {
                             auto leftTupleInterval = &varMap[varPositionPair.second];
                             std::vector<uint32_t> idVec;
                             rightColor->getTupleId(&idVec);
-                            int32_t leftVarModifier = getVarModifier(varModifierMapL->operator[](varPositionPair.second).back(), index);
+                            int32_t leftVarModifier = getVarModifier(&varModifierMapL->operator[](varPositionPair.second).back(), index);
 
                             std::vector<Colored::interval_t> intervals;
-                            intervals.push_back(getIntervalFromIds(idVec, varPositionPair.second->colorType->size(), leftVarModifier));
+                            intervals.push_back(getIntervalFromIds(&idVec, varPositionPair.second->colorType->size(), leftVarModifier));
 
                             expandIntervalVec(varMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR, varPositionPair.second, intervals, leftTupleInterval->tupleSize(), index + idVec.size());
 
-                            Colored::intervalTuple_t newIntervalTupleL = getIntervalOverlap(leftTupleInterval->_intervals, intervals);
+                            Colored::intervalTuple_t newIntervalTupleL = getIntervalOverlap(&leftTupleInterval->_intervals, &intervals);
                             *leftTupleInterval = newIntervalTupleL;
                         }
                     }
@@ -292,18 +292,80 @@ namespace PetriEngine {
                             auto rightTupleInterval = &varMap[varPositionPair.second];
                             std::vector<uint32_t> idVec;
                             leftColor->getTupleId(&idVec);
-                            int32_t rightVarModifier = getVarModifier(varModifierMapR->operator[](varPositionPair.second).back(), index);
+                            int32_t rightVarModifier = getVarModifier(&varModifierMapR->operator[](varPositionPair.second).back(), index);
 
                             std::vector<Colored::interval_t> intervals;
-                            intervals.push_back(getIntervalFromIds(idVec, varPositionPair.second->colorType->size(), rightVarModifier));
+                            intervals.push_back(getIntervalFromIds(&idVec, varPositionPair.second->colorType->size(), rightVarModifier));
 
                             expandIntervalVec(varMap, varModifierMapR, varModifierMapL, varPositionsL, constantMapL, varPositionsR->operator[](index), intervals, rightTupleInterval->tupleSize(), index + idVec.size());
 
-                            Colored::intervalTuple_t newIntervalTupleR = getIntervalOverlap(rightTupleInterval->_intervals, intervals);
+                            Colored::intervalTuple_t newIntervalTupleR = getIntervalOverlap(&rightTupleInterval->_intervals, &intervals);
                             *rightTupleInterval = newIntervalTupleR;
                         }
                     }
                 }
+            }
+
+            Colored::intervalTuple_t shiftIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>& varMap, std::vector<const Colored::ColorType *> *colortypes, PetriEngine::Colored::intervalTuple_t *intervals, int32_t modifier, uint32_t ctSizeBefore) const {
+                Colored::intervalTuple_t newIntervals;
+
+                for(uint32_t i = 0;  i < intervals->size(); i++) {
+                    Colored::interval_t newInterval;
+                    std::vector<Colored::interval_t> tempIntervals;
+                    auto interval = &intervals->operator[](i);
+                    for(uint32_t j = 0; j < interval->_ranges.size(); j++) {
+                        auto& range = interval->operator[](j);
+                        size_t ctSize = colortypes->operator[](j+ ctSizeBefore)->size();
+                        
+                        auto shiftedInterval = newIntervals.shiftInterval(range._lower, range._upper, ctSize, modifier);
+                        range._lower = shiftedInterval.first;
+                        range._upper = shiftedInterval.second;
+
+
+                        if(range._upper+1 == range._lower){
+                            if(tempIntervals.empty()){
+                                newInterval.addRange(0, ctSize-1);
+                                tempIntervals.push_back(newInterval);
+                            } else {
+                                for (auto& tempInterval : tempIntervals){ 
+                                    tempInterval.addRange(0, ctSize-1);
+                                }
+                            }
+                        } else if(range._upper < range._lower ){
+                            
+                            if(tempIntervals.empty()){
+                                auto intervalCopy = newInterval;
+                                newInterval.addRange(range._lower, ctSize-1);
+                                intervalCopy.addRange(0,range._upper);
+                                tempIntervals.push_back(newInterval);
+                                tempIntervals.push_back(intervalCopy);
+                            } else {
+                                std::vector<Colored::interval_t> newTempIntervals;
+                                for(auto tempInterval : tempIntervals){
+                                    auto intervalCopy = tempInterval;
+                                    tempInterval.addRange(range._lower, ctSize-1);
+                                    intervalCopy.addRange(0,range._upper);
+                                    newTempIntervals.push_back(intervalCopy);
+                                    newTempIntervals.push_back(tempInterval);
+                                }
+                                tempIntervals = newTempIntervals;
+                            }                            
+                        } else {
+                            if(tempIntervals.empty()){
+                                newInterval.addRange(range);
+                                tempIntervals.push_back(newInterval);
+                            } else {
+                                for (auto& tempInterval : tempIntervals){ 
+                                    tempInterval.addRange(range);
+                                }
+                            }
+                        }
+                    }
+                    for(auto tempInterval : tempIntervals){
+                        newIntervals.addInterval(tempInterval);
+                    }                   
+                }
+                return newIntervals;
             }
         };        
     }

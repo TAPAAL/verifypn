@@ -248,12 +248,14 @@ namespace PetriEngine {
         if(!transitionActivated){
             return;
         }
+        auto timerStart = std::chrono::high_resolution_clock::now();
         if(intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId])){              
+            auto timerEnd = std::chrono::high_resolution_clock::now();
+            _timer += (std::chrono::duration_cast<std::chrono::microseconds>(timerEnd - timerStart).count())*0.000001;
             if(transition.guard != nullptr) {
-                auto timerStart = std::chrono::high_resolution_clock::now();
+                
                 transition.guard->restrictVars(transition.variableMaps); 
-                auto timerEnd = std::chrono::high_resolution_clock::now();
-                _timer += (std::chrono::duration_cast<std::chrono::microseconds>(timerEnd - timerStart).count())*0.000001;               
+                               
                 std::vector<std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>> newVarmaps;
                 for(auto& varMap : transition.variableMaps){
                     bool validVarMap = true;      
@@ -278,6 +280,8 @@ namespace PetriEngine {
                 }
             }
         } else {
+            auto timerEnd = std::chrono::high_resolution_clock::now();
+            _timer += (std::chrono::duration_cast<std::chrono::microseconds>(timerEnd - timerStart).count())*0.000001;
             std::cout << "getting var intervals failed " << std::endl;
             transitionActivated = false;
         }                                            

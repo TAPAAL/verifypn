@@ -102,9 +102,11 @@ namespace PetriEngine {
             DotConstant();
             
         public:
-            static const Color* dotConstant() {
+            static const Color* dotConstant(ColorType *ct) {
                 static DotConstant _instance;
-                
+                if(ct != nullptr){
+                    _instance._colorType = ct;
+                }
                 return &_instance;
             }
             
@@ -172,7 +174,7 @@ namespace PetriEngine {
             virtual void addColor(const char* colorName);
             virtual void addColor(std::vector<const Color*>& colors);
             virtual void addDot() {
-                _colors.push_back(*DotConstant::dotConstant());
+                _colors.push_back(*DotConstant::dotConstant(this));
             }
             
             virtual size_t size() const {

@@ -40,7 +40,7 @@ namespace PetriEngine {
             
             const Color* findColor(const std::string& color) const {
                 if (color.compare("dot") == 0)
-                    return DotConstant::dotConstant();
+                    return DotConstant::dotConstant(nullptr);
                 for (auto& elem : colorTypes) {
                     auto col = (*elem.second)[color];
                     if (col)
@@ -131,7 +131,7 @@ namespace PetriEngine {
         class DotConstantExpression : public ColorExpression {
         public:
             const Color* eval(ExpressionContext& context) const override {
-                return DotConstant::dotConstant();
+                return DotConstant::dotConstant(nullptr);
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index, int32_t modifier) const override {
@@ -145,7 +145,7 @@ namespace PetriEngine {
             Colored::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>& varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
                 Colored::interval_t interval;
                 Colored::intervalTuple_t tupleInterval;
-                const Color *dotColor = DotConstant::dotConstant();
+                const Color *dotColor = DotConstant::dotConstant(nullptr);
                  
                 colortypes->push_back(dotColor->getColorType());
                 
@@ -155,11 +155,11 @@ namespace PetriEngine {
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
-                const Color *dotColor = DotConstant::dotConstant();
+                const Color *dotColor = DotConstant::dotConstant(nullptr);
                 constantMap[index] = dotColor;
             }
             ColorType* getColorType(std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
-                return DotConstant::dotConstant()->getColorType();
+                return DotConstant::dotConstant(nullptr)->getColorType();
             }
 
             std::string toString() const override {
@@ -203,8 +203,8 @@ namespace PetriEngine {
             Colored::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>& varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
                 Colored::intervalTuple_t varInterval;
                 
+                // If we see a new variable on an out arc, it gets its full interval
                 if (varMap.count(_variable) == 0){
-                    std::cout << "Could not find intervals for: " << _variable->name << std::endl;
                     Colored::intervalTuple_t intervalTuple;
                     intervalTuple.addInterval(_variable->colorType->getFullInterval());
                     varMap[_variable] = intervalTuple;
@@ -215,7 +215,6 @@ namespace PetriEngine {
                 }
                                            
                 std::vector<ColorType*> varColorTypes;
-
                 _variable->colorType->getColortypes(varColorTypes);
 
                 for(auto ct : varColorTypes){
@@ -287,8 +286,7 @@ namespace PetriEngine {
                         for (auto i = intervalsToRemove.rbegin(); i != intervalsToRemove.rend(); ++i) {
                             intervalTuple.removeInterval(*i);
                         }
-                    }                
-                    
+                    }              
                     return !arcIntervals._intervalTupleVec[0]._intervals.empty();
                 }
             }
@@ -384,65 +382,8 @@ namespace PetriEngine {
                 auto colortypesBefore = colortypes->size();
 
                 auto nestedInterval = _color->getOutputIntervals(varMap, colortypes);
-                Colored::intervalTuple_t newIntervals;
-
-                for(uint32_t i = 0;  i < nestedInterval.size(); i++) {
-                    Colored::interval_t newInterval;
-                    std::vector<Colored::interval_t> tempIntervals;
-                    auto interval = &nestedInterval[i];
-                    for(uint32_t j = 0; j < interval->_ranges.size(); j++) {
-                        auto& range = interval->operator[](j);
-                        size_t ctSize = colortypes->operator[](j+ colortypesBefore)->size();
-                        
-                        int32_t lower_val = ctSize +(range._lower +1);
-                        int32_t upper_val = ctSize +(range._upper +1);
-                        range._lower = lower_val % ctSize;
-                        range._upper = upper_val % ctSize;
-                        
-                        if(range._upper+1 == range._lower){
-                            if(tempIntervals.empty()){
-                                newInterval.addRange(0, ctSize-1);
-                                tempIntervals.push_back(newInterval);
-                            } else {
-                                for (auto& tempInterval : tempIntervals){ 
-                                    tempInterval.addRange(0, ctSize-1);
-                                }
-                            }
-                        } else if(range._upper < range._lower ){
-                            
-                            if(tempIntervals.empty()){
-                                auto intervalCopy = newInterval;
-                                newInterval.addRange(range._lower, ctSize-1);
-                                intervalCopy.addRange(0,range._upper);
-                                tempIntervals.push_back(newInterval);
-                                tempIntervals.push_back(intervalCopy);
-                            } else {
-                                std::vector<Colored::interval_t> newTempIntervals;
-                                for(auto tempInterval : tempIntervals){
-                                    auto intervalCopy = tempInterval;
-                                    tempInterval.addRange(range._lower, ctSize-1);
-                                    intervalCopy.addRange(0,range._upper);
-                                    newTempIntervals.push_back(intervalCopy);
-                                    newTempIntervals.push_back(tempInterval);
-                                }
-                                tempIntervals = newTempIntervals;
-                            }                            
-                        } else {
-                            if(tempIntervals.empty()){
-                                newInterval.addRange(range);
-                                tempIntervals.push_back(newInterval);
-                            } else {
-                                for (auto& tempInterval : tempIntervals){ 
-                                    tempInterval.addRange(range);
-                                }
-                            }
-                        }
-                    }
-                    for(auto tempInterval : tempIntervals){
-                        newIntervals.addInterval(tempInterval);
-                    }                   
-                }
-                return newIntervals;
+                Colored::guardRestrictor guardRestrictor;
+                return guardRestrictor.shiftIntervals(varMap, colortypes, &nestedInterval, 1, colortypesBefore);
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
@@ -495,67 +436,8 @@ namespace PetriEngine {
                 auto colortypesBefore = colortypes->size();
 
                 auto nestedInterval = _color->getOutputIntervals(varMap, colortypes);
-                Colored::intervalTuple_t newIntervals;
-
-                for(uint32_t i = 0;  i < nestedInterval.size(); i++) {
-                    Colored::interval_t newInterval;
-                    std::vector<Colored::interval_t> tempIntervals;
-
-                    auto interval = &nestedInterval[i];
-                    for(uint32_t j = 0; j < interval->_ranges.size(); j++) {
-                        auto& range = interval->operator[](j);
-                        auto ctSize = colortypes->operator[](j + colortypesBefore)->size()-1;
-                        
-                        int32_t lower_val = ctSize +(range._lower -1);
-                        int32_t upper_val = ctSize +(range._upper -1);
-                        range._lower = lower_val % ctSize;
-                        range._upper = upper_val % ctSize;
-
-                        if(range._upper+1 == range._lower ){
-                            if(tempIntervals.empty()){
-                                newInterval.addRange(0, ctSize-1);
-                                tempIntervals.push_back(newInterval);
-                            } else {
-                                for(auto& tempInterval : tempIntervals){
-                                    tempInterval.addRange(0, ctSize-1);
-                                }
-                            }
-                        } else if(range._upper < range._lower ){
-                            if(tempIntervals.empty()){
-                                auto intervalCopy = newInterval;
-                                newInterval.addRange(range._lower, ctSize-1);
-                                intervalCopy.addRange(0,range._upper);
-                                tempIntervals.push_back(newInterval);
-                                tempIntervals.push_back(intervalCopy);
-
-                            } else {
-                                std::vector<Colored::interval_t> newTempIntervals;
-                                for (auto tempInterval : tempIntervals){
-                                    auto intervalCopy = tempInterval;
-                                    tempInterval.addRange(range._lower, ctSize-1);
-                                    intervalCopy.addRange(0, range._upper);
-                                    newTempIntervals.push_back(tempInterval);
-                                    newTempIntervals.push_back(intervalCopy);
-                                }
-                                tempIntervals = newTempIntervals;
-                            }                            
-                        } else {                            
-                            if(tempIntervals.empty()){
-                                newInterval.addRange(range);
-                                tempIntervals.push_back(newInterval);
-                            } else {
-                                for(auto& tempInterval : tempIntervals){
-                                    tempInterval.addRange(range);
-                                }
-                            }                   
-                        }
-                    }
-
-                    for(auto tempInterval : tempIntervals){
-                        newIntervals.addInterval(tempInterval);
-                    }                    
-                }
-                return newIntervals;
+                Colored::guardRestrictor guardRestrictor;
+                return guardRestrictor.shiftIntervals(varMap, colortypes, &nestedInterval, -1, colortypesBefore);
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
@@ -670,7 +552,6 @@ namespace PetriEngine {
                 }
             }
 
-
             std::string toString() const override {
                 std::string res = "(" + _colors[0]->toString();
                 for (uint32_t i = 1; i < _colors.size(); ++i) {
@@ -735,7 +616,6 @@ namespace PetriEngine {
                     return;
                 }
                 Colored::guardRestrictor guardRestrictor;
-
                 guardRestrictor.restrictDiagonal(variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, true, true);
             }
             
@@ -1141,8 +1021,7 @@ namespace PetriEngine {
                         for(auto interval : cfp.constraints._intervals){                            
                             newIntervalTuple.addInterval(interval);
                         }
-                    }
-                    
+                    }                    
                     arcIntervals._intervalTupleVec.push_back(newIntervalTuple);
                     return colorsInFixpoint;
                 } else {
@@ -1153,9 +1032,7 @@ namespace PetriEngine {
                             newIntervalTupleVec.push_back(intervalTuple);
                         }
                     }
-
                     arcIntervals._intervalTupleVec = std::move(newIntervalTupleVec);
-               
                     return !arcIntervals._intervalTupleVec.empty();
                 }
             }
