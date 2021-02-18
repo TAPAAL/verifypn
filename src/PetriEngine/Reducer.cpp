@@ -1474,21 +1474,25 @@ namespace PetriEngine {
             auto transition = parent->_transitions[t];
             if (!tseen[t] && !transition.skip && !transition.inhib && transition.pre.size() == 1 &&
                 transition.post.size() == 1
-                && transition.pre[0].place == transition.post[0].place &&
-                transition.pre[0].weight == 1) {
+                && transition.pre[0].place == transition.post[0].place) {
                 auto p = transition.pre[0].place;
                 if (!pseen[p] && !parent->_places[p].inhib) {
                     if (parent->initialMarking[p] >= transition.pre[0].weight){
+                        //Mark the initially marked self loop as relevant.
+                        tseen[t] = true;
+                        pseen[p] = true;
                         reduced |= remove_irrelevant(placeInQuery, tseen, pseen);
                         _ruleK++;
                         return reduced;
                     }
-                    for (auto t2 : parent->_places[p].consumers) {
-                        auto transition2 = parent->_transitions[t2];
-                        if (t != t2 && !tseen[t2] && !transition2.skip) {
-                            skipTransition(t2);
-                            reduced = true;
-                            _ruleK++;
+                    if (transition.pre[0].weight == 1){
+                        for (auto t2 : parent->_places[p].consumers) {
+                            auto transition2 = parent->_transitions[t2];
+                            if (t != t2 && !tseen[t2] && !transition2.skip) {
+                                skipTransition(t2);
+                                reduced = true;
+                                _ruleK++;
+                            }
                         }
                     }
                 }
