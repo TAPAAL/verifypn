@@ -54,7 +54,9 @@ namespace PetriEngine {
         inline bool has_prev_state() const {
             return last_state != NoLastState;
         }
-
+        [[nodiscard]] inline bool fresh() const {
+            return pcounter == NoPCounter && tcounter == NoTCounter;
+        }
         static constexpr auto NoPCounter = 0;
         static constexpr auto NoTCounter = std::numeric_limits<uint32_t>::max();
         static constexpr auto NoBuchiState = std::numeric_limits<size_t>::max();
@@ -71,6 +73,7 @@ namespace PetriEngine {
 
     class SuccessorGenerator {
 public:
+    using sucinfo = successor_info;
     SuccessorGenerator(const PetriNet& net);
     SuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries);
     SuccessorGenerator(const PetriNet& net, const std::shared_ptr<PQL::Condition> &query);
@@ -79,17 +82,18 @@ public:
     void prepare(const Structures::State* state, const successor_info &sucinfo);
     void getSuccInfo(successor_info &sucinfo) const;
     bool next(Structures::State& write);
+    bool next(Structures::State& write, successor_info &) { return next(write); }
     uint32_t fired() const
     {
         return _suc_tcounter -1;
     }
-        
+
     const MarkVal* parent() const {
         return _parent->marking();
     }
 
     void reset();
-    
+
     /**
      * Checks if the conditions are met for fireing t, if write != NULL,
      * then also consumes tokens from write while checking
@@ -119,6 +123,8 @@ protected:
     const PetriNet& _net;
 
     bool next(Structures::State &write, uint32_t &tindex);
+
+    void _fire(Structures::State &write, uint32_t tid);
 
     const Structures::State* _parent;
 

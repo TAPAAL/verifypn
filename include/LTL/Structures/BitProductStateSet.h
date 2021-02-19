@@ -62,10 +62,10 @@ namespace LTL::Structures {
         BitProductStateSet(const PetriEngine::PetriNet &net, int kbound = 0)
                 : markings(net, kbound, net.numberOfPlaces())
         {
-#ifndef NDEBUG
+/*#ifndef NDEBUG
             std::cerr << "markingMask: " << markingMask << '\n';
             std::cerr << "buchiMask:   " << buchiMask << std::endl;
-#endif
+#endif*/
         }
 
         /**

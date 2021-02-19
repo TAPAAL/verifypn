@@ -42,11 +42,11 @@ namespace LTL::Structures {
         }
 
         //TODO override equality operators to handle both marking and NBA state
-        size_t getBuchiState() const {
+        uint32_t getBuchiState() const {
             return marking()[buchi_state_idx];
         }
 
-        void setBuchiState(size_t state) {
+        void setBuchiState(uint32_t state) {
             marking()[buchi_state_idx] = state;
         }
 

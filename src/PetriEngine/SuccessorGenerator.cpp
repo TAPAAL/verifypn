@@ -129,9 +129,7 @@ namespace PetriEngine {
                 for (; tindex != last; ++tindex) {
 
                     if (!checkPreset(tindex)) continue;
-                    memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
-                    consumePreset(write, tindex);
-                    producePostset(write, tindex);
+                    _fire(write, tindex);
 
                     ++tindex;
                     return true;
@@ -141,6 +139,12 @@ namespace PetriEngine {
             tindex = std::numeric_limits<uint32_t>::max();
         }
         return false;
+    }
+
+    void SuccessorGenerator::_fire(Structures::State &write, uint32_t tid) {
+        memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
+        consumePreset(write, tid);
+        producePostset(write, tid);
     }
 
     void SuccessorGenerator::prepare(const Structures::State* state, const successor_info &sucinfo) {

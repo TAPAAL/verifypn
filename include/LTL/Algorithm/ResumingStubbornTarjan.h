@@ -15,25 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_STUBBORNTARJANMODELCHECKER_H
-#define VERIFYPN_STUBBORNTARJANMODELCHECKER_H
+#ifndef VERIFYPN_RESUMINGSTUBBORNTARJAN_H
+#define VERIFYPN_RESUMINGSTUBBORNTARJAN_H
+
 
 #include "LTL/Stubborn/LTLStubbornSet.h"
 #include "LTL/Algorithm/ModelChecker.h"
 #include "PetriEngine/Structures/light_deque.h"
 #include "LTL/Structures/BitProductStateSet.h"
+#include "LTL/Structures/EnabledTransitionSet.h"
 
 namespace LTL {
-    // template parameter for debugging purposes
-    class StubbornTarjanModelChecker : public ModelChecker<PetriEngine::ReducingSuccessorGenerator> {
+    class ResumingStubbornTarjan : public ModelChecker<PetriEngine::ReducingSuccessorGenerator> {
     public:
-        StubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
+        ResumingStubbornTarjan(const PetriEngine::PetriNet &net, const Condition_ptr &query)
                 : ModelChecker<PetriEngine::ReducingSuccessorGenerator>
                           (net, query,
                            PetriEngine::ReducingSuccessorGenerator{
                                    net, std::make_shared<LTLStubbornSet>(net, query)}),
                   factory(net, this->successorGenerator->initial_buchi_state()),
-                  seen(net, 0) {
+                  seen(net, 0), _enabled(net.numberOfTransitions()),
+                  buf1(new bool[net.numberOfTransitions()]), buf2(new bool[net.numberOfTransitions()])
+        {
             if (this->successorGenerator->buchiStates() > 65535) {
                 std::cout << "CANNOT_COMPUTE\n";
                 std::cout << "Too many Buchi states: " << this->successorGenerator->buchiStates() << std::endl;
@@ -44,7 +47,8 @@ namespace LTL {
 
         bool isSatisfied() override;
 
-        void printStats(ostream &os) override {
+        void printStats(ostream &os) override
+        {
             std::cout << "STATS:\n"
                       << "\tdiscovered states: " << seen.size() << std::endl
                       << "\texplored states:   " << this->stats.explored << std::endl
@@ -56,6 +60,7 @@ namespace LTL {
 
         using State = LTL::Structures::ProductState;
         using idx_t = size_t;
+        using EnabledSet = LTL::Structures::EnabledTransitionSet;
 
         static constexpr idx_t HashSz = (1U << 27U);
 
@@ -63,11 +68,13 @@ namespace LTL {
 
         // TODO take number of Büchi states into account at construction time, perhaps implement pair-ID state set.
         LTL::Structures::BitProductStateSet<> seen;
+        EnabledSet _enabled;
         std::unordered_set<idx_t> store;
 
         std::array<idx_t, HashSz> chash;
 
-        static inline idx_t hash(idx_t id) {
+        static inline idx_t hash(idx_t id)
+        {
             // Warning: Smarter hash function may violate cstack search for repeat markings
             // unless the new hash also considers only the marking part of state ID.
             // This should work since the marking ID is lower half of state ID.
@@ -78,22 +85,28 @@ namespace LTL {
             idx_t lowlink;
             idx_t stateid;
             idx_t next = std::numeric_limits<idx_t>::max();
+            idx_t enabled = std::numeric_limits<idx_t>::max();
+            idx_t stubborn = std::numeric_limits<idx_t>::max();
 
             CEntry(idx_t lowlink, idx_t stateid, idx_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
+
+            bool hasEnabled() const { return enabled != std::numeric_limits<idx_t>::max(); }
         };
 
         struct DEntry {
             idx_t pos;
-            light_deque<idx_t> successors{};
-            bool expanded = false;
+            PetriEngine::ReducingSuccessorGenerator::sucinfo sucinfo;
         };
-
 
         std::vector<CEntry> cstack;
         std::stack<DEntry> dstack;
         std::stack<idx_t> astack;
-        std::stack<idx_t> extstack;
+        std::stack<idx_t> extstack; // tarjan extension; stack of states that were fully expanded in stubborn set
         bool violation = false;
+
+        std::unique_ptr<bool[]> buf1;
+        std::unique_ptr<bool[]> buf2;
+
 
         void push(State &state, size_t stateid);
 
@@ -105,7 +118,10 @@ namespace LTL {
 
         void popCStack();
 
-        idx_t searchCStack(idx_t stateid) const {
+        void expandAll(DEntry &delem);
+
+        idx_t searchCStack(idx_t stateid) const
+        {
             auto p = chash[hash(stateid)];
             while (p != numeric_limits<idx_t>::max() && cstack[p].stateid != stateid) {
                 p = cstack[p].next;
@@ -115,4 +131,4 @@ namespace LTL {
     };
 }
 
-#endif //VERIFYPN_STUBBORNTARJANMODELCHECKER_H
+#endif //VERIFYPN_RESUMINGSTUBBORNTARJAN_H

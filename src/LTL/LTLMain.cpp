@@ -20,6 +20,7 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Expressions.h"
 #include "LTL/Algorithm/StubbornTarjanModelChecker.h"
+#include "LTL/Algorithm/ResumingStubbornTarjan.h"
 
 #include <utility>
 
@@ -97,7 +98,11 @@ namespace LTL {
             case Algorithm::Tarjan:
                 if (options.stubbornreduction && !negated_formula->containsNext()) {
                     std::cout << "Running stubborn version!" << std::endl;
-                    result = _verify<StubbornTarjanModelChecker<ReducingSuccessorGenerator>>(net, negated_formula, options.printstatistics);
+                    result = _verify<StubbornTarjanModelChecker>(net, negated_formula, options.printstatistics);
+                    //result = _verify<ResumingStubbornTarjan>(net, negated_formula, options.printstatistics);
+
+                    //for profiling
+                    //result = _verify<TarjanModelChecker<false>>(net, negated_formula, options.printstatistics);
                 } else {
                     result = _verify<TarjanModelChecker<false>>(net, negated_formula, options.printstatistics);
                 }
