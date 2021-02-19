@@ -58,7 +58,7 @@ namespace LTL {
                     seed = &curState;
                     ndfs(curState);
                     if (violation) {
-                        if constexpr (std::is_same_v<W, PetriEngine::Structures::TracableStateSet>) {
+                        if constexpr (SaveTrace) {
                             std::stack<size_t> transitions;
                             size_t next = top.id;
                             states.decode(working, next);
@@ -78,7 +78,7 @@ namespace LTL {
                 auto[it, is_new] = mark1.insert(stateid);
                 top.sucinfo.last_state = stateid;
                 if (is_new) {
-                    if constexpr (std::is_same_v<W, PetriEngine::Structures::TracableStateSet>) {
+                    if constexpr (SaveTrace) {
                         states.setParent(top.id);
                         states.setHistory(stateid, successorGenerator->fired());
                     }
@@ -113,7 +113,7 @@ namespace LTL {
                 }
                 if (working == *seed) {
                     violation = true;
-                    if constexpr (std::is_same_v<W, PetriEngine::Structures::TracableStateSet>) {
+                    if constexpr (SaveTrace) {
                         auto[_, stateid] = states.add(working);
                         states.setHistory2(stateid, successorGenerator->fired());
                         size_t next = stateid;
@@ -136,7 +136,7 @@ namespace LTL {
                 auto[it, is_new] = mark2.insert(stateid);
                 top.sucinfo.last_state = stateid;
                 if (is_new) {
-                    if constexpr (std::is_same_v<W, PetriEngine::Structures::TracableStateSet>) {
+                    if constexpr (SaveTrace) {
                         states.setParent(top.id);
                         states.setHistory2(stateid, successorGenerator->fired());
                     }

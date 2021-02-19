@@ -236,7 +236,7 @@ namespace PetriEngine {
             virtual std::pair<size_t, size_t> getHistory2(size_t markingid) override
             {
                 assert(false);
-                return std::make_pair(0,0);
+                return std::make_pair(std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max());
             }
             
         private:
