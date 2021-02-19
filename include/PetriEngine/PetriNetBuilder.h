@@ -131,6 +131,9 @@ namespace PetriEngine {
     protected:
         std::unordered_map<std::string, uint32_t> _placenames;
         std::unordered_map<std::string, uint32_t> _transitionnames;
+
+        std::vector< std::tuple<double, double> > _placelocations;
+        std::vector< std::tuple<double, double> > _transitionlocations;
         
         std::vector<Transition> _transitions;
         std::vector<Place> _places;

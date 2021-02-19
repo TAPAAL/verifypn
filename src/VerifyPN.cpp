@@ -406,6 +406,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Søren Moss Nielsen <soren_moss@mac.com>\n");
             printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>\n");
             printf("                        Samuel Pastva <daemontus@gmail.com>\n");
+            printf("                        Thomas Pedersen <thomas.pedersen@stofanet.dk\n");
             printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
@@ -822,13 +823,6 @@ int main(int argc, char* argv[]) {
     if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
     {
         std::cerr << "Could not analyze the queries" << std::endl;
-        return ErrorCode;
-    }
-
-    if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout == 0)
-    { 
-        // Conflicting flags "-s OverApprox" and "-q 0"
-        std::cerr << "Conflicting flags '-s OverApprox' and '-q 0'" << std::endl;
         return ErrorCode;
     }
 
