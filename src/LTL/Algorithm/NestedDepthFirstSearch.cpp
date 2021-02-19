@@ -18,14 +18,15 @@
 #include "LTL/Algorithm/NestedDepthFirstSearch.h"
 
 namespace LTL {
-
-    bool NestedDepthFirstSearch::isSatisfied() {
+    template<typename W>
+    bool NestedDepthFirstSearch<W>::isSatisfied() {
         is_weak = successorGenerator->is_weak() && shortcircuitweak;
         dfs();
         return !violation;
     }
 
-    void NestedDepthFirstSearch::dfs() {
+    template<typename W>
+    void NestedDepthFirstSearch<W>::dfs() {
         std::stack<size_t> call_stack;
         std::stack<StackEntry> todo;
 
@@ -56,13 +57,31 @@ namespace LTL {
                 if (successorGenerator->isAccepting(curState)) {
                     seed = &curState;
                     ndfs(curState);
-                    if (violation) return;
+                    if (violation) {
+                        if constexpr (SaveTrace) {
+                            std::stack<size_t> transitions;
+                            size_t next = top.id;
+                            states.decode(working, next);
+                            while (!successorGenerator->isInitialState(working)) {
+                                auto[parent, transition] = states.getHistory(next);
+                                next = parent;
+                                transitions.push(transition);
+                                states.decode(working, next);
+                            }
+                            printTrace(transitions);
+                        }
+                        return;
+                    }
                 }
             } else {
                 auto[_, stateid] = states.add(working);
                 auto[it, is_new] = mark1.insert(stateid);
                 top.sucinfo.last_state = stateid;
                 if (is_new) {
+                    if constexpr (SaveTrace) {
+                        states.setParent(top.id);
+                        states.setHistory(stateid, successorGenerator->fired());
+                    }
                     _discovered++;
                     todo.push(StackEntry{stateid, initial_suc_info});
                 }
@@ -70,8 +89,8 @@ namespace LTL {
         }
     }
 
-
-    void NestedDepthFirstSearch::ndfs(State &state) {
+    template<typename W>
+    void NestedDepthFirstSearch<W>::ndfs(State &state) {
         std::stack<StackEntry> todo;
 
         State working = factory.newState();
@@ -94,12 +113,33 @@ namespace LTL {
                 }
                 if (working == *seed) {
                     violation = true;
+                    if constexpr (SaveTrace) {
+                        auto[_, stateid] = states.add(working);
+                        states.setHistory2(stateid, successorGenerator->fired());
+                        size_t next = stateid;
+                        ptrie::uint trans = 0;
+                        while (trans < std::numeric_limits<ptrie::uint>::max() - 1) {
+                            auto[state, transition] = states.getHistory2(next);
+                            if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
+                                auto[_, transition] = states.getHistory(next);
+                                nested_transitions.push(transition);
+                                break;
+                            }
+                            next = state;
+                            trans = transition;
+                            nested_transitions.push(transition);
+                        }
+                    }
                     return;
                 }
                 auto[_, stateid] = states.add(working);
                 auto[it, is_new] = mark2.insert(stateid);
                 top.sucinfo.last_state = stateid;
                 if (is_new) {
+                    if constexpr (SaveTrace) {
+                        states.setParent(top.id);
+                        states.setHistory2(stateid, successorGenerator->fired());
+                    }
                     _discovered++;
                     todo.push(StackEntry{stateid, initial_suc_info});
                 }
@@ -107,4 +147,37 @@ namespace LTL {
             }
         }
     }
+
+    template<typename W>
+    ostream &NestedDepthFirstSearch<W>::printTransition(size_t transition, uint indent, ostream &os) {
+        if (transition == std::numeric_limits<ptrie::uint>::max() - 1) {
+            os << std::string(indent, '\t') << "<deadlock/>";
+            return os;
+        }
+        std::string tname = states.net().transitionNames()[transition];
+        os << std::string(indent, '\t') << "<transition id=\"" << tname << "\" index=\"" << transition << "\"/>";
+        return os;
+    }
+
+    template<typename W>
+    void NestedDepthFirstSearch<W>::printTrace(std::stack<size_t> &transitions) {
+        std::cerr << "Trace:\n<trace>\n";
+        while (!transitions.empty()) {
+            printTransition(transitions.top(), 1) << std::endl;
+            transitions.pop();
+        }
+        std::cerr << "\t<loop>" << std::endl;
+        while (!nested_transitions.empty()) {
+            printTransition(nested_transitions.top(), 2) << std::endl;
+            nested_transitions.pop();
+        }
+        std::cerr << "\t</loop>" << std::endl << "</trace>" << std::endl;
+    }
+
+
+    template
+    class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
+
+    template
+    class NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>;
 }

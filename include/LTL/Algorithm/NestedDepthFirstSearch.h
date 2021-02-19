@@ -30,6 +30,7 @@
 using namespace PetriEngine;
 
 namespace LTL {
+    template <typename W>
     class NestedDepthFirstSearch : public ModelChecker {
     public:
         NestedDepthFirstSearch(const PetriNet &net, PetriEngine::PQL::Condition_ptr ptr, const bool shortcircuitweak)
@@ -42,7 +43,7 @@ namespace LTL {
         using State = LTL::Structures::ProductState;
 
         Structures::ProductStateFactory factory;
-        PetriEngine::Structures::StateSet states;
+        W states; //StateSet
         std::set<size_t> mark1;
         std::set<size_t> mark2;
 
@@ -54,10 +55,19 @@ namespace LTL {
         State *seed;
         bool violation = false;
 
+        //Used for printing the trace
+        std::stack<size_t> nested_transitions;
+
         void dfs();
 
         void ndfs(State &state);
+        void printTrace(stack<size_t> &transitions);
+
+        ostream & printTransition(size_t transition, uint indent, ostream &os = std::cerr);
+        static constexpr bool SaveTrace = std::is_same_v<W, PetriEngine::Structures::TracableStateSet>;
     };
+    extern template class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
+    extern template class NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>;
 }
 
 #endif //VERIFYPN_NESTEDDEPTHFIRSTSEARCH_H
