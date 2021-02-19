@@ -30,6 +30,7 @@
 #include <set>
 #include <cmath>
 #include <numeric>
+#include <PetriEngine/Stubborn/StubbornSet.h>
 #include "PetriEngine/PQL/QueryPrinter.h"
 
 using namespace PetriEngine::Simplification;
@@ -3832,9 +3833,325 @@ namespace PetriEngine {
 
         
         /******************** Stubborn reduction interesting transitions ********************/
-        
 
-/********************** CONSTRUCTORS *********************************/
+        void PlusExpr::incr(StubbornSet& generator) const {
+            for(auto& i : _ids) generator.presetOf(i.first, true);
+            for(auto& e : _exprs) e->incr(generator);
+        }
+
+        void PlusExpr::decr(StubbornSet& generator) const {
+            for(auto& i : _ids) generator.postsetOf(i.first, true);
+            for(auto& e : _exprs) e->decr(generator);
+        }
+
+        void SubtractExpr::incr(StubbornSet& generator) const {
+            bool first = true;
+            for(auto& e : _exprs)
+            {
+                if(first)
+                    e->incr(generator);
+                else
+                    e->decr(generator);
+                first = false;
+            }
+        }
+
+        void SubtractExpr::decr(StubbornSet& generator) const {
+            bool first = true;
+            for(auto& e : _exprs)
+            {
+                if(first)
+                    e->decr(generator);
+                else
+                    e->incr(generator);
+                first = false;
+            }
+        }
+
+        void MultiplyExpr::incr(StubbornSet& generator) const {
+            if((_ids.size() + _exprs.size()) == 1)
+            {
+                for(auto& i : _ids) generator.presetOf(i.first, true);
+                for(auto& e : _exprs) e->incr(generator);
+            }
+            else
+            {
+                for(auto& i : _ids)
+                {
+                    generator.presetOf(i.first, true);
+                    generator.postsetOf(i.first, true);
+                }
+                for(auto& e : _exprs)
+                {
+                    e->incr(generator);
+                    e->decr(generator);
+                }
+            }
+        }
+
+        void MultiplyExpr::decr(StubbornSet& generator) const {
+            if((_ids.size() + _exprs.size()) == 1)
+            {
+                for(auto& i : _ids) generator.postsetOf(i.first, true);
+                for(auto& e : _exprs) e->decr(generator);
+            }
+            else
+                incr(generator);
+        }
+
+        void MinusExpr::incr(StubbornSet& generator) const {
+            // TODO not implemented
+        }
+
+        void MinusExpr::decr(StubbornSet& generator) const {
+            // TODO not implemented
+        }
+
+        void LiteralExpr::incr(StubbornSet& generator) const {
+            // Add nothing
+        }
+
+        void LiteralExpr::decr(StubbornSet& generator) const {
+            // Add nothing
+        }
+
+        void UnfoldedIdentifierExpr::incr(StubbornSet& generator) const {
+            generator.presetOf(_offsetInMarking, true);
+        }
+
+        void UnfoldedIdentifierExpr::decr(StubbornSet& generator) const {
+            generator.postsetOf(_offsetInMarking, true);
+        }
+
+        void SimpleQuantifierCondition::findInteresting(StubbornSet& generator, bool negated) const{
+            _cond->findInteresting(generator, negated);
+        }
+
+        void UntilCondition::findInteresting(StubbornSet& generator, bool negated) const{
+            _cond1->findInteresting(generator, negated);
+            _cond1->findInteresting(generator, !negated);
+            _cond2->findInteresting(generator, negated);
+        }
+
+
+        void AndCondition::findInteresting(StubbornSet& generator, bool negated) const {
+            if(!negated){               // and
+                for(auto& c : _conds)
+                {
+                    if(!c->isSatisfied())
+                    {
+                        c->findInteresting(generator, negated);
+                        break;
+                    }
+                }
+            } else {                    // or
+                for(auto& c : _conds) c->findInteresting(generator, negated);
+            }
+        }
+
+        void OrCondition::findInteresting(StubbornSet& generator, bool negated) const {
+            if(!negated){               // or
+                for(auto& c : _conds) c->findInteresting(generator, negated);
+            } else {                    // and
+                for(auto& c : _conds)
+                {
+                    if(c->isSatisfied())
+                    {
+                        c->findInteresting(generator, negated);
+                        break;
+                    }
+                }
+            }
+        }
+
+        void CompareConjunction::findInteresting(StubbornSet& generator, bool negated) const{
+
+            auto neg = negated != _negated;
+            int32_t cand = std::numeric_limits<int32_t>::max();
+            bool pre = false;
+            for(auto& c : _constraints)
+            {
+                auto val = generator.parent()[c._place];
+                if(c._lower == c._upper)
+                {
+                    if(neg)
+                    {
+                        if(val != c._lower) continue;
+                        generator.postsetOf(c._place, true);
+                        generator.presetOf(c._place, true);
+                    }
+                    else
+                    {
+                        if(val == c._lower) continue;
+                        if(val > c._lower) {
+                            cand = c._place;
+                            pre = false;
+                        } else {
+                            cand = c._place;
+                            pre = true;
+                        }
+                    }
+                }
+                else
+                {
+                    if(!neg)
+                    {
+                        if(val < c._lower && c._lower != 0)
+                        {
+                            assert(!neg);
+                            cand = c._place;
+                            pre = true;
+                        }
+
+                        if(val > c._upper && c._upper != std::numeric_limits<uint32_t>::max())
+                        {
+                            assert(!neg);
+                            cand = c._place;
+                            pre = false;
+                        }
+                    }
+                    else
+                    {
+                        if(val >= c._lower && c._lower != 0)
+                        {
+                            generator.postsetOf(c._place, true);
+                        }
+
+                        if(val <= c._upper && c._upper != std::numeric_limits<uint32_t>::max())
+                        {
+                            generator.presetOf(c._place, true);
+                        }
+                    }
+                }
+                if(cand != std::numeric_limits<int32_t>::max())
+                {
+                    if(pre && generator.seenPre(cand))
+                        return;
+                    else if(!pre && generator.seenPost(cand))
+                        return;
+                }
+            }
+            if(cand != std::numeric_limits<int32_t>::max())
+            {
+                if(pre)
+                {
+                    generator.presetOf(cand, true);
+                }
+                else if(!pre)
+                {
+                    generator.postsetOf(cand, true);
+                }
+            }
+        }
+
+        void EqualCondition::findInteresting(StubbornSet& generator, bool negated) const {
+            if(!negated){               // equal
+                if(_expr1->getEval() == _expr2->getEval()) { return; }
+                if(_expr1->getEval() > _expr2->getEval()){
+                    _expr1->decr(generator);
+                    _expr2->incr(generator);
+                } else {
+                    _expr1->incr(generator);
+                    _expr2->decr(generator);
+                }
+            } else {                    // not equal
+                if(_expr1->getEval() != _expr2->getEval()) { return; }
+                _expr1->incr(generator);
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+                _expr2->decr(generator);
+            }
+        }
+
+        void NotEqualCondition::findInteresting(StubbornSet& generator, bool negated) const {
+            if(!negated){               // not equal
+                if(_expr1->getEval() != _expr2->getEval()) { return; }
+                _expr1->incr(generator);
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+                _expr2->decr(generator);
+            } else {                    // equal
+                if(_expr1->getEval() == _expr2->getEval()) { return; }
+                if(_expr1->getEval() > _expr2->getEval()){
+                    _expr1->decr(generator);
+                    _expr2->incr(generator);
+                } else {
+                    _expr1->incr(generator);
+                    _expr2->decr(generator);
+                }
+            }
+        }
+
+        void LessThanCondition::findInteresting(StubbornSet& generator, bool negated) const {
+            if(!negated){               // less than
+                if(_expr1->getEval() < _expr2->getEval()) { return; }
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+            } else {                    // greater than or equal
+                if(_expr1->getEval() >= _expr2->getEval()) { return; }
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            }
+        }
+
+        void LessThanOrEqualCondition::findInteresting(StubbornSet& generator, bool negated) const {
+            if(!negated){               // less than or equal
+                if(_expr1->getEval() <= _expr2->getEval()) { return; }
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+            } else {                    // greater than
+                if(_expr1->getEval() > _expr2->getEval()) { return; }
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            }
+        }
+
+        void GreaterThanCondition::findInteresting(StubbornSet& generator, bool negated) const {
+            if(!negated){               // greater than
+                if(_expr1->getEval() > _expr2->getEval()) { return; }
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            } else {                    // less than or equal
+                if(_expr1->getEval() <= _expr2->getEval()) { return; }
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+            }
+        }
+
+        void GreaterThanOrEqualCondition::findInteresting(StubbornSet& generator, bool negated) const {
+            if(!negated){               // greater than or equal
+                if(_expr1->getEval() >= _expr2->getEval()) { return; }
+                _expr1->incr(generator);
+                _expr2->decr(generator);
+            } else {                    // less than
+                if(_expr1->getEval() < _expr2->getEval()) { return; }
+                _expr1->decr(generator);
+                _expr2->incr(generator);
+            }
+        }
+
+        void NotCondition::findInteresting(StubbornSet& generator, bool negated) const {
+            _cond->findInteresting(generator, !negated);
+        }
+
+        void BooleanCondition::findInteresting(StubbornSet& generator, bool negated) const {
+            // Add nothing
+        }
+
+        void DeadlockCondition::findInteresting(StubbornSet& generator, bool negated) const {
+            if(!isSatisfied()){
+                generator.postPresetOf(generator.leastDependentEnabled(), true);
+            } // else add nothing
+        }
+
+        void UnfoldedUpperBoundsCondition::findInteresting(StubbornSet& generator, bool negated) const {
+            for(auto& p : _places)
+                if(!p._maxed_out)
+                    generator.presetOf(p._place);
+        }
+
+
+        /********************** CONSTRUCTORS *********************************/
 
         template<typename T>
         void postMerge(std::vector<Condition_ptr>& conds) {

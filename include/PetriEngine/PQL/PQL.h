@@ -32,6 +32,7 @@
 
 namespace PetriEngine {
     class ReducingSuccessorGenerator;
+    class StubbornSet;
     namespace Simplification
     {
         class Member;
@@ -118,6 +119,9 @@ namespace PetriEngine {
             /** Output the expression as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const = 0;
             virtual void toBinary(std::ostream&) const = 0;
+
+            virtual void incr(StubbornSet& generator) const = 0;
+            virtual void decr(StubbornSet& generator) const = 0;
 
             /** Count size of the entire formula in number of nodes */
             virtual int formulaSize() const = 0;
@@ -230,7 +234,9 @@ namespace PetriEngine {
             virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
             virtual void toBinary(std::ostream& out) const = 0;
 
-        /** Checks if the condition is trivially true */
+            virtual void findInteresting(StubbornSet& generator, bool negated) const = 0;
+
+            /** Checks if the condition is trivially true */
             bool isTriviallyTrue();
             /*** Checks if the condition is trivially false */
             bool isTriviallyFalse();

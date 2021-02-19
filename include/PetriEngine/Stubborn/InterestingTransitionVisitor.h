@@ -51,6 +51,8 @@ namespace PetriEngine {
 
         void _accept(const PQL::UnfoldedUpperBoundsCondition *element) override;
 
+
+
         void _accept(const PQL::UnfoldedIdentifierExpr *element) override {
             assert(false);
             std::cerr << "No accept for UnfoldedIdentifierExpr" << std::endl;
@@ -90,6 +92,10 @@ namespace PetriEngine {
         void _accept(const PQL::SimpleQuantifierCondition *element);
 
         void _accept(const PQL::UntilCondition *element) override;
+
+        void _accept(const PQL::GCondition *condition) override;
+
+        void _accept(const PQL::FCondition *condition) override;
 
         void _accept(const PQL::BooleanCondition *element) override;
 

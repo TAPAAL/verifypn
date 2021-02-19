@@ -54,7 +54,7 @@ namespace PetriEngine {
         int32_t cand = std::numeric_limits<int32_t>::max();
         bool pre = false;
         for (auto &c : *element) {
-            auto val = _stubborn.getParent()[c._place];
+            auto val = _stubborn.parent()[c._place];
             if (c._lower == c._upper) {
                 if (neg) {
                     if (val != c._lower) continue;
@@ -198,7 +198,7 @@ namespace PetriEngine {
 
     void InterestingTransitionVisitor::_accept(const PQL::NotCondition *element) {
         negate();
-        element->visit(*this);
+        (*element)[0]->visit(*this);
         negate();
     }
 
@@ -217,6 +217,18 @@ namespace PetriEngine {
         for (auto &p : element->places())
             if (!p._maxed_out)
                 _stubborn.presetOf(p._place);
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::GCondition *element)
+    {
+        negate();
+        (*element)[0]->visit(*this);
+        negate();
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::FCondition *element)
+    {
+        (*element)[0]->visit(*this);
     }
 
     void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::PlusExpr *element) {

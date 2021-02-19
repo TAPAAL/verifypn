@@ -1,8 +1,18 @@
-/*
- * File:   LTLStubbornSet.cpp.cc
- * Author: Nikolaj J. Ulrik <nikolaj@njulrik.dk>
+/* Copyright (C) 2021  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
+ *                     Simon M. Virenfeldt <simon@simwir.dk>
  *
- * Created on 08/02/2021
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
@@ -13,37 +23,48 @@ using namespace PetriEngine::PQL;
 
 namespace LTL {
     void LTLStubbornSet::prepare(const PetriEngine::Structures::State *marking) {
+        reset();
         _parent = marking;
         memset(_places_seen.get(), 0, _net.numberOfPlaces());
         constructEnabled();
-        if (_ordering.size() == 0) return;
+        if (_ordering.empty()) return;
         if (_ordering.size() == 1) {
             _stubborn[_ordering.front()] = true;
             return;
         }
         for (auto &q : _queries) {
             q->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
+            InterestingTransitionVisitor interesting{*this};
+
+            q->visit(interesting);
         }
-        findKeyTransition();
+        closure();
+        //findKeyTransition();
 
         ensureRuleV();
 
         ensureRulesL();
 
-/*#ifndef NDEBUG
-        std::vector<size_t> stubs;
+        _nenabled = _ordering.size();
+//#ifndef NDEBUG
+        /*std::vector<size_t> stubs;
+        size_t nenabled = 0;
         for (auto i = 0; i < _net.numberOfTransitions(); ++i) {
-            if (_stubborn[i]) {
+            if (_stubborn[i] && _enabled[i]) {
                 stubs.push_back(i);
+            }
+            if (_enabled[i]) {
+                ++nenabled;
             }
         }
         if (stubs.empty()) return;
+        std::cerr << "#stub: " << stubs.size() << "\t#enabled: " << nenabled << std::endl;
         std::cerr << "Stubborn set is: \n  ";
         for (auto i : stubs) {
             std::cerr << _net.transitionNames()[i] << " ";
         }
-        std::cerr << std::endl;
-#endif*/
+        std::cerr << std::endl;*/
+//#endif
     }
 
     uint32_t LTLStubbornSet::next() {
