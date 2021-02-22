@@ -47,7 +47,9 @@ namespace LTL {
 
         LTL::Structures::ProductStateFactory factory;
 
-        PetriEngine::Structures::StateSet seen;
+        using StateSet = std::conditional_t<SaveTrace, PetriEngine::Structures::TracableStateSet, PetriEngine::Structures::StateSet>;
+
+        StateSet seen;
         std::unordered_set<idx_t> store;
 
         std::array<idx_t, HashSz> chash;
@@ -86,6 +88,7 @@ namespace LTL {
         std::stack<DEntry> dstack;
         std::stack<idx_t> astack;
         bool violation = false;
+        size_t loopstate = std::numeric_limits<size_t>::max();
 
         void push(State &state);
 
@@ -96,6 +99,11 @@ namespace LTL {
         bool nexttrans(State &state, State& parent, DEntry &delem);
 
         void popCStack();
+
+        std::ostream &printTransition(size_t transition, uint indent, std::ostream &os);
+
+        void printTrace(std::stack<DEntry> &&dstack);
+
     };
 extern template class TarjanModelChecker<true>;
 extern template class TarjanModelChecker<false>;

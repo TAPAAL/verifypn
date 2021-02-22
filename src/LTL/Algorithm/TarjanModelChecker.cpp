@@ -46,7 +46,12 @@ namespace LTL {
                     pop();
                     continue;
                 }
-                const idx_t stateid = seen.add(working).second;
+                auto[isnew, stateid] = seen.add(working);
+                if constexpr (SaveTrace) {
+                    if (isnew) {
+                        seen.setHistory(stateid, successorGenerator->fired());
+                    }
+                }
                 dtop.sucinfo.last_state = stateid;
 
                 // lookup successor in 'hash' table
@@ -66,46 +71,13 @@ namespace LTL {
             }
             if constexpr (SaveTrace) {
                 if (violation) {
-                    State next = factory.newState();
-                    std::cerr << "Printing trace: " << std::endl;
-                    std::vector<DEntry> rev;
-                    auto sz = dstack.size();
-                    // dump stack to vector to allow iteration
-                    for (idx_t i = 0; i < sz; ++i) {
-                        rev.push_back(dstack.top());
+                    std::stack<DEntry> revstack;
+                    while (!dstack.empty()) {
+                        revstack.push(std::move(dstack.top()));
                         dstack.pop();
                     }
-                    idx_t pos = 0;
-                    // print dstack in-order. rev[0] is dstack.top(), so loop vector in reverse
-                    for (int i = rev.size() - 1; i >= 0; --i) {
-                        pos = rev[i].pos;
-                        seen.decode(parent, cstack[pos].stateid);
-                        _dump_state(parent);
-                        cstack[pos].lowlink = std::numeric_limits<idx_t>::max();
-                        if (i > 0) {
-                            // print transition to next state
-                            seen.decode(next, cstack[rev[i - 1].pos].stateid);
-                            successorGenerator->prepare(&parent);
-                            while (successorGenerator->next(working)) {
-                                if (working == next) {
-                                    std::cerr << net.transitionNames()[successorGenerator->last_transition()]
-                                              << std::endl;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    // follow lowsource until back in dstack
-                    pos = cstack[pos].lowsource;
-                    if (cstack[pos].lowlink != std::numeric_limits<idx_t>::max()) {
-                        std::cerr << "Printing looping part\n";
-                    }
-                    while (cstack[pos].lowlink != std::numeric_limits<idx_t>::max()) {
-                        seen.decode(parent, cstack[pos].stateid);
-                        _dump_state(parent);
-                        pos = cstack[pos].lowsource;
-                    }
+                    printTrace(std::move(revstack));
+                    return false;
                 }
             }
         }
@@ -173,7 +145,8 @@ namespace LTL {
             violation = (!astack.empty() && to <= astack.top());
             cstack[from].lowlink = cstack[to].lowlink;
             if constexpr (SaveTrace) {
-                cstack[from].lowsource = to;
+                loopstate = cstack[to].stateid;
+                //cstack[from].lowsource = to;
             }
         }
     }
@@ -188,6 +161,39 @@ namespace LTL {
         auto res = successorGenerator->next(state, delem.sucinfo);
         return res;
     }
+
+    template<bool SaveTrace>
+    std::ostream &TarjanModelChecker<SaveTrace>::printTransition(size_t transition, uint indent, std::ostream &os)
+    {
+        if (transition == std::numeric_limits<ptrie::uint>::max() - 1) {
+            os << std::string(indent, '\t') << "<deadlock/>";
+            return os;
+        }
+        std::string tname = seen.net().transitionNames()[transition];
+        os << std::string(indent, '\t') << "<transition id=\"" << tname << "\" index=\"" << transition << "\"/>";
+        return os;
+    }
+
+    template<bool SaveTrace>
+    void TarjanModelChecker<SaveTrace>::printTrace(std::stack<DEntry> &&dstack)
+    {
+        dstack.pop();
+        std::cerr << "Trace:\n"
+                     "<trace>\n";
+        auto indent = 1;
+        while (!dstack.empty()) {
+            auto stateid = cstack[dstack.top().pos].stateid;
+            auto[parent, tid] = seen.getHistory(stateid);
+            if (stateid == loopstate) {
+                indent++;
+                std::cerr << "\t<loop>\n";
+            }
+            printTransition(tid, indent, std::cerr) << '\n';
+            dstack.pop();
+        }
+        std::cerr << "\t</loop>\n</trace>" << std::endl;
+    }
+
 
     template
     class TarjanModelChecker<true>;
