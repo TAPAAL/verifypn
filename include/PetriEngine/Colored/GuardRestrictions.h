@@ -106,107 +106,133 @@ namespace PetriEngine {
                 }
             }
 
+            void restrictByConstant(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap,
+                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *mainVarModifierMap,
+                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *otherVarModifierMap,
+                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositions,
+                            std::unordered_map<uint32_t, const Color*> *constantMap,
+                            const Colored::Variable *var,
+                            const Colored::Variable *otherVar, 
+                            uint32_t index, bool lessthan, bool strict){
+                for(auto& varMap : variableMap){
+                    auto leftColor = constantMap->operator[](index);
+                    auto rightTupleInterval = &varMap[var];
+                    std::vector<uint32_t> idVec;
+                    leftColor->getTupleId(&idVec);
+
+                    expandIdVec(&varMap, mainVarModifierMap, otherVarModifierMap, varPositions, constantMap, otherVar, idVec, rightTupleInterval->tupleSize(), index + idVec.size());
+
+                    if(lessthan){
+                        rightTupleInterval->constrainUpper(idVec, strict);
+                    } else {
+                        rightTupleInterval->constrainLower(idVec, strict);
+                    }
+                }
+                 
+            }
+
             void restrictDiagonal(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap,
                             std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *varModifierMapL,
                             std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *varModifierMapR,
                             std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsL,
                             std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsR,
                             std::unordered_map<uint32_t, const Color*> *constantMapL,
-                            std::unordered_map<uint32_t, const Color*> *constantMapR, 
-                            bool lessthan, bool strict) {
+                            std::unordered_map<uint32_t, const Color*> *constantMapR,
+                            const Colored::Variable *var, 
+                            uint32_t index, bool lessthan, bool strict, bool isPartitioning, bool& diagonal){
+
+                if(isPartitioning){
+                    diagonal = true;
+                    return;
+                }
 
                 for(auto& varMap : variableMap){
-                    for(auto varPositionPair : *varPositionsL){
-                        uint32_t index = varPositionPair.first;
-                        if(varPositionsR->count(index)){
-                            if(varMap.count(varPositionPair.second) == 0){
-                                std::cout << "Unable to find left var " << varPositionPair.second->name << std::endl;
-                            }
-                            if(varMap.count(varPositionsR->operator[](index)) == 0){
-                                std::cout << "Unable to find right var " << varPositionsR->operator[](index)->name << std::endl;
-                            }
-                            auto leftTupleInterval = &varMap[varPositionPair.second];
-                            auto rightTupleInterval = &varMap[varPositionsR->operator[](index)];
-                            int32_t leftVarModifier = getVarModifier(&varModifierMapL->operator[](varPositionPair.second).back(), index);
-                            int32_t rightVarModifier = getVarModifier(&varModifierMapR->operator[](varPositionsR->operator[](index)).back(), index);
-
-                            auto leftIds = leftTupleInterval->getLowerIds(-leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());
-                            auto rightIds = rightTupleInterval->getUpperIds(-rightVarModifier, varPositionsR->operator[](index)->colorType->getConstituentsSizes());
-
-                            //comparing vars of same size
-                            if(varPositionPair.second->colorType->productSize() == varPositionsR->operator[](index)->colorType->productSize()){
-                                if(lessthan){
-                                    leftTupleInterval->constrainUpper(rightIds, strict);
-                                    rightTupleInterval->constrainLower(leftIds, strict);
-                                } else {
-                                    leftTupleInterval->constrainLower(rightIds, strict);
-                                    rightTupleInterval->constrainUpper(leftIds, strict);
-                                }
-                                
-                            } else if(varPositionPair.second->colorType->productSize() > varPositionsR->operator[](index)->colorType->productSize()){
-                                std::vector<uint32_t> leftLowerVec(leftIds.begin(), leftIds.begin() + rightTupleInterval->tupleSize());
-                                
-                                auto idVec = rightIds;
-
-                                expandIdVec(&varMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR, varPositionPair.second, idVec, leftTupleInterval->tupleSize(), index + varPositionsR->operator[](index)->colorType->productSize());
-
-                                if(lessthan){
-                                    leftTupleInterval->constrainUpper(idVec, strict);
-                                    rightTupleInterval->constrainLower(leftLowerVec, strict);
-                                } else {
-                                    leftTupleInterval->constrainLower(idVec, strict);
-                                    rightTupleInterval->constrainUpper(leftLowerVec, strict);
-                                }
-                                
-                            } else {
-                                std::vector<uint32_t> rightUpperVec(rightIds.begin(), rightIds.begin() + leftTupleInterval->tupleSize());
-                                
-                                auto idVec = leftIds;
-                                expandIdVec(&varMap, varModifierMapR, varModifierMapL, varPositionsL, constantMapL, varPositionsR->operator[](index), idVec, rightTupleInterval->tupleSize(), index + varPositionsL->operator[](index)->colorType->productSize());
-
-                                if(lessthan){
-                                    leftTupleInterval->constrainUpper(rightUpperVec, strict);
-                                    rightTupleInterval->constrainLower(idVec, strict);
-                                } else {
-                                    leftTupleInterval->constrainLower(rightUpperVec, strict);
-                                    rightTupleInterval->constrainUpper(idVec, strict);
-                                }                            
-                            }
-                        } else {
-                            auto rightColor = constantMapR->operator[](index);
-                            auto leftTupleInterval = &varMap[varPositionPair.second];
-                            std::vector<uint32_t> idVec;
-                            rightColor->getTupleId(&idVec);
-
-                            expandIdVec(&varMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR, varPositionPair.second, idVec, leftTupleInterval->tupleSize(), index + idVec.size());
-
-                            if(lessthan){
-                                leftTupleInterval->constrainUpper(idVec, strict);
-                            } else {
-                                leftTupleInterval->constrainLower(idVec, strict);
-                            }                        
-                        }
+                    if(varMap.count(var) == 0){
+                        std::cout << "Unable to find left var " << var->name << std::endl;
+                    }
+                    if(varMap.count(varPositionsR->operator[](index)) == 0){
+                        std::cout << "Unable to find right var " << varPositionsR->operator[](index)->name << std::endl;
                     }
 
-                    for(auto varPositionPair : *varPositionsR){
-                        uint32_t index = varPositionPair.first;
+                    auto leftTupleInterval = &varMap[var];
+                    auto rightTupleInterval = &varMap[varPositionsR->operator[](index)];
+                    int32_t leftVarModifier = getVarModifier(&varModifierMapL->operator[](var).back(), index);
+                    int32_t rightVarModifier = getVarModifier(&varModifierMapR->operator[](varPositionsR->operator[](index)).back(), index);
 
-                        if(constantMapL->count(index)){
-                            auto leftColor = constantMapL->operator[](index);
-                            auto rightTupleInterval = &varMap[varPositionPair.second];
-                            std::vector<uint32_t> idVec;
-                            leftColor->getTupleId(&idVec);
+                    auto leftIds = leftTupleInterval->getLowerIds(-leftVarModifier, var->colorType->getConstituentsSizes());
+                    auto rightIds = rightTupleInterval->getUpperIds(-rightVarModifier, varPositionsR->operator[](index)->colorType->getConstituentsSizes());
 
-                            expandIdVec(&varMap, varModifierMapR, varModifierMapL, varPositionsL, constantMapL, varPositionsR->operator[](index), idVec, rightTupleInterval->tupleSize(), index + idVec.size());
-
-                            if(lessthan){
-                                rightTupleInterval->constrainUpper(idVec, strict);
-                            } else {
-                                rightTupleInterval->constrainLower(idVec, strict);
-                            }                        
+                    //comparing vars of same size
+                    if(var->colorType->productSize() == varPositionsR->operator[](index)->colorType->productSize()){
+                        if(lessthan){
+                            leftTupleInterval->constrainUpper(rightIds, strict);
+                            rightTupleInterval->constrainLower(leftIds, strict);
+                        } else {
+                            leftTupleInterval->constrainLower(rightIds, strict);
+                            rightTupleInterval->constrainUpper(leftIds, strict);
                         }
+                    } else if(var->colorType->productSize() > varPositionsR->operator[](index)->colorType->productSize()){
+                        std::vector<uint32_t> leftLowerVec(leftIds.begin(), leftIds.begin() + rightTupleInterval->tupleSize());
+                        
+                        auto idVec = rightIds;
+
+                        expandIdVec(&varMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR, var, idVec, leftTupleInterval->tupleSize(), index + varPositionsR->operator[](index)->colorType->productSize());
+
+                        if(lessthan){
+                            leftTupleInterval->constrainUpper(idVec, strict);
+                            rightTupleInterval->constrainLower(leftLowerVec, strict);
+                        } else {
+                            leftTupleInterval->constrainLower(idVec, strict);
+                            rightTupleInterval->constrainUpper(leftLowerVec, strict);
+                        }
+                        
+                    } else {
+                        std::vector<uint32_t> rightUpperVec(rightIds.begin(), rightIds.begin() + leftTupleInterval->tupleSize());
+                        
+                        auto idVec = leftIds;
+                        expandIdVec(&varMap, varModifierMapR, varModifierMapL, varPositionsL, constantMapL, varPositionsR->operator[](index), idVec, rightTupleInterval->tupleSize(), index + varPositionsL->operator[](index)->colorType->productSize());
+
+                        if(lessthan){
+                            leftTupleInterval->constrainUpper(rightUpperVec, strict);
+                            rightTupleInterval->constrainLower(idVec, strict);
+                        } else {
+                            leftTupleInterval->constrainLower(rightUpperVec, strict);
+                            rightTupleInterval->constrainUpper(idVec, strict);
+                        }                            
+                    }
+                }               
+            }
+
+            void restrictVars(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap,
+                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *varModifierMapL,
+                            std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> *varModifierMapR,
+                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsL,
+                            std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsR,
+                            std::unordered_map<uint32_t, const Color*> *constantMapL,
+                            std::unordered_map<uint32_t, const Color*> *constantMapR, 
+                            bool lessthan, bool strict, bool isPartitioning, bool& diagonal) {
+
+
+                for(auto varPositionPair : *varPositionsL){
+                    uint32_t index = varPositionPair.first;
+                    if(varPositionsR->count(index)){
+                        restrictDiagonal(variableMap, varModifierMapL, varModifierMapR, varPositionsL, varPositionsR, 
+                                        constantMapL, constantMapR, varPositionPair.second, index, lessthan, strict, isPartitioning, diagonal);
+                    } else {
+                        restrictByConstant(variableMap, varModifierMapR, varModifierMapL, varPositionsR, constantMapR, 
+                                        varPositionPair.second, varPositionPair.second, index, lessthan, strict);                        
                     }
                 }
+
+                for(auto varPositionPair : *varPositionsR){
+                    uint32_t index = varPositionPair.first;
+
+                    if(constantMapL->count(index)){
+                        restrictByConstant(variableMap,varModifierMapL, varModifierMapR, varPositionsL, constantMapL, 
+                                        varPositionPair.second, varPositionsR->operator[](index),index, lessthan, strict);                       
+                    }
+                }
+                
             }
 
             void restrictEquality(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap,
@@ -215,7 +241,8 @@ namespace PetriEngine {
                             std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsL,
                             std::unordered_map<uint32_t, const Colored::Variable *> *varPositionsR,
                             std::unordered_map<uint32_t, const Color*> *constantMapL,
-                            std::unordered_map<uint32_t, const Color*> *constantMapR) {
+                            std::unordered_map<uint32_t, const Color*> *constantMapR,
+                            bool isPartitioning) {
                 
                 for(auto& varMap : variableMap){
                     for(auto varPositionPair : *varPositionsL){
