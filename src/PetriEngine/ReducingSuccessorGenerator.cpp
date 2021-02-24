@@ -21,7 +21,6 @@ namespace PetriEngine {
     bool ReducingSuccessorGenerator::next(Structures::State &write) {
         _current = _stubSet->next();
         if (_current == std::numeric_limits<uint32_t>::max()) {
-            reset();
             return false;
         }
         memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof(MarkVal));
