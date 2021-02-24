@@ -26,15 +26,15 @@
 #include "LTL/Structures/BitProductStateSet.h"
 
 namespace LTL {
-    // template parameter for debugging purposes
-    template<typename SuccessorGen = PetriEngine::ReducingSuccessorGenerator, typename StateSet = PetriEngine::Structures::StateSet>
+    template<typename SuccessorGen, typename StateSet = PetriEngine::Structures::StateSet>
     class StubbornTarjanModelChecker : public ModelChecker<SuccessorGen> {
+            using StubSet = std::conditional_t<std::is_same_v<SuccessorGen, LTL::ReducingSuccessorGenerator>, AutomatonStubbornSet, LTLStubbornSet>;
     public:
         StubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
                 : ModelChecker<SuccessorGen>
                           (net, query,
-                           LTL::ReducingSuccessorGenerator{
-                                   net, std::make_shared<AutomatonStubbornSet>(net)}),
+                           SuccessorGen{
+                                   net, std::make_shared<StubSet>(net, query)}),
                   factory(net, this->successorGenerator->initial_buchi_state()),
                   seen(net, 0, net.numberOfPlaces() + 1)
         {
@@ -80,6 +80,7 @@ namespace LTL {
             // Warning: Smarter hash function may violate cstack search for repeat markings
             // unless the new hash also considers only the marking part of state ID.
             // This should work since the marking ID is lower half of state ID.
+            // ^ obsolete warning since bit product state set not in use in here
             return id % HashSz;
         }
 
@@ -151,7 +152,6 @@ namespace LTL {
 
     template
     class StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
-    //template class StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator>;
 }
 
 #endif //VERIFYPN_STUBBORNTARJANMODELCHECKER_H

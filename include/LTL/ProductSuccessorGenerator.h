@@ -34,7 +34,7 @@ namespace LTL {
 
     template<class SuccessorGen>
     class ProductSuccessorGenerator {
-        static constexpr auto LTLReducing = std::is_same_v<SuccessorGen, LTL::ReducingSuccessorGenerator>;
+        static constexpr auto AutomataReducing = std::is_same_v<SuccessorGen, LTL::ReducingSuccessorGenerator>;
     public:
 
         ProductSuccessorGenerator(const PetriEngine::PetriNet &net,
@@ -44,22 +44,24 @@ namespace LTL {
                   buchiSuccessorGenerator(makeBuchiAutomaton(cond)),
                   aut(buchiSuccessorGenerator.aut)
         {
-            std::vector<AtomicProposition> aps(aut.ap_info.size());
-            std::transform(std::begin(aut.ap_info), std::end(aut.ap_info), std::begin(aps),
-                           [](const std::pair<int, AtomicProposition> &pair) { return pair.second; });
-            for (unsigned state = 0; state < aut._buchi->num_states(); ++state) {
-                stateToGuards.emplace_back(state, aut._buchi->state_is_accepting(state));
-                for (auto &e : aut._buchi->out(state)) {
-                    auto formula = spot::bdd_to_formula(e.cond, aut.dict);
-                    if (e.dst == state) {
-                        stateToGuards.back().retarding = toPQL(formula, aps);
+            if constexpr (AutomataReducing) {
+                std::vector<AtomicProposition> aps(aut.ap_info.size());
+                std::transform(std::begin(aut.ap_info), std::end(aut.ap_info), std::begin(aps),
+                               [](const std::pair<int, AtomicProposition> &pair) { return pair.second; });
+                for (unsigned state = 0; state < aut._buchi->num_states(); ++state) {
+                    stateToGuards.emplace_back(state, aut._buchi->state_is_accepting(state));
+                    for (auto &e : aut._buchi->out(state)) {
+                        auto formula = spot::bdd_to_formula(e.cond, aut.dict);
+                        if (e.dst == state) {
+                            stateToGuards.back().retarding = toPQL(formula, aps);
+                        }
+                        else {
+                            stateToGuards.back().progressing.push_back(toPQL(formula, aps));
+                        }
                     }
-                    else {
-                        stateToGuards.back().progressing.push_back(toPQL(formula, aps));
+                    if (!stateToGuards.back().retarding) {
+                        stateToGuards.back().retarding = std::make_shared<BooleanCondition>(false);
                     }
-                }
-                if (!stateToGuards.back().retarding) {
-                    stateToGuards.back().retarding = std::make_shared<BooleanCondition>(false);
                 }
             }
         }
@@ -68,7 +70,7 @@ namespace LTL {
 
         void prepare(const LTL::Structures::ProductState *state)
         {
-            if constexpr (!LTLReducing) {
+            if constexpr (!AutomataReducing) {
                 successorGenerator.prepare(state);
             }
             else {
@@ -136,7 +138,7 @@ namespace LTL {
          */
         void prepare(const LTL::Structures::ProductState *state, const PetriEngine::successor_info &sucinfo)
         {
-            if constexpr (LTLReducing) {
+            if constexpr (AutomataReducing) {
                 successorGenerator.prepare(state, sucinfo, false);
             }
             else {

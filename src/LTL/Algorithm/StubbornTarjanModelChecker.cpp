@@ -29,8 +29,8 @@ namespace LTL {
         std::cerr << std::endl;
     }
 
-    template<typename G, typename W>
-    bool StubbornTarjanModelChecker<G, W>::isSatisfied()
+    template<typename W, typename G>
+    bool StubbornTarjanModelChecker<W, G>::isSatisfied()
     {
         this->is_weak = this->successorGenerator->is_weak() && this->shortcircuitweak;
         std::vector<State> initial_states;
@@ -81,8 +81,8 @@ namespace LTL {
      * Push a state to the various stacks.
      * @param state
      */
-    template<typename G, typename W>
-    void StubbornTarjanModelChecker<G, W>::push(State &state, size_t stateid)
+    template<typename W, typename G>
+    void StubbornTarjanModelChecker<W, G>::push(State &state, size_t stateid)
     {
         //const auto res = seen.add(state);
         const auto ctop = static_cast<idx_t>(cstack.size());
@@ -95,8 +95,8 @@ namespace LTL {
         }
     }
 
-    template<typename G, typename W>
-    void StubbornTarjanModelChecker<G, W>::pop()
+    template<typename W, typename G>
+    void StubbornTarjanModelChecker<W, G>::pop()
     {
         const auto p = dstack.top().pos;
         dstack.pop();
@@ -119,8 +119,8 @@ namespace LTL {
         }
     }
 
-    template<typename G, typename W>
-    void StubbornTarjanModelChecker<G, W>::popCStack()
+    template<typename W, typename G>
+    void StubbornTarjanModelChecker<W, G>::popCStack()
     {
         auto h = hash(cstack.back().stateid);
         store.insert(cstack.back().stateid);
@@ -128,8 +128,8 @@ namespace LTL {
         cstack.pop_back();
     }
 
-    template<typename G, typename W>
-    void StubbornTarjanModelChecker<G, W>::update(idx_t to)
+    template<typename W, typename G>
+    void StubbornTarjanModelChecker<W, G>::update(idx_t to)
     {
         const auto from = dstack.top().pos;
         if (cstack[to].lowlink <= cstack[from].lowlink) {
@@ -146,8 +146,8 @@ namespace LTL {
         }
     }
 
-    template<typename G, typename W>
-    bool StubbornTarjanModelChecker<G, W>::nexttrans(State &state, State &parent, DEntry &delem)
+    template<typename W, typename G>
+    bool StubbornTarjanModelChecker<W, G>::nexttrans(State &state, State &parent, DEntry &delem)
     {
         if (delem.successors.empty()) {
             if (delem.expanded) {
@@ -213,8 +213,8 @@ namespace LTL {
         }
     }
 
-    template<typename G, typename W>
-    std::ostream &StubbornTarjanModelChecker<G, W>::printTransition(size_t transition, uint indent, std::ostream &os)
+    template<typename W, typename G>
+    std::ostream &StubbornTarjanModelChecker<W, G>::printTransition(size_t transition, uint indent, std::ostream &os)
     {
         if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
             os << std::string(indent, '\t') << "<deadlock/>";
@@ -225,8 +225,8 @@ namespace LTL {
         return os;
     }
 
-    template<typename G, typename W>
-    void StubbornTarjanModelChecker<G, W>::printTrace(std::stack<DEntry> &&dstack, std::ostream &os)
+    template<typename W, typename G>
+    void StubbornTarjanModelChecker<W, G>::printTrace(std::stack<DEntry> &&dstack, std::ostream &os)
     {
         if constexpr (!SaveTrace) {
             return;
