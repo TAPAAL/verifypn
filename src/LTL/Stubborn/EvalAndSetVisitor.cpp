@@ -72,7 +72,7 @@ namespace LTL {
 
     void EvalAndSetVisitor::_accept(AndCondition *element) {
         auto res = Condition::RTRUE;
-        for(auto& c : *element) {
+        for (auto &c : *element) {
             c->visit(*this);
             auto r = c->getSatisfied();
             if (r == Condition::RFALSE) res = Condition::RFALSE;
@@ -83,7 +83,7 @@ namespace LTL {
 
     void EvalAndSetVisitor::_accept(OrCondition *element) {
         auto res = Condition::RFALSE;
-        for(auto& c : *element) {
+        for (auto &c : *element) {
             c->visit(*this);
             auto r = c->getSatisfied();
             if (r == Condition::RTRUE) res = Condition::RTRUE;
