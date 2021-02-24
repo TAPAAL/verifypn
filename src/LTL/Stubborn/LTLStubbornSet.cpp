@@ -49,6 +49,10 @@ namespace LTL {
         ensureRulesL();
 
         _nenabled = _ordering.size();
+
+        if (!_has_stubborn) {
+            memset(_stubborn.get(), 1, _net.numberOfTransitions());
+        }
 //#ifndef NDEBUG
         /*std::vector<size_t> stubs;
         size_t nenabled = 0;
@@ -144,6 +148,7 @@ namespace LTL {
     void LTLStubbornSet::reset() {
         StubbornSet::reset();
         _skipped.clear();
+        _has_stubborn = false;
     }
 
     void LTLStubbornSet::generateAll() {
@@ -163,6 +168,11 @@ namespace LTL {
                 _ordering.push_back(tid);
             _skipped.pop_front();
         }
+    }
+
+    void LTLStubbornSet::addToStub(uint32_t t) {
+        _has_stubborn = true;
+        StubbornSet::addToStub(t);
     }
 
 

@@ -126,7 +126,7 @@ namespace PetriEngine {
 
         bool checkPreset(uint32_t t);
 
-        void addToStub(uint32_t t);
+        virtual void addToStub(uint32_t t);
 
         void closure();
 

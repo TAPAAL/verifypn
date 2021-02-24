@@ -79,10 +79,14 @@ namespace LTL {
 
         void generateAll();
 
+    protected:
+        void addToStub(uint32_t t) override;
+
     private:
         std::unique_ptr<bool[]> _visible;
         light_deque<uint32_t> _skipped;
         uint32_t _key;
+        bool _has_stubborn;
 
         void findKeyTransition();
 
