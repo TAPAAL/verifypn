@@ -867,7 +867,7 @@ int main(int argc, char* argv[]) {
     bool alldone = options.queryReductionTimeout > 0;
     PetriNetBuilder b2(builder);
     std::unique_ptr<PetriNet> qnet(b2.makePetriNet(false));
-    MarkVal* qm0 = qnet->makeInitialMarking();
+    std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
     ResultPrinter p2(&b2, &options, querynames);
 
     if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
@@ -921,7 +921,7 @@ int main(int argc, char* argv[]) {
                     if(!hadTo[i]) continue;
                     hadTo[i] = false;
                     negstat_t stats;
-                    EvaluationContext context(qm0, qnet.get());
+                    EvaluationContext context(qm0.get(), qnet.get());
 
                     if(options.printstatistics && options.queryReductionTimeout > 0)
                     {
@@ -939,7 +939,7 @@ int main(int argc, char* argv[]) {
 
                     if (options.logic == TemporalLogic::LTL) {
                         if (options.queryReductionTimeout == 0) continue;
-                        SimplificationContext simplificationContext(qm0, qnet.get(), qt,
+                        SimplificationContext simplificationContext(qm0.get(), qnet.get(), qt,
                                                                     options.lpsolveTimeout, &cache);
                         queries[i] = simplify_ltl_query(queries[i], options.printstatistics,
                                            context, simplificationContext, out);
@@ -958,7 +958,7 @@ int main(int argc, char* argv[]) {
 
                     if (options.queryReductionTimeout > 0 && qt > 0)
                     {
-                        SimplificationContext simplificationContext(qm0, qnet.get(), qt,
+                        SimplificationContext simplificationContext(qm0.get(), qnet.get(), qt,
                                 options.lpsolveTimeout, &cache);
                         try {
                             negstat_t stats;
@@ -974,7 +974,6 @@ int main(int argc, char* argv[]) {
                             std::cerr << "Query reduction failed." << std::endl;
                             std::cerr << "Exception information: " << ba.what() << std::endl;
 
-                            delete[] qm0;
                             std::exit(ErrorCode);
                         }
 
@@ -1057,7 +1056,7 @@ int main(int argc, char* argv[]) {
     }
 
     qnet = nullptr;
-    delete[] qm0;
+    qm0 = nullptr;
 
     if (!options.statespaceexploration){
         for(size_t i = 0; i < queries.size(); ++i)

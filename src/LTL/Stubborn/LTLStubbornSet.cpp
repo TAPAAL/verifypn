@@ -17,6 +17,7 @@
 
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
 #include "LTL/Stubborn/LTLStubbornSet.h"
+#include "LTL/Stubborn/EvalAndSetVisitor.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
@@ -25,6 +26,7 @@ namespace LTL {
     void LTLStubbornSet::prepare(const PetriEngine::Structures::State *marking) {
         reset();
         _parent = marking;
+        PQL::EvaluationContext evaluationContext{_parent->marking(), &_net};
         memset(_places_seen.get(), 0, _net.numberOfPlaces());
         constructEnabled();
         if (_ordering.empty()) return;
@@ -33,9 +35,10 @@ namespace LTL {
             return;
         }
         for (auto &q : _queries) {
-            q->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
-            InterestingTransitionVisitor interesting{*this};
+            EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
+            q->visit(evalAndSetVisitor);
 
+            InterestingLTLTransitionVisitor interesting{*this};
             q->visit(interesting);
         }
         closure();

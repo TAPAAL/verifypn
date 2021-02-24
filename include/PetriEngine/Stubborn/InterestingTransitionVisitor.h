@@ -1,8 +1,18 @@
-/*
- * File:   InterestingTransitionVisitor.h
- * Author: Nikolaj J. Ulrik <nikolaj@njulrik.dk>
+/* Copyright (C) 2021  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
+ *                     Simon M. Virenfeldt <simon@simwir.dk>
  *
- * Created on 03/02/2021
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef VERIFYPN_INTERESTINGTRANSITIONVISITOR_H
@@ -22,9 +32,6 @@ namespace PetriEngine {
 
     private:
         PetriEngine::StubbornSet &_stubborn;
-        bool negated = false;
-
-        void negate() { negated = !negated; }
 
     protected:
         void _accept(const PQL::NotCondition *element) override;
@@ -99,6 +106,9 @@ namespace PetriEngine {
 
         void _accept(const PQL::BooleanCondition *element) override;
 
+        void negate() { negated = !negated; }
+
+        bool negated = false;
     private:
 
         /*
@@ -161,6 +171,29 @@ namespace PetriEngine {
 
         IncrVisitor incr;
         DecrVisitor decr;
+    };
+
+    class InterestingLTLTransitionVisitor : public InterestingTransitionVisitor {
+    public:
+        explicit InterestingLTLTransitionVisitor(StubbornSet &stubbornSet) : InterestingTransitionVisitor(stubbornSet) {}
+
+    protected:
+        void _accept(const PQL::LessThanCondition *element) override;
+
+        void _accept(const PQL::LessThanOrEqualCondition *element) override;
+
+        void _accept(const PQL::GreaterThanCondition *element) override;
+
+        void _accept(const PQL::GreaterThanOrEqualCondition *element) override;
+
+        void _accept(const PQL::EqualCondition *element) override;
+
+        void _accept(const PQL::NotEqualCondition *element) override;
+
+        void _accept(const PQL::CompareConjunction *element) override;
+
+        template<typename Condition>
+        void negate_if_satisfied(const Condition *element);
     };
 
 }

@@ -153,11 +153,7 @@ namespace LTL {
                 }
                 if (p != std::numeric_limits<idx_t>::max()) {
                     // loop found!
-                    std::cerr << "loop found!" << std::endl;
                     if (extstack.empty() || p >= extstack.top()) {
-#ifndef NDEBUG
-                        std::cerr << "  expanding all" << std::endl;
-#endif
                         // if no extension was computed during cycle, generate all
                         this->successorGenerator->generateAll();
                         extstack.push(stateid);
