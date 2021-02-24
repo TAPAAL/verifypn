@@ -33,11 +33,17 @@ namespace LTL {
 
         void reset() override;
 
+        void addToStub(uint32_t t) override {
+            hasStubborn = true;
+            PetriEngine::StubbornSet::addToStub(t);
+        }
+
     private:
         void prepare_accepting(const PetriEngine::Structures::State *state, const GuardInfo &info);
         void prepare_nonaccepting(const PetriEngine::Structures::State *state, const GuardInfo &info);
 
         PetriEngine::NegatedStubbornSet negated;
+        bool hasStubborn = false;
     };
 
 }

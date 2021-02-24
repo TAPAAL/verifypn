@@ -15,8 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <LTL/Structures/GuardInfo.h>
+#include "LTL/Structures/GuardInfo.h"
 #include "LTL/Stubborn/AutomatonStubbornSet.h"
+#include "LTL/Stubborn/EvalAndSetVisitor.h"
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
 
 using namespace PetriEngine;
@@ -36,16 +37,23 @@ namespace LTL {
             return;
         }
         PQL::EvaluationContext evalCtx(_parent->marking(), &_net);
-        info.retarding->evalAndSet(evalCtx);
+        EvalAndSetVisitor evalVisitor{evalCtx};
+        info.retarding->visit(evalVisitor);
         for (auto &cond : info.progressing) {
-            cond->evalAndSet(evalCtx);
+            cond->visit(evalVisitor);
         }
         if (!info.is_accepting) {
             prepare_nonaccepting(state, info);
         } else {
             prepare_accepting(state, info);
         }
-        closure();
+        if (!_ordering.empty() && !hasStubborn) {
+            // if there are enabled transitions, ensure we have some stubborn transition (all)
+            memcpy(_stubborn.get(), _enabled.get(), _net.numberOfTransitions());
+        }
+        else {
+            closure();
+        }
     }
 
     void AutomatonStubbornSet::prepare_accepting(const PetriEngine::Structures::State *state, const GuardInfo &info)
@@ -98,6 +106,7 @@ namespace LTL {
 
     void AutomatonStubbornSet::reset()
     {
+        hasStubborn = false;
         StubbornSet::reset();
         negated.reset();
     }

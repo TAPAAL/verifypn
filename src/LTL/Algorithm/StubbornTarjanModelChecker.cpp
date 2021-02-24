@@ -18,6 +18,17 @@
 #include "LTL/Algorithm/StubbornTarjanModelChecker.h"
 
 namespace LTL {
+    inline void _dump_state(const LTL::Structures::ProductState &state)
+    {
+        std::cerr << "marking: ";
+        std::cerr << state.marking()[0];
+        for (size_t i = 1; i < state.size(); ++i) {
+            std::cerr << ", " << state.marking()[i];
+        }
+        std::cerr << "\tbuchi " << state.getBuchiState();
+        std::cerr << std::endl;
+    }
+
     template<typename G, typename W>
     bool StubbornTarjanModelChecker<G, W>::isSatisfied()
     {
@@ -64,16 +75,6 @@ namespace LTL {
             }
         }
         return !violation;
-    }
-
-    inline void _dump_state(const LTL::Structures::ProductState &state)
-    {
-        std::cerr << "marking: ";
-        std::cerr << state.marking()[0];
-        for (size_t i = 1; i < state.size(); ++i) {
-            std::cerr << ", " << state.marking()[i];
-        }
-        std::cerr << std::endl;
     }
 
     /**

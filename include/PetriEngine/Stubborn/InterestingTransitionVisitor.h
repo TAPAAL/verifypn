@@ -35,10 +35,8 @@ namespace PetriEngine {
 
     private:
         PetriEngine::StubbornSet &_stubborn;
-        bool negated = false;
 
         bool closure;
-        void negate() { negated = !negated; }
 
     protected:
         void _accept(const PQL::NotCondition *element) override;
@@ -113,8 +111,6 @@ namespace PetriEngine {
 
         void _accept(const PQL::BooleanCondition *element) override;
 
-        void negate() { negated = !negated; }
-
         bool negated = false;
     private:
 
@@ -187,7 +183,7 @@ namespace PetriEngine {
 
     class InterestingLTLTransitionVisitor : public InterestingTransitionVisitor {
     public:
-        explicit InterestingLTLTransitionVisitor(StubbornSet &stubbornSet) : InterestingTransitionVisitor(stubbornSet) {}
+        explicit InterestingLTLTransitionVisitor(StubbornSet &stubbornSet, bool closure) : InterestingTransitionVisitor(stubbornSet, closure) {}
 
     protected:
         void _accept(const PQL::LessThanCondition *element) override;

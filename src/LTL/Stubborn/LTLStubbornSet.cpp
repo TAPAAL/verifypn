@@ -38,7 +38,7 @@ namespace LTL {
             EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
             q->visit(evalAndSetVisitor);
 
-            InterestingLTLTransitionVisitor interesting{*this};
+            InterestingLTLTransitionVisitor interesting{*this, true};
             q->visit(interesting);
         }
         closure();
@@ -48,7 +48,7 @@ namespace LTL {
 
         ensureRulesL();
 
-        _nenabled = _ordering.size();
+        //_nenabled = _ordering.size();
 //#ifndef NDEBUG
         /*std::vector<size_t> stubs;
         size_t nenabled = 0;

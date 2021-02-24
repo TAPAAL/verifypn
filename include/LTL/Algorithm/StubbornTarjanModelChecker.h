@@ -36,7 +36,7 @@ namespace LTL {
                            LTL::ReducingSuccessorGenerator{
                                    net, std::make_shared<AutomatonStubbornSet>(net)}),
                   factory(net, this->successorGenerator->initial_buchi_state()),
-                  seen(net, 0)
+                  seen(net, 0, net.numberOfPlaces() + 1)
         {
             if (this->successorGenerator->buchiStates() > 65535) {
                 std::cout << "CANNOT_COMPUTE\n";
