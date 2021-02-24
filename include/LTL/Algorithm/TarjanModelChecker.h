@@ -30,7 +30,7 @@ namespace LTL {
 
     /**
      * Implements on-the-fly version of Tarjan's algorithm suitable for LTL model checking.
-     * The idea is to detect some strongly connected component containing an accepting state,
+     * The idea is to detect some reachable strongly connected component containing an accepting state,
      * which constitutes a counter-example.
      * For more details see
      *   Jaco Geldenhuys & Antti Valmari,

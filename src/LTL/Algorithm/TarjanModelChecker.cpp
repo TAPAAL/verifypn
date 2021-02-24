@@ -167,7 +167,7 @@ namespace LTL {
     template<bool SaveTrace>
     std::ostream &TarjanModelChecker<SaveTrace>::printTransition(size_t transition, uint indent, std::ostream &os)
     {
-        if (transition == std::numeric_limits<ptrie::uint>::max() - 1) {
+        if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
             os << std::string(indent, '\t') << "<deadlock/>";
             return os;
         }
@@ -176,7 +176,7 @@ namespace LTL {
         return os;
     }
 
-template<bool SaveTrace>
+    template<bool SaveTrace>
     void TarjanModelChecker<SaveTrace>::printTrace(std::stack<DEntry> &&dstack, std::ostream &os)
     {
         if constexpr (!SaveTrace) {
