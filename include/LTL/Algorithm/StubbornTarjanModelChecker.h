@@ -19,22 +19,25 @@
 #define VERIFYPN_STUBBORNTARJANMODELCHECKER_H
 
 #include "LTL/Stubborn/LTLStubbornSet.h"
+#include "LTL/Stubborn/AutomatonStubbornSet.h"
+#include "LTL/Stubborn/ReducingSuccessorGenerator.h"
 #include "LTL/Algorithm/ModelChecker.h"
 #include "PetriEngine/Structures/light_deque.h"
 #include "LTL/Structures/BitProductStateSet.h"
 
 namespace LTL {
     // template parameter for debugging purposes
-    template<typename SuccessorGen = PetriEngine::ReducingSuccessorGenerator>
+    template<typename SuccessorGen = PetriEngine::ReducingSuccessorGenerator, typename StateSet = PetriEngine::Structures::StateSet>
     class StubbornTarjanModelChecker : public ModelChecker<SuccessorGen> {
     public:
         StubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
                 : ModelChecker<SuccessorGen>
                           (net, query,
-                           PetriEngine::ReducingSuccessorGenerator{
-                                   net, std::make_shared<LTLStubbornSet>(net, query)}),
+                           LTL::ReducingSuccessorGenerator{
+                                   net, std::make_shared<AutomatonStubbornSet>(net)}),
                   factory(net, this->successorGenerator->initial_buchi_state()),
-                  seen(net, 0) {
+                  seen(net, 0)
+        {
             if (this->successorGenerator->buchiStates() > 65535) {
                 std::cout << "CANNOT_COMPUTE\n";
                 std::cout << "Too many Buchi states: " << this->successorGenerator->buchiStates() << std::endl;
@@ -45,9 +48,10 @@ namespace LTL {
 
         bool isSatisfied() override;
 
-        void printStats(ostream &os) override {
+        void printStats(ostream &os) override
+        {
             std::cout << "STATS:\n"
-                      << "\tdiscovered states: " << seen.size() << std::endl
+                      << "\tdiscovered states: " << seen.discovered() << std::endl
                       << "\texplored states:   " << this->stats.explored << std::endl
                       << "\texpanded states:   " << this->stats.expanded << std::endl
                       << "\tmax tokens:        " << seen.maxTokens() << std::endl;
@@ -63,25 +67,41 @@ namespace LTL {
         LTL::Structures::ProductStateFactory factory;
 
         // TODO take number of Büchi states into account at construction time, perhaps implement pair-ID state set.
-        LTL::Structures::BitProductStateSet<> seen;
+        static constexpr auto SaveTrace = std::is_same_v<StateSet, PetriEngine::Structures::TracableStateSet>;
+        StateSet seen;
         std::unordered_set<idx_t> store;
+        size_t loopstate = std::numeric_limits<size_t>::max();
+        size_t looptrans = std::numeric_limits<size_t>::max();
 
         std::array<idx_t, HashSz> chash;
 
-        static inline idx_t hash(idx_t id) {
+        static inline idx_t hash(idx_t id)
+        {
             // Warning: Smarter hash function may violate cstack search for repeat markings
             // unless the new hash also considers only the marking part of state ID.
             // This should work since the marking ID is lower half of state ID.
             return id % HashSz;
         }
 
-        struct CEntry {
+        struct PlainCEntry {
             idx_t lowlink;
             idx_t stateid;
             idx_t next = std::numeric_limits<idx_t>::max();
 
-            CEntry(idx_t lowlink, idx_t stateid, idx_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
+            PlainCEntry(idx_t lowlink, idx_t stateid, idx_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
         };
+
+        struct TracableCEntry : PlainCEntry {
+            idx_t lowsource = std::numeric_limits<idx_t>::max();
+            idx_t sourcetrans;
+
+            TracableCEntry(idx_t lowlink, idx_t stateid, idx_t next) : PlainCEntry(lowlink, stateid, next) {}
+        };
+
+        using CEntry = std::conditional_t<SaveTrace,
+                TracableCEntry,
+                PlainCEntry>;
+
 
         struct DEntry {
             idx_t pos;
@@ -105,15 +125,32 @@ namespace LTL {
 
         void popCStack();
 
-        idx_t searchCStack(idx_t stateid) const {
+        idx_t searchCStack(idx_t stateid) const
+        {
             auto p = chash[hash(stateid)];
             while (p != numeric_limits<idx_t>::max() && cstack[p].stateid != stateid) {
                 p = cstack[p].next;
             }
             return p;
         }
+
+        std::ostream &printTransition(size_t transition, uint indent, std::ostream &os);
+
+        void printTrace(std::stack<DEntry> &&dstack, std::ostream &os = std::cout);
+
     };
-    template class StubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator>;
+
+    template
+    class StubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>;
+
+    template
+    class StubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
+
+    template
+    class StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>;
+
+    template
+    class StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
     //template class StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator>;
 }
 

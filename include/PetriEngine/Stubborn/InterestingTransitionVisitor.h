@@ -14,17 +14,19 @@
 namespace PetriEngine {
     class InterestingTransitionVisitor : public PQL::Visitor {
     public:
-        InterestingTransitionVisitor(PetriEngine::StubbornSet &stubbornSet)
-                : _stubborn(stubbornSet), incr(stubbornSet), decr(stubbornSet) {
+        InterestingTransitionVisitor(PetriEngine::StubbornSet &stubbornSet, bool closure)
+                : _stubborn(stubbornSet), closure(closure), incr(stubbornSet, closure), decr(stubbornSet, closure)
+        {
             incr.decr = &decr;
             decr.incr = &incr;
         }
 
+        void negate() { negated = !negated; }
+
     private:
         PetriEngine::StubbornSet &_stubborn;
         bool negated = false;
-
-        void negate() { negated = !negated; }
+        bool closure;
 
     protected:
         void _accept(const PQL::NotCondition *element) override;
@@ -51,37 +53,43 @@ namespace PetriEngine {
 
         void _accept(const PQL::UnfoldedUpperBoundsCondition *element) override;
 
-        void _accept(const PQL::UnfoldedIdentifierExpr *element) override {
+        void _accept(const PQL::UnfoldedIdentifierExpr *element) override
+        {
             assert(false);
             std::cerr << "No accept for UnfoldedIdentifierExpr" << std::endl;
             exit(0);
         };
 
-        void _accept(const PQL::LiteralExpr *element) override {
+        void _accept(const PQL::LiteralExpr *element) override
+        {
             assert(false);
             std::cerr << "No accept for LiteralExpr" << std::endl;
             exit(0);
         };
 
-        void _accept(const PQL::PlusExpr *element) override {
+        void _accept(const PQL::PlusExpr *element) override
+        {
             assert(false);
             std::cerr << "No accept for PlusExpr" << std::endl;
             exit(0);
         };
 
-        void _accept(const PQL::MultiplyExpr *element) override {
+        void _accept(const PQL::MultiplyExpr *element) override
+        {
             assert(false);
             std::cerr << "No accept for MultiplyExpr" << std::endl;
             exit(0);
         };
 
-        void _accept(const PQL::MinusExpr *element) override {
+        void _accept(const PQL::MinusExpr *element) override
+        {
             assert(false);
             std::cerr << "No accept for MinusExpr" << std::endl;
             exit(0);
         };
 
-        void _accept(const PQL::SubtractExpr *element) override {
+        void _accept(const PQL::SubtractExpr *element) override
+        {
             assert(false);
             std::cerr << "No accept for SubtractExpr" << std::endl;
             exit(0);
@@ -100,16 +108,19 @@ namespace PetriEngine {
          */
 
         class DecrVisitor;
+
         class IncrVisitor : public PQL::ExpressionVisitor {
         public:
-            IncrVisitor(StubbornSet &stubbornSet)
-                    : _stubborn(stubbornSet) {}
+            IncrVisitor(StubbornSet &stubbornSet, bool closure)
+                    : _stubborn(stubbornSet), closure(closure) {}
 
             DecrVisitor *decr;
         private:
             StubbornSet &_stubborn;
+            bool closure;
 
-            void _accept(const PQL::IdentifierExpr *element) override {
+            void _accept(const PQL::IdentifierExpr *element) override
+            {
                 element->compiled()->visit(*this);
             }
 
@@ -128,15 +139,17 @@ namespace PetriEngine {
 
         class DecrVisitor : public PQL::ExpressionVisitor {
         public:
-            DecrVisitor(StubbornSet &stubbornSet)
-                    : _stubborn(stubbornSet) {}
+            DecrVisitor(StubbornSet &stubbornSet, bool closure)
+                    : _stubborn(stubbornSet), closure(closure) {}
 
             IncrVisitor *incr;
 
         private:
             StubbornSet &_stubborn;
+            bool closure;
 
-            void _accept(const PQL::IdentifierExpr *element) override {
+            void _accept(const PQL::IdentifierExpr *element) override
+            {
                 element->compiled()->visit(*this);
             }
 

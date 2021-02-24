@@ -20,34 +20,67 @@
 
 #include "PetriEngine/SuccessorGenerator.h"
 #include "PetriEngine/ReducingSuccessorGenerator.h"
+#include "LTL/Stubborn/ReducingSuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/Structures/ProductState.h"
 #include "LTL/BuchiSuccessorGenerator.h"
 #include "LTL/LTLToBuchi.h"
 #include "LTL/Stubborn/LTLStubbornSet.h"
-
+#include "LTL/Simplification/SpotToPQL.h"
+#include "LTL/Structures/GuardInfo.h"
+#include <spot/twa/formula2bdd.hh>
 
 namespace LTL {
 
     template<class SuccessorGen>
     class ProductSuccessorGenerator {
+        static constexpr auto LTLReducing = std::is_same_v<SuccessorGen, LTL::ReducingSuccessorGenerator>;
     public:
 
         ProductSuccessorGenerator(const PetriEngine::PetriNet &net,
                                   const PetriEngine::PQL::Condition_ptr &cond,
                                   const SuccessorGen &successorGen)
-                : successorGenerator(successorGen), _net(net), buchi(makeBuchiAutomaton(cond)) {}
+                : successorGenerator(successorGen), _net(net),
+                  buchiSuccessorGenerator(makeBuchiAutomaton(cond)),
+                  aut(buchiSuccessorGenerator.aut)
+        {
+            std::vector<AtomicProposition> aps(aut.ap_info.size());
+            std::transform(std::begin(aut.ap_info), std::end(aut.ap_info), std::begin(aps),
+                           [](const std::pair<int, AtomicProposition> &pair) { return pair.second; });
+            for (unsigned state = 0; state < aut._buchi->num_states(); ++state) {
+                stateToGuards.emplace_back(state, aut._buchi->state_is_accepting(state));
+                for (auto &e : aut._buchi->out(state)) {
+                    auto formula = spot::bdd_to_formula(e.cond, aut.dict);
+                    if (e.dst == state) {
+                        stateToGuards.back().retarding = toPQL(formula, aps);
+                    }
+                    else {
+                        stateToGuards.back().progressing.push_back(toPQL(formula, aps));
+                    }
+                }
+                if (!stateToGuards.back().retarding) {
+                    stateToGuards.back().retarding = std::make_shared<BooleanCondition>(false);
+                }
+            }
+        }
 
-        [[nodiscard]] size_t initial_buchi_state() const { return buchi.initial_state_number(); };
+        [[nodiscard]] size_t initial_buchi_state() const { return buchiSuccessorGenerator.initial_state_number(); };
 
-        void prepare(const LTL::Structures::ProductState *state) {
-            successorGenerator.prepare(state);
-            buchi.prepare(state->getBuchiState());
+        void prepare(const LTL::Structures::ProductState *state)
+        {
+            if constexpr (!LTLReducing) {
+                successorGenerator.prepare(state);
+            }
+            else {
+                successorGenerator.prepare(state, stateToGuards.at(state->getBuchiState()));
+            }
+            buchiSuccessorGenerator.prepare(state->getBuchiState());
             buchi_parent = state->getBuchiState();
             fresh_marking = true;
         }
 
-        bool next(LTL::Structures::ProductState &state) {
+        bool next(LTL::Structures::ProductState &state)
+        {
             if (fresh_marking) {
                 fresh_marking = false;
                 if (!successorGenerator.next(state)) {
@@ -64,8 +97,8 @@ namespace LTL {
                 // Try next marking(s) and see if we find a successor.
             else {
                 while (successorGenerator.next(state)) {
-                    // reset buchi successors
-                    buchi.prepare(buchi_parent);
+                    // reset buchiSuccessorGenerator successors
+                    buchiSuccessorGenerator.prepare(buchi_parent);
                     if (next_buchi_succ(state)) {
                         return true;
                     }
@@ -74,18 +107,20 @@ namespace LTL {
             }
         }
 
-        bool isAccepting(const LTL::Structures::ProductState &state) {
-            return buchi.is_accepting(state.getBuchiState());
+        bool isAccepting(const LTL::Structures::ProductState &state)
+        {
+            return buchiSuccessorGenerator.is_accepting(state.getBuchiState());
         }
 
-        void makeInitialState(std::vector<LTL::Structures::ProductState> &states) {
+        void makeInitialState(std::vector<LTL::Structures::ProductState> &states)
+        {
             auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces() + 1];
             std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), buf);
             buf[_net.numberOfPlaces()] = 0;
             LTL::Structures::ProductState state;
             state.setMarking(buf, _net.numberOfPlaces());
             state.setBuchiState(initial_buchi_state());
-            buchi.prepare(state.getBuchiState());
+            buchiSuccessorGenerator.prepare(state.getBuchiState());
             while (next_buchi_succ(state)) {
                 states.emplace_back();
                 states.back().setMarking(new PetriEngine::MarkVal[_net.numberOfPlaces() + 1], _net.numberOfPlaces());
@@ -99,9 +134,15 @@ namespace LTL {
          * @param state the source state to generate successors from
          * @param sucinfo the point in the iteration to start from, as returned by `next`.
          */
-        void prepare(const LTL::Structures::ProductState *state, const PetriEngine::successor_info &sucinfo) {
-            successorGenerator.prepare(state, sucinfo);
-            buchi.prepare(state->getBuchiState());
+        void prepare(const LTL::Structures::ProductState *state, const PetriEngine::successor_info &sucinfo)
+        {
+            if constexpr (LTLReducing) {
+                successorGenerator.prepare(state, sucinfo, false);
+            }
+            else {
+                successorGenerator.prepare(state, sucinfo);
+            }
+            buchiSuccessorGenerator.prepare(state->getBuchiState());
             buchi_parent = state->getBuchiState();
             fresh_marking = sucinfo.pcounter == 0 && sucinfo.tcounter == std::numeric_limits<uint32_t>::max();
             if (!fresh_marking) {
@@ -110,7 +151,7 @@ namespace LTL {
                 // TODO is there perhaps a good way to avoid this, perhaps using raw edge vector?
                 // Caveat: it seems like there usually are not that many successors, so this is probably cheap regardless
                 size_t tmp;
-                while (buchi.next(tmp, cond)) {
+                while (buchiSuccessorGenerator.next(tmp, cond)) {
                     if (tmp == sucinfo.buchi_state) {
                         break;
                     }
@@ -125,7 +166,8 @@ namespace LTL {
          * @return `true` if a successor was successfully generated, `false` otherwise.
          * @warning do not use the same State for both prepare and next, this will cause wildly incorrect behaviour!
          */
-        bool next(Structures::ProductState &state, PetriEngine::successor_info &sucinfo) {
+        bool next(Structures::ProductState &state, PetriEngine::successor_info &sucinfo)
+        {
             if (fresh_marking) {
                 fresh_marking = false;
                 if (!successorGenerator.next(state)) {
@@ -144,8 +186,8 @@ namespace LTL {
                 // Try next marking(s) and see if we find a successor.
             else {
                 while (successorGenerator.next(state)) {
-                    // reset buchi successors
-                    buchi.prepare(buchi_parent);
+                    // reset buchiSuccessorGenerator successors
+                    buchiSuccessorGenerator.prepare(buchi_parent);
                     if (next_buchi_succ(state)) {
                         successorGenerator.getSuccInfo(sucinfo);
                         sucinfo.buchi_state = state.getBuchiState();
@@ -157,8 +199,9 @@ namespace LTL {
         }
 
 
-        [[nodiscard]] bool is_weak() const {
-            return buchi.is_weak();
+        [[nodiscard]] bool is_weak() const
+        {
+            return buchiSuccessorGenerator.is_weak();
         }
 
         size_t last_transition() const { return successorGenerator.last_transition(); }
@@ -166,29 +209,34 @@ namespace LTL {
         size_t fired() const { return successorGenerator.fired(); }
 
         //template<typename T = std::enable_if_t<std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>, void>>
-        void generateAll() {
+        void generateAll()
+        {
             if constexpr (std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>)
                 successorGenerator.generateAll();
         }
 
-        size_t buchiStates() { return buchi.buchiStates(); }
+        size_t buchiStates() { return buchiSuccessorGenerator.buchiStates(); }
 
     private:
         SuccessorGen successorGenerator;
         const PetriEngine::PetriNet &_net;
 
-        BuchiSuccessorGenerator buchi;
+        BuchiSuccessorGenerator buchiSuccessorGenerator;
+        LTL::Structures::BuchiAutomaton &aut;
         bdd cond;
         size_t buchi_parent;
         bool fresh_marking = true;
 
-        bool guard_valid(const PetriEngine::Structures::State &state, bdd bdd) {
+        std::vector<GuardInfo> stateToGuards;
+
+        bool guard_valid(const PetriEngine::Structures::State &state, bdd bdd)
+        {
             EvaluationContext ctx{state.marking(), &_net};
             // IDs 0 and 1 are false and true atoms, respectively
             while (bdd.id() > 1/*!(bdd == bddtrue || bdd == bddfalse)*/) {
                 // find variable to test, and test it
                 size_t var = bdd_var(bdd);
-                Condition::Result res = buchi.getExpression(var)->evaluate(ctx);
+                Condition::Result res = buchiSuccessorGenerator.getExpression(var)->evaluate(ctx);
                 switch (res) {
                     case Condition::RUNKNOWN:
                         std::cerr << "Unexpected unknown answer from evaluating query!\n";
@@ -206,9 +254,10 @@ namespace LTL {
             return bdd == bddtrue;
         }
 
-        bool next_buchi_succ(LTL::Structures::ProductState &state) {
+        bool next_buchi_succ(LTL::Structures::ProductState &state)
+        {
             size_t tmp;
-            while (buchi.next(tmp, cond)) {
+            while (buchiSuccessorGenerator.next(tmp, cond)) {
                 if (guard_valid(state, cond)) {
                     state.setBuchiState(tmp);
                     return true;
@@ -217,8 +266,12 @@ namespace LTL {
             return false;
         }
     };
-    extern template class ProductSuccessorGenerator<PetriEngine::SuccessorGenerator>;
-    extern template class ProductSuccessorGenerator<PetriEngine::ReducingSuccessorGenerator>;
+
+    extern template
+    class ProductSuccessorGenerator<PetriEngine::SuccessorGenerator>;
+
+    extern template
+    class ProductSuccessorGenerator<PetriEngine::ReducingSuccessorGenerator>;
 }
 
 

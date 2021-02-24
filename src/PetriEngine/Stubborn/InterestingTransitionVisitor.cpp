@@ -58,8 +58,8 @@ namespace PetriEngine {
             if (c._lower == c._upper) {
                 if (neg) {
                     if (val != c._lower) continue;
-                    _stubborn.postsetOf(c._place, true);
-                    _stubborn.presetOf(c._place, true);
+                    _stubborn.postsetOf(c._place, closure);
+                    _stubborn.presetOf(c._place, closure);
                 } else {
                     if (val == c._lower) continue;
                     if (val > c._lower) {
@@ -85,11 +85,11 @@ namespace PetriEngine {
                     }
                 } else {
                     if (val >= c._lower && c._lower != 0) {
-                        _stubborn.postsetOf(c._place, true);
+                        _stubborn.postsetOf(c._place, closure);
                     }
 
                     if (val <= c._upper && c._upper != std::numeric_limits<uint32_t>::max()) {
-                        _stubborn.presetOf(c._place, true);
+                        _stubborn.presetOf(c._place, closure);
                     }
                 }
             }
@@ -102,9 +102,9 @@ namespace PetriEngine {
         }
         if (cand != std::numeric_limits<int32_t>::max()) {
             if (pre) {
-                _stubborn.presetOf(cand, true);
+                _stubborn.presetOf(cand, closure);
             } else if (!pre) {
-                _stubborn.postsetOf(cand, true);
+                _stubborn.postsetOf(cand, closure);
             }
         }
     }
@@ -198,7 +198,7 @@ namespace PetriEngine {
 
     void InterestingTransitionVisitor::_accept(const PQL::NotCondition *element) {
         negate();
-        element->visit(*this);
+        (*element)[0]->visit(*this);
         negate();
     }
 
@@ -208,7 +208,7 @@ namespace PetriEngine {
 
     void InterestingTransitionVisitor::_accept(const PQL::DeadlockCondition *element) {
         if (!element->isSatisfied()) {
-            _stubborn.postPresetOf(_stubborn.leastDependentEnabled(), true);
+            _stubborn.postPresetOf(_stubborn.leastDependentEnabled(), closure);
         } // else add nothing
     }
 
@@ -220,12 +220,12 @@ namespace PetriEngine {
     }
 
     void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::PlusExpr *element) {
-        for(auto& i : element->places()) _stubborn.presetOf(i.first, true);
+        for(auto& i : element->places()) _stubborn.presetOf(i.first, closure);
         for(auto& e : element->expressions()) e->visit(*this);
     }
 
     void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::PlusExpr *element) {
-        for(auto& i : element->places()) _stubborn.postsetOf(i.first, true);
+        for(auto& i : element->places()) _stubborn.postsetOf(i.first, closure);
         for(auto& e : element->expressions()) e->visit(*this);
     }
 
@@ -256,15 +256,15 @@ namespace PetriEngine {
     void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::MultiplyExpr *element) {
         if((element->places().size() + element->expressions().size()) == 1)
         {
-            for(auto& i : element->places()) _stubborn.presetOf(i.first, true);
+            for(auto& i : element->places()) _stubborn.presetOf(i.first, closure);
             for(auto& e : element->expressions()) e->visit(*this);
         }
         else
         {
             for(auto& i : element->places())
             {
-                _stubborn.presetOf(i.first, true);
-                _stubborn.postsetOf(i.first, true);
+                _stubborn.presetOf(i.first, closure);
+                _stubborn.postsetOf(i.first, closure);
             }
             for(auto& e : element->expressions())
             {
@@ -277,7 +277,7 @@ namespace PetriEngine {
     void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::MultiplyExpr *element) {
         if((element->places().size() + element->expressions().size()) == 1)
         {
-            for(auto& i : element->places()) _stubborn.postsetOf(i.first, true);
+            for(auto& i : element->places()) _stubborn.postsetOf(i.first, closure);
             for(auto& e : element->expressions()) e->visit(*this);
         }
         else
@@ -301,11 +301,11 @@ namespace PetriEngine {
     }
 
     void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::UnfoldedIdentifierExpr *element) {
-        _stubborn.presetOf(element->offset(), true);
+        _stubborn.presetOf(element->offset(), closure);
     }
 
     void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::UnfoldedIdentifierExpr *element) {
-        _stubborn.postsetOf(element->offset(), true);
+        _stubborn.postsetOf(element->offset(), closure);
     }
 
 }

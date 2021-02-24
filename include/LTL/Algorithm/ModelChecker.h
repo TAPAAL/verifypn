@@ -48,7 +48,7 @@ namespace LTL {
         };
 
         stats_t stats;
-        virtual void _printStats(ostream &os, const PetriEngine::Structures::StateSet &stateSet) {
+        virtual void _printStats(ostream &os, const PetriEngine::Structures::StateSetInterface &stateSet) {
             std::cout   << "STATS:\n"
                         << "\tdiscovered states: " << stateSet.discovered() << std::endl
                         << "\texplored states:   " << stats.explored << std::endl

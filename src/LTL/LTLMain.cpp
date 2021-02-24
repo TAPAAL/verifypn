@@ -40,7 +40,8 @@ namespace LTL {
  * @return @code(ltl_formula, should_negate) - ltl_formula is the formula f if it is a valid LTL formula, nullptr otherwise.
  * should_negate indicates whether the returned formula is negated (in the case the parameter was E f)
  */
-    std::pair<Condition_ptr, bool> to_ltl(const Condition_ptr &formula) {
+    std::pair<Condition_ptr, bool> to_ltl(const Condition_ptr &formula)
+    {
         LTL::LTLValidator validator;
         bool should_negate = false;
         Condition_ptr converted;
@@ -62,7 +63,8 @@ namespace LTL {
     template<typename Checker>
     Result _verify(const PetriNet *net,
                    Condition_ptr &negatedQuery,
-                   bool printstats) {
+                   bool printstats)
+    {
         Result result;
         auto modelChecker = std::make_unique<Checker>(*net, negatedQuery);
         result.satisfied = modelChecker->isSatisfied();
@@ -76,7 +78,8 @@ namespace LTL {
     ReturnValue LTLMain(const PetriNet *net,
                         const Condition_ptr &query,
                         const std::string &queryName,
-                        const options_t &options) {
+                        const options_t &options)
+    {
         auto res = to_ltl(query);
         Condition_ptr negated_formula = res.first;
         bool negate_answer = res.second;
@@ -95,11 +98,23 @@ namespace LTL {
                 result = _verify<RandomNDFS>(net, negated_formula, options.printstatistics);
                 break;
             case Algorithm::Tarjan:
-                if (options.stubbornreduction && !negated_formula->containsNext()) {
+                if (options.stubbornreduction/* && !negated_formula->containsNext()*/) {
                     std::cout << "Running stubborn version!" << std::endl;
-                    result = _verify<StubbornTarjanModelChecker<ReducingSuccessorGenerator>>(net, negated_formula, options.printstatistics);
+                    if (options.trace) {
+                        result = _verify<StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>>(
+                                net, negated_formula, options.printstatistics);
+                    }
+                    else {
+                        result = _verify<StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>>(
+                                net, negated_formula, options.printstatistics);
+                    }
                 } else {
-                    result = _verify<TarjanModelChecker<false>>(net, negated_formula, options.printstatistics);
+                    if (options.trace) {
+                        result = _verify<TarjanModelChecker<true>>(net, negated_formula, options.printstatistics);
+                    }
+                    else {
+                        result = _verify<TarjanModelChecker<false>>(net, negated_formula, options.printstatistics);
+                    }
                 }
                 break;
             case Algorithm::None:

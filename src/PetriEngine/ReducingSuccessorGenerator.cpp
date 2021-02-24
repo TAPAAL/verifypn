@@ -3,6 +3,9 @@
 #include <cassert>
 #include "PetriEngine/PQL/Contexts.h"
 
+namespace LTL {
+    class AutomatonStubbornSet;
+}
 namespace PetriEngine {
 
     ReducingSuccessorGenerator::ReducingSuccessorGenerator(const PetriNet &net,
@@ -32,7 +35,6 @@ namespace PetriEngine {
         _parent = state;
         _stubSet->prepare(state);
     }
-
 
     /*void ReducingSuccessorGenerator::constructEnabled() {
         _ordering.clear();

@@ -19,7 +19,8 @@
 
 namespace LTL {
 
-    inline void _dump_state(const LTL::Structures::ProductState &state) {
+    inline void _dump_state(const LTL::Structures::ProductState &state)
+    {
         std::cerr << "marking: ";
         std::cerr << state.marking()[0];
         for (size_t i = 1; i < state.size(); ++i) {
@@ -29,7 +30,8 @@ namespace LTL {
     }
 
     template<bool SaveTrace>
-    bool TarjanModelChecker<SaveTrace>::isSatisfied() {
+    bool TarjanModelChecker<SaveTrace>::isSatisfied()
+    {
         is_weak = successorGenerator->is_weak() && shortcircuitweak;
         std::vector<State> initial_states;
         successorGenerator->makeInitialState(initial_states);
@@ -47,7 +49,12 @@ namespace LTL {
                     continue;
                 }
                 ++stats.explored;
-                const idx_t stateid = seen.add(working).second;
+                auto[isnew, stateid] = seen.add(working);
+                if constexpr (SaveTrace) {
+                    if (isnew) {
+                        seen.setHistory(stateid, successorGenerator->fired());
+                    }
+                }
                 dtop.sucinfo.last_state = stateid;
 
                 // lookup successor in 'hash' table
@@ -67,46 +74,14 @@ namespace LTL {
             }
             if constexpr (SaveTrace) {
                 if (violation) {
-                    State next = factory.newState();
-                    std::cerr << "Printing trace: " << std::endl;
-                    std::vector<DEntry> rev;
-                    auto sz = dstack.size();
-                    // dump stack to vector to allow iteration
-                    for (idx_t i = 0; i < sz; ++i) {
-                        rev.push_back(dstack.top());
+                    std::stack<DEntry> revstack;
+                    while (!dstack.empty()) {
+                        revstack.push(std::move(dstack.top()));
                         dstack.pop();
                     }
-                    idx_t pos = 0;
-                    // print dstack in-order. rev[0] is dstack.top(), so loop vector in reverse
-                    for (int i = rev.size() - 1; i >= 0; --i) {
-                        pos = rev[i].pos;
-                        seen.decode(parent, cstack[pos].stateid);
-                        _dump_state(parent);
-                        cstack[pos].lowlink = std::numeric_limits<idx_t>::max();
-                        if (i > 0) {
-                            // print transition to next state
-                            seen.decode(next, cstack[rev[i - 1].pos].stateid);
-                            successorGenerator->prepare(&parent);
-                            while (successorGenerator->next(working)) {
-                                if (working == next) {
-                                    std::cerr << net.transitionNames()[successorGenerator->last_transition()]
-                                              << std::endl;
-                                    break;
-                                }
-                            }
-                        }
-                    }
+                    printTrace(std::move(revstack));
+                    return false;
 
-                    // follow lowsource until back in dstack
-                    pos = cstack[pos].lowsource;
-                    if (cstack[pos].lowlink != std::numeric_limits<idx_t>::max()) {
-                        std::cerr << "Printing looping part\n";
-                    }
-                    while (cstack[pos].lowlink != std::numeric_limits<idx_t>::max()) {
-                        seen.decode(parent, cstack[pos].stateid);
-                        _dump_state(parent);
-                        pos = cstack[pos].lowsource;
-                    }
                 }
             }
         }
@@ -118,7 +93,8 @@ namespace LTL {
      * @param state
      */
     template<bool SaveTrace>
-    void TarjanModelChecker<SaveTrace>::push(State &state) {
+    void TarjanModelChecker<SaveTrace>::push(State &state)
+    {
         const auto res = seen.add(state);
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(res.second);
@@ -134,7 +110,8 @@ namespace LTL {
     }
 
     template<bool SaveTrace>
-    void TarjanModelChecker<SaveTrace>::pop() {
+    void TarjanModelChecker<SaveTrace>::pop()
+    {
         const auto p = dstack.top().pos;
         dstack.pop();
         if (cstack[p].lowlink == p) {
@@ -144,7 +121,7 @@ namespace LTL {
         } else if (is_weak) {
             State state = factory.newState();
             seen.decode(state, cstack[p].stateid);
-            if(!successorGenerator->isAccepting(state)){
+            if (!successorGenerator->isAccepting(state)) {
                 popCStack();
             }
         }
@@ -157,7 +134,8 @@ namespace LTL {
     }
 
     template<bool SaveTrace>
-    void TarjanModelChecker<SaveTrace>::popCStack(){
+    void TarjanModelChecker<SaveTrace>::popCStack()
+    {
         auto h = hash(cstack.back().stateid);
         store.insert(cstack.back().stateid);
         chash[h] = cstack.back().next;
@@ -165,7 +143,8 @@ namespace LTL {
     }
 
     template<bool SaveTrace>
-    void TarjanModelChecker<SaveTrace>::update(idx_t to) {
+    void TarjanModelChecker<SaveTrace>::update(idx_t to)
+    {
         const auto from = dstack.top().pos;
         if (cstack[to].lowlink <= cstack[from].lowlink) {
             // we have found a loop into earlier seen component cstack[to].lowlink.
@@ -174,13 +153,16 @@ namespace LTL {
             violation = (!astack.empty() && to <= astack.top());
             cstack[from].lowlink = cstack[to].lowlink;
             if constexpr (SaveTrace) {
-                cstack[from].lowsource = to;
+                loopstate = cstack[to].stateid;
+                looptrans = successorGenerator->fired();
+                cstack[from].lowsource = cstack[to].lowlink;
             }
         }
     }
 
     template<bool SaveTrace>
-    bool TarjanModelChecker<SaveTrace>::nexttrans(State &state, State &parent, TarjanModelChecker::DEntry &delem) {
+    bool TarjanModelChecker<SaveTrace>::nexttrans(State &state, State &parent, TarjanModelChecker::DEntry &delem)
+    {
         seen.decode(parent, cstack[delem.pos].stateid);
         successorGenerator->prepare(&parent, delem.sucinfo);
         if (delem.sucinfo.has_prev_state()) {
@@ -191,6 +173,54 @@ namespace LTL {
             ++stats.expanded;
         return res;
     }
+
+    template<bool SaveTrace>
+    std::ostream &TarjanModelChecker<SaveTrace>::printTransition(size_t transition, uint indent, std::ostream &os)
+    {
+        if (transition == std::numeric_limits<ptrie::uint>::max() - 1) {
+            os << std::string(indent, '\t') << "<deadlock/>";
+            return os;
+        }
+        std::string tname = seen.net().transitionNames()[transition];
+        os << std::string(indent, '\t') << "<transition id=\"" << tname << "\" index=\"" << transition << "\"/>";
+        return os;
+    }
+
+    template<bool SaveTrace>
+    void TarjanModelChecker<SaveTrace>::printTrace(std::stack<DEntry> &&dstack, std::ostream &os)
+    {
+        if constexpr (!SaveTrace) {
+            return;
+        } else {
+            dstack.pop();
+            os << "Trace:\n"
+                  "<trace>\n";
+            auto indent = 1;
+            long p;
+            // print (reverted) dstack
+            while (!dstack.empty()) {
+                p = dstack.top().pos;
+                auto stateid = cstack[p].stateid;
+                auto[parent, tid] = seen.getHistory(stateid);
+                printTransition(tid, indent, os) << '\n';
+                cstack[p].lowlink = std::numeric_limits<idx_t>::max();
+                dstack.pop();
+            }
+            ++indent;
+            os << "\t<loop>\n";
+            // follow previously found back edges via lowsource until back in dstack.
+            p = cstack[p].lowsource;
+            while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {
+                auto[parent, tid] = seen.getHistory(cstack[p].stateid);
+                printTransition(tid, indent, os);
+                p = cstack[p].lowsource;
+            }
+            printTransition(looptrans, indent, os) << '\n';
+
+            os << "\t</loop>\n</trace>" << std::endl;
+        }
+    }
+
 
     template
     class TarjanModelChecker<true>;

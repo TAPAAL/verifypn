@@ -33,14 +33,14 @@ namespace LTL {
         }
 
         void prepare(size_t state) {
-            auto curstate = aut.buchi->state_from_number(state);
-            succ = std::unique_ptr<spot::twa_succ_iterator>{aut.buchi->succ_iter(curstate)};
+            auto curstate = aut._buchi->state_from_number(state);
+            succ = std::unique_ptr<spot::twa_succ_iterator>{aut._buchi->succ_iter(curstate)};
             succ->first();
         }
 
         bool next(size_t &state, bdd &cond) {
             if (!succ->done()) {
-                state = aut.buchi->state_number(succ->dst());
+                state = aut._buchi->state_number(succ->dst());
                 cond = succ->cond();
                 succ->next();
                 return true;
@@ -49,11 +49,11 @@ namespace LTL {
         }
 
         [[nodiscard]] bool is_accepting(size_t state) const {
-            return aut.buchi->state_is_accepting(state);
+            return aut._buchi->state_is_accepting(state);
         }
 
         [[nodiscard]] size_t initial_state_number() const {
-            return aut.buchi->get_init_state_number();
+            return aut._buchi->get_init_state_number();
         }
 
         [[nodiscard]] Condition_ptr getExpression(size_t i) const {
@@ -61,11 +61,11 @@ namespace LTL {
         }
 
         [[nodiscard]] bool is_weak() const {
-            return (bool) aut.buchi->prop_weak();
+            return (bool) aut._buchi->prop_weak();
         }
-        size_t buchiStates() { return aut.buchi->num_states(); }
+        size_t buchiStates() { return aut._buchi->num_states(); }
 
-    private:
+    //private:
         Structures::BuchiAutomaton aut;
         std::unique_ptr<spot::twa_succ_iterator> succ;
     };

@@ -18,15 +18,16 @@
 #include "LTL/Algorithm/StubbornTarjanModelChecker.h"
 
 namespace LTL {
-    template<typename SuccessorGen>
-    bool StubbornTarjanModelChecker<SuccessorGen>::isSatisfied() {
+    template<typename G, typename W>
+    bool StubbornTarjanModelChecker<G, W>::isSatisfied()
+    {
         this->is_weak = this->successorGenerator->is_weak() && this->shortcircuitweak;
         std::vector<State> initial_states;
         this->successorGenerator->makeInitialState(initial_states);
         State working = factory.newState();
         State parent = factory.newState();
         for (auto &state : initial_states) {
-            const auto res = seen.insertProductState(state);
+            const auto res = seen.add(state);
             if (res.first) {
                 push(state, res.second);
             }
@@ -36,7 +37,7 @@ namespace LTL {
                     pop();
                     continue;
                 }
-                const idx_t stateid = seen.insertProductState(working).second;
+                const idx_t stateid = seen.add(working).second;
 
                 // lookup successor in 'hash' table
                 idx_t p = searchCStack(stateid);
@@ -50,11 +51,23 @@ namespace LTL {
                     push(working, stateid);
                 }
             }
+            if constexpr (SaveTrace) {
+                if (violation) {
+                    std::stack<DEntry> revstack;
+                    while (!dstack.empty()) {
+                        revstack.push(std::move(dstack.top()));
+                        dstack.pop();
+                    }
+                    printTrace(std::move(revstack));
+                    return false;
+                }
+            }
         }
         return !violation;
     }
 
-    inline void _dump_state(const LTL::Structures::ProductState &state) {
+    inline void _dump_state(const LTL::Structures::ProductState &state)
+    {
         std::cerr << "marking: ";
         std::cerr << state.marking()[0];
         for (size_t i = 1; i < state.size(); ++i) {
@@ -67,9 +80,10 @@ namespace LTL {
      * Push a state to the various stacks.
      * @param state
      */
-    template<typename SuccessorGen>
-    void StubbornTarjanModelChecker<SuccessorGen>::push(State &state, size_t stateid) {
-        //const auto res = seen.insertProductState(state);
+    template<typename G, typename W>
+    void StubbornTarjanModelChecker<G, W>::push(State &state, size_t stateid)
+    {
+        //const auto res = seen.add(state);
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(stateid);
         cstack.emplace_back(ctop, stateid, chash[h]);
@@ -80,8 +94,9 @@ namespace LTL {
         }
     }
 
-    template <typename SuccessorGen>
-    void StubbornTarjanModelChecker<SuccessorGen>::pop() {
+    template<typename G, typename W>
+    void StubbornTarjanModelChecker<G, W>::pop()
+    {
         const auto p = dstack.top().pos;
         dstack.pop();
         if (cstack[p].lowlink == p) {
@@ -90,7 +105,7 @@ namespace LTL {
             }
         } else if (this->is_weak) {
             State state = factory.newState();
-            seen.retrieveProductState(state, cstack[p].stateid);
+            seen.decode(state, cstack[p].stateid);
             if (!this->successorGenerator->isAccepting(state)) {
                 popCStack();
             }
@@ -103,65 +118,79 @@ namespace LTL {
         }
     }
 
-    template<typename SuccessorGen>
-    void StubbornTarjanModelChecker<SuccessorGen>::popCStack() {
+    template<typename G, typename W>
+    void StubbornTarjanModelChecker<G, W>::popCStack()
+    {
         auto h = hash(cstack.back().stateid);
         store.insert(cstack.back().stateid);
         chash[h] = cstack.back().next;
         cstack.pop_back();
     }
 
-    template<typename SuccessorGen>
-    void StubbornTarjanModelChecker<SuccessorGen>::update(idx_t to) {
+    template<typename G, typename W>
+    void StubbornTarjanModelChecker<G, W>::update(idx_t to)
+    {
         const auto from = dstack.top().pos;
         if (cstack[to].lowlink <= cstack[from].lowlink) {
             // we have found a loop into earlier seen component cstack[to].lowlink.
             // if this earlier component was found before an accepting state,
             // we have found an accepting loop and thus a violation.
             violation = (!astack.empty() && to <= astack.top());
+            if constexpr (SaveTrace) {
+                cstack[from].lowsource = to;
+                loopstate = to;
+                looptrans = this->successorGenerator->fired();
+            }
             cstack[from].lowlink = cstack[to].lowlink;
         }
     }
 
-    template<typename SuccessorGen>
-    bool StubbornTarjanModelChecker<SuccessorGen>::nexttrans(State &state, State &parent, DEntry &delem) {
+    template<typename G, typename W>
+    bool StubbornTarjanModelChecker<G, W>::nexttrans(State &state, State &parent, DEntry &delem)
+    {
         if (delem.successors.empty()) {
             if (delem.expanded) {
                 return false;
             }
-            seen.retrieveProductState(parent, cstack[delem.pos].stateid);
+            seen.decode(parent, cstack[delem.pos].stateid);
             delem.expanded = true;
             light_deque<size_t> successors;
             this->successorGenerator->prepare(&parent);
             while (this->successorGenerator->next(state)) {
                 ++this->stats.explored;
-                auto [_new, stateid] = seen.insertProductState(state);
-                auto markingId = seen.getMarkingId(stateid);
+                auto[_new, stateid] = seen.add(state);
+                // from textbook LTL / bit product state
+                /*auto markingId = seen.getMarkingId(stateid);
                 auto p = chash[hash(stateid)];
                 while (p != numeric_limits<idx_t>::max() && seen.getMarkingId(cstack[p].stateid) != markingId) {
                     p = cstack[p].next;
                 }
                 if (p != std::numeric_limits<idx_t>::max()) {
                     this->successorGenerator->generateAll();
-                }
+                }*/
                 //if (_new) {
                 successors.push_back(stateid);
+                if constexpr (SaveTrace) {
+                    if (_new) {
+                        seen.setHistory(stateid, this->successorGenerator->fired());
+                    }
+                }
                 //}
             }
             delem.successors = successors;
             if (!delem.successors.empty()) {
-                seen.retrieveProductState(state, delem.successors.front());
+                seen.decode(state, delem.successors.front());
                 delem.successors.pop_front();
             }
             return true;
-            idx_t lastgenerated = std::numeric_limits<idx_t>::max();
+            /*idx_t lastgenerated = std::numeric_limits<idx_t>::max();
             while (true) {
                 if (this->successorGenerator->next(state)) {
                     ++this->stats.explored;
                     if (lastgenerated != std::numeric_limits<idx_t>::max()) {
                         delem.successors.push_back(lastgenerated);
                     }
-                    auto res = seen.insertProductState(state);
+                    auto res = seen.add(state);
                     // don't explore previously visited states
                     if (res.first) lastgenerated = res.second;
                     auto p = searchCStack(res.second);
@@ -174,12 +203,59 @@ namespace LTL {
                     return true;
                 }
 
-            }
+            }*/
         } else {
             auto stateid = delem.successors.front();
             delem.successors.pop_front();
-            seen.retrieveProductState(state, stateid);
+            seen.decode(state, stateid);
             return true;
+        }
+    }
+
+    template<typename G, typename W>
+    std::ostream &StubbornTarjanModelChecker<G, W>::printTransition(size_t transition, uint indent, std::ostream &os)
+    {
+        if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
+            os << std::string(indent, '\t') << "<deadlock/>";
+            return os;
+        }
+        std::string tname = seen.net().transitionNames()[transition];
+        os << std::string(indent, '\t') << "<transition id=\"" << tname << "\" index=\"" << transition << "\"/>";
+        return os;
+    }
+
+    template<typename G, typename W>
+    void StubbornTarjanModelChecker<G, W>::printTrace(std::stack<DEntry> &&dstack, std::ostream &os)
+    {
+        if constexpr (!SaveTrace) {
+            return;
+        } else {
+            dstack.pop();
+            os << "Trace:\n"
+                  "<trace>\n";
+            auto indent = 1;
+            long p;
+            // print (reverted) dstack
+            while (!dstack.empty()) {
+                p = dstack.top().pos;
+                auto stateid = cstack[p].stateid;
+                auto[parent, tid] = seen.getHistory(stateid);
+                printTransition(tid, indent, os) << '\n';
+                cstack[p].lowlink = std::numeric_limits<idx_t>::max();
+                dstack.pop();
+            }
+            ++indent;
+            os << "\t<loop>\n";
+            // follow previously found back edges via lowsource until back in dstack.
+            p = cstack[p].lowsource;
+            while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {
+                auto[parent, tid] = seen.getHistory(cstack[p].stateid);
+                printTransition(tid, indent, os);
+                p = cstack[p].lowsource;
+            }
+            printTransition(looptrans, indent, os) << '\n';
+
+            os << "\t</loop>\n</trace>" << std::endl;
         }
     }
 }
