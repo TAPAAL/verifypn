@@ -28,6 +28,17 @@
 
 namespace LTL {
 
+    /**
+     * Implements on-the-fly version of Tarjan's algorithm suitable for LTL model checking.
+     * The idea is to detect some strongly connected component containing an accepting state,
+     * which constitutes a counter-example.
+     * For more details see
+     *   Jaco Geldenhuys & Antti Valmari,
+     *   More efficient on-the-fly LTL verification with Tarjan's algorithm,
+     *   https://doi.org/10.1016/j.tcs.2005.07.004
+     *
+     * @tparam SaveTrace whether to save and print counter-examples when possible.
+     */
     template <bool SaveTrace>
     class TarjanModelChecker : public ModelChecker {
     public:
@@ -75,20 +86,21 @@ namespace LTL {
         };
 
         using CEntry = std::conditional_t<SaveTrace,
-            TracableCEntry,
-            PlainCEntry>;
+                TracableCEntry,
+                PlainCEntry>;
+
 
         struct DEntry {
             idx_t pos;
             successor_info sucinfo;
         };
 
-
         std::vector<CEntry> cstack;
         std::stack<DEntry> dstack;
         std::stack<idx_t> astack;
         bool violation = false;
         size_t loopstate = std::numeric_limits<size_t>::max();
+        size_t looptrans = std::numeric_limits<size_t>::max();
 
         void push(State &state);
 
@@ -102,7 +114,7 @@ namespace LTL {
 
         std::ostream &printTransition(size_t transition, uint indent, std::ostream &os);
 
-        void printTrace(std::stack<DEntry> &&dstack);
+        void printTrace(std::stack<DEntry> &&dstack, std::ostream &os = std::cout);
 
     };
 extern template class TarjanModelChecker<true>;

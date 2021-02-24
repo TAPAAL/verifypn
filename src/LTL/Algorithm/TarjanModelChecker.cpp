@@ -146,7 +146,9 @@ namespace LTL {
             cstack[from].lowlink = cstack[to].lowlink;
             if constexpr (SaveTrace) {
                 loopstate = cstack[to].stateid;
-                //cstack[from].lowsource = to;
+                looptrans = successorGenerator->fired();
+                cstack[from].lowsource = cstack[to].lowlink;
+
             }
         }
     }
@@ -174,25 +176,41 @@ namespace LTL {
         return os;
     }
 
-    template<bool SaveTrace>
-    void TarjanModelChecker<SaveTrace>::printTrace(std::stack<DEntry> &&dstack)
+template<bool SaveTrace>
+    void TarjanModelChecker<SaveTrace>::printTrace(std::stack<DEntry> &&dstack, std::ostream &os)
     {
-        dstack.pop();
-        std::cerr << "Trace:\n"
-                     "<trace>\n";
-        auto indent = 1;
-        while (!dstack.empty()) {
-            auto stateid = cstack[dstack.top().pos].stateid;
-            auto[parent, tid] = seen.getHistory(stateid);
-            if (stateid == loopstate) {
-                indent++;
-                std::cerr << "\t<loop>\n";
-            }
-            printTransition(tid, indent, std::cerr) << '\n';
+        if constexpr (!SaveTrace) {
+            return;
+        } else {
             dstack.pop();
+            os << "Trace:\n"
+                  "<trace>\n";
+            auto indent = 1;
+            long p;
+            // print (reverted) dstack
+            while (!dstack.empty()) {
+                p = dstack.top().pos;
+                auto stateid = cstack[p].stateid;
+                auto[parent, tid] = seen.getHistory(stateid);
+                printTransition(tid, indent, os) << '\n';
+                cstack[p].lowlink = std::numeric_limits<idx_t>::max();
+                dstack.pop();
+            }
+            ++indent;
+            os << "\t<loop>\n";
+            // follow previously found back edges via lowsource until back in dstack.
+            p = cstack[p].lowsource;
+            while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {
+                auto[parent, tid] = seen.getHistory(cstack[p].stateid);
+                printTransition(tid, indent, os);
+                p = cstack[p].lowsource;
+            }
+            printTransition(looptrans, indent, os) << '\n';
+
+            os << "\t</loop>\n</trace>" << std::endl;
         }
-        std::cerr << "\t</loop>\n</trace>" << std::endl;
     }
+
 
 
     template
