@@ -140,7 +140,9 @@ namespace LTL {
             if constexpr (SaveTrace) {
                 cstack[from].lowsource = to;
                 loopstate = to;
-                looptrans = this->successorGenerator->fired();
+                if (violation) {
+                    looptrans = _lasttid;
+                }
             }
             cstack[from].lowlink = cstack[to].lowlink;
         }
@@ -155,7 +157,7 @@ namespace LTL {
             }
             seen.decode(parent, cstack[delem.pos].stateid);
             delem.expanded = true;
-            light_deque<size_t> successors;
+            light_deque<DSucc> successors;
             this->successorGenerator->prepare(&parent);
             while (this->successorGenerator->next(state)) {
                 ++this->stats.explored;
@@ -170,17 +172,22 @@ namespace LTL {
                     this->successorGenerator->generateAll();
                 }*/
                 //if (_new) {
-                successors.push_back(stateid);
                 if constexpr (SaveTrace) {
-                    if (_new) {
-                        seen.setHistory(stateid, this->successorGenerator->fired());
-                    }
+                    auto tid = this->successorGenerator->fired();
+                    successors.push_back(DSucc{stateid, tid});
+                    if (_new)
+                        seen.setHistory(stateid, tid);
                 }
-                //}
+                else {
+                    successors.push_back(DSucc{stateid});
+                }
             }
             delem.successors = successors;
             if (!delem.successors.empty()) {
-                seen.decode(state, delem.successors.front());
+                seen.decode(state, delem.successors.front().id);
+                if constexpr (SaveTrace) {
+                    _lasttid = delem.successors.front().trans;
+                }
                 delem.successors.pop_front();
             }
             return true;
@@ -207,8 +214,11 @@ namespace LTL {
             }*/
         } else {
             auto stateid = delem.successors.front();
+            if constexpr (SaveTrace) {
+                _lasttid = delem.successors.front().trans;
+            }
             delem.successors.pop_front();
-            seen.decode(state, stateid);
+            seen.decode(state, stateid.id);
             return true;
         }
     }

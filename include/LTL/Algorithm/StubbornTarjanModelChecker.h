@@ -28,7 +28,7 @@
 namespace LTL {
     template<typename SuccessorGen, typename StateSet = PetriEngine::Structures::StateSet>
     class StubbornTarjanModelChecker : public ModelChecker<SuccessorGen> {
-            using StubSet = std::conditional_t<std::is_same_v<SuccessorGen, LTL::ReducingSuccessorGenerator>, AutomatonStubbornSet, LTLStubbornSet>;
+        using StubSet = std::conditional_t<std::is_same_v<SuccessorGen, LTL::ReducingSuccessorGenerator>, AutomatonStubbornSet, LTLStubbornSet>;
     public:
         StubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
                 : ModelChecker<SuccessorGen>
@@ -103,13 +103,23 @@ namespace LTL {
                 TracableCEntry,
                 PlainCEntry>;
 
+        struct Suc {
+            idx_t id;
+        };
+        struct TraceSuc {
+            idx_t id;
+            idx_t trans;
+        };
+        using DSucc = std::conditional_t<SaveTrace, TraceSuc, Suc>;
 
         struct DEntry {
             idx_t pos;
-            light_deque<idx_t> successors{};
+            idx_t parenttrans;
+            light_deque<DSucc> successors{};
             bool expanded = false;
         };
 
+        uint32_t _lasttid;
 
         std::vector<CEntry> cstack;
         std::stack<DEntry> dstack;

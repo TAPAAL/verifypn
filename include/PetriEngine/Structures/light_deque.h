@@ -71,7 +71,10 @@ class light_deque
         {
             return _data.get()[_front];
         }
-        
+        const T& front() {
+            return _data.get()[_front];
+        }
+
         void pop_front()
         {
             ++_front;

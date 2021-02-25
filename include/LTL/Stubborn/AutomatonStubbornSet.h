@@ -36,6 +36,7 @@ namespace LTL {
 
         void addToStub(uint32_t t) override {
             hasStubborn = true;
+            if (!_stubborn[t]) ++nstubborn;
             PetriEngine::StubbornSet::addToStub(t);
         }
 
@@ -45,6 +46,9 @@ namespace LTL {
 
         PetriEngine::NegatedStubbornSet negated;
         bool hasStubborn = false;
+        size_t nstubborn = 0;
+
+        friend class VisibilityVisitor;
     };
 
 }

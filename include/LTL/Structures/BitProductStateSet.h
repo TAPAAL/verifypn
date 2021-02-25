@@ -124,6 +124,8 @@ namespace LTL::Structures {
 
     };
 
+    template <uint8_t nbytes>
+    class TraceableBitProductStateSet : ProductStateSetInterface<std::pair<size_t, size_t>>{};
 }
 
 #endif //VERIFYPN_BITPRODUCTSTATESET_H

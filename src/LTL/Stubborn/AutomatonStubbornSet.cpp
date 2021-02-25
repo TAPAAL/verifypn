@@ -18,6 +18,7 @@
 #include "LTL/Structures/GuardInfo.h"
 #include "LTL/Stubborn/AutomatonStubbornSet.h"
 #include "LTL/Stubborn/EvalAndSetVisitor.h"
+#include "LTL/Stubborn/VisibilityVisitor.h"
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
 
 using namespace PetriEngine;
@@ -47,12 +48,18 @@ namespace LTL {
         } else {
             prepare_accepting(state, info);
         }
-        if (!_ordering.empty() && !hasStubborn) {
-            // if there are enabled transitions, ensure we have some stubborn transition (all)
-            memcpy(_stubborn.get(), _enabled.get(), _net.numberOfTransitions());
-        }
-        else {
-            closure();
+        if (!_ordering.empty()) {
+            for (auto t = 0; t < _net.numberOfTransitions(); ++t) {
+                if (_stubborn[t] && _enabled[t]) {
+                    hasStubborn = true;
+                    break;
+                }
+            }
+            if (!hasStubborn) {
+                // if there are enabled transitions, ensure we have some stubborn transition (all)
+                std::cerr << "expanding all!" << std::endl;
+                memset(_stubborn.get(), true, sizeof(bool) * _net.numberOfTransitions());
+            }
         }
         float num_stubborn = 0;
         float num_enabled = 0;
@@ -80,15 +87,27 @@ namespace LTL {
             }
         }
         if (!sat) {
-            negated.prepare(state, satQueries, false);
-            closure();
-            negated.copyStubborn(_stubborn);
+            if (!satQueries.empty()) {
+                //closure();
+            }
+            else {
+                negated.prepare(state, satQueries, false);
+                //closure();
+                negated.copyStubborn(_stubborn);
+            }
         }
         else {
-            negated.prepare(state, satQueries, true);
-            negated.extend(info.retarding, false);
-            closure();
-            negated.copyStubborn(_stubborn);
+            if (!satQueries.empty()) {
+                negated.prepare(state, satQueries, true);
+                negated.extend(info.retarding, false);
+                closure();
+                negated.copyStubborn(_stubborn);
+            }
+            else {
+                negated.prepare(state, {info.retarding}, false);
+                closure();
+                negated.copyStubborn(_stubborn);
+            }
         }
     }
 
@@ -105,10 +124,25 @@ namespace LTL {
                 cond->visit(interesting);
             }
         }
-        if (!satQueries.empty() || info.retarding->isSatisfied()) {
-            negated.prepare(state, satQueries, true);
+        if (info.retarding->isSatisfied()) {
+            
+            VisibilityVisitor visible{*this};
+            info.retarding->visit(visible);
+            if (visible.foundVisible()) {
+                std::cerr << "Found visible!\n";
+                memset(_stubborn.get(), true, _net.numberOfTransitions());
+                return;
+            }
+            else {
+                closure();
+                return;
+            }
+            //satQueries.push_back(info.retarding);
+        }
+        if (!satQueries.empty()) {
+            negated.prepare(state, satQueries, false);
             // exists satisfying queries, thus add all interesting transitions
-            closure();
+            // closure();
             negated.copyStubborn(_stubborn);
         } else {
             info.retarding->visit(interesting);
@@ -118,6 +152,7 @@ namespace LTL {
     void AutomatonStubbornSet::reset()
     {
         hasStubborn = false;
+        nstubborn = 0;
         StubbornSet::reset();
         negated.reset();
     }
