@@ -38,7 +38,6 @@ namespace LTL {
                     continue;
                 }
                 const idx_t stateid = seen.insertProductState(working).second;
-
                 // lookup successor in 'hash' table
                 idx_t p = searchCStack(stateid);
                 if (p != std::numeric_limits<idx_t>::max()) {

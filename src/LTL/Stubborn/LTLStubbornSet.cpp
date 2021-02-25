@@ -50,7 +50,8 @@ namespace LTL {
 
         _nenabled = _ordering.size();
 
-        if (!_has_stubborn) {
+
+        if (!_has_enabled_stubborn) {
             memset(_stubborn.get(), 1, _net.numberOfTransitions());
         }
 //#ifndef NDEBUG
@@ -148,7 +149,7 @@ namespace LTL {
     void LTLStubbornSet::reset() {
         StubbornSet::reset();
         _skipped.clear();
-        _has_stubborn = false;
+        _has_enabled_stubborn = false;
     }
 
     void LTLStubbornSet::generateAll() {
@@ -171,7 +172,8 @@ namespace LTL {
     }
 
     void LTLStubbornSet::addToStub(uint32_t t) {
-        _has_stubborn = true;
+        if (_enabled[t])
+            _has_enabled_stubborn = true;
         StubbornSet::addToStub(t);
     }
 

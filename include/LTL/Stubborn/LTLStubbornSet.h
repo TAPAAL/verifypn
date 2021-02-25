@@ -86,7 +86,7 @@ namespace LTL {
         std::unique_ptr<bool[]> _visible;
         light_deque<uint32_t> _skipped;
         uint32_t _key;
-        bool _has_stubborn;
+        bool _has_enabled_stubborn;
 
         void findKeyTransition();
 
