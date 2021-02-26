@@ -473,8 +473,8 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::A; }
             Path getPath() const override             { return Path::pError; }
             uint32_t distance(DistanceContext& context) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
+                uint32_t retval = _cond->distance(context);
+                return retval;
             }
             void visit(Visitor&) const override;
 
@@ -513,10 +513,10 @@ namespace PetriEngine {
           Path getPath() const override { return Path::G; }
 
           uint32_t distance(DistanceContext &context) const override {
-              // TODO implement
-              assert(false);
-              std::cerr << "TODO implement" << std::endl;
-              exit(0);
+              context.negate();
+              uint32_t retval = _cond->distance(context);
+              context.negate();
+              return retval;
           }
 
           bool isLoopSensitive() const override { return true; }
@@ -548,8 +548,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override             { return Path::F; }
             uint32_t distance(DistanceContext& context) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
+                return _cond->distance(context);
             }
             bool isLoopSensitive() const override { return true; }
             void visit(Visitor&) const override;
@@ -574,8 +573,7 @@ namespace PetriEngine {
             Quantifier getQuantifier() const override { return Quantifier::EMPTY; }
             Path getPath() const override             { return Path::X; }
             uint32_t distance(DistanceContext& context) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
+                return _cond->distance(context);
             }
             bool containsNext() const override { return true; }
             bool isLoopSensitive() const override { return true; }
@@ -733,8 +731,7 @@ namespace PetriEngine {
 
             void visit(Visitor &ctx) const override;
             uint32_t distance(DistanceContext& context) const override {
-                // TODO implement
-                assert(false); std::cerr << "TODO implement" << std::endl; exit(0);
+                return _cond2->distance(context);
             }
             Retval simplify(SimplificationContext& context) const override;
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
