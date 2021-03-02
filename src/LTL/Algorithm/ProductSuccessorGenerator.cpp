@@ -87,9 +87,13 @@ namespace LTL {
         return false;
     }
 
+    /**
+     * Evaluate binary decision diagram (BDD) representation of transition guard in given state.
+     */
     bool ProductSuccessorGenerator::guard_valid(const PetriEngine::Structures::State &state, bdd bdd) {
         EvaluationContext ctx{state.marking(), &_net};
         // IDs 0 and 1 are false and true atoms, respectively
+        // More details in buddy manual for details ( http://buddy.sourceforge.net/manual/main.html )
         while (bdd.id() > 1/*!(bdd == bddtrue || bdd == bddfalse)*/) {
             // find variable to test, and test it
             size_t var = bdd_var(bdd);

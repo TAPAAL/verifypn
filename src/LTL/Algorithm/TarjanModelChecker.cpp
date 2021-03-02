@@ -42,6 +42,7 @@ namespace LTL {
             }
             while (!dstack.empty() && !violation) {
                 DEntry &dtop = dstack.top();
+                // write next successor state to working.
                 if (!nexttrans(working, parent, dtop)) {
                     pop();
                     continue;
@@ -65,6 +66,7 @@ namespace LTL {
                 }
             }
             if constexpr (SaveTrace) {
+                // print counter-example if it exists.
                 if (violation) {
                     State next = factory.newState();
                     std::cerr << "Printing trace: " << std::endl;
@@ -167,10 +169,11 @@ namespace LTL {
     void TarjanModelChecker<SaveTrace>::update(idx_t to) {
         const auto from = dstack.top().pos;
         if (cstack[to].lowlink <= cstack[from].lowlink) {
-            // we have found a loop into earlier seen component cstack[to].lowlink.
-            // if this earlier component was found before an accepting state,
-            // we have found an accepting loop and thus a violation.
+            // we have now found a loop into earlier seen component cstack[to].lowlink.
+            // if this earlier component precedes an accepting state,
+            // the found loop is accepting and thus a violation.
             violation = (!astack.empty() && to <= astack.top());
+            // either way update the component ID of the state we came from.
             cstack[from].lowlink = cstack[to].lowlink;
             if constexpr (SaveTrace) {
                 cstack[from].lowsource = to;

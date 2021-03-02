@@ -23,14 +23,20 @@
 #include <spot/tl/formula.hh>
 
 namespace LTL {
-PetriEngine::PQL::Condition_ptr toPQL(const spot::formula &formula, const APInfo &apinfo);
+    /**
+     * Transform a Spot formula back into the PQL expression tree form.
+     * @param formula The formula to translate to PQL
+     * @param apinfo List of atomic propositions in the formula. This should have been created by {@link LTL::to_spot_formula}.
+     * @return A PQL formula equivalent to the passed spot formula.
+     */
+    PetriEngine::PQL::Condition_ptr toPQL(const spot::formula &formula, const APInfo &apinfo);
 
-/**
- * Simplify an LTL formula using Spot's formula simplifier. Throws if formula is not valid LTL.
- * @param formula The formula to simplify.
- * @return the simplified formula.
- */
-PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr& formula);
+    /**
+     * Simplify an LTL formula using Spot's formula simplifier. Throws if formula is not valid LTL.
+     * @param formula The formula to simplify.
+     * @return the simplified formula.
+     */
+    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr &formula);
 }
 
 #endif // VERIFYPN_SPOTTOPQL_H

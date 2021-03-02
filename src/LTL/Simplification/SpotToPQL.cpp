@@ -31,7 +31,6 @@ namespace LTL {
     PetriEngine::PQL::Condition_ptr toPQL(const spot::formula &formula, const APInfo &apinfo) {
 
         switch (formula.kind()) {
-
             case spot::op::ff:
                 return BooleanCondition::FALSE_CONSTANT;
             case spot::op::tt:
@@ -154,6 +153,7 @@ namespace LTL {
         auto[f, apinfo] = LTL::to_spot_formula(formula);
         spot::tl_simplifier simplifier{2};
         f = simplifier.simplify(f);
+        // spot simplifies using unsupported operators R, W, and M, which we now remove.
         f = spot::unabbreviate(f, "RWM");
         return toPQL(f, apinfo);
     }

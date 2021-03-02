@@ -30,6 +30,23 @@
 using namespace PetriEngine;
 
 namespace LTL {
+    /**
+     * Implement the nested DFS algorithm for LTL model checking. Roughly based on versions given in
+     * <p>
+     *   Jaco Geldenhuys & Antti Valmari,<br>
+     *   More efficient on-the-fly LTL verification with Tarjan's algorithm,<br>
+     *   https://doi.org/10.1016/j.tcs.2005.07.004
+     * </p>
+     * and
+     * <p>
+     *   Gerard J. Holzmann, Doron Peled, and Mihalis Yannakakis<br>
+     *   On Nested Depth First Search<br>
+     *   https://spinroot.com/gerard/pdf/inprint/spin96.pdf
+     * </p>
+     * For most use cases, Tarjan's algorithm (see LTL::TarjanModelChecker) is faster.
+     * @tparam W type used for state storage. Use <code>PetriEngine::Structures::TracableStateSet</code> if you want traces,
+     *         <code>PetriEngine::Structures::StateSet</code> if you don't care (as it is faster).
+     */
     template <typename W>
     class NestedDepthFirstSearch : public ModelChecker {
     public:
