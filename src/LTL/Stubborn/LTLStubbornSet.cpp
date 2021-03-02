@@ -54,6 +54,19 @@ namespace LTL {
         if (!_has_enabled_stubborn) {
             memset(_stubborn.get(), 1, _net.numberOfTransitions());
         }
+#ifdef STUBBORN_STATISTICS
+        float num_stubborn = 0;
+        float num_enabled = 0;
+        float num_enabled_stubborn = 0;
+        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
+            if (_stubborn[i]) ++num_stubborn;
+            if (_enabled[i]) ++num_enabled;
+            if (_stubborn[i] && _enabled[i]) ++num_enabled_stubborn;
+        }
+        std::cerr << "Enabled: " << num_enabled << "/" << _net.numberOfTransitions() << " (" << num_enabled/_net.numberOfTransitions()*100.0 << "%),\t\t "
+                  << "Stubborn: " << num_stubborn << "/" << _net.numberOfTransitions() << " (" << num_stubborn/_net.numberOfTransitions()*100.0 << "%),\t\t "
+                  << "Enabled stubborn: " << num_enabled_stubborn << "/" << num_enabled << " (" << num_enabled_stubborn/num_enabled*100.0 << "%)" << std::endl;
+#endif
 //#ifndef NDEBUG
         /*std::vector<size_t> stubs;
         size_t nenabled = 0;
