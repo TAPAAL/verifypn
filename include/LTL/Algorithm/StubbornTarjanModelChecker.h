@@ -147,7 +147,7 @@ namespace LTL {
 
         std::ostream &printTransition(size_t transition, uint indent, std::ostream &os);
 
-        void printTrace(std::stack<DEntry> &&dstack, std::ostream &os = std::cout);
+        void printTrace(std::stack<DEntry> &&revdstack, std::ostream &os = std::cout);
 
     };
 
@@ -156,6 +156,12 @@ namespace LTL {
 
     template
     class StubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
+
+    template
+    class StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator, PetriEngine::Structures::StateSet>;
+
+    template
+    class StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
 
     template
     class StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>;

@@ -29,6 +29,7 @@
 #include "LTL/Simplification/SpotToPQL.h"
 #include "LTL/Structures/GuardInfo.h"
 #include <spot/twa/formula2bdd.hh>
+#include <spot/tl/formula.hh>
 
 namespace LTL {
 
@@ -118,10 +119,11 @@ namespace LTL {
         {
             auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces() + 1];
             std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), buf);
-            buf[_net.numberOfPlaces()] = 0;
+            buf[_net.numberOfPlaces()] = initial_buchi_state();
             LTL::Structures::ProductState state;
             state.setMarking(buf, _net.numberOfPlaces());
-            state.setBuchiState(initial_buchi_state());
+            _net.print(buf);
+            //state.setBuchiState(initial_buchi_state());
             buchiSuccessorGenerator.prepare(state.getBuchiState());
             while (next_buchi_succ(state)) {
                 states.emplace_back();
@@ -235,6 +237,9 @@ namespace LTL {
         {
             EvaluationContext ctx{state.marking(), &_net};
             // IDs 0 and 1 are false and true atoms, respectively
+            /*std::cout << spot::bdd_to_formula(bdd, buchiSuccessorGenerator.aut.dict) << std::endl;
+            bdd_printdot(bdd);
+            std::cout << bdd << std::endl;*/
             while (bdd.id() > 1/*!(bdd == bddtrue || bdd == bddfalse)*/) {
                 // find variable to test, and test it
                 size_t var = bdd_var(bdd);

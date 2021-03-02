@@ -26,9 +26,12 @@
 namespace LTL {
     class ReducingSuccessorGenerator : public PetriEngine::ReducingSuccessorGenerator {
     public:
-        ReducingSuccessorGenerator(const PetriEngine::PetriNet &net,
-                                   std::shared_ptr<PetriEngine::StubbornSet> stubbornSet)
-                : PetriEngine::ReducingSuccessorGenerator(net, std::move(stubbornSet)) {}
+        ReducingSuccessorGenerator(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &query)
+                : PetriEngine::ReducingSuccessorGenerator(net, std::make_shared<AutomatonStubbornSet>(net, query)) {}
+
+        ReducingSuccessorGenerator(const PetriEngine::PetriNet &net, const std::shared_ptr<AutomatonStubbornSet> &stubSet)
+                : PetriEngine::ReducingSuccessorGenerator(net, stubSet) {}
+
 
         void prepare(const PetriEngine::Structures::State *state, const LTL::GuardInfo &info)
         {

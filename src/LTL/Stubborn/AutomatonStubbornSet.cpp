@@ -57,10 +57,11 @@ namespace LTL {
             }
             if (!hasStubborn) {
                 // if there are enabled transitions, ensure we have some stubborn transition (all)
-                std::cerr << "expanding all!" << std::endl;
+                //std::cerr << "expanding all!" << std::endl;
                 memset(_stubborn.get(), true, sizeof(bool) * _net.numberOfTransitions());
             }
         }
+#ifndef NDEBUG
         float num_stubborn = 0;
         float num_enabled = 0;
         float num_enabled_stubborn = 0;
@@ -69,9 +70,17 @@ namespace LTL {
             if (_enabled[i]) ++num_enabled;
             if (_stubborn[i] && _enabled[i]) ++num_enabled_stubborn;
         }
-        std::cerr << "Enabled: " << num_enabled << "/" << _net.numberOfTransitions() << " (" << num_enabled/_net.numberOfTransitions()*100.0 << "%),\t "
-                  << "Stubborn: " << num_stubborn << "/" << _net.numberOfTransitions() << " (" << num_stubborn/_net.numberOfTransitions()*100.0 << "%),\t "
-                  << "Enabled stubborn: " << num_enabled_stubborn << "/" << num_enabled << " (" << num_enabled_stubborn/num_enabled*100.0 << "%)" << std::endl;
+        std::cerr << "Enabled: " << num_enabled << "/" << _net.numberOfTransitions() << " ("
+                  << num_enabled / _net.numberOfTransitions() * 100.0 << "%),\t "
+                  << "Stubborn: " << num_stubborn << "/" << _net.numberOfTransitions() << " ("
+                  << num_stubborn / _net.numberOfTransitions() * 100.0 << "%),\t "
+                  << "Enabled stubborn: " << num_enabled_stubborn << "/" << num_enabled << " ("
+                  << num_enabled_stubborn / num_enabled * 100.0 << "%)" << std::endl;
+        if (num_enabled_stubborn != num_enabled) {
+            _net.print(getParent());
+            std::cout << "Buchi: " << info.buchi_state << std::endl;
+        }
+#endif
     }
 
     void AutomatonStubbornSet::prepare_accepting(const PetriEngine::Structures::State *state, const GuardInfo &info)
@@ -88,22 +97,19 @@ namespace LTL {
         }
         if (!sat) {
             if (!satQueries.empty()) {
-                //closure();
-            }
-            else {
+                closure();
+            } else {
                 negated.prepare(state, satQueries, false);
-                //closure();
+                closure();
                 negated.copyStubborn(_stubborn);
             }
-        }
-        else {
+        } else {
             if (!satQueries.empty()) {
                 negated.prepare(state, satQueries, true);
                 negated.extend(info.retarding, false);
                 closure();
                 negated.copyStubborn(_stubborn);
-            }
-            else {
+            } else {
                 negated.prepare(state, {info.retarding}, false);
                 closure();
                 negated.copyStubborn(_stubborn);
@@ -125,24 +131,24 @@ namespace LTL {
             }
         }
         if (info.retarding->isSatisfied()) {
-            
+            /*closure();
             VisibilityVisitor visible{*this};
             info.retarding->visit(visible);
             if (visible.foundVisible()) {
-                std::cerr << "Found visible!\n";
+                //std::cerr << "Found visible!\n";
                 memset(_stubborn.get(), true, _net.numberOfTransitions());
                 return;
             }
             else {
                 closure();
                 return;
-            }
-            //satQueries.push_back(info.retarding);
+            }*/
+            satQueries.push_back(info.retarding);
         }
         if (!satQueries.empty()) {
             negated.prepare(state, satQueries, false);
             // exists satisfying queries, thus add all interesting transitions
-            // closure();
+            closure();
             negated.copyStubborn(_stubborn);
         } else {
             info.retarding->visit(interesting);

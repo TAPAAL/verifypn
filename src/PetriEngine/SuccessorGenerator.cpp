@@ -154,5 +154,9 @@ namespace PetriEngine {
         sucinfo.pcounter = _suc_pcounter;
         sucinfo.tcounter = _suc_tcounter;
     }
+
+    SuccessorGenerator::SuccessorGenerator(const PetriNet &net, const std::shared_ptr<StubbornSet>&)
+        : SuccessorGenerator(net){}
+
 }
 

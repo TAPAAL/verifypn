@@ -23,6 +23,7 @@ namespace PetriEngine {
         if (_current == std::numeric_limits<uint32_t>::max()) {
             return false;
         }
+        assert(checkPreset(_current));
         memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof(MarkVal));
         consumePreset(write, _current);
         producePostset(write, _current);

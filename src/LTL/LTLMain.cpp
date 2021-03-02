@@ -103,17 +103,17 @@ namespace LTL {
                     if (options.trace) {
                         result = _verify<StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>>(
                                 net, negated_formula, options.printstatistics);
-                    }
-                    else {
+                    } else {
                         result = _verify<StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>>(
                                 net, negated_formula, options.printstatistics);
                     }
                 } else {
                     if (options.trace) {
-                        result = _verify<TarjanModelChecker<true>>(net, negated_formula, options.printstatistics);
-                    }
-                    else {
-                        result = _verify<TarjanModelChecker<false>>(net, negated_formula, options.printstatistics);
+                        result = _verify<StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator, PetriEngine::Structures::TracableStateSet>>(
+                                net, negated_formula, options.printstatistics);
+                    } else {
+                        result = _verify<StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator, PetriEngine::Structures::StateSet>>(
+                                net, negated_formula, options.printstatistics);
                     }
                 }
                 break;

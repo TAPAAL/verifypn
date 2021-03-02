@@ -139,8 +139,8 @@ namespace LTL {
             violation = (!astack.empty() && to <= astack.top());
             if constexpr (SaveTrace) {
                 cstack[from].lowsource = to;
-                loopstate = to;
                 if (violation) {
+                    loopstate = cstack[to].stateid;
                     looptrans = _lasttid;
                 }
             }
@@ -175,10 +175,9 @@ namespace LTL {
                 if constexpr (SaveTrace) {
                     auto tid = this->successorGenerator->fired();
                     successors.push_back(DSucc{stateid, tid});
-                    if (_new)
-                        seen.setHistory(stateid, tid);
-                }
-                else {
+                    //if (_new)
+                    seen.setHistory(stateid, tid);
+                } else {
                     successors.push_back(DSucc{stateid});
                 }
             }
@@ -187,10 +186,12 @@ namespace LTL {
                 seen.decode(state, delem.successors.front().id);
                 if constexpr (SaveTrace) {
                     _lasttid = delem.successors.front().trans;
+
                 }
                 delem.successors.pop_front();
+                return true;
             }
-            return true;
+            else return false;
             /*idx_t lastgenerated = std::numeric_limits<idx_t>::max();
             while (true) {
                 if (this->successorGenerator->next(state)) {
@@ -236,35 +237,37 @@ namespace LTL {
     }
 
     template<typename W, typename G>
-    void StubbornTarjanModelChecker<W, G>::printTrace(std::stack<DEntry> &&dstack, std::ostream &os)
+    void StubbornTarjanModelChecker<W, G>::printTrace(std::stack<DEntry> &&revdstack, std::ostream &os)
     {
         if constexpr (!SaveTrace) {
             return;
         } else {
-            dstack.pop();
+            revdstack.pop();
             os << "Trace:\n"
                   "<trace>\n";
             auto indent = 1;
             long p;
-            // print (reverted) dstack
-            while (!dstack.empty()) {
-                p = dstack.top().pos;
+            // print (reversed) dstack
+            while (!revdstack.empty()) {
+                p = revdstack.top().pos;
                 auto stateid = cstack[p].stateid;
                 auto[parent, tid] = seen.getHistory(stateid);
+                if (stateid == loopstate) {
+                    ++indent;
+                    os << "\t<loop>\n";
+                }
                 printTransition(tid, indent, os) << '\n';
                 cstack[p].lowlink = std::numeric_limits<idx_t>::max();
-                dstack.pop();
+                revdstack.pop();
             }
-            ++indent;
-            os << "\t<loop>\n";
-            // follow previously found back edges via lowsource until back in dstack.
+            // follow previously found back edges via lowsource until back in revdstack.
             p = cstack[p].lowsource;
             while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {
                 auto[parent, tid] = seen.getHistory(cstack[p].stateid);
                 printTransition(tid, indent, os);
                 p = cstack[p].lowsource;
             }
-            printTransition(looptrans, indent, os) << '\n';
+            printTransition(_lasttid, indent, os) << '\n';
 
             os << "\t</loop>\n</trace>" << std::endl;
         }

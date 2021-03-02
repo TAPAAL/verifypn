@@ -29,16 +29,19 @@ namespace LTL {
     class BuchiSuccessorGenerator {
     public:
         explicit BuchiSuccessorGenerator(Structures::BuchiAutomaton automaton)
-                : aut(std::move(automaton)) {
+                : aut(std::move(automaton))
+        {
         }
 
-        void prepare(size_t state) {
+        void prepare(size_t state)
+        {
             auto curstate = aut._buchi->state_from_number(state);
             succ = std::unique_ptr<spot::twa_succ_iterator>{aut._buchi->succ_iter(curstate)};
             succ->first();
         }
 
-        bool next(size_t &state, bdd &cond) {
+        bool next(size_t &state, bdd &cond)
+        {
             if (!succ->done()) {
                 state = aut._buchi->state_number(succ->dst());
                 cond = succ->cond();
@@ -48,26 +51,33 @@ namespace LTL {
             return false;
         }
 
-        [[nodiscard]] bool is_accepting(size_t state) const {
+        [[nodiscard]] bool is_accepting(size_t state) const
+        {
             return aut._buchi->state_is_accepting(state);
         }
 
-        [[nodiscard]] size_t initial_state_number() const {
+        [[nodiscard]] size_t initial_state_number() const
+        {
             return aut._buchi->get_init_state_number();
         }
 
-        [[nodiscard]] Condition_ptr getExpression(size_t i) const {
+        [[nodiscard]] Condition_ptr getExpression(size_t i) const
+        {
             return aut.ap_info.at(i).expression;
         }
 
-        [[nodiscard]] bool is_weak() const {
+        [[nodiscard]] bool is_weak() const
+        {
             return (bool) aut._buchi->prop_weak();
         }
+
         size_t buchiStates() { return aut._buchi->num_states(); }
 
-    //private:
         Structures::BuchiAutomaton aut;
+
+        //private:
         std::unique_ptr<spot::twa_succ_iterator> succ;
+
     };
 }
 #endif //VERIFYPN_BUCHISUCCESSORGENERATOR_H
