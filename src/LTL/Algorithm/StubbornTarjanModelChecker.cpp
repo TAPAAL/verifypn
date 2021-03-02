@@ -167,8 +167,10 @@ namespace LTL {
             if (!delem.successors.empty()) {
                 seen.retrieveProductState(state, delem.successors.front());
                 delem.successors.pop_front();
+                return true;
+            } else {
+                return false;
             }
-            return true;
         } else {
             auto stateid = delem.successors.front();
             delem.successors.pop_front();
