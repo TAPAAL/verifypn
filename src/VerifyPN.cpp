@@ -726,8 +726,7 @@ std::vector<Condition_ptr> getLTLQueries(const vector<Condition_ptr>& ctlStarQue
     std::vector<Condition_ptr> ltlQueries;
     for (const auto &ctlStarQuery : ctlStarQueries) {
         LTL::LTLValidator isLtl;
-        ctlStarQuery->visit(isLtl);
-        if (isLtl) {
+        if (isLtl.isLTL(ctlStarQuery)) {
             ltlQueries.push_back(ctlStarQuery);
         } else {
             ltlQueries.push_back(nullptr);
@@ -745,9 +744,15 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
                                  const EvaluationContext &evalContext,
                                  SimplificationContext &simplificationContext,
                                  std::ostream &out = std::cout) {
-    assert(dynamic_pointer_cast<SimpleQuantifierCondition>(query) != nullptr);
-    bool wasACond = dynamic_pointer_cast<ACondition>(query) != nullptr;
-    auto cond = (*dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
+    Condition_ptr cond;
+    bool wasACond;
+    if (dynamic_pointer_cast<SimpleQuantifierCondition>(query) != nullptr) {
+        wasACond = dynamic_pointer_cast<ACondition>(query) != nullptr;
+        cond = (*dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
+    } else {
+        wasACond = true;
+        cond = query;
+    }
 
     {
 #ifdef VERIFYPN_MC_Simplification
