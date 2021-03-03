@@ -121,6 +121,8 @@ namespace PetriEngine {
 
             void _accept(const CompareCondition *element, const std::string &op);
 
+            void _accept(const CommutativeExpr *element, const std::string &op);
+
             void _accept(const NaryExpr *element, const std::string &op);
         };
     }

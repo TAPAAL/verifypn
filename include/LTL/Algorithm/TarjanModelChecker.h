@@ -29,6 +29,17 @@
 
 namespace LTL {
 
+    /**
+     * Implements on-the-fly version of Tarjan's algorithm suitable for LTL model checking.
+     * The idea is to detect some reachable strongly connected component containing an accepting state,
+     * which constitutes a counter-example.
+     * For more details see
+     * <p>
+     *   Jaco Geldenhuys & Antti Valmari,
+     *   More efficient on-the-fly LTL verification with Tarjan's algorithm,
+     *   https://doi.org/10.1016/j.tcs.2005.07.004
+     * </p>
+     */
     template<bool SaveTrace = false>
     class TarjanModelChecker : public ModelChecker<PetriEngine::SuccessorGenerator> {
     public:
@@ -61,6 +72,8 @@ namespace LTL {
         StateSet seen;
         std::unordered_set<idx_t> store;
 
+        // rudimentary hash table of state IDs. chash[hash(state)] is the top index in cstack
+        // corresponding to state. Collisions are resolved using linked list via CEntry::next.
         std::array<idx_t, HashSz> chash;
         static_assert(sizeof(chash) == (1U << 27U));
 
@@ -89,13 +102,15 @@ namespace LTL {
                 PlainCEntry>;
 
         struct DEntry {
-            idx_t pos;
+            idx_t pos; // position in cstack.
             PetriEngine::successor_info sucinfo;
         };
 
-
+        // master list of state information.
         std::vector<CEntry> cstack;
+        // depth-first search stack, contains current search path.
         std::stack<DEntry> dstack;
+        // cstack positions of accepting states in current search path, for quick access.
         std::stack<idx_t> astack;
         bool violation = false;
         size_t loopstate = std::numeric_limits<size_t>::max();

@@ -31,21 +31,24 @@ namespace LTL {
         explicit BuchiSuccessorGenerator(Structures::BuchiAutomaton automaton)
                 : aut(std::move(automaton))
         {
+            deleter = SuccIterDeleter{&aut};
         }
 
         void prepare(size_t state)
         {
             auto curstate = aut._buchi->state_from_number(state);
-            succ = std::unique_ptr<spot::twa_succ_iterator>{aut._buchi->succ_iter(curstate)};
+            succ = _succ_iter{aut._buchi->succ_iter(curstate), SuccIterDeleter{&aut}};
             succ->first();
         }
 
         bool next(size_t &state, bdd &cond)
         {
             if (!succ->done()) {
-                state = aut._buchi->state_number(succ->dst());
+                auto dst = succ->dst();
+                state = aut._buchi->state_number(dst);
                 cond = succ->cond();
                 succ->next();
+                dst->destroy();
                 return true;
             }
             return false;
@@ -75,9 +78,19 @@ namespace LTL {
 
         Structures::BuchiAutomaton aut;
 
-        //private:
-        std::unique_ptr<spot::twa_succ_iterator> succ;
+        struct SuccIterDeleter {
+            Structures::BuchiAutomaton *aut;
 
+            void operator()(spot::twa_succ_iterator *iter) const
+            {
+                aut->buchi->release_iter(iter);
+            }
+        };
+
+        SuccIterDeleter deleter{};
+
+        using _succ_iter = std::unique_ptr<spot::twa_succ_iterator, SuccIterDeleter>;
+        _succ_iter succ = nullptr;
     };
 }
 #endif //VERIFYPN_BUCHISUCCESSORGENERATOR_H

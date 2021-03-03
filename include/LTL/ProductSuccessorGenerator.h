@@ -133,6 +133,10 @@ namespace LTL {
             }
         }
 
+        [[nodiscard]] bool isInitialState(const LTL::Structures::ProductState &state) const {
+            return state.markingEqual(_net.initial());
+        }
+
         /**
          * prepare a state for successor generation, starting from specific point in iteration
          * @param state the source state to generate successors from

@@ -30,6 +30,24 @@
 using namespace PetriEngine;
 
 namespace LTL {
+    /**
+     * Implement the nested DFS algorithm for LTL model checking. Roughly based on versions given in
+     * <p>
+     *   Jaco Geldenhuys & Antti Valmari,<br>
+     *   More efficient on-the-fly LTL verification with Tarjan's algorithm,<br>
+     *   https://doi.org/10.1016/j.tcs.2005.07.004
+     * </p>
+     * and
+     * <p>
+     *   Gerard J. Holzmann, Doron Peled, and Mihalis Yannakakis<br>
+     *   On Nested Depth First Search<br>
+     *   https://spinroot.com/gerard/pdf/inprint/spin96.pdf
+     * </p>
+     * For most use cases, Tarjan's algorithm (see LTL::TarjanModelChecker) is faster.
+     * @tparam W type used for state storage. Use <code>PetriEngine::Structures::TracableStateSet</code> if you want traces,
+     *         <code>PetriEngine::Structures::StateSet</code> if you don't care (as it is faster).
+     */
+    template <typename W>
     class NestedDepthFirstSearch : public ModelChecker<PetriEngine::SuccessorGenerator> {
     public:
         NestedDepthFirstSearch(const PetriNet &net, const PetriEngine::PQL::Condition_ptr &query, const bool shortcircuitweak = true)
@@ -44,7 +62,7 @@ namespace LTL {
         using State = LTL::Structures::ProductState;
 
         Structures::ProductStateFactory factory;
-        PetriEngine::Structures::StateSet states;
+        W states; //StateSet
         std::set<size_t> mark1;
         std::set<size_t> mark2;
 
@@ -56,10 +74,19 @@ namespace LTL {
         State *seed;
         bool violation = false;
 
+        //Used for printing the trace
+        std::stack<size_t> nested_transitions;
+
         void dfs();
 
         void ndfs(State &state);
+        void printTrace(stack<size_t> &transitions);
+
+        ostream & printTransition(size_t transition, uint indent, ostream &os = std::cerr);
+        static constexpr bool SaveTrace = std::is_same_v<W, PetriEngine::Structures::TracableStateSet>;
     };
+    extern template class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
+    extern template class NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>;
 }
 
 #endif //VERIFYPN_NESTEDDEPTHFIRSTSEARCH_H
