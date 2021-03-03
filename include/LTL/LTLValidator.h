@@ -29,8 +29,8 @@ namespace LTL {
 
         bool isLTL(const PetriEngine::PQL::Condition_ptr& condition) {
             std::shared_ptr<PetriEngine::PQL::SimpleQuantifierCondition> quantifierCondition;
-            if ((quantifierCondition = dynamic_pointer_cast<PetriEngine::PQL::ACondition>(condition)) != nullptr ||
-                (quantifierCondition = dynamic_pointer_cast<PetriEngine::PQL::ECondition>(condition)) != nullptr ){
+            if ((quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ACondition>(condition)) != nullptr ||
+                (quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ECondition>(condition)) != nullptr ){
                 (*quantifierCondition)[0]->visit(*this);
             } else {
                 condition->visit(*this);

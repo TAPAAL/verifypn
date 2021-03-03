@@ -92,7 +92,11 @@ namespace LTL {
         Result result;
         switch (options.ltlalgorithm) {
             case Algorithm::NDFS:
-                result = _verify<NestedDepthFirstSearch>(net, negated_formula, options.printstatistics);
+                if (options.trace) {
+                    result = _verify<NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>(net, negated_formula, options.printstatistics);
+                } else {
+                    result = _verify<NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>(net, negated_formula, options.printstatistics);
+                }
                 break;
             case Algorithm::RandomNDFS:
                 result = _verify<RandomNDFS>(net, negated_formula, options.printstatistics);

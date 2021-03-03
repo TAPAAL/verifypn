@@ -83,7 +83,7 @@ namespace LTL {
 
             void operator()(spot::twa_succ_iterator *iter) const
             {
-                aut->buchi->release_iter(iter);
+                aut->_buchi->release_iter(iter);
             }
         };
 
