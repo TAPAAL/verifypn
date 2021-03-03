@@ -113,10 +113,10 @@ namespace LTL {
                     }
                 } else {
                     if (options.trace) {
-                        result = _verify<StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator, PetriEngine::Structures::TracableStateSet>>(
+                        result = _verify<TarjanModelChecker<true>>(
                                 net, negated_formula, options.printstatistics);
                     } else {
-                        result = _verify<StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator, PetriEngine::Structures::StateSet>>(
+                        result = _verify<TarjanModelChecker<false>>(
                                 net, negated_formula, options.printstatistics);
                     }
                 }

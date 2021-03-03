@@ -126,7 +126,7 @@ namespace LTL {
 
         void popCStack();
 
-        std::ostream &printTransition(size_t transition, uint indent, std::ostream &os);
+        std::ostream &printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os);
 
         void printTrace(std::stack<DEntry> &&dstack, std::ostream &os = std::cout);
 

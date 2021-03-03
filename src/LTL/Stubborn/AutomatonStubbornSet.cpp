@@ -96,11 +96,9 @@ namespace LTL {
             }
         }
         if (!sat) {
+            info.retarding->visit(interesting);
             if (!satQueries.empty()) {
-                closure();
-            } else {
                 negated.prepare(state, satQueries, false);
-                closure();
                 negated.copyStubborn(_stubborn);
             }
         } else {

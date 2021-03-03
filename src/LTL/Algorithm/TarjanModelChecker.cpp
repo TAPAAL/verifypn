@@ -178,15 +178,31 @@ namespace LTL {
     }
 
     template<bool SaveTrace>
-    std::ostream &TarjanModelChecker<SaveTrace>::printTransition(size_t transition, uint indent, std::ostream &os)
+    std::ostream &
+    TarjanModelChecker<SaveTrace>::printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os)
     {
-        if (transition == std::numeric_limits<ptrie::uint>::max() - 1) {
-            os << std::string(indent, '\t') << "<deadlock/>";
+        std::string indent = "  "; std::string tokenIndent = "    ";
+        if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
+            os << indent << "<deadlock/>";
             return os;
         }
-        std::string tname = seen.net().transitionNames()[transition];
-        os << std::string(indent, '\t') << "<transition id=\"" << tname << "\" index=\"" << transition << "\"/>";
+        std::string tname = net.transitionNames()[transition];
+            os << indent << "<transition id=\"" << tname << "\">\n";
+            for (size_t i = 0; i < net.numberOfPlaces(); ++i) {
+                for (size_t j = 0; j < state.marking()[i]; ++j) {
+                    os << tokenIndent << R"(<token age="0" place=")" << net.placeNames()[i] << "\"/>\n";
+                }
+            }
+#ifndef NDEBUG
+            os << '\n' << tokenIndent << "<buchi state=\"" << state.getBuchiState() << "\"/>";
+#endif
+            os << indent << "</transition>";
         return os;
+    }
+
+    void printLoop(std::ostream &os)
+    {
+        os << "  " << "<loop/>\n";
     }
 
     template<bool SaveTrace>
@@ -195,32 +211,32 @@ namespace LTL {
         if constexpr (!SaveTrace) {
             return;
         } else {
+            State state = factory.newState();
             dstack.pop();
-            os << "Trace:\n"
+            os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
                   "<trace>\n";
-            auto indent = 1;
-            long p;
+            unsigned long p;
             // print (reverted) dstack
             while (!dstack.empty()) {
                 p = dstack.top().pos;
                 auto stateid = cstack[p].stateid;
                 auto[parent, tid] = seen.getHistory(stateid);
-                printTransition(tid, indent, os) << '\n';
+                seen.decode(state, stateid);
+                printTransition(tid, state, os) << '\n';
                 cstack[p].lowlink = std::numeric_limits<idx_t>::max();
                 dstack.pop();
             }
-            ++indent;
-            os << "\t<loop>\n";
+            printLoop(os);
             // follow previously found back edges via lowsource until back in dstack.
             p = cstack[p].lowsource;
             while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {
                 auto[parent, tid] = seen.getHistory(cstack[p].stateid);
-                printTransition(tid, indent, os);
+                seen.decode(state, cstack[p].stateid);
+                printTransition(tid, state, os);
                 p = cstack[p].lowsource;
             }
-            printTransition(looptrans, indent, os) << '\n';
-
-            os << "\t</loop>\n</trace>" << std::endl;
+            printTransition(looptrans, state, os) << '\n';
+            os << "</trace>" << std::endl;
         }
     }
 
