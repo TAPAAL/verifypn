@@ -118,6 +118,8 @@ namespace LTL {
                         states.setHistory2(stateid, successorGenerator->fired());
                         size_t next = stateid;
                         ptrie::uint trans = 0;
+                        // SuccessorGenerator returns tcount - 1, but resets tcount to UINT_MAX when done,
+                        // hence loop until transition >= UINT_MAX - 1.
                         while (trans < std::numeric_limits<ptrie::uint>::max() - 1) {
                             auto[state, transition] = states.getHistory2(next);
                             if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
