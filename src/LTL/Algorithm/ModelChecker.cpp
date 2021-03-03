@@ -20,8 +20,9 @@
 #include <utility>
 
 namespace LTL {
-    ModelChecker::ModelChecker(const PetriEngine::PetriNet& net, PetriEngine::PQL::Condition_ptr condition, const bool shortcircuitweak)
-        : net(net), formula(condition), shortcircuitweak(shortcircuitweak)
+    ModelChecker::ModelChecker(const PetriEngine::PetriNet &net, PetriEngine::PQL::Condition_ptr condition,
+                               const bool shortcircuitweak, TraceLevel level)
+            : net(net), formula(condition), shortcircuitweak(shortcircuitweak), traceLevel(level)
     {
 
         successorGenerator = std::make_unique<ProductSuccessorGenerator>(net, condition);
@@ -29,5 +30,30 @@ namespace LTL {
 
         //LTL::ProductPrinter::printProduct(*successorGenerator, std::cout, net, condition);
     }
+
+    std::ostream &ModelChecker::printTransition(size_t transition, LTL::Structures::ProductState& state, std::ostream &os)
+    {
+        static constexpr auto indent = "  ";
+        static constexpr auto tokenIndent = "    ";
+        if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
+            os << indent << "<deadlock/>";
+            return os;
+        }
+        std::string tname = net.transitionNames()[transition];
+        if (traceLevel == TraceLevel::Full) {
+            os << indent << "<transition id=\"" << tname << "\">\n";
+            for (size_t i = 0; i < net.numberOfPlaces(); ++i) {
+                for (size_t j = 0; j < state.marking()[i]; ++j) {
+                    os << tokenIndent << R"(<token age="0" place=")" << net.placeNames()[i] << "\"/>\n";
+                }
+            }
+            os << indent << "</transition>";
+        }
+        else {
+            os << indent << "<transition id=\"" << tname << "\"/>";
+        }
+        return os;
+    }
+
 }
 

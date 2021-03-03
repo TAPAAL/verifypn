@@ -39,12 +39,14 @@ namespace LTL {
      *
      * @tparam SaveTrace whether to save and print counter-examples when possible.
      */
-    template <bool SaveTrace>
+    template<bool SaveTrace>
     class TarjanModelChecker : public ModelChecker {
     public:
-        TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond, const bool shortcircuitweak)
-                : ModelChecker(net, cond, shortcircuitweak), factory(net, successorGenerator->initial_buchi_state()),
-                  seen(net, 0, (int) net.numberOfPlaces() + 1) {
+        TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond, const bool shortcircuitweak,
+                           TraceLevel level = TraceLevel::Full)
+                : ModelChecker(net, cond, shortcircuitweak, level), factory(net, successorGenerator->initial_buchi_state()),
+                  seen(net, 0, (int) net.numberOfPlaces() + 1)
+        {
             chash.fill(std::numeric_limits<idx_t>::max());
         }
 
@@ -66,7 +68,8 @@ namespace LTL {
         std::array<idx_t, HashSz> chash;
         static_assert(sizeof(chash) == (1U << 27U));
 
-        static inline idx_t hash(idx_t id) {
+        static inline idx_t hash(idx_t id)
+        {
             return id % HashSz;
         }
 
@@ -108,17 +111,19 @@ namespace LTL {
 
         void update(idx_t to);
 
-        bool nexttrans(State &state, State& parent, DEntry &delem);
+        bool nexttrans(State &state, State &parent, DEntry &delem);
 
         void popCStack();
-
-        std::ostream &printTransition(size_t transition, uint indent, std::ostream &os);
 
         void printTrace(std::stack<DEntry> &&dstack, std::ostream &os = std::cout);
 
     };
-extern template class TarjanModelChecker<true>;
-extern template class TarjanModelChecker<false>;
+
+    extern template
+    class TarjanModelChecker<true>;
+
+    extern template
+    class TarjanModelChecker<false>;
 }
 
 #endif //VERIFYPN_TARJANMODELCHECKER_H
