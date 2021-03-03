@@ -148,6 +148,8 @@ namespace LTL {
         }
     }
 
+//#define PRINTF_NEXTRANS
+
     template<typename W, typename G>
     bool StubbornTarjanModelChecker<W, G>::nexttrans(State &state, State &parent, DEntry &delem)
     {
@@ -162,6 +164,10 @@ namespace LTL {
             while (this->successorGenerator->next(state)) {
                 ++this->stats.explored;
                 auto[_new, stateid] = seen.add(state);
+#ifdef PRINTF_NEXTRANS
+                const PetriEngine::PetriNet &net = this->successorGenerator->getNet();
+                std::cerr << cstack[delem.pos].stateid << "-" << net.transitionNames()[this->successorGenerator->fired()] << "> " << stateid << std::endl;
+#endif
                 // from textbook LTL / bit product state
                 /*auto markingId = seen.getMarkingId(stateid);
                 auto p = chash[hash(stateid)];

@@ -215,6 +215,7 @@ namespace LTL {
         size_t last_transition() const { return successorGenerator.last_transition(); }
 
         size_t fired() const { return successorGenerator.fired(); }
+        const PetriEngine::PetriNet &getNet() { return _net; }
 
         //template<typename T = std::enable_if_t<std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>, void>>
         void generateAll()

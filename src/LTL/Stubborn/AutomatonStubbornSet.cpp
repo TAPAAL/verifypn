@@ -107,12 +107,12 @@ namespace LTL {
             if (!satQueries.empty()) {
                 negated.prepare(state, satQueries, true);
                 negated.extend(info.retarding, false);
+                copyNegated();
                 closure();
-                negated.copyStubborn(_stubborn);
             } else {
                 negated.prepare(state, {info.retarding}, false);
+                copyNegated();
                 closure();
-                negated.copyStubborn(_stubborn);
             }
         }
     }
@@ -158,8 +158,15 @@ namespace LTL {
     void AutomatonStubbornSet::reset()
     {
         hasStubborn = false;
-        nstubborn = 0;
         StubbornSet::reset();
         negated.reset();
+    }
+
+    void AutomatonStubbornSet::copyNegated() {
+        for (size_t t = 0; t < _net.numberOfTransitions(); ++t) {
+            if (negated.isStubborn(t)) {
+                addToStub(t);
+            }
+        }
     }
 }

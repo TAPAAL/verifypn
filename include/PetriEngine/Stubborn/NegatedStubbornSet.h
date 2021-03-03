@@ -43,6 +43,8 @@ namespace PetriEngine {
             }
         }
 
+        [[nodiscard]] inline bool isStubborn(size_t t) const { return _stubborn[t]; }
+
         void extend(const PQL::Condition_ptr &query, bool do_closure);
             protected:
         void addToStub(uint32_t) override;
