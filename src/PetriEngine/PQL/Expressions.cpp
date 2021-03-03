@@ -500,8 +500,8 @@ namespace PetriEngine {
             std::sort(_ids.begin(), _ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
             std::sort(_exprs.begin(), _exprs.end(), [](auto& a, auto& b)
             {
-                auto ida = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(a);
-                auto idb = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(b);
+                auto ida = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(a);
+                auto idb = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(b);
                 if(ida == NULL) return false;
                 if(ida && !idb) return true;
                 return ida->offset() < idb->offset();
@@ -3557,16 +3557,16 @@ namespace PetriEngine {
                     if(bi == b->_ids.end() || ai == a->_ids.end()) break;
                 }
             };
-            if(auto p1 = dynamic_pointer_cast<PlusExpr>(_expr1))
-                if(auto p2 = dynamic_pointer_cast<PlusExpr>(_expr2))
+            if(auto p1 = std::dynamic_pointer_cast<PlusExpr>(_expr1))
+                if(auto p2 = std::dynamic_pointer_cast<PlusExpr>(_expr2))
                     remdup(p1, p2);
             
-            if(auto m1 = dynamic_pointer_cast<MultiplyExpr>(_expr1))
-                if(auto m2 = dynamic_pointer_cast<MultiplyExpr>(_expr2))
+            if(auto m1 = std::dynamic_pointer_cast<MultiplyExpr>(_expr1))
+                if(auto m2 = std::dynamic_pointer_cast<MultiplyExpr>(_expr2))
                     remdup(m1, m2);                    
             
-            if(auto p1 = dynamic_pointer_cast<CommutativeExpr>(_expr1))
-                if(auto p2 = dynamic_pointer_cast<CommutativeExpr>(_expr2))            
+            if(auto p1 = std::dynamic_pointer_cast<CommutativeExpr>(_expr1))
+                if(auto p2 = std::dynamic_pointer_cast<CommutativeExpr>(_expr2))
                     return p1->_exprs.size() + p1->_ids.size() + p2->_exprs.size() + p2->_ids.size() == 0;
             return _expr1->placeFree() && _expr2->placeFree();
         }        
@@ -3657,324 +3657,6 @@ namespace PetriEngine {
             return std::make_shared<UnfoldedUpperBoundsCondition>(_places, _max, _offset);
         }
 
-        
-        /******************** Stubborn reduction interesting transitions ********************/
-        
-        void PlusExpr::incr(ReducingSuccessorGenerator& generator) const { 
-            for(auto& i : _ids) generator.presetOf(i.first, true);
-            for(auto& e : _exprs) e->incr(generator);
-        }
-        
-        void PlusExpr::decr(ReducingSuccessorGenerator& generator) const {
-            for(auto& i : _ids) generator.postsetOf(i.first, true);
-            for(auto& e : _exprs) e->decr(generator);
-        }
-        
-        void SubtractExpr::incr(ReducingSuccessorGenerator& generator) const {
-            bool first = true;
-            for(auto& e : _exprs)
-            {
-                if(first)
-                    e->incr(generator);
-                else
-                    e->decr(generator);
-                first = false;
-            }
-        }
-        
-        void SubtractExpr::decr(ReducingSuccessorGenerator& generator) const {
-            bool first = true;
-            for(auto& e : _exprs)
-            {
-                if(first)
-                    e->decr(generator);
-                else
-                    e->incr(generator);
-                first = false;
-            }
-        }
-        
-        void MultiplyExpr::incr(ReducingSuccessorGenerator& generator) const {
-            if((_ids.size() + _exprs.size()) == 1)
-            {
-                for(auto& i : _ids) generator.presetOf(i.first, true);
-                for(auto& e : _exprs) e->incr(generator);                
-            }
-            else
-            {
-                for(auto& i : _ids)
-                {
-                    generator.presetOf(i.first, true);
-                    generator.postsetOf(i.first, true);
-                }
-                for(auto& e : _exprs)
-                {
-                    e->incr(generator);
-                    e->decr(generator);
-                }
-            }
-        }
-        
-        void MultiplyExpr::decr(ReducingSuccessorGenerator& generator) const {
-            if((_ids.size() + _exprs.size()) == 1)
-            {
-                for(auto& i : _ids) generator.postsetOf(i.first, true);
-                for(auto& e : _exprs) e->decr(generator);            
-            }
-            else
-                incr(generator);
-        }
-        
-        void MinusExpr::incr(ReducingSuccessorGenerator& generator) const {
-            // TODO not implemented
-        }
-        
-        void MinusExpr::decr(ReducingSuccessorGenerator& generator) const {
-            // TODO not implemented
-        }
-
-        void LiteralExpr::incr(ReducingSuccessorGenerator& generator) const {
-            // Add nothing
-        }
-        
-        void LiteralExpr::decr(ReducingSuccessorGenerator& generator) const {
-            // Add nothing
-        }
-
-        void UnfoldedIdentifierExpr::incr(ReducingSuccessorGenerator& generator) const {
-            generator.presetOf(_offsetInMarking, true);
-        }
-        
-        void UnfoldedIdentifierExpr::decr(ReducingSuccessorGenerator& generator) const {
-             generator.postsetOf(_offsetInMarking, true);
-        }
-        
-        void SimpleQuantifierCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
-            _cond->findInteresting(generator, negated);
-        }
-        
-        void UntilCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
-            _cond1->findInteresting(generator, negated);
-            _cond1->findInteresting(generator, !negated);
-            _cond2->findInteresting(generator, negated);
-        }
-        
-        void AndCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // and
-                for(auto& c : _conds)
-                {
-                    if(!c->isSatisfied())
-                    {
-                        c->findInteresting(generator, negated);
-                        break;
-                    }
-                }
-            } else {                    // or
-                for(auto& c : _conds) c->findInteresting(generator, negated);
-            }
-        }
-        
-        void OrCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // or
-                for(auto& c : _conds) c->findInteresting(generator, negated);
-            } else {                    // and
-                for(auto& c : _conds)
-                {
-                    if(c->isSatisfied())
-                    {
-                        c->findInteresting(generator, negated);
-                        break;
-                    }
-                }
-            }
-        }
-        
-        void CompareConjunction::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
-             
-            auto neg = negated != _negated;
-            int32_t cand = std::numeric_limits<int32_t>::max();
-            bool pre = false;
-            for(auto& c : _constraints)
-            {
-                auto val = generator.parent()[c._place];
-                if(c._lower == c._upper)
-                {
-                    if(neg)
-                    {
-                        if(val != c._lower) continue;
-                        generator.postsetOf(c._place, true);
-                        generator.presetOf(c._place, true);
-                    }
-                    else
-                    {
-                        if(val == c._lower) continue;
-                        if(val > c._lower) {
-                            cand = c._place;
-                            pre = false;
-                        } else {
-                            cand = c._place;
-                            pre = true;
-                        }   
-                    }
-                }
-                else
-                {
-                    if(!neg)
-                    {
-                        if(val < c._lower && c._lower != 0)
-                        {
-                            assert(!neg);
-                            cand = c._place;
-                            pre = true;
-                        }
-                        
-                        if(val > c._upper && c._upper != std::numeric_limits<uint32_t>::max())
-                        {
-                            assert(!neg);
-                            cand = c._place;
-                            pre = false;
-                        }
-                    }
-                    else
-                    {
-                        if(val >= c._lower && c._lower != 0)
-                        {
-                            generator.postsetOf(c._place, true);
-                        }
-                        
-                        if(val <= c._upper && c._upper != std::numeric_limits<uint32_t>::max())
-                        {
-                            generator.presetOf(c._place, true);
-                        }
-                    }
-                }
-                if(cand != std::numeric_limits<int32_t>::max())
-                {
-                    if(pre && generator.seenPre(cand))
-                        return;
-                    else if(!pre && generator.seenPost(cand))
-                        return;
-                }
-            }
-            if(cand != std::numeric_limits<int32_t>::max())
-            {
-                if(pre)
-                {
-                    generator.presetOf(cand, true);
-                }
-                else if(!pre)
-                {
-                    generator.postsetOf(cand, true);
-                }
-            }
-        }
-        
-        void EqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // equal
-                if(_expr1->getEval() == _expr2->getEval()) { return; }
-                if(_expr1->getEval() > _expr2->getEval()){
-                    _expr1->decr(generator);
-                    _expr2->incr(generator);
-                } else {
-                    _expr1->incr(generator);
-                    _expr2->decr(generator);
-                }   
-            } else {                    // not equal
-                if(_expr1->getEval() != _expr2->getEval()) { return; }
-                _expr1->incr(generator);
-                _expr1->decr(generator);
-                _expr2->incr(generator);
-                _expr2->decr(generator);
-            }
-        }
-        
-        void NotEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // not equal
-                if(_expr1->getEval() != _expr2->getEval()) { return; }
-                _expr1->incr(generator);
-                _expr1->decr(generator);
-                _expr2->incr(generator);
-                _expr2->decr(generator);
-            } else {                    // equal
-                if(_expr1->getEval() == _expr2->getEval()) { return; }
-                if(_expr1->getEval() > _expr2->getEval()){
-                    _expr1->decr(generator);
-                    _expr2->incr(generator);
-                } else {
-                    _expr1->incr(generator);
-                    _expr2->decr(generator);
-                }   
-            }
-        }
-        
-        void LessThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {                
-            if(!negated){               // less than
-                if(_expr1->getEval() < _expr2->getEval()) { return; }
-                _expr1->decr(generator);
-                _expr2->incr(generator);
-            } else {                    // greater than or equal
-                if(_expr1->getEval() >= _expr2->getEval()) { return; }
-                _expr1->incr(generator);
-                _expr2->decr(generator);
-            }
-        }
-        
-        void LessThanOrEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // less than or equal
-                if(_expr1->getEval() <= _expr2->getEval()) { return; }
-                _expr1->decr(generator);
-                _expr2->incr(generator);
-            } else {                    // greater than
-                if(_expr1->getEval() > _expr2->getEval()) { return; }
-                _expr1->incr(generator);
-                _expr2->decr(generator);
-            }
-        }
-        
-        void GreaterThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // greater than
-                if(_expr1->getEval() > _expr2->getEval()) { return; }
-                _expr1->incr(generator);
-                _expr2->decr(generator);
-            } else {                    // less than or equal
-                if(_expr1->getEval() <= _expr2->getEval()) { return; }
-                _expr1->decr(generator);
-                _expr2->incr(generator);
-            }
-        }
-        
-        void GreaterThanOrEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // greater than or equal
-                if(_expr1->getEval() >= _expr2->getEval()) { return; }
-                _expr1->incr(generator);
-                _expr2->decr(generator); 
-            } else {                    // less than
-                if(_expr1->getEval() < _expr2->getEval()) { return; }
-                _expr1->decr(generator);
-                _expr2->incr(generator);
-            }
-        }
-        
-        void NotCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            _cond->findInteresting(generator, !negated);
-        }
-        
-        void BooleanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            // Add nothing
-        }
-        
-        void DeadlockCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!isSatisfied()){
-                generator.postPresetOf(generator.leastDependentEnabled(), true);
-            } // else add nothing
-        }
-
-        void UnfoldedUpperBoundsCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            for(auto& p : _places)
-                if(!p._maxed_out)
-                    generator.presetOf(p._place);
-        }
-        
         
 /********************** CONSTRUCTORS *********************************/
 
@@ -4156,10 +3838,10 @@ namespace PetriEngine {
                     EvaluationContext c;
                     _constant = apply(_constant, e->evaluate(c));
                 }
-                else if (auto id = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(e)) {
+                else if (auto id = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(e)) {
                     _ids.emplace_back(id->offset(), id->name());
                 } 
-                else if(auto c = dynamic_pointer_cast<CommutativeExpr>(e))
+                else if(auto c = std::dynamic_pointer_cast<CommutativeExpr>(e))
                 {
                     // we should move up plus/multiply here when possible;
                     if(c->_ids.size() == 0 && c->_exprs.size() == 0)

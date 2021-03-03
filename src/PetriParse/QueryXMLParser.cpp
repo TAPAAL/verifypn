@@ -569,7 +569,7 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
     return nullptr;
 }
 
-string QueryXMLParser::parsePlace(rapidxml::xml_node<>*  element) {
+std::string QueryXMLParser::parsePlace(rapidxml::xml_node<>*  element) {
     if (strcmp(element->name(), "place") != 0)  return ""; // missing place tag
     string placeName = element->value();
     placeName.erase(std::remove_if(placeName.begin(), placeName.end(), ::isspace), placeName.end());

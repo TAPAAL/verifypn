@@ -62,8 +62,14 @@ namespace PetriEngine
             virtual void _accept(const EUCondition*)
             {   assert(false); std::cerr << "No accept for EUCondition" << std::endl; exit(0);};
             virtual void _accept(const AUCondition*)
-            {   assert(false); std::cerr << "No accept for AUCondition" << std::endl; exit(0);};            
-            
+            {   assert(false); std::cerr << "No accept for AUCondition" << std::endl; exit(0);};
+
+            virtual void _accept(const UntilCondition *) {
+                assert(false);
+                std::cerr << "No accept for UntilCondition" << std::endl;
+                exit(0);
+            };
+
             // shallow elements, neither of these should exist in a compiled expression
             virtual void _accept(const UnfoldedFireableCondition* element) 
             {   assert(false); std::cerr << "No accept for UnfoldedFireableCondition" << std::endl; exit(0);};
@@ -93,7 +99,85 @@ namespace PetriEngine
             // shallow expression, default to error
             virtual void _accept(const IdentifierExpr* element)
             {   assert(false); std::cerr << "No accept for IdentifierExpr" << std::endl; exit(0);};
-        }; 
+        };
+
+        class ExpressionVisitor : public Visitor {
+        public:
+
+        private:
+            void _accept(const NotCondition *element) override {
+                assert(false);
+                std::cerr << "No accept for NotCondition" << std::endl;
+                exit(0);
+            };
+
+            void _accept(const AndCondition *element) override {
+                assert(false);
+                std::cerr << "No accept for AndCondition" << std::endl;
+                exit(0);
+            };
+
+            void _accept(const OrCondition *element) override {
+                assert(false);
+                std::cerr << "No accept for OrCondition" << std::endl;
+                exit(0);
+            };
+
+            void _accept(const LessThanCondition *element) override {
+                assert(false);
+                std::cerr << "No accept for LessThanCondition" << std::endl;
+                exit(0);
+            };
+
+            void _accept(const LessThanOrEqualCondition *element) override {
+                assert(false);
+                std::cerr << "No accept for LessThanOrEqualCondition" << std::endl;
+                exit(0);
+            };
+
+            void _accept(const GreaterThanCondition *element) override {
+                assert(false);
+                std::cerr << "No accept for GreaterThanCondition" << std::endl;
+                exit(0);
+            };
+
+            void _accept(const GreaterThanOrEqualCondition *element) override {
+                assert(false);
+                std::cerr << "No accept for GreaterThanOrEqualCondition" << std::endl;
+                exit(0);
+            };
+
+            void _accept(const EqualCondition *element) override {
+                assert(false);
+                std::cerr << "No accept for EqualCondition" << std::endl;
+                exit(0);
+            };
+
+            void _accept(const NotEqualCondition *element) override {
+                assert(false);
+                std::cerr << "No accept for NotEqualCondition" << std::endl;
+                exit(0);
+            };
+
+            void _accept(const DeadlockCondition *element) override {
+                assert(false);
+                std::cerr << "No accept for DeadlockCondition" << std::endl;
+                exit(0);
+            };
+
+            void _accept(const CompareConjunction *element) override {
+                assert(false);
+                std::cerr << "No accept for CompareConjunction" << std::endl;
+                exit(0);
+            };
+
+            void _accept(const UnfoldedUpperBoundsCondition *element) override {
+                assert(false);
+                std::cerr << "No accept for UnfoldedUpperBoundsCondition" << std::endl;
+                exit(0);
+            };
+        };
+
     }
 }
 
