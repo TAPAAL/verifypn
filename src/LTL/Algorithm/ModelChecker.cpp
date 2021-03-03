@@ -18,23 +18,32 @@
 #include "LTL/Algorithm/ModelChecker.h"
 
 #include <utility>
+#include <iomanip>
 
 namespace LTL {
     ModelChecker::ModelChecker(const PetriEngine::PetriNet &net, PetriEngine::PQL::Condition_ptr condition,
                                const bool shortcircuitweak, TraceLevel level)
-            : net(net), formula(condition), shortcircuitweak(shortcircuitweak), traceLevel(level)
+            : net(net), formula(condition), traceLevel(level), shortcircuitweak(shortcircuitweak)
     {
 
         successorGenerator = std::make_unique<ProductSuccessorGenerator>(net, condition);
-        //TODO Create successor generator from net and condition
 
-        //LTL::ProductPrinter::printProduct(*successorGenerator, std::cout, net, condition);
+        maxTransName = std::max_element(std::begin(net.transitionNames()), std::end(net.transitionNames()),
+                                        [](auto &a, auto &b) { return a.size() < b.size(); })->size();
+
     }
 
-    std::ostream &ModelChecker::printTransition(size_t transition, LTL::Structures::ProductState& state, std::ostream &os)
+    static constexpr auto indent = "  ";
+    static constexpr auto tokenIndent = "    ";
+
+    void ModelChecker::printLoop(std::ostream &os)
     {
-        static constexpr auto indent = "  ";
-        static constexpr auto tokenIndent = "    ";
+        os << indent << "<loop/>\n";
+    }
+
+    std::ostream &
+    ModelChecker::printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os)
+    {
         if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
             os << indent << "<deadlock/>";
             return os;
@@ -47,10 +56,13 @@ namespace LTL {
                     os << tokenIndent << R"(<token age="0" place=")" << net.placeNames()[i] << "\"/>\n";
                 }
             }
+#ifndef NDEBUG
+            os << '\n' << tokenIndent << "<buchi state=\"" << state.getBuchiState() << "\"/>";
+#endif
             os << indent << "</transition>";
-        }
-        else {
-            os << indent << "<transition id=\"" << tname << "\"/>";
+        } else {
+            os << indent << "<transition id=" << std::setw(maxTransName + 1) << std::quoted(tname) << "\tbuchisucc=\""
+               << state.getBuchiState() << "\"/>";
         }
         return os;
     }

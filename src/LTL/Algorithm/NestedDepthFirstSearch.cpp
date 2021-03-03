@@ -158,7 +158,7 @@ namespace LTL {
             printTransition(transition, state, os) << std::endl;
             transitions.pop();
         }
-        os << "  <loop>" << std::endl;
+        printLoop(os);
         while (!nested_transitions.empty()) {
             auto [stateid, transition] = nested_transitions.top();
             states.decode(state, stateid);

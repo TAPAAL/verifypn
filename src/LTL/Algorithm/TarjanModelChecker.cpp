@@ -186,7 +186,7 @@ namespace LTL {
                 cstack[p].lowlink = std::numeric_limits<idx_t>::max();
                 dstack.pop();
             }
-            os << "  <loop/>\n";
+            printLoop(os);
             // follow previously found back edges via lowsource until back in dstack.
             p = cstack[p].lowsource;
             while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {

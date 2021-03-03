@@ -21,13 +21,9 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/ProductSuccessorGenerator.h"
 #include "LTL/Algorithm/ProductPrinter.h"
+#include "PetriEngine/options.h"
 
 namespace LTL {
-    enum class TraceLevel {
-        None,
-        Transitions,
-        Full
-    };
 
     class ModelChecker {
     public:
@@ -51,8 +47,11 @@ namespace LTL {
         const bool shortcircuitweak;
         bool weakskip = false;
         bool is_weak = false;
+        int maxTransName;
 
-        std::ostream &printTransition(size_t transition, LTL::Structures::ProductState& state, std::ostream &os);
+        std::ostream &printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os);
+
+        void printLoop(std::ostream &os);
     };
 }
 
