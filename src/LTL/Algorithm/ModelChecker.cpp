@@ -57,7 +57,7 @@ namespace LTL {
                 }
             }
 #ifndef NDEBUG
-            os << '\n' << tokenIndent << "<buchi state=\"" << state.getBuchiState() << "\"/>";
+            os << '\n' << tokenIndent << "<buchi state=\"" << state.getBuchiState() << "\"/>\n";
 #endif
             os << indent << "</transition>";
         } else {

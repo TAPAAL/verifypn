@@ -192,7 +192,7 @@ namespace LTL {
             while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {
                 auto[parent, tid] = seen.getHistory(cstack[p].stateid);
                 seen.decode(state, cstack[p].stateid);
-                printTransition(tid, state, os);
+                printTransition(tid, state, os) << '\n';
                 p = cstack[p].lowsource;
             }
             printTransition(looptrans, state, os) << '\n';

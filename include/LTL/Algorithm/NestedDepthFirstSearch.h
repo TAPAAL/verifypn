@@ -63,7 +63,6 @@ namespace LTL {
         void ndfs(State &state);
         void printTrace(std::stack<std::pair<size_t, size_t>> &transitions, std::ostream &os = std::cout);
 
-        //ostream & printTransition(size_t transition, uint indent, ostream &os);
         static constexpr bool SaveTrace = std::is_same_v<W, PetriEngine::Structures::TracableStateSet>;
     };
     extern template class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
