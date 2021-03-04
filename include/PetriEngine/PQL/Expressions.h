@@ -236,7 +236,7 @@ namespace PetriEngine {
             }
             void visit(Visitor& visitor) const override;
 
-                const Expr_ptr &compiled() const
+            [[nodiscard]] const Expr_ptr &compiled() const
             {
                 return _compiled;
             }

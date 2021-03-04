@@ -33,18 +33,6 @@ namespace PetriEngine {
         return std::numeric_limits<uint32_t>::max();
     }
 
-    /*
-    uint32_t StubbornSet::next() {
-        while (_tid < _net.numberOfTransitions()) {
-            if (_stubborn[_tid] && _enabled[_tid]) {
-                return _tid++;
-            }
-            ++_tid;
-        }
-        return std::numeric_limits<uint32_t>::max();
-    }
-*/
-
     bool StubbornSet::checkPreset(uint32_t t) {
         const TransPtr &ptr = transitions()[t];
         uint32_t finv = ptr.inputs;
@@ -287,22 +275,6 @@ namespace PetriEngine {
             }
         }
     }
-
-    /*bool StubbornSet::next(Structures::State &write) {
-        while (!_ordering.empty()) {
-            _current = _ordering.front();
-            _ordering.pop_front();
-            if (_stubborn[_current]) {
-                assert(_enabled[_current]);
-                memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof(MarkVal));
-                consumePreset(write, _current);
-                producePostset(write, _current);
-                return true;
-            }
-        }
-        reset();
-        return false;
-    }*/
 
     uint32_t StubbornSet::leastDependentEnabled() {
         uint32_t tLeast = -1;
