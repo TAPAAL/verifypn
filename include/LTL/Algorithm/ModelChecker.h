@@ -21,24 +21,37 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/ProductSuccessorGenerator.h"
 #include "LTL/Algorithm/ProductPrinter.h"
+#include "PetriEngine/options.h"
 
 namespace LTL {
+
     class ModelChecker {
     public:
-        ModelChecker(const PetriEngine::PetriNet& net, PetriEngine::PQL::Condition_ptr, const bool shortcircuitweak);
+        ModelChecker(const PetriEngine::PetriNet &net, PetriEngine::PQL::Condition_ptr, const bool shortcircuitweak,
+                     TraceLevel level = TraceLevel::Transitions);
+
         virtual bool isSatisfied() = 0;
-        
+
         virtual ~ModelChecker() = default;
+
         [[nodiscard]] bool isweak() const { return is_weak; }
+
+
     protected:
         std::unique_ptr<ProductSuccessorGenerator> successorGenerator;
         const PetriEngine::PetriNet &net;
         PetriEngine::PQL::Condition_ptr formula;
+        TraceLevel traceLevel;
 
         size_t _discovered = 0;
         const bool shortcircuitweak;
         bool weakskip = false;
         bool is_weak = false;
+        int maxTransName;
+
+        std::ostream &printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os);
+
+        void printLoop(std::ostream &os);
     };
 }
 

@@ -18,16 +18,54 @@
 #include "LTL/Algorithm/ModelChecker.h"
 
 #include <utility>
+#include <iomanip>
 
 namespace LTL {
-    ModelChecker::ModelChecker(const PetriEngine::PetriNet& net, PetriEngine::PQL::Condition_ptr condition, const bool shortcircuitweak)
-        : net(net), formula(condition), shortcircuitweak(shortcircuitweak)
+    ModelChecker::ModelChecker(const PetriEngine::PetriNet &net, PetriEngine::PQL::Condition_ptr condition,
+                               const bool shortcircuitweak, TraceLevel level)
+            : net(net), formula(condition), traceLevel(level), shortcircuitweak(shortcircuitweak)
     {
 
         successorGenerator = std::make_unique<ProductSuccessorGenerator>(net, condition);
-        //TODO Create successor generator from net and condition
 
-        //LTL::ProductPrinter::printProduct(*successorGenerator, std::cout, net, condition);
+        maxTransName = std::max_element(std::begin(net.transitionNames()), std::end(net.transitionNames()),
+                                        [](auto &a, auto &b) { return a.size() < b.size(); })->size();
+
     }
+
+    static constexpr auto indent = "  ";
+    static constexpr auto tokenIndent = "    ";
+
+    void ModelChecker::printLoop(std::ostream &os)
+    {
+        os << indent << "<loop/>\n";
+    }
+
+    std::ostream &
+    ModelChecker::printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os)
+    {
+        if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
+            os << indent << "<deadlock/>";
+            return os;
+        }
+        std::string tname = net.transitionNames()[transition];
+        if (traceLevel == TraceLevel::Full) {
+            os << indent << "<transition id=\"" << tname << "\">\n";
+            for (size_t i = 0; i < net.numberOfPlaces(); ++i) {
+                for (size_t j = 0; j < state.marking()[i]; ++j) {
+                    os << tokenIndent << R"(<token age="0" place=")" << net.placeNames()[i] << "\"/>\n";
+                }
+            }
+#ifndef NDEBUG
+            os << '\n' << tokenIndent << "<buchi state=\"" << state.getBuchiState() << "\"/>\n";
+#endif
+            os << indent << "</transition>";
+        } else {
+            os << indent << "<transition id=" << std::setw(maxTransName + 1) << std::quoted(tname) << "\tbuchisucc=\""
+               << state.getBuchiState() << "\"/>";
+        }
+        return os;
+    }
+
 }
 
