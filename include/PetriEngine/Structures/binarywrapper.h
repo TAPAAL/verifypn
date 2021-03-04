@@ -394,7 +394,7 @@ namespace ptrie
         uchar* _blob = nullptr;
             
         // number of bytes allocated on heap
-        uint16_t _nbytes = 0;
+        size_t _nbytes = 0;
                
         // masks for single-bit access
      } __attribute__((packed));
