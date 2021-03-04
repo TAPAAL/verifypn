@@ -645,7 +645,6 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context) override;
             
-            uint32_t distance(DistanceContext& context) const override;
             void toString(std::ostream&) const override;
             void toBinary(std::ostream& out) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
@@ -679,7 +678,6 @@ namespace PetriEngine {
             Retval simplifyAnd(SimplificationContext& context) const;                  
 
         private:
-            virtual uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const = 0;
             virtual std::string op() const = 0;
             
         protected:
@@ -705,9 +703,9 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;
             Quantifier getQuantifier() const override { return Quantifier::AND; }
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+            uint32_t distance(DistanceContext& context) const override;
         private:
             //int logicalOp() const;
-            uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const override;
             std::string op() const override;
         };
 
@@ -729,9 +727,9 @@ namespace PetriEngine {
             void findInteresting(ReducingSuccessorGenerator& generator, bool negated) const override;   
             Quantifier getQuantifier() const override { return Quantifier::OR; }
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+            uint32_t distance(DistanceContext& context) const override;
         private:
             //int logicalOp() const;
-            uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const override;
             std::string op() const override;
         };
 

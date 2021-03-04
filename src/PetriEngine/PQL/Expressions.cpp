@@ -1477,8 +1477,6 @@ namespace PetriEngine {
 
         /******************** Distance Condition ********************/
 
-#define MAX(v1, v2)  (v1 > v2 ? v1 : v2)
-#define MIN(v1, v2)  (v1 < v2 ? v1 : v2)
 
         template<>
         uint32_t delta<EqualCondition>(int v1, int v2, bool negated) {
@@ -1592,12 +1590,6 @@ namespace PetriEngine {
             return r1 + r2;
         }
         
-        uint32_t LogicalCondition::distance(DistanceContext& context) const {
-            uint32_t d = _conds[0]->distance(context);
-            for(size_t i = 1; i < _conds.size(); ++i) d = delta(d, _conds[i]->distance(context), context);
-            return d;
-        }
-        
         uint32_t CompareConjunction::distance(DistanceContext& context) const {
             uint32_t d = 0;
             auto neg = context.negated() != _negated;
@@ -1620,7 +1612,7 @@ namespace PetriEngine {
                     {
                         auto d2 = delta<LessThanOrEqualCondition>(pv, c._upper, neg);
                         if(first) d = d2;
-                        else      d = MIN(d, d2);
+                        else      d = std::min(d, d2);
                         first = false;
                     }
                     
@@ -1628,7 +1620,7 @@ namespace PetriEngine {
                     {
                         auto d2 = delta<GreaterThanOrEqualCondition>(pv, c._upper, neg);
                         if(first) d = d2;
-                        else      d = MIN(d, d2);
+                        else      d = std::min(d, d2);
                         first = false;
                     }
                 }
@@ -1636,20 +1628,36 @@ namespace PetriEngine {
             return d;
         }
 
-        uint32_t AndCondition::delta(uint32_t d1,
-                uint32_t d2,
-                const DistanceContext& context) const {
-                return d1 + d2;
+        uint32_t conjDistance(DistanceContext& context, const std::vector<Condition_ptr>& conds)
+        {
+            uint32_t val = 0;
+            for(auto& c : conds)
+                val += c->distance(context);
+            return val;
         }
 
-        uint32_t OrCondition::delta(uint32_t d1,
-                uint32_t d2,
-                const DistanceContext& context) const {
-            if (context.negated())
-                return MAX(d1, d2);
-            else
-                return MIN(d1, d2);
+        uint32_t disjDistance(DistanceContext& context, const std::vector<Condition_ptr>& conds)
+        {
+            uint32_t val = std::numeric_limits<uint32_t>::max();
+            for(auto& c : conds)
+                val = std::min(c->distance(context), val);
+            return val;
         }
+
+        uint32_t AndCondition::distance(DistanceContext& context) const {
+            if(context.negated())
+                return disjDistance(context, _conds);
+            else
+                return conjDistance(context, _conds);
+        }
+
+        uint32_t OrCondition::distance(DistanceContext& context) const {
+            if(context.negated())
+                return conjDistance(context, _conds);
+            else
+                return disjDistance(context, _conds);
+        }
+
 
         struct S {
             int d;
