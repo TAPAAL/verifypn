@@ -166,7 +166,7 @@ namespace LTL {
                 auto[_new, stateid] = seen.add(state);
 #ifdef PRINTF_NEXTRANS
                 const PetriEngine::PetriNet &net = this->successorGenerator->getNet();
-                std::cerr << cstack[delem.pos].stateid << "-" << net.transitionNames()[this->successorGenerator->fired()] << "> " << stateid << std::endl;
+                std::cerr << cstack[delem.pos].stateid << "-" << net.transitionNames()[this->successorGenerator->fired()] << "> " << stateid << " Buchi: " << state.getBuchiState() << std::endl;
 #endif
                 // from textbook LTL / bit product state
                 /*auto markingId = seen.getMarkingId(stateid);

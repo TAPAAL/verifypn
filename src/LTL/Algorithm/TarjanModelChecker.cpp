@@ -177,6 +177,8 @@ namespace LTL {
         return res;
     }
 
+#define TRANS_TRACE
+
     template<bool SaveTrace>
     std::ostream &
     TarjanModelChecker<SaveTrace>::printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os)
@@ -188,11 +190,13 @@ namespace LTL {
         }
         std::string tname = net.transitionNames()[transition];
             os << indent << "<transition id=\"" << tname << "\">\n";
+#ifndef TRANS_TRACE
             for (size_t i = 0; i < net.numberOfPlaces(); ++i) {
                 for (size_t j = 0; j < state.marking()[i]; ++j) {
                     os << tokenIndent << R"(<token age="0" place=")" << net.placeNames()[i] << "\"/>\n";
                 }
             }
+#endif
 #ifndef NDEBUG
             os << '\n' << tokenIndent << "<buchi state=\"" << state.getBuchiState() << "\"/>";
 #endif

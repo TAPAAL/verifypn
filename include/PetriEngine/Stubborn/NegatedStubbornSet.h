@@ -37,12 +37,6 @@ namespace PetriEngine {
         void prepare(const Structures::State *state, const std::vector<PQL::Condition_ptr> &_queries,
                      bool do_closure);
 
-        void copyStubborn(std::unique_ptr<bool[]> &stub) {
-            for (size_t i = 0; i < _net.numberOfTransitions(); ++i) {
-                stub[i] |= _stubborn[i];
-            }
-        }
-
         [[nodiscard]] inline bool isStubborn(size_t t) const { return _stubborn[t]; }
 
         void extend(const PQL::Condition_ptr &query, bool do_closure);

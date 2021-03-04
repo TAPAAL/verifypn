@@ -99,7 +99,7 @@ namespace LTL {
             info.retarding->visit(interesting);
             if (!satQueries.empty()) {
                 negated.prepare(state, satQueries, false);
-                negated.copyStubborn(_stubborn);
+                copyNegated();
             }
         } else {
             if (!satQueries.empty()) {
@@ -147,7 +147,7 @@ namespace LTL {
             negated.prepare(state, satQueries, false);
             // exists satisfying queries, thus add all interesting transitions
             closure();
-            negated.copyStubborn(_stubborn);
+            copyNegated();
         } else {
             info.retarding->visit(interesting);
         }
