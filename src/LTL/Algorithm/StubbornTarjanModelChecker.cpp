@@ -278,4 +278,22 @@ namespace LTL {
             os << "\t</loop>\n</trace>" << std::endl;
         }
     }
+
+    template
+    class StubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>;
+
+    template
+    class StubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
+
+    template
+    class StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator, PetriEngine::Structures::StateSet>;
+
+    template
+    class StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
+
+    template
+    class StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>;
+
+    template
+    class StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
 }

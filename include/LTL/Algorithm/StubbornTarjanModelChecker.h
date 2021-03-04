@@ -152,22 +152,23 @@ namespace LTL {
 
     };
 
-    template
+
+    extern template
     class StubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>;
 
-    template
+    extern template
     class StubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
 
-    template
+    extern template
     class StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator, PetriEngine::Structures::StateSet>;
 
-    template
+    extern template
     class StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
 
-    template
+    extern template
     class StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>;
 
-    template
+    extern template
     class StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
 }
 
