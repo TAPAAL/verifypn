@@ -30,11 +30,12 @@ namespace LTL {
     class StubbornTarjanModelChecker : public ModelChecker<SuccessorGen> {
         using StubSet = std::conditional_t<std::is_same_v<SuccessorGen, LTL::ReducingSuccessorGenerator>, AutomatonStubbornSet, LTLStubbornSet>;
     public:
-        StubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
+        StubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query, const TraceLevel level, const bool shorcircuitweak)
                 : ModelChecker<SuccessorGen>
                           (net, query,
                            SuccessorGen{
-                                   net, std::make_shared<StubSet>(net, query)}),
+                                   net, std::make_shared<StubSet>(net, query)},
+                                   level, shorcircuitweak),
                   factory(net, this->successorGenerator->initial_buchi_state()),
                   seen(net, 0, net.numberOfPlaces() + 1)
         {

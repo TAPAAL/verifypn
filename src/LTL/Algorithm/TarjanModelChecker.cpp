@@ -83,7 +83,6 @@ namespace LTL {
                     }
                     printTrace(std::move(revstack));
                     return false;
-
                 }
             }
         }
@@ -159,6 +158,7 @@ namespace LTL {
                 loopstate = cstack[to].stateid;
                 looptrans = successorGenerator->fired();
                 cstack[from].lowsource = cstack[to].lowlink;
+
             }
         }
     }
@@ -175,38 +175,6 @@ namespace LTL {
         if (!res)
             ++stats.expanded;
         return res;
-    }
-
-#define TRANS_TRACE
-
-    template<bool SaveTrace>
-    std::ostream &
-    TarjanModelChecker<SaveTrace>::printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os)
-    {
-        std::string indent = "  "; std::string tokenIndent = "    ";
-        if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
-            os << indent << "<deadlock/>";
-            return os;
-        }
-        std::string tname = net.transitionNames()[transition];
-            os << indent << "<transition id=\"" << tname << "\">\n";
-#ifndef TRANS_TRACE
-            for (size_t i = 0; i < net.numberOfPlaces(); ++i) {
-                for (size_t j = 0; j < state.marking()[i]; ++j) {
-                    os << tokenIndent << R"(<token age="0" place=")" << net.placeNames()[i] << "\"/>\n";
-                }
-            }
-#endif
-#ifndef NDEBUG
-            os << '\n' << tokenIndent << "<buchi state=\"" << state.getBuchiState() << "\"/>";
-#endif
-            os << indent << "</transition>";
-        return os;
-    }
-
-    void printLoop(std::ostream &os)
-    {
-        os << "  " << "<loop/>\n";
     }
 
     template<bool SaveTrace>
@@ -236,14 +204,14 @@ namespace LTL {
             while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {
                 auto[parent, tid] = seen.getHistory(cstack[p].stateid);
                 seen.decode(state, cstack[p].stateid);
-                printTransition(tid, state, os);
+                printTransition(tid, state, os) << '\n';
                 p = cstack[p].lowsource;
             }
             printTransition(looptrans, state, os) << '\n';
+
             os << "</trace>" << std::endl;
         }
     }
-
 
     template
     class TarjanModelChecker<true>;

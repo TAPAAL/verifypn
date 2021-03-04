@@ -18,9 +18,11 @@
 #ifndef VERIFYPN_MODELCHECKER_H
 #define VERIFYPN_MODELCHECKER_H
 
+#include <iomanip>
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/ProductSuccessorGenerator.h"
 #include "LTL/Algorithm/ProductPrinter.h"
+#include "PetriEngine/options.h"
 
 namespace LTL {
     template<typename SuccessorGen>
@@ -28,8 +30,9 @@ namespace LTL {
     public:
         ModelChecker(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &condition,
                      const SuccessorGen &successorGen,
+                     const TraceLevel level = TraceLevel::Transitions,
                      bool shortcircuitweak = true)
-                : net(net), formula(condition), shortcircuitweak(shortcircuitweak) {
+                : net(net), formula(condition), traceLevel(level), shortcircuitweak(shortcircuitweak) {
             successorGenerator = std::make_unique<ProductSuccessorGenerator<SuccessorGen>>(net, condition,
                                                                                            successorGen);
         }
@@ -41,6 +44,7 @@ namespace LTL {
         virtual void printStats(std::ostream &os) = 0;
 
         [[nodiscard]] bool isweak() const { return is_weak; }
+
 
     protected:
         struct stats_t {
@@ -59,12 +63,47 @@ namespace LTL {
         std::unique_ptr<ProductSuccessorGenerator<SuccessorGen>> successorGenerator;
         const PetriEngine::PetriNet &net;
         PetriEngine::PQL::Condition_ptr formula;
+        TraceLevel traceLevel;
 
         size_t _discovered = 0;
         const bool shortcircuitweak;
         bool weakskip = false;
         bool is_weak = false;
+        int maxTransName;
 
+        static constexpr auto indent = "  ";
+        static constexpr auto tokenIndent = "    ";
+
+        void printLoop(std::ostream &os)
+        {
+            os << indent << "<loop/>\n";
+        }
+
+        std::ostream &
+        printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os)
+        {
+            if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
+                os << indent << "<deadlock/>";
+                return os;
+            }
+            std::string tname = net.transitionNames()[transition];
+            if (traceLevel == TraceLevel::Full) {
+                os << indent << "<transition id=\"" << tname << "\">\n";
+                for (size_t i = 0; i < net.numberOfPlaces(); ++i) {
+                    for (size_t j = 0; j < state.marking()[i]; ++j) {
+                        os << tokenIndent << R"(<token age="0" place=")" << net.placeNames()[i] << "\"/>\n";
+                    }
+                }
+#ifndef NDEBUG
+                os << '\n' << tokenIndent << "<buchi state=\"" << state.getBuchiState() << "\"/>\n";
+#endif
+                os << indent << "</transition>";
+            } else {
+                os << indent << "<transition id=" << std::setw(maxTransName + 1) << std::quoted(tname) << "\tbuchisucc=\""
+                   << state.getBuchiState() << "\"/>";
+            }
+            return os;
+        }
 
     };
     template class ModelChecker<PetriEngine::SuccessorGenerator>;

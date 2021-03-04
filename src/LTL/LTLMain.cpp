@@ -63,13 +63,13 @@ namespace LTL {
     template<typename Checker>
     Result _verify(const PetriNet *net,
                    Condition_ptr &negatedQuery,
-                   bool printstats)
+                   const options_t &options)
     {
         Result result;
-        auto modelChecker = std::make_unique<Checker>(*net, negatedQuery);
+        auto modelChecker = std::make_unique<Checker>(*net, negatedQuery, options.trace, options.ltluseweak);
         result.satisfied = modelChecker->isSatisfied();
         result.is_weak = modelChecker->isweak();
-        if (printstats) {
+        if (options.printstatistics) {
             modelChecker->printStats(std::cout);
         }
         return result;
@@ -92,32 +92,32 @@ namespace LTL {
         Result result;
         switch (options.ltlalgorithm) {
             case Algorithm::NDFS:
-                if (options.trace) {
-                    result = _verify<NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>(net, negated_formula, options.printstatistics);
+                if (options.trace != TraceLevel::None) {
+                    result = _verify<NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>(net, negated_formula, options);
                 } else {
-                    result = _verify<NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>(net, negated_formula, options.printstatistics);
+                    result = _verify<NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>(net, negated_formula, options);
                 }
                 break;
             case Algorithm::RandomNDFS:
-                result = _verify<RandomNDFS>(net, negated_formula, options.printstatistics);
+                result = _verify<RandomNDFS>(net, negated_formula, options);
                 break;
             case Algorithm::Tarjan:
                 if (options.stubbornreduction/* && !negated_formula->containsNext()*/) {
                     std::cout << "Running stubborn version!" << std::endl;
-                    if (options.trace) {
+                    if (options.trace != TraceLevel::None) {
                         result = _verify<StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>>(
-                                net, negated_formula, options.printstatistics);
+                                net, negated_formula, options);
                     } else {
                         result = _verify<StubbornTarjanModelChecker<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>>(
-                                net, negated_formula, options.printstatistics);
+                                net, negated_formula, options);
                     }
                 } else {
-                    if (options.trace) {
+                    if (options.trace != TraceLevel::None) {
                         result = _verify<TarjanModelChecker<true>>(
-                                net, negated_formula, options.printstatistics);
+                                net, negated_formula, options);
                     } else {
                         result = _verify<TarjanModelChecker<false>>(
-                                net, negated_formula, options.printstatistics);
+                                net, negated_formula, options);
                     }
                 }
                 break;

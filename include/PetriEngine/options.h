@@ -9,11 +9,17 @@
 
 #include "Reachability/ReachabilitySearch.h"
 #include "../CTL/Algorithm/AlgorithmTypes.h"
-#include "../LTL/LTL.h"
+#include "../LTL/AlgorithmTypes.h"
 
 
 enum class TemporalLogic {
     CTL, LTL
+};
+
+enum class TraceLevel {
+    None,
+    Transitions,
+    Full
 };
 
 struct options_t {
@@ -29,7 +35,7 @@ struct options_t {
     bool printstatistics = true;
     std::set<size_t> querynumbers;
     PetriEngine::Reachability::Strategy strategy = PetriEngine::Reachability::DEFAULT;
-    bool trace = false;
+    TraceLevel trace = TraceLevel::None;
     bool use_query_reductions = true;
     int queryReductionTimeout = 30, lpsolveTimeout = 10;
     uint32_t siphontrapTimeout = 0;
@@ -78,7 +84,7 @@ struct options_t {
             optionsOut = "\nSearch=OverApprox";
         }
         
-        if (trace) {
+        if (trace != TraceLevel::None) {
             optionsOut += ",Trace=ENABLED";
         } else {
             optionsOut += ",Trace=DISABLED";

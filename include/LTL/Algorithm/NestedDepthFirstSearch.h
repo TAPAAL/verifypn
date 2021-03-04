@@ -50,8 +50,8 @@ namespace LTL {
     template <typename W>
     class NestedDepthFirstSearch : public ModelChecker<PetriEngine::SuccessorGenerator> {
     public:
-        NestedDepthFirstSearch(const PetriNet &net, const PetriEngine::PQL::Condition_ptr &query, const bool shortcircuitweak = true)
-                : ModelChecker(net, query, SuccessorGenerator{net, query}, shortcircuitweak), factory{net, successorGenerator->initial_buchi_state()},
+        NestedDepthFirstSearch(const PetriNet &net, const PetriEngine::PQL::Condition_ptr &query, TraceLevel level = TraceLevel::Full, const bool shortcircuitweak = true)
+                : ModelChecker(net, query, SuccessorGenerator{net, query}, level, shortcircuitweak), factory{net, successorGenerator->initial_buchi_state()},
                   states(net, 0, (int)net.numberOfPlaces() + 1) {}
 
         bool isSatisfied() override;
@@ -75,14 +75,13 @@ namespace LTL {
         bool violation = false;
 
         //Used for printing the trace
-        std::stack<size_t> nested_transitions;
+        std::stack<std::pair<size_t, size_t>> nested_transitions;
 
         void dfs();
 
         void ndfs(State &state);
-        void printTrace(stack<size_t> &transitions);
+        void printTrace(std::stack<std::pair<size_t, size_t>> &transitions, std::ostream &os = std::cout);
 
-        ostream & printTransition(size_t transition, uint indent, ostream &os = std::cerr);
         static constexpr bool SaveTrace = std::is_same_v<W, PetriEngine::Structures::TracableStateSet>;
     };
     extern template class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;

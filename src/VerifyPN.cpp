@@ -170,7 +170,22 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--no-statistics") == 0) {
             options.printstatistics = false;
         } else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--trace") == 0) {
-            options.trace = true;
+            if (argc > i + 1) {
+                if (strcmp("1", argv[i+1]) == 0) {
+                    options.trace = TraceLevel::Transitions;
+                }
+                else if (strcmp("2", argv[i+1]) == 0) {
+                    options.trace = TraceLevel::Full;
+                }
+                else {
+                    options.trace = TraceLevel::Full;
+                    continue;
+                }
+                ++i;
+            }
+            else {
+                options.trace = TraceLevel::Full;
+            }
         } else if (strcmp(argv[i], "-x") == 0 || strcmp(argv[i], "--xml-queries") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -1123,7 +1138,7 @@ int main(int argc, char* argv[]) {
     if (options.enablereduction > 0) {
         // Compute how many times each place appears in the query
         builder.startTimer();
-        builder.reduce(queries, results, options.enablereduction, options.trace, nullptr, options.reductionTimeout, options.reductions);
+        builder.reduce(queries, results, options.enablereduction, options.trace != TraceLevel::None, nullptr, options.reductionTimeout, options.reductions);
         printer.setReducer(builder.getReducer());
     }
 
@@ -1241,7 +1256,7 @@ int main(int argc, char* argv[]) {
         //Reachability search
         strategy.reachable(queries, results,
                 options.printstatistics,
-                options.trace);
+                options.trace != TraceLevel::None);
     }
     else
     {
@@ -1256,7 +1271,7 @@ int main(int argc, char* argv[]) {
                            options.stubbornreduction,
                            options.statespaceexploration,
                            options.printstatistics,
-                           options.trace);
+                           options.trace != TraceLevel::None);
     }
 
     return SuccessCode;

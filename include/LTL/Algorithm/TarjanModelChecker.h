@@ -39,13 +39,15 @@ namespace LTL {
      *   More efficient on-the-fly LTL verification with Tarjan's algorithm,
      *   https://doi.org/10.1016/j.tcs.2005.07.004
      * </p>
+     * @tparam SaveTrace whether to save and print counter-examples when possible.
      */
     template<bool SaveTrace = false>
     class TarjanModelChecker : public ModelChecker<PetriEngine::SuccessorGenerator> {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond,
+                           const TraceLevel level = TraceLevel::Full,
                            const bool shortcircuitweak = true)
-                : ModelChecker(net, cond, PetriEngine::SuccessorGenerator{net, cond}, shortcircuitweak),
+                : ModelChecker(net, cond, PetriEngine::SuccessorGenerator{net, cond}, level, shortcircuitweak),
                   factory(net, successorGenerator->initial_buchi_state()),
                   seen(net, 0, (int) net.numberOfPlaces() + 1)
         {
@@ -101,6 +103,7 @@ namespace LTL {
                 TracableCEntry,
                 PlainCEntry>;
 
+
         struct DEntry {
             idx_t pos; // position in cstack.
             PetriEngine::successor_info sucinfo;
@@ -125,8 +128,6 @@ namespace LTL {
         bool nexttrans(State &state, State &parent, DEntry &delem);
 
         void popCStack();
-
-        std::ostream &printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os);
 
         void printTrace(std::stack<DEntry> &&dstack, std::ostream &os = std::cout);
 
