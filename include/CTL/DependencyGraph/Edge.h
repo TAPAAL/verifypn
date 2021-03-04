@@ -25,6 +25,7 @@ public:
     {
         assert(conf);
         targets.push_front(conf);
+        ++children;
     }
     
     container targets;    
@@ -34,6 +35,8 @@ public:
     bool is_negated = false;
     bool handled = false;
     int32_t refcnt = 0;
+    size_t children;
+    Assignment assignment;
 };
 }
 #endif // EDGE_H

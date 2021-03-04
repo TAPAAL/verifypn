@@ -602,6 +602,8 @@ Edge* OnTheFlyDG::newEdge(Configuration &t_source, uint32_t weight)
         recycle.pop();
     }
     assert(e->targets.empty());
+    e->assignment = UNKNOWN;
+    e->children = 0;
     e->source = &t_source;
     assert(e->refcnt == 0);
     ++e->refcnt;
