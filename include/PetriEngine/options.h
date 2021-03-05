@@ -146,9 +146,6 @@ struct options_t {
                 case LTL::Algorithm::Tarjan:
                     optionsOut += ",LTLAlgorithm=Tarjan";
                     break;
-                case LTL::Algorithm::RandomNDFS:
-                    optionsOut += ",LTLAlgorithm=RandomNDFS";
-                    break;
                 case LTL::Algorithm::None:
                     optionsOut += ",LTLAlgorithm=None";
                     break;

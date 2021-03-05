@@ -20,14 +20,12 @@
 
 namespace LTL {
     enum class Algorithm {
-        NDFS, RandomNDFS, Tarjan, None=-1
+        NDFS, Tarjan, None=-1
     };
     inline auto to_string(Algorithm alg) {
         switch (alg) {
             case Algorithm::NDFS:
                 return "NDFS";
-            case Algorithm::RandomNDFS:
-                return "RNDFS";
             case Algorithm::Tarjan:
                 return "TARJAN";
             case Algorithm::None:

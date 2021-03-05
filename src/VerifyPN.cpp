@@ -329,9 +329,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 else if(strcmp(argv[i + 1], "tarjan") == 0) {
                     options.ltlalgorithm = LTL::Algorithm::Tarjan;
                 }
-                else if(strcmp(argv[i + 1], "rndfs") == 0) {
-                    options.ltlalgorithm = LTL::Algorithm::RandomNDFS;
-                }
                 else if (strcmp(argv[i + 1], "none") == 0) {
                     options.ltlalgorithm = LTL::Algorithm::None;
                 }
@@ -358,7 +355,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -s, --search-strategy <strategy>   Search strategy:\n"
                     "                                     - BestFS       Heuristic search (default)\n"
                     "                                     - BFS          Breadth first search\n"
-                    "                                     - DFS          Depth first search (CTL default)\n"
+                    "                                     - DFS          Depth first search (CTL and LTL default)\n"
                     "                                     - RDFS         Random depth first search\n"
                     "                                     - OverApprox   Linear Over Approx\n"
                     "  --seed-offset <number>             Extra noise to add to the seed of the random number generation\n"
@@ -385,7 +382,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -ltl [<type>]                      Verify LTL properties (default tarjan). If omitted the queries are assumed to be CTL.\n"
                     "                                     - ndfs      Nested depth first search algorithm\n"
                     "                                     - tarjan    On-the-fly Tarjan's algorithm\n"
-                    "                                     - rndfs     NDFS with randomised search order. Less memory efficient compared to straigt ndfs.\n"
                     "                                     - none      Run preprocessing steps only.\n"
                     "  -noweak                            Disable optimizations for weak Büchi automata when doing \n"
                     "                                     LTL model checking. Not recommended.\n"
@@ -493,7 +489,21 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             return ErrorCode;
         }
         if (options.strategy != PetriEngine::Reachability::DEFAULT) {
-            std::cerr << "Argument Warning: LTL model checking does not support search strategies. Will use DFS." << std::endl;
+            if (options.ltlalgorithm == LTL::Algorithm::Tarjan && options.strategy != DFS) {
+                std::cerr << "Argument Error: Unsupported search strategy for Tarjan. Supported values are DFS." << std::endl;
+                return ErrorCode;
+            }
+            if (options.strategy != DFS &&
+                !(options.ltlalgorithm == LTL::Algorithm::NDFS && options.strategy == RDFS)) {
+                std::cerr << "Argument Error: Unsupported search strategy for NDFS. Supported values are DFS and RDFS" << std::endl;
+                return ErrorCode;
+            }
+            if (options.trace != TraceLevel::None
+                && options.strategy == RDFS
+                && options.ltlalgorithm == LTL::Algorithm::NDFS) {
+                std::cerr << "Argument Error: Random search order NDFS does not support traces" << std::endl;
+                return ErrorCode;
+            }
         }
     }
 
@@ -1238,6 +1248,10 @@ int main(int argc, char* argv[]) {
             std::unique_ptr<LTL::ModelChecker> modelChecker;
             switch (options.ltlalgorithm) {
                 case LTL::Algorithm::NDFS:
+                    if (options.strategy == RDFS) {
+                        std::cout << "RNDFS :tada:\n";
+                        modelChecker = std::make_unique<LTL::RandomNDFS>(*net, negated_formula);
+                    }
                     if (options.trace != TraceLevel::None)
                         modelChecker = std::make_unique<LTL::NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>
                                 (*net, negated_formula, options.ltluseweak, options.trace);
@@ -1245,8 +1259,6 @@ int main(int argc, char* argv[]) {
                         modelChecker = std::make_unique<LTL::NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>
                                 (*net, negated_formula, options.ltluseweak);
                     break;
-                case LTL::Algorithm::RandomNDFS:
-                    modelChecker = std::make_unique<LTL::RandomNDFS>(*net, negated_formula);
                 case LTL::Algorithm::Tarjan:
                     if (options.trace != TraceLevel::None)
                         modelChecker = std::make_unique<LTL::TarjanModelChecker<true>>(*net, negated_formula, options.ltluseweak, options.trace);
