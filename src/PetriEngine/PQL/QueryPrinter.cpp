@@ -246,7 +246,7 @@ namespace PetriEngine {
         }
 
         void QueryPrinter::_accept(const UnfoldedIdentifierExpr *element) {
-            os << element->name() << "(P" << element->offset() << ")";
+            os << element->name();
         }
 
         void QueryPrinter::_accept(const LiteralExpr *element) {
