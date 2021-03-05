@@ -100,9 +100,6 @@ namespace LTL {
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(res.second);
         cstack.emplace_back(ctop, res.second, chash[h]);
-        if constexpr (SaveTrace) {
-            cstack.back().lowsource = ctop;
-        }
         chash[h] = ctop;
         dstack.push(DEntry{ctop, PetriEngine::initial_suc_info});
         if (successorGenerator->isAccepting(state)) {
@@ -157,7 +154,7 @@ namespace LTL {
             if constexpr (SaveTrace) {
                 loopstate = cstack[to].stateid;
                 looptrans = successorGenerator->fired();
-                cstack[from].lowsource = cstack[to].lowlink;
+                cstack[from].lowsource = to;
 
             }
         }
@@ -184,9 +181,11 @@ namespace LTL {
             return;
         } else {
             State state = factory.newState();
-            dstack.pop();
             os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
                   "<trace>\n";
+            if (cstack[dstack.top().pos].stateid == loopstate) printLoop(os);
+            cstack[dstack.top().pos].lowlink = std::numeric_limits<idx_t>::max();
+            dstack.pop();
             unsigned long p;
             // print (reverted) dstack
             while (!dstack.empty()) {
@@ -194,17 +193,19 @@ namespace LTL {
                 auto stateid = cstack[p].stateid;
                 auto[parent, tid] = seen.getHistory(stateid);
                 seen.decode(state, stateid);
+                if (stateid == loopstate) printLoop(os);
                 printTransition(tid, state, os) << '\n';
                 cstack[p].lowlink = std::numeric_limits<idx_t>::max();
                 dstack.pop();
             }
-            printLoop(os);
             // follow previously found back edges via lowsource until back in dstack.
+            assert(cstack[p].lowsource != std::numeric_limits<idx_t>::max());
             p = cstack[p].lowsource;
             while (cstack[p].lowlink != std::numeric_limits<idx_t>::max()) {
                 auto[parent, tid] = seen.getHistory(cstack[p].stateid);
                 seen.decode(state, cstack[p].stateid);
                 printTransition(tid, state, os) << '\n';
+                assert(cstack[p].lowsource != std::numeric_limits<idx_t>::max());
                 p = cstack[p].lowsource;
             }
             printTransition(looptrans, state, os) << '\n';
