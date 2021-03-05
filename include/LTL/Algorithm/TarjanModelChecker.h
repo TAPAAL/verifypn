@@ -53,6 +53,11 @@ namespace LTL {
 
         bool isSatisfied() override;
 
+        void printStats(ostream &os) override
+        {
+            _printStats(os, seen);
+        }
+
     private:
         using State = LTL::Structures::ProductState;
         using idx_t = size_t;
@@ -111,7 +116,7 @@ namespace LTL {
         size_t loopstate = std::numeric_limits<size_t>::max();
         size_t looptrans = std::numeric_limits<size_t>::max();
 
-        void push(State &state);
+        void push(State &state, size_t stateid);
 
         void pop();
 

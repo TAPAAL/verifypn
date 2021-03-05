@@ -95,6 +95,13 @@ namespace LTL {
                 todo.push(r.second, ctx, formula);
             }
         }
+    }
 
+    void RandomNDFS::printStats(ostream &os) {
+        std::cout << "STATS:\n"
+                  << "\tdiscovered states:          " << mark1.discovered() << std::endl
+                  << "\tmax tokens:                 " << mark2.maxTokens() << std::endl
+                  << "\tdiscovered states (nested): " << mark1.discovered() << std::endl
+                  << "\tmax tokens (nested):        " << mark2.maxTokens() << std::endl;
     }
 }

@@ -34,10 +34,24 @@ namespace LTL {
 
         virtual ~ModelChecker() = default;
 
+        virtual void printStats(std::ostream &os) = 0;
+
         [[nodiscard]] bool isweak() const { return is_weak; }
 
-
     protected:
+        struct stats_t {
+            size_t explored = 0, expanded = 0;
+        };
+
+        stats_t stats;
+        virtual void _printStats(ostream &os, const PetriEngine::Structures::StateSetInterface &stateSet) {
+            std::cout   << "STATS:\n"
+                        << "\tdiscovered states: " << stateSet.discovered() << std::endl
+                        << "\texplored states:   " << stats.explored << std::endl
+                        << "\texpanded states:   " << stats.expanded << std::endl
+                        << "\tmax tokens:        " << stateSet.maxTokens() << std::endl;
+        }
+
         std::unique_ptr<ProductSuccessorGenerator> successorGenerator;
         const PetriEngine::PetriNet &net;
         PetriEngine::PQL::Condition_ptr formula;

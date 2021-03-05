@@ -1225,6 +1225,7 @@ int main(int argc, char* argv[]) {
     //----------------------- Verify LTL queries -----------------------//
 
     if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
+        options.usedltl = true;
         if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode) {
             std::cerr << "Error performing context analysis" << std::endl;
             return v;
@@ -1254,11 +1255,18 @@ int main(int argc, char* argv[]) {
                     break;
             }
             satisfied = negate_answer ^ modelChecker->isSatisfied();
+            if (options.printstatistics) {
+                modelChecker->printStats(std::cout);
+            }
+
             std::cout << "FORMULA " << querynames[qid] <<
                       (satisfied ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT " <<
                       LTL::to_string(options.ltlalgorithm) <<
                       (modelChecker->isweak() ? " WEAK_SKIP" : "") <<
                       (queries[qid]->isReachability(0) ? " REACHABILITY" : "") << std::endl;
+        }
+        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+            return SuccessCode;
         }
     }
 
