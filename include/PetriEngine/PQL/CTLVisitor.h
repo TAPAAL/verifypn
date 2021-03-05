@@ -95,7 +95,7 @@ namespace PetriEngine::PQL {
         void _accept(const IdentifierExpr *element) override;
 
     private:
-        CTLSyntaxType curType;
+        CTLSyntaxType _cur_type;
 
         void _accept(const LogicalCondition *element);
 
@@ -104,7 +104,8 @@ namespace PetriEngine::PQL {
 
     class AsCTL : public Visitor {
     public:
-        Condition_ptr ctlQuery = nullptr;
+        Condition_ptr _ctl_query = nullptr;
+        Expr_ptr _expression = nullptr;
 
     protected:
         void _accept(const NotCondition *element) override;
@@ -190,10 +191,14 @@ namespace PetriEngine::PQL {
         void _accept(const IdentifierExpr *element) override;
 
     private:
-        std::pair<Expr_ptr, Expr_ptr> compareCondition(const CompareCondition *element);
-
         template<typename T>
         void _acceptNary(const T *element);
+    
+        template<typename T>
+        Expr_ptr copy_narry_expr(const T* el);
+        
+        template<typename T>
+        std::shared_ptr<T> copy_compare_condition(const T *element);
     };
 }
 

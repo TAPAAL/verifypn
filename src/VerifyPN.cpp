@@ -763,7 +763,7 @@ std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlSt
         if (isCtlVisitor.isCTL) {
             AsCTL asCtl;
             ctlStarQuery->visit(asCtl);
-            ctlQueries.push_back(asCtl.ctlQuery);
+            ctlQueries.push_back(asCtl._ctl_query);
         } else {
             ctlQueries.push_back(nullptr);
         }

@@ -16,19 +16,19 @@
  */
 #include "PetriEngine/PQL/CTLVisitor.h"
 
+#include <memory>
 
 namespace PetriEngine::PQL {
-
     void IsCTLVisitor::_accept(const NotCondition *element) {
         (*element)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const LogicalCondition *element) {
         for (size_t i = 0; i < element->operands(); i++){
             (*element)[i]->visit(*this);
-            if (curType != CTLSyntaxType::BOOLEAN){
+            if (_cur_type != CTLSyntaxType::BOOLEAN){
                 isCTL = false;
                 break;
             }
@@ -45,7 +45,7 @@ namespace PetriEngine::PQL {
 
     void IsCTLVisitor::_accept(const CompareCondition *element) {
         //We are an atom. No need to check children as they are the same as CTL*
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const LessThanCondition *element) {
@@ -73,174 +73,174 @@ namespace PetriEngine::PQL {
     }
 
     void IsCTLVisitor::_accept(const DeadlockCondition *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const CompareConjunction *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const UnfoldedUpperBoundsCondition *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const EFCondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const EGCondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const AGCondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const AFCondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const EXCondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const AXCondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const EUCondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const AUCondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
     }
 
     void IsCTLVisitor::_accept(const ACondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::PATH)
+        if (_cur_type != CTLSyntaxType::PATH)
             isCTL = false;
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const ECondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::PATH)
+        if (_cur_type != CTLSyntaxType::PATH)
             isCTL = false;
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const GCondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
-        curType = CTLSyntaxType::PATH;
+        _cur_type = CTLSyntaxType::PATH;
     }
 
     void IsCTLVisitor::_accept(const FCondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
-        curType = CTLSyntaxType::PATH;
+        _cur_type = CTLSyntaxType::PATH;
     }
 
     void IsCTLVisitor::_accept(const XCondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
-        curType = CTLSyntaxType::PATH;
+        _cur_type = CTLSyntaxType::PATH;
     }
 
     void IsCTLVisitor::_accept(const UntilCondition *condition) {
         (*condition)[0]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
         (*condition)[1]->visit(*this);
-        if (curType != CTLSyntaxType::BOOLEAN)
+        if (_cur_type != CTLSyntaxType::BOOLEAN)
             isCTL = false;
-        curType = CTLSyntaxType::PATH;
+        _cur_type = CTLSyntaxType::PATH;
     }
 
     void IsCTLVisitor::_accept(const UnfoldedFireableCondition *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const FireableCondition *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const UpperBoundsCondition *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const LivenessCondition *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const KSafeCondition *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const QuasiLivenessCondition *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const StableMarkingCondition *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const BooleanCondition *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const UnfoldedIdentifierExpr *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const LiteralExpr *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const PlusExpr *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const MultiplyExpr *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const MinusExpr *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const SubtractExpr *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
     void IsCTLVisitor::_accept(const IdentifierExpr *element) {
-        curType = CTLSyntaxType::BOOLEAN;
+        _cur_type = CTLSyntaxType::BOOLEAN;
     }
 
 
     void AsCTL::_accept(const NotCondition *element) {
         (*element)[0]->visit(*this);
-        ctlQuery = std::make_shared<NotCondition>(ctlQuery);
+        _ctl_query = std::make_shared<NotCondition>(_ctl_query);
     }
 
     template<typename T>
@@ -248,9 +248,9 @@ namespace PetriEngine::PQL {
         std::vector<Condition_ptr> children;
         for (auto operand : *element){
             operand->visit(*this);
-            children.push_back(ctlQuery);
+            children.push_back(_ctl_query);
         }
-        ctlQuery = std::make_shared<T>(children);
+        _ctl_query = std::make_shared<T>(children);
     }
 
     void AsCTL::_accept(const AndCondition *element) {
@@ -261,102 +261,93 @@ namespace PetriEngine::PQL {
         AsCTL::_acceptNary(element);
     }
 
-    std::pair<Expr_ptr, Expr_ptr> AsCTL::compareCondition(const CompareCondition *element){
-        return std::make_pair(element->getExpr1(), element->getExpr2());
-        /*element->getExpr1()->visit(*this);
-        Expr_ptr expr1 = curExpr;
-        element->getExpr2()->visit(*this);
-        return std::make_pair(expr1, curExpr);*/
+    template<typename T>
+    std::shared_ptr<T> AsCTL::copy_compare_condition(const T *element) {
+        (*element)[0]->visit(*this);
+        auto e1 = _expression;
+        (*element)[1]->visit(*this);
+        auto e2 = _expression;
+        return std::make_shared<T>(e1, e2);
     }
 
     void AsCTL::_accept(const LessThanCondition *element) {
-        auto exprs = compareCondition(element);
-        ctlQuery = std::make_shared<LessThanCondition>(exprs.first, exprs.second);
+        _ctl_query = copy_compare_condition(element);
     }
 
     void AsCTL::_accept(const LessThanOrEqualCondition *element) {
-        auto exprs = compareCondition(element);
-        ctlQuery = std::make_shared<LessThanOrEqualCondition>(exprs.first, exprs.second);
+        _ctl_query = copy_compare_condition(element);
     }
 
     void AsCTL::_accept(const GreaterThanCondition *element) {
-        auto exprs = compareCondition(element);
-        ctlQuery = std::make_shared<GreaterThanCondition>(exprs.first, exprs.second);
+        _ctl_query = copy_compare_condition(element);
     }
 
     void AsCTL::_accept(const GreaterThanOrEqualCondition *element) {
-        auto exprs = compareCondition(element);
-        ctlQuery = std::make_shared<GreaterThanOrEqualCondition>(exprs.first, exprs.second);
+        _ctl_query = copy_compare_condition(element);
     }
 
     void AsCTL::_accept(const EqualCondition *element) {
-        auto exprs = compareCondition(element);
-        ctlQuery = std::make_shared<EqualCondition>(exprs.first, exprs.second);
+        _ctl_query = copy_compare_condition(element);
     }
 
     void AsCTL::_accept(const NotEqualCondition *element) {
-        auto exprs = compareCondition(element);
-        ctlQuery = std::make_shared<NotEqualCondition>(exprs.first, exprs.second);
+        _ctl_query = copy_compare_condition(element);
     }
 
     void AsCTL::_accept(const DeadlockCondition *element) {
-        ctlQuery = std::make_shared<DeadlockCondition>();
+        _ctl_query = std::make_shared<DeadlockCondition>();
     }
 
     void AsCTL::_accept(const CompareConjunction *element) {
-        assert(false);
-        std::cerr << "void AsCTL::_accept(const CompareConjunction *element) Not implemented" << std::endl;
-        ctlQuery = nullptr;
+        _ctl_query = std::make_shared<CompareConjunction>(*element);
     }
 
     void AsCTL::_accept(const UnfoldedUpperBoundsCondition *element) {
-        assert(false);
-        std::cerr << "void AsCTL::_accept(const UnfoldedUpperBoundsCondition *element) Not implemented" << std::endl;
-        ctlQuery = nullptr;
+        _ctl_query = std::make_shared<UnfoldedUpperBoundsCondition>(*element);
     }
 
     void AsCTL::_accept(const EFCondition *condition) {
         (*condition)[0]->visit(*this);
-        ctlQuery = std::make_shared<EFCondition>(ctlQuery);
+        _ctl_query = std::make_shared<EFCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const EGCondition *condition) {
         (*condition)[0]->visit(*this);
-        ctlQuery = std::make_shared<EGCondition>(ctlQuery);
+        _ctl_query = std::make_shared<EGCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const AGCondition *condition) {
         (*condition)[0]->visit(*this);
-        ctlQuery = std::make_shared<AGCondition>(ctlQuery);
+        _ctl_query = std::make_shared<AGCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const AFCondition *condition) {
         (*condition)[0]->visit(*this);
-        ctlQuery = std::make_shared<AFCondition>(ctlQuery);
+        _ctl_query = std::make_shared<AFCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const EXCondition *condition) {
         (*condition)[0]->visit(*this);
-        ctlQuery = std::make_shared<EXCondition>(ctlQuery);
+        _ctl_query = std::make_shared<EXCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const AXCondition *condition) {
         (*condition)[0]->visit(*this);
-        ctlQuery = std::make_shared<AXCondition>(ctlQuery);
+        _ctl_query = std::make_shared<AXCondition>(_ctl_query);
     }
 
     void AsCTL::_accept(const EUCondition *condition) {
         (*condition)[0]->visit(*this);
-        auto first = ctlQuery;
+        auto first = _ctl_query;
         (*condition)[1]->visit(*this);
-        ctlQuery = std::make_shared<EUCondition>(first, ctlQuery);
+        _ctl_query = std::make_shared<EUCondition>(first, _ctl_query);
     }
 
     void AsCTL::_accept(const AUCondition *condition) {
         (*condition)[0]->visit(*this);
-        auto first = ctlQuery;
+        auto first = _ctl_query;
         (*condition)[1]->visit(*this);
-        ctlQuery = std::make_shared<AUCondition>(first, ctlQuery);
+        _ctl_query = std::make_shared<AUCondition>(first, _ctl_query);
     }
 
     void AsCTL::_accept(const ACondition *condition) {
@@ -364,26 +355,26 @@ namespace PetriEngine::PQL {
         switch (child->getPath()) {
             case Path::G:
                 (*child)[0]->visit(*this);
-                ctlQuery = std::make_shared<AGCondition>(ctlQuery);
+                _ctl_query = std::make_shared<AGCondition>(_ctl_query);
                 break;
             case Path::X:
                 (*child)[0]->visit(*this);
-                ctlQuery = std::make_shared<AXCondition>(ctlQuery);
+                _ctl_query = std::make_shared<AXCondition>(_ctl_query);
                 break;
             case Path::F:
                 (*child)[0]->visit(*this);
-                ctlQuery = std::make_shared<AFCondition>(ctlQuery);
+                _ctl_query = std::make_shared<AFCondition>(_ctl_query);
                 break;
             case Path::U: {
                 (*child)[0]->visit(*this);
-                auto first = ctlQuery;
+                auto first = _ctl_query;
                 (*child)[1]->visit(*this);
-                ctlQuery = std::make_shared<AUCondition>(first, ctlQuery);
+                _ctl_query = std::make_shared<AUCondition>(first, _ctl_query);
                 break;
             }
             case Path::pError:
                 assert(false);
-                ctlQuery = nullptr;
+                _ctl_query = nullptr;
                 break;
         }
     }
@@ -393,26 +384,26 @@ namespace PetriEngine::PQL {
         switch (child->getPath()) {
             case Path::G:
                 (*child)[0]->visit(*this);
-                ctlQuery = std::make_shared<EGCondition>(ctlQuery);
+                _ctl_query = std::make_shared<EGCondition>(_ctl_query);
                 break;
             case Path::X:
                 (*child)[0]->visit(*this);
-                ctlQuery = std::make_shared<EXCondition>(ctlQuery);
+                _ctl_query = std::make_shared<EXCondition>(_ctl_query);
                 break;
             case Path::F:
                 (*child)[0]->visit(*this);
-                ctlQuery = std::make_shared<EFCondition>(ctlQuery);
+                _ctl_query = std::make_shared<EFCondition>(_ctl_query);
                 break;
             case Path::U: {
                 (*child)[0]->visit(*this);
-                auto first = ctlQuery;
+                auto first = _ctl_query;
                 (*child)[1]->visit(*this);
-                ctlQuery = std::make_shared<EUCondition>(first, ctlQuery);
+                _ctl_query = std::make_shared<EUCondition>(first, _ctl_query);
                 break;
             }
             case Path::pError:
                 assert(false);
-                ctlQuery = nullptr;
+                _ctl_query = nullptr;
                 break;
         }
     }
@@ -420,107 +411,104 @@ namespace PetriEngine::PQL {
     void AsCTL::_accept(const GCondition *condition) {
         std::cerr << "Direct call to path quantifier in AsCTL GCondition" << std::endl;
         assert(false);
-        ctlQuery = nullptr;
+        _ctl_query = nullptr;
     }
 
     void AsCTL::_accept(const FCondition *condition) {
         std::cerr << "Direct call to path quantifier in AsCTL FCondition" << std::endl;
         assert(false);
-        ctlQuery = nullptr;
+        _ctl_query = nullptr;
     }
 
     void AsCTL::_accept(const XCondition *condition) {
         std::cerr << "Direct call to path quantifier in AsCTL XCondition" << std::endl;
         assert(false);
-        ctlQuery = nullptr;
+        _ctl_query = nullptr;
     }
 
     void AsCTL::_accept(const UntilCondition *condition) {
         std::cerr << "Direct call to path quantifier in AsCTL UntilCondition" << std::endl;
         assert(false);
-        ctlQuery = nullptr;
+        _ctl_query = nullptr;
     }
 
     void AsCTL::_accept(const UnfoldedFireableCondition *element) {
-        assert(false);
-        std::cerr << "void AsCTL::_accept(const UnfoldedFireableCondition *element) Not implemented" << std::endl;
-        ctlQuery = nullptr;
+        _ctl_query = std::make_shared<UnfoldedFireableCondition>(*element);
+    }
+
+    template<typename T>
+    Condition_ptr copy_condition(const T* el)
+    {
+        return std::make_shared<T>(*el);
     }
 
     void AsCTL::_accept(const FireableCondition *element) {
-        ctlQuery = std::make_shared<FireableCondition>(element->getName());
+        _ctl_query = copy_condition(element);
     }
 
     void AsCTL::_accept(const UpperBoundsCondition *element) {
-        ctlQuery = std::make_shared<UpperBoundsCondition>(element->getPlaces());
+        _ctl_query = copy_condition(element);
     }
 
     void AsCTL::_accept(const LivenessCondition *element) {
-        ctlQuery = std::make_shared<LivenessCondition>();
+        _ctl_query = copy_condition(element);
     }
 
     void AsCTL::_accept(const KSafeCondition *element) {
-        ctlQuery = std::make_shared<KSafeCondition>(element->getBound());
+        _ctl_query = copy_condition(element);
     }
 
     void AsCTL::_accept(const QuasiLivenessCondition *element) {
-        ctlQuery = std::make_shared<QuasiLivenessCondition>();
+        _ctl_query = copy_condition(element);
     }
 
     void AsCTL::_accept(const StableMarkingCondition *element) {
-        ctlQuery = std::make_shared<StableMarkingCondition>();
+        _ctl_query = copy_condition(element);
     }
 
     void AsCTL::_accept(const BooleanCondition *element) {
-        ctlQuery = element->value ? BooleanCondition::TRUE_CONSTANT : BooleanCondition::FALSE_CONSTANT;
+        _ctl_query = element->value ? BooleanCondition::TRUE_CONSTANT : BooleanCondition::FALSE_CONSTANT;
     }
 
-    void AsCTL::_accept(const UnfoldedIdentifierExpr *element) {
-        assert(false);
-        std::cerr << "void AsCTL::_accept(const UnfoldedIdentifierExpr *element) Not implemented" << std::endl;
-        ctlQuery = nullptr;
-    }
-
-    //TODO Clean expressions if it is possible to reuse shared pointers.
-
-    void AsCTL::_accept(const LiteralExpr *element) {
-        assert(false);
-        std::cerr << "void AsCTL::_accept(const LiteralExpr *element) Not implemented" << std::endl;
-        ctlQuery = nullptr;
-        //curExpr = std::make_shared<LiteralExpr>(element->value());
+    template<typename T>
+    Expr_ptr AsCTL::copy_narry_expr(const T* el)
+    {
+        std::vector<Expr_ptr> vec;
+        for(auto& e : el->expressions())
+        {
+            e->visit(*this);
+            vec.emplace_back(_expression);
+        }
+        return std::make_shared<T>(std::move(vec));
     }
 
     void AsCTL::_accept(const PlusExpr *element) {
-        assert(false);
-        std::cerr << "void AsCTL::_accept(const PlusExpr *element) Not implemented" << std::endl;
-        ctlQuery = nullptr;
-        //curExpr = std::make_shared<PlusExpr>(element->expressions(), element->tk);
+        _expression = copy_narry_expr(element);
     }
 
     void AsCTL::_accept(const MultiplyExpr *element) {
-        assert(false);
-        std::cerr << "void AsCTL::_accept(const MultiplyExpr *element) Not implemented" << std::endl;
-        ctlQuery = nullptr;
-        //curExpr = std::make_shared<MultiplyExpr>(std::move(element->expressions()));
-    }
-
-    void AsCTL::_accept(const MinusExpr *element) {
-        assert(false);
-        std::cerr << "void AsCTL::_accept(const MinusExpr *element) Not implemented" << std::endl;
-        ctlQuery = nullptr;
+        _expression = copy_narry_expr(element);
     }
 
     void AsCTL::_accept(const SubtractExpr *element) {
-        assert(false);
-        std::cerr << "void AsCTL::_accept(const SubtractExpr *element) Not implemented" << std::endl;
-        ctlQuery = nullptr;
+        _expression = copy_narry_expr(element);
+    }
+
+    void AsCTL::_accept(const MinusExpr *element) {
+        (*element)[0]->visit(*this);
+        _expression = std::make_shared<MinusExpr>(_expression);
+    }
+
+    void AsCTL::_accept(const LiteralExpr *element) {
+        _expression = std::make_shared<LiteralExpr>(element->value());
     }
 
     void AsCTL::_accept(const IdentifierExpr *element) {
-        assert(false);
-        std::cerr << "void AsCTL::_accept(const IdentifierExpr *element) Not implemented" << std::endl;
-        ctlQuery = nullptr;
+        _expression = std::make_shared<IdentifierExpr>(*element);
     }
 
+    void AsCTL::_accept(const UnfoldedIdentifierExpr *element) {
+        _expression = std::make_shared<UnfoldedIdentifierExpr>(*element);
+    }
 
 }

@@ -178,6 +178,7 @@ namespace PetriEngine {
 
             LiteralExpr(int value) : _value(value) {
             }
+            LiteralExpr(const LiteralExpr&) = default;
             void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
             Expr::Types type() const override;
@@ -201,6 +202,7 @@ namespace PetriEngine {
         class IdentifierExpr : public Expr {
         public:
             IdentifierExpr(const std::string& name) : _name(name) {}
+            IdentifierExpr(const IdentifierExpr&) = default;
             void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override {
                 return _compiled->evaluate(context);
@@ -252,6 +254,8 @@ namespace PetriEngine {
 
             UnfoldedIdentifierExpr(const std::string& name) : UnfoldedIdentifierExpr(name, -1) {
             }
+            
+            UnfoldedIdentifierExpr(const UnfoldedIdentifierExpr&) = default;
 
             void analyze(AnalysisContext& context) override;
             int evaluate(const EvaluationContext& context) override;
@@ -308,10 +312,6 @@ namespace PetriEngine {
             CTLType getQueryType() const override { return _compiled->getQueryType(); }
             bool containsNext() const override { return _compiled->containsNext(); }
             bool nestedDeadlock() const override { return _compiled->nestedDeadlock(); }
-#ifdef VERIFYPN_TAR
-            virtual z3::expr encodeSat(const PetriNet& net, z3::context& context, std::vector<int32_t>& uses, std::vector<bool>& incremented) const
-            { return _compiled->encodeSat(net, context, uses, incremented); }
-#endif
             int formulaSize() const override{
                 return _compiled->formulaSize();
             }
@@ -1325,6 +1325,7 @@ namespace PetriEngine {
             UnfoldedUpperBoundsCondition(const std::vector<place_t>& places, double max, double offset)
                     : _places(places), _max(max), _offset(offset) {
             };
+            UnfoldedUpperBoundsCondition(const UnfoldedUpperBoundsCondition&) = default;
             int formulaSize() const override{
                 return _places.size();
             }
