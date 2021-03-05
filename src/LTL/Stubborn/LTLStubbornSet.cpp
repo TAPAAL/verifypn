@@ -22,30 +22,29 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 
 namespace LTL {
-    void LTLStubbornSet::prepare(const PetriEngine::Structures::State *marking) {
+    bool LTLStubbornSet::prepare(const PetriEngine::Structures::State *marking) {
         reset();
         _parent = marking;
         memset(_places_seen.get(), 0, _net.numberOfPlaces());
         constructEnabled();
-        if (_ordering.empty()) return;
+        if (_ordering.empty())
+            return false;
         if (_ordering.size() == 1) {
             _stubborn[_ordering.front()] = true;
-            return;
+            return true;
         }
         for (auto &q : _queries) {
             q->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
-            InterestingTransitionVisitor interesting{*this};
-
-            q->visit(interesting);
         }
-        closure();
-        //findKeyTransition();
+        findKeyTransition();
 
         ensureRuleV();
 
         ensureRulesL();
 
         _nenabled = _ordering.size();
+        return true;
+
 //#ifndef NDEBUG
         /*std::vector<size_t> stubs;
         size_t nenabled = 0;

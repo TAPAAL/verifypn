@@ -93,7 +93,7 @@ namespace LTL {
         std::stack<idx_t> astack;
         bool violation = false;
 
-        void push(State &state);
+        void push(State &state, size_t stateid);
 
         void pop();
 

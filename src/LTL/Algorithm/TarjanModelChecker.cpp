@@ -38,16 +38,19 @@ namespace LTL {
         for (auto &state : initial_states) {
             const auto res = seen.add(state);
             if (res.first) {
-                push(state);
+                push(state, res.second);
             }
             while (!dstack.empty() && !violation) {
                 DEntry &dtop = dstack.top();
                 if (!nexttrans(working, parent, dtop)) {
+                    ++stats.expanded;
                     pop();
                     continue;
                 }
-                ++stats.explored;
-                const idx_t stateid = seen.add(working).second;
+                const auto[is_new, stateid] = seen.add(working);
+                if (is_new) {
+                    ++stats.explored;
+                }
                 dtop.sucinfo.last_state = stateid;
 
                 // lookup successor in 'hash' table
@@ -62,7 +65,7 @@ namespace LTL {
                     continue;
                 }
                 if (store.find(stateid) == std::end(store)) {
-                    push(working);
+                    push(working, stateid);
                 }
             }
             if constexpr (SaveTrace) {
@@ -118,11 +121,10 @@ namespace LTL {
      * @param state
      */
     template<bool SaveTrace>
-    void TarjanModelChecker<SaveTrace>::push(State &state) {
-        const auto res = seen.add(state);
+    void TarjanModelChecker<SaveTrace>::push(State &state, size_t stateid) {
         const auto ctop = static_cast<idx_t>(cstack.size());
-        const auto h = hash(res.second);
-        cstack.emplace_back(ctop, res.second, chash[h]);
+        const auto h = hash(stateid);
+        cstack.emplace_back(ctop, stateid, chash[h]);
         if constexpr (SaveTrace) {
             cstack.back().lowsource = ctop;
         }
@@ -187,8 +189,6 @@ namespace LTL {
             seen.decode(state, delem.sucinfo.last_state);
         }
         auto res = successorGenerator->next(state, delem.sucinfo);
-        if (res)
-            ++stats.expanded;
         return res;
     }
 

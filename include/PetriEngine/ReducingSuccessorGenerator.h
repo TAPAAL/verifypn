@@ -17,6 +17,10 @@ namespace PetriEngine {
         struct sucinfo {
             uint32_t buchi_state;
             uint32_t tid = no_value;
+            size_t enabled; // id from ptrie storage at call-site, see EnabledTransitionSet
+            size_t stubborn;
+
+            [[nodiscard]] bool hasEnabled() const { return enabled != std::numeric_limits<size_t>::max(); }
 
             [[nodiscard]] inline bool fresh() const {
                 return tid == no_value;
@@ -25,26 +29,38 @@ namespace PetriEngine {
             static constexpr auto no_value = std::numeric_limits<uint32_t>::max();
         };
 
-        static constexpr sucinfo initial_suc_info{std::numeric_limits<uint32_t>::max(), sucinfo::no_value};
+        static constexpr sucinfo initial_suc_info{
+            std::numeric_limits<uint32_t>::max(),
+            sucinfo::no_value,
+            std::numeric_limits<size_t>::max(),
+            std::numeric_limits<size_t>::max()};
 
         void getSuccInfo(sucinfo &sucinfo) const {}
 
         ReducingSuccessorGenerator(const PetriNet &net, std::shared_ptr<StubbornSet> stubbornSet);
 
+        ReducingSuccessorGenerator(const PetriNet &net,
+                                   std::shared_ptr<StubbornSet> stubbornSet,
+                                   const bool* enabled, const bool* stubborn);
+
         void reset();
 
         void setQuery(PQL::Condition *ptr) { _stubSet->setQuery(ptr); }
 
-        void prepare(const Structures::State *state);
+        bool prepare(const Structures::State *state);
 
-        void prepare(const Structures::State *state, const sucinfo &)
+        void prepare(const Structures::State *state, const sucinfo &sucinfo)
         {
-            SuccessorGenerator::prepare(state);
+            if (sucinfo.hasEnabled()) {
+                SuccessorGenerator::prepare(state);
+            }
+            // indirection to stubborn set prepare, thus calculating stubborn and enabled arrays.
+            else prepare(state);
         }
 
         bool next(Structures::State &write);
 
-        bool next(Structures::State &state, const sucinfo &sucinfo);
+        bool next(Structures::State &state, sucinfo &sucinfo);
 
         auto fired() const { return _current; }
 
@@ -67,6 +83,8 @@ namespace PetriEngine {
 
         //std::vector<PQL::Condition *> _queries;
 
+        const bool* _enabled = enabled();
+        const bool* _stubborn = stubborn();
     };
 }
 

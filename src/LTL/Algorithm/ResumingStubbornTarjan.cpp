@@ -21,7 +21,8 @@ using PetriEngine::ReducingSuccessorGenerator;
 
 namespace LTL {
 
-    inline void _dump_state(const LTL::Structures::ProductState &state) {
+    inline void _dump_state(const LTL::Structures::ProductState &state)
+    {
         std::cerr << "marking: ";
         std::cerr << state.marking()[0];
         for (size_t i = 1; i < state.size(); ++i) {
@@ -30,8 +31,9 @@ namespace LTL {
         std::cerr << std::endl;
     }
 
-    
-    bool ResumingStubbornTarjan::isSatisfied() {
+
+    bool ResumingStubbornTarjan::isSatisfied()
+    {
         is_weak = successorGenerator->is_weak() && shortcircuitweak;
         std::vector<State> initial_states;
         successorGenerator->makeInitialState(initial_states);
@@ -46,22 +48,27 @@ namespace LTL {
                 DEntry &dtop = dstack.top();
                 if (!nexttrans(working, parent, dtop)) {
                     pop();
+                    ++stats.expanded;
                     continue;
                 }
-                ++stats.explored;
-                const idx_t stateid = seen.insertProductState(working).second;
+                const auto[is_new, stateid] = seen.insertProductState(working);
+                if (is_new) {
+                    ++stats.explored;
+                }
                 //dtop.sucinfo.last_state = stateid;
 
                 // lookup successor in 'hash' table
                 auto p = chash[hash(stateid)];
                 auto marking = seen.getMarkingId(stateid);
-                while (p != std::numeric_limits<idx_t>::max() && seen.getMarkingId(cstack[p].stateid) != marking) {
+                while (p != std::numeric_limits<idx_t>::max() && cstack[p].stateid != stateid) {
                     p = cstack[p].next;
+                    if (p != std::numeric_limits<idx_t>::max() && seen.getMarkingId(cstack[p].stateid) == marking) {
+                        if (extstack.empty() || p >= extstack.top()) {
+                            expandAll(dtop);
+                        }
+                    }
                 }
                 if (p != std::numeric_limits<idx_t>::max()) {
-                    if (extstack.empty() || p >= extstack.top()) {
-                        expandAll(dtop);
-                    }
                     // we found the successor, i.e. there's a loop!
                     // now update lowlinks and check whether the loop contains an accepting state
                     update(p);
@@ -79,7 +86,8 @@ namespace LTL {
      * Push a state to the various stacks.
      * @param state
      */
-    void ResumingStubbornTarjan::push(State &state, size_t stateid) {
+    void ResumingStubbornTarjan::push(State &state, size_t stateid)
+    {
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(stateid);
         cstack.emplace_back(ctop, stateid, chash[h]);
@@ -90,8 +98,9 @@ namespace LTL {
         }
     }
 
-    
-    void ResumingStubbornTarjan::pop() {
+
+    void ResumingStubbornTarjan::pop()
+    {
         const auto p = dstack.top().pos;
         dstack.pop();
         if (cstack[p].lowlink == p) {
@@ -110,8 +119,9 @@ namespace LTL {
         }
     }
 
-    
-    void ResumingStubbornTarjan::popCStack(){
+
+    void ResumingStubbornTarjan::popCStack()
+    {
         auto h = hash(cstack.back().stateid);
         store.insert(cstack.back().stateid);
         chash[h] = cstack.back().next;
@@ -119,7 +129,8 @@ namespace LTL {
     }
 
 
-    void ResumingStubbornTarjan::update(idx_t to) {
+    void ResumingStubbornTarjan::update(idx_t to)
+    {
         const auto from = dstack.top().pos;
         if (cstack[to].lowlink <= cstack[from].lowlink) {
             // we have found a loop into earlier seen component cstack[to].lowlink.
@@ -130,58 +141,85 @@ namespace LTL {
         }
     }
 
-    bool ResumingStubbornTarjan::nexttrans(State &state, State &parent, ResumingStubbornTarjan::DEntry &delem) {
+    bool ResumingStubbornTarjan::nexttrans(State &state, State &parent, ResumingStubbornTarjan::DEntry &delem)
+    {
+        /*if (delem.sucinfo.tid >= net.numberOfTransitions() &&
+            delem.sucinfo.tid < ReducingSuccessorGenerator::sucinfo::no_value) {
+            return false;
+        }*/
         CEntry &centry = cstack[delem.pos];
         seen.retrieveProductState(parent, centry.stateid);
 
-        const bool* enabled;
-        const bool* stubborn;
-
-        if (!centry.hasEnabled()) {
-            successorGenerator->prepare(&parent);
-            centry.enabled = _enabled.insert(successorGenerator->enabled()).second;
-            centry.stubborn = _enabled.insert(successorGenerator->stubborn()).second;
-            memcpy(buf1.get(), successorGenerator->stubborn(), net.numberOfTransitions());
-            enabled = successorGenerator->enabled();
-            stubborn = successorGenerator->stubborn();
+        successorGenerator->prepare(&parent, delem.sucinfo);
+        if (delem.sucinfo.hasEnabled()) {
+            assert(delem.sucinfo.stubborn != std::numeric_limits<size_t>::max());
+            assert(delem.sucinfo.buchi_state != std::numeric_limits<uint32_t>::max());
+            _enabled.get(const_cast<bool *>(successorGenerator->stubborn()), delem.sucinfo.stubborn);
+            _enabled.get(const_cast<bool *>(successorGenerator->enabled()), delem.sucinfo.enabled);
+            state.setBuchiState(delem.sucinfo.buchi_state);
         }
         else {
-            _enabled.get(buf1.get(), centry.enabled);
-            _enabled.get(buf2.get(), centry.stubborn);
-            enabled = buf1.get();
-            stubborn = buf2.get();
+            delem.sucinfo.enabled = _enabled.insert(successorGenerator->enabled()).second;
+            delem.sucinfo.stubborn = _enabled.insert(successorGenerator->stubborn()).second;
+        }
+        auto res = successorGenerator->next(state, delem.sucinfo);
+        return res;
+
+/*        const bool *enabled;
+        const bool *stubborn;
+
+        if (!centry.hasEnabled()) {
+            if (!successorGenerator->prepare(&parent)) {
+                delem.sucinfo.tid = net.numberOfTransitions();
+                centry.stubborn = 0;
+                centry.enabled = 0;
+                return successorGenerator->next(state);
+                std::copy(parent.marking(), parent.marking() + net.numberOfPlaces() + 1,
+                          state.marking());
+                delem.sucinfo.tid = net.numberOfTransitions();
+                centry.stubborn = 0;
+                centry.enabled = 0;
+            }
+            centry.enabled = _enabled.insert(successorGenerator->enabled()).second;
+            centry.stubborn = _enabled.insert(successorGenerator->stubborn()).second;
+            //memcpy(buf1.get(), successorGenerator->stubborn(), net.numberOfTransitions());
+            enabled = successorGenerator->enabled();
+            stubborn = successorGenerator->stubborn();
+        } else {
+            _enabled.get(const_cast<bool *>(successorGenerator->enabled()), centry.enabled);
+            _enabled.get(const_cast<bool *>(successorGenerator->stubborn()), centry.stubborn);
+            enabled = successorGenerator->enabled();
+            stubborn = successorGenerator->stubborn();
         }
         successorGenerator->prepare(&parent, delem.sucinfo);
         auto &tid = delem.sucinfo.tid;
         if (tid == ReducingSuccessorGenerator::sucinfo::no_value) tid = 0;
         while (tid < net.numberOfTransitions()) {
             if (enabled[tid] && stubborn[tid]) {
-                auto res = successorGenerator->next(state, delem.sucinfo);
-                if (res)
-                    ++stats.expanded;
-                ++tid;
-                return res;
+//                std::cerr << "tid: " << tid << "\tname: " << net.transitionNames()[tid] << std::endl;
+                return successorGenerator->next(state, delem.sucinfo);
             }
             ++tid;
-        }
+        }*/
         return false;
     }
 
     void LTL::ResumingStubbornTarjan::expandAll(DEntry &delem)
     {
 #ifndef NDEBUG
-        std::cerr << "Expanding all\n";
 #endif
+        std::cerr << "Expanding all\n";
         CEntry &centry = cstack[delem.pos];
-        _enabled.get(buf2.get(), centry.stubborn);
-        _enabled.get(buf1.get(), centry.enabled);
+        _enabled.get(buf2.get(), delem.sucinfo.stubborn);
+        _enabled.get(buf1.get(), delem.sucinfo.enabled);
         // tid is end while ntrans is end+1. Have to normalize like this since tid can be INT_MAX and thus overflow.
+        assert(delem.sucinfo.tid != std::numeric_limits<uint32_t>::max());
         auto range = std::min(delem.sucinfo.tid, net.numberOfTransitions() - 1) + 1;
-        for (uint32_t i = 0; i < range; ++i) {
+        for (uint32_t i = 0; i < delem.sucinfo.tid; ++i) {
             // unset previously fired transitions.
             if (buf2[i]) buf1[i] = false;
         }
-        centry.stubborn = _enabled.insert(buf1.get()).second;
+        delem.sucinfo.stubborn = _enabled.insert(buf1.get()).second;
         delem.sucinfo.tid = 0;
         extstack.push(centry.stateid);
     }

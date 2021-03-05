@@ -40,12 +40,12 @@ namespace LTL {
 
         [[nodiscard]] size_t initial_buchi_state() const { return buchi.initial_state_number(); };
 
-        void prepare(const LTL::Structures::ProductState *state)
+        bool prepare(const LTL::Structures::ProductState *state)
         {
-            successorGenerator.prepare(state);
             buchi.prepare(state->getBuchiState());
             buchi_parent = state->getBuchiState();
             fresh_marking = true;
+            return successorGenerator.prepare(state);
         }
 
         bool next(LTL::Structures::ProductState &state)

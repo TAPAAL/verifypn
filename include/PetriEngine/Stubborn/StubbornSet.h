@@ -55,7 +55,7 @@ namespace PetriEngine {
             _queries.push_back(query.get());
         }
 
-        virtual void prepare(const Structures::State *marking) = 0;
+        virtual bool prepare(const Structures::State *marking) = 0;
 
         uint32_t next();
 

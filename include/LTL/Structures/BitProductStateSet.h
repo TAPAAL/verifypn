@@ -50,15 +50,7 @@ namespace LTL::Structures {
             return (buchiState << buchiShift) | (markingMask & markingId);
         }
 
-    private:
-        static constexpr auto markingMask = (1L << (64 - nbits)) - 1;
-        static constexpr auto buchiMask = std::numeric_limits<size_t>::max() ^markingMask;
-        static constexpr auto buchiShift = 64 - nbits;
 
-        PetriEngine::Structures::StateSet markings;
-        std::unordered_set<stateid_t> states;
-        static constexpr auto err_val = std::make_pair(false, std::numeric_limits<size_t>::max());
-    public:
         BitProductStateSet(const PetriEngine::PetriNet &net, int kbound = 0)
                 : markings(net, kbound, net.numberOfPlaces())
         {
@@ -75,6 +67,7 @@ namespace LTL::Structures {
          */
         result_t insertProductState(const LTL::Structures::ProductState &state)
         {
+            ++_discovered;
             const auto[_, markingId] = markings.add(state);
             const stateid_t product_id = getProductId(markingId, state.getBuchiState());
 
@@ -107,9 +100,19 @@ namespace LTL::Structures {
             return true;
         }
 
-        size_t size() { return states.size(); }
+        size_t size() { return _discovered; }
 
         size_t maxTokens() { return markings.maxTokens(); }
+
+    private:
+        static constexpr auto markingMask = (1L << (64 - nbits)) - 1;
+        static constexpr auto buchiMask = std::numeric_limits<size_t>::max() ^markingMask;
+        static constexpr auto buchiShift = 64 - nbits;
+
+        PetriEngine::Structures::StateSet markings;
+        std::unordered_set<stateid_t> states;
+        static constexpr auto err_val = std::make_pair(false, std::numeric_limits<size_t>::max());
+        size_t _discovered = 0;
     };
 }
 

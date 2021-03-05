@@ -62,7 +62,7 @@ namespace LTL {
         using idx_t = size_t;
         using EnabledSet = LTL::Structures::EnabledTransitionSet;
 
-        static constexpr idx_t HashSz = (1U << 27U);
+        static constexpr idx_t HashSz = 16777216;
 
         LTL::Structures::ProductStateFactory factory;
 
@@ -72,6 +72,7 @@ namespace LTL {
         std::unordered_set<idx_t> store;
 
         std::array<idx_t, HashSz> chash;
+        static_assert(sizeof(chash) == (1U << 27U));
 
         static inline idx_t hash(idx_t id)
         {
@@ -85,12 +86,10 @@ namespace LTL {
             idx_t lowlink;
             idx_t stateid;
             idx_t next = std::numeric_limits<idx_t>::max();
-            idx_t enabled = std::numeric_limits<idx_t>::max();
-            idx_t stubborn = std::numeric_limits<idx_t>::max();
 
             CEntry(idx_t lowlink, idx_t stateid, idx_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
 
-            bool hasEnabled() const { return enabled != std::numeric_limits<idx_t>::max(); }
+            //bool hasEnabled() const { return enabled != std::numeric_limits<idx_t>::max(); }
         };
 
         struct DEntry {
