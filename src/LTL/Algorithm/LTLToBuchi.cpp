@@ -154,7 +154,6 @@ namespace LTL {
         formula = spot::formula::Not(formula);
         spot::translator translator;
         translator.set_type(spot::postprocessor::BA);
-        translator.set_pref(spot::postprocessor::Complete);
         spot::twa_graph_ptr automaton = translator.run(formula);
         std::unordered_map<int, AtomicProposition> ap_map;
         // bind PQL expressions to the atomic proposition IDs used by spot.
