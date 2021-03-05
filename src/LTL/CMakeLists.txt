@@ -6,5 +6,5 @@ add_subdirectory(Simplification)
 
 add_library(LTL ${HEADER_FILES} _LTL.cpp)
 
-target_link_libraries(LTL LTL_algorithm bddx spot LTL_simplification)
+target_link_libraries(LTL LTL_algorithm LTL_simplification)
 

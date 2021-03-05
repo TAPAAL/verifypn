@@ -8,7 +8,7 @@ add_subdirectory(PetriEngine)
 add_executable(verifypn-${ARCH_TYPE} VerifyPN.cpp)
 add_dependencies(verifypn-${ARCH_TYPE} glpk-ext spot-ext)
 
-target_link_libraries(verifypn-${ARCH_TYPE} PRIVATE CTL LTL PetriEngine PetriParse glpk spot)
+target_link_libraries(verifypn-${ARCH_TYPE} PRIVATE CTL LTL PetriEngine PetriParse spot bddx)
 
 # add_executable(parse-benchmark-asctl ParseOnly.cpp)
 
