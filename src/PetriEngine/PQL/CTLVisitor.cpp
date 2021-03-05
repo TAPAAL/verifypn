@@ -263,11 +263,9 @@ namespace PetriEngine::PQL {
 
     template<typename T>
     std::shared_ptr<T> AsCTL::copy_compare_condition(const T *element) {
-        (*element)[0]->visit(*this);
-        auto e1 = _expression;
-        (*element)[1]->visit(*this);
-        auto e2 = _expression;
-        return std::make_shared<T>(e1, e2);
+        // we copy of sharedptr for now, but this is not safe!
+        // copy_narry_expr needs fixing.
+        return std::make_shared<T>((*element)[0], (*element)[1]);
     }
 
     void AsCTL::_accept(const LessThanCondition *element) {
@@ -473,13 +471,9 @@ namespace PetriEngine::PQL {
     template<typename T>
     Expr_ptr AsCTL::copy_narry_expr(const T* el)
     {
-        std::vector<Expr_ptr> vec;
-        for(auto& e : el->expressions())
-        {
-            e->visit(*this);
-            vec.emplace_back(_expression);
-        }
-        return std::make_shared<T>(std::move(vec));
+        assert(false);
+        // TODO: fix
+        return nullptr;
     }
 
     void AsCTL::_accept(const PlusExpr *element) {
