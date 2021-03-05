@@ -161,6 +161,16 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
             }
             return std::make_shared<UnfoldedUpperBoundsCondition>(places, max, offset);
         }
+        else if (q == Quantifier::A || q == Quantifier::E)
+        {
+            Condition_ptr cond1 = parseQuery(binary, names);
+            assert(cond1);
+            if (!cond1) return nullptr;
+            if (q == Quantifier::A)
+                return std::make_shared<ACondition>(cond1);
+            else
+                return std::make_shared<ECondition>(cond1);
+        }
         else
         {
             assert(false);
@@ -174,21 +184,27 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
         if(!cond1) return nullptr;
         if(p == Path::X)
         {
-            if(q == Quantifier::A)
+            if (q == Quantifier::EMPTY)
+                return std::make_shared<XCondition>(cond1);
+            else if(q == Quantifier::A)
                 return std::make_shared<AXCondition>(cond1);
             else
                 return std::make_shared<EXCondition>(cond1);
         }
         else if(p == Path::F)
         {
-            if(q == Quantifier::A)
+            if (q == Quantifier::EMPTY)
+                return std::make_shared<FCondition>(cond1);
+            else if(q == Quantifier::A)
                 return std::make_shared<AFCondition>(cond1);
             else
                 return std::make_shared<EFCondition>(cond1);
         }
         else if(p == Path::G)
         {
-            if(q == Quantifier::A)
+            if (q == Quantifier::EMPTY)
+                return std::make_shared<GCondition>(cond1);
+            else if(q == Quantifier::A)
                 return std::make_shared<AGCondition>(cond1);
             else
                 return std::make_shared<EGCondition>(cond1);
@@ -201,7 +217,9 @@ Condition_ptr QueryBinaryParser::parseQuery(std::ifstream& binary, const std::ve
                 assert(false);
                 return nullptr;
             }
-            if(q == Quantifier::A)
+            if (q == Quantifier::EMPTY)
+                return std::make_shared<UntilCondition>(cond1, cond2);
+            else if(q == Quantifier::A)
                 return std::make_shared<AUCondition>(cond1, cond2);
             else
                 return std::make_shared<EUCondition>(cond1, cond2);

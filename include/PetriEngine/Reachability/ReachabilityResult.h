@@ -44,6 +44,8 @@ namespace PetriEngine {
                 Unknown,
                 /** The query should be verified using the CTL engine */
                 CTL,
+                /** The query should be verified using the LTL engine */
+                LTL,
                 /** Just ignore */
                 Ignore
             };

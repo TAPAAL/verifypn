@@ -24,7 +24,7 @@ namespace PetriEngine
             Visitor() {}
 
             template<typename T>
-            void accept(T element)
+            void accept(T &&element)
             {
                 _accept(element);
             }
@@ -63,12 +63,18 @@ namespace PetriEngine
             {   assert(false); std::cerr << "No accept for EUCondition" << std::endl; exit(0);};
             virtual void _accept(const AUCondition*)
             {   assert(false); std::cerr << "No accept for AUCondition" << std::endl; exit(0);};
-
-            virtual void _accept(const UntilCondition *) {
-                assert(false);
-                std::cerr << "No accept for UntilCondition" << std::endl;
-                exit(0);
-            };
+            virtual void _accept(const ACondition*)
+            {   assert(false); std::cerr << "No accept for ACondition" << std::endl; exit(0);};
+            virtual void _accept(const ECondition*)
+            {   assert(false); std::cerr << "No accept for ECondition" << std::endl; exit(0);};
+            virtual void _accept(const GCondition*)
+            {   assert(false); std::cerr << "No accept for GCondition" << std::endl; exit(0);};
+            virtual void _accept(const FCondition*)
+            {   assert(false); std::cerr << "No accept for FCondition" << std::endl; exit(0);};
+            virtual void _accept(const XCondition*)
+            {   assert(false); std::cerr << "No accept for XCondition" << std::endl; exit(0);};
+            virtual void _accept(const UntilCondition*)
+            {   assert(false); std::cerr << "No accept for UntilCondition" << std::endl; exit(0);};
 
             // shallow elements, neither of these should exist in a compiled expression
             virtual void _accept(const UnfoldedFireableCondition* element) 

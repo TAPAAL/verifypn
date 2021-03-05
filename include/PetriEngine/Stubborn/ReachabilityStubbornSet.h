@@ -24,7 +24,7 @@
 namespace PetriEngine {
     class ReachabilityStubbornSet : public StubbornSet {
     public:
-        ReachabilityStubbornSet(const PetriNet &net, const vector<PQL::Condition_ptr> &queries)
+        ReachabilityStubbornSet(const PetriNet &net, const std::vector<PQL::Condition_ptr> &queries)
                 : StubbornSet(net, queries) {}
 
         ReachabilityStubbornSet(const PetriNet &net)
