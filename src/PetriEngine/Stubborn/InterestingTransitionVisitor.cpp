@@ -198,7 +198,7 @@ namespace PetriEngine {
 
     void InterestingTransitionVisitor::_accept(const PQL::NotCondition *element) {
         negate();
-        element->visit(*this);
+        (*element)[0]->visit(*this);
         negate();
     }
 
