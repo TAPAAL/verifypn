@@ -219,6 +219,46 @@ namespace PetriEngine {
                 _stubborn.presetOf(p._place);
     }
 
+    void InterestingTransitionVisitor::_accept(const PQL::EFCondition *condition)
+    {
+        _accept((PetriEngine::PQL::SimpleQuantifierCondition*) condition);
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::EGCondition *condition)
+    {
+        _accept((PetriEngine::PQL::SimpleQuantifierCondition*) condition);
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::AGCondition *condition)
+    {
+        _accept((PetriEngine::PQL::SimpleQuantifierCondition*) condition);
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::AFCondition *condition)
+    {
+        _accept((PetriEngine::PQL::SimpleQuantifierCondition*) condition);
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::EXCondition *condition)
+    {
+        _accept((PetriEngine::PQL::SimpleQuantifierCondition*) condition);
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::AXCondition *condition)
+    {
+        _accept((PetriEngine::PQL::SimpleQuantifierCondition*) condition);
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::EUCondition *condition)
+    {
+        _accept((PetriEngine::PQL::SimpleQuantifierCondition*) condition);
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::AUCondition *condition)
+    {
+        _accept((PetriEngine::PQL::SimpleQuantifierCondition*) condition);
+    }
+
     void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::PlusExpr *element) {
         for(auto& i : element->places()) _stubborn.presetOf(i.first, true);
         for(auto& e : element->expressions()) e->visit(*this);
