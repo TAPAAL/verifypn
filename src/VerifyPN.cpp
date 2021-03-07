@@ -838,6 +838,13 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true));
     }, stats, evalContext, false, false, true);
 
+    if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
+        // nothing
+    } else if (wasACond) {
+        cond = std::make_shared<ACondition>(cond);
+    } else {
+        cond = std::make_shared<ECondition>(cond);
+    }
     if (printstats) {
         out << "RWSTATS POST:";
         stats.print(out);
@@ -846,13 +853,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         cond->toString(out);
         out << std::endl;
     }
-    if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
-        return cond;
-    } else if (wasACond) {
-        return std::make_shared<ACondition>(cond);
-    } else {
-        return std::make_shared<ECondition>(cond);
-    }
+    return cond;
 }
 
 
