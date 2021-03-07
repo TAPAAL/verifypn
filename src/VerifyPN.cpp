@@ -488,7 +488,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             std::cerr << "Argument Error: --siphon-depth is not compatible with LTL model checking." << std::endl;
             return ErrorCode;
         }
-        if (options.strategy != PetriEngine::Reachability::DEFAULT) {
+        if (options.strategy != PetriEngine::Reachability::DEFAULT &&
+            options.strategy != PetriEngine::Reachability::OverApprox) {
+
             if (options.ltlalgorithm == LTL::Algorithm::Tarjan && options.strategy != DFS) {
                 std::cerr << "Argument Error: Unsupported search strategy for Tarjan. Supported values are DFS." << std::endl;
                 return ErrorCode;
