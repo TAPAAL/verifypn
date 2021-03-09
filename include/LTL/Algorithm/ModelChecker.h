@@ -42,6 +42,8 @@ namespace LTL {
 
         [[nodiscard]] bool isweak() const { return is_weak; }
 
+        size_t get_explored() { return stats.explored; }
+
     protected:
         struct stats_t {
             size_t explored = 0, expanded = 0;

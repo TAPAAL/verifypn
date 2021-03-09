@@ -26,11 +26,16 @@
 
 using namespace PetriEngine::PQL;
 
+#define DEBUG_EXPLORED_STATES
+
 namespace LTL {
     struct Result {
         bool satisfied = false;
         bool is_weak = true;
         Algorithm algorithm = Algorithm::Tarjan;
+#ifdef DEBUG_EXPLORED_STATES
+        size_t explored_states = 0;
+#endif
     };
 
 /**
@@ -68,6 +73,9 @@ namespace LTL {
         auto modelChecker = std::make_unique<Checker>(*net, negatedQuery);
         result.satisfied = modelChecker->isSatisfied();
         result.is_weak = modelChecker->isweak();
+#ifdef DEBUG_EXPLORED_STATES
+        result.explored_states = modelChecker->get_explored();
+#endif
         if (printstats) {
             modelChecker->printStats(std::cout);
         }
@@ -117,6 +125,9 @@ namespace LTL {
                   << (result.is_weak ? " WEAK_SKIP" : "")
                   << ((options.stubbornreduction && !negated_formula->containsNext()) ? " STUBBORN" : "")
                   << std::endl;
+#ifdef DEBUG_EXPLORED_STATES
+        std::cout << "FORMULA " << queryName << " STATS EXPLORED " << result.explored_states << std::endl;
+#endif
         /*(queries[qid]->isReachability(0) ? " REACHABILITY" : "") <<*/
 
         return SuccessCode;
