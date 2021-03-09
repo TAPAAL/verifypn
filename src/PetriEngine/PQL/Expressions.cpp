@@ -3560,16 +3560,12 @@ namespace PetriEngine {
 
         Condition_ptr ACondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
                                                bool initrw) {
-            assert(false);
-            return nullptr;
             return ECondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
         }
 
 
         Condition_ptr ECondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
                                                bool initrw) {
-            assert(false);
-            return nullptr;
             auto _sub = _cond->pushNegation(stats, context, nested, !negated, initrw);
             return negated ? (Condition_ptr)std::make_shared<ACondition>(_sub) : (Condition_ptr)std::make_shared<ECondition>(_sub);
         }
