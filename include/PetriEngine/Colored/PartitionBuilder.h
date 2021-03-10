@@ -30,6 +30,9 @@ namespace PetriEngine {
                 bool splitPartition(EquivalenceVec equivalenceVec, uint32_t placeId);
 
                 void handleTransition(uint32_t transitionId, uint32_t postPlaceId);
+                void handleTransition(Transition *transitionId, uint32_t postPlaceId, Arc *postArc);
+
+                void handleLeafTransitions();
 
                 std::vector<std::unordered_map<const Variable *, intervalTuple_t>> prepareVariables(
                             std::unordered_map<const Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap, 

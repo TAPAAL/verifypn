@@ -50,8 +50,12 @@ namespace PetriEngine {
                         std::cout << "~~~~~~" << std::endl;
 
                         if(subtractedIntervals.empty() || subtractedIntervals[0].size() == 0){
-                            //resIntervals._intervals.clear();
-                            continue;
+                            if(_colorType->productSize() > 1){
+                                resIntervals._intervals.clear();
+                                break;
+                            } else {
+                                continue;
+                            }                            
                         }
 
                         //[0,5] - [1,1][5,5] 

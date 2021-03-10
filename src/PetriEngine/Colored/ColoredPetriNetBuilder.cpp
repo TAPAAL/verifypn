@@ -401,9 +401,23 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place) {
         if(_ptplacenames.count(place.name) <= 0){
             
-            std::string name = place.name + "_" + std::to_string(place.marking.size());
+            std::string name = place.name + "_orphan";
             _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
             _ptplacenames[place.name][0] = std::move(name);
+        } else {
+            uint32_t usedTokens = 0;
+            for(auto unfoldedPlace : _ptplacenames[place.name]){
+                
+                auto unfoldedMarking = _ptBuilder.initMarking();
+                auto unfoldedPlaceMap = _ptBuilder.getPlaceNames();
+                auto unfoldedPlaceId = unfoldedPlaceMap[unfoldedPlace.second];
+                usedTokens += unfoldedMarking[unfoldedPlaceId];
+            }
+            if(place.marking.size() > usedTokens){
+                std::string name = place.name + "_orphan";
+                _ptBuilder.addPlace(name, place.marking.size() - usedTokens, 0.0, 0.0);
+                _ptplacenames[place.name][UINT32_MAX] = std::move(name);
+            }
         }
         
         //++_nptplaces;        

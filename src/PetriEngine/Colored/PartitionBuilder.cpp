@@ -37,6 +37,7 @@ namespace PetriEngine {
 
         
         void PartitionBuilder::partitionNet(){
+            handleLeafTransitions();
             while(!_placeQueue.empty()){
                 auto placeId = _placeQueue.back();
                 _placeQueue.pop_back();
@@ -53,13 +54,9 @@ namespace PetriEngine {
             }
         }
 
-        void PartitionBuilder::handleTransition(uint32_t transitionId, uint32_t postPlaceId){
-            std::unordered_map<const PetriEngine::Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap;
-            std::set<const Colored::Variable*> diagonalVars;
-            std::unordered_map<uint32_t, const PetriEngine::Colored::Variable *> varPositionMap;
-            std::set<const PetriEngine::Colored::Variable *> postArcVars;
-            std::set<const PetriEngine::Colored::Variable *>guardVars;
+        
 
+        void PartitionBuilder::handleTransition(uint32_t transitionId, uint32_t postPlaceId){
             auto transition = _transitions->operator[](transitionId);
             Arc postArc;
             bool arcFound = false;
@@ -74,17 +71,41 @@ namespace PetriEngine {
             if(!arcFound){
                 return;
             }           
-            
-            postArc.expr->getVariables(postArcVars, varPositionMap, varModifierMap);
+                        
+            handleTransition(&transition, postPlaceId, &postArc);
+        }
 
-            if(transition.guard != nullptr){
-                transition.guard->getVariables(guardVars);
+        void PartitionBuilder::handleTransition(Transition *transition, uint32_t postPlaceId, Arc *postArc) {
+            std::unordered_map<const PetriEngine::Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap;
+            std::unordered_map<uint32_t, const PetriEngine::Colored::Variable *> varPositionMap;
+            std::set<const PetriEngine::Colored::Variable *> postArcVars;
+            std::set<const PetriEngine::Colored::Variable *>guardVars;
+            std::set<const Colored::Variable*> diagonalVars;
+            
+            postArc->expr->getVariables(postArcVars, varPositionMap, varModifierMap);
+
+            for(auto varModMap : varModifierMap){
+                if(varModMap.second.size() > 1){
+                    uint32_t actualSize = 0;
+                    for(auto map : varModMap.second){
+                        if(!map.empty()){
+                            actualSize++;
+                        }
+                    }
+                    if(actualSize > 1) {
+                        _partition[postPlaceId].diagonal = true;
+                    } 
+                }
+            }
+
+            if(transition->guard != nullptr){
+                transition->guard->getVariables(guardVars);
             }
 
             auto placePartition = _partition[postPlaceId]._equivalenceClasses;
             
             for(auto eqClass : placePartition){
-                auto varMaps = prepareVariables(varModifierMap, &eqClass, &postArc, postPlaceId);
+                auto varMaps = prepareVariables(varModifierMap, &eqClass, postArc, postPlaceId);
 
                 for(auto& varMap : varMaps){
                     for(auto var : guardVars){
@@ -94,17 +115,34 @@ namespace PetriEngine {
                     }
                 }
 
-                if(_transitions->operator[](transitionId).guard != nullptr){
-                    _transitions->operator[](transitionId).guard->restrictVars(varMaps, diagonalVars);
+                if(transition->guard != nullptr){
+                    transition->guard->restrictVars(varMaps, diagonalVars);
                 }
 
-                for(auto inArc : transition.input_arcs){
+                for(auto inArc : transition->input_arcs){
                     if(_partition[inArc.place].diagonal){
                         continue;
                     }
 
+                    
+                    std::unordered_map<const PetriEngine::Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> preVarModifierMap;
+                    std::unordered_map<uint32_t, const PetriEngine::Colored::Variable *> preVarPositionMap;
                     std::set<const PetriEngine::Colored::Variable *> preArcVars;
-                    inArc.expr->getVariables(preArcVars); 
+                    inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap); 
+
+                    for(auto varModMap : preVarModifierMap){
+                        if(varModMap.second.size() > 1){
+                            uint32_t actualSize = 0;
+                            for(auto map : varModMap.second){
+                                if(!map.empty()){
+                                    actualSize++;
+                                }
+                            }
+                            if(actualSize > 1) {
+                                _partition[inArc.place].diagonal = true;
+                            }                            
+                        }
+                    }
                     for(auto preVar : preArcVars){
                         if(diagonalVars.count(preVar)){
                             //should only happen if the variable is not in a tuple 
@@ -130,7 +168,7 @@ namespace PetriEngine {
             }
 
             std::set<const PetriEngine::Colored::Variable *> preArcVars;
-            for(auto inArc : transition.input_arcs){
+            for(auto inArc : transition->input_arcs){
                 inArc.expr->getVariables(preArcVars);
                 for(auto postVar : postArcVars){
                     if(preArcVars.count(postVar)){
@@ -140,7 +178,6 @@ namespace PetriEngine {
                     }
                 }
             }
-            
         }
 
 
@@ -202,7 +239,7 @@ namespace PetriEngine {
         std::vector<std::unordered_map<const Variable *, intervalTuple_t>> 
         PartitionBuilder::prepareVariables(
                     std::unordered_map<const Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap, 
-                    EquivalenceClass *eqClass , Arc *postArc, uint32_t placeId){
+                    EquivalenceClass *eqClass , Arc *arc, uint32_t placeId){
             std::vector<std::unordered_map<const Variable *, intervalTuple_t>> varMaps;
             std::unordered_map<const Variable *, intervalTuple_t> varMap;
             varMaps.push_back(varMap);
@@ -212,11 +249,21 @@ namespace PetriEngine {
             ArcIntervals newArcInterval(&postPlaceFixpoint, varModifierMap);
             uint32_t index = 0;
 
-            postArc->expr->getArcIntervals(newArcInterval, postPlaceFixpoint, &index, 0);
+            arc->expr->getArcIntervals(newArcInterval, postPlaceFixpoint, &index, 0);
             placeArcIntervals[placeId] = newArcInterval;
             intervalGenerator.getVarIntervals(varMaps, placeArcIntervals);
 
             return varMaps;                
         }
-    }
+
+        void PartitionBuilder::handleLeafTransitions(){
+            for(uint32_t i = 0; i < _transitions->size(); i++){
+                auto transition = _transitions->operator[](i);
+                if(transition.output_arcs.empty() && !transition.input_arcs.empty()){
+                    std::cout << "Handling leaf transition" << std::endl;
+                    handleTransition(&transition, transition.input_arcs.back().place, &transition.input_arcs.back());
+                }
+            }
+        }
+    }    
 }
