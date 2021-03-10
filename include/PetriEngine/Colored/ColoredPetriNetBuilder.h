@@ -15,6 +15,7 @@
 #include "../PetriNetBuilder.h"
 #include "BindingGenerator.h"
 #include "IntervalGenerator.h"
+#include "PartitionBuilder.h"
 
 namespace PetriEngine {
 
@@ -126,6 +127,7 @@ namespace PetriEngine {
         std::unordered_map<std::string,uint32_t> _transitionnames;
         std::unordered_map<uint32_t, std::unordered_map<uint32_t, Colored::ArcIntervals>> _arcIntervals;
         std::unordered_map<uint32_t,std::vector<uint32_t>> _placePostTransitionMap;
+        std::unordered_map<uint32_t,std::vector<uint32_t>> _placePreTransitionMap;
         std::unordered_map<uint32_t,FixpointBindingGenerator> _bindings;
         PTPlaceMap _ptplacenames;
         PTTransitionMap _pttransitionnames;
@@ -146,6 +148,7 @@ namespace PetriEngine {
         bool _fixpointDone = false;
 
         std::vector<uint32_t> _placeFixpointQueue;
+        std::unordered_map<uint32_t, Colored::EquivalenceVec> _partition;
 
 
         double _time;
@@ -172,6 +175,7 @@ namespace PetriEngine {
         void unfoldPlace(Colored::Place& place);
         void unfoldTransition(Colored::Transition& transition);
         void handleOrphanPlace(Colored::Place& place);
+        void partitionVariableMap();
 
         void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name, bool input);
     };

@@ -385,10 +385,15 @@ namespace PetriEngine {
             ArcIntervals(Colored::ColorFixpoint * source) : _source(source){
             }
 
-            ArcIntervals(Colored::ColorFixpoint * source, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varIndexModMap) : _varIndexModMap(varIndexModMap), _source(source) {
+            ArcIntervals(Colored::ColorFixpoint * source, 
+                        std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varIndexModMap) 
+                        : _varIndexModMap(varIndexModMap), _source(source) {
             };
 
-            ArcIntervals(Colored::ColorFixpoint * source, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varIndexModMap,  std::vector<Colored::intervalTuple_t> ranges) : _varIndexModMap(varIndexModMap), _intervalTupleVec(ranges), _source(source) {
+            ArcIntervals(Colored::ColorFixpoint * source,
+                        std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varIndexModMap,
+                        std::vector<Colored::intervalTuple_t> ranges) 
+                        : _varIndexModMap(varIndexModMap), _intervalTupleVec(ranges), _source(source) {
             };
 
             size_t size() {

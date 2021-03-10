@@ -5,6 +5,11 @@
 #include <set>
 #include <unordered_map>
 #include <chrono>
+#include <string>
+#include <string.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 
 namespace PetriEngine {
@@ -96,6 +101,14 @@ namespace PetriEngine {
                     ids.push_back(range._upper);
                 }
                 return ids;
+            }
+
+            interval_t getSingleColorInterval(){
+                interval_t newInterval;
+                for(auto id : getLowerIds()){
+                    newInterval.addRange(id,id);
+                }
+                return newInterval;
             }
 
             bool equals(interval_t other){
@@ -215,10 +228,54 @@ namespace PetriEngine {
                 return overlapInterval;
             }
 
+            std::vector<interval_t> getSubtracted(interval_t other, uint32_t ctSize){
+                std::vector<interval_t> result;
+                
+                if(size() != other.size()){
+                    return result;
+                }
+                
+                for(uint32_t i = 0; i < size(); i++){
+                    interval_t newInterval = *this;
+                    
+                    int32_t newMinUpper = std::min(((int) other[i]._lower) -1, (int)_ranges[i]._upper);
+                    uint32_t otherUpper = (other[i]._upper +1) >= ctSize? ctSize-1: other[i]._upper +1;
+                    uint32_t newMaxLower = std::max(other[i]._upper +1, _ranges[i]._lower);
+
+                    if(((int32_t) _ranges[i]._lower) <= newMinUpper && newMaxLower <= _ranges[i]._upper){
+                        auto intervalCopy = *this;
+                        auto lowerRange = Reachability::range_t(_ranges[i]._lower, newMinUpper);
+                        auto upperRange = Reachability::range_t(newMaxLower, _ranges[i]._upper);
+                        newInterval._ranges[i] = lowerRange;
+                        intervalCopy._ranges[i] = upperRange;
+                        result.push_back(std::move(intervalCopy));
+                        result.push_back(std::move(newInterval));
+                        
+                    } else if (((int32_t) _ranges[i]._lower)  <= newMinUpper){
+                        auto lowerRange = Reachability::range_t(_ranges[i]._lower, newMinUpper);
+                        newInterval._ranges[i] = lowerRange;
+                        result.push_back(std::move(newInterval));
+                    } else if (newMaxLower <= _ranges[i]._upper) {
+                        auto upperRange = Reachability::range_t(newMaxLower, _ranges[i]._upper);
+                        newInterval._ranges[i] = upperRange;
+                        result.push_back(std::move(newInterval));
+                    }                    
+                }                
+                return result;
+            }
+
             void print() {
                 for(auto range : _ranges){
                     std::cout << " " << range._lower << "-" << range._upper << " ";
                 }
+            }
+
+            std::string toString() {
+                std::ostringstream strs;
+                for(auto range : _ranges){
+                    strs << " " << range._lower << "-" << range._upper << " ";
+                }
+                return strs.str();
             }
         };
 
@@ -453,6 +510,16 @@ namespace PetriEngine {
                     interval.print();
                     std::cout << "]" << std::endl;
                 }
+            }
+
+            std::string toString() {
+                std::string out;
+                for (auto interval : _intervals){
+                    out += "[";
+                    out += interval.toString();
+                    out += "]\n";
+                }
+                return out;
             }
 
             std::vector<uint32_t> getLowerIds(){

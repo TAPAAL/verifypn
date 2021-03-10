@@ -139,8 +139,8 @@ namespace PetriEngine {
     }
 
     FixpointBindingGenerator::FixpointBindingGenerator(Colored::Transition& transition,
-        ColorTypeMap& colorTypes)
-    : _colorTypes(colorTypes), _transition(transition)
+        ColorTypeMap& colorTypes, std::unordered_map<uint32_t, Colored::EquivalenceVec> &partition)
+    : _colorTypes(colorTypes), _transition(transition), _partition(partition)
     {
         _isDone = false;
         _noValidBindings = false;
