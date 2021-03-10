@@ -88,7 +88,7 @@ namespace LTL {
     public:
 
         explicit FormulaToSpotSyntax(std::ostream &os = std::cout)
-                : PetriEngine::PQL::QueryPrinter(os) {}
+                : PetriEngine::PQL::QueryPrinter(os), compress(true) {}
 
         auto begin() const {
             return std::begin(ap_info);
@@ -105,13 +105,21 @@ namespace LTL {
     private:
         APInfo ap_info;
         bool is_quoted = false;
+        bool compress;
 
-        void make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element) {
-            auto cond = const_cast<PetriEngine::PQL::Condition *>(element.get())->shared_from_this();
+        void make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element)
+        {
+            auto cond =
+                const_cast<PetriEngine::PQL::Condition *>(element.get())->shared_from_this();
             std::stringstream ss;
             ss << "\"";
-            PetriEngine::PQL::QueryPrinter _printer{ss};
-            cond->visit(_printer);
+            if (compress) {
+                ss << ap_info.size();
+            }
+            else {
+                PetriEngine::PQL::QueryPrinter _printer{ss};
+                cond->visit(_printer);
+            }
             ss << "\"";
             os << ss.str();
             ap_info.push_back(AtomicProposition{cond, ss.str().substr(1, ss.str().size() - 2)});
