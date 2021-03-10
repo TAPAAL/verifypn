@@ -20,7 +20,11 @@
 
 #include "PetriEngine/SuccessorGenerator.h"
 #include "LTL/Structures/BuchiAutomaton.h"
+#include "LTL/AlgorithmTypes.h"
 
+#include <spot/twaalgos/dot.hh>
+#include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/neverclaim.hh>
 #include <spot/twa/twagraph.hh>
 #include <utility>
 #include <memory>
@@ -72,6 +76,21 @@ namespace LTL {
         [[nodiscard]] bool is_weak() const
         {
             return (bool) aut.buchi->prop_weak();
+        }
+
+        void output_buchi(const std::string& file, BuchiOutType type) {
+            std::ofstream fs(file);
+            switch (type) {
+                case BuchiOutType::Dot:
+                    spot::print_dot(fs, aut.buchi);
+                    break;
+                case BuchiOutType::HOA:
+                    spot::print_hoa(fs, aut.buchi, "s");
+                    break;
+                case BuchiOutType::Spin:
+                    spot::print_never_claim(fs, aut.buchi);
+                    break;
+            }
         }
 
     private:

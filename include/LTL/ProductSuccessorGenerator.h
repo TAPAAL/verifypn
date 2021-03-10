@@ -130,6 +130,8 @@ namespace LTL {
             return buchi.is_weak();
         }
 
+        void output_buchi(const std::string& file, BuchiOutType type) { buchi.output_buchi(file, type); }
+
     private:
         BuchiSuccessorGenerator buchi;
         bdd cond;

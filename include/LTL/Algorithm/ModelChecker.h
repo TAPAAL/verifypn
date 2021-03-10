@@ -38,6 +38,8 @@ namespace LTL {
 
         [[nodiscard]] bool isweak() const { return is_weak; }
 
+        void output_buchi(const std::string& file, BuchiOutType type) { successorGenerator->output_buchi(file, type); }
+
     protected:
         struct stats_t {
             size_t explored = 0, expanded = 0;

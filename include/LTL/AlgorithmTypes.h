@@ -22,6 +22,13 @@ namespace LTL {
     enum class Algorithm {
         NDFS, Tarjan, None=-1
     };
+
+    enum class BuchiOutType {
+        Dot,
+        HOA,
+        Spin
+    };
+
     inline auto to_string(Algorithm alg) {
         switch (alg) {
             case Algorithm::NDFS:
@@ -32,6 +39,7 @@ namespace LTL {
             default:
                 std::cerr << "to_string: Invalid LTL Algorithm " << static_cast<int>(alg) << '\n';
                 assert(false);
+                return "";
         }
     }
 }

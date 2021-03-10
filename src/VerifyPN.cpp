@@ -289,6 +289,20 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         {
             options.model_out_file = std::string(argv[++i]);
         }
+        else if (strcmp(argv[i], "--write-buchi") == 0)
+        {
+            options.buchi_out_file = std::string(argv[++i]);
+            if (argc > i + 1) {
+                if(strcmp(argv[i + 1], "dot") == 0) {
+                    options.buchi_out_type = LTL::BuchiOutType::Dot;
+                } else if (strcmp(argv[i + 1], "hoa") == 0) {
+                    options.buchi_out_type = LTL::BuchiOutType::HOA;
+                } else if (strcmp(argv[i + 1], "spin") == 0) {
+                    options.buchi_out_type = LTL::BuchiOutType::Spin;
+                } else continue;
+                ++i;
+            }
+        }
 #ifdef VERIFYPN_MC_Simplification
         else if (strcmp(argv[i], "-z") == 0)
         {
@@ -350,56 +364,60 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "extended with inhibitor arcs.\n"
                     "\n"
                     "Options:\n"
-                    "  -k, --k-bound <number of tokens>   Token bound, 0 to ignore (default)\n"
-                    "  -t, --trace                        Provide XML-trace to stderr\n"
-                    "  -s, --search-strategy <strategy>   Search strategy:\n"
-                    "                                     - BestFS       Heuristic search (default)\n"
-                    "                                     - BFS          Breadth first search\n"
-                    "                                     - DFS          Depth first search (CTL and LTL default)\n"
-                    "                                     - RDFS         Random depth first search\n"
-                    "                                     - OverApprox   Linear Over Approx\n"
-                    "  --seed-offset <number>             Extra noise to add to the seed of the random number generation\n"
-                    "  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
-                    "  -x, --xml-query <query index>      Parse XML query file and verify query of a given index\n"
-                    "  -r, --reduction <type>             Change structural net reduction:\n"
-                    "                                     - 0  disabled\n"
-                    "                                     - 1  aggressive reduction (default)\n"
-                    "                                     - 2  reduction preserving k-boundedness\n"
-                    "                                     - 3  user defined reduction sequence, eg -r 3 0,1,2,3 to use rules A,B,C,D only, and in that order\n"
-                    "  -d, --reduction-timeout <timeout>  Timeout for structural reductions in seconds (default 60)\n"
-                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
-                    "                                     write -q 0 to disable query reduction\n"
-                    "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
-                    "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
-                    "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds (default 0)\n"
-                    "      --siphon-depth <place count>   Search depth of siphon (default 0, which counts all places)\n"
-                    "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
-                    "  -h, --help                         Display this help message\n"
-                    "  -v, --version                      Display version information\n"
-                    "  -ctl <type>                        Verify CTL properties\n"
-                    "                                     - local     Liu and Smolka's on-the-fly algorithm\n"
-                    "                                     - czero     local with certain zero extension (default)\n"
-                    "  -ltl [<type>]                      Verify LTL properties (default tarjan). If omitted the queries are assumed to be CTL.\n"
-                    "                                     - ndfs      Nested depth first search algorithm\n"
-                    "                                     - tarjan    On-the-fly Tarjan's algorithm\n"
-                    "                                     - none      Run preprocessing steps only.\n"
-                    "  -noweak                            Disable optimizations for weak Büchi automata when doing \n"
-                    "                                     LTL model checking. Not recommended.\n"
-                    "  -noreach                           Force use of CTL/LTL engine, even when queries are reachability.\n"
-                    "                                     Not recommended since the reachability engine is faster.\n"
-                    "  -c, --cpn-overapproximation        Over approximate query on Colored Petri Nets (CPN only)\n"
+                    "  -k, --k-bound <number of tokens>     Token bound, 0 to ignore (default)\n"
+                    "  -t, --trace                          Provide XML-trace to stderr\n"
+                    "  -s, --search-strategy <strategy>     Search strategy:\n"
+                    "                                       - BestFS       Heuristic search (default)\n"
+                    "                                       - BFS          Breadth first search\n"
+                    "                                       - DFS          Depth first search (CTL and LTL default)\n"
+                    "                                       - RDFS         Random depth first search\n"
+                    "                                       - OverApprox   Linear Over Approx\n"
+                    "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
+                    "  -e, --state-space-exploration        State-space exploration only (query-file is irrelevant)\n"
+                    "  -x, --xml-query <query index>        Parse XML query file and verify query of a given index\n"
+                    "  -r, --reduction <type>               Change structural net reduction:\n"
+                    "                                       - 0  disabled\n"
+                    "                                       - 1  aggressive reduction (default)\n"
+                    "                                       - 2  reduction preserving k-boundedness\n"
+                    "                                       - 3  user defined reduction sequence, eg -r 3 0,1,2,3 to use rules A,B,C,D only, and in that order\n"
+                    "  -d, --reduction-timeout <timeout>    Timeout for structural reductions in seconds (default 60)\n"
+                    "  -q, --query-reduction <timeout>      Query reduction timeout in seconds (default 30)\n"
+                    "                                       write -q 0 to disable query reduction\n"
+                    "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
+                    "  -p, --partial-order-reduction        Disable partial order reduction (stubborn sets)\n"
+                    "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
+                    "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
+                    "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
+                    "  -h, --help                           Display this help message\n"
+                    "  -v, --version                        Display version information\n"
+                    "  -ctl <type>                          Verify CTL properties\n"
+                    "                                       - local     Liu and Smolka's on-the-fly algorithm\n"
+                    "                                       - czero     local with certain zero extension (default)\n"
+                    "  -ltl [<type>]                        Verify LTL properties (default tarjan). If omitted the queries are assumed to be CTL.\n"
+                    "                                       - ndfs      Nested depth first search algorithm\n"
+                    "                                       - tarjan    On-the-fly Tarjan's algorithm\n"
+                    "                                       - none      Run preprocessing steps only.\n"
+                    "  -noweak                              Disable optimizations for weak Büchi automata when doing \n"
+                    "                                       LTL model checking. Not recommended.\n"
+                    "  -noreach                             Force use of CTL/LTL engine, even when queries are reachability.\n"
+                    "                                       Not recommended since the reachability engine is faster.\n"
+                    "  -c, --cpn-overapproximation          Over approximate query on Colored Petri Nets (CPN only)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
 #ifdef VERIFYPN_MC_Simplification
-                    "  -z <number of cores>               Number of cores to use (currently only query simplification)\n"
+                    "  -z <number of cores>                 Number of cores to use (currently only query simplification)\n"
 #endif
-                    "  -tar                               Enables Trace Abstraction Refinement for reachability properties\n"
-                    "  --write-simplified <filename>      Outputs the queries to the given file after simplification\n"
-                    "  --write-reduced <filename>         Outputs the model to the given file after structural reduction\n"
-                    "  --binary-query-io <0,1,2,3>        Determines the input/output format of the query-file\n"
-                    "                                     - 0 MCC XML format for Input and Output\n"
-                    "                                     - 1 Input is binary, output is XML\n"
-                    "                                     - 2 Output is binary, input is XML\n"
-                    "                                     - 3 Input and Output is binary\n"
+                    "  -tar                                 Enables Trace Abstraction Refinement for reachability properties\n"
+                    "  --write-simplified <filename>        Outputs the queries to the given file after simplification\n"
+                    "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
+                    "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
+                    "                                       - 0 MCC XML format for Input and Output\n"
+                    "                                       - 1 Input is binary, output is XML\n"
+                    "                                       - 2 Output is binary, input is XML\n"
+                    "                                       - 3 Input and Output is binary\n"
+                    "  --write-buchi <filename> [<format>]  Valid for LTL. Write the generated buchi automaton to file. Formats:\n"
+                    "                                       - dot   (default) Write the buchi in GraphViz Dot format\n"
+                    "                                       - hoa   Write the buchi in the Hanoi Omega-Automata Format\n"
+                    "                                       - spin  Write the buchi in the spin model checker format."
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -1242,7 +1260,7 @@ int main(int argc, char* argv[]) {
         }
 
         for (auto qid : ltl_ids) {
-            bool satisfied = false, weakskip = false;
+            bool satisfied = false;
 
             auto[negated_formula, negate_answer] = LTL::to_ltl(queries[qid]);
             std::unique_ptr<LTL::ModelChecker> modelChecker;
@@ -1265,6 +1283,12 @@ int main(int argc, char* argv[]) {
                     else
                         modelChecker = std::make_unique<LTL::TarjanModelChecker<false>>(*net, negated_formula, options.ltluseweak);
                     break;
+                case LTL::Algorithm::None:
+                    std::cerr << "Cannot perform LTL None model checking, bug in control flow." << std::endl;
+                    return ErrorCode;
+            }
+            if ( !options.buchi_out_file.empty() ) {
+                modelChecker->output_buchi(options.buchi_out_file, options.buchi_out_type);
             }
             satisfied = negate_answer ^ modelChecker->isSatisfied();
             if (options.printstatistics) {
