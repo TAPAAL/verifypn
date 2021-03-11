@@ -36,6 +36,7 @@ namespace LTL {
                     pop();
                     continue;
                 }
+                ++this->stats.explored;
                 const idx_t stateid = seen.insertProductState(working).second;
 
                 // lookup successor in 'hash' table
@@ -134,7 +135,6 @@ namespace LTL {
             light_deque<size_t> successors;
             this->successorGenerator->prepare(&parent);
             while (this->successorGenerator->next(state)) {
-                ++this->stats.explored;
                 auto [_new, stateid] = seen.insertProductState(state);
                 auto markingId = seen.getMarkingId(stateid);
                 auto p = chash[hash(stateid)];
