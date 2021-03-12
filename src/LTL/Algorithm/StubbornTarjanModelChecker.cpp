@@ -33,10 +33,12 @@ namespace LTL {
             while (!dstack.empty() && !violation) {
                 DEntry &dtop = dstack.top();
                 if (!nexttrans(working, parent, dtop)) {
+                    ++this->stats.expanded;
                     pop();
                     continue;
                 }
                 ++this->stats.explored;
+
                 const idx_t stateid = seen.insertProductState(working).second;
 
                 // lookup successor in 'hash' table
@@ -152,29 +154,13 @@ namespace LTL {
             if (!delem.successors.empty()) {
                 seen.retrieveProductState(state, delem.successors.front());
                 delem.successors.pop_front();
+                return true;
             }
-            return true;
-            idx_t lastgenerated = std::numeric_limits<idx_t>::max();
-            while (true) {
-                if (this->successorGenerator->next(state)) {
-                    ++this->stats.explored;
-                    if (lastgenerated != std::numeric_limits<idx_t>::max()) {
-                        delem.successors.push_back(lastgenerated);
-                    }
-                    auto res = seen.insertProductState(state);
-                    // don't explore previously visited states
-                    if (res.first) lastgenerated = res.second;
-                    auto p = searchCStack(res.second);
-                    if (p != std::numeric_limits<idx_t>::max()) {
-                        this->successorGenerator->generateAll();
-                    }
-                } else {
-                    ++this->stats.expanded;
-                    // return state of last transition instead of first, saving one state operation.
-                    return true;
-                }
+            else {
+                // deadlock
+                return false;
+            }
 
-            }
         } else {
             auto stateid = delem.successors.front();
             delem.successors.pop_front();
