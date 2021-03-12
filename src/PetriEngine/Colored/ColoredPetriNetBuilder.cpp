@@ -235,10 +235,27 @@ namespace PetriEngine {
                                 for(auto &varIntervals : varmap){
                                     Colored::intervalTuple_t newIntervalTuple;
                                     for(auto varInterval : varIntervals.second._intervals){
-                                        auto overlappingInterval = interval.getOverlap(varInterval);
-                                        if(overlappingInterval.isSound()){
-                                            newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
-                                        }                                        
+                                        for(auto indexModMap : varModifierMap[varIntervals.first]){
+                                            for(auto indexModPair : indexModMap){
+                                                if(isTuple){
+                                                    Colored::interval_t reducedPlaceInterval;
+                                                    for(uint32_t i = indexModPair.first; i < indexModPair.first + varIntervals.first->colorType->size(); i++){
+                                                        reducedPlaceInterval.addRange(interval[i]);
+                                                    }
+
+                                                    auto overlappingInterval = reducedPlaceInterval.getOverlap(varInterval);
+                                                    if(overlappingInterval.isSound()){
+                                                        newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
+                                                    }
+                                                } else {
+                                                    auto overlappingInterval = interval.getOverlap(varInterval);
+                                                    if(overlappingInterval.isSound()){
+                                                        newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
+                                                    }
+                                                }
+                                            }
+                                        }
+                                                                                
                                     }
                                     if(!newIntervalTuple._intervals.empty()){
                                         varIntervals.second = newIntervalTuple;
