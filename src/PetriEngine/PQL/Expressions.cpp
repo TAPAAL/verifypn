@@ -2617,7 +2617,7 @@ namespace PetriEngine {
                             if(neg) return std::make_shared<NotEqualCondition>(id, lu);
                             else    return std::make_shared<EqualCondition>(id, lu);
                         else
-                            if(neg) return std::make_shared<LessThanOrEqualCondition>(lu, id);
+                            if(neg) return std::make_shared<LessThanCondition>(lu, id);
                             else    return std::make_shared<LessThanOrEqualCondition>(id, lu);
                     }
                     else
@@ -2625,7 +2625,7 @@ namespace PetriEngine {
                         if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max())
                         {
                             if(neg) return makeOr(std::make_shared<LessThanCondition>(id, ll),std::make_shared<LessThanCondition>(lu, id));
-                            else    return makeAnd(std::make_shared<LessThanCondition>(ll, id),std::make_shared<LessThanOrEqualCondition>(id, lu));
+                            else    return makeAnd(std::make_shared<LessThanOrEqualCondition>(ll, id),std::make_shared<LessThanOrEqualCondition>(id, lu));
                         }
                         else if(c._lower != 0)
                         {
