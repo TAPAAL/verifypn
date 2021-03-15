@@ -1,8 +1,20 @@
-/*
- * File:   ColoredPetriNetBuilder.h
- * Author: Klostergaard
+/* Copyright (C) 2020  Alexander Bilgram <alexander@bilgram.dk>,
+ *                     Peter Haar Taankvist <ptaankvist@gmail.com>,
+ *                     Thomas Pedersen <thomas.pedersen@stofanet.dk>
+ *                     Andreas H. Klostergaard
  *
- * Created on 17. februar 2018, 16:25
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef COLOREDPETRINETBUILDER_H
@@ -15,6 +27,7 @@
 #include "../PetriNetBuilder.h"
 #include "BindingGenerator.h"
 #include "IntervalGenerator.h"
+#include "ArcIntervals.h"
 
 namespace PetriEngine {
 
@@ -119,7 +132,7 @@ namespace PetriEngine {
         
         PetriNetBuilder& unfold();
         PetriNetBuilder& stripColors();
-        void computePlaceColorFixpoint(uint32_t max_intervals, int32_t timeout);
+        void computePlaceColorFixpoint(uint32_t maxIntervals, uint32_t maxIntervalsReduced, int32_t timeout);
         
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
@@ -143,10 +156,8 @@ namespace PetriEngine {
         PetriNetBuilder _ptBuilder;
         bool _unfolded = false;
         bool _stripped = false;
-        bool _fixpointDone = false;
 
         std::vector<uint32_t> _placeFixpointQueue;
-
 
         double _time;
         double _fixPointCreationTime;
@@ -169,7 +180,7 @@ namespace PetriEngine {
         void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals);
         void processOutputArcs(Colored::Transition& transition);
         
-        void unfoldPlace(Colored::Place& place);
+        void unfoldPlace(const Colored::Place& place, const PetriEngine::Colored::Color *color);
         void unfoldTransition(Colored::Transition& transition);
         void handleOrphanPlace(Colored::Place& place);
 

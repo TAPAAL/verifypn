@@ -1,14 +1,20 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   Expressions.h
- * Author: andreas
+/* Copyright (C) 2020  Alexander Bilgram <alexander@bilgram.dk>,
+ *                     Peter Haar Taankvist <ptaankvist@gmail.com>,
+ *                     Thomas Pedersen <thomas.pedersen@stofanet.dk>
+ *                     Andreas H. Klostergaard
  *
- * Created on February 19, 2018, 7:00 PM
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef COLORED_EXPRESSIONS_H
@@ -25,7 +31,8 @@
 
 #include "Colors.h"
 #include "Multiset.h"
-#include "GuardRestrictions.h"
+#include "ArcIntervals.h"
+#include "GuardRestrictor.h"
 #include "../errorcodes.h"
 
 namespace PetriEngine {
@@ -382,8 +389,8 @@ namespace PetriEngine {
                 auto colortypesBefore = colortypes->size();
 
                 auto nestedInterval = _color->getOutputIntervals(varMap, colortypes);
-                Colored::guardRestrictor guardRestrictor;
-                return guardRestrictor.shiftIntervals(varMap, colortypes, &nestedInterval, 1, colortypesBefore);
+                Colored::GuardRestrictor guardRestrictor;
+                return guardRestrictor.shiftIntervals(colortypes, &nestedInterval, 1, colortypesBefore);
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
@@ -436,8 +443,8 @@ namespace PetriEngine {
                 auto colortypesBefore = colortypes->size();
 
                 auto nestedInterval = _color->getOutputIntervals(varMap, colortypes);
-                Colored::guardRestrictor guardRestrictor;
-                return guardRestrictor.shiftIntervals(varMap, colortypes, &nestedInterval, -1, colortypesBefore);
+                Colored::GuardRestrictor guardRestrictor;
+                return guardRestrictor.shiftIntervals(colortypes, &nestedInterval, -1, colortypesBefore);
             }
 
             void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const override {
@@ -615,8 +622,8 @@ namespace PetriEngine {
                 if(leftVars.empty() && rightVars.empty()){
                     return;
                 }
-                Colored::guardRestrictor guardRestrictor;
-                guardRestrictor.restrictDiagonal(variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, true, true);
+                Colored::GuardRestrictor guardRestrictor;
+                guardRestrictor.restrictDiagonal(&variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, true, true);
             }
             
             std::string toString() const override {
@@ -664,8 +671,8 @@ namespace PetriEngine {
                     return;
                 }
 
-                Colored::guardRestrictor guardRestrictor;
-                guardRestrictor.restrictDiagonal(variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, false, true);
+                Colored::GuardRestrictor guardRestrictor;
+                guardRestrictor.restrictDiagonal(&variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, false, true);
             }
 
             std::string toString() const override {
@@ -712,8 +719,8 @@ namespace PetriEngine {
                     return;
                 }
 
-                Colored::guardRestrictor guardRestrictor;
-                guardRestrictor.restrictDiagonal(variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, true, false); 
+                Colored::GuardRestrictor guardRestrictor;
+                guardRestrictor.restrictDiagonal(&variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, true, false); 
             }
 
             std::string toString() const override {
@@ -761,8 +768,8 @@ namespace PetriEngine {
                     return;
                 }
 
-                Colored::guardRestrictor guardRestrictor;
-                guardRestrictor.restrictDiagonal(variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, false, false);                
+                Colored::GuardRestrictor guardRestrictor;
+                guardRestrictor.restrictDiagonal(&variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR, false, false);                
             }
             
             std::string toString() const override {
@@ -810,8 +817,8 @@ namespace PetriEngine {
                     return;
                 }
                 
-                Colored::guardRestrictor guardRestrictor;
-                guardRestrictor.restrictEquality(variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR);
+                Colored::GuardRestrictor guardRestrictor;
+                guardRestrictor.restrictEquality(&variableMap, &varModifierMapL, &varModifierMapR, &varPositionsL, &varPositionsR, &constantMapL, &constantMapR);
             }
 
             std::string toString() const override {

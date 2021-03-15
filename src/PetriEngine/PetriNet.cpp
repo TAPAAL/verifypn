@@ -27,8 +27,6 @@
 #include <string.h>
 #include <assert.h>
 
-using namespace std;
-
 namespace PetriEngine {
 
     PetriNet::PetriNet(uint32_t trans, uint32_t invariants, uint32_t places)
@@ -193,8 +191,8 @@ namespace PetriEngine {
             auto& p = _placenames[i];
             auto& placelocation = _placelocations[i];
             out << "<place id=\"" << p << "\">\n"
-                << "<graphics><position x=\"" << get<0>(placelocation) 
-                << "\" y=\"" << get<1>(placelocation) << "\"/></graphics>\n"
+                << "<graphics><position x=\"" << std::get<0>(placelocation)
+                << "\" y=\"" << std::get<1>(placelocation) << "\"/></graphics>\n"
                 << "<name><text>" << p << "</text></name>\n";
             if(_initialMarking[i] > 0)
             {
@@ -207,8 +205,8 @@ namespace PetriEngine {
             auto& transitionlocation = _transitionlocations[i];
             out << "<transition id=\"" << _transitionnames[i] << "\">\n"
                 << "<name><text>" << _transitionnames[i] << "</text></name>\n";
-            out << "<graphics><position x=\"" << get<0>(transitionlocation) 
-                << "\" y=\"" << get<1>(transitionlocation) << "\"/></graphics>\n";
+            out << "<graphics><position x=\"" << std::get<0>(transitionlocation)
+                << "\" y=\"" << std::get<1>(transitionlocation) << "\"/></graphics>\n";
             out << "</transition>\n";
         }
         size_t id = 0;

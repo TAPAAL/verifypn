@@ -51,8 +51,25 @@ namespace PetriEngine {
             {
                 _marking = NULL;
             }
-            
-            ~State()
+
+            State (const State &state) = delete;
+
+            State (State &&state)
+            :_marking(state._marking)
+            {
+                state._marking = nullptr;
+            }
+
+            State &operator=(State &&other) {
+                if (&other != this) {
+                    delete _marking;
+                    _marking = other._marking;
+                    other._marking = nullptr;
+                }
+                return *this;
+            }
+
+            virtual ~State()
             {
                 delete[] _marking;
             }
@@ -62,13 +79,29 @@ namespace PetriEngine {
                 std::swap(_marking, other._marking);
             }
             
-            void print(PetriNet& net) {
+            void print(const PetriNet& net, std::ostream &os = std::cout) {
                 for (uint32_t i = 0; i < net.numberOfPlaces(); i++) {
                     if(_marking[i])
-                        std::cout << net.placeNames()[i] << ": " << _marking[i] << std::endl;   
+                        os << net.placeNames()[i] << ": " << _marking[i] << std::endl;
                 }
-                std::cout << std::endl;
+                os << std::endl;
             }
+
+            std::ostream &printShort(const PetriNet &net, std::ostream &os) {
+                for (uint32_t i = 0; i < net.numberOfPlaces(); i++) {
+                        os << _marking[i];
+                }
+                return os;
+            }
+
+            bool operator==(const State &rhs) const {
+                return _marking == rhs._marking;
+            }
+
+            bool operator!=(const State &rhs) const {
+                return !(rhs == *this);
+            }
+
         private:
             MarkVal* _marking;
         };

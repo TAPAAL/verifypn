@@ -369,7 +369,7 @@ unsigned char AlignedEncoder::getType(uint32_t sum, uint32_t pwt, bool same, uin
         size_t indirect = _psize+pwt*(_psize+tsize);   
         size_t bvindirect = scratchpad_t::bytes(_places)+pwt*tsize;
         size_t direct = _places*tsize;
-        
+
         if(val < 4 && bvsize <= indirect && bvsize <= bvindirect)
         {
             return DBOUND+1;
