@@ -1119,41 +1119,6 @@ namespace PetriEngine {
             std::string sopTAPAAL() const override;
         };
 
-        /* Greater-than conditon */
-        class GreaterThanCondition : public CompareCondition {
-        public:
-
-            using CompareCondition::CompareCondition;
-            Retval simplify(SimplificationContext& context) const override;
-            void toXML(std::ostream&, uint32_t tabs) const override;
-
-            uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
-            void visit(Visitor&) const override;
-        private:
-            bool apply(int v1, int v2) const override;
-            std::string op() const override;
-            std::string opTAPAAL() const override;
-            std::string sopTAPAAL() const override;
-        };
-
-        /* Greater-than-or-equal conditon */
-        class GreaterThanOrEqualCondition : public CompareCondition {
-        public:
-            using CompareCondition::CompareCondition;
-            Retval simplify(SimplificationContext& context) const override;
-            void toXML(std::ostream&, uint32_t tabs) const override;
-
-            uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
-            void visit(Visitor&) const override;
-        private:
-            bool apply(int v1, int v2) const override;
-            std::string op() const override;
-            std::string opTAPAAL() const override;
-            std::string sopTAPAAL() const override;
-        };
-
         /* Bool condition */
         class BooleanCondition : public Condition {
         public:

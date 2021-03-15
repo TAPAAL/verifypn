@@ -60,14 +60,6 @@ namespace PetriEngine {
             _accept(element, "<=");
         }
 
-        void QueryPrinter::_accept(const GreaterThanCondition *element) {
-            _accept(element, ">");
-        }
-
-        void QueryPrinter::_accept(const GreaterThanOrEqualCondition *element) {
-            _accept(element, ">=");
-        }
-
         void QueryPrinter::_accept(const EqualCondition *element) {
             _accept(element, "==");
         }

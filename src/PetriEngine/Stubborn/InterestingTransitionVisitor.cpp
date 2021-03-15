@@ -171,31 +171,6 @@ namespace PetriEngine {
         }
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::GreaterThanCondition *element) {
-        if (!negated) {               // greater than
-            if (element->getExpr1()->getEval() > element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(incr);
-            element->getExpr2()->visit(decr);
-        } else {                    // less than or equal
-            if (element->getExpr1()->getEval() <= element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(decr);
-            element->getExpr2()->visit(incr);
-        }
-    }
-
-    void
-    InterestingTransitionVisitor::_accept(const PQL::GreaterThanOrEqualCondition *element) {
-        if (!negated) {               // greater than or equal
-            if (element->getExpr1()->getEval() >= element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(incr);
-            element->getExpr2()->visit(decr);
-        } else {                    // less than
-            if (element->getExpr1()->getEval() < element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(decr);
-            element->getExpr2()->visit(incr);
-        }
-    }
-
     void InterestingTransitionVisitor::_accept(const PQL::NotCondition *element) {
         negate();
         (*element)[0]->visit(*this);

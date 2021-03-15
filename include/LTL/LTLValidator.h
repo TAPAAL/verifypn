@@ -117,16 +117,6 @@ namespace LTL {
             (*element)[1]->visit(*this);
         }
 
-        void _accept(const PetriEngine::PQL::GreaterThanCondition *element) override {
-            (*element)[0]->visit(*this);
-            (*element)[1]->visit(*this);
-        }
-
-        void _accept(const PetriEngine::PQL::GreaterThanOrEqualCondition *element) override {
-            (*element)[0]->visit(*this);
-            (*element)[1]->visit(*this);
-        }
-
         void _accept(const PetriEngine::PQL::EqualCondition *element) override {
             (*element)[0]->visit(*this);
             (*element)[1]->visit(*this);

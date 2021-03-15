@@ -235,7 +235,7 @@ PetriEngine::Colored::GuardExpression_ptr PNMLParser::parseGuardExpression(rapid
     } else if (strcmp(element->name(), "gt") == 0 || strcmp(element->name(), "greaterthan") == 0) {
         auto left = element->first_node();
         auto right = left->next_sibling();
-        return std::make_shared<PetriEngine::Colored::GreaterThanExpression>(parseColorExpression(left), parseColorExpression(right));
+        return std::make_shared<PetriEngine::Colored::LessThanExpression>(parseColorExpression(left), parseColorExpression(right));
     } else if (strcmp(element->name(), "leq") == 0 || strcmp(element->name(), "lessthanorequal") == 0) {
         auto left = element->first_node();
         auto right = left->next_sibling();
