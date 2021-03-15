@@ -530,7 +530,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         generated_filename += options.queryfile;
         generated_filename.erase(std::remove(generated_filename.begin(), generated_filename.end(), '/'), generated_filename.end());
         for(auto num : options.querynumbers){
-            generated_filename += to_string(num +1);
+            generated_filename += std::to_string(num +1);
         }
         generated_filename = options.output_stats + "/" + generated_filename;
         generated_filename += ".csv";

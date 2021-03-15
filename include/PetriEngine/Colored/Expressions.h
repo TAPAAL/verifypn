@@ -389,7 +389,7 @@ namespace PetriEngine {
                 auto colortypesBefore = colortypes->size();
 
                 auto nestedInterval = _color->getOutputIntervals(varMap, colortypes);
-                Colored::GuardRestrictor guardRestrictor;
+                Colored::GuardRestrictor guardRestrictor = Colored::GuardRestrictor();
                 return guardRestrictor.shiftIntervals(colortypes, &nestedInterval, 1, colortypesBefore);
             }
 

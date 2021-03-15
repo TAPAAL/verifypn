@@ -185,7 +185,7 @@ namespace PetriEngine {
                 if(!_arcIntervals.count(transitionId)){
                     _arcIntervals[transitionId] = setupTransitionVars(transition);
                 }           
-                processInputArcs(transition, currentPlaceId, transitionId, transitionActivated, max_intervals);
+                processInputArcs(transition, currentPlaceId, transitionId, transitionActivated, maxIntervals);
          
                 //If there were colors which activated the transitions, compute the intervals produced
                 if (transitionActivated) {
@@ -367,4 +367,87 @@ namespace PetriEngine {
             _ptBuilder.addTransition(name, 0.0, 0.0);
             _pttransitionnames[transition.name].push_back(name);
             ++_npttransitions;
+            for (auto& arc : transition.input_arcs) {
+                unfoldArc(arc, b, name, true );
+            }
+            for (auto& arc : transition.output_arcs) {
+                unfoldArc(arc, b, name, false);
+            }
+        }    
+    }
+
+    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName, bool input) {
+        Colored::ExpressionContext context {binding, _colors};
+        auto ms = arc.expr->eval(context);       
+
+        for (const auto& color : ms) {
+            if (color.second == 0) {
+                continue;
+            }
+            const PetriEngine::Colored::Place& place = _places[arc.place];
+            const std::string& pName = _ptplacenames[place.name][color.first->getId()];
+            if (pName.empty()) {
+                
+                std::string name = place.name + "_" + std::to_string(color.first->getId());
+                _ptBuilder.addPlace(name, place.marking[color.first], 0.0, 0.0);
+                _ptplacenames[place.name][color.first->getId()] = std::move(name);
+                ++_nptplaces;                
+            }
+            if (arc.input) {
+                _ptBuilder.addInputArc(pName, tName, false, color.second);
+            } else {
+                _ptBuilder.addOutputArc(tName, pName, color.second);
+            }
+            ++_nptarcs;
+        }
+    }
+
+    //----------------------- Strip Colors -----------------------//
+
+    PetriNetBuilder& ColoredPetriNetBuilder::stripColors() {
+        if (_unfolded) assert(false);
+        if (_isColored && !_stripped) {
+            for (auto& place : _places) {
+                _ptBuilder.addPlace(place.name, place.marking.size(), 0.0, 0.0);
+            }
+
+            for (auto& transition : _transitions) {
+                _ptBuilder.addTransition(transition.name, 0.0, 0.0);
+                for (auto& arc : transition.input_arcs) {
+                    try {
+                        _ptBuilder.addInputArc(_places[arc.place].name, _transitions[arc.transition].name, false,
+                                                arc.expr->weight());
+                    } catch (Colored::WeightException& e) {
+                        std::cerr << "Exception on input arc: " << arcToString(arc) << std::endl;
+                        std::cerr << "In expression: " << arc.expr->toString() << std::endl;
+                        std::cerr << e.what() << std::endl;
+                        exit(ErrorCode);
+                    }
+                }
+                for (auto& arc : transition.output_arcs) {
+                    try {
+                        _ptBuilder.addOutputArc(_transitions[arc.transition].name, _places[arc.place].name,
+                                                arc.expr->weight());
+                    } catch (Colored::WeightException& e) {
+                        std::cerr << "Exception on output arc: " << arcToString(arc) << std::endl;
+                        std::cerr << "In expression: " << arc.expr->toString() << std::endl;
+                        std::cerr << e.what() << std::endl;
+                        exit(ErrorCode);
+                    }
+                }
+            }
+
+            _stripped = true;
+            _isColored = false;
+        }
+
+        return _ptBuilder;
+    }
+
+    std::string ColoredPetriNetBuilder::arcToString(Colored::Arc& arc) const {
+        return !arc.input ? "(" + _transitions[arc.transition].name + ", " + _places[arc.place].name + ")" :
+               "(" + _places[arc.place].name + ", " + _transitions[arc.transition].name + ")";
+    }
+}
+    
  
