@@ -251,7 +251,7 @@ namespace ptrie
          * @return 
          */
 
-        inline uchar operator[](int i) const
+        inline uchar operator[](unsigned int i) const
         {
             if (i >= _nbytes) {
                  return 0x0;

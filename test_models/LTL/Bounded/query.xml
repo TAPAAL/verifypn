@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>Bounded.Satisfied-1</id>
+    <description>Bounded.Satisfied-1</description>
+    <formula>
+      <all-paths>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>P4</place>
+            </tokens-count>
+            <integer-constant>1</integer-constant>
+          </integer-eq>
+        </finally>
+      </all-paths>
+    </formula>
+  </property>
+  <property>
+    <id>Bounded.Not_Satisfied-2</id>
+    <description>Bounded.Not_Satisfied-2</description>
+    <formula>
+      <all-paths>
+        <finally>
+          <integer-eq>
+            <tokens-count>
+              <place>P3</place>
+            </tokens-count>
+            <integer-constant>1</integer-constant>
+          </integer-eq>
+        </finally>
+      </all-paths>
+    </formula>
+  </property>
+</property-set>

@@ -29,7 +29,6 @@
 #include "PetriEngine/Reducer.h"
 #include "PetriEngine/PQL/Expressions.h"
 
-using namespace std;
 
 namespace PetriEngine {
 
@@ -45,7 +44,7 @@ namespace PetriEngine {
 
     }
 
-    void PetriNetBuilder::addPlace(const string &name, int tokens, double x, double y) {
+    void PetriNetBuilder::addPlace(const std::string &name, int tokens, double x, double y) {
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
@@ -61,7 +60,7 @@ namespace PetriEngine {
         
     }
 
-    void PetriNetBuilder::addTransition(const string &name,
+    void PetriNetBuilder::addTransition(const std::string &name,
             double x, double y) {
         if(_transitionnames.count(name) == 0)
         {
@@ -72,7 +71,7 @@ namespace PetriEngine {
         }
     }
 
-    void PetriNetBuilder::addInputArc(const string &place, const string &transition, bool inhibitor, int weight) {
+    void PetriNetBuilder::addInputArc(const std::string &place, const std::string &transition, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
             addTransition(transition,0.0,0.0);
@@ -97,7 +96,7 @@ namespace PetriEngine {
         _places[p].inhib |= inhibitor;
     }
 
-    void PetriNetBuilder::addOutputArc(const string &transition, const string &place, int weight) {
+    void PetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
             addTransition(transition,0,0);
@@ -463,10 +462,11 @@ namespace PetriEngine {
         for(uint32_t i = 0; i < queries.size(); ++i)
         {
             if(results[i] == Reachability::ResultPrinter::Unknown ||
-               results[i] == Reachability::ResultPrinter::CTL )
+               results[i] == Reachability::ResultPrinter::CTL ||
+               results[i] == Reachability::ResultPrinter::LTL)
             {
                 queries[i]->analyze(placecontext);
-                all_reach &= (results[i] != Reachability::ResultPrinter::CTL);
+                all_reach &= (results[i] != Reachability::ResultPrinter::CTL && results[i] != Reachability::ResultPrinter::LTL);
                 remove_loops &= !queries[i]->isLoopSensitive();
                 // There is a deadlock somewhere, if it is not alone, we cannot reduce.
                 // this has similar problems as nested next.                        

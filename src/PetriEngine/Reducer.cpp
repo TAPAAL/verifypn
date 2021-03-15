@@ -903,131 +903,24 @@ namespace PetriEngine {
 
             if(skipplace)
                 skipPlace(p);
-            
+
         }
         assert(consistent());
         return continueReductions;
     }
-   
+
     bool Reducer::ReducebyRuleI(uint32_t* placeInQuery, bool remove_loops, bool remove_consumers) {
         bool reduced = false;
         if(remove_loops)
         {
-            std::vector<uint32_t> wtrans;
-            std::vector<bool> tseen(parent->numberOfTransitions(), false);
 
-            for(uint32_t p = 0; p < parent->numberOfPlaces(); ++p)
-            {
-                if(hasTimedout()) return false;
-                if(placeInQuery[p] > 0)
-                {
-                    const Place& place = parent->_places[p];
-                    for(auto t : place.consumers)
-                    {
-                        if(!tseen[t])
-                        {
-                            wtrans.push_back(t);
-                            tseen[t] = true;
-                        }
-                    }
-                    for(auto t : place.producers)
-                    {
-                        if(!tseen[t])
-                        {
-                            wtrans.push_back(t);
-                            tseen[t] = true;
-                        }
-                    }
-                }
+            auto result = relevant(placeInQuery, remove_consumers);
+            if (!result) {
+                return false;
             }
+            auto[tseen, pseen] = result.value();
 
-            std::vector<bool> pseen(parent->numberOfPlaces(), false);        
-            while(!wtrans.empty())
-            {
-                if(hasTimedout()) return false;
-                auto t = wtrans.back();
-                wtrans.pop_back();
-                const Transition& trans = parent->_transitions[t];
-                for(const Arc& arc : trans.pre)
-                {
-                    const Place& place = parent->_places[arc.place];
-                    if(arc.inhib)
-                    {
-                        for(auto pt : place.consumers)
-                        {
-                            if(!tseen[pt])
-                            {
-                                Transition& trans = parent->_transitions[pt];
-                                auto it = trans.post.begin();
-                                for(; it != trans.post.end(); ++it)
-                                    if(it->place >= arc.place) break;
-                                if(it != trans.post.end() && it->place == arc.place)
-                                {
-                                    auto it2 = trans.pre.begin();
-                                    for(; it2 != trans.pre.end(); ++it2)
-                                        if(it2->place >= arc.place || it2->inhib) break;
-                                    if(it->weight <= it2->weight) continue;
-                                }
-                                tseen[pt] = true;
-                                wtrans.push_back(pt);                                    
-                            }
-                        }                        
-                    }
-                    else
-                    {
-                        for(auto pt : place.producers)
-                        {
-                            if(!tseen[pt])
-                            {                                    
-                                Transition& trans = parent->_transitions[pt];
-                                auto it = trans.pre.begin();
-                                for(; it != trans.pre.end(); ++it)
-                                    if(it->place >= arc.place) break;
-
-                                if(it != trans.pre.end() && it->place == arc.place && !it->inhib)
-                                {
-                                    auto it2 = trans.post.begin();
-                                    for(; it2 != trans.post.end(); ++it2)
-                                        if(it2->place >= arc.place) break;
-                                    if(it->weight >= it2->weight) continue;
-                                }
-
-                                tseen[pt] = true;
-                                wtrans.push_back(pt);
-                            }
-                        }
-
-                        for(auto pt : place.consumers)
-                        {
-                            if(!tseen[pt] && (!remove_consumers || placeInQuery[arc.place] > 0))
-                            {
-                                tseen[pt] = true;
-                                wtrans.push_back(pt);                                    
-                            }
-                        }
-                    }
-                    pseen[arc.place] = true;
-                }
-            }
-
-            for(size_t t = 0; t < parent->numberOfTransitions(); ++t)
-            {
-                if(!tseen[t] && !parent->_transitions[t].skip)
-                {
-                    skipTransition(t);
-                    reduced = true;
-                }
-            }
-
-            for(size_t p = 0; p < parent->numberOfPlaces(); ++p)
-            {
-                if(!pseen[p] && !parent->_places[p].skip && placeInQuery[p] == 0)
-                {
-                    assert(placeInQuery[p] == 0);
-                    skipPlace(p);
-                    reduced = true;
-                }
-            }
+            reduced |= remove_irrelevant(placeInQuery, tseen, pseen);
             
             if(reduced)
                 ++_ruleI;
@@ -1565,8 +1458,155 @@ namespace PetriEngine {
         }
         return continueReductions;
     }
-        
+
+    bool Reducer::ReducebyRuleK(uint32_t *placeInQuery, bool remove_consumers) {
+        bool reduced = false;
+        auto opt = relevant(placeInQuery, remove_consumers);
+        if (!opt)
+            return false;
+        auto[tseen, pseen] = opt.value();
+        for (std::size_t p = 0; p < parent->numberOfPlaces(); ++p) {
+            if (placeInQuery[p] != 0)
+                pseen[p] = true;
+        }
+
+        for (std::size_t t = 0; t < parent->numberOfTransitions(); ++t) {
+            auto transition = parent->_transitions[t];
+            if (!tseen[t] && !transition.skip && !transition.inhib && transition.pre.size() == 1 &&
+                transition.post.size() == 1
+                && transition.pre[0].place == transition.post[0].place) {
+                auto p = transition.pre[0].place;
+                if (!pseen[p] && !parent->_places[p].inhib) {
+                    if (parent->initialMarking[p] >= transition.pre[0].weight){
+                        //Mark the initially marked self loop as relevant.
+                        tseen[t] = true;
+                        pseen[p] = true;
+                        reduced |= remove_irrelevant(placeInQuery, tseen, pseen);
+                        _ruleK++;
+                        return reduced;
+                    }
+                    if (transition.pre[0].weight == 1){
+                        for (auto t2 : parent->_places[p].consumers) {
+                            auto transition2 = parent->_transitions[t2];
+                            if (t != t2 && !tseen[t2] && !transition2.skip) {
+                                skipTransition(t2);
+                                reduced = true;
+                                _ruleK++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return reduced;
+    }
+
+    std::optional<std::pair<std::vector<bool>, std::vector<bool>>>
+    Reducer::relevant(const uint32_t *placeInQuery, bool remove_consumers) {
+        std::vector<uint32_t> wtrans;
+        std::vector<bool> tseen(parent->numberOfTransitions(), false);
+        for (uint32_t p = 0; p < parent->numberOfPlaces(); ++p) {
+            if (hasTimedout()) return std::nullopt;
+            if (placeInQuery[p] > 0) {
+                const Place &place = parent->_places[p];
+                for (auto t : place.consumers) {
+                    if (!tseen[t]) {
+                        wtrans.push_back(t);
+                        tseen[t] = true;
+                    }
+                }
+                for (auto t : place.producers) {
+                    if (!tseen[t]) {
+                        wtrans.push_back(t);
+                        tseen[t] = true;
+                    }
+                }
+            }
+        }
+        std::vector<bool> pseen(parent->numberOfPlaces(), false);
+
+        while (!wtrans.empty()) {
+            if (hasTimedout()) return std::nullopt;
+            auto t = wtrans.back();
+            wtrans.pop_back();
+            const Transition &trans = parent->_transitions[t];
+            for (const Arc &arc : trans.pre) {
+                const Place &place = parent->_places[arc.place];
+                if (arc.inhib) {
+                    for (auto pt : place.consumers) {
+                        if (!tseen[pt]) {
+                            Transition &trans = parent->_transitions[pt];
+                            auto it = trans.post.begin();
+                            for (; it != trans.post.end(); ++it)
+                                if (it->place >= arc.place) break;
+                            if (it != trans.post.end() && it->place == arc.place) {
+                                auto it2 = trans.pre.begin();
+                                for (; it2 != trans.pre.end(); ++it2)
+                                    if (it2->place >= arc.place || it2->inhib) break;
+                                if (it->weight <= it2->weight) continue;
+                            }
+                            tseen[pt] = true;
+                            wtrans.push_back(pt);
+                        }
+                    }
+                } else {
+                    for (auto pt : place.producers) {
+                        if (!tseen[pt]) {
+                            Transition &trans = parent->_transitions[pt];
+                            auto it = trans.pre.begin();
+                            for (; it != trans.pre.end(); ++it)
+                                if (it->place >= arc.place) break;
+
+                            if (it != trans.pre.end() && it->place == arc.place && !it->inhib) {
+                                auto it2 = trans.post.begin();
+                                for (; it2 != trans.post.end(); ++it2)
+                                    if (it2->place >= arc.place) break;
+                                if (it->weight >= it2->weight) continue;
+                            }
+
+                            tseen[pt] = true;
+                            wtrans.push_back(pt);
+                        }
+                    }
+
+                    for (auto pt : place.consumers) {
+                        if (!tseen[pt] && (!remove_consumers || placeInQuery[arc.place] > 0)) {
+                            tseen[pt] = true;
+                            wtrans.push_back(pt);
+                        }
+                    }
+                }
+                pseen[arc.place] = true;
+            }
+        }
+        return std::make_optional(std::pair(tseen, pseen));
+    }
+
+    bool Reducer::remove_irrelevant(const uint32_t* placeInQuery, const std::vector<bool> &tseen, const std::vector<bool> &pseen) {
+        bool reduced = false;
+        for(size_t t = 0; t < parent->numberOfTransitions(); ++t)
+        {
+            if(!tseen[t] && !parent->_transitions[t].skip)
+            {
+                skipTransition(t);
+                reduced = true;
+            }
+        }
+
+        for(size_t p = 0; p < parent->numberOfPlaces(); ++p)
+        {
+            if(!pseen[p] && !parent->_places[p].skip && placeInQuery[p] == 0)
+            {
+                assert(placeInQuery[p] == 0);
+                skipPlace(p);
+                reduced = true;
+            }
+        }
+        return reduced;
+    }
+
     void Reducer::Reduce(QueryPlaceAnalysisContext& context, int enablereduction, bool reconstructTrace, int timeout, bool remove_loops, bool remove_consumers, bool next_safe, std::vector<uint32_t>& reduction) {
+
         this->_timeout = timeout;
         _timer = std::chrono::high_resolution_clock::now();
         assert(consistent());
@@ -1596,13 +1636,14 @@ namespace PetriEngine {
                         changed = false;
                         while(ReducebyRuleE(context.getQueryPlaceCount())) changed = true;
                         while(ReducebyRuleC(context.getQueryPlaceCount())) changed = true;
-                        if(!next_safe) 
+                        while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
+                        if(!next_safe)
                         {
-                            while(ReducebyRuleF(context.getQueryPlaceCount())) changed = true;
                             while(ReducebyRuleG(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                             if(!remove_loops) 
                                 while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                             while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
+                            //changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers); //Rule disabled as correctness has not been proved. Experiments indicate that it is not correct for CTL.
                         }
                     } while(changed && !hasTimedout());
                     if(!next_safe) 
@@ -1622,16 +1663,16 @@ namespace PetriEngine {
         }
         else
         {
-            const char* rnames = "ABCDEFGHIJ";
-            for(int i = reduction.size() - 1; i > 0; --i)
+            const char* rnames = "ABCDEFGHIJK";
+            for(int i = reduction.size() - 1; i >= 0; --i)
             {
                 if(next_safe)
                 {
-                    if(reduction[i] != 2 && reduction[i] != 4)
+                    if(reduction[i] != 2 && reduction[i] != 4 && reduction[i] != 5)
                     {
                         std::cerr << "Skipping Rule" << rnames[reduction[i]] << " due to NEXT operator in proposition" << std::endl;
                         reduction.erase(reduction.begin() + i);
-			continue;
+			            continue;
                     }
                 }
                 if(!remove_loops && reduction[i] == 5)
@@ -1682,6 +1723,9 @@ namespace PetriEngine {
                             break;                            
                         case 9:
                             while(ReducebyRuleJ(context.getQueryPlaceCount())) changed = true;
+                            break;
+                        case 10:
+                            if (ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers)) changed = true;
                             break;
                     }
 #ifndef NDEBUG
