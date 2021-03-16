@@ -31,7 +31,6 @@ namespace LTL {
     PetriEngine::PQL::Condition_ptr toPQL(const spot::formula &formula, const APInfo &apinfo) {
 
         switch (formula.kind()) {
-
             case spot::op::ff:
                 return BooleanCondition::FALSE_CONSTANT;
             case spot::op::tt:
@@ -145,15 +144,16 @@ namespace LTL {
         }
     }
 
-    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr& formula) {
+    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr &formula) {
         if (auto e = std::dynamic_pointer_cast<ECondition>(formula); e != nullptr) {
             return std::make_shared<ECondition>(simplify((*e)[0]));
         } else if (auto a = std::dynamic_pointer_cast<ACondition>(formula); a != nullptr) {
             return std::make_shared<ACondition>(simplify((*a)[0]));
         }
         auto[f, apinfo] = LTL::to_spot_formula(formula);
-        spot::tl_simplifier simplifier{3};
+        spot::tl_simplifier simplifier{2};
         f = simplifier.simplify(f);
+        // spot simplifies using unsupported operators R, W, and M, which we now remove.
         f = spot::unabbreviate(f, "RWM");
         return toPQL(f, apinfo);
     }

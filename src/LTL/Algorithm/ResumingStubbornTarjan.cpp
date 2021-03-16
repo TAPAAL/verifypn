@@ -51,31 +51,36 @@ namespace LTL {
                     ++stats.expanded;
                     continue;
                 }
-                const auto[is_new, stateid] = seen.insertProductState(working);
+                const auto[is_new, suc_state] = seen.insertProductState(working);
                 if (is_new) {
                     ++stats.explored;
                 }
-                //dtop.sucinfo.last_state = stateid;
+                dtop.sucinfo.last_state = suc_state;
 
                 // lookup successor in 'hash' table
-                auto p = chash[hash(stateid)];
-                auto marking = seen.getMarkingId(stateid);
-                while (p != std::numeric_limits<idx_t>::max() && cstack[p].stateid != stateid) {
-                    p = cstack[p].next;
-                    if (p != std::numeric_limits<idx_t>::max() && seen.getMarkingId(cstack[p].stateid) == marking) {
-                        if (extstack.empty() || p >= extstack.top()) {
+                auto suc_pos = chash[hash(suc_state)];
+                auto marking = seen.getMarkingId(suc_state);
+                while (suc_pos != std::numeric_limits<idx_t>::max() && cstack[suc_pos].stateid != suc_state) {
+                    if (seen.getMarkingId(cstack[suc_pos].stateid) == marking) {
+                        if (extstack.empty() || suc_pos > extstack.top()) {
+                            //std::cerr << "wud print\n";
                             expandAll(dtop);
                         }
                     }
+                    suc_pos = cstack[suc_pos].next;
                 }
-                if (p != std::numeric_limits<idx_t>::max()) {
+                if (suc_pos != std::numeric_limits<idx_t>::max()) {
+                    if (extstack.empty() || suc_pos > extstack.top()) {
+                        //std::cerr << "sej print\n";
+                        expandAll(dtop);
+                    }
                     // we found the successor, i.e. there's a loop!
                     // now update lowlinks and check whether the loop contains an accepting state
-                    update(p);
+                    update(suc_pos);
                     continue;
                 }
-                if (store.find(stateid) == std::end(store)) {
-                    push(working, stateid);
+                if (store.find(suc_state) == std::end(store)) {
+                    push(working, suc_state);
                 }
             }
         }
@@ -147,16 +152,20 @@ namespace LTL {
             delem.sucinfo.tid < ReducingSuccessorGenerator::sucinfo::no_value) {
             return false;
         }*/
-        CEntry &centry = cstack[delem.pos];
+        CEntry &centry = cstack.at(delem.pos);
         seen.retrieveProductState(parent, centry.stateid);
 
         successorGenerator->prepare(&parent, delem.sucinfo);
         if (delem.sucinfo.hasEnabled()) {
             assert(delem.sucinfo.stubborn != std::numeric_limits<size_t>::max());
             assert(delem.sucinfo.buchi_state != std::numeric_limits<uint32_t>::max());
-            _enabled.get(const_cast<bool *>(successorGenerator->stubborn()), delem.sucinfo.stubborn);
-            _enabled.get(const_cast<bool *>(successorGenerator->enabled()), delem.sucinfo.enabled);
+            _enabled.get(successorGenerator->enabled(), delem.sucinfo.enabled);
+            _enabled.get(successorGenerator->stubborn(), delem.sucinfo.stubborn);
             state.setBuchiState(delem.sucinfo.buchi_state);
+            // ensure that `state` buffer contains the correct state for Büchi successor generation.
+            if (delem.sucinfo.has_prev_state()) {
+                seen.retrieveProductState(state, delem.sucinfo.last_state);
+            }
         }
         else {
             delem.sucinfo.enabled = _enabled.insert(successorGenerator->enabled()).second;
@@ -164,63 +173,39 @@ namespace LTL {
         }
         auto res = successorGenerator->next(state, delem.sucinfo);
         return res;
-
-/*        const bool *enabled;
-        const bool *stubborn;
-
-        if (!centry.hasEnabled()) {
-            if (!successorGenerator->prepare(&parent)) {
-                delem.sucinfo.tid = net.numberOfTransitions();
-                centry.stubborn = 0;
-                centry.enabled = 0;
-                return successorGenerator->next(state);
-                std::copy(parent.marking(), parent.marking() + net.numberOfPlaces() + 1,
-                          state.marking());
-                delem.sucinfo.tid = net.numberOfTransitions();
-                centry.stubborn = 0;
-                centry.enabled = 0;
-            }
-            centry.enabled = _enabled.insert(successorGenerator->enabled()).second;
-            centry.stubborn = _enabled.insert(successorGenerator->stubborn()).second;
-            //memcpy(buf1.get(), successorGenerator->stubborn(), net.numberOfTransitions());
-            enabled = successorGenerator->enabled();
-            stubborn = successorGenerator->stubborn();
-        } else {
-            _enabled.get(const_cast<bool *>(successorGenerator->enabled()), centry.enabled);
-            _enabled.get(const_cast<bool *>(successorGenerator->stubborn()), centry.stubborn);
-            enabled = successorGenerator->enabled();
-            stubborn = successorGenerator->stubborn();
-        }
-        successorGenerator->prepare(&parent, delem.sucinfo);
-        auto &tid = delem.sucinfo.tid;
-        if (tid == ReducingSuccessorGenerator::sucinfo::no_value) tid = 0;
-        while (tid < net.numberOfTransitions()) {
-            if (enabled[tid] && stubborn[tid]) {
-//                std::cerr << "tid: " << tid << "\tname: " << net.transitionNames()[tid] << std::endl;
-                return successorGenerator->next(state, delem.sucinfo);
-            }
-            ++tid;
-        }*/
-        return false;
     }
 
     void LTL::ResumingStubbornTarjan::expandAll(DEntry &delem)
     {
+        // int_max is set on no more successors; if we made it here
+        // then nexttrans must have returned true, hence this is a deadlock,
+        // and we do not need to expand.
+        if (successorGenerator->fired() == std::numeric_limits<uint32_t>::max()) {
+            extstack.push(cstack.size() - 1);
+            return;
+        }
 #ifndef NDEBUG
+        std::cerr << "Expanding all";
 #endif
-        std::cerr << "Expanding all\n";
         CEntry &centry = cstack[delem.pos];
         _enabled.get(buf2.get(), delem.sucinfo.stubborn);
         _enabled.get(buf1.get(), delem.sucinfo.enabled);
         // tid is end while ntrans is end+1. Have to normalize like this since tid can be INT_MAX and thus overflow.
         assert(delem.sucinfo.tid != std::numeric_limits<uint32_t>::max());
         auto range = std::min(delem.sucinfo.tid, net.numberOfTransitions() - 1) + 1;
+        uint32_t nexttid = net.numberOfTransitions();
         for (uint32_t i = 0; i < delem.sucinfo.tid; ++i) {
             // unset previously fired transitions.
-            if (buf2[i]) buf1[i] = false;
+            if (buf2[i] && buf1[i]) {
+                buf1[i] = false;
+                nexttid = std::min(nexttid, i);
+            }
         }
         delem.sucinfo.stubborn = _enabled.insert(buf1.get()).second;
-        delem.sucinfo.tid = 0;
-        extstack.push(centry.stateid);
+        delem.sucinfo.tid = std::min(nexttid, delem.sucinfo.tid);
+#ifndef NDEBUG
+        std::cerr << "\ttid = " << delem.sucinfo.tid << "\ttrans " << net.transitionNames()[delem.sucinfo.tid] << "\tstateid = " << delem.sucinfo.last_state << std::endl;
+#endif
+        extstack.push(cstack.size() - 1);
     }
 }

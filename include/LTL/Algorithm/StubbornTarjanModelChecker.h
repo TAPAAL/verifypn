@@ -33,7 +33,8 @@ namespace LTL {
                            PetriEngine::ReducingSuccessorGenerator{
                                    net, std::make_shared<LTLStubbornSet>(net, query)}),
                   factory(net, this->successorGenerator->initial_buchi_state()),
-                  seen(net, 0) {
+                  seen(net, 0)
+        {
             if (this->successorGenerator->buchiStates() > 65535) {
                 std::cout << "CANNOT_COMPUTE\n";
                 std::cout << "Too many Buchi states: " << this->successorGenerator->buchiStates() << std::endl;
@@ -44,7 +45,8 @@ namespace LTL {
 
         bool isSatisfied() override;
 
-        void printStats(ostream &os) override {
+        void printStats(ostream &os) override
+        {
             std::cout << "STATS:\n"
                       << "\tdiscovered states: " << seen.size() << std::endl
                       << "\texplored states:   " << this->stats.explored << std::endl
@@ -67,7 +69,8 @@ namespace LTL {
 
         std::array<idx_t, HashSz> chash;
 
-        static inline idx_t hash(idx_t id) {
+        static inline idx_t hash(idx_t id)
+        {
             // Warning: Smarter hash function may violate cstack search for repeat markings
             // unless the new hash also considers only the marking part of state ID.
             // This should work since the marking ID is lower half of state ID.
@@ -105,7 +108,8 @@ namespace LTL {
 
         void popCStack();
 
-        idx_t searchCStack(idx_t stateid) const {
+        idx_t searchCStack(idx_t stateid) const
+        {
             auto p = chash[hash(stateid)];
             while (p != numeric_limits<idx_t>::max() && cstack[p].stateid != stateid) {
                 p = cstack[p].next;

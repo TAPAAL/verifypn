@@ -31,8 +31,6 @@ namespace LTL {
     /**
      * Formula serializer to SPOT-compatible syntax.
      */
-
-
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotCondition *element) {
         os << "(! ";
         (*element)[0]->visit(*this);
@@ -130,11 +128,11 @@ namespace LTL {
     }
 
     void FormulaToSpotSyntax::_accept(const ACondition *condition) {
-        condition->operator[](0)->visit(*this);
+        (*condition)[0]->visit(*this);
     }
 
     void FormulaToSpotSyntax::_accept(const ECondition *condition) {
-        condition->operator[](0)->visit(*this);
+        (*condition)[0]->visit(*this);
     }
 
     std::pair<spot::formula, APInfo> to_spot_formula(const Condition_ptr& query) {
@@ -153,6 +151,8 @@ namespace LTL {
         auto [formula, apinfo] = to_spot_formula(query);
         formula = spot::formula::Not(formula);
         spot::translator translator;
+        // Ask for Büchi acceptance (rather than generalized Büchi) and medium optimizations
+        // (default is high which causes many worst case BDD constructions i.e. exponential blow-up)
         translator.set_type(spot::postprocessor::BA);
         translator.set_level(spot::postprocessor::Medium);
         //translator.set_pref(spot::postprocessor::Complete);
@@ -164,6 +164,8 @@ namespace LTL {
             int varnum = automaton->register_ap(info.text);
             ap_map[varnum] = info;
         }
+
+        spot::print_dot(std::cerr, automaton);
 
         return BuchiSuccessorGenerator{Structures::BuchiAutomaton{std::move(automaton), std::move(ap_map)}};
     }

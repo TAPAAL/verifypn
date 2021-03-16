@@ -98,6 +98,11 @@ namespace LTL {
             }
         }
 
+        [[nodiscard]] bool isInitialState(const LTL::Structures::ProductState &state) const
+        {
+            return state.markingEqual(_net.initial());
+        }
+
         /**
          * prepare a state for successor generation, starting from specific point in iteration
          * @param state the source state to generate successors from
@@ -186,14 +191,15 @@ namespace LTL {
             return -1;
         }
 
-        const bool *enabled() const
+        bool *enabled() const
         {
             if constexpr (std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>) {
                 return successorGenerator.enabled();
             }
             return nullptr;
         };
-        const bool *stubborn() const
+
+        bool *stubborn() const
         {
             if constexpr (std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>) {
                 return successorGenerator.stubborn();
@@ -213,11 +219,15 @@ namespace LTL {
         size_t buchi_parent;
         bool fresh_marking = true;
 
+        /**
+         * Evaluate binary decision diagram (BDD) representation of transition guard in given state.
+         */
         bool guard_valid(const PetriEngine::Structures::State &state, bdd bdd)
         {
             EvaluationContext ctx{state.marking(), &_net};
             // IDs 0 and 1 are false and true atoms, respectively
-            while (bdd.id() > 1/*!(bdd == bddtrue || bdd == bddfalse)*/) {
+            // More details in buddy manual ( http://buddy.sourceforge.net/manual/main.html )
+            while (bdd.id() > 1) {
                 // find variable to test, and test it
                 size_t var = bdd_var(bdd);
                 Condition::Result res = buchi.getExpression(var)->evaluate(ctx);
@@ -251,11 +261,6 @@ namespace LTL {
         }
     };
 
-    extern template
-    class ProductSuccessorGenerator<PetriEngine::SuccessorGenerator>;
-
-    extern template
-    class ProductSuccessorGenerator<PetriEngine::ReducingSuccessorGenerator>;
 }
 
 

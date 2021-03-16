@@ -13,23 +13,69 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *//*
+ */
 
 #include "LTL/Algorithm/ModelChecker.h"
 
 #include <utility>
+#include <iomanip>
 
 namespace LTL {
     template<typename SuccessorGen>
-    ModelChecker<SuccessorGen>::ModelChecker(const PetriEngine::PetriNet &net, PetriEngine::PQL::Condition_ptr condition,
-                               bool shortcircuitweak)
-            : net(net), formula(condition), shortcircuitweak(shortcircuitweak) {
+    ModelChecker<SuccessorGen>::ModelChecker(const PetriEngine::PetriNet &net,
+                                             const PetriEngine::PQL::Condition_ptr &condition,
+                                             const SuccessorGen &successorGen,
+                                             TraceLevel level,
+                                             bool shortcircuitweak)
+            : net(net), formula(condition), traceLevel(level), shortcircuitweak(shortcircuitweak)
+    {
+        successorGenerator = std::make_unique<ProductSuccessorGenerator<SuccessorGen>>(net, condition,
+                                                                                       successorGen);
 
-        successorGenerator = std::make_unique<ProductSuccessorGenerator<PetriEngine::SuccessorGenerator>>(net, condition);
-        //TODO Create successor generator from net and condition
+        maxTransName = std::max_element(std::begin(net.transitionNames()), std::end(net.transitionNames()),
+                                        [](auto &a, auto &b) { return a.size() < b.size(); })->size();
 
-        //LTL::ProductPrinter::printProduct(*successorGenerator, std::cout, net, condition);
     }
-}
 
-*/
+    static constexpr auto indent = "  ";
+    static constexpr auto tokenIndent = "    ";
+
+    template<typename SuccessorGen>
+    void ModelChecker<SuccessorGen>::printLoop(std::ostream &os)
+    {
+        os << indent << "<loop/>\n";
+    }
+
+    template<typename SuccessorGen>
+    std::ostream &
+    ModelChecker<SuccessorGen>::printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os)
+    {
+        if (transition >= std::numeric_limits<ptrie::uint>::max() - 1) {
+            os << indent << "<deadlock/>";
+            return os;
+        }
+        std::string tname = net.transitionNames()[transition];
+        if (traceLevel == TraceLevel::Full) {
+            os << indent << "<transition id=\"" << tname << "\">\n";
+            for (size_t i = 0; i < net.numberOfPlaces(); ++i) {
+                for (size_t j = 0; j < state.marking()[i]; ++j) {
+                    os << tokenIndent << R"(<token age="0" place=")" << net.placeNames()[i] << "\"/>\n";
+                }
+            }
+//#ifndef NDEBUG
+            os << tokenIndent << "<buchi state=\"" << state.getBuchiState() << "\"/>\n";
+//#endif
+            os << indent << "</transition>";
+        } else {
+            os << indent << "<transition id=" << std::setw(maxTransName + 1) << std::quoted(tname) << "\tbuchisucc=\""
+               << state.getBuchiState() << "\"/>";
+        }
+        return os;
+    }
+
+    template
+    class ModelChecker<PetriEngine::SuccessorGenerator>;
+
+    template
+    class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
+}

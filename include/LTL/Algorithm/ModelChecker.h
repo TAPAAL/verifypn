@@ -21,6 +21,7 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/ProductSuccessorGenerator.h"
 #include "LTL/Algorithm/ProductPrinter.h"
+#include "PetriEngine/options.h"
 
 namespace LTL {
     template<typename SuccessorGen>
@@ -28,11 +29,8 @@ namespace LTL {
     public:
         ModelChecker(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &condition,
                      const SuccessorGen &successorGen,
-                     bool shortcircuitweak = true)
-                : net(net), formula(condition), shortcircuitweak(shortcircuitweak) {
-            successorGenerator = std::make_unique<ProductSuccessorGenerator<SuccessorGen>>(net, condition,
-                                                                                           successorGen);
-        }
+                     TraceLevel level = TraceLevel::Transitions,
+                     bool shortcircuitweak = true);
 
         virtual bool isSatisfied() = 0;
 
@@ -42,13 +40,14 @@ namespace LTL {
 
         [[nodiscard]] bool isweak() const { return is_weak; }
 
+
     protected:
         struct stats_t {
             size_t explored = 0, expanded = 0;
         };
 
         stats_t stats;
-        virtual void _printStats(ostream &os, const PetriEngine::Structures::StateSet &stateSet) {
+        virtual void _printStats(ostream &os, const PetriEngine::Structures::StateSetInterface &stateSet) {
             std::cout   << "STATS:\n"
                         << "\tdiscovered states: " << stateSet.discovered() << std::endl
                         << "\texplored states:   " << stats.explored << std::endl
@@ -59,16 +58,20 @@ namespace LTL {
         std::unique_ptr<ProductSuccessorGenerator<SuccessorGen>> successorGenerator;
         const PetriEngine::PetriNet &net;
         PetriEngine::PQL::Condition_ptr formula;
+        TraceLevel traceLevel;
 
         size_t _discovered = 0;
         const bool shortcircuitweak;
         bool weakskip = false;
         bool is_weak = false;
+        int maxTransName;
 
+        std::ostream &printTransition(size_t transition, LTL::Structures::ProductState &state, std::ostream &os);
 
+        void printLoop(std::ostream &os);
     };
-    template class ModelChecker<PetriEngine::SuccessorGenerator>;
-    template class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
+    extern template class ModelChecker<PetriEngine::SuccessorGenerator>;
+    extern template class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
 }
 
 #endif //VERIFYPN_MODELCHECKER_H

@@ -20,6 +20,10 @@
  *                          Peter Gjøl Jensen <root@petergjoel.dk>
  *                          Mads Johannsen <mads_johannsen@yahoo.com>
  *                          Jiri Srba <srba.jiri@gmail.com>
+ *
+ * LTL Extension
+ *                          Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>
+ *                          Simon Mejlby Virenfeldt <simon@simwir.dk>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +52,7 @@
 #ifdef VERIFYPN_MC_Simplification
 #include <thread>
 #include <iso646.h>
+#include <mutex>
 #endif
 
 #include "PetriEngine/PQL/PQLParser.h"
@@ -169,7 +174,22 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--no-statistics") == 0) {
             options.printstatistics = false;
         } else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--trace") == 0) {
-            options.trace = true;
+            if (argc > i + 1) {
+                if (strcmp("1", argv[i+1]) == 0) {
+                    options.trace = TraceLevel::Transitions;
+                }
+                else if (strcmp("2", argv[i+1]) == 0) {
+                    options.trace = TraceLevel::Full;
+                }
+                else {
+                    options.trace = TraceLevel::Full;
+                    continue;
+                }
+                ++i;
+            }
+            else {
+                options.trace = TraceLevel::Full;
+            }
         } else if (strcmp(argv[i], "-x") == 0 || strcmp(argv[i], "--xml-queries") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -204,7 +224,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 for(auto& qn : q)
                 {
                     int32_t n;
-                    if(sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 9)
+                    if(sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 10)
                     {
                         std::cerr << "Error in reduction rule choice : " << qn << std::endl;
                         return ErrorCode;
@@ -457,6 +477,25 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
     if (!options.modelfile && !options.statespaceexploration) {
         fprintf(stderr, "Argument Error: No query-file provided\n");
         return ErrorCode;
+    }
+
+    //Check for compatibility with LTL model checking
+    if (options.logic == TemporalLogic::LTL) {
+        if (options.tar) {
+            std::cerr << "Argument Error: -tar is not compatible with LTL model checking." << std::endl;
+            return ErrorCode;
+        }
+        if (options.siphontrapTimeout != 0) {
+            std::cerr << "Argument Error: -a/--siphon-trap is not compatible with LTL model checking." << std::endl;
+            return ErrorCode;
+        }
+        if (options.siphonDepth != 0) {
+            std::cerr << "Argument Error: --siphon-depth is not compatible with LTL model checking." << std::endl;
+            return ErrorCode;
+        }
+        if (options.strategy != PetriEngine::Reachability::DEFAULT) {
+            std::cerr << "Argument Warning: LTL model checking does not support search strategies. Will use DFS." << std::endl;
+        }
     }
 
     return ContinueCode;
@@ -726,8 +765,7 @@ std::vector<Condition_ptr> getLTLQueries(const vector<Condition_ptr>& ctlStarQue
     std::vector<Condition_ptr> ltlQueries;
     for (const auto &ctlStarQuery : ctlStarQueries) {
         LTL::LTLValidator isLtl;
-        ctlStarQuery->visit(isLtl);
-        if (isLtl) {
+        if (isLtl.isLTL(ctlStarQuery)) {
             ltlQueries.push_back(ctlStarQuery);
         } else {
             ltlQueries.push_back(nullptr);
@@ -736,15 +774,31 @@ std::vector<Condition_ptr> getLTLQueries(const vector<Condition_ptr>& ctlStarQue
     return ltlQueries;
 }
 
+#ifdef VERIFYPN_MC_Simplification
+std::mutex spot_mutex;
+#endif
+
 Condition_ptr simplify_ltl_query(Condition_ptr query,
                                  bool printstats,
                                  const EvaluationContext &evalContext,
                                  SimplificationContext &simplificationContext,
                                  std::ostream &out = std::cout) {
-    assert(dynamic_pointer_cast<SimpleQuantifierCondition>(query) != nullptr);
-    bool wasACond = dynamic_pointer_cast<ACondition>(query) != nullptr;
-    auto cond = (*dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
-    cond = LTL::simplify(cond);
+    Condition_ptr cond;
+    bool wasACond;
+    if (dynamic_pointer_cast<SimpleQuantifierCondition>(query) != nullptr) {
+        wasACond = dynamic_pointer_cast<ACondition>(query) != nullptr;
+        cond = (*dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
+    } else {
+        wasACond = true;
+        cond = query;
+    }
+
+    {
+#ifdef VERIFYPN_MC_Simplification
+        std::scoped_lock scopedLock{spot_mutex};
+#endif
+        cond = LTL::simplify(cond);
+    }
     negstat_t stats;
     cond = Condition::initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true)
             ->pushNegation(stats, evalContext, false, false, true);
@@ -765,14 +819,18 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         std::exit(ErrorCode);
     }
 
-    cond = Condition::initialMarkingRW([&]() { return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true)); }, stats, evalContext, false, false, true);
+    cond = Condition::initialMarkingRW([&]() {
+#ifdef VERIFYPN_MC_Simplification
+        std::scoped_lock scopedLock{spot_mutex};
+#endif
+        return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true));
+    }, stats, evalContext, false, false, true);
 
     if (printstats) {
         out << "RWSTATS POST:";
         stats.print(out);
         out << std::endl;
-
-        out << "\nQuery after reduction: ";
+        out << "Query after reduction: ";
         cond->toString(out);
         out << std::endl;
     }
@@ -1104,7 +1162,7 @@ int main(int argc, char* argv[]) {
     if (options.enablereduction > 0) {
         // Compute how many times each place appears in the query
         builder.startTimer();
-        builder.reduce(queries, results, options.enablereduction, options.trace, nullptr, options.reductionTimeout, options.reductions);
+        builder.reduce(queries, results, options.enablereduction, options.trace != TraceLevel::None, nullptr, options.reductionTimeout, options.reductions);
         printer.setReducer(builder.getReducer());
     }
 
@@ -1222,7 +1280,7 @@ int main(int argc, char* argv[]) {
         //Reachability search
         strategy.reachable(queries, results,
                 options.printstatistics,
-                options.trace);
+                options.trace != TraceLevel::None);
     }
     else
     {
@@ -1237,7 +1295,7 @@ int main(int argc, char* argv[]) {
                            options.stubbornreduction,
                            options.statespaceexploration,
                            options.printstatistics,
-                           options.trace);
+                           options.trace != TraceLevel::None);
     }
 
     return SuccessCode;

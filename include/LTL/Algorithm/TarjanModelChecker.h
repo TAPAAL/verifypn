@@ -29,19 +29,34 @@
 
 namespace LTL {
 
-    template <bool SaveTrace = false>
+    /**
+     * Implements on-the-fly version of Tarjan's algorithm suitable for LTL model checking.
+     * The idea is to detect some reachable strongly connected component containing an accepting state,
+     * which constitutes a counter-example.
+     * For more details see
+     * <p>
+     *   Jaco Geldenhuys & Antti Valmari,
+     *   More efficient on-the-fly LTL verification with Tarjan's algorithm,
+     *   https://doi.org/10.1016/j.tcs.2005.07.004
+     * </p>
+     * @tparam SaveTrace whether to save and print counter-examples when possible.
+     */
+    template<bool SaveTrace = false>
     class TarjanModelChecker : public ModelChecker<PetriEngine::SuccessorGenerator> {
     public:
-        TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond, const bool shortcircuitweak = true)
-                : ModelChecker(net, cond, PetriEngine::SuccessorGenerator{net, cond}, shortcircuitweak),
-                factory(net, successorGenerator->initial_buchi_state()),
-                  seen(net, 0, (int) net.numberOfPlaces() + 1) {
+        TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond,
+                           TraceLevel level = TraceLevel::Full, const bool shortcircuitweak = true)
+                : ModelChecker(net, cond, PetriEngine::SuccessorGenerator{net, cond}, level, shortcircuitweak),
+                  factory(net, successorGenerator->initial_buchi_state()),
+                  seen(net, 0, (int) net.numberOfPlaces() + 1)
+        {
             chash.fill(std::numeric_limits<idx_t>::max());
         }
 
         bool isSatisfied() override;
 
-        void printStats(ostream &os) override {
+        void printStats(ostream &os) override
+        {
             _printStats(os, seen);
         }
 
@@ -53,13 +68,18 @@ namespace LTL {
 
         LTL::Structures::ProductStateFactory factory;
 
-        PetriEngine::Structures::StateSet seen;
+        using StateSet = std::conditional_t<SaveTrace, PetriEngine::Structures::TracableStateSet, PetriEngine::Structures::StateSet>;
+
+        StateSet seen;
         std::unordered_set<idx_t> store;
 
+        // rudimentary hash table of state IDs. chash[hash(state)] is the top index in cstack
+        // corresponding to state. Collisions are resolved using linked list via CEntry::next.
         std::array<idx_t, HashSz> chash;
         static_assert(sizeof(chash) == (1U << 27U));
 
-        static inline idx_t hash(idx_t id) {
+        static inline idx_t hash(idx_t id)
+        {
             return id % HashSz;
         }
 
@@ -79,19 +99,24 @@ namespace LTL {
         };
 
         using CEntry = std::conditional_t<SaveTrace,
-            TracableCEntry,
-            PlainCEntry>;
+                TracableCEntry,
+                PlainCEntry>;
+
 
         struct DEntry {
-            idx_t pos;
+            idx_t pos; // position in cstack.
             PetriEngine::successor_info sucinfo;
         };
 
-
+        // master list of state information.
         std::vector<CEntry> cstack;
+        // depth-first search stack, contains current search path.
         std::stack<DEntry> dstack;
+        // cstack positions of accepting states in current search path, for quick access.
         std::stack<idx_t> astack;
         bool violation = false;
+        size_t loopstate = std::numeric_limits<size_t>::max();
+        size_t looptrans = std::numeric_limits<size_t>::max();
 
         void push(State &state, size_t stateid);
 
@@ -99,13 +124,19 @@ namespace LTL {
 
         void update(idx_t to);
 
-        bool nexttrans(State &state, State& parent, DEntry &delem);
+        bool nexttrans(State &state, State &parent, DEntry &delem);
 
         void popCStack();
 
+        void printTrace(std::stack<DEntry> &&dstack, std::ostream &os = std::cout);
+
     };
-extern template class TarjanModelChecker<true>;
-extern template class TarjanModelChecker<false>;
+
+    extern template
+    class TarjanModelChecker<true>;
+
+    extern template
+    class TarjanModelChecker<false>;
 }
 
 #endif //VERIFYPN_TARJANMODELCHECKER_H

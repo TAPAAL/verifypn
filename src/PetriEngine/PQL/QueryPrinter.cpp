@@ -253,6 +253,18 @@ namespace PetriEngine {
             os << element->value();
         }
 
+        void QueryPrinter::_accept(const CommutativeExpr *element, const std::string &op) {
+            os << "(" << element->constant();
+            for (const auto &id: element->places()) {
+                os << " " << op << " " << id.second;
+            }
+            for (const auto &expr : element->expressions()) {
+                os << " " << op << " ";
+                expr->visit(*this);
+            }
+            os << ")";
+        }
+
         void QueryPrinter::_accept(const NaryExpr *element, const std::string &op) {
             os << "(";
             (*element)[0]->visit(*this);
@@ -265,11 +277,11 @@ namespace PetriEngine {
         }
 
         void QueryPrinter::_accept(const PlusExpr *element) {
-            _accept((const NaryExpr *)element, "+");
+            _accept((const CommutativeExpr *)element, "+");
         }
 
         void QueryPrinter::_accept(const MultiplyExpr *element) {
-            _accept((const NaryExpr *)element, "*");
+            _accept((const CommutativeExpr*)element, "*");
         }
 
         void QueryPrinter::_accept(const MinusExpr *element) {

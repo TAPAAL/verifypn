@@ -51,7 +51,7 @@ namespace LTL::Structures {
         }
 
 
-        BitProductStateSet(const PetriEngine::PetriNet &net, int kbound = 0)
+        explicit BitProductStateSet(const PetriEngine::PetriNet &net, int kbound = 0)
                 : markings(net, kbound, net.numberOfPlaces())
         {
 /*#ifndef NDEBUG

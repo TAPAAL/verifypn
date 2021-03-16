@@ -19,11 +19,17 @@ namespace PetriEngine {
             uint32_t tid = no_value;
             size_t enabled; // id from ptrie storage at call-site, see EnabledTransitionSet
             size_t stubborn;
+            size_t last_state;
 
-            [[nodiscard]] bool hasEnabled() const { return enabled != std::numeric_limits<size_t>::max(); }
+            [[nodiscard]] bool hasEnabled() const {
+                return enabled != std::numeric_limits<size_t>::max() && stubborn != std::numeric_limits<size_t>::max();
+            }
 
             [[nodiscard]] inline bool fresh() const {
                 return tid == no_value;
+            }
+            inline bool has_prev_state() const {
+                return last_state != std::numeric_limits<size_t>::max();
             }
 
             static constexpr auto no_value = std::numeric_limits<uint32_t>::max();
@@ -32,6 +38,7 @@ namespace PetriEngine {
         static constexpr sucinfo initial_suc_info{
             std::numeric_limits<uint32_t>::max(),
             sucinfo::no_value,
+            std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max()};
 
@@ -71,9 +78,9 @@ namespace PetriEngine {
             }
         }
 
-        const bool *enabled() const { return _stubSet->enabled(); };
+        bool *enabled() const { return _stubSet->enabled(); };
 
-        const bool *stubborn() const { return _stubSet->stubborn(); };
+        bool *stubborn() const { return _stubSet->stubborn(); };
 
         size_t nenabled() { return _stubSet->nenabled(); }
 

@@ -73,7 +73,7 @@ namespace LTL {
 
         bool prepare(const PetriEngine::Structures::State *marking) override;
 
-        uint32_t next();
+        uint32_t next() override;
 
         void reset();
 

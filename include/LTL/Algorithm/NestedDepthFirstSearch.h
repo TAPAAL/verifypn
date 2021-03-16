@@ -30,11 +30,31 @@
 using namespace PetriEngine;
 
 namespace LTL {
+    /**
+     * Implement the nested DFS algorithm for LTL model checking. Roughly based on versions given in
+     * <p>
+     *   Jaco Geldenhuys & Antti Valmari,<br>
+     *   More efficient on-the-fly LTL verification with Tarjan's algorithm,<br>
+     *   https://doi.org/10.1016/j.tcs.2005.07.004
+     * </p>
+     * and
+     * <p>
+     *   Gerard J. Holzmann, Doron Peled, and Mihalis Yannakakis<br>
+     *   On Nested Depth First Search<br>
+     *   https://spinroot.com/gerard/pdf/inprint/spin96.pdf
+     * </p>
+     * For most use cases, Tarjan's algorithm (see LTL::TarjanModelChecker) is faster.
+     * @tparam W type used for state storage. Use <code>PetriEngine::Structures::TracableStateSet</code> if you want traces,
+     *         <code>PetriEngine::Structures::StateSet</code> if you don't care (as it is faster).
+     */
+    template<typename W>
     class NestedDepthFirstSearch : public ModelChecker<PetriEngine::SuccessorGenerator> {
     public:
-        NestedDepthFirstSearch(const PetriNet &net, const PetriEngine::PQL::Condition_ptr &query, const bool shortcircuitweak = true)
-                : ModelChecker(net, query, SuccessorGenerator{net, query}, shortcircuitweak), factory{net, successorGenerator->initial_buchi_state()},
-                  states(net, 0, (int)net.numberOfPlaces() + 1) {}
+        NestedDepthFirstSearch(const PetriNet &net, const PetriEngine::PQL::Condition_ptr &query,
+                               TraceLevel level = TraceLevel::Full, const bool shortcircuitweak = true)
+                : ModelChecker(net, query, SuccessorGenerator{net, query}, level, shortcircuitweak),
+                  factory{net, successorGenerator->initial_buchi_state()},
+                  states(net, 0, (int) net.numberOfPlaces() + 1) {}
 
         bool isSatisfied() override;
 
@@ -44,7 +64,7 @@ namespace LTL {
         using State = LTL::Structures::ProductState;
 
         Structures::ProductStateFactory factory;
-        PetriEngine::Structures::StateSet states;
+        W states; //StateSet
         std::set<size_t> mark1;
         std::set<size_t> mark2;
 
@@ -56,10 +76,23 @@ namespace LTL {
         State *seed;
         bool violation = false;
 
+        //Used for printing the trace
+        std::stack<std::pair<size_t, size_t>> nested_transitions;
+
         void dfs();
 
         void ndfs(State &state);
+
+        void printTrace(std::stack<std::pair<size_t, size_t>> &transitions, std::ostream &os = std::cout);
+
+        static constexpr bool SaveTrace = std::is_same_v<W, PetriEngine::Structures::TracableStateSet>;
     };
+
+    extern template
+    class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
+
+    extern template
+    class NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>;
 }
 
 #endif //VERIFYPN_NESTEDDEPTHFIRSTSEARCH_H

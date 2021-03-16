@@ -57,7 +57,7 @@ namespace PetriEngine {
 
         virtual bool prepare(const Structures::State *marking) = 0;
 
-        uint32_t next();
+        virtual uint32_t next();
 
         virtual ~StubbornSet() = default;
 
@@ -94,8 +94,8 @@ namespace PetriEngine {
 
         [[nodiscard]] size_t nenabled() const { return _nenabled; }
 
-        [[nodiscard]] const bool *enabled() const { return _enabled.get(); };
-        [[nodiscard]] const bool *stubborn() const { return _stubborn.get(); };
+        [[nodiscard]] bool *enabled() const { return _enabled.get(); };
+        [[nodiscard]] bool *stubborn() const { return _stubborn.get(); };
 
     protected:
         const PetriEngine::PetriNet &_net;

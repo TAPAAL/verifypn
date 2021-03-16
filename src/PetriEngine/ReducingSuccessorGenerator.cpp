@@ -40,7 +40,7 @@ namespace PetriEngine {
             sucinfo.tid = 0;
         }
         while (sucinfo.tid < _net._ntransitions) {
-            if (_enabled[sucinfo.tid] && _stubborn[sucinfo.tid]) {
+            if (_enabled[sucinfo.tid]) {
                 assert(checkPreset(sucinfo.tid));
                 _fire(write, sucinfo.tid);
                 sucinfo.tid++;
@@ -48,6 +48,8 @@ namespace PetriEngine {
             }
             sucinfo.tid++;
         }
+        sucinfo.tid = _net.numberOfTransitions() + 1;
+        _current = std::numeric_limits<uint32_t>::max();
         return false;
 
        /* if (sucinfo.tid >= _net.numberOfTransitions()) {
