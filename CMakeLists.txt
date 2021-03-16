@@ -67,10 +67,10 @@ if (VERIFYPN_GetDependencies)
     )
 
     ExternalProject_add(spot-ext
-        URL http://www.lrde.epita.fr/dload/spot/spot-2.9.4.tar.gz
-        URL_HASH SHA512=d8e5f8c97495f7964698547d83d8a657afb5e71e886d31298802a6d9d449359d9b34714c080551ca24ab1dce9ca874bfc79ac70d3236dbf6e4fd56bd981483bf
+        URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
+	URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
         BUILD_COMMAND make -j8
-        CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin
+	CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin
         INSTALL_COMMAND make install
     )
 
