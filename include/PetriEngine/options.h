@@ -55,6 +55,9 @@ struct options_t {
     bool usedltl = false;
     LTL::Algorithm ltlalgorithm = LTL::Algorithm::Tarjan;
     bool ltluseweak = true;
+    std::string buchi_out_file;
+    LTL::BuchiOutType buchi_out_type = LTL::BuchiOutType::Dot;
+
 
     std::string query_out_file;
     std::string model_out_file;
