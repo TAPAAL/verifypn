@@ -284,6 +284,240 @@ namespace PetriEngine {
                 exit(0);
             };
         };
+
+        class BaseVisitor : public Visitor {
+        protected:
+            void _accept(const NotCondition *element) override
+            {
+                (*element)[0]->visit(*this);
+            }
+
+            void _accept(const AndCondition *element) override
+            {
+                for (const auto &cond : *element) {
+                    cond->visit(*this);
+                }
+            }
+
+            void _accept(const OrCondition *element) override
+            {
+                for (const auto &cond : *element) {
+                    cond->visit(*this);
+                }
+            }
+
+            void _accept(const LessThanCondition *element) override
+            {
+                element->getExpr1()->visit(*this);
+                element->getExpr2()->visit(*this);
+            }
+
+            void _accept(const LessThanOrEqualCondition *element) override
+            {
+                element->getExpr1()->visit(*this);
+                element->getExpr2()->visit(*this);
+            }
+
+            void _accept(const GreaterThanCondition *element) override
+            {
+                element->getExpr1()->visit(*this);
+                element->getExpr2()->visit(*this);
+            }
+
+            void _accept(const GreaterThanOrEqualCondition *element) override
+            {
+                element->getExpr1()->visit(*this);
+                element->getExpr2()->visit(*this);
+            }
+
+            void _accept(const EqualCondition *element) override
+            {
+                element->getExpr1()->visit(*this);
+                element->getExpr2()->visit(*this);
+            }
+
+            void _accept(const NotEqualCondition *element) override
+            {
+                element->getExpr1()->visit(*this);
+                element->getExpr2()->visit(*this);
+            }
+
+            void _accept(const DeadlockCondition *element) override
+            {
+                // no-op
+            }
+
+            void _accept(const CompareConjunction *element) override
+            {
+                // no-op, complicated
+            }
+
+            void _accept(const UnfoldedUpperBoundsCondition *element) override
+            {
+                // no-op
+            }
+
+            void _accept(const EFCondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+            }
+
+            void _accept(const EGCondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+            }
+
+            void _accept(const AGCondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+            }
+
+            void _accept(const AFCondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+            }
+
+            void _accept(const EXCondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+            }
+
+            void _accept(const AXCondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+            }
+
+            void _accept(const EUCondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+                (*condition)[1]->visit(*this);
+            }
+
+            void _accept(const AUCondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+                (*condition)[1]->visit(*this);
+            }
+
+            void _accept(const ACondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+            }
+
+            void _accept(const ECondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+            }
+
+            void _accept(const GCondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+            }
+
+            void _accept(const FCondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+            }
+
+            void _accept(const XCondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+            }
+
+            void _accept(const UntilCondition *condition) override
+            {
+                (*condition)[0]->visit(*this);
+                (*condition)[1]->visit(*this);
+            }
+
+            void _accept(const UnfoldedFireableCondition *element) override
+            {
+                if (const auto &compiled = element->getCompiled())
+                    compiled->visit(*this);
+            }
+
+            void _accept(const FireableCondition *element) override
+            {
+                if (const auto &compiled = element->getCompiled())
+                    compiled->visit(*this);
+            }
+
+            void _accept(const UpperBoundsCondition *element) override
+            {
+                if (const auto &compiled = element->getCompiled())
+                    compiled->visit(*this);
+            }
+
+            void _accept(const LivenessCondition *element) override
+            {
+                if (const auto &compiled = element->getCompiled())
+                    compiled->visit(*this);
+            }
+
+            void _accept(const KSafeCondition *element) override
+            {
+                if (const auto &compiled = element->getCompiled())
+                    compiled->visit(*this);
+            }
+
+            void _accept(const QuasiLivenessCondition *element) override
+            {
+                if (const auto &compiled = element->getCompiled())
+                    compiled->visit(*this);
+            }
+
+            void _accept(const StableMarkingCondition *element) override
+            {
+                if (const auto &compiled = element->getCompiled())
+                    compiled->visit(*this);
+            }
+
+            void _accept(const BooleanCondition *element) override
+            {
+                // no-op
+            }
+
+            void _accept(const UnfoldedIdentifierExpr *element) override
+            {
+                // no-op
+            }
+
+            void _accept(const LiteralExpr *element) override
+            {
+                // no-op
+            }
+
+            void _accept(const PlusExpr *element) override
+            {
+                for (const auto &expr : element->expressions()) {
+                    expr->visit(*this);
+                }
+            }
+
+            void _accept(const MultiplyExpr *element) override
+            {
+                for (const auto &expr : element->expressions()) {
+                    expr->visit(*this);
+                }
+            }
+
+            void _accept(const MinusExpr *element) override
+            {
+                (*element)[0]->visit(*this);
+            }
+
+            void _accept(const SubtractExpr *element) override
+            {
+                for (const auto &expr : element->expressions()) {
+                    expr->visit(*this);
+                }
+            }
+
+            void _accept(const IdentifierExpr *element) override
+            {
+                // no-op
+            }
+        };
     }
 }
 

@@ -3,6 +3,9 @@
 #include <cassert>
 #include "PetriEngine/PQL/Contexts.h"
 
+namespace LTL {
+    class AutomatonStubbornSet;
+}
 namespace PetriEngine {
 
     ReducingSuccessorGenerator::ReducingSuccessorGenerator(const PetriNet &net,
@@ -18,9 +21,9 @@ namespace PetriEngine {
     bool ReducingSuccessorGenerator::next(Structures::State &write) {
         _current = _stubSet->next();
         if (_current == std::numeric_limits<uint32_t>::max()) {
-            reset();
             return false;
         }
+        assert(checkPreset(_current));
         memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof(MarkVal));
         consumePreset(write, _current);
         producePostset(write, _current);
@@ -32,7 +35,6 @@ namespace PetriEngine {
         _parent = state;
         _stubSet->prepare(state);
     }
-
 
     /*void ReducingSuccessorGenerator::constructEnabled() {
         _ordering.clear();

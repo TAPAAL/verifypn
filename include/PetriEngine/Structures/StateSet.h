@@ -58,6 +58,10 @@ namespace PetriEngine {
             virtual void setHistory(size_t id, size_t transition) = 0;
             
             virtual std::pair<size_t, size_t> getHistory(size_t markingid) = 0;
+
+            virtual void setHistory2(size_t id, size_t transition) = 0;
+
+            virtual std::pair<size_t, size_t> getHistory2(size_t markingid) = 0;
             
         protected:
             size_t _discovered;
@@ -225,6 +229,14 @@ namespace PetriEngine {
                 assert(false); 
                 return std::make_pair(0,0); 
             }
+
+            virtual void setHistory2(size_t id, size_t transition) override {}
+
+            virtual std::pair<size_t, size_t> getHistory2(size_t markingid) override
+            {
+                assert(false);
+                return std::make_pair(std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max());
+            }
             
         private:
             ptrie_t _trie;
@@ -236,7 +248,9 @@ namespace PetriEngine {
             struct traceable_t
             {
                 ptrie::uint parent;
-                ptrie::uint transition;
+                ptrie::uint transition = std::numeric_limits<ptrie::uint>::max();
+                ptrie::uint parent2;
+                ptrie::uint transition2 = std::numeric_limits<ptrie::uint>::max();
             };
             
         private:
@@ -280,6 +294,21 @@ namespace PetriEngine {
             {
                 traceable_t& t = _trie.get_data(markingid);
                 return std::pair<size_t, size_t>(t.parent, t.transition);
+            }
+
+            virtual void setHistory2(size_t id, size_t transition) override {
+                traceable_t &t = _trie.get_data(id);
+                t.parent2 = _parent;
+                t.transition2 = transition;
+            }
+
+            virtual std::pair<size_t, size_t> getHistory2(size_t markingid) override {
+                traceable_t &t = _trie.get_data(markingid);
+                return std::pair<size_t, size_t>(t.parent2, t.transition2);
+            }
+
+            void setParent(size_t id) {
+                _parent = id;
             }
             
         private:

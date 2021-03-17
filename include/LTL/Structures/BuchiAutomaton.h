@@ -20,11 +20,18 @@
 
 #include "LTL/LTLToBuchi.h"
 #include <spot/twa/twagraph.hh>
+#include <unordered_map>
 
 namespace LTL::Structures {
     struct BuchiAutomaton {
-        spot::twa_graph_ptr buchi;
+        BuchiAutomaton(spot::twa_graph_ptr buchi, std::unordered_map<int, AtomicProposition> apInfo)
+                : _buchi(std::move(buchi)), ap_info(std::move(apInfo)) {
+            dict = _buchi->get_dict();
+        }
+
+        spot::twa_graph_ptr _buchi;
         const std::unordered_map<int, AtomicProposition> ap_info;
+        spot::bdd_dict_ptr dict;
     };
 }
 

@@ -50,6 +50,15 @@ namespace LTL::Structures {
             marking()[buchi_state_idx] = state;
         }
 
+        [[nodiscard]] bool markingEqual(const PetriEngine::MarkVal *rhs) const {
+            for (int i = 0; i < buchi_state_idx; ++i) {
+                if (marking()[i] != rhs[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         bool operator==(const ProductState &rhs) const {
             for (size_t i = 0; i <= buchi_state_idx; ++i) {
                 if (marking()[i] != rhs.marking()[i]) {

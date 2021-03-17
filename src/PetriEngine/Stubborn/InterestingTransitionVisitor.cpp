@@ -1,8 +1,18 @@
-/*
- * File:   InterestingTransitionVisitor.cpp.cc
- * Author: Nikolaj J. Ulrik <nikolaj@njulrik.dk>
+/* Copyright (C) 2021  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
+ *                     Simon M. Virenfeldt <simon@simwir.dk>
  *
- * Created on 03/02/2021
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
@@ -58,8 +68,8 @@ namespace PetriEngine {
             if (c._lower == c._upper) {
                 if (neg) {
                     if (val != c._lower) continue;
-                    _stubborn.postsetOf(c._place, true);
-                    _stubborn.presetOf(c._place, true);
+                    _stubborn.postsetOf(c._place, closure);
+                    _stubborn.presetOf(c._place, closure);
                 } else {
                     if (val == c._lower) continue;
                     if (val > c._lower) {
@@ -85,11 +95,11 @@ namespace PetriEngine {
                     }
                 } else {
                     if (val >= c._lower && c._lower != 0) {
-                        _stubborn.postsetOf(c._place, true);
+                        _stubborn.postsetOf(c._place, closure);
                     }
 
                     if (val <= c._upper && c._upper != std::numeric_limits<uint32_t>::max()) {
-                        _stubborn.presetOf(c._place, true);
+                        _stubborn.presetOf(c._place, closure);
                     }
                 }
             }
@@ -102,9 +112,9 @@ namespace PetriEngine {
         }
         if (cand != std::numeric_limits<int32_t>::max()) {
             if (pre) {
-                _stubborn.presetOf(cand, true);
+                _stubborn.presetOf(cand, closure);
             } else if (!pre) {
-                _stubborn.postsetOf(cand, true);
+                _stubborn.postsetOf(cand, closure);
             }
         }
     }
@@ -198,7 +208,7 @@ namespace PetriEngine {
 
     void InterestingTransitionVisitor::_accept(const PQL::NotCondition *element) {
         negate();
-        element->visit(*this);
+        (*element)[0]->visit(*this);
         negate();
     }
 
@@ -208,7 +218,7 @@ namespace PetriEngine {
 
     void InterestingTransitionVisitor::_accept(const PQL::DeadlockCondition *element) {
         if (!element->isSatisfied()) {
-            _stubborn.postPresetOf(_stubborn.leastDependentEnabled(), true);
+            _stubborn.postPresetOf(_stubborn.leastDependentEnabled(), closure);
         } // else add nothing
     }
 
@@ -220,12 +230,12 @@ namespace PetriEngine {
     }
 
     void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::PlusExpr *element) {
-        for(auto& i : element->places()) _stubborn.presetOf(i.first, true);
+        for(auto& i : element->places()) _stubborn.presetOf(i.first, closure);
         for(auto& e : element->expressions()) e->visit(*this);
     }
 
     void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::PlusExpr *element) {
-        for(auto& i : element->places()) _stubborn.postsetOf(i.first, true);
+        for(auto& i : element->places()) _stubborn.postsetOf(i.first, closure);
         for(auto& e : element->expressions()) e->visit(*this);
     }
 
@@ -256,15 +266,15 @@ namespace PetriEngine {
     void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::MultiplyExpr *element) {
         if((element->places().size() + element->expressions().size()) == 1)
         {
-            for(auto& i : element->places()) _stubborn.presetOf(i.first, true);
+            for(auto& i : element->places()) _stubborn.presetOf(i.first, closure);
             for(auto& e : element->expressions()) e->visit(*this);
         }
         else
         {
             for(auto& i : element->places())
             {
-                _stubborn.presetOf(i.first, true);
-                _stubborn.postsetOf(i.first, true);
+                _stubborn.presetOf(i.first, closure);
+                _stubborn.postsetOf(i.first, closure);
             }
             for(auto& e : element->expressions())
             {
@@ -277,7 +287,7 @@ namespace PetriEngine {
     void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::MultiplyExpr *element) {
         if((element->places().size() + element->expressions().size()) == 1)
         {
-            for(auto& i : element->places()) _stubborn.postsetOf(i.first, true);
+            for(auto& i : element->places()) _stubborn.postsetOf(i.first, closure);
             for(auto& e : element->expressions()) e->visit(*this);
         }
         else
@@ -301,11 +311,52 @@ namespace PetriEngine {
     }
 
     void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::UnfoldedIdentifierExpr *element) {
-        _stubborn.presetOf(element->offset(), true);
+        _stubborn.presetOf(element->offset(), closure);
     }
 
     void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::UnfoldedIdentifierExpr *element) {
-        _stubborn.postsetOf(element->offset(), true);
+        _stubborn.postsetOf(element->offset(), closure);
+    }
+
+    void InterestingLTLTransitionVisitor::_accept(const PQL::LessThanCondition *element) {
+        negate_if_satisfied<PQL::LessThanCondition>(element);
+    }
+
+    void InterestingLTLTransitionVisitor::_accept(const PQL::LessThanOrEqualCondition *element) {
+        negate_if_satisfied<PQL::LessThanOrEqualCondition>(element);
+    }
+
+    void InterestingLTLTransitionVisitor::_accept(const PQL::GreaterThanCondition *element) {
+        negate_if_satisfied<PQL::GreaterThanCondition>(element);
+    }
+
+    void InterestingLTLTransitionVisitor::_accept(const PQL::GreaterThanOrEqualCondition *element) {
+        negate_if_satisfied<PQL::GreaterThanOrEqualCondition>(element);
+    }
+
+    void InterestingLTLTransitionVisitor::_accept(const PQL::EqualCondition *element) {
+        negate_if_satisfied<PQL::EqualCondition>(element);
+    }
+
+    void InterestingLTLTransitionVisitor::_accept(const PQL::NotEqualCondition *element) {
+        negate_if_satisfied<PQL::NotEqualCondition>(element);
+    }
+
+    void InterestingLTLTransitionVisitor::_accept(const PQL::CompareConjunction *element) {
+        negate_if_satisfied<PQL::CompareConjunction>(element);
+    }
+
+    template<typename Condition>
+    void InterestingLTLTransitionVisitor::negate_if_satisfied(const Condition *element){
+        // TODO: There may be leftover information in isSatisfied that has not been updated in this marking. It is most like needed to evalAndSet the entire tree everytime instead of as now where it may gain a result in a node and therefore not explore the remaining children.
+        auto isSatisfied = element->getSatisfied();
+        assert(isSatisfied != PQL::Condition::RUNKNOWN);
+        if ((isSatisfied == PQL::Condition::RTRUE) != negated){
+            negate();
+            InterestingTransitionVisitor::_accept(element);
+            negate();
+        } else
+            InterestingTransitionVisitor::_accept(element);
     }
 
 }

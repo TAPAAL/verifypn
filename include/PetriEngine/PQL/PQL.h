@@ -39,6 +39,7 @@ namespace PetriEngine {
     }
     namespace PQL {
         class Visitor;
+        class MutatingVisitor;
         
         enum CTLType {PATHQEURY = 1, LOPERATOR = 2, EVAL = 3, TYPE_ERROR = -1};
         enum Quantifier { AND = 1, OR = 2, A = 3, E = 4, NEG = 5, COMPCONJ = 6, DEADLOCK = 7, UPPERBOUNDS = 8, PN_BOOLEAN = 9, EMPTY = -1 };
@@ -211,6 +212,7 @@ namespace PetriEngine {
             virtual Result evaluate(const EvaluationContext& context) = 0;
             virtual Result evalAndSet(const EvaluationContext& context) = 0;
             virtual void visit(Visitor& visitor) const = 0;
+            virtual void visit(MutatingVisitor& visitor) = 0;
             
             /** Export condition to TAPAAL query (add EF manually!) */
             virtual void toTAPAALQuery(std::ostream&, TAPAALConditionExportContext& context) const = 0;
@@ -250,6 +252,11 @@ namespace PetriEngine {
             void setSatisfied(Result isSatisfied)
             {
                 _eval = isSatisfied;
+            }
+
+            [[nodiscard]] Result getSatisfied() const
+            {
+                return _eval;
             }
             
             void setInvariant(bool isInvariant)

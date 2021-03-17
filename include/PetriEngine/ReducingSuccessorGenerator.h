@@ -9,6 +9,9 @@
 #include "LTL/Stubborn/LTLStubbornSet.h"
 #include <memory>
 
+namespace LTL {
+    class GuardInfo;
+}
 namespace PetriEngine {
 
     class ReducingSuccessorGenerator : public SuccessorGenerator {
@@ -43,7 +46,7 @@ namespace PetriEngine {
             }
         }
 
-    private:
+    protected:
         std::shared_ptr<StubbornSet> _stubSet;
         uint32_t _current;
 

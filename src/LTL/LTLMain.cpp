@@ -45,7 +45,8 @@ namespace LTL {
  * @return @code(ltl_formula, should_negate) - ltl_formula is the formula f if it is a valid LTL formula, nullptr otherwise.
  * should_negate indicates whether the returned formula is negated (in the case the parameter was E f)
  */
-    std::pair<Condition_ptr, bool> to_ltl(const Condition_ptr &formula) {
+    std::pair<Condition_ptr, bool> to_ltl(const Condition_ptr &formula)
+    {
         LTL::LTLValidator validator;
         bool should_negate = false;
         Condition_ptr converted;
@@ -67,15 +68,16 @@ namespace LTL {
     template<typename Checker>
     Result _verify(const PetriNet *net,
                    Condition_ptr &negatedQuery,
-                   bool printstats) {
+                   const options_t &options)
+    {
         Result result;
-        auto modelChecker = std::make_unique<Checker>(*net, negatedQuery);
+        auto modelChecker = std::make_unique<Checker>(*net, negatedQuery, options.trace, options.ltluseweak);
         result.satisfied = modelChecker->isSatisfied();
         result.is_weak = modelChecker->isweak();
 #ifdef DEBUG_EXPLORED_STATES
         result.explored_states = modelChecker->get_explored();
 #endif
-        if (printstats) {
+        if (options.printstatistics) {
             modelChecker->printStats(std::cout);
         }
         return result;
@@ -84,7 +86,8 @@ namespace LTL {
     ReturnValue LTLMain(const PetriNet *net,
                         const Condition_ptr &query,
                         const std::string &queryName,
-                        const options_t &options) {
+                        const options_t &options)
+    {
         auto res = to_ltl(query);
         Condition_ptr negated_formula = res.first;
         bool negate_answer = res.second;
@@ -97,17 +100,37 @@ namespace LTL {
         Result result;
         switch (options.ltlalgorithm) {
             case Algorithm::NDFS:
-                result = _verify<NestedDepthFirstSearch>(net, negated_formula, options.printstatistics);
+                if (options.trace != TraceLevel::None) {
+                    result = _verify<NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>(net, negated_formula, options);
+                } else {
+                    result = _verify<NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>(net, negated_formula, options);
+                }
                 break;
             case Algorithm::RandomNDFS:
-                result = _verify<RandomNDFS>(net, negated_formula, options.printstatistics);
+                result = _verify<RandomNDFS>(net, negated_formula, options);
                 break;
             case Algorithm::Tarjan:
-                if (options.stubbornreduction && !negated_formula->containsNext()) {
+                if (options.stubbornreduction/* && !negated_formula->containsNext()*/) {
                     std::cout << "Running stubborn version!" << std::endl;
+                    // TODO Add stubborn Tarjan model checkers after merge
+/*
                     result = _verify<VisibleStubbornTarjanModelChecker<ReducingSuccessorGenerator>>(net, negated_formula, options.printstatistics);
+                    if (options.trace != TraceLevel::None) {
+                        result = _verify<AutomataStubbornTarjan<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>>(
+                                net, negated_formula, options);
+                    } else {
+                        result = _verify<AutomataStubbornTarjan<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>>(
+                                net, negated_formula, options);
+                    }
+*/
                 } else {
-                    result = _verify<TarjanModelChecker<false>>(net, negated_formula, options.printstatistics);
+                    if (options.trace != TraceLevel::None) {
+                        result = _verify<TarjanModelChecker<true>>(
+                                net, negated_formula, options);
+                    } else {
+                        result = _verify<TarjanModelChecker<false>>(
+                                net, negated_formula, options);
+                    }
                 }
                 break;
             case Algorithm::None:

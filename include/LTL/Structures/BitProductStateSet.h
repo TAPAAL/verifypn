@@ -24,48 +24,55 @@
 #include <unordered_set>
 
 namespace LTL::Structures {
-/**
- * Bit-hacking product state set for storing pairs (M, q) compactly in 64 bits.
- * Allows for a max of 2^nbits Büchi states and 2^(64-nbits) markings without overflow.
- * @tparam nbits the number of bits to allocate for Büchi state. Defaults to 16-bit. Max is 32-bit.
- */
-    template<uint8_t nbits = 16>
-    class BitProductStateSet {
+
+    template<typename StateId>
+    class ProductStateSetInterface {
     public:
+        using stateid_t = StateId;
+        using result_t = std::pair<bool, stateid_t>;
+
+        virtual size_t getBuchiState(StateId id) = 0;
+
+        virtual size_t getMarkingId(StateId id) = 0;
+
+        virtual stateid_t getProductId(size_t markingId, size_t buchiState) = 0;
+
+        virtual result_t add(const LTL::Structures::ProductState &state) = 0;
+
+        virtual bool decode(LTL::Structures::ProductState &state, stateid_t id) = 0;
+
+        virtual ~ProductStateSetInterface() = default;
+
+    };
+
+    /**
+     * Bit-hacking product state set for storing pairs (M, q) compactly in 64 bits.
+     * Allows for a max of 2^nbits Büchi states and 2^(64-nbits) markings without overflow.
+     * @tparam nbits the number of bits to allocate for Büchi state. Defaults to 16-bit. Max is 32-bit.
+     */
+    template<uint8_t nbits = 16>
+    class BitProductStateSet : public ProductStateSetInterface<size_t> {
+    public:
+        explicit BitProductStateSet(const PetriEngine::PetriNet &net, int kbound = 0)
+                : markings(net, kbound, net.numberOfPlaces())
+        {
+        }
+
         static_assert(nbits <= 32, "Only up to 2^32 Büchi states supported");
-        using stateid_t = size_t;
+        //using stateid_t = size_t;
 
         /**
          * bool success
          * size_t stateID; if error it is UINT64_MAX.
          */
-        using result_t = std::pair<bool, stateid_t>;
 
-        size_t getBuchiState(stateid_t id) { return id >> buchiShift; }
+        size_t getBuchiState(stateid_t id) override { return id >> buchiShift; }
 
-        size_t getMarkingId(stateid_t id) { return id & markingMask; }
+        size_t getMarkingId(stateid_t id) override { return id & markingMask; }
 
-        stateid_t getProductId(size_t markingId, size_t buchiState)
+        stateid_t getProductId(size_t markingId, size_t buchiState) override
         {
             return (buchiState << buchiShift) | (markingMask & markingId);
-        }
-
-    private:
-        static constexpr auto markingMask = (1L << (64 - nbits)) - 1;
-        static constexpr auto buchiMask = std::numeric_limits<size_t>::max() ^markingMask;
-        static constexpr auto buchiShift = 64 - nbits;
-
-        PetriEngine::Structures::StateSet markings;
-        std::unordered_set<stateid_t> states;
-        static constexpr auto err_val = std::make_pair(false, std::numeric_limits<size_t>::max());
-    public:
-        BitProductStateSet(const PetriEngine::PetriNet &net, int kbound = 0)
-                : markings(net, kbound, net.numberOfPlaces())
-        {
-#ifndef NDEBUG
-            std::cerr << "markingMask: " << markingMask << '\n';
-            std::cerr << "buchiMask:   " << buchiMask << std::endl;
-#endif
         }
 
         /**
@@ -73,7 +80,7 @@ namespace LTL::Structures {
          * @param state the product state to insert.
          * @return pair of [success, ID]
          */
-        result_t insertProductState(const LTL::Structures::ProductState &state)
+        result_t add(const LTL::Structures::ProductState &state) override
         {
             const auto[_, markingId] = markings.add(state);
             const stateid_t product_id = getProductId(markingId, state.getBuchiState());
@@ -81,11 +88,6 @@ namespace LTL::Structures {
             const auto[iter, is_new] = states.insert(product_id);
             assert(iter != std::end(states));
             return std::make_pair(is_new, product_id);
-            if (is_new) {
-                return std::make_pair(true, product_id);
-            } else {
-                return err_val;
-            }
         }
 
         /**
@@ -94,7 +96,7 @@ namespace LTL::Structures {
          * @param state Output parameter to write product state to.
          * @return true if the state was successfully retrieved, false otherwise.
          */
-        bool retrieveProductState(LTL::Structures::ProductState &state, stateid_t id)
+        bool decode(LTL::Structures::ProductState &state, stateid_t id) override
         {
             const auto it = states.find(id);
             if (it == std::cend(states)) {
@@ -107,10 +109,23 @@ namespace LTL::Structures {
             return true;
         }
 
-        size_t size() { return states.size(); }
+        size_t discovered() { return states.size(); }
 
         size_t maxTokens() { return markings.maxTokens(); }
+
+    private:
+        static constexpr auto markingMask = (1L << (64 - nbits)) - 1;
+        static constexpr auto buchiMask = std::numeric_limits<size_t>::max() ^markingMask;
+        static constexpr auto buchiShift = 64 - nbits;
+
+        PetriEngine::Structures::StateSet markings;
+        std::unordered_set<stateid_t> states;
+        static constexpr auto err_val = std::make_pair(false, std::numeric_limits<size_t>::max());
+
     };
+
+    template <uint8_t nbytes>
+    class TraceableBitProductStateSet : ProductStateSetInterface<std::pair<size_t, size_t>>{};
 }
 
 #endif //VERIFYPN_BITPRODUCTSTATESET_H

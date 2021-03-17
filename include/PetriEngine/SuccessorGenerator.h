@@ -17,6 +17,7 @@
 #include "PetriNet.h"
 #include "Structures/State.h"
 #include <memory>
+#include "Stubborn/StubbornSet.h"
 
 namespace PetriEngine {
     /**
@@ -72,6 +73,7 @@ namespace PetriEngine {
     class SuccessorGenerator {
 public:
     SuccessorGenerator(const PetriNet& net);
+    SuccessorGenerator(const PetriNet& net, const std::shared_ptr<StubbornSet>&);
     SuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries);
     SuccessorGenerator(const PetriNet& net, const std::shared_ptr<PQL::Condition> &query);
     virtual ~SuccessorGenerator();
