@@ -165,8 +165,6 @@ namespace LTL {
             ap_map[varnum] = info;
         }
 
-        spot::print_dot(std::cerr, automaton);
-
         return BuchiSuccessorGenerator{Structures::BuchiAutomaton{std::move(automaton), std::move(ap_map)}};
     }
 
