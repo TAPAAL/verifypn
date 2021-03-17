@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LTL/Algorithm/StubbornTarjanModelChecker.h"
+#include "LTL/Algorithm/VisibleStubbornTarjanModelChecker.h"
 
 namespace LTL {
     template<typename SuccessorGen>
-    bool StubbornTarjanModelChecker<SuccessorGen>::isSatisfied() {
+    bool VisibleStubbornTarjanModelChecker<SuccessorGen>::isSatisfied() {
         this->is_weak = this->successorGenerator->is_weak() && this->shortcircuitweak;
         std::vector<State> initial_states;
         this->successorGenerator->makeInitialState(initial_states);
@@ -71,7 +71,7 @@ namespace LTL {
      * @param state
      */
     template<typename SuccessorGen>
-    void StubbornTarjanModelChecker<SuccessorGen>::push(State &state, size_t stateid) {
+    void VisibleStubbornTarjanModelChecker<SuccessorGen>::push(State &state, size_t stateid) {
         //const auto res = seen.insertProductState(state);
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(stateid);
@@ -84,7 +84,7 @@ namespace LTL {
     }
 
     template <typename SuccessorGen>
-    void StubbornTarjanModelChecker<SuccessorGen>::pop() {
+    void VisibleStubbornTarjanModelChecker<SuccessorGen>::pop() {
         const auto p = dstack.top().pos;
         dstack.pop();
         if (cstack[p].lowlink == p) {
@@ -107,7 +107,7 @@ namespace LTL {
     }
 
     template<typename SuccessorGen>
-    void StubbornTarjanModelChecker<SuccessorGen>::popCStack() {
+    void VisibleStubbornTarjanModelChecker<SuccessorGen>::popCStack() {
         auto h = hash(cstack.back().stateid);
         store.insert(cstack.back().stateid);
         chash[h] = cstack.back().next;
@@ -115,7 +115,7 @@ namespace LTL {
     }
 
     template<typename SuccessorGen>
-    void StubbornTarjanModelChecker<SuccessorGen>::update(idx_t to) {
+    void VisibleStubbornTarjanModelChecker<SuccessorGen>::update(idx_t to) {
         const auto from = dstack.top().pos;
         if (cstack[to].lowlink <= cstack[from].lowlink) {
             // we have found a loop into earlier seen component cstack[to].lowlink.
@@ -127,7 +127,7 @@ namespace LTL {
     }
 
     template<typename SuccessorGen>
-    bool StubbornTarjanModelChecker<SuccessorGen>::nexttrans(State &state, State &parent, DEntry &delem) {
+    bool VisibleStubbornTarjanModelChecker<SuccessorGen>::nexttrans(State &state, State &parent, DEntry &delem) {
         if (delem.successors.empty()) {
             if (delem.expanded) {
                 return false;

@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_STUBBORNTARJANMODELCHECKER_H
-#define VERIFYPN_STUBBORNTARJANMODELCHECKER_H
+#ifndef VERIFYPN_VISIBLESTUBBORNTARJANMODELCHECKER_H
+#define VERIFYPN_VISIBLESTUBBORNTARJANMODELCHECKER_H
 
 #include "LTL/Stubborn/LTLStubbornSet.h"
 #include "LTL/Algorithm/ModelChecker.h"
@@ -26,9 +26,9 @@
 namespace LTL {
     // template parameter for debugging purposes
     template<typename SuccessorGen = PetriEngine::ReducingSuccessorGenerator>
-    class StubbornTarjanModelChecker : public ModelChecker<SuccessorGen> {
+    class VisibleStubbornTarjanModelChecker : public ModelChecker<SuccessorGen> {
     public:
-        StubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
+        VisibleStubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
                 : ModelChecker<SuccessorGen>
                           (net, query,
                            PetriEngine::ReducingSuccessorGenerator{
@@ -113,8 +113,8 @@ namespace LTL {
             return p;
         }
     };
-    template class StubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator>;
-    //template class StubbornTarjanModelChecker<PetriEngine::SuccessorGenerator>;
+    template class VisibleStubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator>;
+    //template class VisibleStubbornTarjanModelChecker<PetriEngine::SuccessorGenerator>;
 }
 
-#endif //VERIFYPN_STUBBORNTARJANMODELCHECKER_H
+#endif //VERIFYPN_VISIBLESTUBBORNTARJANMODELCHECKER_H
