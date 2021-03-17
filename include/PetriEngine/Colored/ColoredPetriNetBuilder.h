@@ -180,7 +180,7 @@ namespace PetriEngine {
         void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals);
         void processOutputArcs(Colored::Transition& transition);
         
-        void unfoldPlace(const Colored::Place& place, const PetriEngine::Colored::Color *color);
+        void unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color);
         void unfoldTransition(Colored::Transition& transition);
         void handleOrphanPlace(Colored::Place& place);
 

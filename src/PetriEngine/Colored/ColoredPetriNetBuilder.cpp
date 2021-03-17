@@ -196,6 +196,7 @@ namespace PetriEngine {
         }
 
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
+
         // printPlaceTable();
         _placeColorFixpoints.clear();
     }
@@ -255,14 +256,17 @@ namespace PetriEngine {
 
     //Retreive interval colors from the input arcs restricted by the transition guard
     void ColoredPetriNetBuilder::processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals) {     
+        
+        
         getArcIntervals(transition, transitionActivated, max_intervals, transitionId);  
+        
 
         if(!transitionActivated){
             return;
         }
         if(intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId])){              
             if(transition.guard != nullptr) {
-                transition.guard->restrictVars(transition.variableMaps);               
+                transition.guard->restrictVars(transition.variableMaps);              
                 removeInvalidVarmaps(transition);
 
                 if(transition.variableMaps.empty()){
@@ -297,8 +301,8 @@ namespace PetriEngine {
             auto intervals = arc.expr->getOutputIntervals(transition.variableMaps);
             intervals.simplify();
 
-            for(auto interval : intervals._intervals){
-                placeFixpoint.constraints.addInterval(interval);    
+            for(auto& interval : intervals._intervals){
+                placeFixpoint.constraints.addInterval(std::move(interval));    
             }
 
             //Check if the place should be added to the queue
@@ -342,8 +346,7 @@ namespace PetriEngine {
     //so we make a placeholder place which just has tokens equal to the number of colored tokens
     //Ideally, orphan places should just be translated to a constant in the query
     void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place) {
-        if(_ptplacenames.count(place.name) <= 0){
-            
+        if(_ptplacenames.count(place.name) <= 0){   
             std::string name = place.name + "_" + std::to_string(place.marking.size());
             _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
             _ptplacenames[place.name][0] = std::move(name);
@@ -352,10 +355,10 @@ namespace PetriEngine {
         //++_nptplaces;        
     }
     
-    void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place& place, const PetriEngine::Colored::Color *color) {
-        std::string name = place.name + "_" + std::to_string(color->getId());
-        _ptBuilder.addPlace(name, place.marking[color], 0.0, 0.0);
-        _ptplacenames[place.name][color->getId()] = std::move(name);
+    void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color) {
+        std::string name = place->name + "_" + std::to_string(color->getId());
+        _ptBuilder.addPlace(name, place->marking[color], 0.0, 0.0);
+        _ptplacenames[place->name][color->getId()] = std::move(name);
         ++_nptplaces; 
     }
 
@@ -387,11 +390,7 @@ namespace PetriEngine {
             const PetriEngine::Colored::Place& place = _places[arc.place];
             const std::string& pName = _ptplacenames[place.name][color.first->getId()];
             if (pName.empty()) {
-                
-                std::string name = place.name + "_" + std::to_string(color.first->getId());
-                _ptBuilder.addPlace(name, place.marking[color.first], 0.0, 0.0);
-                _ptplacenames[place.name][color.first->getId()] = std::move(name);
-                ++_nptplaces;                
+                unfoldPlace(&place, color.first);               
             }
             if (arc.input) {
                 _ptBuilder.addInputArc(pName, tName, false, color.second);
