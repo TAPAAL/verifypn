@@ -110,6 +110,10 @@ namespace LTL {
             std::stringstream ss;
             ss << "\"";
             if (compress) {
+                // FIXME Very naive; this completely removes APs being in multiple places in the query,
+                // leading to some query not being answered as is. The net gain is large in the firebaility category,
+                // but ideally it would be possible to make a smarter approach that looks at previously stored APs
+                // and efficiently checks for repeat APs such that we can reuse APs.
                 ss << ap_info.size();
             }
             else {

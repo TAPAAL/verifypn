@@ -428,6 +428,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Thomas Pedersen <thomas.pedersen@stofanet.dk\n");
             printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
+            printf("                        Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>\n");
+            printf("                        Simon Mejlby Virenfeldt <simon@simwir.dk>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
         } else if (options.modelfile == NULL) {
