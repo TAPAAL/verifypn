@@ -18,7 +18,7 @@
 #ifndef VERIFYPN_AUTOMATASTUBBORNTARJAN_H
 #define VERIFYPN_AUTOMATASTUBBORNTARJAN_H
 
-#include "LTL/Stubborn/LTLStubbornSet.h"
+#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include "LTL/Stubborn/AutomatonStubbornSet.h"
 #include "LTL/Stubborn/ReducingSuccessorGenerator.h"
 #include "LTL/Algorithm/ModelChecker.h"
@@ -28,7 +28,7 @@
 namespace LTL {
     template<typename SuccessorGen, typename StateSet = PetriEngine::Structures::StateSet>
     class AutomataStubbornTarjan : public ModelChecker<SuccessorGen> {
-        using StubSet = std::conditional_t<std::is_same_v<SuccessorGen, LTL::ReducingSuccessorGenerator>, AutomatonStubbornSet, LTLStubbornSet>;
+        using StubSet = std::conditional_t<std::is_same_v<SuccessorGen, LTL::ReducingSuccessorGenerator>, AutomatonStubbornSet, VisibleLTLStubbornSet>;
     public:
         AutomataStubbornTarjan(const PetriEngine::PetriNet &net, const Condition_ptr &query, const TraceLevel level, const bool shorcircuitweak)
                 : ModelChecker<SuccessorGen>

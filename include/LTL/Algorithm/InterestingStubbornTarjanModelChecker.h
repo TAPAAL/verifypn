@@ -18,7 +18,7 @@
 #ifndef VERIFYPN_INTERESTINGSTUBBORNTARJANMODELCHECKER_H
 #define VERIFYPN_INTERESTINGSTUBBORNTARJANMODELCHECKER_H
 
-#include "LTL/Stubborn/LTLStubbornSet.h"
+#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include "LTL/Algorithm/ModelChecker.h"
 #include "PetriEngine/Structures/light_deque.h"
 #include "LTL/Structures/BitProductStateSet.h"
@@ -31,7 +31,7 @@ namespace LTL {
                 : ModelChecker<PetriEngine::ReducingSuccessorGenerator>
                           (net, query,
                            PetriEngine::ReducingSuccessorGenerator{
-                                   net, std::make_shared<LTLStubbornSet>(net, query)}),
+                                   net, std::make_shared<VisibleLTLStubbornSet>(net, query)}),
                   factory(net, this->successorGenerator->initial_buchi_state()),
                   seen(net, 0) {
             if (this->successorGenerator->buchiStates() > 65535) {

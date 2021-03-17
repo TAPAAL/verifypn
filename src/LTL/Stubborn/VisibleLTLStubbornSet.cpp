@@ -16,33 +16,29 @@
  */
 
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
-#include "LTL/Stubborn/LTLStubbornSet.h"
+#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include "LTL/Stubborn/EvalAndSetVisitor.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 
 namespace LTL {
-    void LTLStubbornSet::prepare(const PetriEngine::Structures::State *marking) {
+    bool VisibleLTLStubbornSet::prepare(const PetriEngine::Structures::State *marking) {
         reset();
         _parent = marking;
         PQL::EvaluationContext evaluationContext{_parent->marking(), &_net};
         memset(_places_seen.get(), 0, _net.numberOfPlaces());
         constructEnabled();
-        if (_ordering.empty()) return;
+        if (_ordering.empty()) return false;
         if (_ordering.size() == 1) {
             _stubborn[_ordering.front()] = true;
-            return;
+            return true;
         }
         for (auto &q : _queries) {
             EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
             q->visit(evalAndSetVisitor);
-
-            InterestingLTLTransitionVisitor interesting{*this, true};
-            q->visit(interesting);
         }
-        closure();
-        //findKeyTransition();
+        findKeyTransition();
 
         ensureRuleV();
 
@@ -67,28 +63,10 @@ namespace LTL {
                   << "Stubborn: " << num_stubborn << "/" << _net.numberOfTransitions() << " (" << num_stubborn/_net.numberOfTransitions()*100.0 << "%),\t\t "
                   << "Enabled stubborn: " << num_enabled_stubborn << "/" << num_enabled << " (" << num_enabled_stubborn/num_enabled*100.0 << "%)" << std::endl;
 #endif
-//#ifndef NDEBUG
-        /*std::vector<size_t> stubs;
-        size_t nenabled = 0;
-        for (auto i = 0; i < _net.numberOfTransitions(); ++i) {
-            if (_stubborn[i] && _enabled[i]) {
-                stubs.push_back(i);
-            }
-            if (_enabled[i]) {
-                ++nenabled;
-            }
-        }
-        if (stubs.empty()) return;
-        std::cerr << "#stub: " << stubs.size() << "\t#enabled: " << nenabled << std::endl;
-        std::cerr << "Stubborn set is: \n  ";
-        for (auto i : stubs) {
-            std::cerr << _net.transitionNames()[i] << " ";
-        }
-        std::cerr << std::endl;*/
-//#endif
+        return true;
     }
 
-    uint32_t LTLStubbornSet::next() {
+    uint32_t VisibleLTLStubbornSet::next() {
         while (!_ordering.empty()) {
             _current = _ordering.front();
             _ordering.pop_front();
@@ -103,7 +81,7 @@ namespace LTL {
         return std::numeric_limits<uint32_t>::max();
     }
 
-    void LTLStubbornSet::findKeyTransition() {
+    void VisibleLTLStubbornSet::findKeyTransition() {
         // try to find invisible key transition first
         assert(!_ordering.empty());
         auto tkey = _ordering.front();
@@ -131,7 +109,7 @@ namespace LTL {
     }
 
     constexpr bool isRuleVPrime = true;
-    void LTLStubbornSet::ensureRuleV() {
+    void VisibleLTLStubbornSet::ensureRuleV() {
         // Rule V: If there is an enabled, visible transition in the stubborn set,
         // all visible transitions must be stubborn.
         // Rule V' (implemented): If there is an enabled, visible transition
@@ -155,17 +133,17 @@ namespace LTL {
         closure();*/
     }
 
-    void LTLStubbornSet::ensureRulesL() {
+    void VisibleLTLStubbornSet::ensureRulesL() {
         static_assert(isRuleVPrime, "Plain rule V does not imply L1");
     }
 
-    void LTLStubbornSet::reset() {
+    void VisibleLTLStubbornSet::reset() {
         StubbornSet::reset();
         _skipped.clear();
         _has_enabled_stubborn = false;
     }
 
-    void LTLStubbornSet::generateAll() {
+    void VisibleLTLStubbornSet::generateAll() {
         // Ensure rule L2, forcing all visible transitions into the stubborn set when closing cycle.
         for (uint32_t i = 0; i < _net.numberOfTransitions(); ++i) {
             if (_visible[i]) {
@@ -184,7 +162,7 @@ namespace LTL {
         }
     }
 
-    void LTLStubbornSet::addToStub(uint32_t t) {
+    void VisibleLTLStubbornSet::addToStub(uint32_t t) {
         if (_enabled[t])
             _has_enabled_stubborn = true;
         StubbornSet::addToStub(t);

@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_LTLSTUBBORNSET_H
-#define VERIFYPN_LTLSTUBBORNSET_H
+#ifndef VERIFYPN_INTERESTINGLTLSTUBBORNSET_H
+#define VERIFYPN_INTERESTINGLTLSTUBBORNSET_H
 
 
 //#include "PetriEngine/ReducingSuccessorGenerator.h"
@@ -25,9 +25,9 @@
 #include "LTL/Stubborn/VisibleTransitionVisitor.h"
 
 namespace LTL {
-    class LTLStubbornSet : public PetriEngine::StubbornSet {
+    class InterestingLTLStubbornSet : public PetriEngine::StubbornSet {
     public:
-        LTLStubbornSet(const PetriEngine::PetriNet &net, const std::vector<PetriEngine::PQL::Condition_ptr> &queries)
+        InterestingLTLStubbornSet(const PetriEngine::PetriNet &net, const std::vector<PetriEngine::PQL::Condition_ptr> &queries)
                 : StubbornSet(net, queries), _visible(new bool[net.numberOfTransitions()])
         {
             assert(!_netContainsInhibitorArcs);
@@ -38,7 +38,7 @@ namespace LTL {
             }
         }
 
-        LTLStubbornSet(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &query)
+        InterestingLTLStubbornSet(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &query)
                 : StubbornSet(net, query), _visible(new bool[net.numberOfTransitions()])
         {
             assert(!_netContainsInhibitorArcs);
@@ -71,7 +71,7 @@ namespace LTL {
             }
         }
 
-        void prepare(const PetriEngine::Structures::State *marking) override;
+        bool prepare(const PetriEngine::Structures::State *marking) override;
 
         uint32_t next();
 
@@ -97,4 +97,4 @@ namespace LTL {
     };
 }
 
-#endif //VERIFYPN_LTLSTUBBORNSET_H
+#endif //VERIFYPN_InterestingLTLSTUBBORNSET_H

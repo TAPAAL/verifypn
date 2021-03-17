@@ -107,8 +107,8 @@ namespace LTL {
         }
 
     };
-    template class ModelChecker<PetriEngine::SuccessorGenerator>;
-    template class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
+    extern template class ModelChecker<PetriEngine::SuccessorGenerator>;
+    extern template class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
 }
 
 #endif //VERIFYPN_MODELCHECKER_H

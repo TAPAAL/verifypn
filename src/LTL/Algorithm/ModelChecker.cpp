@@ -1,4 +1,4 @@
-/* Copyright (C) 2021  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
+/* Copyright (C) 2020  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
  *                     Simon M. Virenfeldt <simon@simwir.dk>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,23 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_REACHABILITYSTUBBORNSET_H
-#define VERIFYPN_REACHABILITYSTUBBORNSET_H
+#include "LTL/Algorithm/ModelChecker.h"
 
+#include <utility>
+#include <iomanip>
 
-#include "PetriEngine/Stubborn/StubbornSet.h"
+namespace LTL {
+    template
+    class ModelChecker<PetriEngine::SuccessorGenerator>;
 
-namespace PetriEngine {
-    class ReachabilityStubbornSet : public StubbornSet {
-    public:
-        ReachabilityStubbornSet(const PetriNet &net, const vector<PQL::Condition_ptr> &queries)
-                : StubbornSet(net, queries) {}
-
-        ReachabilityStubbornSet(const PetriNet &net)
-                : StubbornSet(net) {}
-
-        bool prepare(const Structures::State *state) override;
-    };
+    template
+    class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
 }
-
-#endif //VERIFYPN_REACHABILITYSTUBBORNSET_H

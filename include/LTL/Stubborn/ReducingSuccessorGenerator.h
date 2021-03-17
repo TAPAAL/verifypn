@@ -33,11 +33,11 @@ namespace LTL {
                 : PetriEngine::ReducingSuccessorGenerator(net, stubSet) {}
 
 
-        void prepare(const PetriEngine::Structures::State *state, const LTL::GuardInfo &info)
+        bool prepare(const PetriEngine::Structures::State *state, const LTL::GuardInfo &info)
         {
             _current = 0;
             _parent = state;
-            (dynamic_pointer_cast<LTL::AutomatonStubbornSet>(_stubSet))->prepare(state, info);
+            return (dynamic_pointer_cast<LTL::AutomatonStubbornSet>(_stubSet))->prepare(state, info);
         }
 
     };

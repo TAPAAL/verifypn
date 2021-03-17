@@ -29,7 +29,7 @@ namespace LTL {
         explicit AutomatonStubbornSet(const PetriEngine::PetriNet &net) : ReachabilityStubbornSet(net), negated(net) {}
         AutomatonStubbornSet(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr&) : ReachabilityStubbornSet(net), negated(net) {}
 
-        void prepare(const PetriEngine::Structures::State *state,
+        bool prepare(const PetriEngine::Structures::State *state,
                      const GuardInfo &info);
 
         void reset() override;

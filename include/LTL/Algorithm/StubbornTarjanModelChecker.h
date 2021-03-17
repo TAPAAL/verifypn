@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_VISIBLESTUBBORNTARJANMODELCHECKER_H
-#define VERIFYPN_VISIBLESTUBBORNTARJANMODELCHECKER_H
+#ifndef VERIFYPN_STUBBORNTARJANMODELCHECKER_H
+#define VERIFYPN_STUBBORNTARJANMODELCHECKER_H
 
 #include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include "LTL/Algorithm/ModelChecker.h"
@@ -25,16 +25,16 @@
 
 namespace LTL {
     // template parameter for debugging purposes
-    template<typename SuccessorGen = PetriEngine::ReducingSuccessorGenerator>
-    class VisibleStubbornTarjanModelChecker : public ModelChecker<SuccessorGen> {
+    class StubbornTarjanModelChecker : public ModelChecker<PetriEngine::ReducingSuccessorGenerator> {
     public:
-        VisibleStubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
-                : ModelChecker<SuccessorGen>
+        StubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
+                : ModelChecker<PetriEngine::ReducingSuccessorGenerator>
                           (net, query,
                            PetriEngine::ReducingSuccessorGenerator{
-                                   net, std::make_shared<VisibleLTLStubbornSet>(net, query)}),
+                                   net, std::make_shared<LTLStubbornSet>(net, query)}),
                   factory(net, this->successorGenerator->initial_buchi_state()),
-                  seen(net, 0) {
+                  seen(net, 0)
+        {
             if (this->successorGenerator->buchiStates() > 65535) {
                 std::cout << "CANNOT_COMPUTE\n";
                 std::cout << "Too many Buchi states: " << this->successorGenerator->buchiStates() << std::endl;
@@ -45,9 +45,10 @@ namespace LTL {
 
         bool isSatisfied() override;
 
-        void printStats(ostream &os) override {
+        void printStats(ostream &os) override
+        {
             std::cout << "STATS:\n"
-                      << "\tdiscovered states: " << seen.discovered() << std::endl
+                      << "\tdiscovered states: " << seen.size() << std::endl
                       << "\texplored states:   " << this->stats.explored << std::endl
                       << "\texpanded states:   " << this->stats.expanded << std::endl
                       << "\tmax tokens:        " << seen.maxTokens() << std::endl;
@@ -68,7 +69,8 @@ namespace LTL {
 
         std::array<idx_t, HashSz> chash;
 
-        static inline idx_t hash(idx_t id) {
+        static inline idx_t hash(idx_t id)
+        {
             // Warning: Smarter hash function may violate cstack search for repeat markings
             // unless the new hash also considers only the marking part of state ID.
             // This should work since the marking ID is lower half of state ID.
@@ -93,6 +95,7 @@ namespace LTL {
         std::vector<CEntry> cstack;
         std::stack<DEntry> dstack;
         std::stack<idx_t> astack;
+        std::stack<idx_t> extstack;
         bool violation = false;
 
         void push(State &state, size_t stateid);
@@ -105,7 +108,8 @@ namespace LTL {
 
         void popCStack();
 
-        idx_t searchCStack(idx_t stateid) const {
+        idx_t searchCStack(idx_t stateid) const
+        {
             auto p = chash[hash(stateid)];
             while (p != numeric_limits<idx_t>::max() && cstack[p].stateid != stateid) {
                 p = cstack[p].next;
@@ -113,8 +117,6 @@ namespace LTL {
             return p;
         }
     };
-    template class VisibleStubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator>;
-    //template class VisibleStubbornTarjanModelChecker<PetriEngine::SuccessorGenerator>;
 }
 
-#endif //VERIFYPN_VISIBLESTUBBORNTARJANMODELCHECKER_H
+#endif //VERIFYPN_STUBBORNTARJANMODELCHECKER_H

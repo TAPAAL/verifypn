@@ -47,12 +47,14 @@ namespace LTL {
      * @tparam W type used for state storage. Use <code>PetriEngine::Structures::TracableStateSet</code> if you want traces,
      *         <code>PetriEngine::Structures::StateSet</code> if you don't care (as it is faster).
      */
-    template <typename W>
+    template<typename W>
     class NestedDepthFirstSearch : public ModelChecker<PetriEngine::SuccessorGenerator> {
     public:
-        NestedDepthFirstSearch(const PetriNet &net, const PetriEngine::PQL::Condition_ptr &query, TraceLevel level = TraceLevel::Full, const bool shortcircuitweak = true)
-                : ModelChecker(net, query, SuccessorGenerator{net, query}, level, shortcircuitweak), factory{net, successorGenerator->initial_buchi_state()},
-                  states(net, 0, (int)net.numberOfPlaces() + 1) {}
+        NestedDepthFirstSearch(const PetriNet &net, const PetriEngine::PQL::Condition_ptr &query,
+                               TraceLevel level = TraceLevel::Full, const bool shortcircuitweak = true)
+                : ModelChecker(net, query, SuccessorGenerator{net, query}, level, shortcircuitweak),
+                  factory{net, successorGenerator->initial_buchi_state()},
+                  states(net, 0, (int) net.numberOfPlaces() + 1) {}
 
         bool isSatisfied() override;
 
@@ -80,12 +82,17 @@ namespace LTL {
         void dfs();
 
         void ndfs(State &state);
+
         void printTrace(std::stack<std::pair<size_t, size_t>> &transitions, std::ostream &os = std::cout);
 
         static constexpr bool SaveTrace = std::is_same_v<W, PetriEngine::Structures::TracableStateSet>;
     };
-    extern template class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
-    extern template class NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>;
+
+    extern template
+    class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
+
+    extern template
+    class NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>;
 }
 
 #endif //VERIFYPN_NESTEDDEPTHFIRSTSEARCH_H

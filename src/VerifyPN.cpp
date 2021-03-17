@@ -20,6 +20,10 @@
  *                          Peter Gjøl Jensen <root@petergjoel.dk>
  *                          Mads Johannsen <mads_johannsen@yahoo.com>
  *                          Jiri Srba <srba.jiri@gmail.com>
+ *
+ * LTL Extension
+ *                          Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>
+ *                          Simon Mejlby Virenfeldt <simon@simwir.dk>
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -473,6 +477,25 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
     if (!options.modelfile && !options.statespaceexploration) {
         fprintf(stderr, "Argument Error: No query-file provided\n");
         return ErrorCode;
+    }
+
+    //Check for compatibility with LTL model checking
+    if (options.logic == TemporalLogic::LTL) {
+        if (options.tar) {
+            std::cerr << "Argument Error: -tar is not compatible with LTL model checking." << std::endl;
+            return ErrorCode;
+        }
+        if (options.siphontrapTimeout != 0) {
+            std::cerr << "Argument Error: -a/--siphon-trap is not compatible with LTL model checking." << std::endl;
+            return ErrorCode;
+        }
+        if (options.siphonDepth != 0) {
+            std::cerr << "Argument Error: --siphon-depth is not compatible with LTL model checking." << std::endl;
+            return ErrorCode;
+        }
+        if (options.strategy != PetriEngine::Reachability::DEFAULT) {
+            std::cerr << "Argument Warning: LTL model checking does not support search strategies. Will use DFS." << std::endl;
+        }
     }
 
     return ContinueCode;

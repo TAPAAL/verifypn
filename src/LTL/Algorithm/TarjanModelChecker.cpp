@@ -40,17 +40,18 @@ namespace LTL {
         for (auto &state : initial_states) {
             const auto res = seen.add(state);
             if (res.first) {
-                push(state);
+                push(state, res.second);
             }
             while (!dstack.empty() && !violation) {
                 DEntry &dtop = dstack.top();
                 // write next successor state to working.
                 if (!nexttrans(working, parent, dtop)) {
+                    ++stats.expanded;
                     pop();
                     continue;
                 }
                 ++stats.explored;
-                auto[isnew, stateid] = seen.add(working);
+                const auto[isnew, stateid] = seen.add(working);
                 if constexpr (SaveTrace) {
                     if (isnew) {
                         seen.setHistory(stateid, successorGenerator->fired());
@@ -70,7 +71,7 @@ namespace LTL {
                     continue;
                 }
                 if (store.find(stateid) == std::end(store)) {
-                    push(working);
+                    push(working, stateid);
                 }
             }
             if constexpr (SaveTrace) {
@@ -94,12 +95,10 @@ namespace LTL {
      * @param state
      */
     template<bool SaveTrace>
-    void TarjanModelChecker<SaveTrace>::push(State &state)
-    {
-        const auto res = seen.add(state);
+    void TarjanModelChecker<SaveTrace>::push(State &state, size_t stateid) {
         const auto ctop = static_cast<idx_t>(cstack.size());
-        const auto h = hash(res.second);
-        cstack.emplace_back(ctop, res.second, chash[h]);
+        const auto h = hash(stateid);
+        cstack.emplace_back(ctop, stateid, chash[h]);
         chash[h] = ctop;
         dstack.push(DEntry{ctop, PetriEngine::initial_suc_info});
         if (successorGenerator->isAccepting(state)) {
@@ -165,12 +164,11 @@ namespace LTL {
     {
         seen.decode(parent, cstack[delem.pos].stateid);
         successorGenerator->prepare(&parent, delem.sucinfo);
+        // ensure that `state` buffer contains the correct state for Büchi successor generation.
         if (delem.sucinfo.has_prev_state()) {
             seen.decode(state, delem.sucinfo.last_state);
         }
         auto res = successorGenerator->next(state, delem.sucinfo);
-        if (res)
-            ++stats.expanded;
         return res;
     }
 

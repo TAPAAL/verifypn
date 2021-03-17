@@ -119,7 +119,7 @@ namespace LTL {
         size_t loopstate = std::numeric_limits<size_t>::max();
         size_t looptrans = std::numeric_limits<size_t>::max();
 
-        void push(State &state);
+        void push(State &state, size_t stateid);
 
         void pop();
 

@@ -132,11 +132,9 @@ namespace LTL {
 */
                 } else {
                     if (options.trace != TraceLevel::None) {
-                        result = _verify<TarjanModelChecker<true>>(
-                                net, negated_formula, options);
+                        result = _verify<TarjanModelChecker<true>>(net, negated_formula, options);
                     } else {
-                        result = _verify<TarjanModelChecker<false>>(
-                                net, negated_formula, options);
+                        result = _verify<TarjanModelChecker<false>>(net, negated_formula, options);
                     }
                 }
                 break;

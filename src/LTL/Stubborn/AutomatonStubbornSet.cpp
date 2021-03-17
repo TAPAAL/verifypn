@@ -25,17 +25,16 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 
 namespace LTL {
-    void
-    AutomatonStubbornSet::prepare(const PetriEngine::Structures::State *state, const GuardInfo &info)
+    bool AutomatonStubbornSet::prepare(const PetriEngine::Structures::State *state, const GuardInfo &info)
     {
         reset();
         _parent = state;
         memset(_places_seen.get(), 0, _net.numberOfPlaces());
         constructEnabled();
-        if (_ordering.size() == 0) return;
+        if (_ordering.empty()) return false;
         if (_ordering.size() == 1) {
             _stubborn[_ordering.front()] = true;
-            return;
+            return true;
         }
         PQL::EvaluationContext evalCtx(_parent->marking(), &_net);
         EvalAndSetVisitor evalVisitor{evalCtx};
@@ -81,6 +80,7 @@ namespace LTL {
             std::cout << "Buchi: " << info.buchi_state << std::endl;
         }
 #endif
+        return true;
     }
 
     void AutomatonStubbornSet::prepare_accepting(const PetriEngine::Structures::State *state, const GuardInfo &info)

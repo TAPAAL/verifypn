@@ -87,6 +87,7 @@ namespace LTL::Structures {
          */
         result_t add(const LTL::Structures::ProductState &state) override
         {
+            ++_discovered;
             const auto[_, markingId] = markings.add(state);
             const stateid_t product_id = getProductId(markingId, state.getBuchiState());
 
@@ -114,7 +115,8 @@ namespace LTL::Structures {
             return true;
         }
 
-        size_t discovered() { return states.size(); }
+        //size_t size() { return states.size(); }
+        size_t discovered() { return _discovered; }
 
         size_t maxTokens() { return markings.maxTokens(); }
 
@@ -127,6 +129,7 @@ namespace LTL::Structures {
         std::unordered_set<stateid_t> states;
         static constexpr auto err_val = std::make_pair(false, std::numeric_limits<size_t>::max());
 
+        size_t _discovered = 0;
     };
 
     template <uint8_t nbytes>

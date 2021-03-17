@@ -6,7 +6,7 @@
 #include "Structures/light_deque.h"
 #include "PQL/PQL.h"
 #include "PetriEngine/Stubborn/StubbornSet.h"
-#include "LTL/Stubborn/LTLStubbornSet.h"
+#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include <memory>
 
 namespace LTL {
@@ -20,47 +20,70 @@ namespace PetriEngine {
         struct sucinfo {
             uint32_t buchi_state;
             uint32_t tid = no_value;
+            size_t enabled; // id from ptrie storage at call-site, see EnabledTransitionSet
+            size_t stubborn;
+            size_t last_state;
+
+            [[nodiscard]] bool hasEnabled() const {
+                return enabled != std::numeric_limits<size_t>::max() && stubborn != std::numeric_limits<size_t>::max();
+            }
 
             [[nodiscard]] inline bool fresh() const {
                 return tid == no_value;
+            }
+            inline bool has_prev_state() const {
+                return last_state != std::numeric_limits<size_t>::max();
             }
 
             static constexpr auto no_value = std::numeric_limits<uint32_t>::max();
         };
 
-        static constexpr sucinfo initial_suc_info{std::numeric_limits<uint32_t>::max(), sucinfo::no_value};
+        static constexpr sucinfo initial_suc_info{
+            std::numeric_limits<uint32_t>::max(),
+            sucinfo::no_value,
+            std::numeric_limits<size_t>::max(),
+            std::numeric_limits<size_t>::max(),
+            std::numeric_limits<size_t>::max()};
 
         void getSuccInfo(sucinfo &sucinfo) const {}
 
         ReducingSuccessorGenerator(const PetriNet &net, std::shared_ptr<StubbornSet> stubbornSet);
 
+        ReducingSuccessorGenerator(const PetriNet &net,
+                                   std::shared_ptr<StubbornSet> stubbornSet,
+                                   const bool* enabled, const bool* stubborn);
+
         void reset();
 
         void setQuery(PQL::Condition *ptr) { _stubSet->setQuery(ptr); }
 
-        void prepare(const Structures::State *state);
+        bool prepare(const Structures::State *state);
 
-        void prepare(const Structures::State *state, const sucinfo &)
+        void prepare(const Structures::State *state, const sucinfo &sucinfo)
         {
-            SuccessorGenerator::prepare(state);
+            if (sucinfo.hasEnabled()) {
+                SuccessorGenerator::prepare(state);
+            }
+            // indirection to stubborn set prepare, thus calculating stubborn and enabled arrays.
+            else prepare(state);
         }
 
         bool next(Structures::State &write);
 
-        bool next(Structures::State &state, const sucinfo &sucinfo);
+        bool next(Structures::State &state, sucinfo &sucinfo);
 
         auto fired() const { return _current; }
 
         void generateAll()
         {
-            if (auto ltlstub = std::dynamic_pointer_cast<LTL::LTLStubbornSet>(_stubSet)) {
+            if (auto ltlstub = std::dynamic_pointer_cast<LTL::VisibleLTLStubbornSet>(_stubSet)) {
                 ltlstub->generateAll();
             }
         }
 
-        const bool *enabled() const { return _stubSet->enabled(); };
+        bool *enabled() const { return _stubSet->enabled(); };
 
-        const bool *stubborn() const { return _stubSet->stubborn(); };
+        bool *stubborn() const { return _stubSet->stubborn(); };
 
         size_t nenabled() { return _stubSet->nenabled(); }
 
@@ -70,6 +93,8 @@ namespace PetriEngine {
 
         //std::vector<PQL::Condition *> _queries;
 
+        const bool* _enabled = enabled();
+        const bool* _stubborn = stubborn();
     };
 }
 
