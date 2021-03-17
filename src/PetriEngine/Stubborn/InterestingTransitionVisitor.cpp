@@ -19,11 +19,13 @@
 
 namespace PetriEngine {
 
-    void InterestingTransitionVisitor::_accept(const PQL::SimpleQuantifierCondition *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::SimpleQuantifierCondition *element)
+    {
         (*element)[0]->visit(*this);
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::UntilCondition *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::UntilCondition *element)
+    {
         element->getCond1()->visit(*this);
         negate();
         element->getCond1()->visit(*this);
@@ -32,7 +34,8 @@ namespace PetriEngine {
     }
 
 
-    void InterestingTransitionVisitor::_accept(const PQL::AndCondition *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::AndCondition *element)
+    {
         if (!negated) {               // and
             for (auto &c : *element) {
                 if (!c->isSatisfied()) {
@@ -45,7 +48,8 @@ namespace PetriEngine {
         }
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::OrCondition *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::OrCondition *element)
+    {
         if (!negated) {               // or
             for (auto &c : *element) c->visit(*this);
         } else {                    // and
@@ -58,7 +62,8 @@ namespace PetriEngine {
         }
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::CompareConjunction *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::CompareConjunction *element)
+    {
 
         auto neg = negated != element->isNegated();
         int32_t cand = std::numeric_limits<int32_t>::max();
@@ -119,7 +124,8 @@ namespace PetriEngine {
         }
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::EqualCondition *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::EqualCondition *element)
+    {
         if (!negated) {               // equal
             if (element->getExpr1()->getEval() == element->getExpr2()->getEval()) { return; }
             if (element->getExpr1()->getEval() > element->getExpr2()->getEval()) {
@@ -138,7 +144,8 @@ namespace PetriEngine {
         }
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::NotEqualCondition *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::NotEqualCondition *element)
+    {
         if (!negated) {               // not equal
             if (element->getExpr1()->getEval() != element->getExpr2()->getEval()) { return; }
             element->getExpr1()->visit(incr);
@@ -157,7 +164,8 @@ namespace PetriEngine {
         }
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::LessThanCondition *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::LessThanCondition *element)
+    {
         if (!negated) {               // less than
             if (element->getExpr1()->getEval() < element->getExpr2()->getEval()) { return; }
             element->getExpr1()->visit(decr);
@@ -169,7 +177,8 @@ namespace PetriEngine {
         }
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::LessThanOrEqualCondition *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::LessThanOrEqualCondition *element)
+    {
         if (!negated) {               // less than or equal
             if (element->getExpr1()->getEval() <= element->getExpr2()->getEval()) { return; }
             element->getExpr1()->visit(decr);
@@ -181,7 +190,8 @@ namespace PetriEngine {
         }
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::GreaterThanCondition *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::GreaterThanCondition *element)
+    {
         if (!negated) {               // greater than
             if (element->getExpr1()->getEval() > element->getExpr2()->getEval()) { return; }
             element->getExpr1()->visit(incr);
@@ -194,7 +204,8 @@ namespace PetriEngine {
     }
 
     void
-    InterestingTransitionVisitor::_accept(const PQL::GreaterThanOrEqualCondition *element) {
+    InterestingTransitionVisitor::_accept(const PQL::GreaterThanOrEqualCondition *element)
+    {
         if (!negated) {               // greater than or equal
             if (element->getExpr1()->getEval() >= element->getExpr2()->getEval()) { return; }
             element->getExpr1()->visit(incr);
@@ -206,44 +217,62 @@ namespace PetriEngine {
         }
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::NotCondition *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::NotCondition *element)
+    {
         negate();
         (*element)[0]->visit(*this);
         negate();
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::BooleanCondition *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::BooleanCondition *element)
+    {
         // Add nothing
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::DeadlockCondition *element) {
+    void InterestingTransitionVisitor::_accept(const PQL::DeadlockCondition *element)
+    {
         if (!element->isSatisfied()) {
             _stubborn.postPresetOf(_stubborn.leastDependentEnabled(), closure);
         } // else add nothing
     }
 
     void
-    InterestingTransitionVisitor::_accept(const PQL::UnfoldedUpperBoundsCondition *element) {
+    InterestingTransitionVisitor::_accept(const PQL::UnfoldedUpperBoundsCondition *element)
+    {
         for (auto &p : element->places())
             if (!p._maxed_out)
                 _stubborn.presetOf(p._place);
     }
 
-    void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::PlusExpr *element) {
-        for(auto& i : element->places()) _stubborn.presetOf(i.first, closure);
-        for(auto& e : element->expressions()) e->visit(*this);
+    void InterestingTransitionVisitor::_accept(const PQL::GCondition *element)
+    {
+        negate();
+        (*element)[0]->visit(*this);
+        negate();
     }
 
-    void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::PlusExpr *element) {
-        for(auto& i : element->places()) _stubborn.postsetOf(i.first, closure);
-        for(auto& e : element->expressions()) e->visit(*this);
+    void InterestingTransitionVisitor::_accept(const PQL::FCondition *element)
+    {
+        (*element)[0]->visit(*this);
     }
 
-    void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::SubtractExpr *element) {
+    void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::PlusExpr *element)
+    {
+        for (auto &i : element->places()) _stubborn.presetOf(i.first, closure);
+        for (auto &e : element->expressions()) e->visit(*this);
+    }
+
+    void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::PlusExpr *element)
+    {
+        for (auto &i : element->places()) _stubborn.postsetOf(i.first, closure);
+        for (auto &e : element->expressions()) e->visit(*this);
+    }
+
+    void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::SubtractExpr *element)
+    {
         bool first = true;
-        for(auto& e : element->expressions())
-        {
-            if(first)
+        for (auto &e : element->expressions()) {
+            if (first)
                 e->visit(*this);
             else
                 e->visit(*decr);
@@ -251,11 +280,11 @@ namespace PetriEngine {
         }
     }
 
-    void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::SubtractExpr *element) {
+    void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::SubtractExpr *element)
+    {
         bool first = true;
-        for(auto& e : element->expressions())
-        {
-            if(first)
+        for (auto &e : element->expressions()) {
+            if (first)
                 e->visit(*this);
             else
                 e->visit(*incr);
@@ -263,95 +292,104 @@ namespace PetriEngine {
         }
     }
 
-    void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::MultiplyExpr *element) {
-        if((element->places().size() + element->expressions().size()) == 1)
-        {
-            for(auto& i : element->places()) _stubborn.presetOf(i.first, closure);
-            for(auto& e : element->expressions()) e->visit(*this);
-        }
-        else
-        {
-            for(auto& i : element->places())
-            {
+    void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::MultiplyExpr *element)
+    {
+        if ((element->places().size() + element->expressions().size()) == 1) {
+            for (auto &i : element->places()) _stubborn.presetOf(i.first, closure);
+            for (auto &e : element->expressions()) e->visit(*this);
+        } else {
+            for (auto &i : element->places()) {
                 _stubborn.presetOf(i.first, closure);
                 _stubborn.postsetOf(i.first, closure);
             }
-            for(auto& e : element->expressions())
-            {
+            for (auto &e : element->expressions()) {
                 e->visit(*this);
                 e->visit(*decr);
             }
         }
     }
 
-    void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::MultiplyExpr *element) {
-        if((element->places().size() + element->expressions().size()) == 1)
-        {
-            for(auto& i : element->places()) _stubborn.postsetOf(i.first, closure);
-            for(auto& e : element->expressions()) e->visit(*this);
-        }
-        else
+    void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::MultiplyExpr *element)
+    {
+        if ((element->places().size() + element->expressions().size()) == 1) {
+            for (auto &i : element->places()) _stubborn.postsetOf(i.first, closure);
+            for (auto &e : element->expressions()) e->visit(*this);
+        } else
             element->visit(*incr);
     }
 
-    void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::MinusExpr *element) {
+    void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::MinusExpr *element)
+    {
         // TODO not implemented
     }
 
-    void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::MinusExpr *element) {
+    void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::MinusExpr *element)
+    {
         // TODO not implemented
     }
 
-    void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::LiteralExpr *element) {
+    void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::LiteralExpr *element)
+    {
         // Add nothing
     }
 
-    void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::LiteralExpr *element) {
+    void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::LiteralExpr *element)
+    {
         // Add nothing
     }
 
-    void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::UnfoldedIdentifierExpr *element) {
+    void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::UnfoldedIdentifierExpr *element)
+    {
         _stubborn.presetOf(element->offset(), closure);
     }
 
-    void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::UnfoldedIdentifierExpr *element) {
+    void InterestingTransitionVisitor::DecrVisitor::_accept(const PQL::UnfoldedIdentifierExpr *element)
+    {
         _stubborn.postsetOf(element->offset(), closure);
     }
 
-    void InterestingLTLTransitionVisitor::_accept(const PQL::LessThanCondition *element) {
+    void InterestingLTLTransitionVisitor::_accept(const PQL::LessThanCondition *element)
+    {
         negate_if_satisfied<PQL::LessThanCondition>(element);
     }
 
-    void InterestingLTLTransitionVisitor::_accept(const PQL::LessThanOrEqualCondition *element) {
+    void InterestingLTLTransitionVisitor::_accept(const PQL::LessThanOrEqualCondition *element)
+    {
         negate_if_satisfied<PQL::LessThanOrEqualCondition>(element);
     }
 
-    void InterestingLTLTransitionVisitor::_accept(const PQL::GreaterThanCondition *element) {
+    void InterestingLTLTransitionVisitor::_accept(const PQL::GreaterThanCondition *element)
+    {
         negate_if_satisfied<PQL::GreaterThanCondition>(element);
     }
 
-    void InterestingLTLTransitionVisitor::_accept(const PQL::GreaterThanOrEqualCondition *element) {
+    void InterestingLTLTransitionVisitor::_accept(const PQL::GreaterThanOrEqualCondition *element)
+    {
         negate_if_satisfied<PQL::GreaterThanOrEqualCondition>(element);
     }
 
-    void InterestingLTLTransitionVisitor::_accept(const PQL::EqualCondition *element) {
+    void InterestingLTLTransitionVisitor::_accept(const PQL::EqualCondition *element)
+    {
         negate_if_satisfied<PQL::EqualCondition>(element);
     }
 
-    void InterestingLTLTransitionVisitor::_accept(const PQL::NotEqualCondition *element) {
+    void InterestingLTLTransitionVisitor::_accept(const PQL::NotEqualCondition *element)
+    {
         negate_if_satisfied<PQL::NotEqualCondition>(element);
     }
 
-    void InterestingLTLTransitionVisitor::_accept(const PQL::CompareConjunction *element) {
+    void InterestingLTLTransitionVisitor::_accept(const PQL::CompareConjunction *element)
+    {
         negate_if_satisfied<PQL::CompareConjunction>(element);
     }
 
     template<typename Condition>
-    void InterestingLTLTransitionVisitor::negate_if_satisfied(const Condition *element){
+    void InterestingLTLTransitionVisitor::negate_if_satisfied(const Condition *element)
+    {
         // TODO: There may be leftover information in isSatisfied that has not been updated in this marking. It is most like needed to evalAndSet the entire tree everytime instead of as now where it may gain a result in a node and therefore not explore the remaining children.
         auto isSatisfied = element->getSatisfied();
         assert(isSatisfied != PQL::Condition::RUNKNOWN);
-        if ((isSatisfied == PQL::Condition::RTRUE) != negated){
+        if ((isSatisfied == PQL::Condition::RTRUE) != negated) {
             negate();
             InterestingTransitionVisitor::_accept(element);
             negate();

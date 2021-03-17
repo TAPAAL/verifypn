@@ -24,9 +24,16 @@ namespace PetriEngine {
             return false;
         }
         assert(checkPreset(_current));
-        memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof(MarkVal));
-        consumePreset(write, _current);
-        producePostset(write, _current);
+        _fire(write, _current);
+        return true;
+    }
+
+    bool ReducingSuccessorGenerator::next(Structures::State &write, const sucinfo &sucinfo)
+    {
+/*            if (sucinfo.tid == sucinfo::no_value)
+½                return false;*/
+        assert(checkPreset(sucinfo.tid));
+        _fire(write, sucinfo.tid);
         return true;
     }
 

@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_VISIBLESTUBBORNTARJANMODELCHECKER_H
-#define VERIFYPN_VISIBLESTUBBORNTARJANMODELCHECKER_H
+#ifndef VERIFYPN_INTERESTINGSTUBBORNTARJANMODELCHECKER_H
+#define VERIFYPN_INTERESTINGSTUBBORNTARJANMODELCHECKER_H
 
 #include "LTL/Stubborn/LTLStubbornSet.h"
 #include "LTL/Algorithm/ModelChecker.h"
@@ -25,11 +25,10 @@
 
 namespace LTL {
     // template parameter for debugging purposes
-    template<typename SuccessorGen = PetriEngine::ReducingSuccessorGenerator>
-    class VisibleStubbornTarjanModelChecker : public ModelChecker<SuccessorGen> {
+    class InterestingStubbornTarjanModelChecker : public ModelChecker<PetriEngine::ReducingSuccessorGenerator> {
     public:
-        VisibleStubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
-                : ModelChecker<SuccessorGen>
+        InterestingStubbornTarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &query)
+                : ModelChecker<PetriEngine::ReducingSuccessorGenerator>
                           (net, query,
                            PetriEngine::ReducingSuccessorGenerator{
                                    net, std::make_shared<LTLStubbornSet>(net, query)}),
@@ -93,6 +92,7 @@ namespace LTL {
         std::vector<CEntry> cstack;
         std::stack<DEntry> dstack;
         std::stack<idx_t> astack;
+        std::stack<idx_t> extstack;
         bool violation = false;
 
         void push(State &state, size_t stateid);
@@ -113,8 +113,6 @@ namespace LTL {
             return p;
         }
     };
-    template class VisibleStubbornTarjanModelChecker<PetriEngine::ReducingSuccessorGenerator>;
-    //template class VisibleStubbornTarjanModelChecker<PetriEngine::SuccessorGenerator>;
 }
 
-#endif //VERIFYPN_VISIBLESTUBBORNTARJANMODELCHECKER_H
+#endif //VERIFYPN_INTERESTINGSTUBBORNTARJANMODELCHECKER_H

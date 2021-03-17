@@ -29,7 +29,7 @@ namespace LTL {
         EvalAndSetVisitor(const PetriEngine::PQL::EvaluationContext &context) : _context(context) {}
 
     private:
-        const PetriEngine::PQL::EvaluationContext& _context;
+        const PetriEngine::PQL::EvaluationContext &_context;
     protected:
 
     protected:

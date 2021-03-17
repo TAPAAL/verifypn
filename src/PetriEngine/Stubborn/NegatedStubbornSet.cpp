@@ -65,7 +65,7 @@ namespace PetriEngine {
         memset(_enabled.get(), false, sizeof(bool) * _net.numberOfTransitions());
         memset(_stubborn.get(), true, sizeof(bool) * _net.numberOfTransitions());
         _ordering.clear();
-        _tid = 0;
+        _current = 0;
     }
 
 

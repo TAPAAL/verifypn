@@ -15,13 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LTL/Algorithm/VisibleStubbornTarjanModelChecker.h"
+#include "LTL/Algorithm/InterestingStubbornTarjanModelChecker.h"
 
 namespace LTL {
-    template<typename SuccessorGen>
-    bool VisibleStubbornTarjanModelChecker<SuccessorGen>::isSatisfied() {
+
+    bool InterestingStubbornTarjanModelChecker::isSatisfied()
+    {
         this->is_weak = this->successorGenerator->is_weak() && this->shortcircuitweak;
-        std::vector<State> initial_states;
+        std::vector <State> initial_states;
         this->successorGenerator->makeInitialState(initial_states);
         State working = factory.newState();
         State parent = factory.newState();
@@ -33,14 +34,10 @@ namespace LTL {
             while (!dstack.empty() && !violation) {
                 DEntry &dtop = dstack.top();
                 if (!nexttrans(working, parent, dtop)) {
-                    ++this->stats.expanded;
                     pop();
                     continue;
                 }
-                ++this->stats.explored;
-
                 const idx_t stateid = seen.add(working).second;
-
                 // lookup successor in 'hash' table
                 idx_t p = searchCStack(stateid);
                 if (p != std::numeric_limits<idx_t>::max()) {
@@ -57,7 +54,8 @@ namespace LTL {
         return !violation;
     }
 
-    inline void _dump_state(const LTL::Structures::ProductState &state) {
+    inline void _dump_state(const LTL::Structures::ProductState &state)
+    {
         std::cerr << "marking: ";
         std::cerr << state.marking()[0];
         for (size_t i = 1; i < state.size(); ++i) {
@@ -70,8 +68,9 @@ namespace LTL {
      * Push a state to the various stacks.
      * @param state
      */
-    template<typename SuccessorGen>
-    void VisibleStubbornTarjanModelChecker<SuccessorGen>::push(State &state, size_t stateid) {
+
+    void InterestingStubbornTarjanModelChecker::push(State &state, size_t stateid)
+    {
         //const auto res = seen.add(state);
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(stateid);
@@ -83,8 +82,9 @@ namespace LTL {
         }
     }
 
-    template <typename SuccessorGen>
-    void VisibleStubbornTarjanModelChecker<SuccessorGen>::pop() {
+
+    void InterestingStubbornTarjanModelChecker::pop()
+    {
         const auto p = dstack.top().pos;
         dstack.pop();
         if (cstack[p].lowlink == p) {
@@ -101,21 +101,26 @@ namespace LTL {
         if (!astack.empty() && p == astack.top()) {
             astack.pop();
         }
+        if (!extstack.empty() && p == extstack.top()) {
+            extstack.pop();
+        }
         if (!dstack.empty()) {
             update(p);
         }
     }
 
-    template<typename SuccessorGen>
-    void VisibleStubbornTarjanModelChecker<SuccessorGen>::popCStack() {
+
+    void InterestingStubbornTarjanModelChecker::popCStack()
+    {
         auto h = hash(cstack.back().stateid);
         store.insert(cstack.back().stateid);
         chash[h] = cstack.back().next;
         cstack.pop_back();
     }
 
-    template<typename SuccessorGen>
-    void VisibleStubbornTarjanModelChecker<SuccessorGen>::update(idx_t to) {
+
+    void InterestingStubbornTarjanModelChecker::update(idx_t to)
+    {
         const auto from = dstack.top().pos;
         if (cstack[to].lowlink <= cstack[from].lowlink) {
             // we have found a loop into earlier seen component cstack[to].lowlink.
@@ -126,41 +131,46 @@ namespace LTL {
         }
     }
 
-    template<typename SuccessorGen>
-    bool VisibleStubbornTarjanModelChecker<SuccessorGen>::nexttrans(State &state, State &parent, DEntry &delem) {
+
+    bool InterestingStubbornTarjanModelChecker::nexttrans(State &state, State &parent, DEntry &delem)
+    {
         if (delem.successors.empty()) {
             if (delem.expanded) {
                 return false;
             }
             seen.decode(parent, cstack[delem.pos].stateid);
             delem.expanded = true;
-            light_deque<size_t> successors;
+            light_deque <size_t> successors;
             this->successorGenerator->prepare(&parent);
             while (this->successorGenerator->next(state)) {
-                auto [_new, stateid] = seen.add(state);
+                ++this->stats.explored;
+                auto[_new, stateid] = seen.add(state);
                 auto markingId = seen.getMarkingId(stateid);
                 auto p = chash[hash(stateid)];
                 while (p != numeric_limits<idx_t>::max() && seen.getMarkingId(cstack[p].stateid) != markingId) {
                     p = cstack[p].next;
                 }
                 if (p != std::numeric_limits<idx_t>::max()) {
-                    this->successorGenerator->generateAll();
+                    // loop found!
+                    if (extstack.empty() || p >= extstack.top()) {
+                        // if no extension was computed during cycle, generate all
+                        this->successorGenerator->generateAll();
+                        extstack.push(stateid);
+                    }
                 }
                 //if (_new) {
                 successors.push_back(stateid);
                 //}
             }
             delem.successors = successors;
+            ++this->stats.expanded;
             if (!delem.successors.empty()) {
                 seen.decode(state, delem.successors.front());
                 delem.successors.pop_front();
                 return true;
-            }
-            else {
-                // deadlock
+            } else {
                 return false;
             }
-
         } else {
             auto stateid = delem.successors.front();
             delem.successors.pop_front();

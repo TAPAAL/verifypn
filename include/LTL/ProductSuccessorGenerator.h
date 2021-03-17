@@ -89,7 +89,7 @@ namespace LTL {
                 if (!successorGenerator.next(state)) {
                     // This is a fresh marking, so if there is no more successors for the state the state is deadlocked.
                     // The semantics for deadlock is to just loop the marking so return true without changing the value of state.
-                    std::copy(successorGenerator.parent(), successorGenerator.parent() + state.buchi_state_idx + 1,
+                    std::copy(successorGenerator.getParent(), successorGenerator.getParent() + state.buchi_state_idx + 1,
                               state.marking());
                 }
             }
@@ -142,7 +142,7 @@ namespace LTL {
          * @param state the source state to generate successors from
          * @param sucinfo the point in the iteration to start from, as returned by `next`.
          */
-        void prepare(const LTL::Structures::ProductState *state, const PetriEngine::successor_info &sucinfo)
+        void prepare(const LTL::Structures::ProductState *state, const typename SuccessorGen::sucinfo &sucinfo)
         {
             if constexpr (AutomataReducing) {
                 successorGenerator.prepare(state, sucinfo, false);
@@ -152,7 +152,7 @@ namespace LTL {
             }
             buchiSuccessorGenerator.prepare(state->getBuchiState());
             buchi_parent = state->getBuchiState();
-            fresh_marking = sucinfo.pcounter == 0 && sucinfo.tcounter == std::numeric_limits<uint32_t>::max();
+            fresh_marking = sucinfo.fresh(); //
             if (!fresh_marking) {
                 assert(sucinfo.buchi_state != std::numeric_limits<size_t>::max());
                 // spool Büchi successors until last state found.
@@ -174,14 +174,14 @@ namespace LTL {
          * @return `true` if a successor was successfully generated, `false` otherwise.
          * @warning do not use the same State for both prepare and next, this will cause wildly incorrect behaviour!
          */
-        bool next(Structures::ProductState &state, PetriEngine::successor_info &sucinfo)
+        bool next(Structures::ProductState &state, typename SuccessorGen::sucinfo &sucinfo)
         {
             if (fresh_marking) {
                 fresh_marking = false;
-                if (!successorGenerator.next(state)) {
+                if (!successorGenerator.next(state, sucinfo)) {
                     // This is a fresh marking, so if there are no more successors for the state the state is deadlocked.
                     // The semantics for deadlock is to just loop the marking so return true without changing the value of state.
-                    std::copy(successorGenerator.parent(), successorGenerator.parent() + state.buchi_state_idx + 1,
+                    std::copy(successorGenerator.getParent(), successorGenerator.getParent() + state.buchi_state_idx + 1,
                               state.marking());
                 }
             }
@@ -193,7 +193,7 @@ namespace LTL {
                 // No valid transition in Büchi automaton for current marking;
                 // Try next marking(s) and see if we find a successor.
             else {
-                while (successorGenerator.next(state)) {
+                while (successorGenerator.next(state, sucinfo)) {
                     // reset buchiSuccessorGenerator successors
                     buchiSuccessorGenerator.prepare(buchi_parent);
                     if (next_buchi_succ(state)) {
@@ -223,6 +223,28 @@ namespace LTL {
             if constexpr (std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>)
                 successorGenerator.generateAll();
         }
+
+        size_t numEnabled()
+        {
+            if constexpr (std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>)
+                return successorGenerator.nenabled();
+            return -1;
+        }
+
+        const bool *enabled() const
+        {
+            if constexpr (std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>) {
+                return successorGenerator.enabled();
+            }
+            return nullptr;
+        };
+        const bool *stubborn() const
+        {
+            if constexpr (std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>) {
+                return successorGenerator.stubborn();
+            }
+            return nullptr;
+        };
 
         size_t buchiStates() { return buchiSuccessorGenerator.buchiStates(); }
 

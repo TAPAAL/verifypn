@@ -1211,7 +1211,7 @@ int main(int argc, char* argv[]) {
         for (auto qid : ltl_ids) {
             LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
         }
-        return SuccessCode;
+        return SuccessCode; // FIXME bad control flow
     }
 
     //----------------------- Siphon Trap ------------------------//

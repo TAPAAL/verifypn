@@ -75,6 +75,11 @@ namespace LTL::Structures {
             return (buchiState << buchiShift) | (markingMask & markingId);
         }
 
+/*#ifndef NDEBUG
+            std::cerr << "markingMask: " << markingMask << '\n';
+            std::cerr << "buchiMask:   " << buchiMask << std::endl;
+#endif*/
+
         /**
          * Insert a product state into the state set.
          * @param state the product state to insert.

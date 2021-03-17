@@ -1,0 +1,188 @@
+/* Copyright (C) 2021  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
+ *                     Simon M. Virenfeldt <simon@simwir.dk>
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "LTL/Algorithm/ResumingStubbornTarjan.h"
+
+using PetriEngine::ReducingSuccessorGenerator;
+
+namespace LTL {
+
+    inline void _dump_state(const LTL::Structures::ProductState &state) {
+        std::cerr << "marking: ";
+        std::cerr << state.marking()[0];
+        for (size_t i = 1; i < state.size(); ++i) {
+            std::cerr << ", " << state.marking()[i];
+        }
+        std::cerr << std::endl;
+    }
+
+    
+    bool ResumingStubbornTarjan::isSatisfied() {
+        is_weak = successorGenerator->is_weak() && shortcircuitweak;
+        std::vector<State> initial_states;
+        successorGenerator->makeInitialState(initial_states);
+        State working = factory.newState();
+        State parent = factory.newState();
+        for (auto &state : initial_states) {
+            const auto res = seen.add(state);
+            if (res.first) {
+                push(state, res.second);
+            }
+            while (!dstack.empty() && !violation) {
+                DEntry &dtop = dstack.top();
+                if (!nexttrans(working, parent, dtop)) {
+                    pop();
+                    continue;
+                }
+                ++stats.explored;
+                const idx_t stateid = seen.add(working).second;
+                //dtop.sucinfo.last_state = stateid;
+
+                // lookup successor in 'hash' table
+                auto p = chash[hash(stateid)];
+                auto marking = seen.getMarkingId(stateid);
+                while (p != std::numeric_limits<idx_t>::max() && seen.getMarkingId(cstack[p].stateid) != marking) {
+                    p = cstack[p].next;
+                }
+                if (p != std::numeric_limits<idx_t>::max()) {
+                    if (extstack.empty() || p >= extstack.top()) {
+                        expandAll(dtop);
+                    }
+                    // we found the successor, i.e. there's a loop!
+                    // now update lowlinks and check whether the loop contains an accepting state
+                    update(p);
+                    continue;
+                }
+                if (store.find(stateid) == std::end(store)) {
+                    push(working, stateid);
+                }
+            }
+        }
+        return !violation;
+    }
+
+    /**
+     * Push a state to the various stacks.
+     * @param state
+     */
+    void ResumingStubbornTarjan::push(State &state, size_t stateid) {
+        const auto ctop = static_cast<idx_t>(cstack.size());
+        const auto h = hash(stateid);
+        cstack.emplace_back(ctop, stateid, chash[h]);
+        chash[h] = ctop;
+        dstack.push(DEntry{ctop, ReducingSuccessorGenerator::initial_suc_info});
+        if (successorGenerator->isAccepting(state)) {
+            astack.push(ctop);
+        }
+    }
+
+    
+    void ResumingStubbornTarjan::pop() {
+        const auto p = dstack.top().pos;
+        dstack.pop();
+        if (cstack[p].lowlink == p) {
+            while (cstack.size() > p) {
+                popCStack();
+            }
+        }
+        if (!astack.empty() && p == astack.top()) {
+            astack.pop();
+        }
+        if (!extstack.empty() && p == extstack.top()) {
+            extstack.pop();
+        }
+        if (!dstack.empty()) {
+            update(p);
+        }
+    }
+
+    
+    void ResumingStubbornTarjan::popCStack(){
+        auto h = hash(cstack.back().stateid);
+        store.insert(cstack.back().stateid);
+        chash[h] = cstack.back().next;
+        cstack.pop_back();
+    }
+
+
+    void ResumingStubbornTarjan::update(idx_t to) {
+        const auto from = dstack.top().pos;
+        if (cstack[to].lowlink <= cstack[from].lowlink) {
+            // we have found a loop into earlier seen component cstack[to].lowlink.
+            // if this earlier component was found before an accepting state,
+            // we have found an accepting loop and thus a violation.
+            violation = (!astack.empty() && to <= astack.top());
+            cstack[from].lowlink = cstack[to].lowlink;
+        }
+    }
+
+    bool ResumingStubbornTarjan::nexttrans(State &state, State &parent, ResumingStubbornTarjan::DEntry &delem) {
+        CEntry &centry = cstack[delem.pos];
+        seen.decode(parent, centry.stateid);
+
+        const bool* enabled;
+        const bool* stubborn;
+
+        if (!centry.hasEnabled()) {
+            successorGenerator->prepare(&parent);
+            centry.enabled = _enabled.insert(successorGenerator->enabled()).second;
+            centry.stubborn = _enabled.insert(successorGenerator->stubborn()).second;
+            memcpy(buf1.get(), successorGenerator->stubborn(), net.numberOfTransitions());
+            enabled = successorGenerator->enabled();
+            stubborn = successorGenerator->stubborn();
+        }
+        else {
+            _enabled.get(buf1.get(), centry.enabled);
+            _enabled.get(buf2.get(), centry.stubborn);
+            enabled = buf1.get();
+            stubborn = buf2.get();
+        }
+        successorGenerator->prepare(&parent, delem.sucinfo);
+        auto &tid = delem.sucinfo.tid;
+        if (tid == ReducingSuccessorGenerator::sucinfo::no_value) tid = 0;
+        while (tid < net.numberOfTransitions()) {
+            if (enabled[tid] && stubborn[tid]) {
+                auto res = successorGenerator->next(state, delem.sucinfo);
+                if (res)
+                    ++stats.expanded;
+                ++tid;
+                return res;
+            }
+            ++tid;
+        }
+        return false;
+    }
+
+    void LTL::ResumingStubbornTarjan::expandAll(DEntry &delem)
+    {
+#ifndef NDEBUG
+        std::cerr << "Expanding all\n";
+#endif
+        CEntry &centry = cstack[delem.pos];
+        _enabled.get(buf2.get(), centry.stubborn);
+        _enabled.get(buf1.get(), centry.enabled);
+        // tid is end while ntrans is end+1. Have to normalize like this since tid can be INT_MAX and thus overflow.
+        auto range = std::min(delem.sucinfo.tid, net.numberOfTransitions() - 1) + 1;
+        for (uint32_t i = 0; i < range; ++i) {
+            // unset previously fired transitions.
+            if (buf2[i]) buf1[i] = false;
+        }
+        centry.stubborn = _enabled.insert(buf1.get()).second;
+        delem.sucinfo.tid = 0;
+        extstack.push(centry.stateid);
+    }
+}

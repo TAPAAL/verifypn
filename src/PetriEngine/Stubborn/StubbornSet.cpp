@@ -31,7 +31,7 @@ namespace PetriEngine {
                 return _current;
             }
         }
-        reset();
+        //reset();
         return std::numeric_limits<uint32_t>::max();
     }
 
@@ -106,6 +106,8 @@ namespace PetriEngine {
 
     void StubbornSet::constructEnabled() {
         _ordering.clear();
+        memset(_enabled.get(), 0, _net.numberOfTransitions());
+        memset(_stubborn.get(), 0, _net.numberOfTransitions());
         for (uint32_t p = 0; p < _net.numberOfPlaces(); ++p) {
             // orphans are currently under "place 0" as a special case
             if (p == 0 || _parent->marking()[p] > 0) {
@@ -113,7 +115,9 @@ namespace PetriEngine {
                 uint32_t last = placeToPtrs()[p + 1];
 
                 for (; t != last; ++t) {
-                    if (!checkPreset(t)) continue;
+                    if (!checkPreset(t)) {
+                        continue;
+                    }
                     _enabled[t] = true;
                     _ordering.push_back(t);
                 }
@@ -316,6 +320,6 @@ namespace PetriEngine {
         memset(_enabled.get(), false, sizeof(bool) * _net.numberOfTransitions());
         memset(_stubborn.get(), false, sizeof(bool) * _net.numberOfTransitions());
         _ordering.clear();
-        _tid = 0;
+        //_tid = 0;
     }
 }

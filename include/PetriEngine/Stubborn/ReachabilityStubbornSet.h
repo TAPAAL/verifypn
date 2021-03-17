@@ -32,8 +32,6 @@ namespace PetriEngine {
 
         void prepare(const Structures::State *state) override;
 
-
-    private:
     };
 }
 

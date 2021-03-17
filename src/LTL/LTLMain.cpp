@@ -20,6 +20,8 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Expressions.h"
 #include "LTL/Algorithm/VisibleStubbornTarjanModelChecker.h"
+#include "LTL/Algorithm/InterestingStubbornTarjanModelChecker.h"
+#include "LTL/Algorithm/ResumingStubbornTarjan.h"
 
 #include <utility>
 
@@ -122,6 +124,11 @@ namespace LTL {
                         result = _verify<AutomataStubbornTarjan<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>>(
                                 net, negated_formula, options);
                     }
+                    result = _verify<InterestingStubbornTarjanModelChecker>(net, negated_formula, options.printstatistics);
+                    //result = _verify<ResumingStubbornTarjan>(net, negated_formula, options.printstatistics);
+
+                    //for profiling
+                    //result = _verify<TarjanModelChecker<false>>(net, negated_formula, options.printstatistics);
 */
                 } else {
                     if (options.trace != TraceLevel::None) {
