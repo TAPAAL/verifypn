@@ -6,13 +6,17 @@
 #include <string>
 #include <algorithm>
 #include <cassert>
+#include <forward_list>
 
 namespace DependencyGraph {
 
 class Configuration;
+enum Assignment {
+    ONE = 1, UNKNOWN = 0, ZERO = -1, CZERO = -2
+};
 
 class Edge {
-    typedef std::vector<Configuration*> container;
+    typedef std::forward_list<Configuration*> container;
 public:
     Edge(){}
     Edge(Configuration &t_source) : source(&t_source) {}
@@ -20,17 +24,19 @@ public:
     void addTarget(Configuration* conf)
     {
         assert(conf);
-        targets.push_back(conf);
+        targets.push_front(conf);
+        //++children;
     }
     
+    container targets;    
     Configuration* source;
-    container targets;
     uint8_t status = 0;
     bool processed = false;
     bool is_negated = false;
-    int32_t refcnt = 0;
     bool handled = false;
-    uint32_t weight = 0;
+    int32_t refcnt = 0;
+    /*size_t children;
+    Assignment assignment;*/
 };
 }
 #endif // EDGE_H

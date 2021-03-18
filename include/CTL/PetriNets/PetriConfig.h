@@ -20,8 +20,6 @@ public:
         DependencyGraph::Configuration(), marking(t_marking), query(t_query) {
     }
 
-    virtual ~PetriConfig(){};
-
     size_t marking;
     Condition *query;
 

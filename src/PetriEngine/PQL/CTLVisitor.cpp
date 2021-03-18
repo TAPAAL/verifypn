@@ -56,14 +56,6 @@ namespace PetriEngine::PQL {
         _accept((const CompareCondition *) element);
     }
 
-    void IsCTLVisitor::_accept(const GreaterThanCondition *element) {
-        _accept((const CompareCondition *) element);
-    }
-
-    void IsCTLVisitor::_accept(const GreaterThanOrEqualCondition *element) {
-        _accept((const CompareCondition *) element);
-    }
-
     void IsCTLVisitor::_accept(const EqualCondition *element) {
         _accept((const CompareCondition *) element);
     }
@@ -273,14 +265,6 @@ namespace PetriEngine::PQL {
     }
 
     void AsCTL::_accept(const LessThanOrEqualCondition *element) {
-        _ctl_query = copy_compare_condition(element);
-    }
-
-    void AsCTL::_accept(const GreaterThanCondition *element) {
-        _ctl_query = copy_compare_condition(element);
-    }
-
-    void AsCTL::_accept(const GreaterThanOrEqualCondition *element) {
         _ctl_query = copy_compare_condition(element);
     }
 

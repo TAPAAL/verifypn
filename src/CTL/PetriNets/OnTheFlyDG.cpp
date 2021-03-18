@@ -75,7 +75,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
         if(v->query->getQuantifier() == NEG){
             // no need to try to evaluate here -- this is already transient in other evaluations.
             auto cond = static_cast<NotCondition*>(v->query);
-            Configuration* c = createConfiguration(v->marking, v->owner, (*cond)[0]);
+            Configuration* c = createConfiguration(v->marking, v->getOwner(), (*cond)[0]);
             Edge* e = newEdge(*v, /*v->query->distance(context)*/0);
             e->is_negated = true;
             e->addTarget(c);
@@ -106,7 +106,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
             for(auto c : conds)
             {
                 assert(c->isTemporal());
-                e->addTarget(createConfiguration(v->marking, v->owner, c));
+                e->addTarget(createConfiguration(v->marking, v->getOwner(), c));
             }
             succs.push_back(e);
         }
@@ -135,7 +135,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
             {
                 assert(c->isTemporal());
                 Edge *e = newEdge(*v, /*cond->distance(context)*/0);
-                e->addTarget(createConfiguration(v->marking, v->owner, c));
+                e->addTarget(createConfiguration(v->marking, v->getOwner(), c));
                 succs.push_back(e);
             }
         }
@@ -158,7 +158,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 }
                 else {
                     //right side is temporal, we need to evaluate it as normal
-                    Configuration* c = createConfiguration(v->marking, v->owner, (*cond)[1]);
+                    Configuration* c = createConfiguration(v->marking, v->getOwner(), (*cond)[1]);
                     right = newEdge(*v, /*(*cond)[1]->distance(context)*/0);
                     right->addTarget(c);
                 }
@@ -170,7 +170,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                     valid = r0 == Condition::RTRUE;
                 } else {
                     //left side is temporal, include it in the edge
-                    left = createConfiguration(v->marking, v->owner, (*cond)[0]);
+                    left = createConfiguration(v->marking, v->getOwner(), (*cond)[0]);
                 }
                 if (valid || left != NULL) {
                     //if left side is guaranteed to be not satisfied, skip successor generation
@@ -188,7 +188,6 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                                         return false;
                                     }
                                     context.setMarking(mark.marking());
-                                    leftEdge->weight = 0;//std::min(leftEdge->weight, /*cond->distance(context)*/0);
                                     Configuration* c = createConfiguration(createMarking(mark), owner(mark, cond), cond);
                                     leftEdge->addTarget(c);
                                     return true;
@@ -222,7 +221,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                     }
                 } else {
                     subquery = newEdge(*v, /*cond->distance(context)*/0);
-                    Configuration* c = createConfiguration(v->marking, v->owner, (*cond)[0]);
+                    Configuration* c = createConfiguration(v->marking, v->getOwner(), (*cond)[0]);
                     subquery->addTarget(c);
                 }
                 Edge* e1 = NULL;
@@ -244,7 +243,6 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                                 return false;
                             }
                             context.setMarking(mark.marking());
-                            e1->weight = 0;//std::min(e1->weight, /*cond->distance(context)*/0);
                             Configuration* c = createConfiguration(createMarking(mark), owner(mark, cond), cond);
                             e1->addTarget(c);
                             return true;
@@ -278,8 +276,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                             {
                                 allValid = Condition::RUNKNOWN;
                                 context.setMarking(mark.marking());
-                                e->weight = 0;//std::min(e->weight, /*cond->distance(context)*/0);
-                                Configuration* c = createConfiguration(createMarking(mark), v->owner, (*cond)[0]);
+                                Configuration* c = createConfiguration(createMarking(mark), v->getOwner(), (*cond)[0]);
                                 e->addTarget(c);
                             }
                             return true;
@@ -311,7 +308,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                 Edge *right = NULL;
                 auto r1 = fastEval((*cond)[1], &query_marking);
                 if (r1 == Condition::RUNKNOWN) {
-                    Configuration* c = createConfiguration(v->marking, v->owner, (*cond)[1]);
+                    Configuration* c = createConfiguration(v->marking, v->getOwner(), (*cond)[1]);
                     right = newEdge(*v, /*(*cond)[1]->distance(context)*/0);
                     right->addTarget(c);
                 } else {
@@ -329,7 +326,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                     [&](){
                         auto r0 = fastEval((*cond)[0], &query_marking);
                         if (r0 == Condition::RUNKNOWN) {
-                            left = createConfiguration(v->marking, v->owner, (*cond)[0]);
+                            left = createConfiguration(v->marking, v->getOwner(), (*cond)[0]);
                         } else {
                             valid = r0 == Condition::RTRUE;
                         }                        
@@ -383,7 +380,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                         return succs;
                     }
                 } else {
-                    Configuration* c = createConfiguration(v->marking, v->owner, (*cond)[0]);
+                    Configuration* c = createConfiguration(v->marking, v->getOwner(), (*cond)[0]);
                     subquery = newEdge(*v, /*cond->distance(context)*/0);
                     subquery->addTarget(c);
                 }
@@ -438,7 +435,7 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
                             {
                                 context.setMarking(marking.marking());
                                 Edge* e = newEdge(*v, /*(*cond)[0]->distance(context)*/0);
-                                Configuration* c = createConfiguration(createMarking(marking), v->owner, query);
+                                Configuration* c = createConfiguration(createMarking(marking), v->getOwner(), query);
                                 e->addTarget(c);
                                 succs.push_back(e);
                             }
@@ -458,10 +455,12 @@ std::vector<DependencyGraph::Edge*> OnTheFlyDG::successors(Configuration *c)
     {
         assert(false && "Should never happen");
     }
+    /*
+    // legacy code from distributed version
     if(succs.size() == 1 && succs[0]->targets.size() == 1)
     {
-        ((PetriConfig*)succs[0]->targets[0])->owner = v->owner;
-    }
+        ((PetriConfig*)succs[0]->targets[0])->setOwner(v->getOwner());
+    }*/
     return succs;
 }
 
@@ -546,7 +545,7 @@ PetriConfig *OnTheFlyDG::createConfiguration(size_t marking, size_t own, Conditi
     PetriConfig* newConfig = new (mem) PetriConfig();
     newConfig->marking = marking;
     newConfig->query = t_query;
-    newConfig->owner = own;
+    newConfig->setOwner(own);
     configs.push_back(newConfig);
     return newConfig;
 }
@@ -604,8 +603,9 @@ Edge* OnTheFlyDG::newEdge(Configuration &t_source, uint32_t weight)
         recycle.pop();
     }
     assert(e->targets.empty());
+    /*e->assignment = UNKNOWN;
+    e->children = 0;*/
     e->source = &t_source;
-    e->weight = weight;
     assert(e->refcnt == 0);
     ++e->refcnt;
     return e;

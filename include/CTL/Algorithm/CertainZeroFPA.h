@@ -27,9 +27,8 @@ protected:
     
     void checkEdge(DependencyGraph::Edge* e, bool only_assign = false);
     void finalAssign(DependencyGraph::Configuration *c, DependencyGraph::Assignment a);
+    void finalAssign(DependencyGraph::Edge *e, DependencyGraph::Assignment a);
     void explore(DependencyGraph::Configuration *c);
-    void addDependency(DependencyGraph::Edge *e,
-                          DependencyGraph::Configuration *target);
 
 };
 }

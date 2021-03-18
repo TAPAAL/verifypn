@@ -36,8 +36,6 @@ namespace PetriEngine
             virtual void _accept(const OrCondition* element) = 0;
             virtual void _accept(const LessThanCondition* element) = 0;
             virtual void _accept(const LessThanOrEqualCondition* element) = 0;
-            virtual void _accept(const GreaterThanCondition* element) = 0;
-            virtual void _accept(const GreaterThanOrEqualCondition* element) = 0;
             virtual void _accept(const EqualCondition* element) = 0;
             virtual void _accept(const NotEqualCondition* element) = 0;
 
@@ -138,18 +136,6 @@ namespace PetriEngine
             void _accept(const LessThanOrEqualCondition *element) override {
                 assert(false);
                 std::cerr << "No accept for LessThanOrEqualCondition" << std::endl;
-                exit(0);
-            };
-
-            void _accept(const GreaterThanCondition *element) override {
-                assert(false);
-                std::cerr << "No accept for GreaterThanCondition" << std::endl;
-                exit(0);
-            };
-
-            void _accept(const GreaterThanOrEqualCondition *element) override {
-                assert(false);
-                std::cerr << "No accept for GreaterThanOrEqualCondition" << std::endl;
                 exit(0);
             };
 
