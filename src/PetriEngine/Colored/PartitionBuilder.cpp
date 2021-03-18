@@ -46,10 +46,10 @@ namespace PetriEngine {
                 auto place = _places->operator[](placeId);
 
                 for(uint32_t transitionId : _placePreTransitionMap->operator[](placeId)){
-                    std::cout << "For transition " << _transitions->operator[](transitionId).name << " and place " << _places->operator[](placeId).name << std::endl;
-                    printPartion();                    
+                    //std::cout << "For transition " << _transitions->operator[](transitionId).name << " and place " << _places->operator[](placeId).name << std::endl;
+                    //printPartion();                    
                     handleTransition(transitionId, placeId);
-                    std::cout << "---------------------------------------------------" << std::endl;
+                    //std::cout << "---------------------------------------------------" << std::endl;
                 }               
             }
         }

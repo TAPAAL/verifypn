@@ -208,7 +208,21 @@ namespace PetriEngine {
         // printPlaceTable();
         _placeColorFixpoints.clear();
 
+
+        // std::cout << "Var intervals before partitioning" << std::endl;
+        // for(auto transition : _transitions){
+        //     for(auto varmap : transition.variableMaps){
+        //         for(auto varpair : varmap){
+        //             std::cout << varpair.first->name << std::endl;
+        //             varpair.second.print();
+        //         }
+        //     }
+        // }
+        auto timerStart = std::chrono::high_resolution_clock::now();
         partitionVariableMap();
+        auto timerEnd = std::chrono::high_resolution_clock::now();
+        _timer += (std::chrono::duration_cast<std::chrono::microseconds>(timerEnd - timerStart).count())*0.000001;
+        std::cout << "Partition application took " << _timer << " seconds"<< std::endl;
     }
 
     void ColoredPetriNetBuilder::partitionVariableMap(){
@@ -228,39 +242,39 @@ namespace PetriEngine {
                     continue;
                 }
 
-                for(auto varPos : varPositions){                   
-                    for(auto eqClass : placePartition->_equivalenceClasses){
-                        for(auto interval : eqClass._colorIntervals._intervals){
-                            for(auto &varmap : transition.variableMaps){
-                                for(auto &varIntervals : varmap){
-                                    Colored::intervalTuple_t newIntervalTuple;
-                                    for(auto varInterval : varIntervals.second._intervals){
-                                        for(auto indexModMap : varModifierMap[varIntervals.first]){
-                                            for(auto indexModPair : indexModMap){
-                                                if(isTuple){
-                                                    Colored::interval_t reducedPlaceInterval;
-                                                    for(uint32_t i = indexModPair.first; i < indexModPair.first + varIntervals.first->colorType->size(); i++){
-                                                        reducedPlaceInterval.addRange(interval[i]);
-                                                    }
+                                 
+                for(auto eqClass : placePartition->_equivalenceClasses){
+                    for(auto interval : eqClass._colorIntervals._intervals){
+                        for(auto &varmap : transition.variableMaps){
+                            for(auto &varIntervals : varmap){
+                                Colored::intervalTuple_t newIntervalTuple;
+                                for(auto varInterval : varIntervals.second._intervals){
+                                    for(auto indexModMap : varModifierMap[varIntervals.first]){
+                                        for(auto indexModPair : indexModMap){
+                                            if(isTuple){
+                                                Colored::interval_t reducedPlaceInterval;
+                                                for(uint32_t i = indexModPair.first; i < indexModPair.first + varIntervals.first->colorType->size(); i++){
+                                                    reducedPlaceInterval.addRange(interval[i]);
+                                                }
 
-                                                    auto overlappingInterval = reducedPlaceInterval.getOverlap(varInterval);
-                                                    if(overlappingInterval.isSound()){
-                                                        newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
-                                                    }
-                                                } else {
-                                                    auto overlappingInterval = interval.getOverlap(varInterval);
-                                                    if(overlappingInterval.isSound()){
-                                                        newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
-                                                    }
+                                                auto overlappingInterval = reducedPlaceInterval.getOverlap(varInterval);
+                                                if(overlappingInterval.isSound()){
+                                                    newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
+                                                }
+                                            } else {
+                                                auto overlappingInterval = interval.getOverlap(varInterval);
+                                                if(overlappingInterval.isSound()){
+                                                    newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
                                                 }
                                             }
                                         }
-                                                                                
-                                    }
-                                    if(!newIntervalTuple._intervals.empty()){
-                                        varIntervals.second = newIntervalTuple;
                                     }                                    
                                 }
+                                if(!newIntervalTuple._intervals.empty() && !newIntervalTuple._intervals.back()._ranges.empty()){
+                                    std::cout << "Adding new intervals " << std::endl;
+                                    newIntervalTuple.print();
+                                    varIntervals.second = newIntervalTuple;
+                                }                                    
                             }
                         }
                     }
@@ -273,6 +287,7 @@ namespace PetriEngine {
                     varInterval.second.print();
                 }
             }
+            std::cout << "----------------------------------------------------------" << std::endl;
         }
     }
 
@@ -314,10 +329,8 @@ namespace PetriEngine {
         if(!transitionActivated){
             return;
         }
-        auto timerStart = std::chrono::high_resolution_clock::now();
-        if(intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId])){              
-            auto timerEnd = std::chrono::high_resolution_clock::now();
-            _timer += (std::chrono::duration_cast<std::chrono::microseconds>(timerEnd - timerStart).count())*0.000001;
+        
+        if(intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId])){ 
             if(transition.guard != nullptr) {
                 
                 transition.guard->restrictVars(transition.variableMaps); 
@@ -346,8 +359,6 @@ namespace PetriEngine {
                 }
             }
         } else {
-            auto timerEnd = std::chrono::high_resolution_clock::now();
-            _timer += (std::chrono::duration_cast<std::chrono::microseconds>(timerEnd - timerStart).count())*0.000001;
             std::cout << "getting var intervals failed " << std::endl;
             transitionActivated = false;
         }                                            
@@ -396,6 +407,7 @@ namespace PetriEngine {
     PetriNetBuilder& ColoredPetriNetBuilder::unfold() {
         if (_stripped) assert(false);
         if (_isColored && !_unfolded) {
+            std::cout << "Unfolding" << std::endl;
             auto start = std::chrono::high_resolution_clock::now();
 
             for (auto& transition : _transitions) {

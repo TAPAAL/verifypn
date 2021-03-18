@@ -43,11 +43,11 @@ namespace PetriEngine {
                     
                     for(auto otherInterval : other._colorIntervals._intervals){
                         auto subtractedIntervals = interval.getSubtracted(otherInterval, _colorType->size());
-                        std::cout << interval.toString() << " - " << otherInterval.toString() << " = " << std::endl;
-                        for(auto subinter : subtractedIntervals){
-                            std::cout << subinter.toString() << std::endl;
-                        }
-                        std::cout << "~~~~~~" << std::endl;
+                        // std::cout << interval.toString() << " - " << otherInterval.toString() << " = " << std::endl;
+                        // for(auto subinter : subtractedIntervals){
+                        //     std::cout << subinter.toString() << std::endl;
+                        // }
+                        // std::cout << "~~~~~~" << std::endl;
 
                         if(subtractedIntervals.empty() || subtractedIntervals[0].size() == 0){
                             if(_colorType->productSize() > 1){
@@ -57,10 +57,6 @@ namespace PetriEngine {
                                 continue;
                             }                            
                         }
-
-                        //[0,5] - [1,1][5,5] 
-                        //[0,0][2,5]
-                        //[0,4]
 
                         if(resIntervals._intervals.empty()){
                             resIntervals._intervals = subtractedIntervals;
@@ -79,7 +75,7 @@ namespace PetriEngine {
                                 resIntervals.addInterval(newInterval);
                             }                            
                         }
-                        std::cout << "Subtract res is now: " << resIntervals.toString() << std::endl;
+                        //std::cout << "Subtract res is now: " << resIntervals.toString() << std::endl;
                     }
                 }
                 result._colorIntervals = resIntervals;                  

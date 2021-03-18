@@ -239,7 +239,7 @@ namespace PetriEngine {
                     interval_t newInterval = *this;
                     
                     int32_t newMinUpper = std::min(((int) other[i]._lower) -1, (int)_ranges[i]._upper);
-                    uint32_t otherUpper = (other[i]._upper +1) >= ctSize? ctSize-1: other[i]._upper +1;
+                    //uint32_t otherUpper = (other[i]._upper +1) >= ctSize? ctSize-1: other[i]._upper +1;
                     uint32_t newMaxLower = std::max(other[i]._upper +1, _ranges[i]._lower);
 
                     if(((int32_t) _ranges[i]._lower) <= newMinUpper && newMaxLower <= _ranges[i]._upper){
