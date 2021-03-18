@@ -285,11 +285,11 @@ namespace LTL {
     template
     class AutomataStubbornTarjan<PetriEngine::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
 
-    template
-    class AutomataStubbornTarjan<PetriEngine::SuccessorGenerator, PetriEngine::Structures::StateSet>;
+    /*template
+    class AutomataStubbornTarjan<LTL::ResumingSuccessorGenerator, PetriEngine::Structures::StateSet>;
 
     template
-    class AutomataStubbornTarjan<PetriEngine::SuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
+    class AutomataStubbornTarjan<LTL::ResumingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;*/
 
     template
     class AutomataStubbornTarjan<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>;

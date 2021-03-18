@@ -19,7 +19,7 @@
 #define VERIFYPN_PRODUCTPRINTER_H
 
 #include "LTL/Structures/ProductStateFactory.h"
-#include "LTL/ProductSuccessorGenerator.h"
+#include "ProductSuccessorGenerator.h"
 #include "PetriEngine/Structures/StateSet.h"
 #include "PetriEngine/Structures/Queue.h"
 #include "PetriEngine/PQL/Contexts.h"

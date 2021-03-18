@@ -53,7 +53,7 @@ namespace LTL {
                       << "\tdiscovered states: " << seen.discovered() << std::endl
                       << "\texplored states:   " << this->stats.explored << std::endl
                       << "\texpanded states:   " << this->stats.expanded << std::endl
-                      << "\tmax tokens:        " << seen.maxTokens() << std::endl;
+                      << "\tmax tokens:        " << seen.max_tokens() << std::endl;
         }
 
     private:

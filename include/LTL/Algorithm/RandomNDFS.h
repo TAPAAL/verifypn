@@ -29,11 +29,11 @@
 using namespace PetriEngine;
 
 namespace LTL {
-    class RandomNDFS : public ModelChecker<PetriEngine::SuccessorGenerator> {
+    class RandomNDFS : public ModelChecker<LTL::SpoolingSuccessorGenerator> {
     public:
         RandomNDFS(const PetriNet &net, const PetriEngine::PQL::Condition_ptr &cond, TraceLevel level,
                    bool shortcircuitweak)
-                : ModelChecker(net, cond, SuccessorGenerator{net, cond}, level, shortcircuitweak),
+                : ModelChecker(net, cond, LTL::SpoolingSuccessorGenerator{net, cond}, level, shortcircuitweak),
                   factory{net, successorGenerator->initial_buchi_state()},
                   mark1(net, 0, (int) net.numberOfPlaces() + 1), mark2(net, 0, (int) net.numberOfPlaces() + 1) {}
 

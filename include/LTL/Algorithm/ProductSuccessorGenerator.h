@@ -23,7 +23,7 @@
 #include "LTL/Stubborn/ReducingSuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/Structures/ProductState.h"
-#include "LTL/BuchiSuccessorGenerator.h"
+#include "BuchiSuccessorGenerator.h"
 #include "LTL/LTLToBuchi.h"
 #include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include "LTL/Simplification/SpotToPQL.h"
@@ -40,8 +40,8 @@ namespace LTL {
 
         ProductSuccessorGenerator(const PetriEngine::PetriNet &net,
                                   const PetriEngine::PQL::Condition_ptr &cond,
-                                  const SuccessorGen &successorGen)
-                : successorGenerator(successorGen), _net(net),
+                                  SuccessorGen &&successorGen)
+                : successorGenerator(std::move(successorGen)), _net(net),
                   buchi(makeBuchiAutomaton(cond)),
                   aut(buchi.aut)
         {
@@ -69,7 +69,7 @@ namespace LTL {
 
         [[nodiscard]] size_t initial_buchi_state() const { return buchi.initial_state_number(); };
 
-        bool prepare(const LTL::Structures::ProductState *state)
+        auto prepare(const LTL::Structures::ProductState *state)
         {
             buchi.prepare(state->getBuchiState());
             buchi_parent = state->getBuchiState();
@@ -122,7 +122,6 @@ namespace LTL {
             buf[_net.numberOfPlaces()] = initial_buchi_state();
             LTL::Structures::ProductState state;
             state.setMarking(buf, _net.numberOfPlaces());
-            _net.print(buf);
             //state.setBuchiState(initial_buchi_state());
             buchi.prepare(state.getBuchiState());
             while (next_buchi_succ(state)) {
@@ -143,7 +142,7 @@ namespace LTL {
          * @param state the source state to generate successors from
          * @param sucinfo the point in the iteration to start from, as returned by `next`.
          */
-        void prepare(const LTL::Structures::ProductState *state, const typename SuccessorGen::sucinfo &sucinfo)
+        void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::sucinfo &sucinfo)
         {
             if constexpr (AutomataReducing) {
                 successorGenerator.prepare(state, sucinfo, false);
@@ -151,9 +150,9 @@ namespace LTL {
             else {
                 successorGenerator.prepare(state, sucinfo);
             }
+            fresh_marking = sucinfo.fresh(); //
             buchi.prepare(state->getBuchiState());
             buchi_parent = state->getBuchiState();
-            fresh_marking = sucinfo.fresh(); //
             if (!fresh_marking) {
                 assert(sucinfo.buchi_state != std::numeric_limits<size_t>::max());
                 // spool Büchi successors until last state found.
@@ -187,7 +186,7 @@ namespace LTL {
                 }
             }
             if (next_buchi_succ(state)) {
-                successorGenerator.getSuccInfo(sucinfo);
+                //successorGenerator.getSuccInfo(sucinfo);
                 sucinfo.buchi_state = state.getBuchiState();
                 return true;
             }
@@ -198,7 +197,7 @@ namespace LTL {
                     // reset buchi successors
                     buchi.prepare(buchi_parent);
                     if (next_buchi_succ(state)) {
-                        successorGenerator.getSuccInfo(sucinfo);
+                        //successorGenerator.getSuccInfo(sucinfo);
                         sucinfo.buchi_state = state.getBuchiState();
                         return true;
                     }
@@ -306,11 +305,6 @@ namespace LTL {
         }
     };
 
-    extern template
-    class ProductSuccessorGenerator<PetriEngine::SuccessorGenerator>;
-
-    extern template
-    class ProductSuccessorGenerator<PetriEngine::ReducingSuccessorGenerator>;
 }
 
 

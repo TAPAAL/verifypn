@@ -112,8 +112,9 @@ namespace LTL {
                 result = _verify<RandomNDFS>(net, negated_formula, options);
                 break;
             case Algorithm::Tarjan:
-                if (options.stubbornreduction/* && !negated_formula->containsNext()*/) {
+                if (false && options.stubbornreduction/* && !negated_formula->containsNext()*/) {
                     std::cout << "Running stubborn version!" << std::endl;
+                    assert(false);
                     // TODO Add stubborn Tarjan model checkers after merge
 /*
                     result = _verify<VisibleStubbornTarjanModelChecker<ReducingSuccessorGenerator>>(net, negated_formula, options.printstatistics);
@@ -132,9 +133,9 @@ namespace LTL {
 */
                 } else {
                     if (options.trace != TraceLevel::None) {
-                        result = _verify<TarjanModelChecker<true>>(net, negated_formula, options);
+                        result = _verify<TarjanModelChecker<SpoolingSuccessorGenerator, true>>(net, negated_formula, options);
                     } else {
-                        result = _verify<TarjanModelChecker<false>>(net, negated_formula, options);
+                        result = _verify<TarjanModelChecker<SpoolingSuccessorGenerator, false>>(net, negated_formula, options);
                     }
                 }
                 break;

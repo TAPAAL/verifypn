@@ -50,7 +50,7 @@ namespace LTL {
                       << "\tdiscovered states: " << seen.discovered() << std::endl
                       << "\texplored states:   " << this->stats.explored << std::endl
                       << "\texpanded states:   " << this->stats.expanded << std::endl
-                      << "\tmax tokens:        " << seen.maxTokens() << std::endl;
+                      << "\tmax tokens:        " << seen.max_tokens() << std::endl;
         }
 
     private:
@@ -86,7 +86,15 @@ namespace LTL {
         struct DEntry {
             idx_t pos;
             light_deque<idx_t> successors{};
-            bool expanded = false;
+            bool expanded;
+            size_t buchi_state;
+            size_t last_state;
+            typename SuccessorGen::sucinfo sucinfo;
+
+            inline bool has_prev_state() const
+            {
+                return last_state != std::numeric_limits<size_t>::max();
+            }
         };
 
 

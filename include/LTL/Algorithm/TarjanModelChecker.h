@@ -21,8 +21,9 @@
 
 #include "LTL/Algorithm/ModelChecker.h"
 #include "LTL/Structures/ProductStateFactory.h"
-#include "PetriEngine/Structures/StateSet.h"
-#include "PetriEngine/SuccessorGenerator.h"
+#include "LTL/Structures/BitProductStateSet.h"
+#include "ResumingSuccessorGenerator.h"
+#include "SpoolingSuccessorGenerator.h"
 
 #include <stack>
 #include <unordered_set>
@@ -41,15 +42,15 @@ namespace LTL {
      * </p>
      * @tparam SaveTrace whether to save and print counter-examples when possible.
      */
-    template<bool SaveTrace = false>
-    class TarjanModelChecker : public ModelChecker<PetriEngine::SuccessorGenerator> {
+    template<typename SuccessorGen, bool SaveTrace = false>
+    class TarjanModelChecker : public ModelChecker<SuccessorGen> {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond,
                            const TraceLevel level = TraceLevel::Full,
                            const bool shortcircuitweak = true)
-                : ModelChecker(net, cond, PetriEngine::SuccessorGenerator{net, cond}, level, shortcircuitweak),
-                  factory(net, successorGenerator->initial_buchi_state()),
-                  seen(net, 0, (int) net.numberOfPlaces() + 1)
+                : ModelChecker<SuccessorGen>(net, cond, SuccessorGen{net, cond}, level, shortcircuitweak),
+                  factory(net, this->successorGenerator->initial_buchi_state()),
+                  seen(net, 0)
         {
             chash.fill(std::numeric_limits<idx_t>::max());
         }
@@ -58,7 +59,7 @@ namespace LTL {
 
         void printStats(ostream &os) override
         {
-            _printStats(os, seen);
+            this->_printStats(os, seen);
         }
 
     protected:
@@ -69,7 +70,7 @@ namespace LTL {
 
         LTL::Structures::ProductStateFactory factory;
 
-        using StateSet = std::conditional_t<SaveTrace, PetriEngine::Structures::TracableStateSet, PetriEngine::Structures::StateSet>;
+        using StateSet = std::conditional_t<SaveTrace, LTL::Structures::TraceableBitProductStateSet<>, LTL::Structures::BitProductStateSet<>>;
 
         StateSet seen;
         std::unordered_set<idx_t> store;
@@ -103,10 +104,16 @@ namespace LTL {
                 TracableCEntry,
                 PlainCEntry>;
 
-
         struct DEntry {
             idx_t pos; // position in cstack.
-            PetriEngine::successor_info sucinfo;
+
+            /*DEntry(idx_t pos) : pos(pos), sucinfo(SuccessorGen::sucinfo::initial_suc_info),
+                                buchi_state(std::numeric_limits<size_t>::max()),
+                                last_state(std::numeric_limits<size_t>::max()) {}
+*/
+            typename SuccessorGen::sucinfo sucinfo;
+
+            explicit DEntry(idx_t pos) : pos(pos), sucinfo(SuccessorGen::initial_suc_info()) {}
         };
 
         // master list of state information.
@@ -134,10 +141,16 @@ namespace LTL {
     };
 
     extern template
-    class TarjanModelChecker<true>;
+    class TarjanModelChecker<LTL::ResumingSuccessorGenerator, true>;
 
     extern template
-    class TarjanModelChecker<false>;
+    class TarjanModelChecker<LTL::ResumingSuccessorGenerator, false>;
+
+    extern template
+    class TarjanModelChecker<LTL::SpoolingSuccessorGenerator, true>;
+
+    extern template
+    class TarjanModelChecker<LTL::SpoolingSuccessorGenerator, false>;
 }
 
 #endif //VERIFYPN_TARJANMODELCHECKER_H

@@ -148,18 +148,6 @@ namespace PetriEngine {
         producePostset(write, tid);
     }
 
-    void SuccessorGenerator::prepare(const Structures::State* state, const successor_info &sucinfo) {
-        prepare(state);
-        _suc_pcounter = sucinfo.pcounter;
-        _suc_tcounter = sucinfo.tcounter;
-
-    }
-
-    void SuccessorGenerator::getSuccInfo(successor_info &sucinfo) const {
-        sucinfo.pcounter = _suc_pcounter;
-        sucinfo.tcounter = _suc_tcounter;
-    }
-
     SuccessorGenerator::SuccessorGenerator(const PetriNet &net, const std::shared_ptr<StubbornSet>&)
         : SuccessorGenerator(net){}
 

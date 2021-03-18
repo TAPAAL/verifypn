@@ -20,7 +20,10 @@
 
 #include <iomanip>
 #include "PetriEngine/PQL/PQL.h"
-#include "LTL/ProductSuccessorGenerator.h"
+#include "ProductSuccessorGenerator.h"
+#include "ResumingSuccessorGenerator.h"
+#include "SpoolingSuccessorGenerator.h"
+#include "LTL/Structures/BitProductStateSet.h"
 #include "LTL/Algorithm/ProductPrinter.h"
 #include "PetriEngine/options.h"
 
@@ -29,12 +32,12 @@ namespace LTL {
     class ModelChecker {
     public:
         ModelChecker(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &condition,
-                     const SuccessorGen &successorGen,
+                     SuccessorGen &&successorGen,
                      const TraceLevel level = TraceLevel::Transitions,
                      bool shortcircuitweak = true)
                 : net(net), formula(condition), traceLevel(level), shortcircuitweak(shortcircuitweak) {
             successorGenerator = std::make_unique<ProductSuccessorGenerator<SuccessorGen>>(net, condition,
-                                                                                           successorGen);
+                                                                                           std::move(successorGen));
         }
 
         virtual bool isSatisfied() = 0;
@@ -53,12 +56,12 @@ namespace LTL {
         };
 
         stats_t stats;
-        virtual void _printStats(ostream &os, const PetriEngine::Structures::StateSetInterface &stateSet) {
+        virtual void _printStats(ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet) {
             std::cout   << "STATS:\n"
                         << "\tdiscovered states: " << stateSet.discovered() << std::endl
                         << "\texplored states:   " << stats.explored << std::endl
                         << "\texpanded states:   " << stats.expanded << std::endl
-                        << "\tmax tokens:        " << stateSet.maxTokens() << std::endl;
+                        << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
         }
 
         std::unique_ptr<ProductSuccessorGenerator<SuccessorGen>> successorGenerator;
@@ -107,7 +110,8 @@ namespace LTL {
         }
 
     };
-    extern template class ModelChecker<PetriEngine::SuccessorGenerator>;
+    extern template class ModelChecker<LTL::ResumingSuccessorGenerator>;
+    extern template class ModelChecker<LTL::SpoolingSuccessorGenerator>;
     extern template class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
 }
 

@@ -118,6 +118,7 @@ namespace LTL {
             idx_t parenttrans;
             light_deque<DSucc> successors{};
             bool expanded = false;
+
         };
 
         uint32_t _lasttid;

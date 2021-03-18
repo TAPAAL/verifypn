@@ -48,11 +48,11 @@ namespace LTL {
      *         <code>PetriEngine::Structures::StateSet</code> if you don't care (as it is faster).
      */
     template<typename W>
-    class NestedDepthFirstSearch : public ModelChecker<PetriEngine::SuccessorGenerator> {
+class NestedDepthFirstSearch : public ModelChecker<LTL::ResumingSuccessorGenerator> {
     public:
         NestedDepthFirstSearch(const PetriNet &net, const PetriEngine::PQL::Condition_ptr &query,
                                TraceLevel level = TraceLevel::Full, const bool shortcircuitweak = true)
-                : ModelChecker(net, query, SuccessorGenerator{net, query}, level, shortcircuitweak),
+                : ModelChecker(net, query, LTL::ResumingSuccessorGenerator{net, query}, level, shortcircuitweak),
                   factory{net, successorGenerator->initial_buchi_state()},
                   states(net, 0, (int) net.numberOfPlaces() + 1) {}
 

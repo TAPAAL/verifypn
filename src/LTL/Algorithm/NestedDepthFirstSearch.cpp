@@ -41,7 +41,7 @@ namespace LTL {
             for (auto &state : initial_states) {
                 auto res = states.add(state);
                 assert(res.first);
-                todo.push(StackEntry{res.second, initial_suc_info});
+                todo.push(StackEntry{res.second, LTL::ResumingSuccessorGenerator::initial_suc_info()});
                 _discovered++;
             }
         }
@@ -85,7 +85,7 @@ namespace LTL {
                         states.setHistory(stateid, successorGenerator->fired());
                     }
                     _discovered++;
-                    todo.push(StackEntry{stateid, initial_suc_info});
+                    todo.push(StackEntry{stateid, LTL::ResumingSuccessorGenerator::initial_suc_info()});
                 }
             }
         }
@@ -99,7 +99,7 @@ namespace LTL {
         State working = factory.newState();
         State curState = factory.newState();
 
-        todo.push(StackEntry{states.add(state).second, initial_suc_info});
+        todo.push(StackEntry{states.add(state).second, LTL::ResumingSuccessorGenerator::initial_suc_info()});
 
         while (!todo.empty()) {
             auto &top = todo.top();
@@ -139,7 +139,7 @@ namespace LTL {
                         states.setHistory2(stateid, successorGenerator->fired());
                     }
                     _discovered++;
-                    todo.push(StackEntry{stateid, initial_suc_info});
+                    todo.push(StackEntry{stateid, LTL::ResumingSuccessorGenerator::initial_suc_info()});
                 }
 
             }
