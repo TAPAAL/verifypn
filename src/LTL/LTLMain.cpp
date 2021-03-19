@@ -19,8 +19,6 @@
 #include "LTL/LTLMain.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Expressions.h"
-//#include "LTL/Algorithm/VisibleStubbornTarjanModelChecker.h"
-//#include "LTL/Algorithm/InterestingStubbornTarjanModelChecker.h"
 #include "LTL/Algorithm/ResumingStubbornTarjan.h"
 
 #include "LTL/SuccessorGeneration/Spoolers.h"

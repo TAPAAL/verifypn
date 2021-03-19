@@ -219,10 +219,10 @@ namespace LTL {
         const PetriEngine::PetriNet &getNet() { return _net; }
 
         //template<typename T = std::enable_if_t<std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>, void>>
-        void generateAll()
+        void generateAll(typename SuccessorGen::sucinfo &sucinfo)
         {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                _successor_generator.generate_all();
+                _successor_generator.generate_all(sucinfo);
             }
         }
 

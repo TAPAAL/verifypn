@@ -36,6 +36,8 @@ namespace LTL {
 
         uint32_t next() override
         {
+            // TODO don't need to actually fire the transition, merely spool to next.
+            // this is a non-trivial refactor in SuccessorGenerator, but seems natural.
             if (_successorGenerator.next(_marking)) {
                 return _successorGenerator.fired();
             } else {

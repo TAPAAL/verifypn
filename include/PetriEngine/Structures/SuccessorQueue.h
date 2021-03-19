@@ -85,14 +85,20 @@ public:
     void extend_to(T *src, uint32_t nelem)
     {
         auto newdata = std::make_unique<T[]>(nelem);
-        if (_front != 0)
+        if (_front != 0) {
+            //Add previously fired transitions to start of array.
             memcpy(newdata.get(), _data.get(), sizeof(T) * _front);
+        }
         uint32_t sz = _front;
         // copy over extended successor list, excluding previously popped elements.
         for (uint32_t i = 0; i < nelem; ++i) {
             // FIXME potential optimization target if poor performance is found.
-            auto it = std::find(_data.get(), _data.get() + _front, src[i]);
-            if (it != _data.get() + _front) {
+            auto begin = _data.get(), end = _data.get() + _front;
+            auto it = std::find(begin, end, src[i]);
+
+            // Transition not previously fired. Add it.
+            if (it == end) {
+                assert(sz < nelem);
                 newdata[sz++] = src[i];
             }
         }

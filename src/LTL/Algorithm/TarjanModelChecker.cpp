@@ -66,7 +66,8 @@ namespace LTL {
                     if constexpr (IsSpooling) {
                         if (seen.getMarkingId(cstack[suc_pos].stateid) == marking) {
                             if (extstack.empty() || suc_pos > extstack.top()) {
-                                this->successorGenerator->generateAll();
+                                this->successorGenerator->prepare(&parent, dtop.sucinfo);
+                                this->successorGenerator->generateAll(dtop.sucinfo);
                                 extstack.push(cstack.size() - 1);
                             }
                         }
@@ -76,7 +77,8 @@ namespace LTL {
                 if (suc_pos != std::numeric_limits<idx_t>::max()) {
                     if constexpr (IsSpooling) {
                         if (extstack.empty() || suc_pos > extstack.top()) {
-                            this->successorGenerator->generateAll();
+                            this->successorGenerator->prepare(&parent, dtop.sucinfo);
+                            this->successorGenerator->generateAll(dtop.sucinfo);
                             extstack.push(cstack.size() - 1);
                         }
                     }

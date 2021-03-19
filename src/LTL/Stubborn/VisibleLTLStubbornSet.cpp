@@ -152,14 +152,14 @@ namespace LTL {
         }
         // recompute entire set
         closure();
-
+/*
         // re-add previously non-stubborn, enabled transitions to order if they are now stubborn.
         while (!_skipped.empty()) {
             auto tid = _skipped.front();
             if (_stubborn[tid])
                 _ordering.push_back(tid);
             _skipped.pop_front();
-        }
+        }*/
     }
 
     void VisibleLTLStubbornSet::addToStub(uint32_t t) {
