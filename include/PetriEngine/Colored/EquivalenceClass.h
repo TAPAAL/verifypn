@@ -113,6 +113,7 @@ namespace PetriEngine {
 
         struct EquivalenceVec{
             std::vector<EquivalenceClass> _equivalenceClasses;
+            std::unordered_map<const Colored::Color *, EquivalenceClass *> colorEQClassMap;
             bool diagonal = false;
         };
 

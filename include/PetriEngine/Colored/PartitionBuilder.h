@@ -33,6 +33,7 @@ namespace PetriEngine {
                 void handleTransition(Transition *transitionId, uint32_t postPlaceId, Arc *postArc);
 
                 void handleLeafTransitions();
+                void assignColorMap();
 
                 std::vector<std::unordered_map<const Variable *, intervalTuple_t>> prepareVariables(
                             std::unordered_map<const Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap, 

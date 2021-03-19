@@ -359,6 +359,10 @@ namespace PetriEngine {
             const Color* eval(ExpressionContext& context) const override {
                 return &++(*_color->eval(context));
             }
+
+            bool isTuple() const override {
+                return _color->isTuple();
+            }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
@@ -412,6 +416,10 @@ namespace PetriEngine {
         public:
             const Color* eval(ExpressionContext& context) const override {
                 return &--(*_color->eval(context));
+            }
+
+            bool isTuple() const override {
+                return _color->isTuple();
             }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
@@ -601,6 +609,10 @@ namespace PetriEngine {
                 _right->getVariables(variables, varPositions, varModifierMap);
             }
 
+            bool isTuple() const override {
+                return _left->isTuple() || _right->isTuple();
+            }
+
             void restrictVars(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const override {
                 std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMapL;
                 std::unordered_map<const Colored::Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMapR;
@@ -642,6 +654,10 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) > _right->eval(context);
+            }
+
+            bool isTuple() const override {
+                return _left->isTuple() || _right->isTuple();
             }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
@@ -690,6 +706,10 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) <= _right->eval(context);
+            }
+
+            bool isTuple() const override {
+                return _left->isTuple() || _right->isTuple();
             }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
@@ -740,6 +760,10 @@ namespace PetriEngine {
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) >= _right->eval(context);
             }
+
+            bool isTuple() const override {
+                return _left->isTuple() || _right->isTuple();
+            }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
@@ -789,6 +813,10 @@ namespace PetriEngine {
                 return _left->eval(context) == _right->eval(context);
             }
             
+            bool isTuple() const override {
+                return _left->isTuple() || _right->isTuple();
+            }
+
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
                 _right->getVariables(variables, varPositions, varModifierMap);
@@ -837,6 +865,10 @@ namespace PetriEngine {
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) != _right->eval(context);
             }
+
+            bool isTuple() const override {
+                return _left->isTuple() || _right->isTuple();
+            }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
@@ -863,6 +895,10 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return !_expr->eval(context);
+            }
+
+            bool isTuple() const override {
+                return _expr->isTuple();
             }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
@@ -901,6 +937,10 @@ namespace PetriEngine {
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) && _right->eval(context);
             }
+
+            bool isTuple() const override {
+                return _left->isTuple() || _right->isTuple();
+            }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
@@ -929,6 +969,10 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) || _right->eval(context);
+            }
+
+            bool isTuple() const override {
+                return _left->isTuple() || _right->isTuple();
             }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
@@ -1001,6 +1045,10 @@ namespace PetriEngine {
                     colors.push_back(&(*_sort)[i]);
                 }
                 return colors;
+            }
+
+            bool isTuple() const override {
+                return _sort->productSize() > 1;
             }
 
             void getConstants(std::unordered_map<uint32_t, std::vector<const Color*>> &constantMap, uint32_t &index) const {
@@ -1079,6 +1127,15 @@ namespace PetriEngine {
                     col.push_back(std::make_pair(elem, _number));
                 }
                 return Multiset(col);
+            }
+
+            bool isTuple() const override {
+                for(auto colorExpr : _color){
+                    if(colorExpr->isTuple()){
+                        return true;
+                    }
+                }
+                return false;
             }
 
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
@@ -1202,6 +1259,15 @@ namespace PetriEngine {
                 }
             }
 
+            bool isTuple() const override {
+                for(auto arcExpr : _constituents){
+                    if(arcExpr->isTuple()){
+                        return true;
+                    }
+                }
+                return false;
+            }
+
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index, int32_t modifier) const override {
                 for (auto elem : _constituents) {
                     uint32_t newIndex = 0;
@@ -1282,6 +1348,10 @@ namespace PetriEngine {
                 //_right->getVariables(variables, varPositions, varModifierMap);
             }
 
+            bool isTuple() const override {
+                return _left->isTuple() || _right->isTuple();
+            }
+
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index, int32_t modifier) const override {
                 return _left->getArcIntervals(arcIntervals, cfp, index, modifier);
                 //We ignore the restrictions imposed by the subtraction for now
@@ -1335,6 +1405,10 @@ namespace PetriEngine {
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _expr->getVariables(variables, varPositions,varModifierMap);
+            }
+
+            bool isTuple() const override {
+                return _expr->isTuple();
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index, int32_t modifier) const override {

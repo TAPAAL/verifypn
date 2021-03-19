@@ -633,6 +633,8 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
                 builder.getUnfoldedTransitionCount() << " transitions, and " <<
                 builder.getUnfoldedArcCount() << " arcs" << std::endl;
         std::cout << "Unfolded in " << builder.getUnfoldTime() << " seconds" << std::endl;
+        std::cout << "Partitioned in " << builder.getPartitionTime() << " seconds" << std::endl;
+        std::cout << "Applied partition to variables in " << builder.getPartitionVarMapTime() << " seconds" << std::endl;
         
 
         if(!options.output_stats.empty()){

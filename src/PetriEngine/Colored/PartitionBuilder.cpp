@@ -32,9 +32,6 @@ namespace PetriEngine {
                 std::cout << "Diagonal " << equivalenceVec.second.diagonal << std::endl << std::endl;;
             }
         }
-
-       
-
         
         void PartitionBuilder::partitionNet(){
             handleLeafTransitions();
@@ -52,9 +49,24 @@ namespace PetriEngine {
                     //std::cout << "---------------------------------------------------" << std::endl;
                 }               
             }
+            assignColorMap();
         }
 
-        
+        void PartitionBuilder::assignColorMap(){
+            for(auto& eqVec : _partition){
+                ColorType *colorType = _places->operator[](eqVec.first).type;
+                for(uint32_t i = 0; i < colorType->size(); i++){
+                    const Color *color = &colorType->operator[](i);
+                    for(auto& eqClass : eqVec.second._equivalenceClasses){
+                        std::vector<uint32_t> colorIds;
+                        color->getTupleId(&colorIds);
+                        if(eqClass.constainsColor(colorIds)){
+                            eqVec.second.colorEQClassMap[color] = &eqClass;
+                        }
+                    }
+                }                
+            }
+        }
 
         void PartitionBuilder::handleTransition(uint32_t transitionId, uint32_t postPlaceId){
             auto transition = _transitions->operator[](transitionId);
@@ -193,11 +205,11 @@ namespace PetriEngine {
                     auto ec2 = _partition[placeId]._equivalenceClasses[ecPos2];
                     auto rightSubtractEc = ec1.subtract(ec2);
                     auto leftSubtractEc = ec2.subtract(ec1);
-                    std::cout << "comparing " << ec2.toString() << " to " << ec1.toString() << std::endl;
+                    // std::cout << "comparing " << ec2.toString() << " to " << ec1.toString() << std::endl;
 
-                    std::cout << "Intersection: " << intersection.toString() << std::endl;
-                    std::cout << "Left: " << leftSubtractEc.toString() << std::endl;
-                    std::cout << "Right: " << rightSubtractEc.toString() << std::endl;
+                    // std::cout << "Intersection: " << intersection.toString() << std::endl;
+                    // std::cout << "Left: " << leftSubtractEc.toString() << std::endl;
+                    // std::cout << "Right: " << rightSubtractEc.toString() << std::endl;
 
                     equivalenceVec._equivalenceClasses.erase(equivalenceVec._equivalenceClasses.begin() + ecPos1);
                     _partition[placeId]._equivalenceClasses.erase(_partition[placeId]._equivalenceClasses.begin() + ecPos2);
