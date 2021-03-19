@@ -26,12 +26,10 @@
 
 #include <ptrie/ptrie_stable.h>
 
-using namespace PetriEngine;
-
 namespace LTL {
     class RandomNDFS : public ModelChecker {
     public:
-        RandomNDFS(const PetriNet &net, PetriEngine::PQL::Condition_ptr ptr)
+        RandomNDFS(const PetriEngine::PetriNet &net, PetriEngine::PQL::Condition_ptr ptr)
                 : ModelChecker(net, ptr, false), factory{net, successorGenerator->initial_buchi_state()},
                   mark1(net, 0, (int) net.numberOfPlaces() + 1), mark2(net, 0, (int) net.numberOfPlaces() + 1) {}
 

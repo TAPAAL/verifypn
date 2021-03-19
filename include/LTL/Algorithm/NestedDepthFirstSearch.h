@@ -27,8 +27,6 @@
 #include <ptrie/ptrie_stable.h>
 #include <unordered_set>
 
-using namespace PetriEngine;
-
 namespace LTL {
     /**
      * Implement the nested DFS algorithm for LTL model checking. Roughly based on versions given in
@@ -50,7 +48,7 @@ namespace LTL {
     template <typename W>
     class NestedDepthFirstSearch : public ModelChecker {
     public:
-        NestedDepthFirstSearch(const PetriNet &net, PetriEngine::PQL::Condition_ptr ptr, const bool shortcircuitweak, TraceLevel level = TraceLevel::Full)
+        NestedDepthFirstSearch(const PetriEngine::PetriNet &net, PetriEngine::PQL::Condition_ptr ptr, const bool shortcircuitweak, TraceLevel level = TraceLevel::Full)
                 : ModelChecker(net, ptr, shortcircuitweak, level), factory{net, successorGenerator->initial_buchi_state()},
                 states(net, 0, (int)net.numberOfPlaces() + 1) {}
 
