@@ -121,8 +121,8 @@ namespace LTL {
         }
 
         void generate_all() {
-            //TODO
-            assert(false);
+            assert(_spooler != nullptr);
+            _spooler->generateAll();
         }
 
         std::size_t nenabled(){

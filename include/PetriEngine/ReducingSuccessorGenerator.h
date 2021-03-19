@@ -6,7 +6,7 @@
 #include "Structures/light_deque.h"
 #include "PQL/PQL.h"
 #include "PetriEngine/Stubborn/StubbornSet.h"
-#include "LTL/SuccessorGeneration/VisibleLTLStubbornSet.h"
+#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include <memory>
 
 namespace LTL {

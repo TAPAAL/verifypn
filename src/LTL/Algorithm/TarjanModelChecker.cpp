@@ -60,14 +60,29 @@ namespace LTL {
                 dtop.sucinfo.last_state = stateid;
 
                 // lookup successor in 'hash' table
-                auto p = chash[hash(stateid)];
-                while (p != std::numeric_limits<idx_t>::max() && cstack[p].stateid != stateid) {
-                    p = cstack[p].next;
+                auto suc_pos = chash[hash(stateid)];
+                auto marking = seen.getMarkingId(stateid);
+                while (suc_pos != std::numeric_limits<idx_t>::max() && cstack[suc_pos].stateid != stateid) {
+                    if constexpr (IsSpooling) {
+                        if (seen.getMarkingId(cstack[suc_pos].stateid) == marking) {
+                            if (extstack.empty() || suc_pos > extstack.top()) {
+                                this->successorGenerator->generateAll();
+                                extstack.push(cstack.size() - 1);
+                            }
+                        }
+                    }
+                    suc_pos = cstack[suc_pos].next;
                 }
-                if (p != std::numeric_limits<idx_t>::max()) {
+                if (suc_pos != std::numeric_limits<idx_t>::max()) {
+                    if constexpr (IsSpooling) {
+                        if (extstack.empty() || suc_pos > extstack.top()) {
+                            this->successorGenerator->generateAll();
+                            extstack.push(cstack.size() - 1);
+                        }
+                    }
                     // we found the successor, i.e. there's a loop!
                     // now update lowlinks and check whether the loop contains an accepting state
-                    update(p);
+                    update(suc_pos);
                     continue;
                 }
                 if (store.find(stateid) == std::end(store)) {
@@ -124,6 +139,9 @@ namespace LTL {
         }
         if (!astack.empty() && p == astack.top()) {
             astack.pop();
+        }
+        if (!extstack.empty() && p == extstack.top()) {
+            extstack.pop();
         }
         if (!dstack.empty()) {
             update(p);

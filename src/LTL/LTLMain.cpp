@@ -19,10 +19,12 @@
 #include "LTL/LTLMain.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Expressions.h"
-#include "LTL/Algorithm/VisibleStubbornTarjanModelChecker.h"
-#include "LTL/Algorithm/InterestingStubbornTarjanModelChecker.h"
+//#include "LTL/Algorithm/VisibleStubbornTarjanModelChecker.h"
+//#include "LTL/Algorithm/InterestingStubbornTarjanModelChecker.h"
 #include "LTL/Algorithm/ResumingStubbornTarjan.h"
-#include "LTL/SuccessorGeneration/EnabledSpooler.h"
+
+#include "LTL/SuccessorGeneration/Spoolers.h"
+#include "LTL/SuccessorGeneration/Heuristics.h"
 
 #include <utility>
 
@@ -111,6 +113,8 @@ namespace LTL {
             return ErrorCode;
         }
 
+        bool hasinhib = net->has_inhibitor();
+
         Result result;
         switch (options.ltlalgorithm) {
             case Algorithm::NDFS:
@@ -127,7 +131,8 @@ namespace LTL {
             case Algorithm::RandomNDFS: {
                 SpoolingSuccessorGenerator gen{*net, negated_formula};
                 gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
-                // TODO set random heuristic
+                gen.setHeuristic(std::make_unique<RandomHeuristic>());
+
                 result = _verify(net, negated_formula,
                                  std::make_unique<RandomNDFS>(*net, negated_formula, std::move(gen), options.trace,
                                                               options.ltluseweak),
@@ -135,38 +140,42 @@ namespace LTL {
                 break;
             }
             case Algorithm::Tarjan:
-                if (false && options.stubbornreduction/* && !negated_formula->containsNext()*/) {
-                    std::cout << "Running stubborn version!" << std::endl;
-
-                    assert(false);
-                    // TODO Add stubborn Tarjan model checkers after merge
-/*
-                    result = _verify<VisibleStubbornTarjanModelChecker<ReducingSuccessorGenerator>>(net, negated_formula, options.printstatistics);
-                    if (options.trace != TraceLevel::None) {
-                        result = _verify<AutomataStubbornTarjan<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>>(
-                                net, negated_formula, options);
-                    } else {
-                        result = _verify<AutomataStubbornTarjan<LTL::ReducingSuccessorGenerator, PetriEngine::Structures::StateSet>>(
-                                net, negated_formula, options);
-                    }
-                    result = _verify<InterestingStubbornTarjanModelChecker>(net, negated_formula, options.printstatistics);
-                    //result = _verify<ResumingStubbornTarjan>(net, negated_formula, options.printstatistics);
-
-                    //for profiling
-                    //result = _verify<TarjanModelChecker<false>>(net, negated_formula, options.printstatistics);
-*/
-                } else if (true) {
+                if (options.strategy != PetriEngine::Reachability::DEFAULT ||
+                    (!hasinhib && options.stubbornreduction && !negated_formula->containsNext())) {
+                    // Use spooling successor generator in case of different search strategy or stubborn set method.
                     SpoolingSuccessorGenerator gen{*net, negated_formula};
-                    gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
-                    result = _verify(net, negated_formula,
-                                     std::make_unique<TarjanModelChecker<SpoolingSuccessorGenerator, false>>(
-                                             *net,
-                                             negated_formula,
-                                             std::move(gen),
-                                             options.trace,
-                                             options.ltluseweak),
-                                     options);
+                    if (!hasinhib && options.stubbornreduction && !negated_formula->containsNext()) {
+                        std::cout << "Running stubborn version!" << std::endl;
+
+                        gen.setSpooler(std::make_unique<InterestingLTLStubbornSet>(*net, negated_formula));
+                    }
+                    if (options.strategy == PetriEngine::Reachability::RDFS) {
+                        gen.setHeuristic(std::make_unique<RandomHeuristic>());
+                    } else if (options.strategy == PetriEngine::Reachability::HEUR) {
+                        gen.setHeuristic(std::make_unique<DistanceHeuristic>(net, negated_formula));
+                    }
+
+                    if (options.trace != TraceLevel::None) {
+                        result = _verify(net, negated_formula,
+                                         std::make_unique<TarjanModelChecker<SpoolingSuccessorGenerator, true>>(
+                                                 *net,
+                                                 negated_formula,
+                                                 std::move(gen),
+                                                 options.trace,
+                                                 options.ltluseweak),
+                                         options);
+                    } else {
+                        result = _verify(net, negated_formula,
+                                         std::make_unique<TarjanModelChecker<SpoolingSuccessorGenerator, false>>(
+                                                 *net,
+                                                 negated_formula,
+                                                 std::move(gen),
+                                                 options.trace,
+                                                 options.ltluseweak),
+                                         options);
+                    }
                 } else {
+                    // no spooling needed, thus use resuming successor generation
                     if (options.trace != TraceLevel::None) {
                         result = _verify(net, negated_formula,
                                          std::make_unique<TarjanModelChecker<ResumingSuccessorGenerator, true>>(

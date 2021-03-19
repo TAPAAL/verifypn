@@ -18,7 +18,7 @@
 #ifndef VERIFYPN_INTERESTINGSTUBBORNTARJANMODELCHECKER_H
 #define VERIFYPN_INTERESTINGSTUBBORNTARJANMODELCHECKER_H
 
-#include "LTL/SuccessorGeneration/VisibleLTLStubbornSet.h"
+#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include "LTL/Algorithm/ModelChecker.h"
 #include "PetriEngine/Structures/light_deque.h"
 #include "LTL/Structures/BitProductStateSet.h"

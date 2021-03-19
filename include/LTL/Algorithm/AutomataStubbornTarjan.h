@@ -18,7 +18,7 @@
 #ifndef VERIFYPN_AUTOMATASTUBBORNTARJAN_H
 #define VERIFYPN_AUTOMATASTUBBORNTARJAN_H
 
-#include "LTL/SuccessorGeneration/VisibleLTLStubbornSet.h"
+#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include "LTL/SuccessorGeneration/AutomatonStubbornSet.h"
 #include "LTL/Stubborn/ReducingSuccessorGenerator.h"
 #include "LTL/Algorithm/ModelChecker.h"

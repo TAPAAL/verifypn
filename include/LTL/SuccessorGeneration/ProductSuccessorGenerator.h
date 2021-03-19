@@ -25,7 +25,7 @@
 #include "LTL/Structures/ProductState.h"
 #include "BuchiSuccessorGenerator.h"
 #include "LTL/LTLToBuchi.h"
-#include "VisibleLTLStubbornSet.h"
+#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include "LTL/Simplification/SpotToPQL.h"
 #include "LTL/Structures/GuardInfo.h"
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
@@ -222,7 +222,7 @@ namespace LTL {
         void generateAll()
         {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                _successor_generator.generateAll();
+                _successor_generator.generate_all();
             }
         }
 

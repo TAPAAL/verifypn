@@ -72,6 +72,7 @@ namespace LTL {
         LTL::Structures::ProductStateFactory factory;
 
         using StateSet = std::conditional_t<SaveTrace, LTL::Structures::TraceableBitProductStateSet<>, LTL::Structures::BitProductStateSet<>>;
+        static constexpr bool IsSpooling = std::is_same_v<SuccessorGen, SpoolingSuccessorGenerator>;
 
         StateSet seen;
         std::unordered_set<idx_t> store;
@@ -123,6 +124,9 @@ namespace LTL {
         std::stack<DEntry> dstack;
         // cstack positions of accepting states in current search path, for quick access.
         std::stack<idx_t> astack;
+        // tarjan extension; stack of states that were fully expanded in stubborn set
+        std::stack<idx_t> extstack;
+
         bool violation = false;
         size_t loopstate = std::numeric_limits<size_t>::max();
         size_t looptrans = std::numeric_limits<size_t>::max();
