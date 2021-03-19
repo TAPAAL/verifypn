@@ -20,9 +20,9 @@
 
 #include <iomanip>
 #include "PetriEngine/PQL/PQL.h"
-#include "ProductSuccessorGenerator.h"
-#include "ResumingSuccessorGenerator.h"
-#include "SpoolingSuccessorGenerator.h"
+#include "LTL/SuccessorGeneration/ProductSuccessorGenerator.h"
+#include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
+#include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
 #include "LTL/Structures/BitProductStateSet.h"
 #include "LTL/Algorithm/ProductPrinter.h"
 #include "PetriEngine/options.h"

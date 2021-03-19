@@ -16,7 +16,7 @@
  */
 
 #include "LTL/LTLToBuchi.h"
-#include "LTL/Algorithm/BuchiSuccessorGenerator.h"
+#include "LTL/SuccessorGeneration/BuchiSuccessorGenerator.h"
 
 #include <spot/twaalgos/translate.hh>
 #include <spot/tl/parse.hh>

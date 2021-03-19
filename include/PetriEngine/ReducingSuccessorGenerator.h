@@ -6,7 +6,7 @@
 #include "Structures/light_deque.h"
 #include "PQL/PQL.h"
 #include "PetriEngine/Stubborn/StubbornSet.h"
-#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
+#include "LTL/SuccessorGeneration/VisibleLTLStubbornSet.h"
 #include <memory>
 
 namespace LTL {
@@ -57,7 +57,7 @@ namespace PetriEngine {
 
         void setQuery(PQL::Condition *ptr) { _stubSet->setQuery(ptr); }
 
-        bool prepare(const Structures::State *state);
+        bool prepare(const Structures::State *state) override;
 
         void prepare(const Structures::State *state, const sucinfo &sucinfo)
         {
@@ -68,7 +68,7 @@ namespace PetriEngine {
             else prepare(state);
         }
 
-        bool next(Structures::State &write);
+        bool next(Structures::State &write) override;
 
         bool next(Structures::State &state, sucinfo &sucinfo);
 

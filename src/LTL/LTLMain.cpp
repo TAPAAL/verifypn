@@ -22,6 +22,7 @@
 #include "LTL/Algorithm/VisibleStubbornTarjanModelChecker.h"
 #include "LTL/Algorithm/InterestingStubbornTarjanModelChecker.h"
 #include "LTL/Algorithm/ResumingStubbornTarjan.h"
+#include "LTL/SuccessorGeneration/EnabledSpooler.h"
 
 #include <utility>
 
@@ -70,17 +71,28 @@ namespace LTL {
     template<typename Checker>
     Result _verify(const PetriNet *net,
                    Condition_ptr &negatedQuery,
+                   std::unique_ptr<Checker> checker,
                    const options_t &options)
     {
         Result result;
-        auto modelChecker = std::make_unique<Checker>(*net, negatedQuery, options.trace, options.ltluseweak);
-        result.satisfied = modelChecker->isSatisfied();
-        result.is_weak = modelChecker->isweak();
+
+/*
+        std::unique_ptr<Checker> modelChecker;
+        if constexpr (std::is_same_v<Checker, TarjanModelChecker<SpoolingSuccessorGenerator, true>> ||
+                      std::is_same_v<Checker, TarjanModelChecker<SpoolingSuccessorGenerator, false>>) {
+
+        } else {
+            modelChecker = std::make_unique<Checker>(*net, negatedQuery, options.trace, options.ltluseweak);
+        }
+*/
+
+        result.satisfied = checker->isSatisfied();
+        result.is_weak = checker->isweak();
 #ifdef DEBUG_EXPLORED_STATES
-        result.explored_states = modelChecker->get_explored();
+        result.explored_states = checker->get_explored();
 #endif
         if (options.printstatistics) {
-            modelChecker->printStats(std::cout);
+            checker->printStats(std::cout);
         }
         return result;
     }
@@ -103,17 +115,29 @@ namespace LTL {
         switch (options.ltlalgorithm) {
             case Algorithm::NDFS:
                 if (options.trace != TraceLevel::None) {
-                    result = _verify<NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>(net, negated_formula, options);
+                    result = _verify(net, negated_formula,
+                                     std::make_unique<NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>(
+                                             *net, negated_formula, options.trace, options.ltluseweak), options);
                 } else {
-                    result = _verify<NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>(net, negated_formula, options);
+                    result = _verify(net, negated_formula,
+                                     std::make_unique<NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>(
+                                             *net, negated_formula, options.trace, options.ltluseweak), options);
                 }
                 break;
-            case Algorithm::RandomNDFS:
-                result = _verify<RandomNDFS>(net, negated_formula, options);
+            case Algorithm::RandomNDFS: {
+                SpoolingSuccessorGenerator gen{*net, negated_formula};
+                gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
+                // TODO set random heuristic
+                result = _verify(net, negated_formula,
+                                 std::make_unique<RandomNDFS>(*net, negated_formula, std::move(gen), options.trace,
+                                                              options.ltluseweak),
+                                 options);
                 break;
+            }
             case Algorithm::Tarjan:
                 if (false && options.stubbornreduction/* && !negated_formula->containsNext()*/) {
                     std::cout << "Running stubborn version!" << std::endl;
+
                     assert(false);
                     // TODO Add stubborn Tarjan model checkers after merge
 /*
@@ -131,11 +155,36 @@ namespace LTL {
                     //for profiling
                     //result = _verify<TarjanModelChecker<false>>(net, negated_formula, options.printstatistics);
 */
+                } else if (true) {
+                    SpoolingSuccessorGenerator gen{*net, negated_formula};
+                    gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
+                    result = _verify(net, negated_formula,
+                                     std::make_unique<TarjanModelChecker<SpoolingSuccessorGenerator, false>>(
+                                             *net,
+                                             negated_formula,
+                                             std::move(gen),
+                                             options.trace,
+                                             options.ltluseweak),
+                                     options);
                 } else {
                     if (options.trace != TraceLevel::None) {
-                        result = _verify<TarjanModelChecker<SpoolingSuccessorGenerator, true>>(net, negated_formula, options);
+                        result = _verify(net, negated_formula,
+                                         std::make_unique<TarjanModelChecker<ResumingSuccessorGenerator, true>>(
+                                                 *net,
+                                                 negated_formula,
+                                                 ResumingSuccessorGenerator{*net},
+                                                 options.trace,
+                                                 options.ltluseweak),
+                                         options);
                     } else {
-                        result = _verify<TarjanModelChecker<SpoolingSuccessorGenerator, false>>(net, negated_formula, options);
+                        result = _verify(net, negated_formula,
+                                         std::make_unique<TarjanModelChecker<ResumingSuccessorGenerator, false>>(
+                                                 *net,
+                                                 negated_formula,
+                                                 ResumingSuccessorGenerator{*net},
+                                                 options.trace,
+                                                 options.ltluseweak),
+                                         options);
                     }
                 }
                 break;

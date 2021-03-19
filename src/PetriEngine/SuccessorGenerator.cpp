@@ -143,6 +143,7 @@ namespace PetriEngine {
     }
 
     void SuccessorGenerator::_fire(Structures::State &write, uint32_t tid) {
+        assert(checkPreset(tid));
         memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
         consumePreset(write, tid);
         producePostset(write, tid);

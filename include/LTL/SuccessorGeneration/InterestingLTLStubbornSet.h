@@ -15,19 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_VISIBLELTLSTUBBORNSET_H
-#define VERIFYPN_VISIBLELTLSTUBBORNSET_H
+#ifndef VERIFYPN_INTERESTINGLTLSTUBBORNSET_H
+#define VERIFYPN_INTERESTINGLTLSTUBBORNSET_H
 
 
 //#include "PetriEngine/ReducingSuccessorGenerator.h"
 #include "PetriEngine/Stubborn/StubbornSet.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/Stubborn/VisibleTransitionVisitor.h"
+#include "LTL/SuccessorGeneration/SuccessorSpooler.h"
 
 namespace LTL {
-    class VisibleLTLStubbornSet : public PetriEngine::StubbornSet {
+    class InterestingLTLStubbornSet : public PetriEngine::StubbornSet, public SuccessorSpooler {
     public:
-        VisibleLTLStubbornSet(const PetriEngine::PetriNet &net, const std::vector<PetriEngine::PQL::Condition_ptr> &queries)
+        InterestingLTLStubbornSet(const PetriEngine::PetriNet &net,
+                                  const std::vector<PetriEngine::PQL::Condition_ptr> &queries)
                 : StubbornSet(net, queries), _visible(new bool[net.numberOfTransitions()])
         {
             assert(!_netContainsInhibitorArcs);
@@ -38,7 +40,7 @@ namespace LTL {
             }
         }
 
-        VisibleLTLStubbornSet(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &query)
+        InterestingLTLStubbornSet(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &query)
                 : StubbornSet(net, query), _visible(new bool[net.numberOfTransitions()])
         {
             assert(!_netContainsInhibitorArcs);
@@ -73,11 +75,16 @@ namespace LTL {
 
         bool prepare(const PetriEngine::Structures::State *marking) override;
 
+        bool prepare(const LTL::Structures::ProductState *marking) override
+        {
+            return prepare((const PetriEngine::Structures::State *) marking);
+        }
+
         uint32_t next() override;
 
-        void reset();
+        void reset() override;
 
-        void generateAll();
+        void generateAll() override;
 
     protected:
         void addToStub(uint32_t t) override;
@@ -97,4 +104,4 @@ namespace LTL {
     };
 }
 
-#endif //VERIFYPN_VISIBLELTLSTUBBORNSET_H
+#endif //VERIFYPN_InterestingLTLSTUBBORNSET_H

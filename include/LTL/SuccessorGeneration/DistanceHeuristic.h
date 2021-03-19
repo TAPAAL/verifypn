@@ -15,34 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_VISIBILITYVISITOR_H
-#define VERIFYPN_VISIBILITYVISITOR_H
+#ifndef VERIFYPN_DISTANCEHEURISTIC_H
+#define VERIFYPN_DISTANCEHEURISTIC_H
 
-#include "PetriEngine/PQL/PQL.h"
-#include "PetriEngine/PQL/Visitor.h"
-#include "LTL/SuccessorGeneration/AutomatonStubbornSet.h"
+#include "LTL/SuccessorGeneration/Heuristic.h"
+
+#include <utility>
+#include "PetriEngine/PQL/Contexts.h"
 
 namespace LTL {
-    class VisibilityVisitor : public PetriEngine::PQL::BaseVisitor {
+    class DistanceHeuristic : public Heuristic {
     public:
-        VisibilityVisitor(const AutomatonStubbornSet &stubSet) : stubSet(stubSet) {}
+        DistanceHeuristic(const PetriEngine::PetriNet *net, PetriEngine::PQL::Condition_ptr cond) : _net(net), _cond(std::move(cond)) {}
 
-        bool foundVisible() const { return done; }
-    protected:
-        void _accept(const PetriEngine::PQL::CompareConjunction *element) override;
+        uint32_t eval(const Structures::ProductState &state, uint32_t tid) override
+        {
+            PetriEngine::PQL::DistanceContext context{_net, state.marking()};
+            return _cond->distance(context);
+        }
 
-        void _accept(const PetriEngine::PQL::UnfoldedIdentifierExpr *element) override;
     private:
-        const AutomatonStubbornSet &stubSet;
-        bool done = false;
-
-        bool postSet(uint32_t place);
-
-        bool preSet(uint32_t place);
-
-        void prePostSet(uint32_t place);
+        const PetriEngine::PetriNet *_net;
+        const PetriEngine::PQL::Condition_ptr _cond;
     };
 }
 
-
-#endif //VERIFYPN_VISIBILITYVISITOR_H
+#endif //VERIFYPN_DISTANCEHEURISTIC_H

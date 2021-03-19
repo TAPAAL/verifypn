@@ -165,8 +165,8 @@ namespace LTL {
                 ++this->stats.explored;
                 auto[_new, stateid] = seen.add(state);
 #ifdef PRINTF_NEXTRANS
-                const PetriEngine::PetriNet &net = this->successorGenerator->getNet();
-                std::cerr << cstack[delem.pos].stateid << "-" << net.transitionNames()[this->successorGenerator->fired()] << "> " << stateid << " Buchi: " << state.getBuchiState() << std::endl;
+                const PetriEngine::PetriNet &net = this->_successor_generator->getNet();
+                std::cerr << cstack[delem.pos].stateid << "-" << net.transitionNames()[this->_successor_generator->fired()] << "> " << stateid << " Buchi: " << state.getBuchiState() << std::endl;
 #endif
                 // from textbook LTL / bit product state
                 /*auto markingId = seen.getMarkingId(stateid);
@@ -175,7 +175,7 @@ namespace LTL {
                     p = cstack[p].next;
                 }
                 if (p != std::numeric_limits<idx_t>::max()) {
-                    this->successorGenerator->generateAll();
+                    this->_successor_generator->generateAll();
                 }*/
                 //if (_new) {
                 if constexpr (SaveTrace) {
@@ -200,7 +200,7 @@ namespace LTL {
             else return false;
             /*idx_t lastgenerated = std::numeric_limits<idx_t>::max();
             while (true) {
-                if (this->successorGenerator->next(state)) {
+                if (this->_successor_generator->next(state)) {
                     ++this->stats.explored;
                     if (lastgenerated != std::numeric_limits<idx_t>::max()) {
                         delem.successors.push_back(lastgenerated);
@@ -210,7 +210,7 @@ namespace LTL {
                     if (res.first) lastgenerated = res.second;
                     auto p = searchCStack(res.second);
                     if (p != std::numeric_limits<idx_t>::max()) {
-                        this->successorGenerator->generateAll();
+                        this->_successor_generator->generateAll();
                     }
                 } else {
                     ++this->stats.expanded;

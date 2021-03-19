@@ -23,18 +23,32 @@
 #include <memory>
 #include <cstdint>
 
+/**
+ * light_deque derivative, designed for 'read-mostly' access
+ * to list of successors. Popped elements are preserved post-mortem.
+ */
+template <typename T = uint32_t>
 class SuccessorQueue {
 public:
-    SuccessorQueue(uint32_t *src, uint32_t nelem)
+    SuccessorQueue(T *src, uint32_t nelem)
             : _front(0), _size(nelem)
     {
-        _data = std::make_unique<uint32_t[]>(nelem);
-        memcpy(_data.get(), src, sizeof(uint32_t) * nelem);
+        _data = std::make_unique<T[]>(nelem);
+        memcpy(_data.get(), src, sizeof(T) * nelem);
+    }
+
+    // construct from array of different type, using fn as transformation function.
+    template <typename U, typename Fn>
+    SuccessorQueue(U *src, uint32_t nelem, Fn&& fn)
+            : _front(0), _size(nelem)
+    {
+        _data = std::make_unique<T[]>(nelem);
+        std::transform(src, src + nelem, _data.get(), fn);
     }
 
     SuccessorQueue() noexcept :_front(0), _size(0), _data(nullptr) {}
 
-    [[nodiscard]] uint32_t front() const
+    [[nodiscard]] T front() const
     {
         assert(!empty());
         return _data[_front];
@@ -46,7 +60,7 @@ public:
         ++_front;
     }
 
-    [[nodiscard]] uint32_t size() const
+    [[nodiscard]] T size() const
     {
         return _size - _front;
     }
@@ -60,18 +74,23 @@ public:
 
     [[nodiscard]] bool has_consumed() const { return _front > 0; }
 
+    bool operator==(std::nullptr_t) { return _data == nullptr; }
+    bool operator!=(std::nullptr_t) { return _data != nullptr; }
+
     /**
      * Extend successor list while excluding previously popped elements.
      * @param src C-array containing the new successor list
      * @param nelem the length of src
      */
-    void extend_to(uint32_t *src, uint32_t nelem)
+    void extend_to(T *src, uint32_t nelem)
     {
-        auto newdata = std::make_unique<uint32_t[]>(nelem);
+        auto newdata = std::make_unique<T[]>(nelem);
         if (_front != 0)
-            memcpy(newdata.get(), _data.get(), sizeof(uint32_t) * _front);
+            memcpy(newdata.get(), _data.get(), sizeof(T) * _front);
         uint32_t sz = _front;
+        // copy over extended successor list, excluding previously popped elements.
         for (uint32_t i = 0; i < nelem; ++i) {
+            // FIXME potential optimization target if poor performance is found.
             auto it = std::find(_data.get(), _data.get() + _front, src[i]);
             if (it != _data.get() + _front) {
                 newdata[sz++] = src[i];
@@ -83,9 +102,9 @@ public:
     }
 
 private:
-    uint32_t _front;
-    uint32_t _size;
-    std::unique_ptr<uint32_t[]> _data;
+    uint32_t _front; /* index of first element */
+    uint32_t _size;  /* size of data array */
+    std::unique_ptr<T[]> _data;
 };
 
 #endif //VERIFYPN_SUCCESSORQUEUE_H

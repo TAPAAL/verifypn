@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LTL/Algorithm/ResumingSuccessorGenerator.h"
+#include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
 #include "PetriEngine/Structures/State.h"
 #include "PetriEngine/errorcodes.h"
 

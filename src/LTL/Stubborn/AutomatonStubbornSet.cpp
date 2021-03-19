@@ -16,7 +16,7 @@
  */
 
 #include "LTL/Structures/GuardInfo.h"
-#include "LTL/Stubborn/AutomatonStubbornSet.h"
+#include "LTL/SuccessorGeneration/AutomatonStubbornSet.h"
 #include "LTL/Stubborn/EvalAndSetVisitor.h"
 #include "LTL/Stubborn/VisibilityVisitor.h"
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"

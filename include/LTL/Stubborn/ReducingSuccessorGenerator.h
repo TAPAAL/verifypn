@@ -19,7 +19,7 @@
 #define VERIFYPN_REDUCINGSUCCESSORGENERATOR_H
 
 #include "PetriEngine/ReducingSuccessorGenerator.h"
-#include "LTL/Stubborn/AutomatonStubbornSet.h"
+#include "LTL/SuccessorGeneration/AutomatonStubbornSet.h"
 
 #include <utility>
 

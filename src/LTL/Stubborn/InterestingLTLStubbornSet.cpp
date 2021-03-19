@@ -17,7 +17,7 @@
 
 #include "LTL/Stubborn/EvalAndSetVisitor.h"
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
-#include "LTL/Stubborn/InterestingLTLStubbornSet.h"
+#include "LTL/SuccessorGeneration/InterestingLTLStubbornSet.h"
 
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
