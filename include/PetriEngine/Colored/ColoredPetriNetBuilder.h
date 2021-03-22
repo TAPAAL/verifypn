@@ -1,8 +1,20 @@
-/*
- * File:   ColoredPetriNetBuilder.h
- * Author: Klostergaard
+/* Copyright (C) 2020  Alexander Bilgram <alexander@bilgram.dk>,
+ *                     Peter Haar Taankvist <ptaankvist@gmail.com>,
+ *                     Thomas Pedersen <thomas.pedersen@stofanet.dk>
+ *                     Andreas H. Klostergaard
  *
- * Created on 17. februar 2018, 16:25
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef COLOREDPETRINETBUILDER_H
@@ -11,14 +23,16 @@
 #include <vector>
 #include <unordered_map>
 
-#include "ColoredNetStructures.h"
 #include "../AbstractPetriNetBuilder.h"
 #include "../PetriNetBuilder.h"
+#include "BindingGenerator.h"
+#include "IntervalGenerator.h"
+#include "ArcIntervals.h"
 
 namespace PetriEngine {
+
     class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
     public:
-        typedef std::unordered_map<std::string, Colored::ColorType*> ColorTypeMap;
         typedef std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>> PTPlaceMap;
         typedef std::unordered_map<std::string, std::vector<std::string>> PTTransitionMap;
         
@@ -66,8 +80,16 @@ namespace PetriEngine {
             return _time;
         }
 
+        double getFixpointTime() const {
+            return _fixPointCreationTime;
+        }
+
         uint32_t getPlaceCount() const {
             return _places.size();
+        }
+
+        uint32_t getMaxIntervals() const {
+            return _maxIntervals;
         }
 
         uint32_t getTransitionCount() const {
@@ -77,7 +99,8 @@ namespace PetriEngine {
         uint32_t getArcCount() const {
             uint32_t sum = 0;
             for (auto& t : _transitions) {
-                sum += t.arcs.size();
+                sum += t.input_arcs.size();
+                sum += t.output_arcs.size();
             }
             return sum;
         }
@@ -109,71 +132,69 @@ namespace PetriEngine {
         
         PetriNetBuilder& unfold();
         PetriNetBuilder& stripColors();
+        void computePlaceColorFixpoint(uint32_t maxIntervals, uint32_t maxIntervalsReduced, int32_t timeout);
+        
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
         std::unordered_map<std::string,uint32_t> _transitionnames;
+        std::unordered_map<uint32_t, std::unordered_map<uint32_t, Colored::ArcIntervals>> _arcIntervals;
+        std::unordered_map<uint32_t,std::vector<uint32_t>> _placePostTransitionMap;
+        std::unordered_map<uint32_t,FixpointBindingGenerator> _bindings;
         PTPlaceMap _ptplacenames;
         PTTransitionMap _pttransitionnames;
         uint32_t _nptplaces = 0;
         uint32_t _npttransitions = 0;
         uint32_t _nptarcs = 0;
+        uint32_t _maxIntervals = 0;
+        PetriEngine::IntervalGenerator intervalGenerator;
         
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
         std::vector<Colored::Arc> _arcs;
+        std::vector<Colored::ColorFixpoint> _placeColorFixpoints;
         ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
         bool _unfolded = false;
         bool _stripped = false;
 
+        std::vector<uint32_t> _placeFixpointQueue;
+
         double _time;
+        double _fixPointCreationTime;
+
+        double _timer;
 
         std::string arcToString(Colored::Arc& arc) const ;
+
+        void printPlaceTable();
+
+        std::unordered_map<uint32_t, Colored::ArcIntervals> setupTransitionVars(Colored::Transition transition);
         
         void addArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
                 bool input);
+
+
+        void getArcIntervals(Colored::Transition& transition, bool &transitionActivated, uint32_t max_intervals, uint32_t transitionId);      
+        void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals);
+        void processOutputArcs(Colored::Transition& transition);
         
-        void unfoldPlace(Colored::Place& place);
+        void unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color);
         void unfoldTransition(Colored::Transition& transition);
-        void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name);
+        void handleOrphanPlace(Colored::Place& place);
+
+        void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name, bool input);
     };
     
-    class BindingGenerator {
-    public:
-        class Iterator {
-        private:
-            BindingGenerator* _generator;
-            
-        public:
-            Iterator(BindingGenerator* generator);
-            
-            bool operator==(Iterator& other);
-            bool operator!=(Iterator& other);
-            Iterator& operator++();
-            const Colored::ExpressionContext::BindingMap operator++(int);
-            Colored::ExpressionContext::BindingMap& operator*();
-        };
-    private:
-        Colored::GuardExpression_ptr _expr;
-        Colored::ExpressionContext::BindingMap _bindings;
-        ColoredPetriNetBuilder::ColorTypeMap& _colorTypes;
-        
-        bool eval();
-        
-    public:
-        BindingGenerator(Colored::Transition& transition,
-                const std::vector<Colored::Arc>& arcs,
-                ColoredPetriNetBuilder::ColorTypeMap& colorTypes);
-
-        Colored::ExpressionContext::BindingMap& nextBinding();
-        Colored::ExpressionContext::BindingMap& currentBinding();
-        bool isInitial() const;
-        Iterator begin();
-        Iterator end();
+    //Used for checking if a variable is inside either a succ or pred expression
+    enum ExpressionType {
+        None,
+        Pred,
+        Succ
     };
+ 
+
 }
 
 #endif /* COLOREDPETRINETBUILDER_H */
-

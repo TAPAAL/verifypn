@@ -56,9 +56,27 @@ namespace PetriEngine {
                 return no_lower() && no_upper();
             }
 
+            bool isSound() {
+                return _lower <= _upper;
+            }
+
+            bool contains(uint32_t id){
+                return _lower <= id && id <= _upper;
+            }
+
             void free() {
                 _upper = max();
                 _lower = min();
+            }
+
+            uint32_t size(){
+                return 1 + _upper - _lower;
+            }
+
+            void invalidate() {
+                //hack setting range invalid
+                _lower = 1;
+                _upper = 0;
             }
 
             std::ostream& print(std::ostream& os) const {
@@ -413,7 +431,7 @@ namespace PetriEngine {
                 }
                 return false;
             }
-        };
+        };        
     }
 }
 
