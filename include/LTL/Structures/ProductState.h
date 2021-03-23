@@ -66,9 +66,6 @@ namespace LTL::Structures {
                 }
             }
             return true;
-/*            return static_cast<const PetriEngine::Structures::State &>(*this) ==
-                   static_cast<const PetriEngine::Structures::State &>(rhs) &&
-                   getBuchiState() == rhs.getBuchiState();*/
         }
 
 

@@ -29,7 +29,6 @@
 #include "PetriEngine/Reducer.h"
 #include "PetriEngine/PQL/Expressions.h"
 
-using namespace std;
 
 namespace PetriEngine {
 
@@ -38,18 +37,20 @@ namespace PetriEngine {
     }
     PetriNetBuilder::PetriNetBuilder(const PetriNetBuilder& other)
     : _placenames(other._placenames), _transitionnames(other._transitionnames),
+       _placelocations(other._placelocations), _transitionlocations(other._transitionlocations),
        _transitions(other._transitions), _places(other._places), 
        initialMarking(other.initialMarking), reducer(this)
     {
 
     }
 
-    void PetriNetBuilder::addPlace(const string &name, int tokens, double, double) {
+    void PetriNetBuilder::addPlace(const std::string &name, int tokens, double x, double y) {
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
             _places.emplace_back();
             _placenames[name] = next;
+            _placelocations.push_back(std::tuple<double, double>(x,y));
         }
         
         uint32_t id = _placenames[name];
@@ -59,17 +60,18 @@ namespace PetriEngine {
         
     }
 
-    void PetriNetBuilder::addTransition(const string &name,
-            double, double) {
+    void PetriNetBuilder::addTransition(const std::string &name,
+            double x, double y) {
         if(_transitionnames.count(name) == 0)
         {
             uint32_t next = _transitionnames.size();
             _transitions.emplace_back();
             _transitionnames[name] = next;
+            _transitionlocations.push_back(std::tuple<double, double>(x,y));
         }
     }
 
-    void PetriNetBuilder::addInputArc(const string &place, const string &transition, bool inhibitor, int weight) {
+    void PetriNetBuilder::addInputArc(const std::string &place, const std::string &transition, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
             addTransition(transition,0.0,0.0);
@@ -94,7 +96,7 @@ namespace PetriEngine {
         _places[p].inhib |= inhibitor;
     }
 
-    void PetriNetBuilder::addOutputArc(const string &transition, const string &place, int weight) {
+    void PetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
             addTransition(transition,0,0);
@@ -318,6 +320,7 @@ namespace PetriEngine {
             ++free;
             next = nextPlaceId(place_cons_count, place_prod_count, place_idmap, reorder);
         }
+
         
         // Reindex for great justice!
         for(uint32_t i = 0; i < freeinv; i++)
@@ -336,6 +339,9 @@ namespace PetriEngine {
 //                std::cout << place_idmap[i] << " : " << initialMarking[i] << std::endl;
             }
         }
+
+        net->_placelocations = _placelocations;
+        net->_transitionlocations = _transitionlocations;
         
         // reindex place-names
 
@@ -343,15 +349,18 @@ namespace PetriEngine {
         int rindex = _placenames.size() - 1;
         for(auto& i : _placenames)
         {
+            auto& placelocation = _placelocations[i.second];
             i.second = place_idmap[i.second];
             if(i.second != std::numeric_limits<uint32_t>::max())
             {
                 net->_placenames[i.second] = i.first;
                 assert(_placenames[net->_placenames[i.second]] == i.second);
+                net->_placelocations[i.second] = placelocation;
             }
             else
             {
                 net->_placenames[rindex] = i.first;
+                net->_placelocations[rindex] = placelocation;
                 --rindex;
             }
         }
@@ -360,14 +369,17 @@ namespace PetriEngine {
         int trindex = _transitionnames.size() - 1;
         for(auto& i : _transitionnames)
         {
+            auto& transitionlocation = _transitionlocations[i.second];
             i.second = trans_idmap[i.second];
             if(i.second != std::numeric_limits<uint32_t>::max())
             {
                 net->_transitionnames[i.second] = i.first;
+                net->_transitionlocations[i.second] = transitionlocation;
             }
             else
             {
                 net->_transitionnames[trindex] = i.first;
+                net->_transitionlocations[trindex] = transitionlocation;
                 --trindex;
             }
         }

@@ -81,7 +81,6 @@
 
 #include <atomic>
 
-using namespace std;
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
@@ -290,6 +289,20 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         {
             options.model_out_file = std::string(argv[++i]);
         }
+        else if (strcmp(argv[i], "--write-buchi") == 0)
+        {
+            options.buchi_out_file = std::string(argv[++i]);
+            if (argc > i + 1) {
+                if(strcmp(argv[i + 1], "dot") == 0) {
+                    options.buchi_out_type = LTL::BuchiOutType::Dot;
+                } else if (strcmp(argv[i + 1], "hoa") == 0) {
+                    options.buchi_out_type = LTL::BuchiOutType::HOA;
+                } else if (strcmp(argv[i + 1], "spin") == 0) {
+                    options.buchi_out_type = LTL::BuchiOutType::Spin;
+                } else continue;
+                ++i;
+            }
+        }
 #ifdef VERIFYPN_MC_Simplification
         else if (strcmp(argv[i], "-z") == 0)
         {
@@ -330,9 +343,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 else if(strcmp(argv[i + 1], "tarjan") == 0) {
                     options.ltlalgorithm = LTL::Algorithm::Tarjan;
                 }
-                else if(strcmp(argv[i + 1], "rndfs") == 0) {
-                    options.ltlalgorithm = LTL::Algorithm::RandomNDFS;
-                }
                 else if (strcmp(argv[i + 1], "none") == 0) {
                     options.ltlalgorithm = LTL::Algorithm::None;
                 }
@@ -354,57 +364,60 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "extended with inhibitor arcs.\n"
                     "\n"
                     "Options:\n"
-                    "  -k, --k-bound <number of tokens>   Token bound, 0 to ignore (default)\n"
-                    "  -t, --trace                        Provide XML-trace to stderr\n"
-                    "  -s, --search-strategy <strategy>   Search strategy:\n"
-                    "                                     - BestFS       Heuristic search (default)\n"
-                    "                                     - BFS          Breadth first search\n"
-                    "                                     - DFS          Depth first search (CTL default)\n"
-                    "                                     - RDFS         Random depth first search\n"
-                    "                                     - OverApprox   Linear Over Approx\n"
-                    "  --seed-offset <number>             Extra noise to add to the seed of the random number generation\n"
-                    "  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
-                    "  -x, --xml-query <query index>      Parse XML query file and verify query of a given index\n"
-                    "  -r, --reduction <type>             Change structural net reduction:\n"
-                    "                                     - 0  disabled\n"
-                    "                                     - 1  aggressive reduction (default)\n"
-                    "                                     - 2  reduction preserving k-boundedness\n"
-                    "                                     - 3  user defined reduction sequence, eg -r 3 0,1,2,3 to use rules A,B,C,D only, and in that order\n"
-                    "  -d, --reduction-timeout <timeout>  Timeout for structural reductions in seconds (default 60)\n"
-                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
-                    "                                     write -q 0 to disable query reduction\n"
-                    "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
-                    "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
-                    "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds (default 0)\n"
-                    "      --siphon-depth <place count>   Search depth of siphon (default 0, which counts all places)\n"
-                    "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
-                    "  -h, --help                         Display this help message\n"
-                    "  -v, --version                      Display version information\n"
-                    "  -ctl <type>                        Verify CTL properties\n"
-                    "                                     - local     Liu and Smolka's on-the-fly algorithm\n"
-                    "                                     - czero     local with certain zero extension (default)\n"
-                    "  -ltl [<type>]                      Verify LTL properties (default tarjan). If omitted the queries are assumed to be CTL.\n"
-                    "                                     - ndfs      Nested depth first search algorithm\n"
-                    "                                     - tarjan    On-the-fly Tarjan's algorithm\n"
-                    "                                     - rndfs     NDFS with randomised search order. Less memory efficient compared to straigt ndfs.\n"
-                    "                                     - none      Run preprocessing steps only.\n"
-                    "  -noweak                            Disable optimizations for weak Büchi automata when doing \n"
-                    "                                     LTL model checking. Not recommended.\n"
-                    "  -noreach                           Force use of CTL/LTL engine, even when queries are reachability.\n"
-                    "                                     Not recommended since the reachability engine is faster.\n"
-                    "  -c, --cpn-overapproximation        Over approximate query on Colored Petri Nets (CPN only)\n"
+                    "  -k, --k-bound <number of tokens>     Token bound, 0 to ignore (default)\n"
+                    "  -t, --trace                          Provide XML-trace to stderr\n"
+                    "  -s, --search-strategy <strategy>     Search strategy:\n"
+                    "                                       - BestFS       Heuristic search (default)\n"
+                    "                                       - BFS          Breadth first search\n"
+                    "                                       - DFS          Depth first search (CTL and LTL default)\n"
+                    "                                       - RDFS         Random depth first search\n"
+                    "                                       - OverApprox   Linear Over Approx\n"
+                    "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
+                    "  -e, --state-space-exploration        State-space exploration only (query-file is irrelevant)\n"
+                    "  -x, --xml-query <query index>        Parse XML query file and verify query of a given index\n"
+                    "  -r, --reduction <type>               Change structural net reduction:\n"
+                    "                                       - 0  disabled\n"
+                    "                                       - 1  aggressive reduction (default)\n"
+                    "                                       - 2  reduction preserving k-boundedness\n"
+                    "                                       - 3  user defined reduction sequence, eg -r 3 0,1,2,3 to use rules A,B,C,D only, and in that order\n"
+                    "  -d, --reduction-timeout <timeout>    Timeout for structural reductions in seconds (default 60)\n"
+                    "  -q, --query-reduction <timeout>      Query reduction timeout in seconds (default 30)\n"
+                    "                                       write -q 0 to disable query reduction\n"
+                    "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
+                    "  -p, --partial-order-reduction        Disable partial order reduction (stubborn sets)\n"
+                    "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
+                    "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
+                    "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
+                    "  -h, --help                           Display this help message\n"
+                    "  -v, --version                        Display version information\n"
+                    "  -ctl <type>                          Verify CTL properties\n"
+                    "                                       - local     Liu and Smolka's on-the-fly algorithm\n"
+                    "                                       - czero     local with certain zero extension (default)\n"
+                    "  -ltl [<type>]                        Verify LTL properties (default tarjan). If omitted the queries are assumed to be CTL.\n"
+                    "                                       - ndfs      Nested depth first search algorithm\n"
+                    "                                       - tarjan    On-the-fly Tarjan's algorithm\n"
+                    "                                       - none      Run preprocessing steps only.\n"
+                    "  -noweak                              Disable optimizations for weak Büchi automata when doing \n"
+                    "                                       LTL model checking. Not recommended.\n"
+                    "  -noreach                             Force use of CTL/LTL engine, even when queries are reachability.\n"
+                    "                                       Not recommended since the reachability engine is faster.\n"
+                    "  -c, --cpn-overapproximation          Over approximate query on Colored Petri Nets (CPN only)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
 #ifdef VERIFYPN_MC_Simplification
-                    "  -z <number of cores>               Number of cores to use (currently only query simplification)\n"
+                    "  -z <number of cores>                 Number of cores to use (currently only query simplification)\n"
 #endif
-                    "  -tar                               Enables Trace Abstraction Refinement for reachability properties\n"
-                    "  --write-simplified <filename>      Outputs the queries to the given file after simplification\n"
-                    "  --write-reduced <filename>         Outputs the model to the given file after structural reduction\n"
-                    "  --binary-query-io <0,1,2,3>        Determines the input/output format of the query-file\n"
-                    "                                     - 0 MCC XML format for Input and Output\n"
-                    "                                     - 1 Input is binary, output is XML\n"
-                    "                                     - 2 Output is binary, input is XML\n"
-                    "                                     - 3 Input and Output is binary\n"
+                    "  -tar                                 Enables Trace Abstraction Refinement for reachability properties\n"
+                    "  --write-simplified <filename>        Outputs the queries to the given file after simplification\n"
+                    "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
+                    "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
+                    "                                       - 0 MCC XML format for Input and Output\n"
+                    "                                       - 1 Input is binary, output is XML\n"
+                    "                                       - 2 Output is binary, input is XML\n"
+                    "                                       - 3 Input and Output is binary\n"
+                    "  --write-buchi <filename> [<format>]  Valid for LTL. Write the generated buchi automaton to file. Formats:\n"
+                    "                                       - dot   (default) Write the buchi in GraphViz Dot format\n"
+                    "                                       - hoa   Write the buchi in the Hanoi Omega-Automata Format\n"
+                    "                                       - spin  Write the buchi in the spin model checker format."
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -431,8 +444,11 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Søren Moss Nielsen <soren_moss@mac.com>\n");
             printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>\n");
             printf("                        Samuel Pastva <daemontus@gmail.com>\n");
+            printf("                        Thomas Pedersen <thomas.pedersen@stofanet.dk\n");
             printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
+            printf("                        Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>\n");
+            printf("                        Simon Mejlby Virenfeldt <simon@simwir.dk>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
         } else if (options.modelfile == NULL) {
@@ -493,8 +509,27 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             std::cerr << "Argument Error: --siphon-depth is not compatible with LTL model checking." << std::endl;
             return ErrorCode;
         }
-        if (options.strategy != PetriEngine::Reachability::DEFAULT) {
-            std::cerr << "Argument Warning: LTL model checking does not support search strategies. Will use DFS." << std::endl;
+        std::array tarjanStrategies { DFS, RDFS, HEUR };
+        if (options.strategy != PetriEngine::Reachability::DEFAULT &&
+            options.strategy != PetriEngine::Reachability::OverApprox) {
+
+            if (options.ltlalgorithm == LTL::Algorithm::Tarjan &&
+                std::find(std::begin(tarjanStrategies), std::end(tarjanStrategies), options.strategy) ==
+                std::end(tarjanStrategies)) {
+                std::cerr << "Argument Error: Unsupported search strategy for Tarjan. Supported values are DFS, RDFS, and BestFS." << std::endl;
+                return ErrorCode;
+            }
+            if (options.strategy != DFS &&
+                !(options.ltlalgorithm == LTL::Algorithm::NDFS && options.strategy == RDFS)) {
+                std::cerr << "Argument Error: Unsupported search strategy for NDFS. Supported values are DFS and RDFS" << std::endl;
+                return ErrorCode;
+            }
+            if (options.trace != TraceLevel::None
+                && options.strategy == RDFS
+                && options.ltlalgorithm == LTL::Algorithm::NDFS) {
+                std::cerr << "Argument Error: Random search order NDFS does not support traces" << std::endl;
+                return ErrorCode;
+            }
         }
     }
 
@@ -508,7 +543,7 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
     std::vector<Condition_ptr > conditions;
     if (!options.statespaceexploration) {
         //Open query file
-        ifstream qfile(options.queryfile, ifstream::in);
+        std::ifstream qfile(options.queryfile, std::ifstream::in);
         if (!qfile) {
             fprintf(stderr, "Error: Query file \"%s\" couldn't be opened\n", options.queryfile);
             fprintf(stdout, "CANNOT_COMPUTE\n");
@@ -518,12 +553,12 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
 
         if(options.querynumbers.size() == 0)
         {
-            string querystring; // excluding EF and AG
+            std::string querystring; // excluding EF and AG
 
             //Read everything
-            stringstream buffer;
+            std::stringstream buffer;
             buffer << qfile.rdbuf();
-            string querystr = buffer.str(); // including EF and AG
+            std::string querystr = buffer.str(); // including EF and AG
             //Parse XML the queries and querystr let be the index of xmlquery
 
             qstrings.push_back(querystring);
@@ -609,7 +644,7 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
 ReturnValue parseModel(AbstractPetriNetBuilder& builder, options_t& options)
 {
     //Load the model
-    ifstream mfile(options.modelfile, ifstream::in);
+    std::ifstream mfile(options.modelfile, std::ifstream::in);
     if (!mfile) {
         fprintf(stderr, "Error: Model file \"%s\" couldn't be opened\n", options.modelfile);
         fprintf(stdout, "CANNOT_COMPUTE\n");
@@ -663,7 +698,7 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
     }
 }
 
-std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
+std::string getXMLQueries(std::vector<std::shared_ptr<Condition>> queries, std::vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
     bool cont = false;
     for(uint32_t i = 0; i < results.size(); i++) {
         if (results[i] == ResultPrinter::CTL) {
@@ -693,9 +728,10 @@ std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std
     return ss.str();
 }
 
-void writeQueries(vector<std::shared_ptr<Condition>>& queries, vector<std::string>& querynames, std::vector<uint32_t>& order, std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names)
+void writeQueries(std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
+    std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names)
 {
-    fstream out;
+    std::fstream out;
 
     if(binary)
     {
@@ -745,7 +781,7 @@ void writeQueries(vector<std::shared_ptr<Condition>>& queries, vector<std::strin
     out.close();
 }
 
-std::vector<Condition_ptr> getCTLQueries(const vector<Condition_ptr>& ctlStarQueries) {
+std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlStarQueries) {
     std::vector<Condition_ptr> ctlQueries;
     for (const auto &ctlStarQuery : ctlStarQueries) {
         IsCTLVisitor isCtlVisitor;
@@ -753,7 +789,7 @@ std::vector<Condition_ptr> getCTLQueries(const vector<Condition_ptr>& ctlStarQue
         if (isCtlVisitor.isCTL) {
             AsCTL asCtl;
             ctlStarQuery->visit(asCtl);
-            ctlQueries.push_back(asCtl.ctlQuery);
+            ctlQueries.push_back(asCtl._ctl_query);
         } else {
             ctlQueries.push_back(nullptr);
         }
@@ -761,7 +797,7 @@ std::vector<Condition_ptr> getCTLQueries(const vector<Condition_ptr>& ctlStarQue
     }
     return ctlQueries;
 }
-std::vector<Condition_ptr> getLTLQueries(const vector<Condition_ptr>& ctlStarQueries) {
+std::vector<Condition_ptr> getLTLQueries(const std::vector<Condition_ptr>& ctlStarQueries) {
     std::vector<Condition_ptr> ltlQueries;
     for (const auto &ctlStarQuery : ctlStarQueries) {
         LTL::LTLValidator isLtl;
@@ -785,9 +821,9 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
                                  std::ostream &out = std::cout) {
     Condition_ptr cond;
     bool wasACond;
-    if (dynamic_pointer_cast<SimpleQuantifierCondition>(query) != nullptr) {
-        wasACond = dynamic_pointer_cast<ACondition>(query) != nullptr;
-        cond = (*dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
+    if (std::dynamic_pointer_cast<SimpleQuantifierCondition>(query) != nullptr) {
+        wasACond = std::dynamic_pointer_cast<ACondition>(query) != nullptr;
+        cond = (*std::dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
     } else {
         wasACond = true;
         cond = query;
@@ -826,6 +862,13 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true));
     }, stats, evalContext, false, false, true);
 
+    if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
+        // nothing
+    } else if (wasACond) {
+        cond = std::make_shared<ACondition>(cond);
+    } else {
+        cond = std::make_shared<ECondition>(cond);
+    }
     if (printstats) {
         out << "RWSTATS POST:";
         stats.print(out);
@@ -834,14 +877,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
         cond->toString(out);
         out << std::endl;
     }
-
-    if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
-        return cond;
-    } else if (wasACond) {
-        return std::make_shared<ACondition>(cond);
-    } else {
-        return std::make_shared<ECondition>(cond);
-    }
+    return cond;
 }
 
 
@@ -931,13 +967,6 @@ int main(int argc, char* argv[]) {
     if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
     {
         std::cerr << "Could not analyze the queries" << std::endl;
-        return ErrorCode;
-    }
-
-    if (options.strategy == PetriEngine::Reachability::OverApprox && options.queryReductionTimeout == 0)
-    {
-        // Conflicting flags "-s OverApprox" and "-q 0"
-        std::cerr << "Conflicting flags '-s OverApprox' and '-q 0'" << std::endl;
         return ErrorCode;
     }
 
@@ -1100,7 +1129,7 @@ int main(int argc, char* argv[]) {
     {
         std::vector<uint32_t> reorder(queries.size());
         for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
-        std::sort(reorder.begin(), reorder.end(), [&queries](auto a, auto b){
+        std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b){
 
             if(queries[a]->isReachability() != queries[b]->isReachability())
                 return queries[a]->isReachability() > queries[b]->isReachability();
@@ -1171,7 +1200,7 @@ int main(int argc, char* argv[]) {
 
     if(options.model_out_file.size() > 0)
     {
-        fstream file;
+        std::fstream file;
         file.open(options.model_out_file, std::ios::out);
         net->toXML(file);
     }
@@ -1226,6 +1255,7 @@ int main(int argc, char* argv[]) {
     //----------------------- Verify LTL queries -----------------------//
 
     if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
+        options.usedltl = true;
         if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode) {
             std::cerr << "Error performing context analysis" << std::endl;
             return v;
@@ -1233,8 +1263,11 @@ int main(int argc, char* argv[]) {
 
         for (auto qid : ltl_ids) {
             LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
+
         }
-        return SuccessCode; // FIXME bad control flow
+        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+            return SuccessCode;
+        }
     }
 
     //----------------------- Siphon Trap ------------------------//

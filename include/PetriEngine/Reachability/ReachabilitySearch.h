@@ -28,6 +28,7 @@
 #include "../Structures/Queue.h"
 #include "../SuccessorGenerator.h"
 #include "../ReducingSuccessorGenerator.h"
+#include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
 
 #include <memory>
 #include <vector>

@@ -26,13 +26,10 @@
 
 #include <ptrie/ptrie_stable.h>
 
-// TODO >:(
-using namespace PetriEngine;
-
 namespace LTL {
     class RandomNDFS : public ModelChecker<LTL::SpoolingSuccessorGenerator> {
     public:
-        RandomNDFS(const PetriNet &net, const PetriEngine::PQL::Condition_ptr &cond, LTL::SpoolingSuccessorGenerator &&successorGen, TraceLevel level,
+        RandomNDFS(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &cond, LTL::SpoolingSuccessorGenerator &&successorGen, TraceLevel level,
                    bool shortcircuitweak)
                 : ModelChecker(net, cond, std::move(successorGen), level, shortcircuitweak),
                   factory{net, successorGenerator->initial_buchi_state()},
@@ -40,7 +37,7 @@ namespace LTL {
 
         bool isSatisfied() override;
 
-        void printStats(ostream &os) override;
+        void printStats(std::ostream &os) override;
 
     private:
         using State = LTL::Structures::ProductState;

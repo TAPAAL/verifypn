@@ -28,24 +28,24 @@
 
 namespace LTL {
     struct AtomicProposition {
-        Condition_ptr expression;
+        PetriEngine::PQL::Condition_ptr expression;
         std::string text;
     };
 
     using APInfo = std::vector<AtomicProposition>;
     std::string toSpotFormat(const QueryItem &query);
     void toSpotFormat(const QueryItem &query, std::ostream &os);
-    std::pair<spot::formula, APInfo> to_spot_formula(const Condition_ptr& query);
+    std::pair<spot::formula, APInfo> to_spot_formula(const PetriEngine::PQL::Condition_ptr& query);
 
     class BuchiSuccessorGenerator;
-    BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query);
+    BuchiSuccessorGenerator makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query);
 
 
     class FormulaToSpotSyntax : public PetriEngine::PQL::QueryPrinter {
     protected:
-        void _accept(const ACondition *condition) override;
+        void _accept(const PetriEngine::PQL::ACondition *condition) override;
 
-        void _accept(const ECondition *condition) override;
+        void _accept(const PetriEngine::PQL::ECondition *condition) override;
 
         void _accept(const PetriEngine::PQL::NotCondition *element) override;
 
@@ -83,12 +83,12 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::IdentifierExpr *element) override;
 
-        void _accept(const CompareConjunction *element) override;
+        void _accept(const PetriEngine::PQL::CompareConjunction *element) override;
 
     public:
 
         explicit FormulaToSpotSyntax(std::ostream &os = std::cout)
-                : PetriEngine::PQL::QueryPrinter(os) {}
+                : PetriEngine::PQL::QueryPrinter(os), compress(true) {}
 
         auto begin() const {
             return std::begin(ap_info);
@@ -105,12 +105,25 @@ namespace LTL {
     private:
         APInfo ap_info;
         bool is_quoted = false;
+        bool compress;
 
-        void make_atomic_prop(const Condition_ptr &cond) {
+        void make_atomic_prop(const PetriEngine::PQL::Condition_constptr &element)
+        {
+            auto cond =
+                const_cast<PetriEngine::PQL::Condition *>(element.get())->shared_from_this();
             std::stringstream ss;
             ss << "\"";
-            QueryPrinter _printer{ss};
-            cond->visit(_printer);
+            if (compress) {
+                // FIXME Very naive; this completely removes APs being in multiple places in the query,
+                // leading to some query not being answered as is. The net gain is large in the firebaility category,
+                // but ideally it would be possible to make a smarter approach that looks at previously stored APs
+                // and efficiently checks for repeat APs such that we can reuse APs.
+                ss << ap_info.size();
+            }
+            else {
+                PetriEngine::PQL::QueryPrinter _printer{ss};
+                cond->visit(_printer);
+            }
             ss << "\"";
             os << ss.str();
             ap_info.push_back(AtomicProposition{cond, ss.str().substr(1, ss.str().size() - 2)});

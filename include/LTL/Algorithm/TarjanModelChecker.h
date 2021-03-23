@@ -45,7 +45,7 @@ namespace LTL {
     template<typename SuccessorGen, bool SaveTrace = false>
     class TarjanModelChecker : public ModelChecker<SuccessorGen> {
     public:
-        TarjanModelChecker(const PetriEngine::PetriNet &net, const Condition_ptr &cond,
+        TarjanModelChecker(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &cond,
                            SuccessorGen &&successorGen,
                            const TraceLevel level = TraceLevel::Full,
                            const bool shortcircuitweak = true)
@@ -58,12 +58,12 @@ namespace LTL {
 
         bool isSatisfied() override;
 
-        void printStats(ostream &os) override
+        void printStats(std::ostream &os) override
         {
             this->_printStats(os, seen);
         }
 
-    protected:
+    private:
         using State = LTL::Structures::ProductState;
         using idx_t = size_t;
         // 64 MB hash table

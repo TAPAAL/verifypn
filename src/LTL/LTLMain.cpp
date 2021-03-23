@@ -19,7 +19,6 @@
 #include "LTL/LTLMain.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Expressions.h"
-#include "LTL/Algorithm/ResumingStubbornTarjan.h"
 
 #include "LTL/SuccessorGeneration/Spoolers.h"
 #include "LTL/SuccessorGeneration/Heuristics.h"
@@ -27,6 +26,7 @@
 #include <utility>
 
 using namespace PetriEngine::PQL;
+using namespace PetriEngine;
 
 #define DEBUG_EXPLORED_STATES
 
@@ -116,7 +116,16 @@ namespace LTL {
         Result result;
         switch (options.ltlalgorithm) {
             case Algorithm::NDFS:
-                if (options.trace != TraceLevel::None) {
+                if (options.strategy == PetriEngine::Reachability::RDFS) {
+                    SpoolingSuccessorGenerator gen{*net, negated_formula};
+                    gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
+                    gen.setHeuristic(std::make_unique<RandomHeuristic>());
+
+                    result = _verify(net, negated_formula,
+                                     std::make_unique<RandomNDFS>(*net, negated_formula, std::move(gen), options.trace,
+                                                                  options.ltluseweak),
+                                     options);
+                } else if (options.trace != TraceLevel::None) {
                     result = _verify(net, negated_formula,
                                      std::make_unique<NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>(
                                              *net, negated_formula, options.trace, options.ltluseweak), options);
@@ -126,17 +135,6 @@ namespace LTL {
                                              *net, negated_formula, options.trace, options.ltluseweak), options);
                 }
                 break;
-            case Algorithm::RandomNDFS: {
-                SpoolingSuccessorGenerator gen{*net, negated_formula};
-                gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
-                gen.setHeuristic(std::make_unique<RandomHeuristic>());
-
-                result = _verify(net, negated_formula,
-                                 std::make_unique<RandomNDFS>(*net, negated_formula, std::move(gen), options.trace,
-                                                              options.ltluseweak),
-                                 options);
-                break;
-            }
             case Algorithm::Tarjan:
                 if (options.strategy != PetriEngine::Reachability::DEFAULT ||
                     (!hasinhib && options.stubbornreduction && !negated_formula->containsNext())) {
@@ -146,8 +144,7 @@ namespace LTL {
                         std::cout << "Running stubborn version!" << std::endl;
 
                         gen.setSpooler(std::make_unique<InterestingLTLStubbornSet>(*net, negated_formula));
-                    }
-                    else {
+                    } else {
                         gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
                     }
                     if (options.strategy == PetriEngine::Reachability::RDFS) {

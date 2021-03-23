@@ -110,30 +110,27 @@ namespace PetriEngine {
             /** Perform context analysis */
             virtual void analyze(AnalysisContext& context) = 0;
             /** Evaluate the expression given marking and assignment */
-            virtual int evaluate(const EvaluationContext& context) = 0;
+            [[nodiscard]] virtual int evaluate(const EvaluationContext& context) = 0;
             int evalAndSet(const EvaluationContext& context);
             virtual void visit(Visitor& visitor) const = 0;
             /** Expression type */
-            virtual Types type() const = 0;
+            [[nodiscard]] virtual Types type() const = 0;
             /** Construct left/right side of equations used in query simplification */
             virtual Simplification::Member constraint(SimplificationContext& context) const = 0;
             /** Output the expression as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs, bool tokencount = false) const = 0;
             virtual void toBinary(std::ostream&) const = 0;
 
-            virtual void incr(StubbornSet& generator) const = 0;
-            virtual void decr(StubbornSet& generator) const = 0;
-
             /** Count size of the entire formula in number of nodes */
-            virtual int formulaSize() const = 0;
+            [[nodiscard]] virtual int formulaSize() const = 0;
             
-            virtual bool placeFree() const = 0;
+            [[nodiscard]] virtual bool placeFree() const = 0;
             
             void setEval(int eval) {
                 _eval = eval;
             }
             
-            int getEval() const {
+            [[nodiscard]] int getEval() const {
                 return _eval;
             }
         };
@@ -199,7 +196,7 @@ namespace PetriEngine {
         };
         
         /** Base condition */
-    class Condition {
+        class Condition : public std::enable_shared_from_this<Condition> {
         public:
             enum Result {RUNKNOWN=-1,RFALSE=0,RTRUE=1};
         private:
@@ -221,31 +218,29 @@ namespace PetriEngine {
             /** Export condition to TAPAAL query (add EF manually!) */
             virtual void toTAPAALQuery(std::ostream&, TAPAALConditionExportContext& context) const = 0;
             /** Get distance to query */
-            virtual uint32_t distance(DistanceContext& context) const = 0;
+            [[nodiscard]] virtual uint32_t distance(DistanceContext& context) const = 0;
             /** Query Simplification */
             virtual Simplification::Retval simplify(SimplificationContext& context) const = 0;
             /** Check if query is a reachability query */
-            virtual bool isReachability(uint32_t depth = 0) const = 0;
+            [[nodiscard]] virtual bool isReachability(uint32_t depth = 0) const = 0;
 
-            virtual bool isLoopSensitive() const { return _loop_sensitive; };
+            [[nodiscard]] virtual bool isLoopSensitive() const { return _loop_sensitive; };
             /** Prepare reachability queries */
-            virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
-            virtual std::shared_ptr<Condition> pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated = false, bool initrw = true) = 0;
+            [[nodiscard]] virtual std::shared_ptr<Condition> prepareForReachability(bool negated = false) const = 0;
+            [[nodiscard]] virtual std::shared_ptr<Condition> pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated = false, bool initrw = true) = 0;
             
             /** Output the condition as it currently is to a file in XML */
             virtual void toXML(std::ostream&, uint32_t tabs) const = 0;
             virtual void toBinary(std::ostream& out) const = 0;
 
-            virtual void findInteresting(StubbornSet& generator, bool negated) const = 0;
-
             /** Checks if the condition is trivially true */
-            bool isTriviallyTrue();
+            [[nodiscard]] bool isTriviallyTrue();
             /*** Checks if the condition is trivially false */
-            bool isTriviallyFalse();
+            [[nodiscard]] bool isTriviallyFalse();
             /** Count size of the entire formula in number of nodes */
-            virtual int formulaSize() const = 0;
+            [[nodiscard]] virtual int formulaSize() const = 0;
 
-            bool isSatisfied() const
+            [[nodiscard]] bool isSatisfied() const
             {
                 return _eval == RTRUE;
             }
@@ -275,14 +270,14 @@ namespace PetriEngine {
                 return _inv;
             }
             
-            virtual bool isTemporal() const { return false;}
-            virtual CTLType getQueryType() const = 0;
-            virtual Quantifier getQuantifier() const = 0;
-            virtual Path getPath() const = 0;
-            static std::shared_ptr<Condition> 
+            [[nodiscard]] virtual bool isTemporal() const { return false;}
+            [[nodiscard]] virtual CTLType getQueryType() const = 0;
+            [[nodiscard]] virtual Quantifier getQuantifier() const = 0;
+            [[nodiscard]] virtual Path getPath() const = 0;
+            [[nodiscard]] static std::shared_ptr<Condition> 
             initialMarkingRW(const std::function<std::shared_ptr<Condition> ()>& func, negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw);
-            virtual bool containsNext() const = 0;   
-            virtual bool nestedDeadlock() const = 0;
+            [[nodiscard]] virtual bool containsNext() const = 0;   
+            [[nodiscard]] virtual bool nestedDeadlock() const = 0;
             void toString(std::ostream& os = std::cout);
         protected:
             //Value for checking if condition is trivially true or false.

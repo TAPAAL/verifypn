@@ -31,7 +31,7 @@ namespace LTL {
         PetriEngine::Structures::RDFSQueue todo{&states};
 
         State working = factory.newState();
-        PQL::DistanceContext ctx{&net, working.marking()};
+        PetriEngine::PQL::DistanceContext ctx{&net, working.marking()};
         State curState = factory.newState();
         {
             std::vector<State> initial_states;
@@ -77,7 +77,7 @@ namespace LTL {
         State working = factory.newState();
         State curState = factory.newState();
 
-        PQL::DistanceContext ctx{&net, state.marking()};
+        PetriEngine::PQL::DistanceContext ctx{&net, state.marking()};
 
         todo.push(states.add(state).second, ctx, formula);
 
@@ -98,15 +98,13 @@ namespace LTL {
                 todo.push(r.second, ctx, formula);
             }
         }
-
     }
 
-    void RandomNDFS::printStats(ostream &os) {
+    void RandomNDFS::printStats(std::ostream &os) {
         std::cout << "STATS:\n"
                   << "\tdiscovered states:          " << mark1.discovered() << std::endl
+                  << "\tmax tokens:                 " << mark1.maxTokens() << std::endl
                   << "\tdiscovered states (nested): " << mark2.discovered() << std::endl
-                  << "\tmax tokens:                 " << std::max(mark1.maxTokens(), mark2.maxTokens()) << std::endl
-                  << "\texplored states:            " << stats.explored << std::endl
-                  << "\texplored states (nested):   " << stats.expanded << std::endl;
+                  << "\tmax tokens (nested):        " << mark2.maxTokens() << std::endl;
     }
 }

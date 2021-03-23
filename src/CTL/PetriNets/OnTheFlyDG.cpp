@@ -7,6 +7,7 @@
 #include <limits>
 
 #include "PetriEngine/SuccessorGenerator.h"
+#include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
 #include "PetriEngine/PQL/Expressions.h"
 #include "CTL/SearchStrategy/SearchStrategy.h"
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"

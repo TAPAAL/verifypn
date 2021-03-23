@@ -30,10 +30,9 @@
 #include "PetriEngine/errorcodes.h"
 
 using namespace PetriEngine;
-using namespace std;
 using namespace PetriEngine::PQL;
 
-void PNMLParser::parse(ifstream& xml,
+void PNMLParser::parse(std::ifstream& xml,
         AbstractPetriNetBuilder* builder) {
     //Clear any left overs
     id2name.clear();
@@ -47,7 +46,7 @@ void PNMLParser::parse(ifstream& xml,
 
     //Parser the xml
     rapidxml::xml_document<> doc;
-    vector<char> buffer((istreambuf_iterator<char>(xml)), istreambuf_iterator<char>());
+    std::vector<char> buffer((std::istreambuf_iterator<char>(xml)), std::istreambuf_iterator<char>());
     buffer.push_back('\0');
     doc.parse<0>(&buffer[0]);
     
@@ -379,10 +378,10 @@ void PNMLParser::parseElement(rapidxml::xml_node<>* element) {
 }
 
 void PNMLParser::parseQueries(rapidxml::xml_node<>* element) {
-    string query;
+    std::string query;
 
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
-        string name(element->first_attribute("name")->value());
+        std::string name(element->first_attribute("name")->value());
         parseValue(element, query);
         Query q;
         q.name = name;
@@ -393,7 +392,7 @@ void PNMLParser::parseQueries(rapidxml::xml_node<>* element) {
 
 void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
     double x = 0, y = 0;
-    string id(element->first_attribute("id")->value());
+    std::string id(element->first_attribute("id")->value());
     
     auto initial = element->first_attribute("initialMarking");
     long long initialMarking = 0;
@@ -407,7 +406,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
         if (strcmp(it->name(), "graphics") == 0) {
             parsePosition(it, x, y);
         } else if (strcmp(it->name(),"initialMarking") == 0) {
-            string text;
+            std::string text;
             parseValue(it, text);
             initialMarking = atoll(text.c_str());
         } else if (strcmp(it->name(),"hlinitialMarking") == 0) {
@@ -445,7 +444,7 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
 }
 
 void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
-    string source = element->first_attribute("source")->value(),
+    std::string source = element->first_attribute("source")->value(),
             target = element->first_attribute("target")->value();
     int weight = 1;
     auto type = element->first_attribute("type");
@@ -461,7 +460,7 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
 
     bool first = true;
     for (auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")) {
-        string text;
+        std::string text;
         parseValue(it, text);
         weight = atoi(text.c_str());
         if(std::find_if(text.begin(), text.end(), [](char c) { return !std::isdigit(c) && !std::isblank(c); }) != text.end())
@@ -523,13 +522,13 @@ void PNMLParser::parseArc(rapidxml::xml_node<>* element, bool inhibitor) {
 }
 
 void PNMLParser::parseTransportArc(rapidxml::xml_node<>* element){
-    string source	= element->first_attribute("source")->value(),
+    std::string source	= element->first_attribute("source")->value(),
            transiton	= element->first_attribute("transition")->value(),
            target	= element->first_attribute("target")->value();
     int weight = 1;
 
     for(auto it = element->first_node("inscription"); it; it = it->next_sibling("inscription")){
-        string text;
+        std::string text;
         parseValue(it, text);
         weight = atoi(text.c_str());
     }
@@ -578,7 +577,7 @@ void PNMLParser::parseTransition(rapidxml::xml_node<>* element) {
     id2name[t.id] = nn;
 }
 
-void PNMLParser::parseValue(rapidxml::xml_node<>* element, string& text) {
+void PNMLParser::parseValue(rapidxml::xml_node<>* element, std::string& text) {
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
         if (strcmp(it->name(), "value") == 0 || strcmp(it->name(), "text") == 0) {
             text = it->value();

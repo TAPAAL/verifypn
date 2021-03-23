@@ -52,6 +52,7 @@ namespace LTL {
                 }
                 ++this->stats.explored;
                 const auto[isnew, stateid] = seen.add(working);
+
                 if constexpr (SaveTrace) {
                     if (isnew) {
                         seen.setHistory(stateid, this->successorGenerator->fired());
@@ -211,8 +212,10 @@ namespace LTL {
                 auto stateid = cstack[p].stateid;
                 auto[parent, tid] = seen.getHistory(stateid);
                 seen.decode(state, stateid);
-                if (stateid == loopstate) this->printLoop(os);
+
                 this->printTransition(tid, state, os) << '\n';
+                if (stateid == loopstate) this->printLoop(os);
+
                 cstack[p].lowlink = std::numeric_limits<idx_t>::max();
                 dstack.pop();
             }

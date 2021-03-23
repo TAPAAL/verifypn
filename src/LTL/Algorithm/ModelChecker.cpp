@@ -24,8 +24,6 @@ namespace LTL {
     template
     class ModelChecker<LTL::ResumingSuccessorGenerator>;
 
-    template class ModelChecker<LTL::SpoolingSuccessorGenerator>;
-
     template
-    class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
+    class ModelChecker<LTL::SpoolingSuccessorGenerator>;
 }

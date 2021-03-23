@@ -15,30 +15,15 @@ endif ()
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
-set(VERIFYPN_VERSION 3.1.0)
+set(VERIFYPN_VERSION 3.1.1)
 add_compile_definitions(VERIFYPN_VERSION=\"${VERIFYPN_VERSION}\")
 
 project(verifypn VERSION ${VERIFYPN_VERSION} LANGUAGES CXX C)
 
-option(VERIFYPN_Static "Link libraries statically" ON)
-option(VERIFYPN_MC_Simplification "Enables multicore simplification, incompatible with static linking" OFF)
+option(VERIFYPN_MC_Simplification "Enables multicore simplification" OFF)
 option(VERIFYPN_GetDependencies "Fetch external dependencies from web." ON)
 
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-    set(VERIFYPN_Static OFF)
-endif()
-
-if (VERIFYPN_Static)
-    set(BUILD_SHARED_LIBS OFF)
-    if (VERIFYPN_MC_Simplification)
-        message( FATAL_ERROR "Multicore Simplification is not compatible with static linking" )
-    endif(VERIFYPN_MC_Simplification)
-    if (NOT APPLE)
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-    endif(NOT APPLE)
-else(VERIFYPN_Static)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
-endif (VERIFYPN_Static)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 
 if (VERIFYPN_MC_Simplification)
     add_compile_definitions(VERIFYPN_MC_Simplification)
@@ -54,12 +39,10 @@ else()
     set(ARCH_TYPE "win64")
 endif ()
 
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -pedantic-errors -O3 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s -Wall -pedantic-errors -O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-omit-frame-pointer -fsanitize=address")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -O3 -DNDEBUG")
-if (VERIFYPN_Static AND NOT APPLE)
-    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -static")
-endif()
+
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -84,10 +67,10 @@ if (VERIFYPN_GetDependencies)
     )
 
     ExternalProject_add(spot-ext
-        URL http://www.lrde.epita.fr/dload/spot/spot-2.9.4.tar.gz
-        URL_HASH SHA512=d8e5f8c97495f7964698547d83d8a657afb5e71e886d31298802a6d9d449359d9b34714c080551ca24ab1dce9ca874bfc79ac70d3236dbf6e4fd56bd981483bf
+        URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
+	URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
         BUILD_COMMAND make -j8
-        CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python
+	CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin
         INSTALL_COMMAND make install
     )
 

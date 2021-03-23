@@ -25,6 +25,8 @@
 #include <spot/twaalgos/dot.hh>
 
 
+using namespace PetriEngine::PQL;
+
 namespace LTL {
 
 
@@ -77,8 +79,8 @@ namespace LTL {
         make_atomic_prop(std::make_shared<NotEqualCondition>(*element));
     }
 
-    void FormulaToSpotSyntax::_accept(const CompareConjunction *element) {
-        make_atomic_prop(std::make_shared<CompareConjunction>(*element));
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::CompareConjunction *element) {
+        make_atomic_prop(element->shared_from_this());
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::BooleanCondition *element) {
@@ -127,15 +129,15 @@ namespace LTL {
         //make_atomic_prop(element->shared_from_this());
     }
 
-    void FormulaToSpotSyntax::_accept(const ACondition *condition) {
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::ACondition *condition) {
         (*condition)[0]->visit(*this);
     }
 
-    void FormulaToSpotSyntax::_accept(const ECondition *condition) {
+    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::ECondition *condition) {
         (*condition)[0]->visit(*this);
     }
 
-    std::pair<spot::formula, APInfo> to_spot_formula(const Condition_ptr& query) {
+    std::pair<spot::formula, APInfo> to_spot_formula(const PetriEngine::PQL::Condition_ptr& query) {
         std::stringstream ss;
         FormulaToSpotSyntax spotConverter{ss};
         query->visit(spotConverter);
@@ -147,7 +149,7 @@ namespace LTL {
         return std::make_pair(spot_formula, spotConverter.apInfo());
     }
 
-    BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query) {
+    BuchiSuccessorGenerator makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query) {
         auto [formula, apinfo] = to_spot_formula(query);
         formula = spot::formula::Not(formula);
         spot::translator translator;

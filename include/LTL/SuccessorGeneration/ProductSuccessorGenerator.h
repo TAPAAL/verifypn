@@ -20,7 +20,6 @@
 
 #include "PetriEngine/SuccessorGenerator.h"
 #include "PetriEngine/ReducingSuccessorGenerator.h"
-#include "LTL/Stubborn/ReducingSuccessorGenerator.h"
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/Structures/ProductState.h"
 #include "BuchiSuccessorGenerator.h"
@@ -36,7 +35,6 @@ namespace LTL {
 
     template<class SuccessorGen>
     class ProductSuccessorGenerator {
-        static constexpr auto AutomataReducing = std::is_same_v<SuccessorGen, LTL::ReducingSuccessorGenerator>;
     public:
 
         ProductSuccessorGenerator(const PetriEngine::PetriNet &net,
@@ -46,26 +44,7 @@ namespace LTL {
                   buchi(makeBuchiAutomaton(cond)),
                   aut(buchi.aut)
         {
-            if constexpr (AutomataReducing) {
-                std::vector<AtomicProposition> aps(aut.ap_info.size());
-                std::transform(std::begin(aut.ap_info), std::end(aut.ap_info), std::begin(aps),
-                               [](const std::pair<int, AtomicProposition> &pair) { return pair.second; });
-                for (unsigned state = 0; state < aut._buchi->num_states(); ++state) {
-                    stateToGuards.emplace_back(state, aut._buchi->state_is_accepting(state));
-                    for (auto &e : aut._buchi->out(state)) {
-                        auto formula = spot::bdd_to_formula(e.cond, aut.dict);
-                        if (e.dst == state) {
-                            stateToGuards.back().retarding = toPQL(formula, aps);
-                        }
-                        else {
-                            stateToGuards.back().progressing.push_back(toPQL(formula, aps));
-                        }
-                    }
-                    if (!stateToGuards.back().retarding) {
-                        stateToGuards.back().retarding = std::make_shared<BooleanCondition>(false);
-                    }
-                }
-            }
+
         }
 
         [[nodiscard]] size_t initial_buchi_state() const { return buchi.initial_state_number(); };
@@ -75,12 +54,7 @@ namespace LTL {
             buchi.prepare(state->getBuchiState());
             buchi_parent = state->getBuchiState();
             fresh_marking = true;
-            if constexpr (!AutomataReducing) { //TODO what do we d
-                return _successor_generator.prepare(state);
-            }
-            else {
-                return _successor_generator.prepare(state, stateToGuards.at(state->getBuchiState()));
-            }
+            return _successor_generator.prepare(state);
         }
 
         bool next(LTL::Structures::ProductState &state)
@@ -145,13 +119,8 @@ namespace LTL {
          */
         void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::sucinfo &sucinfo)
         {
-            if constexpr (AutomataReducing) {
-                _successor_generator.prepare(state, sucinfo, false);
-            }
-            else {
-                _successor_generator.prepare(state, sucinfo);
-            }
-            fresh_marking = sucinfo.fresh(); //
+            _successor_generator.prepare(state, sucinfo);
+            fresh_marking = sucinfo.fresh();
             buchi.prepare(state->getBuchiState());
             buchi_parent = state->getBuchiState();
             if (!fresh_marking) {
@@ -254,6 +223,8 @@ namespace LTL {
 
         size_t buchiStates() { return buchi.buchiStates(); }
 
+        void output_buchi(const std::string& file, BuchiOutType type) { buchi.output_buchi(file, type); }
+
     private:
         SuccessorGen _successor_generator;
         const PetriEngine::PetriNet &_net;
@@ -271,12 +242,13 @@ namespace LTL {
          */
         bool guard_valid(const PetriEngine::Structures::State &state, bdd bdd)
         {
-            EvaluationContext ctx{state.marking(), &_net};
+            PetriEngine::PQL::EvaluationContext ctx{state.marking(), &_net};
             // IDs 0 and 1 are false and true atoms, respectively
             // More details in buddy manual ( http://buddy.sourceforge.net/manual/main.html )
             while (bdd.id() > 1) {
                 // find variable to test, and test it
                 size_t var = bdd_var(bdd);
+                using PetriEngine::PQL::Condition;
                 Condition::Result res = buchi.getExpression(var)->evaluate(ctx);
                 switch (res) {
                     case Condition::RUNKNOWN:

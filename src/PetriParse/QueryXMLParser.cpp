@@ -26,8 +26,6 @@
 #include <iostream>
 #include <algorithm>
 
-using namespace std;
-
 int getChildCount(rapidxml::xml_node<> *n)
 {
   int c = 0;
@@ -45,7 +43,7 @@ QueryXMLParser::~QueryXMLParser() = default;
 bool QueryXMLParser::parse(std::ifstream& xml, const std::set<size_t>& parse_only) {
     //Parse the xml
     rapidxml::xml_document<> doc;
-    vector<char> buffer((istreambuf_iterator<char>(xml)), istreambuf_iterator<char>());
+    std::vector<char> buffer((std::istreambuf_iterator<char>(xml)), std::istreambuf_iterator<char>());
     buffer.push_back('\0');
     doc.parse<0>(&buffer[0]);
     rapidxml::xml_node<>*  root = doc.first_node();
@@ -91,7 +89,7 @@ bool QueryXMLParser::parseProperty(rapidxml::xml_node<>*  element) {
         fprintf(stderr, "ERROR missing property\n");
         return false; // unexpected element (only property is allowed)
     }
-    string id;
+    std::string id;
     bool tagsOK = true;
     rapidxml::xml_node<>* formulaPtr = nullptr;
     for (auto it = element->first_node(); it; it = it->next_sibling()) {
@@ -148,7 +146,7 @@ Condition_ptr QueryXMLParser::parseFormula(rapidxml::xml_node<>*  element) {
         return nullptr;    
     }
     auto child = element->first_node();
-    string childName = child->name();
+    std::string childName = child->name();
     Condition_ptr cond = nullptr;
     
     // Formula is either CTL/Reachability, UpperBounds or one of the global properties
@@ -218,7 +216,7 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
      * NEG POS phi = not EF phi
      */
     
-    string elementName = element->name();
+    std::string elementName = element->name();
     Condition_ptr cond = nullptr, cond2 = nullptr;
 
     //TODO: Break invariant, impossibility, and possibility into their own nodes. What is the corresponding semantics of these nodes?
@@ -432,7 +430,7 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
 }
 
 Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) {
-    string elementName = element->name();
+    std::string elementName = element->name();
     if (elementName == "integer-constant") {
         int i;
         if (sscanf(element->value(), "%d", &i) == EOF) 
@@ -450,7 +448,7 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
                 assert(false);
                 return nullptr;
             }
-            string placeName = parsePlace(it);
+            std::string placeName = parsePlace(it);
             if (placeName.empty())
             {
                 assert(false);
@@ -510,9 +508,9 @@ Expr_ptr QueryXMLParser::parseIntegerExpression(rapidxml::xml_node<>*  element) 
     return nullptr;
 }
 
-string QueryXMLParser::parsePlace(rapidxml::xml_node<>*  element) {
+std::string QueryXMLParser::parsePlace(rapidxml::xml_node<>*  element) {
     if (strcmp(element->name(), "place") != 0)  return ""; // missing place tag
-    string placeName = element->value();
+    std::string placeName = element->value();
     placeName.erase(std::remove_if(placeName.begin(), placeName.end(), ::isspace), placeName.end());
     return placeName;
 }
@@ -520,18 +518,18 @@ string QueryXMLParser::parsePlace(rapidxml::xml_node<>*  element) {
 void QueryXMLParser::printQueries(size_t i) {
     //	QueryXMLParser::QueriesIterator it;
     if (i <= 0 || i > queries.size()) {
-        cout << "In printQueries the query index is out of scope\n\n";
+        std::cout << "In printQueries the query index is out of scope\n\n";
         return;
     }
     QueryItem it = queries[i - 1];
-    cout << it.id << ": " ;
+    std::cout << it.id << ": " ;
     if (it.parsingResult == QueryItem::UNSUPPORTED_QUERY) {
-        cout << "\t---------- unsupported query ----------" << endl;
+        std::cout << "\t---------- unsupported query ----------" << std::endl;
     } else {
-        cout << "\t";
+        std::cout << "\t";
         PetriEngine::PQL::QueryPrinter printer;
         it.query->visit(printer);
-        cout << std::endl;
+        std::cout << std::endl;
     }
 }
 

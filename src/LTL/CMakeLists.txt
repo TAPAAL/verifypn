@@ -8,5 +8,5 @@ add_subdirectory(SuccessorGeneration)
 
 add_library(LTL ${HEADER_FILES} LTLMain.cpp)
 
-target_link_libraries(LTL LTL_algorithm bddx spot LTLStubborn LTL_simplification LTLSuccessorGeneration)
-
+target_link_libraries(LTL PRIVATE LTL_algorithm LTLStubborn LTL_simplification LTLSuccessorGeneration
+                          -Wl,-Bstatic spot bddx -Wl,-Bdynamic)

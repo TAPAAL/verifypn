@@ -1643,7 +1643,7 @@ namespace PetriEngine {
                             if(!remove_loops) 
                                 while(ReducebyRuleI(context.getQueryPlaceCount(), remove_loops, remove_consumers)) changed = true;
                             while(ReducebyRuleD(context.getQueryPlaceCount())) changed = true;
-                            changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers);
+                            //changed |= ReducebyRuleK(context.getQueryPlaceCount(), remove_consumers); //Rule disabled as correctness has not been proved. Experiments indicate that it is not correct for CTL.
                         }
                     } while(changed && !hasTimedout());
                     if(!next_safe) 

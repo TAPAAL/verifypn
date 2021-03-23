@@ -147,7 +147,7 @@ namespace LTL {
     }
 
     template<typename W>
-    void NestedDepthFirstSearch<W>::printStats(ostream &os) {
+    void NestedDepthFirstSearch<W>::printStats(std::ostream &os) {
         std::cout << "STATS:\n"
                   << "\tdiscovered states:          " << states.discovered() << std::endl
                   << "\tmax tokens:                 " << states.maxTokens() << std::endl
@@ -178,7 +178,6 @@ namespace LTL {
         }
         os << std::endl << "</trace>" << std::endl;
     }
-
 
     template
     class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;

@@ -222,7 +222,7 @@ namespace PetriEngine {
             }
             
             uint32_t getLpTimeout() const;
-            
+
             Simplification::LPCache* cache() const
             {
                 return _cache;

@@ -20,8 +20,13 @@
 
 #include "PetriEngine/SuccessorGenerator.h"
 #include "LTL/Structures/BuchiAutomaton.h"
+#include "LTL/AlgorithmTypes.h"
 
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/dot.hh>
+#include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/neverclaim.hh>
+
 #include <utility>
 #include <memory>
 
@@ -64,7 +69,7 @@ namespace LTL {
             return aut._buchi->get_init_state_number();
         }
 
-        [[nodiscard]] Condition_ptr getExpression(size_t i) const
+        [[nodiscard]] PetriEngine::PQL::Condition_ptr getExpression(size_t i) const
         {
             return aut.ap_info.at(i).expression;
         }
@@ -74,6 +79,22 @@ namespace LTL {
             return (bool) aut._buchi->prop_weak();
         }
         size_t buchiStates() { return aut._buchi->num_states(); }
+
+        void output_buchi(const std::string& file, BuchiOutType type)
+        {
+            std::ofstream fs(file);
+            switch (type) {
+                case BuchiOutType::Dot:
+                    spot::print_dot(fs, aut._buchi);
+                    break;
+                case BuchiOutType::HOA:
+                    spot::print_hoa(fs, aut._buchi, "s");
+                    break;
+                case BuchiOutType::Spin:
+                    spot::print_never_claim(fs, aut._buchi);
+                    break;
+            }
+        }
 
         Structures::BuchiAutomaton aut;
 

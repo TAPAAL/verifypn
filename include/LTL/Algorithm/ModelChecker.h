@@ -24,7 +24,6 @@
 #include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
 #include "LTL/Structures/BitProductStateSet.h"
-#include "LTL/Algorithm/ProductPrinter.h"
 #include "PetriEngine/options.h"
 
 namespace LTL {
@@ -50,13 +49,15 @@ namespace LTL {
 
         size_t get_explored() { return stats.explored; }
 
+        void output_buchi(const std::string& file, BuchiOutType type) { successorGenerator->output_buchi(file, type); }
+
     protected:
         struct stats_t {
             size_t explored = 0, expanded = 0;
         };
 
         stats_t stats;
-        virtual void _printStats(ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet) {
+        virtual void _printStats(std::ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet) {
             std::cout   << "STATS:\n"
                         << "\tdiscovered states: " << stateSet.discovered() << std::endl
                         << "\texplored states:   " << stats.explored << std::endl
@@ -65,6 +66,7 @@ namespace LTL {
         }
 
         std::unique_ptr<ProductSuccessorGenerator<SuccessorGen>> successorGenerator;
+
         const PetriEngine::PetriNet &net;
         PetriEngine::PQL::Condition_ptr formula;
         TraceLevel traceLevel;
@@ -112,7 +114,6 @@ namespace LTL {
     };
     extern template class ModelChecker<LTL::ResumingSuccessorGenerator>;
     extern template class ModelChecker<LTL::SpoolingSuccessorGenerator>;
-    extern template class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
 }
 
 #endif //VERIFYPN_MODELCHECKER_H
