@@ -147,6 +147,9 @@ namespace LTL {
 
                         gen.setSpooler(std::make_unique<InterestingLTLStubbornSet>(*net, negated_formula));
                     }
+                    else {
+                        gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
+                    }
                     if (options.strategy == PetriEngine::Reachability::RDFS) {
                         gen.setHeuristic(std::make_unique<RandomHeuristic>());
                     } else if (options.strategy == PetriEngine::Reachability::HEUR) {
