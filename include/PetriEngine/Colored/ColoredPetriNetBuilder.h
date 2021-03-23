@@ -182,7 +182,7 @@ namespace PetriEngine {
         
         void unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color);
         void unfoldTransition(Colored::Transition& transition);
-        void handleOrphanPlace(Colored::Place& place);
+        void handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> unfoldedPlaceMap);
 
         void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name, bool input);
     };

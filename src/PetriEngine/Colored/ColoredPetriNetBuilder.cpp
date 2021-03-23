@@ -331,8 +331,9 @@ namespace PetriEngine {
             for (auto& transition : _transitions) {
                 unfoldTransition(transition);
             }
+            auto unfoldedPlaceMap = _ptBuilder.getPlaceNames();
             for (auto& place : _places) {
-               handleOrphanPlace(place);
+               handleOrphanPlace(place, unfoldedPlaceMap);
             }
             _unfolded = true;
             auto end = std::chrono::high_resolution_clock::now();
@@ -345,11 +346,27 @@ namespace PetriEngine {
     //However, in queries asking about orphan places it cannot find these, as they have not been unfolded
     //so we make a placeholder place which just has tokens equal to the number of colored tokens
     //Ideally, orphan places should just be translated to a constant in the query
-    void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place) {
-        if(_ptplacenames.count(place.name) <= 0){   
-            std::string name = place.name + "_" + std::to_string(place.marking.size());
+    void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> unfoldedPlaceMap) {
+        if(_ptplacenames.count(place.name) <= 0){
+            
+            std::string name = place.name + "_orphan";
             _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
             _ptplacenames[place.name][0] = std::move(name);
+        } else {
+            uint32_t usedTokens = 0;
+            
+            for(std::pair<const uint32_t, std::string> unfoldedPlace : _ptplacenames[place.name]){                
+                auto unfoldedMarking = _ptBuilder.initMarking();
+                
+                auto unfoldedPlaceId = unfoldedPlaceMap[unfoldedPlace.second];
+                usedTokens += unfoldedMarking[unfoldedPlaceId];
+            }
+            
+            if(place.marking.size() > usedTokens){
+                std::string name = place.name + "_orphan";
+                _ptBuilder.addPlace(name, place.marking.size() - usedTokens, 0.0, 0.0);
+                _ptplacenames[place.name][UINT32_MAX] = std::move(name);
+            }
         }
         
         //++_nptplaces;        
