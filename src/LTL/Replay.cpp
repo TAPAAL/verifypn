@@ -102,7 +102,8 @@ namespace LTL {
         PetriEngine::SuccessorGenerator successorGenerator(*net);
         std::cout << "Playing back trace. Length: " << trace.size() << std::endl;
         //for (const Transition& transition : trace) {
-        for (int i = 0; i < trace.size(); ++i) {
+        int size = trace.size();
+        for (int i = 0; i < size; ++i) {
             const Transition &transition = trace[i];
             successorGenerator.prepare(&state);
             auto it = transitions.find(transition.id); // std::find(std::begin(transitions), std::end(transitions), transition.id);
@@ -119,6 +120,8 @@ namespace LTL {
             successorGenerator.consumePreset(state, tid);
             successorGenerator.producePostset(state, tid);
             //std::cerr << "Fired transition: " << transition.id << std::endl;
+            if (i % 100000 == 0)
+                std::cerr << i << "/" << size << std::endl;
         }
         std::cerr << "Replay complete. No errors" << std::endl;
         return true;
