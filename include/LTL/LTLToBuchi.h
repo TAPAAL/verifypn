@@ -25,7 +25,6 @@
 #include <string>
 
 #include <spot/tl/formula.hh>
-
 namespace LTL {
     struct AtomicProposition {
         Condition_ptr expression;
@@ -33,13 +32,20 @@ namespace LTL {
     };
 
     using APInfo = std::vector<AtomicProposition>;
+
     std::string toSpotFormat(const QueryItem &query);
+
     void toSpotFormat(const QueryItem &query, std::ostream &os);
-    std::pair<spot::formula, APInfo> to_spot_formula(const Condition_ptr& query);
+
+    std::pair<spot::formula, APInfo> to_spot_formula(const Condition_ptr &query);
 
     class BuchiSuccessorGenerator;
-    BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query);
+    namespace Structures {
+        class BuchiAutomaton;
+    }
+    Structures::BuchiAutomaton makeBuchiAutomaton(const Condition_ptr &query);
 
+    BuchiSuccessorGenerator makeBuchiSuccessorGenerator(const Condition_ptr &query);
 
     class FormulaToSpotSyntax : public PetriEngine::PQL::QueryPrinter {
     protected:
@@ -90,15 +96,18 @@ namespace LTL {
         explicit FormulaToSpotSyntax(std::ostream &os = std::cout)
                 : PetriEngine::PQL::QueryPrinter(os) {}
 
-        auto begin() const {
+        auto begin() const
+        {
             return std::begin(ap_info);
         }
 
-        auto end() const {
+        auto end() const
+        {
             return std::end(ap_info);
         }
 
-        const APInfo &apInfo() const {
+        const APInfo &apInfo() const
+        {
             return ap_info;
         }
 
@@ -106,7 +115,8 @@ namespace LTL {
         APInfo ap_info;
         bool is_quoted = false;
 
-        void make_atomic_prop(const Condition_ptr &cond) {
+        void make_atomic_prop(const Condition_ptr &cond)
+        {
             std::stringstream ss;
             ss << "\"";
             QueryPrinter _printer{ss};

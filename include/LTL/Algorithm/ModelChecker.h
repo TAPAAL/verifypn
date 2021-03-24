@@ -31,14 +31,23 @@ namespace LTL {
     template<typename SuccessorGen>
     class ModelChecker {
     public:
+        ModelChecker(const PetriEngine::PetriNet &net,
+                     const PetriEngine::PQL::Condition_ptr &condition,
+                     const Structures::BuchiAutomaton &buchi,
+                     SuccessorGen &&successorGen,
+                     const TraceLevel level = TraceLevel::Transitions,
+                     bool shortcircuitweak = true)
+                : net(net), formula(condition), traceLevel(level), shortcircuitweak(shortcircuitweak)
+        {
+            successorGenerator = std::make_unique<ProductSuccessorGenerator<SuccessorGen>>(net, buchi,
+                                                                                           std::move(successorGen));
+        }
+
         ModelChecker(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &condition,
                      SuccessorGen &&successorGen,
                      const TraceLevel level = TraceLevel::Transitions,
                      bool shortcircuitweak = true)
-                : net(net), formula(condition), traceLevel(level), shortcircuitweak(shortcircuitweak) {
-            successorGenerator = std::make_unique<ProductSuccessorGenerator<SuccessorGen>>(net, condition,
-                                                                                           std::move(successorGen));
-        }
+                : ModelChecker(net, condition, makeBuchiAutomaton(condition), std::move(successorGen), level, shortcircuitweak) {}
 
         virtual bool isSatisfied() = 0;
 
@@ -56,12 +65,14 @@ namespace LTL {
         };
 
         stats_t stats;
-        virtual void _printStats(ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet) {
-            std::cout   << "STATS:\n"
-                        << "\tdiscovered states: " << stateSet.discovered() << std::endl
-                        << "\texplored states:   " << stats.explored << std::endl
-                        << "\texpanded states:   " << stats.expanded << std::endl
-                        << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
+
+        virtual void _printStats(ostream &os, const LTL::Structures::ProductStateSetInterface &stateSet)
+        {
+            std::cout << "STATS:\n"
+                      << "\tdiscovered states: " << stateSet.discovered() << std::endl
+                      << "\texplored states:   " << stats.explored << std::endl
+                      << "\texpanded states:   " << stats.expanded << std::endl
+                      << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
         }
 
         std::unique_ptr<ProductSuccessorGenerator<SuccessorGen>> successorGenerator;
@@ -103,16 +114,23 @@ namespace LTL {
 #endif
                 os << indent << "</transition>";
             } else {
-                os << indent << "<transition id=" << std::setw(maxTransName + 1) << std::quoted(tname) << "\tbuchisucc=\""
+                os << indent << "<transition id=" << std::setw(maxTransName + 1) << std::quoted(tname)
+                   << "\tbuchisucc=\""
                    << state.getBuchiState() << "\"/>";
             }
             return os;
         }
 
     };
-    extern template class ModelChecker<LTL::ResumingSuccessorGenerator>;
-    extern template class ModelChecker<LTL::SpoolingSuccessorGenerator>;
-    extern template class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
+
+    extern template
+    class ModelChecker<LTL::ResumingSuccessorGenerator>;
+
+    extern template
+    class ModelChecker<LTL::SpoolingSuccessorGenerator>;
+
+    extern template
+    class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
 }
 
 #endif //VERIFYPN_MODELCHECKER_H

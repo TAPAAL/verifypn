@@ -20,5 +20,6 @@
 
 #include "DistanceHeuristic.h"
 #include "RandomHeuristic.h"
+#include "AutomatonHeuristic.h"
 
 #endif //VERIFYPN_HEURISTICS_H

@@ -493,8 +493,13 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             std::cerr << "Argument Error: --siphon-depth is not compatible with LTL model checking." << std::endl;
             return ErrorCode;
         }
-        if (options.strategy != PetriEngine::Reachability::DEFAULT) {
-            std::cerr << "Argument Warning: LTL model checking does not support search strategies. Will use DFS." << std::endl;
+        if (options.strategy != PetriEngine::Reachability::DEFAULT &&
+            options.strategy != PetriEngine::Reachability::HEUR && options.strategy != PetriEngine::Reachability::DFS &&
+            options.strategy != PetriEngine::Reachability::RDFS) {
+            std::cerr
+                    << "Argument Error: LTL model checking does not support the provided search strategy. Supported strategies are: BestFS, DFS and RDFS."
+                    << std::endl;
+            return ErrorCode;
         }
     }
 

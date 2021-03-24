@@ -147,7 +147,7 @@ namespace LTL {
         return std::make_pair(spot_formula, spotConverter.apInfo());
     }
 
-    BuchiSuccessorGenerator makeBuchiAutomaton(const Condition_ptr &query) {
+    Structures::BuchiAutomaton makeBuchiAutomaton(const Condition_ptr &query) {
         auto [formula, apinfo] = to_spot_formula(query);
         formula = spot::formula::Not(formula);
         spot::translator translator;
@@ -165,7 +165,11 @@ namespace LTL {
             ap_map[varnum] = info;
         }
 
-        return BuchiSuccessorGenerator{Structures::BuchiAutomaton{automaton, ap_map}};
+        return Structures::BuchiAutomaton{automaton, ap_map};
+    }
+
+    BuchiSuccessorGenerator makeBuchiSuccessorGenerator(const Condition_ptr &query) {
+        return BuchiSuccessorGenerator{makeBuchiAutomaton(query)};
     }
 
 }

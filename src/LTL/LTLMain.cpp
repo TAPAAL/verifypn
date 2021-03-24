@@ -111,6 +111,7 @@ namespace LTL {
             return ErrorCode;
         }
 
+        Structures::BuchiAutomaton automaton = makeBuchiAutomaton(negated_formula);
         bool hasinhib = net->has_inhibitor();
 
         Result result;
@@ -119,11 +120,11 @@ namespace LTL {
                 if (options.trace != TraceLevel::None) {
                     result = _verify(net, negated_formula,
                                      std::make_unique<NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>(
-                                             *net, negated_formula, options.trace, options.ltluseweak), options);
+                                             *net, negated_formula, automaton, options.trace, options.ltluseweak), options);
                 } else {
                     result = _verify(net, negated_formula,
                                      std::make_unique<NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>(
-                                             *net, negated_formula, options.trace, options.ltluseweak), options);
+                                             *net, negated_formula, automaton, options.trace, options.ltluseweak), options);
                 }
                 break;
             case Algorithm::RandomNDFS: {
@@ -132,7 +133,7 @@ namespace LTL {
                 gen.setHeuristic(std::make_unique<RandomHeuristic>());
 
                 result = _verify(net, negated_formula,
-                                 std::make_unique<RandomNDFS>(*net, negated_formula, std::move(gen), options.trace,
+                                 std::make_unique<RandomNDFS>(*net, negated_formula, automaton, std::move(gen), options.trace,
                                                               options.ltluseweak),
                                  options);
                 break;
@@ -153,7 +154,7 @@ namespace LTL {
                     if (options.strategy == PetriEngine::Reachability::RDFS) {
                         gen.setHeuristic(std::make_unique<RandomHeuristic>());
                     } else if (options.strategy == PetriEngine::Reachability::HEUR) {
-                        gen.setHeuristic(std::make_unique<DistanceHeuristic>(net, negated_formula));
+                        gen.setHeuristic(std::make_unique<AutomatonHeuristic>(net, automaton));
                     }
 
                     if (options.trace != TraceLevel::None) {
@@ -161,6 +162,7 @@ namespace LTL {
                                          std::make_unique<TarjanModelChecker<SpoolingSuccessorGenerator, true>>(
                                                  *net,
                                                  negated_formula,
+                                                 automaton,
                                                  std::move(gen),
                                                  options.trace,
                                                  options.ltluseweak),
@@ -170,6 +172,7 @@ namespace LTL {
                                          std::make_unique<TarjanModelChecker<SpoolingSuccessorGenerator, false>>(
                                                  *net,
                                                  negated_formula,
+                                                 automaton,
                                                  std::move(gen),
                                                  options.trace,
                                                  options.ltluseweak),
@@ -182,6 +185,7 @@ namespace LTL {
                                          std::make_unique<TarjanModelChecker<ResumingSuccessorGenerator, true>>(
                                                  *net,
                                                  negated_formula,
+                                                 automaton,
                                                  ResumingSuccessorGenerator{*net},
                                                  options.trace,
                                                  options.ltluseweak),
@@ -191,6 +195,7 @@ namespace LTL {
                                          std::make_unique<TarjanModelChecker<ResumingSuccessorGenerator, false>>(
                                                  *net,
                                                  negated_formula,
+                                                 automaton,
                                                  ResumingSuccessorGenerator{*net},
                                                  options.trace,
                                                  options.ltluseweak),

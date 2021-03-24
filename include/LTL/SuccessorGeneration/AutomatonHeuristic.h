@@ -15,28 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_HEURISTIC_H
-#define VERIFYPN_HEURISTIC_H
+#ifndef VERIFYPN_AUTOMATONHEURISTIC_H
+#define VERIFYPN_AUTOMATONHEURISTIC_H
 
-#include "PetriEngine/PetriNet.h"
-#include "LTL/Structures/ProductState.h"
+#include "LTL/Structures/BuchiAutomaton.h"
+#include "LTL/SuccessorGeneration/Heuristic.h"
+#include "LTL/Structures/GuardInfo.h"
 
 namespace LTL {
-    class Heuristic {
+    class AutomatonHeuristic : public Heuristic {
     public:
-        virtual uint32_t eval(const LTL::Structures::ProductState &state, uint32_t tid) = 0;
+        AutomatonHeuristic(const PetriEngine::PetriNet *net, const Structures::BuchiAutomaton &aut);
 
-        /**
-         * Does the heuristic provide a prioritisation from this state.
-         * @return True if a heuristic can be calculated from this state.
-         */
-        virtual bool has_heuristic(const LTL::Structures::ProductState &)
-        {
-            return true;
-        }
+        uint32_t eval(const Structures::ProductState &state, uint32_t tid) override;
 
-        virtual ~Heuristic() = default;
+        bool has_heuristic(const Structures::ProductState &state) override;
+
+    private:
+        const PetriEngine::PetriNet *_net;
+        const LTL::Structures::BuchiAutomaton &_aut;
+        std::vector<GuardInfo> _state_guards;
     };
 }
 
-#endif //VERIFYPN_HEURISTIC_H
+#endif //VERIFYPN_AUTOMATONHEURISTIC_H
