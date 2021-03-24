@@ -77,6 +77,7 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "LTL/LTL.h"
+#include "LTL/Replay.h"
 
 #include <atomic>
 
@@ -301,6 +302,11 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 } else continue;
                 ++i;
             }
+        }
+        else if (strcmp(argv[i], "--replay") == 0)
+        {
+            options.replay = true;
+            options.replay_file = std::string(argv[++i]);
         }
 #ifdef VERIFYPN_MC_Simplification
         else if (strcmp(argv[i], "-z") == 0)
@@ -1203,6 +1209,14 @@ int main(int argc, char* argv[]) {
     }
 
     if(alldone) return SuccessCode;
+
+    if (options.replay) {
+        std::ifstream replay_file(options.replay_file, std::ifstream::in);
+        LTL::Replay replay;
+        replay.parse(replay_file);
+        replay.replay(net.get());
+        return SuccessCode;
+    }
 
     //----------------------- Verify CTL queries -----------------------//
     std::vector<size_t> ctl_ids;

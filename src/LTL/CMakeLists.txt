@@ -4,7 +4,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 add_subdirectory(Algorithm)
 add_subdirectory(Simplification)
 
-add_library(LTL ${HEADER_FILES} _LTL.cpp)
+add_library(LTL ${HEADER_FILES} _LTL.cpp Replay.cpp)
 
 target_link_libraries(LTL PRIVATE LTL_algorithm LTL_simplification
                           -Wl,-Bstatic spot bddx -Wl,-Bdynamic)
