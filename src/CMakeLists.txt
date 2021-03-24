@@ -14,4 +14,6 @@ target_link_libraries(verifypn-${ARCH_TYPE} PRIVATE CTL LTL PetriEngine PetriPar
 
  #target_link_libraries(parse-benchmark-asctl PetriEngine PetriParse)
 
-target_link_libraries(verifypn-${ARCH_TYPE} PUBLIC pthread)
+if (VERIFYPN_MC_Simplification)
+    target_link_libraries(verifypn-${ARCH_TYPE} PUBLIC pthread)
+endif(VERIFYPN_MC_Simplification)
