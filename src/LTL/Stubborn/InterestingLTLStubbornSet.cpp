@@ -65,6 +65,7 @@ namespace LTL {
         }
         std::cerr << std::endl;
 #endif*/
+/*
 #ifndef NDEBUG
         float num_stubborn = 0;
         float num_enabled = 0;
@@ -83,6 +84,7 @@ namespace LTL {
         } std::cerr << std::endl;
 
 #endif
+*/
         return true;
 
 //#ifndef NDEBUG
