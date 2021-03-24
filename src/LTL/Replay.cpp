@@ -29,7 +29,8 @@ namespace LTL {
     void Replay::parse(std::ifstream &xml) {
         rapidxml::xml_document<> doc;
         std::vector<char> buffer((std::istreambuf_iterator<char>(xml)), std::istreambuf_iterator<char>());
-        doc.parse<0>(&buffer[0]);
+        buffer.push_back('\0');
+        doc.parse<0>(buffer.data());
         rapidxml::xml_node<> *root = doc.first_node();
 
         if (root) {
@@ -48,6 +49,7 @@ namespace LTL {
         }
         for (auto it = pNode->first_node(); it; it = it->next_sibling()) {
             if (std::strcmp(it->name(), "loop") == 0) continue;
+            if (std::strcmp(it->name(), "deadlock") == 0) continue;
             if (std::strcmp(it->name(), "transition") != 0){
                 std::cerr << "Error: Expected transition or loop node. Got: " << it->name() << std::endl;
                 assert(false); exit(1);
@@ -86,22 +88,30 @@ namespace LTL {
             }
         }
         assert(!place.empty());
-        return Token{ place };
+        return Token{place};
     }
 
     bool Replay::replay(const PetriEngine::PetriNet *net) {
         PetriEngine::Structures::State state;
+        std::unordered_map<std::string, int> transitions;
+        // speed up by an order of magnitude compared to linear look-up during replay
+        for (int i = 0; i < net->transitionNames().size(); ++i) {
+            transitions[net->transitionNames()[i]] = i;
+        }
         state.setMarking(net->makeInitialMarking());
         PetriEngine::SuccessorGenerator successorGenerator(*net);
+        std::cout << "Playing back trace. Length: " << trace.size() << std::endl;
         //for (const Transition& transition : trace) {
         for (int i = 0; i < trace.size(); ++i) {
             const Transition &transition = trace[i];
             successorGenerator.prepare(&state);
-            int tid;
-            for (tid = 0; tid < net->transitionNames().size(); ++tid) {
-                if (net->transitionNames()[tid] == transition.id) break;
+            auto it = transitions.find(transition.id); // std::find(std::begin(transitions), std::end(transitions), transition.id);
+            if (it == std::end(transitions)) {
+                std::cerr << "Unrecognized transition name " << transition.id << std::endl;
+                assert(false); exit(1);
             }
-            assert(tid != net->transitionNames().size());
+            int tid = it->second;
+
             if (!successorGenerator.checkPreset(tid)) {
                 std::cerr << "ERROR the provided trace cannot be replayed on the provided model. Offending transition: " << transition.id << " at index: " << i << "\n";
                 exit(1);

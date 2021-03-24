@@ -31,7 +31,7 @@ namespace LTL {
         };
 
         struct Transition {
-            explicit Transition(std::string id) : id(std::move(id)) {}
+            explicit Transition(std::string id) : id(id) {}
 
             std::string id;
             std::vector<Token> tokens;
