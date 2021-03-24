@@ -29,6 +29,7 @@ namespace LTL {
     void Replay::parse(std::ifstream &xml) {
         rapidxml::xml_document<> doc;
         std::vector<char> buffer((std::istreambuf_iterator<char>(xml)), std::istreambuf_iterator<char>());
+        buffer.push_back('\0');
         doc.parse<0>(&buffer[0]);
         rapidxml::xml_node<> *root = doc.first_node();
 
@@ -94,7 +95,8 @@ namespace LTL {
         state.setMarking(net->makeInitialMarking());
         PetriEngine::SuccessorGenerator successorGenerator(*net);
         //for (const Transition& transition : trace) {
-        for (int i = 0; i < trace.size(); ++i) {
+        int size = trace.size();
+        for (int i = 0; i < size; ++i) {
             const Transition &transition = trace[i];
             successorGenerator.prepare(&state);
             int tid;
@@ -109,6 +111,8 @@ namespace LTL {
             successorGenerator.consumePreset(state, tid);
             successorGenerator.producePostset(state, tid);
             //std::cerr << "Fired transition: " << transition.id << std::endl;
+            if (i % 100000 == 0)
+                std::cerr << i << "/" << size << std::endl;
         }
         std::cerr << "Replay complete. No errors" << std::endl;
         return true;
