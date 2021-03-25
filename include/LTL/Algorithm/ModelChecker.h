@@ -31,13 +31,15 @@ namespace LTL {
     template<typename SuccessorGen>
     class ModelChecker {
     public:
-        ModelChecker(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &condition,
+        ModelChecker(const PetriEngine::PetriNet &net,
+                     const PetriEngine::PQL::Condition_ptr &condition,
+                     const Structures::BuchiAutomaton &buchi,
                      SuccessorGen &&successorGen,
                      const TraceLevel level = TraceLevel::Transitions,
                      bool shortcircuitweak = true)
                 : net(net), formula(condition), traceLevel(level), shortcircuitweak(shortcircuitweak)
         {
-            successorGenerator = std::make_unique<ProductSuccessorGenerator<SuccessorGen>>(net, condition,
+            successorGenerator = std::make_unique<ProductSuccessorGenerator<SuccessorGen>>(net, buchi,
                                                                                            std::move(successorGen));
             if (level != TraceLevel::None) {
                 maxTransName = 0;

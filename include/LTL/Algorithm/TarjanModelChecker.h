@@ -46,10 +46,11 @@ namespace LTL {
     class TarjanModelChecker : public ModelChecker<SuccessorGen> {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &cond,
+                           const Structures::BuchiAutomaton &buchi,
                            SuccessorGen &&successorGen,
                            const TraceLevel level = TraceLevel::Full,
                            const bool shortcircuitweak = true)
-                : ModelChecker<SuccessorGen>(net, cond, std::move(successorGen), level, shortcircuitweak),
+                : ModelChecker<SuccessorGen>(net, cond, buchi, std::move(successorGen), level, shortcircuitweak),
                   factory(net, this->successorGenerator->initial_buchi_state()),
                   seen(net, 0)
         {

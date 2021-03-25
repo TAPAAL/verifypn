@@ -49,8 +49,9 @@ namespace LTL {
 class NestedDepthFirstSearch : public ModelChecker<LTL::ResumingSuccessorGenerator> {
     public:
         NestedDepthFirstSearch(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &query,
+                               const Structures::BuchiAutomaton &buchi,
                                TraceLevel level = TraceLevel::Full, const bool shortcircuitweak = true)
-                : ModelChecker(net, query, LTL::ResumingSuccessorGenerator{net, query}, level, shortcircuitweak),
+                : ModelChecker(net, query, buchi, LTL::ResumingSuccessorGenerator{net, query}, level, shortcircuitweak),
                   factory{net, successorGenerator->initial_buchi_state()},
                   states(net, 0, (int) net.numberOfPlaces() + 1) {}
 

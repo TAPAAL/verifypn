@@ -150,7 +150,8 @@ namespace LTL {
         } else if (auto a = std::dynamic_pointer_cast<ACondition>(formula); a != nullptr) {
             return std::make_shared<ACondition>(simplify((*a)[0]));
         }
-        auto[f, apinfo] = LTL::to_spot_formula(formula);
+        // TODO use heuristic for whether to compress? (e.g. based on formula size)
+        auto[f, apinfo] = LTL::to_spot_formula(formula, true);
         spot::tl_simplifier simplifier{2};
         f = simplifier.simplify(f);
         // spot simplifies using unsupported operators R, W, and M, which we now remove.

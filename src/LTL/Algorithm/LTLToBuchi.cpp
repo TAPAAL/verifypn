@@ -149,7 +149,7 @@ namespace LTL {
         return std::make_pair(spot_formula, spotConverter.apInfo());
     }
 
-    BuchiSuccessorGenerator makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query, bool compress) {
+    Structures::BuchiAutomaton makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query, bool compress) {
         auto [formula, apinfo] = to_spot_formula(query, compress);
         formula = spot::formula::Not(formula);
         spot::translator translator;
@@ -167,7 +167,11 @@ namespace LTL {
             ap_map[varnum] = info;
         }
 
-        return BuchiSuccessorGenerator{Structures::BuchiAutomaton{automaton, ap_map}};
+        return Structures::BuchiAutomaton{automaton, ap_map};
+    }
+
+    BuchiSuccessorGenerator makeBuchiSuccessorGenerator(const Condition_ptr &query, bool compress) {
+        return BuchiSuccessorGenerator{makeBuchiAutomaton(query, compress)};
     }
 
 }

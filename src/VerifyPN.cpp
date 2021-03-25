@@ -510,6 +510,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             return ErrorCode;
         }
         std::array tarjanStrategies { DFS, RDFS, HEUR };
+        std::array ndfsStrategies { DFS, RDFS };
         if (options.strategy != PetriEngine::Reachability::DEFAULT &&
             options.strategy != PetriEngine::Reachability::OverApprox) {
 
@@ -519,8 +520,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 std::cerr << "Argument Error: Unsupported search strategy for Tarjan. Supported values are DFS, RDFS, and BestFS." << std::endl;
                 return ErrorCode;
             }
-            if (options.strategy != DFS &&
-                !(options.ltlalgorithm == LTL::Algorithm::NDFS && options.strategy == RDFS)) {
+            if (options.ltlalgorithm == LTL::Algorithm::NDFS &&
+                    std::find(std::begin(ndfsStrategies), std::end(ndfsStrategies), options.strategy) ==
+                    std::end(ndfsStrategies)) {
                 std::cerr << "Argument Error: Unsupported search strategy for NDFS. Supported values are DFS and RDFS" << std::endl;
                 return ErrorCode;
             }

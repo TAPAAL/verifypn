@@ -28,7 +28,7 @@ namespace LTL {
         SpoolingSuccessorGenerator(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &)
                 : SuccessorGenerator(net), _transbuf(new uint32_t[net.numberOfTransitions()])
         {
-            _markbuf.setMarking(new PetriEngine::MarkVal[net.numberOfPlaces()], net.numberOfPlaces());
+            _statebuf.setMarking(new PetriEngine::MarkVal[net.numberOfPlaces() + 1], net.numberOfPlaces());
         }
 
         struct sucinfo {
@@ -83,7 +83,7 @@ namespace LTL {
             PetriEngine::SuccessorGenerator::prepare(state);
             if (sucinfo.successors == nullptr) {
                 uint32_t tid;
-                if (!_heuristic) {
+                if (!_heuristic || !_heuristic->has_heuristic(*state)) {
                     uint32_t nsuc = 0;
                     // generate list of transitions that generate a successor.
                     while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
@@ -98,8 +98,9 @@ namespace LTL {
                     std::vector<std::pair<uint32_t, uint32_t>> weighted_tids;
                     while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
                         assert(tid <= _net.numberOfTransitions());
-                        SuccessorGenerator::_fire(_markbuf, tid);
-                        weighted_tids.emplace_back(tid, _heuristic->eval(_markbuf, tid));
+                        SuccessorGenerator::_fire(_statebuf, tid);
+                        _statebuf.setBuchiState(state->getBuchiState());
+                        weighted_tids.emplace_back(tid, _heuristic->eval(_statebuf, tid));
                     }
                     // sort by least distance first.
                     std::sort(std::begin(weighted_tids), std::end(weighted_tids),
@@ -119,7 +120,7 @@ namespace LTL {
             }
             _last = sucinfo.successors.front();
             sucinfo.successors.pop();
-            _fire(state, _last);
+            SuccessorGenerator::_fire(state, _last);
             return true;
         }
 
@@ -147,8 +148,9 @@ namespace LTL {
                 std::vector<std::pair<uint32_t, uint32_t>> weighted_tids;
                 while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
                     assert(tid <= _net.numberOfTransitions());
-                    SuccessorGenerator::_fire(_markbuf, tid);
-                    weighted_tids.emplace_back(tid, _heuristic->eval(_markbuf, tid));
+                    SuccessorGenerator::_fire(_statebuf, tid);
+                    _statebuf.setBuchiState(sucinfo.buchi_state);
+                    weighted_tids.emplace_back(tid, _heuristic->eval(_statebuf, tid));
                 }
                 // sort by least distance first.
                 std::sort(std::begin(weighted_tids), std::end(weighted_tids),
@@ -179,6 +181,12 @@ namespace LTL {
             assert(false);
         }
 
+        void _fire(Structures::ProductState &parent, Structures::ProductState &write, uint32_t tid)
+        {
+            PetriEngine::SuccessorGenerator::_fire(write, tid);
+            write.setBuchiState(parent.getBuchiState());
+        }
+
 
     private:
         std::unique_ptr<SuccessorSpooler> _spooler = nullptr;
@@ -186,7 +194,7 @@ namespace LTL {
 
         uint32_t _last;
         std::unique_ptr<uint32_t[]> _transbuf;   /* buffer for enabled transitions, size is ntransitions. */
-        LTL::Structures::ProductState _markbuf;
+        LTL::Structures::ProductState _statebuf;
     };
 }
 #endif //VERIFYPN_SPOOLINGSUCCESSORGENERATOR_H

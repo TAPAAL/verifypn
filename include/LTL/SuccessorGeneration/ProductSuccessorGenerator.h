@@ -28,6 +28,7 @@
 #include "LTL/Simplification/SpotToPQL.h"
 #include "LTL/Structures/GuardInfo.h"
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
+
 #include <spot/twa/formula2bdd.hh>
 #include <spot/tl/formula.hh>
 
@@ -38,11 +39,10 @@ namespace LTL {
     public:
 
         ProductSuccessorGenerator(const PetriEngine::PetriNet &net,
-                                  const PetriEngine::PQL::Condition_ptr &cond,
+                                  const Structures::BuchiAutomaton &buchi,
                                   SuccessorGen &&successorGen)
                 : _successor_generator(std::move(successorGen)), _net(net),
-                  buchi(makeBuchiAutomaton(cond)),
-                  aut(buchi.aut)
+                  buchi(buchi), aut(buchi)
         {
 
         }
@@ -230,7 +230,7 @@ namespace LTL {
         const PetriEngine::PetriNet &_net;
 
         BuchiSuccessorGenerator buchi;
-        LTL::Structures::BuchiAutomaton &aut;
+        const LTL::Structures::BuchiAutomaton &aut;
         bdd cond;
         size_t buchi_parent;
         bool fresh_marking = true;
