@@ -223,8 +223,6 @@ namespace LTL {
 
         size_t buchiStates() { return buchi.buchiStates(); }
 
-        void output_buchi(const std::string& file, BuchiOutType type) { buchi.output_buchi(file, type); }
-
     private:
         SuccessorGen _successor_generator;
         const PetriEngine::PetriNet &_net;

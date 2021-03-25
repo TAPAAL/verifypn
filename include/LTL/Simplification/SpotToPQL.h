@@ -36,7 +36,7 @@ namespace LTL {
      * @param formula The formula to simplify.
      * @return the simplified formula.
      */
-    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr &formula);
+    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr &formula, bool compress = true);
 }
 
 #endif // VERIFYPN_SPOTTOPQL_H

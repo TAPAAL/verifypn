@@ -80,22 +80,6 @@ namespace LTL {
         }
         size_t buchiStates() { return aut._buchi->num_states(); }
 
-        void output_buchi(const std::string& file, BuchiOutType type)
-        {
-            std::ofstream fs(file);
-            switch (type) {
-                case BuchiOutType::Dot:
-                    spot::print_dot(fs, aut._buchi);
-                    break;
-                case BuchiOutType::HOA:
-                    spot::print_hoa(fs, aut._buchi, "s");
-                    break;
-                case BuchiOutType::Spin:
-                    spot::print_never_claim(fs, aut._buchi);
-                    break;
-            }
-        }
-
         Structures::BuchiAutomaton aut;
 
         struct SuccIterDeleter {

@@ -59,8 +59,6 @@ namespace LTL {
 
         size_t get_explored() { return stats.explored; }
 
-        void output_buchi(const std::string &file, BuchiOutType type) { successorGenerator->output_buchi(file, type); }
-
     protected:
         struct stats_t {
             size_t explored = 0, expanded = 0;

@@ -143,15 +143,14 @@ namespace LTL {
         }
     }
 
-    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr &formula) {
+    PetriEngine::PQL::Condition_ptr simplify(const PetriEngine::PQL::Condition_ptr &formula, bool compress) {
         using namespace PetriEngine::PQL;
         if (auto e = std::dynamic_pointer_cast<ECondition>(formula); e != nullptr) {
             return std::make_shared<ECondition>(simplify((*e)[0]));
         } else if (auto a = std::dynamic_pointer_cast<ACondition>(formula); a != nullptr) {
             return std::make_shared<ACondition>(simplify((*a)[0]));
         }
-        // TODO use heuristic for whether to compress? (e.g. based on formula size)
-        auto[f, apinfo] = LTL::to_spot_formula(formula, true);
+        auto[f, apinfo] = LTL::to_spot_formula(formula, compress);
         spot::tl_simplifier simplifier{2};
         f = simplifier.simplify(f);
         // spot simplifies using unsupported operators R, W, and M, which we now remove.

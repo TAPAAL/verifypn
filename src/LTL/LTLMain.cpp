@@ -111,7 +111,13 @@ namespace LTL {
             return ErrorCode;
         }
 
-        Structures::BuchiAutomaton automaton = makeBuchiAutomaton(negated_formula);
+        bool compress = options.compress_buchi && options.buchi_out_file.empty();
+
+        Structures::BuchiAutomaton automaton = makeBuchiAutomaton(negated_formula, compress);
+        if (!options.buchi_out_file.empty()) {
+            automaton.output_buchi(options.buchi_out_file, options.buchi_out_type);
+        }
+
         bool hasinhib = net->has_inhibitor();
 
         Result result;

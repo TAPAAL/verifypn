@@ -303,6 +303,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 ++i;
             }
         }
+        else if (strcmp(argv[i], "--no-compress-buchi") == 0) {
+            options.compress_buchi = false;
+        }
 #ifdef VERIFYPN_MC_Simplification
         else if (strcmp(argv[i], "-z") == 0)
         {
@@ -418,6 +421,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                       - dot   (default) Write the buchi in GraphViz Dot format\n"
                     "                                       - hoa   Write the buchi in the Hanoi Omega-Automata Format\n"
                     "                                       - spin  Write the buchi in the spin model checker format."
+                    "  --no-compress-buchi                  Disable compression of atomic propositions in LTL."
+                    "                                       This compression significantly helps in dealing with massive"
+                    "                                       fireability queries, but sometimes hurts Büchi construction "
+                    "                                       and query simplifation in complex queries."
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -817,7 +824,7 @@ std::mutex spot_mutex;
 #endif
 
 Condition_ptr simplify_ltl_query(Condition_ptr query,
-                                 bool printstats,
+                                 options_t options,
                                  const EvaluationContext &evalContext,
                                  SimplificationContext &simplificationContext,
                                  std::ostream &out = std::cout) {
@@ -835,13 +842,14 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 #ifdef VERIFYPN_MC_Simplification
         std::scoped_lock scopedLock{spot_mutex};
 #endif
-        cond = LTL::simplify(cond);
+        // TODO use heuristic for whether to compress? (e.g. based on formula size).
+        cond = LTL::simplify(cond, options.compress_buchi);
     }
     negstat_t stats;
     cond = Condition::initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true)
             ->pushNegation(stats, evalContext, false, false, true);
 
-    if (printstats) {
+    if (options.printstatistics) {
         out << "RWSTATS PRE:";
         stats.print(out);
         out << std::endl;
@@ -871,7 +879,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
     } else {
         cond = std::make_shared<ECondition>(cond);
     }
-    if (printstats) {
+    if (options.printstatistics) {
         out << "RWSTATS POST:";
         stats.print(out);
         out << std::endl;
@@ -1030,7 +1038,7 @@ int main(int argc, char* argv[]) {
                         if (options.queryReductionTimeout == 0) continue;
                         SimplificationContext simplificationContext(qm0.get(), qnet.get(), qt,
                                                                     options.lpsolveTimeout, &cache);
-                        queries[i] = simplify_ltl_query(queries[i], options.printstatistics,
+                        queries[i] = simplify_ltl_query(queries[i], options,
                                            context, simplificationContext, out);
                         continue;
                     }

@@ -19,8 +19,13 @@
 #define VERIFYPN_BUCHIAUTOMATON_H
 
 #include "LTL/LTLToBuchi.h"
+#include "LTL/AlgorithmTypes.h"
 #include <spot/twa/twagraph.hh>
 #include <unordered_map>
+
+#include <spot/twaalgos/dot.hh>
+#include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/neverclaim.hh>
 
 namespace LTL::Structures {
     struct BuchiAutomaton {
@@ -32,6 +37,23 @@ namespace LTL::Structures {
         spot::twa_graph_ptr _buchi;
         const std::unordered_map<int, AtomicProposition> ap_info;
         spot::bdd_dict_ptr dict;
+
+
+        void output_buchi(const std::string& file, BuchiOutType type)
+        {
+            std::ofstream fs(file);
+            switch (type) {
+                case BuchiOutType::Dot:
+                    spot::print_dot(fs, _buchi);
+                    break;
+                case BuchiOutType::HOA:
+                    spot::print_hoa(fs, _buchi, "s");
+                    break;
+                case BuchiOutType::Spin:
+                    spot::print_never_claim(fs, _buchi);
+                    break;
+            }
+        }
     };
 }
 
