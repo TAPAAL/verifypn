@@ -31,15 +31,16 @@ namespace LTL {
         };
 
         struct Transition {
-            explicit Transition(std::string id) : id(id) {}
+            explicit Transition(std::string id, int buchi) : id(id), buchi_state(buchi) {}
 
             std::string id;
+            int buchi_state;
             std::vector<Token> tokens;
         };
 
         void parse(std::ifstream &xml);
 
-        bool replay(const PetriEngine::PetriNet *net);
+        bool replay(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond);
 
         std::vector<Transition> trace;
     private:

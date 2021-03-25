@@ -1210,13 +1210,7 @@ int main(int argc, char* argv[]) {
 
     if(alldone) return SuccessCode;
 
-    if (options.replay) {
-        std::ifstream replay_file(options.replay_file, std::ifstream::in);
-        LTL::Replay replay;
-        replay.parse(replay_file);
-        replay.replay(net.get());
-        return SuccessCode;
-    }
+
 
     //----------------------- Verify CTL queries -----------------------//
     std::vector<size_t> ctl_ids;
@@ -1230,6 +1224,16 @@ int main(int argc, char* argv[]) {
         else if (results[i] == ResultPrinter::LTL) {
             ltl_ids.push_back(i);
         }
+    }
+
+    if (options.replay) {
+        std::ifstream replay_file(options.replay_file, std::ifstream::in);
+        LTL::Replay replay;
+        replay.parse(replay_file);
+        for (int i : ltl_ids) {
+            replay.replay(net.get(), queries[i]);
+        }
+        return SuccessCode;
     }
 
     if (!ctl_ids.empty()) {
