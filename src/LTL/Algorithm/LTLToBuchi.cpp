@@ -137,9 +137,9 @@ namespace LTL {
         (*condition)[0]->visit(*this);
     }
 
-    std::pair<spot::formula, APInfo> to_spot_formula(const PetriEngine::PQL::Condition_ptr& query) {
+    std::pair<spot::formula, APInfo> to_spot_formula(const PetriEngine::PQL::Condition_ptr& query, bool compress) {
         std::stringstream ss;
-        FormulaToSpotSyntax spotConverter{ss};
+        FormulaToSpotSyntax spotConverter{ss, compress};
         query->visit(spotConverter);
         std::string spotFormula = ss.str();
         if (spotFormula.at(0) == 'E' || spotFormula.at(0) == 'A') {
@@ -149,8 +149,8 @@ namespace LTL {
         return std::make_pair(spot_formula, spotConverter.apInfo());
     }
 
-    BuchiSuccessorGenerator makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query) {
-        auto [formula, apinfo] = to_spot_formula(query);
+    BuchiSuccessorGenerator makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query, bool compress) {
+        auto [formula, apinfo] = to_spot_formula(query, compress);
         formula = spot::formula::Not(formula);
         spot::translator translator;
         // Ask for Büchi acceptance (rather than generalized Büchi) and medium optimizations
