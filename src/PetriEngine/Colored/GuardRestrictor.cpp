@@ -244,7 +244,7 @@ namespace PetriEngine{
                         //comparing vars of same size
                         if(varPositionPair.second->colorType->productSize() == varPositionsR->operator[](index)->colorType->productSize()){
                             intervalTuple_t newIntervalTuple = getIntervalOverlap(&leftTupleIntervalVal._intervals, &rightTupleIntervalVal._intervals);
-                        
+
                             *leftTupleInterval = newIntervalTuple;
                             *rightTupleInterval = newIntervalTuple;
                             leftTupleInterval->applyModifier(leftVarModifier, varPositionPair.second->colorType->getConstituentsSizes());

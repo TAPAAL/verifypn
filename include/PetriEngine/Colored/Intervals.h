@@ -475,7 +475,6 @@ namespace PetriEngine {
 
             void applyModifier(int32_t modifier, std::vector<size_t> sizes){
                 std::vector<interval_t> collectedIntervals;
-
                 for(auto& interval : _intervals){
                     std::vector<interval_t> newIntervals;
                     newIntervals.push_back(std::move(interval));
@@ -494,15 +493,15 @@ namespace PetriEngine {
                                 newInterval[i]._upper = sizes[i]-1;
                                 tempIntervals.push_back(std::move(newInterval));
                             }else {
-                                interval[i]._lower = shiftedInterval.first;
-                                interval[i]._upper = shiftedInterval.second;
+                                interval1[i]._lower = shiftedInterval.first;
+                                interval1[i]._upper = shiftedInterval.second;
                             }
                         }
                         newIntervals.insert(newIntervals.end(), tempIntervals.begin(), tempIntervals.end());                                                
                     }
                     collectedIntervals.insert(collectedIntervals.end(), newIntervals.begin(), newIntervals.end());
                 }
-
+                
                 _intervals = std::move(collectedIntervals);
             }
 

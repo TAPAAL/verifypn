@@ -197,7 +197,7 @@ namespace PetriEngine {
 
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
 
-        // printPlaceTable();
+        //printPlaceTable();
         _placeColorFixpoints.clear();
     }
 
@@ -331,8 +331,9 @@ namespace PetriEngine {
             for (auto& transition : _transitions) {
                 unfoldTransition(transition);
             }
+            auto unfoldedPlaceMap = _ptBuilder.getPlaceNames();
             for (auto& place : _places) {
-               handleOrphanPlace(place);
+               handleOrphanPlace(place, unfoldedPlaceMap);
             }
             _unfolded = true;
             auto end = std::chrono::high_resolution_clock::now();
@@ -345,17 +346,33 @@ namespace PetriEngine {
     //However, in queries asking about orphan places it cannot find these, as they have not been unfolded
     //so we make a placeholder place which just has tokens equal to the number of colored tokens
     //Ideally, orphan places should just be translated to a constant in the query
-    void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place) {
-        if(_ptplacenames.count(place.name) <= 0){   
-            std::string name = place.name + "_" + std::to_string(place.marking.size());
+    void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> unfoldedPlaceMap) {
+        if(_ptplacenames.count(place.name) <= 0){
+            
+            std::string name = place.name + "_orphan";
             _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
             _ptplacenames[place.name][0] = std::move(name);
+        } else {
+            uint32_t usedTokens = 0;
+            
+            for(std::pair<const uint32_t, std::string> unfoldedPlace : _ptplacenames[place.name]){                
+                auto unfoldedMarking = _ptBuilder.initMarking();
+                
+                auto unfoldedPlaceId = unfoldedPlaceMap[unfoldedPlace.second];
+                usedTokens += unfoldedMarking[unfoldedPlaceId];
+            }
+            
+            if(place.marking.size() > usedTokens){
+                std::string name = place.name + "_orphan";
+                _ptBuilder.addPlace(name, place.marking.size() - usedTokens, 0.0, 0.0);
+                _ptplacenames[place.name][UINT32_MAX] = std::move(name);
+            }
         }
         
         //++_nptplaces;        
     }
     
-    void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color) {
+    void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color) {        
         std::string name = place->name + "_" + std::to_string(color->getId());
         _ptBuilder.addPlace(name, place->marking[color], 0.0, 0.0);
         _ptplacenames[place->name][color->getId()] = std::move(name);
@@ -365,7 +382,7 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         FixpointBindingGenerator gen(transition, _colors);
         size_t i = 0;
-        for (auto b : gen) {                  
+        for (auto b : gen) { 
             std::string name = transition.name + "_" + std::to_string(i++);
             _ptBuilder.addTransition(name, 0.0, 0.0);
             _pttransitionnames[transition.name].push_back(name);

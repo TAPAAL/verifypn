@@ -105,18 +105,19 @@ namespace PetriEngine {
         while (!test) {
             bool next = true;
 
-            for (auto& _binding : _bindings) {
-                auto varInterval = _transition.variableMaps[_nextIndex][_binding.first];
+            for (auto& _binding : _bindings) {               
+                auto varInterval = _transition.variableMaps[_nextIndex][_binding.first];                
                 std::vector<uint32_t> colorIds;
                 _binding.second->getTupleId(&colorIds);
                 auto nextIntervalBinding = varInterval.isRangeEnd(colorIds);
 
-                if (nextIntervalBinding.size() == 0){
+                if (nextIntervalBinding.size() == 0){                    
                     _binding.second = &_binding.second->operator++();
                     next = false;
                     break;                    
                 } else {
                     _binding.second = _binding.second->getColorType()->getColor(nextIntervalBinding.getLowerIds());
+                    
                     if(!nextIntervalBinding.equals(varInterval.getFirst())){
                         next = false;
                         break;
@@ -132,10 +133,8 @@ namespace PetriEngine {
                 for(auto& _binding : _bindings){
                     _binding.second =  _binding.second->getColorType()->getColor(_transition.variableMaps[_nextIndex][_binding.first].getFirst().getLowerIds());
                 }
-            }
-                 
+            }                 
             test = eval();
-        
         }
         
         return _bindings;
