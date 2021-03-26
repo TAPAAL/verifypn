@@ -131,16 +131,52 @@ namespace PetriEngine {
                     transition->guard->restrictVars(varMaps, diagonalVars);
                 }
 
+                std::unordered_map<uint32_t, std::set<const Colored::Variable *>> placeVariableMap;
                 for(auto inArc : transition->input_arcs){
                     if(_partition[inArc.place].diagonal){
                         continue;
                     }
-
                     
                     std::unordered_map<const PetriEngine::Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> preVarModifierMap;
                     std::unordered_map<uint32_t, const PetriEngine::Colored::Variable *> preVarPositionMap;
                     std::set<const PetriEngine::Colored::Variable *> preArcVars;
-                    inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap); 
+                    inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap);
+                    for(auto placeVariables : placeVariableMap){
+                        for(auto variable : preArcVars){
+                            if(placeVariables.second.count(variable)){
+                                _partition[inArc.place].diagonal = true;
+                                _partition[placeVariables.first].diagonal = true;
+                                
+                                addToQueue(inArc.place);
+                                addToQueue(placeVariables.first);
+                                break;                                
+                            }
+                        }
+                        if(_partition[inArc.place].diagonal) {
+                            break;
+                        }
+                    }
+                    placeVariableMap[inArc.place] = preArcVars;
+
+                    if(_partition[inArc.place].diagonal){                        
+                        continue;
+                    }
+
+                    if(_partition[postPlaceId].diagonal){
+                        for(auto preVar : preArcVars){
+                            if(postArcVars.count(preVar)){
+                                //maybe something different should happen for tuples
+                                // --(x,y)-->[]--(z,y)-->
+                                _partition[inArc.place].diagonal = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(_partition[inArc.place].diagonal){
+                        addToQueue(inArc.place);
+                        continue;
+                    }
 
                     for(auto varModMap : preVarModifierMap){
                         if(varModMap.second.size() > 1){
@@ -172,13 +208,13 @@ namespace PetriEngine {
 
                     newEqVec._equivalenceClasses.push_back(newEqClass);
 
-                    if(splitPartition(newEqVec, inArc.place) && !_inQueue[inArc.place]){
-                        _placeQueue.push_back(inArc.place);
-                        _inQueue[inArc.place] = true;
+                    if((_partition[inArc.place].diagonal || splitPartition(newEqVec, inArc.place))){
+                        addToQueue(inArc.place);
                     }
                 }
             }
 
+            //is this still needed?
             std::set<const PetriEngine::Colored::Variable *> preArcVars;
             for(auto inArc : transition->input_arcs){
                 inArc.expr->getVariables(preArcVars);
@@ -189,6 +225,13 @@ namespace PetriEngine {
                         }
                     }
                 }
+            }
+        }
+
+        void PartitionBuilder::addToQueue(uint32_t placeId){
+            if(!_inQueue[placeId]){
+                _placeQueue.push_back(placeId);
+                _inQueue[placeId] = true;
             }
         }
 

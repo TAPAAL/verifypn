@@ -9,6 +9,7 @@ namespace PetriEngine {
         struct EquivalenceClass {
             ColorType *_colorType;
             intervalTuple_t _colorIntervals;
+
             
             std::string toString(){
                 return _colorIntervals.toString();
@@ -115,6 +116,30 @@ namespace PetriEngine {
             std::vector<EquivalenceClass> _equivalenceClasses;
             std::unordered_map<const Colored::Color *, EquivalenceClass *> colorEQClassMap;
             bool diagonal = false;
+
+            void applyPartition(Colored::ArcIntervals& arcInterval){
+                if(diagonal){
+                    return;
+                }
+                std::vector<Colored::intervalTuple_t> newTupleVec;
+                for(auto intervalTuple : arcInterval._intervalTupleVec){
+                    intervalTuple.combineNeighbours();
+                    intervalTuple_t newIntervalTuple;
+                    for(auto interval : intervalTuple._intervals){
+                        for(auto EQClass : _equivalenceClasses){
+                            for(auto EQinterval : EQClass._colorIntervals._intervals){
+                                auto overlap = interval.getOverlap(EQinterval);
+                                if(overlap.isSound()){
+                                    newIntervalTuple.addInterval(EQinterval.getSingleColorInterval());
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                   newTupleVec.push_back(std::move(newIntervalTuple));
+                }
+                arcInterval._intervalTupleVec = std::move(newTupleVec);               
+            }
         };
 
     }

@@ -174,7 +174,7 @@ namespace PetriEngine {
         }
 
         void UnfoldedIdentifierExpr::toString(std::ostream& out) const {
-            out << _name << "(P" << _offsetInMarking << ")";
+            out << _name;
         }
 
         void NaryExpr::toString(std::ostream& ss) const {

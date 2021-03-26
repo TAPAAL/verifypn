@@ -212,18 +212,18 @@ namespace PetriEngine {
         // for(auto transition : _transitions){
         //     std::cout << "Transistion " << transition.name << std::endl;
         //     for(auto varmap : transition.variableMaps){
+        //         std::cout << "----------------Varmap--------------------" << std::endl;
         //         for(auto varpair : varmap){
         //             std::cout << varpair.first->name << std::endl;
         //             varpair.second.print();
         //         }
         //     }
         // }
-
         // std::cout << std::endl << std::endl << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl << std::endl;
-        auto pvStart = std::chrono::high_resolution_clock::now();
-        partitionVariableMap();
-        auto pvEnd = std::chrono::high_resolution_clock::now();
-        _partitionVarMapTimer = (std::chrono::duration_cast<std::chrono::microseconds>(pvEnd - pvStart).count())*0.000001;
+        // auto pvStart = std::chrono::high_resolution_clock::now();
+        // //partitionVariableMap();
+        // auto pvEnd = std::chrono::high_resolution_clock::now();
+        // _partitionVarMapTimer = (std::chrono::duration_cast<std::chrono::microseconds>(pvEnd - pvStart).count())*0.000001;
     }
 
     void ColoredPetriNetBuilder::partitionVariableMap(){
@@ -243,40 +243,43 @@ namespace PetriEngine {
                     continue;
                 }
 
-                for(auto &varmap : transition.variableMaps){
-                    for(auto &varIntervals : varmap){
-                        Colored::intervalTuple_t newIntervalTuple;
-                        for(auto eqClass : placePartition->_equivalenceClasses){
-                            for(auto interval : eqClass._colorIntervals._intervals){
-                                for(auto varInterval : varIntervals.second._intervals){
-                                    for(auto indexModMap : varModifierMap[varIntervals.first]){
-                                        for(auto indexModPair : indexModMap){
-                                            if(isTuple){
-                                                Colored::interval_t reducedPlaceInterval;
-                                                for(uint32_t i = indexModPair.first; i < indexModPair.first + varIntervals.first->colorType->productSize(); i++){
-                                                    reducedPlaceInterval.addRange(interval[i]);
-                                                }
+                auto &varmap = transition.variableMaps[0];
+                for(auto &varIntervals : varmap){
+                    Colored::intervalTuple_t newIntervalTuple;
+                    for(auto eqClass : placePartition->_equivalenceClasses){
+                        for(auto interval : eqClass._colorIntervals._intervals){
+                            for(auto varInterval : varIntervals.second._intervals){
+                                for(auto indexModMap : varModifierMap[varIntervals.first]){
+                                    for(auto indexModPair : indexModMap){
+                                        if(isTuple){
+                                            Colored::interval_t reducedPlaceInterval;
+                                            for(uint32_t i = indexModPair.first; i < indexModPair.first + varIntervals.first->colorType->productSize(); i++){
+                                                reducedPlaceInterval.addRange(interval[i]);
+                                            }
 
-                                                auto overlappingInterval = reducedPlaceInterval.getOverlap(varInterval);
-                                                if(overlappingInterval.isSound()){
-                                                    newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
-                                                }
-                                            } else {
-                                                auto overlappingInterval = interval.getOverlap(varInterval);
-                                                if(overlappingInterval.isSound()){
-                                                    newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
-                                                }
+                                            auto overlappingInterval = reducedPlaceInterval.getOverlap(varInterval);
+                                            if(overlappingInterval.isSound()){
+                                                newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
+                                            }
+                                        } else {
+                                            auto overlappingInterval = interval.getOverlap(varInterval);
+                                            if(overlappingInterval.isSound()){
+                                                newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
                                             }
                                         }
-                                    }                                    
-                                }                                
-                            }
-                        }
-                        if(!newIntervalTuple._intervals.empty() && !newIntervalTuple._intervals.back()._ranges.empty()){
-                            varIntervals.second = newIntervalTuple;
+                                    }
+                                }                                    
+                            }                                
                         }
                     }
+                    if(!newIntervalTuple._intervals.empty() && !newIntervalTuple._intervals.back()._ranges.empty()){
+                        varIntervals.second = newIntervalTuple;
+                    }
                 }
+                std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>> newVarMap;
+                newVarMap.push_back((varmap));
+                transition.variableMaps = newVarMap;
+                
             }
             // std::cout << "Varmap after partitioning for transition " << transition.name << std::endl;
             // for(auto varMap : transition.variableMaps){
@@ -305,7 +308,7 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::getArcIntervals(Colored::Transition& transition, bool &transitionActivated, uint32_t max_intervals, uint32_t transitionId){
         for (auto arc : transition.input_arcs) {
-            PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];   
+            PetriEngine::Colored::ColorFixpoint& curCFP = _placeColorFixpoints[arc.place];
             curCFP.constraints.restrict(max_intervals);
             _maxIntervals = std::max(_maxIntervals, (uint32_t) curCFP.constraints.size());
            
@@ -317,7 +320,8 @@ namespace PetriEngine {
                 std::cout << "Failed to get arc intervals" << std::endl;
                 transitionActivated = false;
                 return;
-            }             
+            }
+            _partition[arc.place].applyPartition(arcInterval);           
         }
     }
 
@@ -518,9 +522,18 @@ namespace PetriEngine {
                 color.first->getTupleId(&colorIds);
                 size_t tokenSize = 0;
                 
-                for(auto colorEqClassPair : _partition[arc.place].colorEQClassMap){
-                    tokenSize += place.marking[colorEqClassPair.first];
-                }                
+                if(_partition[arc.place].diagonal){
+                    tokenSize = place.marking[color.first];
+                } else if (_transitions[_transitionnames[tName]].variableMaps.size() > 1 && _partition[arc.place]._equivalenceClasses.size() == 1) {
+                    tokenSize = place.marking[color.first];
+                }else {
+                    for(auto colorEqClassPair : _partition[arc.place].colorEQClassMap){
+                        if(colorEqClassPair.second == _partition[arc.place].colorEQClassMap[color.first]){
+                            tokenSize += place.marking[colorEqClassPair.first];
+                        }                    
+                    }
+                }
+                                
                  
                 std::string name = place.name + "_" + std::to_string(color.first->getId());
                 _ptBuilder.addPlace(name, tokenSize, 0.0, 0.0);

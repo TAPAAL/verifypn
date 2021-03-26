@@ -34,6 +34,7 @@ namespace PetriEngine {
 
                 void handleLeafTransitions();
                 void assignColorMap();
+                void addToQueue(uint32_t placeId);
 
                 std::vector<std::unordered_map<const Variable *, intervalTuple_t>> prepareVariables(
                             std::unordered_map<const Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap, 

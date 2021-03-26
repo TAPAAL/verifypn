@@ -633,8 +633,8 @@ namespace PetriEngine {
                                 newInterval[i]._upper = sizes[i]-1;
                                 tempIntervals.push_back(std::move(newInterval));
                             }else {
-                                interval[i]._lower = shiftedInterval.first;
-                                interval[i]._upper = shiftedInterval.second;
+                                interval1[i]._lower = shiftedInterval.first;
+                                interval1[i]._upper = shiftedInterval.second;
                             }
                         }
                         newIntervals.insert(newIntervals.end(), tempIntervals.begin(), tempIntervals.end());                                                
@@ -746,6 +746,54 @@ namespace PetriEngine {
                                 if(interval->operator[](k)._lower > otherInterval->operator[](k)._upper  || otherInterval->operator[](k)._lower > interval->operator[](k)._upper) {
                                     overlap = false;
                                     break;
+                                }
+                            }
+                        }
+                        
+                        if(overlap) {
+                            for(uint32_t l = 0; l < interval->size(); l++) {
+                                interval->operator[](l) |= otherInterval->operator[](l);
+                            }
+                            rangesToRemove.insert(j);
+                        }  
+                    }
+                }
+                for (auto i = rangesToRemove.rbegin(); i != rangesToRemove.rend(); ++i) {
+                    _intervals.erase(_intervals.begin() + *i);
+                }
+            }
+
+            void combineNeighbours() {
+                std::set<uint32_t> rangesToRemove;
+                if(_intervals.empty()){
+                    return;
+                }
+
+                for (uint32_t i = 0; i < _intervals.size(); i++) {
+                    auto interval = &_intervals[i];
+                    if(!interval->isSound()){
+                        rangesToRemove.insert(i);
+                        continue;
+                    }   
+                    for(uint32_t j = i+1; j < _intervals.size(); j++){
+                        auto otherInterval = &_intervals[j];
+
+                        if(!otherInterval->isSound()){
+                            continue;
+                        }   
+                        bool overlap = true;
+
+                        uint32_t dist = 1;
+
+                        if(overlap){
+                            for(uint32_t k = 0; k < interval->size(); k++) {                            
+                                if(interval->operator[](k)._lower > otherInterval->operator[](k)._upper  || otherInterval->operator[](k)._lower > interval->operator[](k)._upper) {
+                                    if(interval->operator[](k)._lower > otherInterval->operator[](k)._upper + dist  || otherInterval->operator[](k)._lower > interval->operator[](k)._upper + dist) {
+                                        overlap = false;
+                                        break;
+                                    } else {
+                                        dist = 0;
+                                    }                                    
                                 }
                             }
                         }

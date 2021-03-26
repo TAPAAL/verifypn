@@ -66,9 +66,9 @@ namespace PetriEngine {
         }
 
         void populateLocalMap(Colored::ArcIntervals *arcIntervals, 
-                                                std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t> &varMap,
-                                                std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t> &localVarMap,
-                                                Colored::interval_t* interval, bool& allVarsAssigned,  uint32_t tuplePos){
+                            std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t> &varMap,
+                            std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t> &localVarMap,
+                            Colored::interval_t* interval, bool& allVarsAssigned,  uint32_t tuplePos){
             for(auto& pair : arcIntervals->_varIndexModMap){                     
                 Colored::intervalTuple_t varIntervals; 
                 std::vector<Colored::ColorType*> varColorTypes;
@@ -161,7 +161,8 @@ namespace PetriEngine {
 
                                 if(allVarsAssigned){
                                     newVarMapVec.push_back(std::move(localVarMap));
-                                }                               
+                                }
+                                                               
                             }                                                                                    
                         }               
                         variableMaps = std::move(newVarMapVec);                    

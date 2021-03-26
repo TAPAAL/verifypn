@@ -217,6 +217,8 @@ namespace PetriEngine {
             bool next = true;
 
             for (auto& _binding : _bindings) {
+                
+
                 auto varInterval = _transition.variableMaps[_nextIndex][_binding.first];
                 std::vector<uint32_t> colorIds;
                 _binding.second->getTupleId(&colorIds);
