@@ -150,7 +150,7 @@ namespace LTL {
                     if (!hasinhib && options.stubbornreduction && !negated_formula->containsNext()) {
                         std::cout << "Running stubborn version!" << std::endl;
 
-                        gen.setSpooler(std::make_unique<VisibleLTLStubbornSet>(*net, negated_formula));
+                        gen.setSpooler(std::make_unique<InterestingLTLStubbornSet>(*net, negated_formula));
                     } else {
                         gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
                     }
