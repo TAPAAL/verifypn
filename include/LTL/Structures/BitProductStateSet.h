@@ -63,7 +63,7 @@ namespace LTL::Structures {
     template<uint8_t nbits = 16>
     class BitProductStateSet : public ProductStateSetInterface {
     public:
-        explicit BitProductStateSet(const PetriEngine::PetriNet &net, int kbound = 0)
+        explicit BitProductStateSet(const PetriEngine::PetriNet &net, int kbound = 0, size_t nplaces = -1)
                 : markings(net, kbound, net.numberOfPlaces())
         {
         }

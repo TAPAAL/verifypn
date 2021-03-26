@@ -1242,6 +1242,10 @@ int main(int argc, char* argv[]) {
         std::ifstream replay_file(options.replay_file, std::ifstream::in);
         LTL::Replay replay;
         replay.parse(replay_file, net.get());
+        if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
+            std::cerr << "Fatal error assigning indexes" << std::endl;
+            exit(1);
+        }
         for (int i : ltl_ids) {
             replay.replay(net.get(), queries[i]);
         }

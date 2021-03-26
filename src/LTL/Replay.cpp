@@ -84,7 +84,7 @@ namespace LTL {
                 id = std::string(it->value());
             }
             if (std::strstr(it->name(), "buchi") != nullptr) {
-                buchi = atoi(it->value());
+                buchi = std::stoi(it->value());
             }
         }
         if (id.empty()) {
@@ -101,7 +101,7 @@ namespace LTL {
         Transition transition(id, buchi);
 
         for (auto it = pNode->first_node(); it; it = it->next_sibling()) {
-            assert(std::strcmp(it->name(), "token"));
+            assert(std::strcmp(it->name(), "token") == 0);
             parseToken(it, transition.tokens);
         }
 
@@ -113,7 +113,12 @@ namespace LTL {
     {
         for (auto it = pNode->first_attribute(); it; it = it->next_attribute()) {
             if (std::strcmp(it->name(), "place") == 0) {
-                ++current_marking[places.at(it->value())];
+                std::string val{it->value()};
+                if (current_marking.find(places.at(val)) == current_marking.end()) {
+                    current_marking[places.at(val)] = 1;
+                } else {
+                    ++current_marking[places.at(it->value())];
+                }
             }
         }
     }
@@ -127,7 +132,8 @@ namespace LTL {
             }
         }
 
-        BuchiSuccessorGenerator buchiGenerator = makeBuchiSuccessorGenerator(cond);
+        BuchiSuccessorGenerator buchiGenerator = makeBuchiSuccessorGenerator(cond, false);
+        spot::print_dot(std::cerr, buchiGenerator.aut._buchi);
         PetriEngine::Structures::State state;
         state.setMarking(net->makeInitialMarking());
         PetriEngine::SuccessorGenerator successorGenerator(*net);
@@ -162,6 +168,7 @@ namespace LTL {
         state.setMarking(net->makeInitialMarking());
         size_t prev_buchi = init_buchi;
         bdd bdd;
+        bool buchi_failed = false;
         for (int i = 0; i < trace.size(); ++i) {
             const Transition &transition = trace[i];
             successorGenerator.prepare(&state);
@@ -184,27 +191,47 @@ namespace LTL {
             successorGenerator.consumePreset(state, tid);
             successorGenerator.producePostset(state, tid);
 
-            if (!transition.tokens.empty()) {
-                for (auto[pid, token_count] : transition.tokens) {
-                    if (state.marking()[pid] != token_count) {
+            for (int pid = 0; pid < net->numberOfPlaces(); ++pid) {
+                if (transition.tokens.find(pid) == std::end(transition.tokens)) {
+                    if (state.marking()[pid] > 0) {
                         std::cerr << "ERROR the playback of the trace resulted in mismatch of token counts. \n"
-                                     "  Offending place " << net->placeNames()[pid] << ", expected " << token_count
+                                     "  Offending place " << net->placeNames()[pid] << ", expected " << 0
                                   << " tokens but got " << state.marking()[pid] << std::endl;
+                        std::cerr << "  Offending transition: " << transition.id << " at index: " << i << "\n";
                         exit(1);
                     }
+                } else if (transition.tokens.at(pid) != state.marking()[pid]) {
+                    std::cerr << "ERROR the playback of the trace resulted in mismatch of token counts. \n"
+                                 "  Offending place " << net->placeNames()[pid] << ", expected "
+                              << transition.tokens.at(pid)
+                              << " tokens but got " << state.marking()[pid] << std::endl;
+                    std::cerr << "Offending transition: " << transition.id << " at index: " << i << "\n";
+                    exit(1);
                 }
             }
 
+/*
+            for (auto[pid, token_count] : transition.tokens) {
+                if (state.marking()[pid] != token_count) {
+                    std::cerr << "ERROR the playback of the trace resulted in mismatch of token counts. \n"
+                                 "  Offending place " << net->placeNames()[pid] << ", expected " << token_count
+                              << " tokens but got " << state.marking()[pid] << std::endl;
+                    std::cerr << "Offending transition: " << transition.id << " at index: " << i << "\n";
+                    exit(1);
+                }
+            }
+*/
+
             size_t next_buchi = -1;
-            size_t cand;
             const EvaluationContext &ctx = EvaluationContext{state.marking(), net};
             while (buchiGenerator.next(next_buchi, bdd)) {
-                if (guard_valid(ctx, buchiGenerator, bdd)) {
-                    if (next_buchi == transition.buchi_state) break;
-                } else if (next_buchi == transition.buchi_state) {
-                    std::cerr << "WARNING guard invalid for noted buchi state " << transition.buchi_state
-                              << " at index " << i << ". Attempting to proceed anyway.\n";
-                }
+                if (next_buchi == transition.buchi_state) break;
+            }
+            if (guard_valid(ctx, buchiGenerator, bdd)) {
+            } else {
+                std::cerr << "WARNING guard invalid for noted buchi state " << transition.buchi_state
+                          << " at index " << i << ". Attempting to proceed anyway.\n";
+                buchi_failed = true;
             }
             prev_buchi = next_buchi;
             /* if (next_buchi != transition.buchi_state ||
@@ -220,7 +247,8 @@ namespace LTL {
             if (i % 100000 == 0)
                 std::cerr << i << "/" << trace.size() << std::endl;
         }
-        return true;
+
+        return !buchi_failed;
     }
 
     bool guard_valid(const PQL::EvaluationContext ctx, const BuchiSuccessorGenerator &buchi, bdd bdd)
@@ -248,4 +276,5 @@ namespace LTL {
         }
         return bdd == bddtrue;
     }
+
 }

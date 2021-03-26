@@ -229,6 +229,7 @@ namespace LTL {
                 assert(cstack[p].lowsource != std::numeric_limits<idx_t>::max());
                 p = cstack[p].lowsource;
             }
+            seen.decode(state, loopstate);
             this->printTransition(looptrans, state, os) << '\n';
 
             os << "</trace>" << std::endl;
