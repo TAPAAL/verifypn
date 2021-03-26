@@ -5,15 +5,21 @@
 #include "Structures/State.h"
 #include "Structures/light_deque.h"
 #include "PQL/PQL.h"
+#include "PetriEngine/Stubborn/StubbornSet.h"
+#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include <memory>
 #include "PetriEngine/Stubborn/StubbornSet.h"
 
+namespace LTL {
+    class GuardInfo;
+}
 namespace PetriEngine {
 
     class ReducingSuccessorGenerator : public SuccessorGenerator {
 
     public:
         ReducingSuccessorGenerator(const PetriNet &net, std::shared_ptr<StubbornSet> stubbornSet);
+
 
         ReducingSuccessorGenerator(const PetriNet &net, std::vector<std::shared_ptr<PQL::Condition> > &queries,
                                    std::shared_ptr<StubbornSet> stubbornSet);
@@ -22,7 +28,7 @@ namespace PetriEngine {
 
         void setQuery(PQL::Condition *ptr) { _stubSet->setQuery(ptr); }
 
-        void prepare(const Structures::State *state);
+        bool prepare(const Structures::State *state) override;
 
         bool next(Structures::State &write);
 
@@ -32,7 +38,6 @@ namespace PetriEngine {
         uint32_t _current;
 
         std::vector<PQL::Condition *> _queries;
-
     };
 }
 

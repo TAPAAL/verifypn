@@ -25,7 +25,6 @@
 #include <string>
 
 #include <spot/tl/formula.hh>
-
 namespace LTL {
     struct AtomicProposition {
         PetriEngine::PQL::Condition_ptr expression;
@@ -33,13 +32,19 @@ namespace LTL {
     };
 
     using APInfo = std::vector<AtomicProposition>;
+
     std::string toSpotFormat(const QueryItem &query);
+
     void toSpotFormat(const QueryItem &query, std::ostream &os);
-    std::pair<spot::formula, APInfo> to_spot_formula(const PetriEngine::PQL::Condition_ptr& query);
+    std::pair<spot::formula, APInfo> to_spot_formula(const PetriEngine::PQL::Condition_ptr& query, bool compress_aps);
 
     class BuchiSuccessorGenerator;
-    BuchiSuccessorGenerator makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query);
+    namespace Structures {
+        class BuchiAutomaton;
+    }
+    Structures::BuchiAutomaton makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query, bool compress_aps = true);
 
+    BuchiSuccessorGenerator makeBuchiSuccessorGenerator(const PetriEngine::PQL::Condition_ptr &query, bool compress_aps = true);
 
     class FormulaToSpotSyntax : public PetriEngine::PQL::QueryPrinter {
     protected:
@@ -87,18 +92,22 @@ namespace LTL {
 
     public:
 
-        explicit FormulaToSpotSyntax(std::ostream &os = std::cout)
-                : PetriEngine::PQL::QueryPrinter(os), compress(true) {}
+        explicit FormulaToSpotSyntax(std::ostream &os = std::cout, bool compress_aps = true)
+                : PetriEngine::PQL::QueryPrinter(os), compress(compress_aps) {}
 
-        auto begin() const {
+
+        auto begin() const
+        {
             return std::begin(ap_info);
         }
 
-        auto end() const {
+        auto end() const
+        {
             return std::end(ap_info);
         }
 
-        const APInfo &apInfo() const {
+        const APInfo &apInfo() const
+        {
             return ap_info;
         }
 

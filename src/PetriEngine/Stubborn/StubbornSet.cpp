@@ -17,6 +17,8 @@
 
 
 #include <PetriEngine/Stubborn/InterestingTransitionVisitor.h>
+
+#include <memory>
 #include "PetriEngine/Stubborn/StubbornSet.h"
 #include "PetriEngine/PQL/Contexts.h"
 
@@ -29,7 +31,7 @@ namespace PetriEngine {
                 return _current;
             }
         }
-        reset();
+        //reset();
         return std::numeric_limits<uint32_t>::max();
     }
 
@@ -104,6 +106,8 @@ namespace PetriEngine {
 
     void StubbornSet::constructEnabled() {
         _ordering.clear();
+        memset(_enabled.get(), 0, _net.numberOfTransitions());
+        memset(_stubborn.get(), 0, _net.numberOfTransitions());
         for (uint32_t p = 0; p < _net.numberOfPlaces(); ++p) {
             // orphans are currently under "place 0" as a special case
             if (p == 0 || _parent->marking()[p] > 0) {
@@ -111,7 +115,9 @@ namespace PetriEngine {
                 uint32_t last = placeToPtrs()[p + 1];
 
                 for (; t != last; ++t) {
-                    if (!checkPreset(t)) continue;
+                    if (!checkPreset(t)) {
+                        continue;
+                    }
                     _enabled[t] = true;
                     _ordering.push_back(t);
                 }
@@ -160,12 +166,12 @@ namespace PetriEngine {
 
         // flatten
         size_t ntrans = 0;
-        for (auto p : tmp_places) {
+        for (const auto& p : tmp_places) {
             ntrans += p.first.size() + p.second.size();
         }
-        _transitions.reset(new trans_t[ntrans]);
+        _transitions = std::make_unique<trans_t[]>(ntrans);
 
-        _places.reset(new place_t[_net._nplaces + 1]);
+        _places = std::make_unique<place_t[]>(_net._nplaces + 1);
         uint32_t offset = 0;
         uint32_t p = 0;
         for (; p < _net._nplaces; ++p) {
@@ -276,6 +282,22 @@ namespace PetriEngine {
         }
     }
 
+    /*bool StubbornSet::next(Structures::State &write) {
+        while (!_ordering.empty()) {
+            _current = _ordering.front();
+            _ordering.pop_front();
+            if (_stubborn[_current]) {
+                assert(_enabled[_current]);
+                memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof(MarkVal));
+                consumePreset(write, _current);
+                producePostset(write, _current);
+                return true;
+            }
+        }
+        reset();
+        return false;
+    }*/
+
     uint32_t StubbornSet::leastDependentEnabled() {
         uint32_t tLeast = -1;
         bool foundLeast = false;
@@ -297,6 +319,7 @@ namespace PetriEngine {
     void StubbornSet::reset() {
         memset(_enabled.get(), false, sizeof(bool) * _net.numberOfTransitions());
         memset(_stubborn.get(), false, sizeof(bool) * _net.numberOfTransitions());
-        _tid = 0;
+        _ordering.clear();
+        //_tid = 0;
     }
 }

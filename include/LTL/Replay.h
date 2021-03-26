@@ -18,6 +18,8 @@
 #ifndef VERIFYPN_REPLAY_H
 #define VERIFYPN_REPLAY_H
 
+#include "LTL/SuccessorGeneration/BuchiSuccessorGenerator.h"
+
 #include <fstream>
 #include <utility>
 #include <rapidxml.hpp>
@@ -35,10 +37,10 @@ namespace LTL {
 
             std::string id;
             int buchi_state;
-            std::vector<Token> tokens;
+            std::unordered_map<uint32_t, uint32_t> tokens;
         };
 
-        void parse(std::ifstream &xml);
+        void parse(std::ifstream &xml, const PetriEngine::PetriNet *net);
 
         bool replay(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond);
 
@@ -46,9 +48,14 @@ namespace LTL {
     private:
         void parseRoot(const rapidxml::xml_node<> *pNode);
 
-        static Transition parseTransition(const rapidxml::xml_node<char> *pNode);
+        Transition parseTransition(const rapidxml::xml_node<char> *pNode);
 
-        static Token parseToken(const rapidxml::xml_node<char> *pNode);
+        void parseToken(const rapidxml::xml_node<char> *pNode, std::unordered_map<uint32_t, uint32_t> &current_marking);
+
+        std::unordered_map<std::string, int> transitions;
+        std::unordered_map<std::string, int> places;
+        bool _play_trace(const PetriEngine::PetriNet *net, PetriEngine::SuccessorGenerator &successorGenerator,
+                         BuchiSuccessorGenerator &buchiGenerator, size_t init_buchi);
     };
 }
 

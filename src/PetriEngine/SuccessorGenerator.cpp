@@ -24,12 +24,18 @@ namespace PetriEngine {
     }
     SuccessorGenerator::SuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries) : SuccessorGenerator(net){}
 
+    SuccessorGenerator::SuccessorGenerator(const PetriNet &net, const std::shared_ptr<PQL::Condition> &query)
+                                           : SuccessorGenerator(net) {
+
+    }
+
     SuccessorGenerator::~SuccessorGenerator() {
     }
 
-    void SuccessorGenerator::prepare(const Structures::State* state) {
+    bool SuccessorGenerator::prepare(const Structures::State* state) {
         _parent = state;
         reset();
+        return true;
     }
 
     void SuccessorGenerator::reset() {
@@ -124,9 +130,7 @@ namespace PetriEngine {
                 for (; tindex != last; ++tindex) {
 
                     if (!checkPreset(tindex)) continue;
-                    memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
-                    consumePreset(write, tindex);
-                    producePostset(write, tindex);
+                    _fire(write, tindex);
 
                     ++tindex;
                     return true;
@@ -137,5 +141,16 @@ namespace PetriEngine {
         }
         return false;
     }
+
+    void SuccessorGenerator::_fire(Structures::State &write, uint32_t tid) {
+        assert(checkPreset(tid));
+        memcpy(write.marking(), (*_parent).marking(), _net._nplaces * sizeof (MarkVal));
+        consumePreset(write, tid);
+        producePostset(write, tid);
+    }
+
+    SuccessorGenerator::SuccessorGenerator(const PetriNet &net, const std::shared_ptr<StubbornSet>&)
+        : SuccessorGenerator(net){}
+
 }
 

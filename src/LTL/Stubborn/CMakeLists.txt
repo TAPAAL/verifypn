@@ -1,0 +1,4 @@
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+add_library(LTLStubborn EvalAndSetVisitor.cpp VisibleTransitionVisitor.cpp AutomatonStubbornSet.cpp VisibilityVisitor.cpp VisibleLTLStubbornSet.cpp InterestingLTLStubbornSet.cpp)
+add_dependencies(LTLStubborn PetriEngine)

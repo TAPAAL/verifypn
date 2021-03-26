@@ -16,7 +16,7 @@
  */
 
 #include "LTL/LTLToBuchi.h"
-#include "LTL/BuchiSuccessorGenerator.h"
+#include "LTL/SuccessorGeneration/BuchiSuccessorGenerator.h"
 
 #include <spot/twaalgos/translate.hh>
 #include <spot/tl/parse.hh>
@@ -24,6 +24,8 @@
 #include <sstream>
 #include <spot/twaalgos/dot.hh>
 
+
+using namespace PetriEngine::PQL;
 
 namespace LTL {
 
@@ -46,35 +48,35 @@ namespace LTL {
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<LessThanCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::UnfoldedFireableCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<UnfoldedFireableCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::FireableCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<FireableCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::LessThanOrEqualCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<LessThanOrEqualCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::GreaterThanCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<GreaterThanCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::GreaterThanOrEqualCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<GreaterThanOrEqualCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EqualCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<EqualCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::NotEqualCondition *element) {
-        make_atomic_prop(element->shared_from_this());
+        make_atomic_prop(std::make_shared<NotEqualCondition>(*element));
     }
 
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::CompareConjunction *element) {
@@ -135,9 +137,9 @@ namespace LTL {
         (*condition)[0]->visit(*this);
     }
 
-    std::pair<spot::formula, APInfo> to_spot_formula(const PetriEngine::PQL::Condition_ptr& query) {
+    std::pair<spot::formula, APInfo> to_spot_formula(const PetriEngine::PQL::Condition_ptr& query, bool compress) {
         std::stringstream ss;
-        FormulaToSpotSyntax spotConverter{ss};
+        FormulaToSpotSyntax spotConverter{ss, compress};
         query->visit(spotConverter);
         std::string spotFormula = ss.str();
         if (spotFormula.at(0) == 'E' || spotFormula.at(0) == 'A') {
@@ -147,14 +149,15 @@ namespace LTL {
         return std::make_pair(spot_formula, spotConverter.apInfo());
     }
 
-    BuchiSuccessorGenerator makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query) {
-        auto [formula, apinfo] = to_spot_formula(query);
+    Structures::BuchiAutomaton makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query, bool compress) {
+        auto [formula, apinfo] = to_spot_formula(query, compress);
         formula = spot::formula::Not(formula);
         spot::translator translator;
         // Ask for Büchi acceptance (rather than generalized Büchi) and medium optimizations
         // (default is high which causes many worst case BDD constructions i.e. exponential blow-up)
         translator.set_type(spot::postprocessor::BA);
         translator.set_level(spot::postprocessor::Medium);
+        //translator.set_pref(spot::postprocessor::Complete);
         spot::twa_graph_ptr automaton = translator.run(formula);
         std::unordered_map<int, AtomicProposition> ap_map;
         // bind PQL expressions to the atomic proposition IDs used by spot.
@@ -164,7 +167,11 @@ namespace LTL {
             ap_map[varnum] = info;
         }
 
-        return BuchiSuccessorGenerator{Structures::BuchiAutomaton{std::move(automaton), std::move(ap_map)}};
+        return Structures::BuchiAutomaton{automaton, ap_map};
+    }
+
+    BuchiSuccessorGenerator makeBuchiSuccessorGenerator(const Condition_ptr &query, bool compress) {
+        return BuchiSuccessorGenerator{makeBuchiAutomaton(query, compress)};
     }
 
 }

@@ -191,6 +191,8 @@ namespace PetriEngine::PQL {
         void _accept(const IdentifierExpr *element) override;
 
     private:
+        std::pair<Expr_ptr, Expr_ptr> compareCondition(const CompareCondition *element);
+
         template<typename T>
         void _acceptNary(const T *element);
     

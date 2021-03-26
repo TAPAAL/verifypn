@@ -21,7 +21,6 @@
 #include "PetriEngine/Structures/State.h"
 #include "PetriEngine/SuccessorGenerator.h"
 #include "LTL/LTLToBuchi.h"
-#include "LTL/BuchiSuccessorGenerator.h"
 
 #include <rapidxml.hpp>
 #include <vector>
@@ -34,8 +33,14 @@ using namespace PetriEngine::PQL;
 namespace LTL {
     bool guard_valid(const PQL::EvaluationContext ctx, const BuchiSuccessorGenerator &buchi, bdd bdd);
 
-    void Replay::parse(std::ifstream &xml)
+    void Replay::parse(std::ifstream &xml, const PetriNet *net)
     {
+        if (places.empty()) {
+            for (int i = 0; i < net->placeNames().size(); ++i) {
+                places[net->placeNames()[i]] = i;
+            }
+        }
+        // TODO can also validate transition names up front.
         rapidxml::xml_document<> doc;
         std::vector<char> buffer((std::istreambuf_iterator<char>(xml)), std::istreambuf_iterator<char>());
         buffer.push_back('\0');
@@ -97,40 +102,67 @@ namespace LTL {
 
         for (auto it = pNode->first_node(); it; it = it->next_sibling()) {
             assert(std::strcmp(it->name(), "token"));
-            transition.tokens.push_back(parseToken(it));
+            parseToken(it, transition.tokens);
         }
 
         return transition;
     }
 
-    Replay::Token Replay::parseToken(const rapidxml::xml_node<char> *pNode)
+    void
+    Replay::parseToken(const rapidxml::xml_node<char> *pNode, std::unordered_map<uint32_t, uint32_t> &current_marking)
     {
-        std::string place;
         for (auto it = pNode->first_attribute(); it; it = it->next_attribute()) {
             if (std::strcmp(it->name(), "place") == 0) {
-                place = std::string(it->value());
+                ++current_marking[places.at(it->value())];
             }
         }
-        assert(!place.empty());
-        return Token{place};
     }
 
     bool Replay::replay(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond)
     {
-        PetriEngine::Structures::State state;
-        std::unordered_map<std::string, int> transitions;
-        BuchiSuccessorGenerator buchiGenerator = makeBuchiAutomaton(cond);
-
-        for (int i = 0; i < net->transitionNames().size(); ++i) {
-            transitions[net->transitionNames()[i]] = i;
+        // preallocate reverse lookup for transition names. Assume this is always called with the same Petri net.
+        if (transitions.empty()) {
+            for (int i = 0; i < net->transitionNames().size(); ++i) {
+                transitions[net->transitionNames()[i]] = i;
+            }
         }
+
+        BuchiSuccessorGenerator buchiGenerator = makeBuchiSuccessorGenerator(cond);
+        PetriEngine::Structures::State state;
         state.setMarking(net->makeInitialMarking());
         PetriEngine::SuccessorGenerator successorGenerator(*net);
         std::cout << "Playing back trace. Length: " << trace.size() << std::endl;
         //for (const Transition& transition : trace) {
         int size = trace.size();
-        int prev_buchi = buchiGenerator.initial_state_number();
-        for (int i = 0; i < size; ++i) {
+        size_t prev_buchi = buchiGenerator.initial_state_number();
+        buchiGenerator.prepare(prev_buchi);
+        bdd bdd;
+        std::vector<size_t> init_buchi_states;
+        while (buchiGenerator.next(prev_buchi, bdd)) {
+            if (guard_valid(EvaluationContext{state.marking(), net}, buchiGenerator, bdd)) {
+                init_buchi_states.push_back(prev_buchi);
+            }
+        }
+        for (auto i : init_buchi_states) {
+            if (_play_trace(net, successorGenerator, buchiGenerator, i)) {
+                std::cerr << "Replay complete. No errors" << std::endl;
+                return true;
+            }
+        }
+        std::cerr << "ERROR The trace could not be played back using any valid initial Büchi state. "
+                  << "See previous output for details."
+                  << std::endl;
+        return false;
+    }
+
+    bool Replay::_play_trace(const PetriEngine::PetriNet *net, PetriEngine::SuccessorGenerator &successorGenerator,
+                             BuchiSuccessorGenerator &buchiGenerator, size_t init_buchi)
+    {
+        PetriEngine::Structures::State state;
+        state.setMarking(net->makeInitialMarking());
+        size_t prev_buchi = init_buchi;
+        bdd bdd;
+        for (int i = 0; i < trace.size(); ++i) {
             const Transition &transition = trace[i];
             successorGenerator.prepare(&state);
             buchiGenerator.prepare(prev_buchi);
@@ -152,25 +184,42 @@ namespace LTL {
             successorGenerator.consumePreset(state, tid);
             successorGenerator.producePostset(state, tid);
 
+            if (!transition.tokens.empty()) {
+                for (auto[pid, token_count] : transition.tokens) {
+                    if (state.marking()[pid] != token_count) {
+                        std::cerr << "ERROR the playback of the trace resulted in mismatch of token counts. \n"
+                                     "  Offending place " << net->placeNames()[pid] << ", expected " << token_count
+                                  << " tokens but got " << state.marking()[pid] << std::endl;
+                        exit(1);
+                    }
+                }
+            }
+
             size_t next_buchi = -1;
-            bdd cond;
-            while (buchiGenerator.next(next_buchi, cond)) {
-                if (next_buchi == transition.buchi_state) break;
+            size_t cand;
+            const EvaluationContext &ctx = EvaluationContext{state.marking(), net};
+            while (buchiGenerator.next(next_buchi, bdd)) {
+                if (guard_valid(ctx, buchiGenerator, bdd)) {
+                    if (next_buchi == transition.buchi_state) break;
+                } else if (next_buchi == transition.buchi_state) {
+                    std::cerr << "WARNING guard invalid for noted buchi state " << transition.buchi_state
+                              << " at index " << i << ". Attempting to proceed anyway.\n";
+                }
             }
-            if (next_buchi != transition.buchi_state || !guard_valid(EvaluationContext{state.marking(), net}, buchiGenerator, cond)) {
-                std::cerr << "ERROR the provided trace could not execute the Buchi automaton. Offending transition: "
-                          << transition.id << " at index: " << i << '\n';
-                exit(1);
-            }
-            else {
-                prev_buchi = next_buchi;
-            }
+            prev_buchi = next_buchi;
+            /* if (next_buchi != transition.buchi_state ||
+                 !guard_valid(ctx, buchiGenerator, bdd)) {
+                 std::cerr << "WARNING the provided trace could not execute the Buchi automaton using initial state "
+                           << init_buchi << ". Offending transition: " << transition.id << " at index: " << i << '\n';
+                 return false;
+             } else {
+                 prev_buchi = next_buchi;
+             }*/
 
             //std::cerr << "Fired transition: " << transition.id << std::endl;
             if (i % 100000 == 0)
-                std::cerr << i << "/" << size << std::endl;
+                std::cerr << i << "/" << trace.size() << std::endl;
         }
-        std::cerr << "Replay complete. No errors" << std::endl;
         return true;
     }
 
