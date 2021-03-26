@@ -20,38 +20,42 @@
 
 #include "LTL/SuccessorGeneration/BuchiSuccessorGenerator.h"
 
-#include <fstream>
+#include <iostream>
 #include <utility>
 #include <rapidxml.hpp>
-#include "../../cmake-build-debug/external/include/rapidxml.hpp"
 
 namespace LTL {
     class Replay {
     public:
+        Replay(std::istream &is, const PetriEngine::PetriNet *net);
+
         struct Token {
             std::string place;
         };
 
         struct Transition {
-            explicit Transition(std::string id, int buchi) : id(id), buchi_state(buchi) {}
+            explicit Transition(std::string id, int buchi) : id(std::move(id)), buchi_state(buchi) {}
 
             std::string id;
             int buchi_state;
             std::unordered_map<uint32_t, uint32_t> tokens;
         };
 
-        void parse(std::ifstream &xml, const PetriEngine::PetriNet *net);
+        void parse(std::istream &xml, const PetriEngine::PetriNet *net);
 
         bool replay(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond);
 
         std::vector<Transition> trace;
     private:
+
+        static constexpr auto DEADLOCK_TRANS = "##deadlock";
         void parseRoot(const rapidxml::xml_node<> *pNode);
 
         Transition parseTransition(const rapidxml::xml_node<char> *pNode);
 
         void parseToken(const rapidxml::xml_node<char> *pNode, std::unordered_map<uint32_t, uint32_t> &current_marking);
 
+        size_t loop_idx = std::numeric_limits<size_t>::max();
         std::unordered_map<std::string, int> transitions;
         std::unordered_map<std::string, int> places;
         bool _play_trace(const PetriEngine::PetriNet *net, PetriEngine::SuccessorGenerator &successorGenerator,

@@ -425,11 +425,12 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  --write-buchi <filename> [<format>]  Valid for LTL. Write the generated buchi automaton to file. Formats:\n"
                     "                                       - dot   (default) Write the buchi in GraphViz Dot format\n"
                     "                                       - hoa   Write the buchi in the Hanoi Omega-Automata Format\n"
-                    "                                       - spin  Write the buchi in the spin model checker format."
-                    "  --no-compress-buchi                  Disable compression of atomic propositions in LTL."
-                    "                                       This compression significantly helps in dealing with massive"
-                    "                                       fireability queries, but sometimes hurts Büchi construction "
-                    "                                       and query simplifation in complex queries."
+                    "                                       - spin  Write the buchi in the spin model checker format.\n"
+                    "  --no-compress-buchi                  Disable compression of atomic propositions in LTL.\n"
+                    "                                       This compression significantly helps in dealing with massive\n"
+                    "                                       fireability queries, but sometimes hurts Büchi construction \n"
+                    "                                       and query simplifation in complex queries.\n"
+                    "  --replay <file>                      Replays an LTL trace output by the --trace option. The trace is verified against the provided model and query.\n"
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -545,6 +546,11 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 return ErrorCode;
             }
         }
+    }
+
+    if (options.replay && options.logic != TemporalLogic::LTL) {
+        std::cerr << "Argument Error: Trace replay is only supported for LTL model checking." << std::endl;
+        return ErrorCode;
     }
 
     return ContinueCode;
@@ -1239,13 +1245,12 @@ int main(int argc, char* argv[]) {
     }
 
     if (options.replay) {
-        std::ifstream replay_file(options.replay_file, std::ifstream::in);
-        LTL::Replay replay;
-        replay.parse(replay_file, net.get());
         if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
             std::cerr << "Fatal error assigning indexes" << std::endl;
             exit(1);
         }
+        std::ifstream replay_file(options.replay_file, std::ifstream::in);
+        LTL::Replay replay{replay_file, net.get()};
         for (int i : ltl_ids) {
             replay.replay(net.get(), queries[i]);
         }
