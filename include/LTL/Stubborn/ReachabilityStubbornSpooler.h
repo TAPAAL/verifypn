@@ -42,6 +42,9 @@ namespace LTL {
             _stubborn.reset();
         }
 
+        void set_query(PetriEngine::PQL::Condition_ptr cond) {
+            _stubborn.setQuery(cond.get());
+        }
     private:
         PetriEngine::ReachabilityStubbornSet _stubborn;
     };
