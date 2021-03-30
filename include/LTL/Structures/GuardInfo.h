@@ -19,6 +19,7 @@
 #define VERIFYPN_GUARDINFO_H
 
 #include "PetriEngine/PQL/PQL.h"
+#include "LTL/Structures/BuchiAutomaton.h"
 #include <vector>
 
 namespace LTL {
@@ -30,6 +31,10 @@ namespace LTL {
         std::vector<PetriEngine::PQL::Condition_ptr> progressing;
         bool is_accepting;
     };
+
+    std::vector<GuardInfo> getGuardInfo(const Structures::BuchiAutomaton &buchi);
+
+
 }
 
 #endif //VERIFYPN_GUARDINFO_H

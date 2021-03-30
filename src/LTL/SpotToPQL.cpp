@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LTL/Simplification/SpotToPQL.h"
+#include "LTL/SpotToPQL.h"
 #include "LTL/LTLToBuchi.h"
 #include <algorithm>
 #include <map>

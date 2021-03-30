@@ -26,6 +26,7 @@
 #include "LTL/Structures/BitProductStateSet.h"
 #include "LTL/Algorithm/ProductPrinter.h"
 #include "PetriEngine/options.h"
+#include "LTL/SuccessorGeneration/ReachStubProductSuccessorGenerator.h"
 
 namespace LTL {
     template<typename SuccessorGen>
@@ -39,7 +40,7 @@ namespace LTL {
                      bool shortcircuitweak = true)
                 : net(net), formula(condition), traceLevel(level), shortcircuitweak(shortcircuitweak)
         {
-            successorGenerator = std::make_unique<ProductSuccessorGenerator<SuccessorGen>>(net, buchi,
+            successorGenerator = std::make_unique<ReachStubProductSuccessorGenerator<SuccessorGen>>(net, buchi,
                                                                                            std::move(successorGen));
         }
 

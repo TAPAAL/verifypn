@@ -49,14 +49,14 @@ namespace LTL {
             static constexpr auto NoLastState = std::numeric_limits<size_t>::max();
         };
 
-        void setSpooler(std::unique_ptr<SuccessorSpooler> &&spooler)
+        void setSpooler(SuccessorSpooler *const spooler)
         {
-            _spooler.swap(spooler);
+            _spooler = spooler;
         }
 
-        void setHeuristic(std::unique_ptr<Heuristic> &&heuristic)
+        void setHeuristic(Heuristic *const heuristic)
         {
-            _heuristic.swap(heuristic);
+            _heuristic = heuristic;
         }
 
         [[nodiscard]] static sucinfo initial_suc_info()
@@ -186,8 +186,8 @@ namespace LTL {
 
 
     private:
-        std::unique_ptr<SuccessorSpooler> _spooler = nullptr;
-        std::unique_ptr<Heuristic> _heuristic = nullptr;
+        SuccessorSpooler *_spooler = nullptr;
+        Heuristic *_heuristic = nullptr;
 
         std::unique_ptr<uint32_t[]> _transbuf;   /* buffer for enabled transitions, size is ntransitions. */
         LTL::Structures::ProductState _statebuf;

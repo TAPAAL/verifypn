@@ -16,7 +16,7 @@
  */
 
 #include "LTL/SuccessorGeneration/AutomatonHeuristic.h"
-#include "LTL/Simplification/SpotToPQL.h"
+#include "LTL/SpotToPQL.h"
 
 #include <spot/twa/formula2bdd.hh>
 #include <spot/tl/formula.hh>

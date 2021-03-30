@@ -114,6 +114,9 @@ namespace LTL {
         Structures::BuchiAutomaton automaton = makeBuchiAutomaton(negated_formula);
         bool hasinhib = net->has_inhibitor();
 
+        std::unique_ptr<SuccessorSpooler> spooler;
+        std::unique_ptr<Heuristic> heuristic;
+
         Result result;
         switch (options.ltlalgorithm) {
             case Algorithm::NDFS:
@@ -129,8 +132,10 @@ namespace LTL {
                 break;
             case Algorithm::RandomNDFS: {
                 SpoolingSuccessorGenerator gen{*net, negated_formula};
-                gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
-                gen.setHeuristic(std::make_unique<RandomHeuristic>());
+                spooler = std::make_unique<EnabledSpooler>(net, gen);
+                heuristic = std::make_unique<RandomHeuristic>();
+                gen.setSpooler(spooler.get());
+                gen.setHeuristic(heuristic.get());
 
                 result = _verify(net, negated_formula,
                                  std::make_unique<RandomNDFS>(*net, negated_formula, automaton, std::move(gen), options.trace,
@@ -145,16 +150,20 @@ namespace LTL {
                     SpoolingSuccessorGenerator gen{*net, negated_formula};
                     if (!hasinhib && options.stubbornreduction && !negated_formula->containsNext()) {
                         std::cout << "Running stubborn version!" << std::endl;
-
-                        gen.setSpooler(std::make_unique<InterestingLTLStubbornSet>(*net, negated_formula));
+                        spooler = std::make_unique<InterestingLTLStubbornSet>(*net, negated_formula);
                     }
                     else {
-                        gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
+                        spooler = std::make_unique<EnabledSpooler>(net, gen);
                     }
                     if (options.strategy == PetriEngine::Reachability::RDFS) {
-                        gen.setHeuristic(std::make_unique<RandomHeuristic>());
+                        heuristic = std::make_unique<RandomHeuristic>();
                     } else if (options.strategy == PetriEngine::Reachability::HEUR) {
-                        gen.setHeuristic(std::make_unique<AutomatonHeuristic>(net, automaton));
+                        heuristic = std::make_unique<AutomatonHeuristic>(net, automaton);
+                    }
+                    assert(spooler);
+                    gen.setSpooler(spooler.get());
+                    if (heuristic) {
+                        gen.setHeuristic(heuristic.get());
                     }
 
                     if (options.trace != TraceLevel::None) {
