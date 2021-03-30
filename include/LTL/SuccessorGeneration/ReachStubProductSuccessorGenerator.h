@@ -22,6 +22,8 @@
 #include "LTL/Stubborn/ReachabilityStubbornSpooler.h"
 #include "LTL/SuccessorGeneration/EnabledSpooler.h"
 
+#define REACH_STUB_DEBUG
+
 namespace LTL {
     template<typename S>
     class ReachStubProductSuccessorGenerator : public ProductSuccessorGenerator<S> {
@@ -70,18 +72,39 @@ namespace LTL {
                 }
                 if (!has_erased) ++it;
             }
+#ifdef REACH_STUB_DEBUG
             std::cout << "Size of _reach_states: " << _reach_states.size() << std::endl;
+            if (_reach_states.empty())
+                exit(0);
+#endif
         }
 
-        bool prepare(const LTL::Structures::ProductState *state) override
+        bool prepare(const LTL::Structures::ProductState *state) override {
+            //FIXME For some reason RandomNDFS is not able to call this directly on the super class.
+            ProductSuccessorGenerator<S>::prepare(state);
+        }
+
+        void prepare(const LTL::Structures::ProductState *state, typename S::sucinfo &sucinfo) override
         {
             if (_reach_states.find(state->getBuchiState()) != std::end(_reach_states)) {
+#ifdef REACH_STUB_DEBUG
+                if (!_reach_active) {
+                    std::cout << "Found reach stub state. Switching spooler." << std::endl;
+                    _reach_active = true;
+                }
+#endif
                 set_spooler(_reach.get());
             }
             else {
+#ifdef REACH_STUB_DEBUG
+                if (_reach_active) {
+                    std::cout << "Leaving reach stub state. Switching to enabled spooler." << std::endl;
+                    _reach_active = false;
+                }
+#endif
                 set_spooler(_enabled.get());
             }
-            return ProductSuccessorGenerator<S>::prepare(state);
+            ProductSuccessorGenerator<S>::prepare(state, sucinfo);
         }
 
     private:
@@ -94,6 +117,9 @@ namespace LTL {
         std::unique_ptr<EnabledSpooler> _enabled;
         std::unique_ptr<ReachabilityStubbornSpooler> _reach;
         std::unordered_set<size_t> _reach_states;
+#ifdef REACH_STUB_DEBUG
+        bool _reach_active = false;
+#endif
     };
 }
 

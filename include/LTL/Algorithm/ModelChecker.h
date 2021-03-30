@@ -76,7 +76,9 @@ namespace LTL {
                       << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
         }
 
-        std::unique_ptr<ProductSuccessorGenerator<SuccessorGen>> successorGenerator;
+        //std::unique_ptr<ProductSuccessorGenerator<SuccessorGen>> successorGenerator;
+        std::unique_ptr<ReachStubProductSuccessorGenerator<SuccessorGen>> successorGenerator;
+
         const PetriEngine::PetriNet &net;
         PetriEngine::PQL::Condition_ptr formula;
         TraceLevel traceLevel;

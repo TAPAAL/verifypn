@@ -65,7 +65,7 @@ namespace LTL {
         }
         std::cerr << std::endl;
 #endif*/
-#ifndef NDEBUG
+#ifndef NDEBUG/*
         float num_stubborn = 0;
         float num_enabled = 0;
         float num_enabled_stubborn = 0;
@@ -81,7 +81,7 @@ namespace LTL {
         for (int i = 0; i < _net.numberOfTransitions(); ++i) {
             std::cerr << (_enabled[i] ? '1' : '0');
         } std::cerr << std::endl;
-
+*/
 #endif
         return true;
 

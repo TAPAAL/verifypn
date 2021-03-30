@@ -151,7 +151,7 @@ namespace LTL {
          * @param state the source state to generate successors from
          * @param sucinfo the point in the iteration to start from, as returned by `next`.
          */
-        void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::sucinfo &sucinfo)
+        virtual void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::sucinfo &sucinfo)
         {
             if constexpr (AutomataReducing) {
                 _successor_generator.prepare(state, sucinfo, false);
@@ -262,6 +262,7 @@ namespace LTL {
 
         size_t buchiStates() { return buchi.buchiStates(); }
 
+        virtual ~ProductSuccessorGenerator() = default;
     protected:
         SuccessorGen _successor_generator;
 
