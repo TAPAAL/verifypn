@@ -115,13 +115,17 @@ namespace LTL {
         {
             assert(sucinfo.successors != nullptr);
             if (sucinfo.successors.empty()) {
+                _last = std::numeric_limits<uint32_t>::max();
                 return false;
             }
-            auto t = sucinfo.successors.front();
+            _last = sucinfo.successors.front();
             sucinfo.successors.pop();
-            SuccessorGenerator::_fire(state, t);
+            SuccessorGenerator::_fire(state, _last);
             return true;
         }
+
+        [[nodiscard]] uint32_t fired() const { return _last; }
+
 
         void generate_all(sucinfo &sucinfo)
         {
@@ -184,11 +188,23 @@ namespace LTL {
             write.setBuchiState(parent.getBuchiState());
         }
 
+        void push() {
+            // No transitions have been fired yet. We must be in the initial marking.
+            if (fired() == std::numeric_limits<uint32_t>::max()) return;
+            _heuristic->push(fired());
+        }
+
+        void pop(const sucinfo &sc) {
+            if (sc.successors.has_consumed())
+                _heuristic->pop(sc.successors.last_pop());
+        }
+
 
     private:
         std::unique_ptr<SuccessorSpooler> _spooler = nullptr;
         std::unique_ptr<Heuristic> _heuristic = nullptr;
 
+        uint32_t _last = std::numeric_limits<uint32_t>::max();
         std::unique_ptr<uint32_t[]> _transbuf;   /* buffer for enabled transitions, size is ntransitions. */
         LTL::Structures::ProductState _statebuf;
     };
