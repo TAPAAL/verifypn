@@ -1043,7 +1043,7 @@ namespace PetriEngine {
             std::vector<std::pair<const Color*,uint32_t>> eval(ExpressionContext& context) const {
                 std::vector<std::pair<const Color*,uint32_t>> colors;
                 assert(_sort != nullptr);
-                if(context.placePartition.diagonal){
+                if(context.placePartition.diagonal || context.placePartition._equivalenceClasses.empty()){
                     for (size_t i = 0; i < _sort->size(); i++) {
                         colors.push_back(std::make_pair(&(*_sort)[i], 1));
                     }
@@ -1123,18 +1123,17 @@ namespace PetriEngine {
             
         public:
             Multiset eval(ExpressionContext& context) const override {
-                std::vector<const Color*> colors;
                 std::vector<std::pair<const Color*,uint32_t>> col;
                 if (!_color.empty()) {
                     for (auto elem : _color) {
-                        colors.push_back(elem->eval(context));
-                    }
-                    for (auto elem : colors) {
-                        col.push_back(std::make_pair(elem, _number));
+                        col.push_back(std::make_pair(elem->eval(context), _number));
                     }
                 } else if (_all != nullptr) {
                     col = _all->eval(context);
-                }                
+                    for(auto& pair : col){
+                        pair.second = pair.second * _number;
+                    }
+                }               
                 
                 return Multiset(col);
             }

@@ -55,26 +55,31 @@ namespace PetriEngine {
                     //std::cout << "---------------------------------------------------" << std::endl;
                 }               
             }
-            auto start = std::chrono::high_resolution_clock::now(); 
+            
             assignColorMap();
-            auto end = std::chrono::high_resolution_clock::now();
-            _timer += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
+            
 
-            std::cout << "Local timer was " << _timer << std::endl;
+            std::cout << "Local timer was " << _timer *0.000001 << std::endl;
         }
 
         void PartitionBuilder::assignColorMap(){
             for(auto& eqVec : _partition){
                 ColorType *colorType = _places->operator[](eqVec.first).type;
                 for(uint32_t i = 0; i < colorType->size(); i++){
+                    auto start = std::chrono::high_resolution_clock::now(); 
                     const Color *color = &colorType->operator[](i);
-                    for(auto& eqClass : eqVec.second._equivalenceClasses){
+                    
+                    for(auto eqClass : eqVec.second._equivalenceClasses){
+                        
                         std::vector<uint32_t> colorIds;
                         color->getTupleId(&colorIds);
                         if(eqClass.constainsColor(colorIds)){
                             eqVec.second.colorEQClassMap[color] = &eqClass;
                         }
+                        
                     }
+                    auto end = std::chrono::high_resolution_clock::now();
+                    _timer += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
                 }                
             }
         }

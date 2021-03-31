@@ -151,7 +151,7 @@ namespace PetriEngine {
         auto partitionStart = std::chrono::high_resolution_clock::now();
         Colored::PartitionBuilder pBuilder = Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
         pBuilder.partitionNet();
-        pBuilder.printPartion();
+        //pBuilder.printPartion();
         _partition = pBuilder.getPartition();
         auto partitionEnd = std::chrono::high_resolution_clock::now();
         _partitionTimer = (std::chrono::duration_cast<std::chrono::microseconds>(partitionEnd - partitionStart).count())*0.000001;
@@ -208,18 +208,18 @@ namespace PetriEngine {
         _placeColorFixpoints.clear();
 
 
-        std::cout << "Var intervals before partitioning" << std::endl;
-        for(auto transition : _transitions){
-            std::cout << "Transistion " << transition.name << std::endl;
-            for(auto varmap : transition.variableMaps){
-                std::cout << "----------------Varmap--------------------" << std::endl;
-                for(auto varpair : varmap){
-                    std::cout << varpair.first->name << std::endl;
-                    varpair.second.print();
-                }
-            }
-        }
-        std::cout << std::endl << std::endl << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl << std::endl;
+        // std::cout << "Var intervals before partitioning" << std::endl;
+        // for(auto transition : _transitions){
+        //     std::cout << "Transistion " << transition.name << std::endl;
+        //     for(auto varmap : transition.variableMaps){
+        //         std::cout << "----------------Varmap--------------------" << std::endl;
+        //         for(auto varpair : varmap){
+        //             std::cout << varpair.first->name << std::endl;
+        //             varpair.second.print();
+        //         }
+        //     }
+        // }
+        // std::cout << std::endl << std::endl << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl << std::endl;
     }
 
 
