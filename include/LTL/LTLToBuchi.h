@@ -57,10 +57,6 @@ namespace LTL {
 
         void _accept(const PetriEngine::PQL::LessThanOrEqualCondition *element) override;
 
-        void _accept(const PetriEngine::PQL::GreaterThanCondition *element) override;
-
-        void _accept(const PetriEngine::PQL::GreaterThanOrEqualCondition *element) override;
-
         void _accept(const PetriEngine::PQL::EqualCondition *element) override;
 
         void _accept(const PetriEngine::PQL::NotEqualCondition *element) override;

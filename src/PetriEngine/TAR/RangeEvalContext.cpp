@@ -140,16 +140,6 @@ namespace PetriEngine
         handle_compare((*element)[0], (*element)[1], false);
     }
 
-    void RangeEvalContext::_accept(const GreaterThanCondition* element)
-    {
-        handle_compare((*element)[1], (*element)[0], true);
-    }
-    
-    void RangeEvalContext::_accept(const GreaterThanOrEqualCondition* element)
-    {
-        handle_compare((*element)[1], (*element)[0], false);
-    }
-    
     void RangeEvalContext::_accept(const DeadlockCondition* element)
     {
         _bool_result = true;

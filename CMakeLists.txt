@@ -20,10 +20,22 @@ add_compile_definitions(VERIFYPN_VERSION=\"${VERIFYPN_VERSION}\")
 
 project(verifypn VERSION ${VERIFYPN_VERSION} LANGUAGES CXX C)
 
-option(VERIFYPN_MC_Simplification "Enables multicore simplification" OFF)
+option(VERIFYPN_Static "Link libraries statically" ON)
+option(VERIFYPN_MC_Simplification "Enables multicore simplification, incompatible with static linking" OFF)
 option(VERIFYPN_GetDependencies "Fetch external dependencies from web." ON)
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+
+if (VERIFYPN_Static)
+    set(BUILD_SHARED_LIBS OFF)
+    if (VERIFYPN_MC_Simplification)
+        message( FATAL_ERROR "Multicore Simplification is not compatible with static linking" )
+    endif(VERIFYPN_MC_Simplification)
+    if (NOT APPLE)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+    endif(NOT APPLE)
+else(VERIFYPN_Static)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+endif (VERIFYPN_Static)
 
 if (VERIFYPN_MC_Simplification)
     add_compile_definitions(VERIFYPN_MC_Simplification)
@@ -42,7 +54,9 @@ endif ()
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s -Wall -pedantic-errors -O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fno-omit-frame-pointer")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -O3 -DNDEBUG")
-
+if (VERIFYPN_Static AND NOT APPLE)
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -static")
+endif()
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
