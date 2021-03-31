@@ -115,13 +115,16 @@ namespace LTL {
         {
             assert(sucinfo.successors != nullptr);
             if (sucinfo.successors.empty()) {
+                _last = std::numeric_limits<uint32_t>::max();
                 return false;
             }
-            auto t = sucinfo.successors.front();
+            _last = sucinfo.successors.front();
             sucinfo.successors.pop();
-            SuccessorGenerator::_fire(state, t);
+            SuccessorGenerator::_fire(state, _last);
             return true;
         }
+
+        [[nodiscard]] uint32_t fired() const { return _last; }
 
         void generate_all(sucinfo &sucinfo)
         {
@@ -189,6 +192,7 @@ namespace LTL {
         SuccessorSpooler *_spooler = nullptr;
         Heuristic *_heuristic = nullptr;
 
+        uint32_t _last;
         std::unique_ptr<uint32_t[]> _transbuf;   /* buffer for enabled transitions, size is ntransitions. */
         LTL::Structures::ProductState _statebuf;
     };

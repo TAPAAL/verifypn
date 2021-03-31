@@ -58,7 +58,7 @@ namespace LTL {
                 }
                 if (progressing == bddfalse || (progressing | retarding) != bddtrue) continue;
 
-                _reach_states.insert(std::make_pair(state, toPQL(spot::bdd_to_formula(progressing, buchi.dict), aps)));
+                _reach_states.insert(std::make_pair(state, BuchiEdge{progressing, toPQL(spot::bdd_to_formula(progressing, buchi.dict), aps)}));
             }
 
             for (auto it = std::begin(_reach_states); it != std::end(_reach_states);) {
@@ -103,14 +103,14 @@ namespace LTL {
 
         void prepare(const LTL::Structures::ProductState *state, typename S::sucinfo &sucinfo) override
         {
-            if (auto suc = _reach_states.find(state->getBuchiState()); suc != std::end(_reach_states)) {
+            if (auto suc = _reach_states.find(state->getBuchiState()); suc != std::end(_reach_states) && !this->guard_valid(*state, suc->second.bddCond)) {
 #ifdef REACH_STUB_DEBUG
                 if (!_reach_active) {
                     std::cout << "Found reach stub state. Switching spooler." << std::endl;
                     _reach_active = true;
                 }
 #endif
-                _reach->set_query(suc->second);
+                _reach->set_query(suc->second.cond);
                 set_spooler(_reach.get());
             }
             else {
@@ -136,9 +136,14 @@ namespace LTL {
             }
         }
 
+        struct BuchiEdge{
+            bdd bddCond;
+            Condition_ptr cond;
+        };
+
         std::unique_ptr<EnabledSpooler> _enabled;
         std::unique_ptr<ReachabilityStubbornSpooler> _reach;
-        std::unordered_map<size_t, Condition_ptr> _reach_states;
+        std::unordered_map<size_t, BuchiEdge> _reach_states;
 #ifdef REACH_STUB_DEBUG
         bool _reach_active = false;
 #endif

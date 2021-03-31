@@ -29,6 +29,8 @@ namespace LTL {
         std::cerr << std::endl;
     }
 
+//#define TARJAN_RUNTIME_TRACE
+
     template<typename S, bool SaveTrace>
     bool TarjanModelChecker<S, SaveTrace>::isSatisfied()
     {
@@ -48,8 +50,14 @@ namespace LTL {
                 if (!nexttrans(working, parent, dtop)) {
                     ++this->stats.expanded;
                     pop();
+#ifdef TARJAN_RUNTIME_TRACE
+                    std::cout << "<-" << std::endl;
+#endif
                     continue;
                 }
+#ifdef TARJAN_RUNTIME_TRACE
+                std::cout << "-> " << this->net.transitionNames()[this->successorGenerator->fired()] << ", " << working.getBuchiState() << std::endl;
+#endif
                 ++this->stats.explored;
                 const auto[isnew, stateid] = seen.add(working);
                 if constexpr (SaveTrace) {
