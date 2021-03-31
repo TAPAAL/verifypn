@@ -59,8 +59,9 @@ namespace PetriEngine {
     bool NaiveBindingGenerator::eval() {
         if (_expr == nullptr)
             return true;
+        Colored::EquivalenceVec placePartition;
 
-        Colored::ExpressionContext context {_bindings, _colorTypes};
+        Colored::ExpressionContext context {_bindings, _colorTypes, placePartition};
         return _expr->eval(context);
     }
 
@@ -207,7 +208,8 @@ namespace PetriEngine {
         if (_expr == nullptr)
             return true;
 
-        Colored::ExpressionContext context {_bindings, _colorTypes};
+        Colored::EquivalenceVec placePartition;
+        Colored::ExpressionContext context {_bindings, _colorTypes, placePartition};
         return _expr->eval(context);
     }
 

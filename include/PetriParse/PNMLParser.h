@@ -31,6 +31,7 @@
 #include "../PetriEngine/Colored/ColoredNetStructures.h"
 #include "../PetriEngine/Colored/Expressions.h"
 #include "../PetriEngine/Colored/Colors.h"
+#include "../PetriEngine/Colored/EquivalenceClass.h"
 
 class PNMLParser {
 

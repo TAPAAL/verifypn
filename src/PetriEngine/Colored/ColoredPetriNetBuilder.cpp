@@ -151,7 +151,7 @@ namespace PetriEngine {
         auto partitionStart = std::chrono::high_resolution_clock::now();
         Colored::PartitionBuilder pBuilder = Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
         pBuilder.partitionNet();
-        //pBuilder.printPartion();
+        pBuilder.printPartion();
         _partition = pBuilder.getPartition();
         auto partitionEnd = std::chrono::high_resolution_clock::now();
         _partitionTimer = (std::chrono::duration_cast<std::chrono::microseconds>(partitionEnd - partitionStart).count())*0.000001;
@@ -204,93 +204,24 @@ namespace PetriEngine {
             _fixpointDone = true;
         }
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
-        // printPlaceTable();
+        //printPlaceTable();
         _placeColorFixpoints.clear();
 
 
-        // std::cout << "Var intervals before partitioning" << std::endl;
-        // for(auto transition : _transitions){
-        //     std::cout << "Transistion " << transition.name << std::endl;
-        //     for(auto varmap : transition.variableMaps){
-        //         std::cout << "----------------Varmap--------------------" << std::endl;
-        //         for(auto varpair : varmap){
-        //             std::cout << varpair.first->name << std::endl;
-        //             varpair.second.print();
-        //         }
-        //     }
-        // }
-        // std::cout << std::endl << std::endl << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl << std::endl;
-        // auto pvStart = std::chrono::high_resolution_clock::now();
-        // //partitionVariableMap();
-        // auto pvEnd = std::chrono::high_resolution_clock::now();
-        // _partitionVarMapTimer = (std::chrono::duration_cast<std::chrono::microseconds>(pvEnd - pvStart).count())*0.000001;
-    }
-
-    void ColoredPetriNetBuilder::partitionVariableMap(){
-        for(auto& transition : _transitions){
-            for(auto inputArc : transition.input_arcs){              
-                std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap;
-                std::unordered_map<uint32_t, const Colored::Variable *> varPositions;
-                std::set<const Colored::Variable *> arcVars;
-                inputArc.expr->getVariables(arcVars, varPositions, varModifierMap);
-
-                if(arcVars.empty()){
-                    continue;
+        std::cout << "Var intervals before partitioning" << std::endl;
+        for(auto transition : _transitions){
+            std::cout << "Transistion " << transition.name << std::endl;
+            for(auto varmap : transition.variableMaps){
+                std::cout << "----------------Varmap--------------------" << std::endl;
+                for(auto varpair : varmap){
+                    std::cout << varpair.first->name << std::endl;
+                    varpair.second.print();
                 }
-                bool isTuple = inputArc.expr->isTuple();
-                auto placePartition = &_partition[inputArc.place];
-                if(placePartition->diagonal){
-                    continue;
-                }
-
-                auto &varmap = transition.variableMaps[0];
-                for(auto &varIntervals : varmap){
-                    Colored::intervalTuple_t newIntervalTuple;
-                    for(auto eqClass : placePartition->_equivalenceClasses){
-                        for(auto interval : eqClass._colorIntervals._intervals){
-                            for(auto varInterval : varIntervals.second._intervals){
-                                for(auto indexModMap : varModifierMap[varIntervals.first]){
-                                    for(auto indexModPair : indexModMap){
-                                        if(isTuple){
-                                            Colored::interval_t reducedPlaceInterval;
-                                            for(uint32_t i = indexModPair.first; i < indexModPair.first + varIntervals.first->colorType->productSize(); i++){
-                                                reducedPlaceInterval.addRange(interval[i]);
-                                            }
-
-                                            auto overlappingInterval = reducedPlaceInterval.getOverlap(varInterval);
-                                            if(overlappingInterval.isSound()){
-                                                newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
-                                            }
-                                        } else {
-                                            auto overlappingInterval = interval.getOverlap(varInterval);
-                                            if(overlappingInterval.isSound()){
-                                                newIntervalTuple.addInterval(overlappingInterval.getSingleColorInterval());
-                                            }
-                                        }
-                                    }
-                                }                                    
-                            }                                
-                        }
-                    }
-                    if(!newIntervalTuple._intervals.empty() && !newIntervalTuple._intervals.back()._ranges.empty()){
-                        varIntervals.second = newIntervalTuple;
-                    }
-                }
-                std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>> newVarMap;
-                newVarMap.push_back((varmap));
-                transition.variableMaps = newVarMap;
-                
             }
-            // std::cout << "Varmap after partitioning for transition " << transition.name << std::endl;
-            // for(auto varMap : transition.variableMaps){
-            //     for (auto varInterval : varMap){
-            //         std::cout << "Variable " << varInterval.first->name << std::endl;
-            //         varInterval.second.print();
-            //     }
-            // }
-            // std::cout << "----------------------------------------------------------" << std::endl;
         }
+        std::cout << std::endl << std::endl << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl << std::endl;
     }
+
 
     std::unordered_map<uint32_t, Colored::ArcIntervals> ColoredPetriNetBuilder::setupTransitionVars(Colored::Transition transition){
         std::unordered_map<uint32_t, Colored::ArcIntervals> res;
@@ -321,7 +252,7 @@ namespace PetriEngine {
                 transitionActivated = false;
                 return;
             }
-            _partition[arc.place].applyPartition(arcInterval);           
+            _partition[arc.place].applyPartition(arcInterval);        
         }
     }
 
@@ -381,6 +312,21 @@ namespace PetriEngine {
 
             if (!variables.empty()) {
                 transitionHasVarOutArcs = true;
+            }
+
+
+            //Apply partitioning to unbound outgoing variables such that 
+            // bindings are only created for colors used in the rest of the net
+            for(auto outVar : variables){
+                for(auto& varMap : transition.variableMaps){
+                    if(varMap.count(outVar) == 0){
+                        Colored::intervalTuple_t varIntervalTuple;
+                        for(auto EqClass : _partition[arc.place]._equivalenceClasses){
+                            varIntervalTuple.addInterval(EqClass._colorIntervals.back().getSingleColorInterval());
+                        }
+                        varMap[outVar] = varIntervalTuple;
+                    }                    
+                }                
             }
 
             auto intervals = arc.expr->getOutputIntervals(transition.variableMaps);
@@ -468,7 +414,6 @@ namespace PetriEngine {
         if(_fixpointDone){
             
             FixpointBindingGenerator gen(transition, _colors, _partition);
-            
             size_t i = 0;
             
             for (auto b : gen) {                  
@@ -506,7 +451,7 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName, bool input) {
-        Colored::ExpressionContext context {binding, _colors};
+        Colored::ExpressionContext context {binding, _colors, _partition[arc.place]};
         auto ms = arc.expr->eval(context);       
         
         for (const auto& color : ms) {
@@ -521,7 +466,6 @@ namespace PetriEngine {
                 std::vector<uint32_t> colorIds;
                 color.first->getTupleId(&colorIds);
                 size_t tokenSize = 0;
-                
                 if(_partition[arc.place].diagonal){
                     tokenSize = place.marking[color.first];
                 } else if (_transitions[_transitionnames[tName]].variableMaps.size() > 1 && _partition[arc.place]._equivalenceClasses.size() == 1) {
@@ -533,7 +477,6 @@ namespace PetriEngine {
                         }                    
                     }
                 }
-                                
                  
                 std::string name = place.name + "_" + std::to_string(color.first->getId());
                 _ptBuilder.addPlace(name, tokenSize, 0.0, 0.0);

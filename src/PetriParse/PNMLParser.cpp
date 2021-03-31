@@ -175,7 +175,7 @@
 	              new PetriEngine::Colored::ProductType(std::string(element->first_attribute("id")->value())) :	
 	              new PetriEngine::Colored::ColorType(std::string(element->first_attribute("id")->value()));	
 	    	
-	    if (strcmp(type->name(), "dot") == 0) {	
+	    if (strcmp(type->name(), "dot") == 0) {
 	        ct->addDot();	
 	    } else if (strcmp(type->name(), "productsort") == 0) {	
 	        for (auto it = type->first_node(); it; it = it->next_sibling()) {	
@@ -564,7 +564,8 @@
 	            initialMarking = atoll(text.c_str());	
 	        } else if (strcmp(it->name(),"hlinitialMarking") == 0) {	
 	            std::unordered_map<const PetriEngine::Colored::Variable*, const PetriEngine::Colored::Color*> binding;	
-	            PetriEngine::Colored::ExpressionContext context {binding, colorTypes};	
+				PetriEngine::Colored::EquivalenceVec placePartition;
+	            PetriEngine::Colored::ExpressionContext context {binding, colorTypes, placePartition};	
 	            hlinitialMarking = parseArcExpression(it->first_node("structure"))->eval(context);	
 	        } else if (strcmp(it->name(), "type") == 0) {	
 	            type = parseUserSort(it);	

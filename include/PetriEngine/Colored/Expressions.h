@@ -26,6 +26,7 @@
 #include "Colors.h"
 #include "Multiset.h"
 #include "GuardRestrictions.h"
+#include "EquivalenceClass.h"
 #include "../errorcodes.h"
 
 namespace PetriEngine {
@@ -37,6 +38,7 @@ namespace PetriEngine {
 
             BindingMap& binding;
             std::unordered_map<std::string, ColorType*>& colorTypes;
+            Colored::EquivalenceVec& placePartition;
             
             const Color* findColor(const std::string& color) const {
                 if (color.compare("dot") == 0)
@@ -1038,12 +1040,19 @@ namespace PetriEngine {
             
         public:
             virtual ~AllExpression() {};
-            std::vector<const Color*> eval(ExpressionContext& context) const {
-                std::vector<const Color*> colors;
+            std::vector<std::pair<const Color*,uint32_t>> eval(ExpressionContext& context) const {
+                std::vector<std::pair<const Color*,uint32_t>> colors;
                 assert(_sort != nullptr);
-                for (size_t i = 0; i < _sort->size(); i++) {
-                    colors.push_back(&(*_sort)[i]);
+                if(context.placePartition.diagonal){
+                    for (size_t i = 0; i < _sort->size(); i++) {
+                        colors.push_back(std::make_pair(&(*_sort)[i], 1));
+                    }
+                } else {
+                    for (auto EqClass : context.placePartition._equivalenceClasses){
+                        colors.push_back(std::make_pair(_sort->getColor(EqClass._colorIntervals.getLowerIds()),EqClass.size()));
+                    }
                 }
+                
                 return colors;
             }
 
@@ -1115,17 +1124,18 @@ namespace PetriEngine {
         public:
             Multiset eval(ExpressionContext& context) const override {
                 std::vector<const Color*> colors;
+                std::vector<std::pair<const Color*,uint32_t>> col;
                 if (!_color.empty()) {
                     for (auto elem : _color) {
                         colors.push_back(elem->eval(context));
                     }
+                    for (auto elem : colors) {
+                        col.push_back(std::make_pair(elem, _number));
+                    }
                 } else if (_all != nullptr) {
-                    colors = _all->eval(context);
-                }
-                std::vector<std::pair<const Color*,uint32_t>> col;
-                for (auto elem : colors) {
-                    col.push_back(std::make_pair(elem, _number));
-                }
+                    col = _all->eval(context);
+                }                
+                
                 return Multiset(col);
             }
 

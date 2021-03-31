@@ -1,5 +1,6 @@
 #include "PetriEngine/Colored/PartitionBuilder.h"
 #include <numeric>
+#include <chrono>
 
 
 
@@ -34,7 +35,10 @@ namespace PetriEngine {
         }
         
         void PartitionBuilder::partitionNet(){
+            
             handleLeafTransitions();
+            
+            
             while(!_placeQueue.empty()){
                 auto placeId = _placeQueue.back();
                 _placeQueue.pop_back();
@@ -44,12 +48,19 @@ namespace PetriEngine {
 
                 for(uint32_t transitionId : _placePreTransitionMap->operator[](placeId)){
                     //std::cout << "For transition " << _transitions->operator[](transitionId).name << " and place " << _places->operator[](placeId).name << std::endl;
-                    //printPartion();                    
+                    //printPartion(); 
+                                      
                     handleTransition(transitionId, placeId);
+                    
                     //std::cout << "---------------------------------------------------" << std::endl;
                 }               
             }
+            auto start = std::chrono::high_resolution_clock::now(); 
             assignColorMap();
+            auto end = std::chrono::high_resolution_clock::now();
+            _timer += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
+
+            std::cout << "Local timer was " << _timer << std::endl;
         }
 
         void PartitionBuilder::assignColorMap(){
@@ -133,6 +144,11 @@ namespace PetriEngine {
 
                 std::unordered_map<uint32_t, std::set<const Colored::Variable *>> placeVariableMap;
                 for(auto inArc : transition->input_arcs){
+                    //Hack to avoid considering dot places and dealing with retrieving the correct dot pointer
+                    if(_places->operator[](inArc.place).type->getName() == "Dot" || _places->operator[](inArc.place).type->getName() == "dot"){
+                        _partition[inArc.place].diagonal = true;
+                    }
+
                     if(_partition[inArc.place].diagonal){
                         continue;
                     }

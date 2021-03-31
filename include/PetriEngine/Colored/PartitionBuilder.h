@@ -27,6 +27,8 @@ namespace PetriEngine {
                 PetriEngine::IntervalGenerator intervalGenerator;
                 std::vector<uint32_t> _placeQueue;
 
+                double _timer = 0;
+
                 bool splitPartition(EquivalenceVec equivalenceVec, uint32_t placeId);
 
                 void handleTransition(uint32_t transitionId, uint32_t postPlaceId);

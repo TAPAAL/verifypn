@@ -634,13 +634,12 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
                 builder.getUnfoldedArcCount() << " arcs" << std::endl;
         std::cout << "Unfolded in " << builder.getUnfoldTime() << " seconds" << std::endl;
         std::cout << "Partitioned in " << builder.getPartitionTime() << " seconds" << std::endl;
-        std::cout << "Applied partition to variables in " << builder.getPartitionVarMapTime() << " seconds" << std::endl;
         
 
         if(!options.output_stats.empty()){
             std::ofstream log(generated_filename, std::ios_base::app | std::ios_base::out);
             std::ostringstream strs;
-            strs << filename << "," << builder.getPlaceCount() << "," << builder.getTransitionCount() << "," << builder.getArcCount() << "," << builder.getUnfoldedPlaceCount() << "," << builder.getUnfoldedTransitionCount() << "," << builder.getUnfoldedArcCount() << "," << builder.getUnfoldTime() << "," << builder.getFixpointTime() << "\n";
+            strs << filename << "," << builder.getPlaceCount() << "," << builder.getTransitionCount() << "," << builder.getArcCount() << "," << builder.getUnfoldedPlaceCount() << "," << builder.getUnfoldedTransitionCount() << "," << builder.getUnfoldedArcCount() << "," << builder.getUnfoldTime() << "," << builder.getFixpointTime() << "," << builder.getPartitionTime() << "\n";
             std::string str = strs.str();
             log <<  str;
         }
@@ -648,7 +647,7 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
         if(!options.output_stats.empty()){
             std::ofstream log(generated_filename, std::ios_base::app | std::ios_base::out);
             std::ostringstream strs;
-            strs << filename << "," << builder.getPlaceCount() << "," << builder.getTransitionCount() << "," << builder.getArcCount() << "," << builder.getUnfoldedPlaceCount() << "," << builder.getUnfoldedTransitionCount() << "," << builder.getUnfoldedArcCount() << "," << builder.getUnfoldTime() << "," << builder.getFixpointTime() << "\n";
+            strs << filename << "," << builder.getPlaceCount() << "," << builder.getTransitionCount() << "," << builder.getArcCount() << "," << builder.getUnfoldedPlaceCount() << "," << builder.getUnfoldedTransitionCount() << "," << builder.getUnfoldedArcCount() << "," << builder.getUnfoldTime() << "," << builder.getFixpointTime() << "," << builder.getPartitionTime() << "\n";
             std::string str = strs.str();
             log <<  str;
         }
