@@ -129,6 +129,7 @@ namespace LTL {
         std::stack<idx_t> extstack;
 
         bool violation = false;
+        bool invariant_loop = true;
         size_t loopstate = std::numeric_limits<size_t>::max();
         size_t looptrans = std::numeric_limits<size_t>::max();
 

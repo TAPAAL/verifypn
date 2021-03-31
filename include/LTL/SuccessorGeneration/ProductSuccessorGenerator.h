@@ -222,6 +222,9 @@ namespace LTL {
 
         size_t buchiStates() { return buchi.buchiStates(); }
 
+        bool has_invariant_self_loop(const LTL::Structures::ProductState &state) {
+            return buchi.has_invariant_self_loop(state.getBuchiState());
+        }
     private:
         SuccessorGen _successor_generator;
         const PetriEngine::PetriNet &_net;
