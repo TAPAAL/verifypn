@@ -86,6 +86,7 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "LTL/LTL.h"
+#include "LTL/LTLMain.h"
 
 #include <atomic>
 
@@ -343,6 +344,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 ++i;
             }
         }
+        else if (strcmp(argv[i], "--no-compress-buchi") == 0) {
+            options.compress_buchi = false;
+        }
 #ifdef VERIFYPN_MC_Simplification
         else if (strcmp(argv[i], "-z") == 0)
         {
@@ -462,6 +466,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                       - dot   (default) Write the buchi in GraphViz Dot format\n"
                     "                                       - hoa   Write the buchi in the Hanoi Omega-Automata Format\n"
                     "                                       - spin  Write the buchi in the spin model checker format."
+                    "  --no-compress-buchi                  Disable compression of atomic propositions in LTL."
+                    "                                       This compression significantly helps in dealing with massive"
+                    "                                       fireability queries, but sometimes hurts Büchi construction "
+                    "                                       and query simplifation in complex queries."
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -571,15 +579,20 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             std::cerr << "Argument Error: --siphon-depth is not compatible with LTL model checking." << std::endl;
             return ErrorCode;
         }
+        std::array tarjanStrategies { DFS, RDFS, HEUR };
+        std::array ndfsStrategies { DFS, RDFS };
         if (options.strategy != PetriEngine::Reachability::DEFAULT &&
             options.strategy != PetriEngine::Reachability::OverApprox) {
 
-            if (options.ltlalgorithm == LTL::Algorithm::Tarjan && options.strategy != DFS) {
-                std::cerr << "Argument Error: Unsupported search strategy for Tarjan. Supported values are DFS." << std::endl;
+            if (options.ltlalgorithm == LTL::Algorithm::Tarjan &&
+                std::find(std::begin(tarjanStrategies), std::end(tarjanStrategies), options.strategy) ==
+                std::end(tarjanStrategies)) {
+                std::cerr << "Argument Error: Unsupported search strategy for Tarjan. Supported values are DFS, RDFS, and BestFS." << std::endl;
                 return ErrorCode;
             }
-            if (options.strategy != DFS &&
-                !(options.ltlalgorithm == LTL::Algorithm::NDFS && options.strategy == RDFS)) {
+            if (options.ltlalgorithm == LTL::Algorithm::NDFS &&
+                    std::find(std::begin(ndfsStrategies), std::end(ndfsStrategies), options.strategy) ==
+                    std::end(ndfsStrategies)) {
                 std::cerr << "Argument Error: Unsupported search strategy for NDFS. Supported values are DFS and RDFS" << std::endl;
                 return ErrorCode;
             }
@@ -893,7 +906,7 @@ std::mutex spot_mutex;
 #endif
 
 Condition_ptr simplify_ltl_query(Condition_ptr query,
-                                 bool printstats,
+                                 options_t options,
                                  const EvaluationContext &evalContext,
                                  SimplificationContext &simplificationContext,
                                  std::ostream &out = std::cout) {
@@ -911,13 +924,14 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 #ifdef VERIFYPN_MC_Simplification
         std::scoped_lock scopedLock{spot_mutex};
 #endif
-        cond = LTL::simplify(cond);
+        // TODO use heuristic for whether to compress? (e.g. based on formula size).
+        cond = LTL::simplify(cond, options.compress_buchi);
     }
     negstat_t stats;
     cond = Condition::initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true)
             ->pushNegation(stats, evalContext, false, false, true);
 
-    if (printstats) {
+    if (options.printstatistics) {
         out << "RWSTATS PRE:";
         stats.print(out);
         out << std::endl;
@@ -947,7 +961,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
     } else {
         cond = std::make_shared<ECondition>(cond);
     }
-    if (printstats) {
+    if (options.printstatistics) {
         out << "RWSTATS POST:";
         stats.print(out);
         out << std::endl;
@@ -1041,7 +1055,7 @@ int main(int argc, char* argv[]) {
     bool alldone = options.queryReductionTimeout > 0;
     PetriNetBuilder b2(builder);
     std::unique_ptr<PetriNet> qnet(b2.makePetriNet(false));
-    MarkVal* qm0 = qnet->makeInitialMarking();
+    std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
     ResultPrinter p2(&b2, &options, querynames);
 
     if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
@@ -1088,7 +1102,7 @@ int main(int argc, char* argv[]) {
                     if(!hadTo[i]) continue;
                     hadTo[i] = false;
                     negstat_t stats;
-                    EvaluationContext context(qm0, qnet.get());
+                    EvaluationContext context(qm0.get(), qnet.get());
 
                     if(options.printstatistics && options.queryReductionTimeout > 0)
                     {
@@ -1106,9 +1120,9 @@ int main(int argc, char* argv[]) {
 
                     if (options.logic == TemporalLogic::LTL) {
                         if (options.queryReductionTimeout == 0) continue;
-                        SimplificationContext simplificationContext(qm0, qnet.get(), qt,
+                        SimplificationContext simplificationContext(qm0.get(), qnet.get(), qt,
                                                                     options.lpsolveTimeout, &cache);
-                        queries[i] = simplify_ltl_query(queries[i], options.printstatistics,
+                        queries[i] = simplify_ltl_query(queries[i], options,
                                            context, simplificationContext, out);
                         continue;
                     }
@@ -1125,7 +1139,7 @@ int main(int argc, char* argv[]) {
 
                     if (options.queryReductionTimeout > 0 && qt > 0)
                     {
-                        SimplificationContext simplificationContext(qm0, qnet.get(), qt,
+                        SimplificationContext simplificationContext(qm0.get(), qnet.get(), qt,
                                 options.lpsolveTimeout, &cache);
                         try {
                             negstat_t stats;
@@ -1141,7 +1155,6 @@ int main(int argc, char* argv[]) {
                             std::cerr << "Query reduction failed." << std::endl;
                             std::cerr << "Exception information: " << ba.what() << std::endl;
 
-                            delete[] qm0;
                             std::exit(ErrorCode);
                         }
 
@@ -1224,7 +1237,7 @@ int main(int argc, char* argv[]) {
     }
 
     qnet = nullptr;
-    delete[] qm0;
+    qm0 = nullptr;
 
     if (!options.statespaceexploration){
         for(size_t i = 0; i < queries.size(); ++i)
@@ -1343,45 +1356,8 @@ int main(int argc, char* argv[]) {
         }
 
         for (auto qid : ltl_ids) {
-            bool satisfied = false;
+            LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
 
-            auto[negated_formula, negate_answer] = LTL::to_ltl(queries[qid]);
-            std::unique_ptr<LTL::ModelChecker> modelChecker;
-            switch (options.ltlalgorithm) {
-                case LTL::Algorithm::NDFS:
-                    if (options.strategy == RDFS) {
-                        modelChecker = std::make_unique<LTL::RandomNDFS>(*net, negated_formula);
-                    }
-                    if (options.trace != TraceLevel::None)
-                        modelChecker = std::make_unique<LTL::NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>
-                                (*net, negated_formula, options.ltluseweak, options.trace);
-                    else
-                        modelChecker = std::make_unique<LTL::NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>
-                                (*net, negated_formula, options.ltluseweak);
-                    break;
-                case LTL::Algorithm::Tarjan:
-                    if (options.trace != TraceLevel::None)
-                        modelChecker = std::make_unique<LTL::TarjanModelChecker<true>>(*net, negated_formula, options.ltluseweak, options.trace);
-                    else
-                        modelChecker = std::make_unique<LTL::TarjanModelChecker<false>>(*net, negated_formula, options.ltluseweak);
-                    break;
-                case LTL::Algorithm::None:
-                    std::cerr << "Cannot perform LTL None model checking, bug in control flow." << std::endl;
-                    return ErrorCode;
-            }
-            if ( !options.buchi_out_file.empty() ) {
-                modelChecker->output_buchi(options.buchi_out_file, options.buchi_out_type);
-            }
-            satisfied = negate_answer ^ modelChecker->isSatisfied();
-            if (options.printstatistics) {
-                modelChecker->printStats(std::cout);
-            }
-
-            std::cout << "FORMULA " << querynames[qid] <<
-                      (satisfied ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT " <<
-                      LTL::to_string(options.ltlalgorithm) <<
-                      (modelChecker->isweak() ? " WEAK_SKIP" : "") <<
-                      (queries[qid]->isReachability(0) ? " REACHABILITY" : "") << std::endl;
         }
         if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
             return SuccessCode;

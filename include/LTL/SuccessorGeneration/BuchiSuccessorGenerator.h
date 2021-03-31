@@ -22,10 +22,11 @@
 #include "LTL/Structures/BuchiAutomaton.h"
 #include "LTL/AlgorithmTypes.h"
 
+#include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/dot.hh>
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/neverclaim.hh>
-#include <spot/twa/twagraph.hh>
+
 #include <utility>
 #include <memory>
 
@@ -40,8 +41,8 @@ namespace LTL {
 
         void prepare(size_t state)
         {
-            auto curstate = aut.buchi->state_from_number(state);
-            succ = _succ_iter{aut.buchi->succ_iter(curstate), SuccIterDeleter{&aut}};
+            auto curstate = aut._buchi->state_from_number(state);
+            succ = _succ_iter{aut._buchi->succ_iter(curstate), SuccIterDeleter{&aut}};
             succ->first();
         }
 
@@ -49,7 +50,7 @@ namespace LTL {
         {
             if (!succ->done()) {
                 auto dst = succ->dst();
-                state = aut.buchi->state_number(dst);
+                state = aut._buchi->state_number(dst);
                 cond = succ->cond();
                 succ->next();
                 dst->destroy();
@@ -60,12 +61,12 @@ namespace LTL {
 
         [[nodiscard]] bool is_accepting(size_t state) const
         {
-            return aut.buchi->state_is_accepting(state);
+            return aut._buchi->state_is_accepting(state);
         }
 
         [[nodiscard]] size_t initial_state_number() const
         {
-            return aut.buchi->get_init_state_number();
+            return aut._buchi->get_init_state_number();
         }
 
         [[nodiscard]] PetriEngine::PQL::Condition_ptr getExpression(size_t i) const
@@ -75,25 +76,10 @@ namespace LTL {
 
         [[nodiscard]] bool is_weak() const
         {
-            return (bool) aut.buchi->prop_weak();
+            return (bool) aut._buchi->prop_weak();
         }
+        size_t buchiStates() { return aut._buchi->num_states(); }
 
-        void output_buchi(const std::string& file, BuchiOutType type) {
-            std::ofstream fs(file);
-            switch (type) {
-                case BuchiOutType::Dot:
-                    spot::print_dot(fs, aut.buchi);
-                    break;
-                case BuchiOutType::HOA:
-                    spot::print_hoa(fs, aut.buchi, "s");
-                    break;
-                case BuchiOutType::Spin:
-                    spot::print_never_claim(fs, aut.buchi);
-                    break;
-            }
-        }
-
-    private:
         Structures::BuchiAutomaton aut;
 
         struct SuccIterDeleter {
@@ -101,7 +87,7 @@ namespace LTL {
 
             void operator()(spot::twa_succ_iterator *iter) const
             {
-                aut->buchi->release_iter(iter);
+                aut->_buchi->release_iter(iter);
             }
         };
 

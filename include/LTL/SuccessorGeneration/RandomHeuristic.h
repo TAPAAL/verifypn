@@ -1,37 +1,41 @@
 /* Copyright (C) 2021  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
  *                     Simon M. Virenfeldt <simon@simwir.dk>
- *
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_REACHABILITYSTUBBORNSET_H
-#define VERIFYPN_REACHABILITYSTUBBORNSET_H
+#ifndef VERIFYPN_RANDOMHEURISTIC_H
+#define VERIFYPN_RANDOMHEURISTIC_H
 
+#include "LTL/SuccessorGeneration/Heuristic.h"
 
-#include "PetriEngine/Stubborn/StubbornSet.h"
+#include <random>
 
-namespace PetriEngine {
-    class ReachabilityStubbornSet : public StubbornSet {
+namespace LTL {
+    class RandomHeuristic : public Heuristic {
     public:
-        ReachabilityStubbornSet(const PetriNet &net, const std::vector<PQL::Condition_ptr> &queries)
-                : StubbornSet(net, queries) {}
+        RandomHeuristic() : g(rd()) {}
 
-        ReachabilityStubbornSet(const PetriNet &net)
-                : StubbornSet(net) {}
+        uint32_t eval(const LTL::Structures::ProductState &, uint32_t) override {
+            return g();
+        }
 
-        bool prepare(const Structures::State *state) override;
+
+    private:
+        std::random_device rd;
+        std::mt19937 g;
     };
 }
 
-#endif //VERIFYPN_REACHABILITYSTUBBORNSET_H
+#endif //VERIFYPN_RANDOMHEURISTIC_H

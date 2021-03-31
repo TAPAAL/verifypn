@@ -41,7 +41,7 @@ namespace LTL {
             for (auto &state : initial_states) {
                 auto res = states.add(state);
                 assert(res.first);
-                todo.push(StackEntry{res.second, initial_suc_info});
+                todo.push(StackEntry{res.second, LTL::ResumingSuccessorGenerator::initial_suc_info()});
                 _discovered++;
             }
         }
@@ -85,7 +85,7 @@ namespace LTL {
                         states.setHistory(stateid, successorGenerator->fired());
                     }
                     _discovered++;
-                    todo.push(StackEntry{stateid, initial_suc_info});
+                    todo.push(StackEntry{stateid, LTL::ResumingSuccessorGenerator::initial_suc_info()});
                 }
             }
         }
@@ -99,7 +99,7 @@ namespace LTL {
         State working = factory.newState();
         State curState = factory.newState();
 
-        todo.push(StackEntry{states.add(state).second, initial_suc_info});
+        todo.push(StackEntry{states.add(state).second, LTL::ResumingSuccessorGenerator::initial_suc_info()});
 
         while (!todo.empty()) {
             auto &top = todo.top();
@@ -139,12 +139,22 @@ namespace LTL {
                         states.setHistory2(stateid, successorGenerator->fired());
                     }
                     _discovered++;
-                    todo.push(StackEntry{stateid, initial_suc_info});
+                    todo.push(StackEntry{stateid, LTL::ResumingSuccessorGenerator::initial_suc_info()});
                 }
 
             }
         }
     }
+
+    template<typename W>
+    void NestedDepthFirstSearch<W>::printStats(std::ostream &os) {
+        std::cout << "STATS:\n"
+                  << "\tdiscovered states:          " << states.discovered() << std::endl
+                  << "\tmax tokens:                 " << states.maxTokens() << std::endl
+                  << "\texplored states:            " << mark1.size() << std::endl
+                  << "\texplored states (nested):   " << mark2.size() << std::endl;
+    }
+
 
     template<typename W>
     void NestedDepthFirstSearch<W>::printTrace(std::stack<std::pair<size_t, size_t>> &transitions, std::ostream &os)
@@ -167,14 +177,6 @@ namespace LTL {
             nested_transitions.pop();
         }
         os << std::endl << "</trace>" << std::endl;
-    }
-
-    template<typename W>
-    void NestedDepthFirstSearch<W>::printStats(std::ostream &os) {
-        std::cout << "STATS:\n"
-                  << "\tdiscovered states: " << states.discovered() << '\n'
-                  << "\texplored states:   " << mark1.size() + mark2.size() << '\n'
-                  << "\tmax tokens:        " << states.maxTokens() << std::endl;
     }
 
     template
