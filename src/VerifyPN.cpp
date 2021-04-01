@@ -466,7 +466,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
             printf("                        Tobias Skovgaard Jepsen <tobiasj1991@gmail.com>\n");
             printf("                        Mads Johannsen <mads_johannsen@yahoo.com>\n");
-            printf("                        Kenneth Yrke Jørgensen <kenneth.yrke@gmail.com>\n");
+            printf("                        Kenneth Yrke Jørgensen <kenneth@yrke.dk>\n");
             printf("                        Isabella Kaufmann <bellakaufmann93@gmail.com>\n");
             printf("                        Andreas Hairing Klostergaard <kloster92@me.com>\n");
             printf("                        Søren Moss Nielsen <soren_moss@mac.com>\n");
