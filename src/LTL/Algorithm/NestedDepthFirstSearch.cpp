@@ -36,8 +36,7 @@ namespace LTL {
         State curState = factory.newState();
 
         {
-            std::vector<State> initial_states;
-            successorGenerator->makeInitialState(initial_states);
+            std::vector<State> initial_states = successorGenerator->makeInitialState();
             for (auto &state : initial_states) {
                 auto res = states.add(state);
                 assert(res.first);
@@ -147,7 +146,8 @@ namespace LTL {
     }
 
     template<typename W>
-    void NestedDepthFirstSearch<W>::printStats(std::ostream &os) {
+    void NestedDepthFirstSearch<W>::printStats(std::ostream &os)
+    {
         std::cout << "STATS:\n"
                   << "\tdiscovered states:          " << states.discovered() << std::endl
                   << "\tmax tokens:                 " << states.maxTokens() << std::endl
@@ -163,14 +163,14 @@ namespace LTL {
         os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
               "<trace>\n";
         while (!transitions.empty()) {
-            auto [stateid, transition] = transitions.top();
+            auto[stateid, transition] = transitions.top();
             states.decode(state, stateid);
             printTransition(transition, state, os) << std::endl;
             transitions.pop();
         }
         printLoop(os);
         while (!nested_transitions.empty()) {
-            auto [stateid, transition] = nested_transitions.top();
+            auto[stateid, transition] = nested_transitions.top();
             states.decode(state, stateid);
 
             printTransition(transition, state, os) << std::endl;

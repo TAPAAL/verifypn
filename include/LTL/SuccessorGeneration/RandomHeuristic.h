@@ -25,7 +25,7 @@
 namespace LTL {
     class RandomHeuristic : public Heuristic {
     public:
-        RandomHeuristic() : g(rd()) {}
+        explicit RandomHeuristic(uint32_t seed = 0) : g(seed == 0 ? rd() : seed) {}
 
         uint32_t eval(const LTL::Structures::ProductState &, uint32_t) override {
             return g();
