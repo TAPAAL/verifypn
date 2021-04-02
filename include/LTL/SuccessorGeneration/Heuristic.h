@@ -24,6 +24,8 @@
 namespace LTL {
     class Heuristic {
     public:
+        virtual void prepare(const LTL::Structures::ProductState &state) {}
+
         virtual uint32_t eval(const LTL::Structures::ProductState &state, uint32_t tid) = 0;
 
         /**
