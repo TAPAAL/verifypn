@@ -4,11 +4,10 @@
 
 
 #include "PetriEngine/PQL/PQL.h"
-using namespace PetriEngine::PQL;
 
 struct QueryItem {
-    string id; // query name
-    Condition_ptr query;
+    std::string id; // query name
+    PetriEngine::PQL::Condition_ptr query;
 
     enum {
         PARSING_OK,

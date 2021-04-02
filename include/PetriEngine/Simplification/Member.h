@@ -194,7 +194,7 @@ namespace PetriEngine {
                 // self comparison
                 if (*this == m2)
                     return compare(_constant, m2._constant) ? Trivial::True : Trivial::False;
-                    
+
                 // constant < constant/input/output
                 if (type1 == MemberType::Constant){
                     if(type2 == MemberType::Constant){

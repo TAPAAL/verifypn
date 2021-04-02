@@ -29,7 +29,6 @@
 #include "PetriEngine/Reducer.h"
 #include "PetriEngine/PQL/Expressions.h"
 
-using namespace std;
 
 namespace PetriEngine {
 
@@ -45,7 +44,7 @@ namespace PetriEngine {
 
     }
 
-    void PetriNetBuilder::addPlace(const string &name, int tokens, double x, double y) {
+    void PetriNetBuilder::addPlace(const std::string &name, int tokens, double x, double y) {
         if(_placenames.count(name) == 0)
         {
             uint32_t next = _placenames.size();
@@ -61,7 +60,7 @@ namespace PetriEngine {
         
     }
 
-    void PetriNetBuilder::addTransition(const string &name,
+    void PetriNetBuilder::addTransition(const std::string &name,
             double x, double y) {
         if(_transitionnames.count(name) == 0)
         {
@@ -72,7 +71,7 @@ namespace PetriEngine {
         }
     }
 
-    void PetriNetBuilder::addInputArc(const string &place, const string &transition, bool inhibitor, int weight) {
+    void PetriNetBuilder::addInputArc(const std::string &place, const std::string &transition, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
             addTransition(transition,0.0,0.0);
@@ -97,7 +96,7 @@ namespace PetriEngine {
         _places[p].inhib |= inhibitor;
     }
 
-    void PetriNetBuilder::addOutputArc(const string &transition, const string &place, int weight) {
+    void PetriNetBuilder::addOutputArc(const std::string &transition, const std::string &place, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
             addTransition(transition,0,0);
@@ -140,7 +139,7 @@ namespace PetriEngine {
     }
     
     PetriNet* PetriNetBuilder::makePetriNet(bool reorder) {
-        
+
         /*
          * The basic idea is to construct three arrays, the first array, 
          * _invariants points to "arcs" - they are triplets (weight, place, inhibitor)
@@ -168,6 +167,8 @@ namespace PetriEngine {
         std::vector<uint32_t> place_prod_count = std::vector<uint32_t>(_places.size());
         std::vector<uint32_t> place_idmap = std::vector<uint32_t>(_places.size());
         std::vector<uint32_t> trans_idmap = std::vector<uint32_t>(_transitions.size());
+
+
         
         uint32_t invariants = 0;
         
@@ -186,6 +187,7 @@ namespace PetriEngine {
         {
             trans_idmap[i] = std::numeric_limits<uint32_t>::max();
         }
+
         
         PetriNet* net = new PetriNet(ntrans, invariants, nplaces);
         
@@ -195,7 +197,6 @@ namespace PetriEngine {
         uint32_t freetrans = 0;
         
         // first handle orphans
-        
         if(place_idmap.size() > next) place_idmap[next] = free;
         net->_placeToPtrs[free] = freetrans;
         for(size_t t = 0; t < _transitions.size(); ++t)
@@ -236,7 +237,6 @@ namespace PetriEngine {
                 ++freetrans;
             }
         }
-        
         
         bool first = true;
         while(next != std::numeric_limits<uint32_t>::max())
@@ -345,7 +345,6 @@ namespace PetriEngine {
         net->_transitionlocations = _transitionlocations;
         
         // reindex place-names
-
         net->_placenames.resize(_placenames.size());
         int rindex = _placenames.size() - 1;
         for(auto& i : _placenames)
@@ -365,7 +364,6 @@ namespace PetriEngine {
                 --rindex;
             }
         }
-
         net->_transitionnames.resize(_transitionnames.size());
         int trindex = _transitionnames.size() - 1;
         for(auto& i : _transitionnames)
@@ -385,7 +383,7 @@ namespace PetriEngine {
             }
         }
         net->sort();
-        
+
         for(size_t t = 0; t < net->numberOfTransitions(); ++t)
         {
             {
@@ -433,7 +431,6 @@ namespace PetriEngine {
                 }
             }
         }
-        
         return net;
     }
     
@@ -463,10 +460,11 @@ namespace PetriEngine {
         for(uint32_t i = 0; i < queries.size(); ++i)
         {
             if(results[i] == Reachability::ResultPrinter::Unknown ||
-               results[i] == Reachability::ResultPrinter::CTL )
+               results[i] == Reachability::ResultPrinter::CTL ||
+               results[i] == Reachability::ResultPrinter::LTL)
             {
                 queries[i]->analyze(placecontext);
-                all_reach &= (results[i] != Reachability::ResultPrinter::CTL);
+                all_reach &= (results[i] != Reachability::ResultPrinter::CTL && results[i] != Reachability::ResultPrinter::LTL);
                 remove_loops &= !queries[i]->isLoopSensitive();
                 // There is a deadlock somewhere, if it is not alone, we cannot reduce.
                 // this has similar problems as nested next.                        

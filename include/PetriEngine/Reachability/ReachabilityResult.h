@@ -44,6 +44,8 @@ namespace PetriEngine {
                 Unknown,
                 /** The query should be verified using the CTL engine */
                 CTL,
+                /** The query should be verified using the LTL engine */
+                LTL,
                 /** Just ignore */
                 Ignore
             };
@@ -66,8 +68,8 @@ namespace PetriEngine {
             std::vector<std::string>& querynames;
             Reducer* reducer;
         public:
-            const string techniques = "TECHNIQUES COLLATERAL_PROCESSING STRUCTURAL_REDUCTION QUERY_REDUCTION SAT_SMT ";
-            const string techniquesStateSpace = "TECHNIQUES EXPLICIT STATE_COMPRESSION";
+            const std::string techniques = "TECHNIQUES COLLATERAL_PROCESSING STRUCTURAL_REDUCTION QUERY_REDUCTION SAT_SMT ";
+            const std::string techniquesStateSpace = "TECHNIQUES EXPLICIT STATE_COMPRESSION";
             
             ResultPrinter(PetriNetBuilder* b, options_t* o, std::vector<std::string>& querynames) 
             : builder(b), options(o), querynames(querynames), reducer(NULL)

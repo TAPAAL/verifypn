@@ -49,18 +49,6 @@ namespace PQL {
             (*element)[i]->visit(*this);
     }
 
-    void PlaceUseVisitor::_accept(const GreaterThanOrEqualCondition* element)
-    {
-        for(auto i : {0,1})
-            (*element)[i]->visit(*this);
-    }
-
-    void PlaceUseVisitor::_accept(const GreaterThanCondition* element)
-    {
-        for(auto i : {0,1})
-            (*element)[i]->visit(*this);
-    }
-
     void PlaceUseVisitor::_accept(const EqualCondition* element)
     {
         for(auto i : {0,1})

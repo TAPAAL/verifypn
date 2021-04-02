@@ -132,7 +132,7 @@ namespace PetriEngine {
             if(options->cpnOverApprox)
                 std::cout << "\nSolved using CPN Approximation\n" << std::endl;
             
-            if(showTrace && options->trace)
+            if(showTrace && options->trace != TraceLevel::None)
             {
                 if(stateset == nullptr)
                 {

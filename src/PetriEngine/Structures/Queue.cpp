@@ -70,10 +70,17 @@ namespace PetriEngine {
         {
             _stack.push(id);
         }
-        
+
+        bool DFSQueue::top(State &state) const {
+            if(_stack.empty()) return false;
+            uint32_t n = _stack.top();
+            _states->decode(state, n);
+            return true;
+        }
+
         RDFSQueue::RDFSQueue(StateSetInterface* states) : Queue(states) {}
         RDFSQueue::~RDFSQueue(){}
-       
+
         auto rng = std::default_random_engine {};
         bool RDFSQueue::pop(Structures::State& state)
         {
@@ -97,6 +104,13 @@ namespace PetriEngine {
                 _cache.clear();
                 return true;
             }
+        }
+
+        bool RDFSQueue::top(State &state) const {
+            if (_stack.empty()) return false;
+            uint32_t n = _stack.top();
+            _states->decode(state, n);
+            return true;
         }
         
         void RDFSQueue::push(size_t id, PQL::DistanceContext&,
