@@ -79,14 +79,23 @@ if (VERIFYPN_GetDependencies)
         CONFIGURE_COMMAND mkdir -p ${CMAKE_BINARY_DIR}/external/include
         INSTALL_COMMAND cd ../rapidxml-ext && ${CMAKE_COMMAND} -E copy rapidxml.hpp rapidxml_iterators.hpp rapidxml_print.hpp rapidxml_utils.hpp ${EXTERNAL_INSTALL_LOCATION}/include    
     )
-
-    ExternalProject_add(spot-ext
-        URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
-	URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
-        BUILD_COMMAND make -j8
-	CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin
-        INSTALL_COMMAND make install
-    )
+    if (UNIX AND NOT APPLE)
+        ExternalProject_add(spot-ext
+            URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
+            URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
+            BUILD_COMMAND make -j8
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin
+            INSTALL_COMMAND make install
+        )
+    else ()
+        ExternalProject_add(spot-ext
+            URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
+            URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
+            BUILD_COMMAND make -j8
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static CFLAGS=${CMAKE_CXX_FLAGS} LDFLAGS=${CMAKE_LINKER_FLAGS}
+            INSTALL_COMMAND make install
+        )
+    endif ()
 
     if (WIN32) #If windows 32 or 64 
       set(GLPK_CFLAGS "-D __WOE__ -O3" )
