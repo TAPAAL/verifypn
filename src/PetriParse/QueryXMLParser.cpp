@@ -405,8 +405,8 @@ Condition_ptr QueryXMLParser::parseBooleanFormula(rapidxml::xml_node<>*  element
         else if (elementName == "integer-ne") return std::make_shared<NotEqualCondition>(expr1, expr2);
         else if (elementName == "integer-lt") return std::make_shared<LessThanCondition>(expr1, expr2);
         else if (elementName == "integer-le") return std::make_shared<LessThanOrEqualCondition>(expr1, expr2);
-        else if (elementName == "integer-gt") return std::make_shared<GreaterThanCondition>(expr1, expr2);
-        else if (elementName == "integer-ge") return std::make_shared<GreaterThanOrEqualCondition>(expr1, expr2);        
+        else if (elementName == "integer-gt") return std::make_shared<LessThanCondition>(expr2, expr1);
+        else if (elementName == "integer-ge") return std::make_shared<LessThanOrEqualCondition>(expr2, expr1);
     } else if (elementName == "is-fireable") {
         size_t nrOfChildren = getChildCount(element);
         if (nrOfChildren == 0) 

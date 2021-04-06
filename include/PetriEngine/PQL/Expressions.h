@@ -828,7 +828,6 @@ namespace PetriEngine {
             }
             void analyze(AnalysisContext& context) override;
 
-            uint32_t distance(DistanceContext& context) const override;
             void toBinary(std::ostream& out) const override;
             void toTAPAALQuery(std::ostream&,TAPAALConditionExportContext& context) const override;
             bool isReachability(uint32_t depth) const override;
@@ -864,7 +863,6 @@ namespace PetriEngine {
             Retval simplifyAnd(SimplificationContext& context) const;
 
         private:
-            virtual uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const = 0;
             virtual std::string op() const = 0;
 
         protected:
@@ -890,9 +888,9 @@ namespace PetriEngine {
             void toXML(std::ostream&, uint32_t tabs) const override;
             Quantifier getQuantifier() const override { return Quantifier::AND; }
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+            uint32_t distance(DistanceContext& context) const override;
         private:
             //int logicalOp() const;
-            uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const override;
             std::string op() const override;
         };
 
@@ -915,9 +913,9 @@ namespace PetriEngine {
 
             Quantifier getQuantifier() const override { return Quantifier::OR; }
             Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
+            uint32_t distance(DistanceContext& context) const override;
         private:
             //int logicalOp() const;
-            uint32_t delta(uint32_t d1, uint32_t d2, const DistanceContext& context) const override;
             std::string op() const override;
         };
 
@@ -1159,42 +1157,6 @@ namespace PetriEngine {
             std::string sopTAPAAL() const override;
         };
 
-        /* Greater-than conditon */
-        class GreaterThanCondition : public CompareCondition {
-        public:
-
-            using CompareCondition::CompareCondition;
-            Retval simplify(SimplificationContext& context) const override;
-            void toXML(std::ostream&, uint32_t tabs) const override;
-
-            uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-        private:
-            bool apply(int v1, int v2) const override;
-            std::string op() const override;
-            std::string opTAPAAL() const override;
-            std::string sopTAPAAL() const override;
-        };
-
-        /* Greater-than-or-equal conditon */
-        class GreaterThanOrEqualCondition : public CompareCondition {
-        public:
-            using CompareCondition::CompareCondition;
-            Retval simplify(SimplificationContext& context) const override;
-            void toXML(std::ostream&, uint32_t tabs) const override;
-
-            uint32_t distance(DistanceContext& context) const override;
-            Condition_ptr pushNegation(negstat_t&, const EvaluationContext& context, bool nested, bool negated, bool initrw) override;
-            void visit(Visitor&) const override;
-            void visit(MutatingVisitor&) override;
-        private:
-            bool apply(int v1, int v2) const override;
-            std::string op() const override;
-            std::string opTAPAAL() const override;
-            std::string sopTAPAAL() const override;
-        };
 
         /* Bool condition */
         class BooleanCondition : public Condition {

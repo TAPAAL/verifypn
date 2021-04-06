@@ -49,10 +49,6 @@ namespace PetriEngine {
 
         void _accept(const PQL::LessThanOrEqualCondition *element) override;
 
-        void _accept(const PQL::GreaterThanCondition *element) override;
-
-        void _accept(const PQL::GreaterThanOrEqualCondition *element) override;
-
         void _accept(const PQL::EqualCondition *element) override;
 
         void _accept(const PQL::NotEqualCondition *element) override;
@@ -193,10 +189,6 @@ namespace PetriEngine {
         void _accept(const PQL::LessThanCondition *element) override;
 
         void _accept(const PQL::LessThanOrEqualCondition *element) override;
-
-        void _accept(const PQL::GreaterThanCondition *element) override;
-
-        void _accept(const PQL::GreaterThanOrEqualCondition *element) override;
 
         void _accept(const PQL::EqualCondition *element) override;
 

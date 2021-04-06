@@ -100,14 +100,6 @@ namespace LTL {
         element->evalAndSet(_context);
     }
 
-    void EvalAndSetVisitor::_accept(GreaterThanCondition *element) {
-        element->evalAndSet(_context);
-    }
-
-    void EvalAndSetVisitor::_accept(GreaterThanOrEqualCondition *element) {
-        element->evalAndSet(_context);
-    }
-
     void EvalAndSetVisitor::_accept(EqualCondition *element) {
         element->evalAndSet(_context);
     }

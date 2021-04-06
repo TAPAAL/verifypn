@@ -1,5 +1,5 @@
 /* TAPAAL untimed verification engine verifypn 
- * Copyright (C) 2011-2018  Jonas Finnemann Jensen <jopsen@gmail.com>,
+ * Copyright (C) 2011-2021  Jonas Finnemann Jensen <jopsen@gmail.com>,
  *                          Thomas Søndersø Nielsen <primogens@gmail.com>,
  *                          Lars Kærlund Østergaard <larsko@gmail.com>,
  *                          Jiri Srba <srba.jiri@gmail.com>,
@@ -25,6 +25,11 @@
  *                          Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>
  *                          Simon Mejlby Virenfeldt <simon@simwir.dk>
  * 
+ * Color Extension
+ *                          Alexander Bilgram <alexander@bilgram.dk>
+ *                          Peter Haar Taankvist <ptaankvist@gmail.com>
+ *                          Thomas Pedersen <thomas.pedersen@stofanet.dk>
+ *                          Andreas H. Klostergaard
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -48,7 +53,11 @@
 #include <memory>
 #include <utility>
 #include <functional>
-
+// #include <filesystem>
+// #include <bits/stdc++.h> 
+// #include <iostream> 
+// #include <sys/stat.h> 
+// #include <sys/types.h> 
 #ifdef VERIFYPN_MC_Simplification
 #include <thread>
 #include <iso646.h>
@@ -84,6 +93,9 @@
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
+
+std::string generated_filename = "";
+std::string filename = "";
 
 ReturnValue contextAnalysis(ColoredPetriNetBuilder& cpnBuilder, PetriNetBuilder& builder, const PetriNet* net, std::vector<std::shared_ptr<Condition> >& queries)
 {
@@ -157,6 +169,15 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
             if (sscanf(argv[++i], "%d", &options.queryReductionTimeout) != 1 || options.queryReductionTimeout < 0) {
                 fprintf(stderr, "Argument Error: Invalid query reduction timeout argument \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
+        } else if (strcmp(argv[i], "--interval-timeout") == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%d", &options.intervalTimeout) != 1 || options.intervalTimeout < 0) {
+                fprintf(stderr, "Argument Error: Invalid fixpoint timeout argument \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
         } else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--lpsolve-timeout") == 0) {
@@ -274,6 +295,26 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.tar = true;
 
         }
+        else if (strcmp(argv[i], "--max-intervals") == 0){
+            if (i == argc - 1) {
+                fprintf(stderr, "Missing number after \"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
+            if (sscanf(argv[++i], "%d", &options.max_intervals) != 1 || options.max_intervals < 0) {
+                fprintf(stderr, "Argument Error: Invalid number of max intervals in first argument\"%s\"\n", argv[i]);
+                return ErrorCode;
+            }
+            if (i != argc - 1){
+                if (sscanf(argv[++i], "%d", &options.max_intervals_reduced) != 1 || options.max_intervals_reduced < 0) {
+                    fprintf(stderr, "Argument Error: Invalid number of max intervals in second argument \"%s\"\n", argv[i]);
+                    return ErrorCode;
+                }
+            }
+        }
+        else if (strcmp(argv[i], "--output-stats") == 0)
+        {
+            options.output_stats = std::string(argv[++i]);            
+        }
         else if (strcmp(argv[i], "--write-simplified") == 0)
         {
             options.query_out_file = std::string(argv[++i]);
@@ -386,6 +427,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -d, --reduction-timeout <timeout>    Timeout for structural reductions in seconds (default 60)\n"
                     "  -q, --query-reduction <timeout>      Query reduction timeout in seconds (default 30)\n"
                     "                                       write -q 0 to disable query reduction\n"
+                    "  --interval-timeout <timeout>       Time in seconds before the max intervals is halved (default 10)\n"
+                    "                                     write --interval-timeout 0 to disable max interval halving\n"
                     "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction        Disable partial order reduction (stubborn sets)\n"
                     "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
@@ -410,6 +453,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -z <number of cores>                 Number of cores to use (currently only query simplification)\n"
 #endif
                     "  -tar                                 Enables Trace Abstraction Refinement for reachability properties\n"
+                    "  --max-intervals <interval count>   The max amount of intervals kept when computing the color fixpoint\n"
+                    "                  <interval count>   Defualt is 255 and then after <interval-timeout> second(s) to 5\n"
                     "  --write-simplified <filename>        Outputs the queries to the given file after simplification\n"
                     "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
                     "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
@@ -437,7 +482,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             return SuccessCode;
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
             printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERIFYPN_VERSION);
-            printf("Copyright (C) 2011-2020\n");
+            printf("Copyright (C) 2011-2021\n");
+            printf("                        Alexander Bilgram <alexander@bilgram.dk>\n");
             printf("                        Frederik Meyer Boenneland <sadpantz@gmail.com>\n");
             printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
             printf("                        Peter Fogh <peter.f1992@gmail.com>\n");
@@ -446,16 +492,18 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
             printf("                        Tobias Skovgaard Jepsen <tobiasj1991@gmail.com>\n");
             printf("                        Mads Johannsen <mads_johannsen@yahoo.com>\n");
+            printf("                        Kenneth Yrke Jørgensen <kenneth.yrke@gmail.com>\n");
             printf("                        Isabella Kaufmann <bellakaufmann93@gmail.com>\n");
             printf("                        Andreas Hairing Klostergaard <kloster92@me.com>\n");
             printf("                        Søren Moss Nielsen <soren_moss@mac.com>\n");
             printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>\n");
             printf("                        Samuel Pastva <daemontus@gmail.com>\n");
-            printf("                        Thomas Pedersen <thomas.pedersen@stofanet.dk\n");
+            printf("                        Thomas Pedersen <thomas.pedersen@stofanet.dk>\n");
             printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
-            printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
+            printf("                        Peter Haar Taankvist <ptaankvist@gmail.com>\n");
             printf("                        Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>\n");
             printf("                        Simon Mejlby Virenfeldt <simon@simwir.dk>\n");
+            printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
         } else if (options.modelfile == NULL) {
@@ -502,6 +550,21 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         return ErrorCode;
     }
 
+    //Create filename for unfolding statistics file
+    if(!options.output_stats.empty()){
+        filename = options.modelfile;
+        
+        generated_filename += "model";
+        generated_filename += options.modelfile;
+        generated_filename += options.queryfile;
+        generated_filename.erase(std::remove(generated_filename.begin(), generated_filename.end(), '/'), generated_filename.end());
+        for(auto num : options.querynumbers){
+            generated_filename += std::to_string(num +1);
+        }
+        generated_filename = options.output_stats + "/" + generated_filename;
+        generated_filename += ".csv";
+    }
+
     //Check for compatibility with LTL model checking
     if (options.logic == TemporalLogic::LTL) {
         if (options.tar) {
@@ -541,7 +604,6 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
         }
     }
-
     return ContinueCode;
 }
 
@@ -692,10 +754,12 @@ void printStats(PetriNetBuilder& builder, options_t& options)
 }
 
 void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
-    if (options.printstatistics) {
+    //if (options.printstatistics) {
         if (!builder.isColored() && !builder.isUnfolded())
             return;
-        std::cout << "\nSize of colored net: " <<
+        std::cout << "\nColor fixpoint computed in " << builder.getFixpointTime() << " seconds" << std::endl;
+        std::cout << "Max intervals used: " << builder.getMaxIntervals() << std::endl;
+        std::cout << "Size of colored net: " <<
                 builder.getPlaceCount() << " places, " <<
                 builder.getTransitionCount() << " transitions, and " <<
                 builder.getArcCount() << " arcs" << std::endl;
@@ -704,7 +768,25 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
                 builder.getUnfoldedTransitionCount() << " transitions, and " <<
                 builder.getUnfoldedArcCount() << " arcs" << std::endl;
         std::cout << "Unfolded in " << builder.getUnfoldTime() << " seconds" << std::endl;
-    }
+        
+
+        if(!options.output_stats.empty()){
+            std::ofstream log(generated_filename, std::ios_base::app | std::ios_base::out);
+            std::ostringstream strs;
+            strs << filename << "," << builder.getPlaceCount() << "," << builder.getTransitionCount() << "," << builder.getArcCount() << "," << builder.getUnfoldedPlaceCount() << "," << builder.getUnfoldedTransitionCount() << "," << builder.getUnfoldedArcCount() << "," << builder.getUnfoldTime() << "," << builder.getFixpointTime() << "\n";
+            std::string str = strs.str();
+            log <<  str;
+        }
+
+        if(!options.output_stats.empty()){
+            std::ofstream log(generated_filename, std::ios_base::app | std::ios_base::out);
+            std::ostringstream strs;
+            strs << filename << "," << builder.getPlaceCount() << "," << builder.getTransitionCount() << "," << builder.getArcCount() << "," << builder.getUnfoldedPlaceCount() << "," << builder.getUnfoldedTransitionCount() << "," << builder.getUnfoldedArcCount() << "," << builder.getUnfoldTime() << "," << builder.getFixpointTime() << "\n";
+            std::string str = strs.str();
+            log <<  str;
+        }
+
+    //}
 }
 
 std::string getXMLQueries(std::vector<std::shared_ptr<Condition>> queries, std::vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
@@ -961,6 +1043,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.max_intervals_reduced, options.intervalTimeout);
+    
     auto builder = options.cpnOverApprox ? cpnBuilder.stripColors() : cpnBuilder.unfold();
     printUnfoldingStats(cpnBuilder, options);
     builder.sort();

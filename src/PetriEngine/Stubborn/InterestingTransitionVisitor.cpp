@@ -190,35 +190,7 @@ namespace PetriEngine {
         }
     }
 
-    void InterestingTransitionVisitor::_accept(const PQL::GreaterThanCondition *element)
-    {
-        if (!negated) {               // greater than
-            if (element->getExpr1()->getEval() > element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(incr);
-            element->getExpr2()->visit(decr);
-        } else {                    // less than or equal
-            if (element->getExpr1()->getEval() <= element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(decr);
-            element->getExpr2()->visit(incr);
-        }
-    }
-
-    void
-    InterestingTransitionVisitor::_accept(const PQL::GreaterThanOrEqualCondition *element)
-    {
-        if (!negated) {               // greater than or equal
-            if (element->getExpr1()->getEval() >= element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(incr);
-            element->getExpr2()->visit(decr);
-        } else {                    // less than
-            if (element->getExpr1()->getEval() < element->getExpr2()->getEval()) { return; }
-            element->getExpr1()->visit(decr);
-            element->getExpr2()->visit(incr);
-        }
-    }
-
-    void InterestingTransitionVisitor::_accept(const PQL::NotCondition *element)
-    {
+    void InterestingTransitionVisitor::_accept(const PQL::NotCondition *element) {
         negate();
         (*element)[0]->visit(*this);
         negate();
@@ -356,16 +328,6 @@ namespace PetriEngine {
     void InterestingLTLTransitionVisitor::_accept(const PQL::LessThanOrEqualCondition *element)
     {
         negate_if_satisfied<PQL::LessThanOrEqualCondition>(element);
-    }
-
-    void InterestingLTLTransitionVisitor::_accept(const PQL::GreaterThanCondition *element)
-    {
-        negate_if_satisfied<PQL::GreaterThanCondition>(element);
-    }
-
-    void InterestingLTLTransitionVisitor::_accept(const PQL::GreaterThanOrEqualCondition *element)
-    {
-        negate_if_satisfied<PQL::GreaterThanOrEqualCondition>(element);
     }
 
     void InterestingLTLTransitionVisitor::_accept(const PQL::EqualCondition *element)

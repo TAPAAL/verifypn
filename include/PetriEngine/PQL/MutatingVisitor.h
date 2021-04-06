@@ -43,10 +43,6 @@ namespace PetriEngine {
 
             virtual void _accept(LessThanOrEqualCondition *element) = 0;
 
-            virtual void _accept(GreaterThanCondition *element) = 0;
-
-            virtual void _accept(GreaterThanOrEqualCondition *element) = 0;
-
             virtual void _accept(EqualCondition *element) = 0;
 
             virtual void _accept(NotEqualCondition *element) = 0;

@@ -45,8 +45,6 @@ namespace PetriEngine {
         virtual void _accept(const OrCondition* element) override;
         virtual void _accept(const LessThanCondition* element) override;
         virtual void _accept(const LessThanOrEqualCondition* element) override;
-        virtual void _accept(const GreaterThanCondition* element) override;
-        virtual void _accept(const GreaterThanOrEqualCondition* element) override;
         virtual void _accept(const EqualCondition* element) override;
         virtual void _accept(const NotEqualCondition* element) override;
         virtual void _accept(const LiteralExpr* element) override;

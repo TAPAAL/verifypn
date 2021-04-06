@@ -1,14 +1,17 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   Multiset.cpp
- * Author: andreas
- * 
- * Created on February 20, 2018, 10:37 AM
+/* Copyright (C) 2020  Andreas H. Klostergaard
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <ios>
@@ -64,7 +67,7 @@ namespace PetriEngine {
                 throw "You cannot add Multisets over different sets";
             }
             for (auto c : other._set) {
-                const Color* color = DotConstant::dotConstant();
+                const Color* color = DotConstant::dotConstant(nullptr);
                 if (type != nullptr)
                     color = &((*type)[c.first]);
                 (*this)[color] += c.second;
@@ -79,7 +82,7 @@ namespace PetriEngine {
                 throw "You cannot add Multisets over different sets";
             }
             for (auto c : _set) {
-                const Color* color = DotConstant::dotConstant();
+                const Color* color = DotConstant::dotConstant(nullptr);
                 if (type != nullptr)
                     color = &((*type)[c.first]);
                 (*this)[color] = std::min(c.second - other[color], c.second);
@@ -94,6 +97,11 @@ namespace PetriEngine {
 
         uint32_t Multiset::operator [](const Color* color) const {
             if (type != nullptr && type->getId() == color->getColorType()->getId()) {
+                for (auto c : _set) {
+                    if (c.first == color->getId())
+                        return c.second;
+                }
+            } else if (type == nullptr){
                 for (auto c : _set) {
                     if (c.first == color->getId())
                         return c.second;
@@ -163,7 +171,7 @@ namespace PetriEngine {
 
         std::pair<const Color *, uint32_t &> Multiset::Iterator::operator*() {
             auto& item = ms->_set[index];
-            auto color = DotConstant::dotConstant();
+            auto color = DotConstant::dotConstant(nullptr);
             if (ms->type != nullptr)
                 color = &(*ms->type)[item.first];
             return { color, item.second };

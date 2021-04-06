@@ -63,14 +63,6 @@ namespace LTL {
         make_atomic_prop(std::make_shared<LessThanOrEqualCondition>(*element));
     }
 
-    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::GreaterThanCondition *element) {
-        make_atomic_prop(std::make_shared<GreaterThanCondition>(*element));
-    }
-
-    void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::GreaterThanOrEqualCondition *element) {
-        make_atomic_prop(std::make_shared<GreaterThanOrEqualCondition>(*element));
-    }
-
     void FormulaToSpotSyntax::_accept(const PetriEngine::PQL::EqualCondition *element) {
         make_atomic_prop(std::make_shared<EqualCondition>(*element));
     }

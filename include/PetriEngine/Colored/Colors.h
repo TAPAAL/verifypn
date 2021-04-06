@@ -1,14 +1,20 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   Colors.h
- * Author: andreas
+/* Copyright (C) 2020  Alexander Bilgram <alexander@bilgram.dk>,
+ *                     Peter Haar Taankvist <ptaankvist@gmail.com>,
+ *                     Thomas Pedersen <thomas.pedersen@stofanet.dk>
+ *                     Andreas H. Klostergaard
  *
- * Created on February 19, 2018, 8:22 PM
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef COLORS_H
@@ -21,6 +27,10 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
+#include <iostream>
+#include <cassert>
+
+#include "Intervals.h"
 
 namespace PetriEngine {
     namespace Colored {
@@ -44,7 +54,15 @@ namespace PetriEngine {
             bool isTuple() const {
                 return _tuple.size() > 1;
             }
+
+            void getColorConstraints(Colored::interval_t *constraintsVector, uint32_t *index) const;
             
+            std::vector<const Color*> getTupleColors() const {
+                return _tuple;
+            }
+
+            void getTupleId(std::vector<uint32_t> *idVector) const;
+
             const std::string& getColorName() const {
                 if (this->isTuple()) {
                     throw "Cannot get color from a tuple color.";
@@ -90,9 +108,11 @@ namespace PetriEngine {
             DotConstant();
             
         public:
-            static const Color* dotConstant() {
+            static const Color* dotConstant(ColorType *ct) {
                 static DotConstant _instance;
-                
+                if(ct != nullptr){
+                    _instance._colorType = ct;
+                }
                 return &_instance;
             }
             
@@ -160,11 +180,32 @@ namespace PetriEngine {
             virtual void addColor(const char* colorName);
             virtual void addColor(std::vector<const Color*>& colors);
             virtual void addDot() {
-                _colors.push_back(*DotConstant::dotConstant());
+                _colors.push_back(*DotConstant::dotConstant(this));
             }
             
             virtual size_t size() const {
                 return _colors.size();
+            }
+
+            virtual size_t productSize() {
+                return 1;
+            }
+
+            virtual std::vector<size_t> getConstituentsSizes(){
+                std::vector<size_t> result;                
+                result.push_back(_colors.size());
+                
+                return result;
+            }
+
+            virtual Colored::interval_t getFullInterval(){
+                Colored::interval_t interval;
+                interval.addRange(Reachability::range_t(0, size()-1));
+                return interval;
+            }
+
+            virtual void getColortypes(std::vector<ColorType *> &colorTypes){
+                colorTypes.push_back(this);
             }
             
             virtual const Color& operator[] (size_t index) {
@@ -176,6 +217,7 @@ namespace PetriEngine {
             }
             
             virtual const Color& operator[] (uint32_t index) {
+                assert(index < _colors.size());
                 return _colors[index];
             }
             
@@ -183,6 +225,11 @@ namespace PetriEngine {
             
             virtual const Color* operator[] (const std::string& index) {
                 return (*this)[index.c_str()];
+            }
+
+            virtual const Color* getColor(std::vector<uint32_t> ids){
+                assert(ids.size() == 1);
+                return &_colors[ids[0]];
             }
             
             bool operator== (const ColorType& other) const {
@@ -233,6 +280,36 @@ namespace PetriEngine {
                 return product;
             }
 
+            virtual size_t productSize() {
+                size_t size = 0;
+                for (auto ct : constituents){
+                    size += ct->productSize();
+                }
+                return size;
+            }
+
+            std::vector<size_t> getConstituentsSizes() override{
+                std::vector<size_t> result;
+                for (auto ct : constituents) {
+                    result.push_back(ct->size());
+                }
+                return result;
+            }
+
+            Colored::interval_t getFullInterval() override{
+                Colored::interval_t interval;
+                for(auto ct : constituents) {
+                    interval.addRange(Reachability::range_t(0, ct->size()-1));
+                }                
+                return interval;
+            }
+
+            void getColortypes(std::vector<ColorType *> &colorTypes) override{
+                for(auto ct : constituents){
+                    ct->getColortypes(colorTypes);
+                }
+            }
+
             bool containsTypes(const std::vector<const ColorType*>& types) const {
                 if (constituents.size() != types.size()) return false;
 
@@ -243,6 +320,19 @@ namespace PetriEngine {
                 }
 
                 return true;
+            }
+
+            const ColorType* getNestedColorType(size_t index) {
+                return constituents[index];
+            }
+
+            const Color* getColor(std::vector<uint32_t> ids){
+                assert(ids.size() == constituents.size());
+                std::vector<const Color *> colors;
+                for(uint32_t i = 0; i < ids.size(); i++){
+                    colors.push_back(&constituents[i]->operator[](i));
+                }
+                return getColor(colors);
             }
 
             const Color* getColor(const std::vector<const Color*>& colors);
@@ -263,13 +353,29 @@ namespace PetriEngine {
             std::string name;
             ColorType* colorType;
         };
-        
-        struct Binding {
-            Variable* var;
-            const Color* color;
-            
-            bool operator==(Binding& other) {
-                return var->name.compare(other.var->name);
+
+        struct ColorFixpoint {
+            Colored::intervalTuple_t constraints;
+            bool inQueue;
+            uint32_t productSize;
+
+            bool constainsColor(std::pair<const PetriEngine::Colored::Color *const, std::vector<uint32_t>> constPair) {
+                std::unordered_map<uint32_t, bool> contained;
+                for(auto interval : constraints._intervals) {
+                    for(uint32_t id : constPair.second){
+                        
+                        if(contained[id] != true){
+                            contained[id] = interval[id].contains(constPair.first->getId());
+                        }                        
+                    }
+                }
+
+                for(auto pair : contained){
+                    if (!pair.second){
+                        return false;
+                    }
+                }
+                return true;
             }
         };
     }

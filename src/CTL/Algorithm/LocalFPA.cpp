@@ -109,15 +109,5 @@ void Algorithm::LocalFPA::explore(DependencyGraph::Configuration *c)
 
 void Algorithm::LocalFPA::addDependency(DependencyGraph::Edge *e, DependencyGraph::Configuration *target)
 {
-    unsigned int sDist = e->is_negated ? e->source->getDistance() + 1 : e->source->getDistance();
-    unsigned int tDist = target->getDistance();
-
-    target->setDistance(std::max(sDist, tDist));
-
-    auto lb = std::lower_bound(std::begin(target->dependency_set), std::end(target->dependency_set), e);
-    if(lb == std::end(target->dependency_set) || *lb != e)
-    {
-        target->dependency_set.insert(lb, e);
-        ++e->refcnt;
-    }
+    target->addDependency(e);
 }

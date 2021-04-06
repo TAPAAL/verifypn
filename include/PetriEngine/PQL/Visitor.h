@@ -28,29 +28,18 @@ namespace PetriEngine {
 
         protected:
 
-            virtual void _accept(const NotCondition *element) = 0;
 
-            virtual void _accept(const AndCondition *element) = 0;
+            virtual void _accept(const NotCondition* element) = 0;
+            virtual void _accept(const AndCondition* element) = 0;
+            virtual void _accept(const OrCondition* element) = 0;
+            virtual void _accept(const LessThanCondition* element) = 0;
+            virtual void _accept(const LessThanOrEqualCondition* element) = 0;
+            virtual void _accept(const EqualCondition* element) = 0;
+            virtual void _accept(const NotEqualCondition* element) = 0;
 
-            virtual void _accept(const OrCondition *element) = 0;
-
-            virtual void _accept(const LessThanCondition *element) = 0;
-
-            virtual void _accept(const LessThanOrEqualCondition *element) = 0;
-
-            virtual void _accept(const GreaterThanCondition *element) = 0;
-
-            virtual void _accept(const GreaterThanOrEqualCondition *element) = 0;
-
-            virtual void _accept(const EqualCondition *element) = 0;
-
-            virtual void _accept(const NotEqualCondition *element) = 0;
-
-            virtual void _accept(const DeadlockCondition *element) = 0;
-
-            virtual void _accept(const CompareConjunction *element) = 0;
-
-            virtual void _accept(const UnfoldedUpperBoundsCondition *element) = 0;
+            virtual void _accept(const DeadlockCondition* element) = 0;
+            virtual void _accept(const CompareConjunction* element) = 0;
+            virtual void _accept(const UnfoldedUpperBoundsCondition* element) = 0;
 
             // Quantifiers, most uses of the visitor will not use the quantifiers - so we give a default implementation.
             // default behaviour is error
@@ -242,18 +231,6 @@ namespace PetriEngine {
                 exit(0);
             };
 
-            void _accept(const GreaterThanCondition *element) override {
-                assert(false);
-                std::cerr << "No accept for GreaterThanCondition" << std::endl;
-                exit(0);
-            };
-
-            void _accept(const GreaterThanOrEqualCondition *element) override {
-                assert(false);
-                std::cerr << "No accept for GreaterThanOrEqualCondition" << std::endl;
-                exit(0);
-            };
-
             void _accept(const EqualCondition *element) override {
                 assert(false);
                 std::cerr << "No accept for EqualCondition" << std::endl;
@@ -313,18 +290,6 @@ namespace PetriEngine {
             }
 
             void _accept(const LessThanOrEqualCondition *element) override
-            {
-                element->getExpr1()->visit(*this);
-                element->getExpr2()->visit(*this);
-            }
-
-            void _accept(const GreaterThanCondition *element) override
-            {
-                element->getExpr1()->visit(*this);
-                element->getExpr2()->visit(*this);
-            }
-
-            void _accept(const GreaterThanOrEqualCondition *element) override
             {
                 element->getExpr1()->visit(*this);
                 element->getExpr2()->visit(*this);

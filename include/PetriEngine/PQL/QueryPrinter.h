@@ -41,10 +41,6 @@ namespace PetriEngine {
 
             void _accept(const LessThanOrEqualCondition *element) override;
 
-            void _accept(const GreaterThanCondition *element) override;
-
-            void _accept(const GreaterThanOrEqualCondition *element) override;
-
             void _accept(const EqualCondition *element) override;
 
             void _accept(const NotEqualCondition *element) override;

@@ -44,16 +44,6 @@ namespace LTL {
         element->getExpr2()->visit(*this);
     }
 
-    void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::GreaterThanCondition *element) {
-        element->getExpr1()->visit(*this);
-        element->getExpr2()->visit(*this);
-    }
-
-    void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::GreaterThanOrEqualCondition *element) {
-        element->getExpr1()->visit(*this);
-        element->getExpr2()->visit(*this);
-    }
-
     void VisibleTransitionVisitor::_accept(const PetriEngine::PQL::EqualCondition *element) {
         element->getExpr1()->visit(*this);
         element->getExpr2()->visit(*this);

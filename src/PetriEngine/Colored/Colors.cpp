@@ -1,7 +1,20 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* Copyright (C) 2020  Alexander Bilgram <alexander@bilgram.dk>,
+ *                     Peter Haar Taankvist <ptaankvist@gmail.com>,
+ *                     Thomas Pedersen <thomas.pedersen@stofanet.dk>
+ *                     Andreas H. Klostergaard
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "PetriEngine/Colored/Colors.h"
@@ -60,35 +73,37 @@ namespace PetriEngine {
         }
         
         bool Color::operator< (const Color& other) const {
-            if (_colorType == other._colorType) {
+            if (_colorType != other._colorType) {
                 throw "Cannot compare colors from different types";
             }
             return _id < other._id;
         }
         
         bool Color::operator> (const Color& other) const {
-            if (_colorType == other._colorType) {
+            if (_colorType != other._colorType) {
                 throw "Cannot compare colors from different types";
             }
             return _id > other._id;
         }
         
         bool Color::operator<= (const Color& other) const {
-            if (_colorType == other._colorType) {
+            if (_colorType != other._colorType) {
                 throw "Cannot compare colors from different types";
             }
             return _id <= other._id;
         }
         
         bool Color::operator>= (const Color& other) const {
-            if (_colorType == other._colorType) {
+            if (_colorType != other._colorType) {
                 throw "Cannot compare colors from different types";
             }
             return _id >= other._id;
         }
         
         const Color& Color::operator++ () const {
+            //std::cout << _colorName <<" " << _colorType->getName() << std::endl;
             if (_id >= _colorType->size() - 1) {
+                //std::cout << "inside if" << std::endl;
                 return (*_colorType)[0];
             }
             assert(_id + 1 < _colorType->size());
@@ -105,6 +120,41 @@ namespace PetriEngine {
         
         std::string Color::toString() const {
             return toString(this);
+        }
+
+        void Color::getColorConstraints(Colored::interval_t *constraintsVector, uint32_t *index) const {
+            if (this->isTuple()) {
+                for (const Color *color : _tuple) {
+                    color->getColorConstraints(constraintsVector, index);
+                    (*index)++;
+                }
+            } else {
+                Reachability::range_t curRange;
+                if (*index >= constraintsVector->size()){
+                    curRange &= _id;
+                    constraintsVector->addRange(curRange);
+                } else {
+                    curRange = constraintsVector->operator[](*index);
+                    if (_id < curRange._lower){
+                        curRange._lower = _id;
+                    }
+                    if (_id > curRange._upper){
+                        curRange._upper = _id;
+                    }
+
+                    constraintsVector->operator[](*index) = curRange;
+                }            
+            }
+        }
+
+        void Color::getTupleId(std::vector<uint32_t> *idVector) const {
+            if(this->isTuple()) {
+                for (auto color : _tuple) {
+                    color->getTupleId(idVector);
+                }
+            } else {
+                idVector->push_back(_id);
+            }
         }
         
         std::string Color::toString(const Color* color) {
@@ -165,7 +215,7 @@ namespace PetriEngine {
 
                 std::vector<const Color*> colors;
                 for (auto & constituent : constituents) {
-                    mod = constituents.size();
+                    mod = constituent->size();
                     colors.push_back(&(*constituent)[(index / div) % mod]);
                     div *= mod;
                 }
