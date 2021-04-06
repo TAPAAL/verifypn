@@ -38,7 +38,7 @@ namespace LTL {
     class ProductSuccessorGenerator {
     public:
 
-        ProductSuccessorGenerator(const PetriEngine::PetriNet &net,
+        ProductSuccessorGenerator(const PetriEngine::PetriNet *net,
                                   const Structures::BuchiAutomaton &buchi,
                                   SuccessorGen &&successorGen)
                 : _successor_generator(std::move(successorGen)), _net(net),
@@ -90,26 +90,28 @@ namespace LTL {
             return buchi.is_accepting(state.getBuchiState());
         }
 
-        void makeInitialState(std::vector<LTL::Structures::ProductState> &states)
+        std::vector<LTL::Structures::ProductState> makeInitialState()
         {
-            auto buf = new PetriEngine::MarkVal[_net.numberOfPlaces() + 1];
-            std::copy(_net.initial(), _net.initial() + _net.numberOfPlaces(), buf);
-            buf[_net.numberOfPlaces()] = initial_buchi_state();
+            std::vector<LTL::Structures::ProductState> states;
+            auto buf = new PetriEngine::MarkVal[_net->numberOfPlaces() + 1];
+            std::copy(_net->initial(), _net->initial() + _net->numberOfPlaces(), buf);
+            buf[_net->numberOfPlaces()] = initial_buchi_state();
             LTL::Structures::ProductState state;
-            state.setMarking(buf, _net.numberOfPlaces());
+            state.setMarking(buf, _net->numberOfPlaces());
             //state.setBuchiState(initial_buchi_state());
             buchi.prepare(state.getBuchiState());
             while (next_buchi_succ(state)) {
                 states.emplace_back();
-                states.back().setMarking(new PetriEngine::MarkVal[_net.numberOfPlaces() + 1], _net.numberOfPlaces());
-                std::copy(state.marking(), state.marking() + _net.numberOfPlaces(), states.back().marking());
+                states.back().setMarking(new PetriEngine::MarkVal[_net->numberOfPlaces() + 1], _net->numberOfPlaces());
+                std::copy(state.marking(), state.marking() + _net->numberOfPlaces(), states.back().marking());
                 states.back().setBuchiState(state.getBuchiState());
             }
+            return states;
         }
 
         [[nodiscard]] bool isInitialState(const LTL::Structures::ProductState &state) const
         {
-            return state.markingEqual(_net.initial());
+            return state.markingEqual(_net->initial());
         }
 
         /**
@@ -185,7 +187,6 @@ namespace LTL {
         size_t last_transition() const { return _successor_generator.last_transition(); }
 
         size_t fired() const { return _successor_generator.fired(); }
-        const PetriEngine::PetriNet &getNet() { return _net; }
 
         //template<typename T = std::enable_if_t<std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>, void>>
         void generateAll(typename SuccessorGen::sucinfo &sucinfo)
@@ -225,7 +226,7 @@ namespace LTL {
 
     private:
         SuccessorGen _successor_generator;
-        const PetriEngine::PetriNet &_net;
+        const PetriEngine::PetriNet *_net;
 
         BuchiSuccessorGenerator buchi;
         const LTL::Structures::BuchiAutomaton &aut;
@@ -240,7 +241,7 @@ namespace LTL {
          */
         bool guard_valid(const PetriEngine::Structures::State &state, bdd bdd)
         {
-            PetriEngine::PQL::EvaluationContext ctx{state.marking(), &_net};
+            PetriEngine::PQL::EvaluationContext ctx{state.marking(), _net};
             // IDs 0 and 1 are false and true atoms, respectively
             // More details in buddy manual ( http://buddy.sourceforge.net/manual/main.html )
             while (bdd.id() > 1) {

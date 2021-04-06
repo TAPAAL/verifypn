@@ -31,7 +31,7 @@ namespace LTL {
     template<typename SuccessorGen>
     class ModelChecker {
     public:
-        ModelChecker(const PetriEngine::PetriNet &net,
+        ModelChecker(const PetriEngine::PetriNet *net,
                      const PetriEngine::PQL::Condition_ptr &condition,
                      const Structures::BuchiAutomaton &buchi,
                      SuccessorGen &&successorGen,
@@ -43,7 +43,7 @@ namespace LTL {
                                                                                            std::move(successorGen));
             if (level != TraceLevel::None) {
                 maxTransName = 0;
-                for (auto transname : net.transitionNames()) {
+                for (const auto &transname : net->transitionNames()) {
                     maxTransName = std::max(transname.size(), maxTransName);
                 }
             }
@@ -77,7 +77,7 @@ namespace LTL {
 
         std::unique_ptr<ProductSuccessorGenerator<SuccessorGen>> successorGenerator;
 
-        const PetriEngine::PetriNet &net;
+        const PetriEngine::PetriNet *net;
         PetriEngine::PQL::Condition_ptr formula;
         TraceLevel traceLevel;
 
@@ -102,12 +102,12 @@ namespace LTL {
                 os << indent << "<deadlock buchi=\"" << state.getBuchiState() << "\"/>";
                 return os;
             }
-            std::string tname = net.transitionNames()[transition];
+            std::string tname = net->transitionNames()[transition];
             if (traceLevel == TraceLevel::Full) {
                 os << indent << "<transition id=\"" << tname << "\">\n";
-                for (size_t i = 0; i < net.numberOfPlaces(); ++i) {
+                for (size_t i = 0; i < net->numberOfPlaces(); ++i) {
                     for (size_t j = 0; j < state.marking()[i]; ++j) {
-                        os << tokenIndent << R"(<token age="0" place=")" << net.placeNames()[i] << "\"/>\n";
+                        os << tokenIndent << R"(<token age="0" place=")" << net->placeNames()[i] << "\"/>\n";
                     }
                 }
 #ifndef NDEBUG

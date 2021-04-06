@@ -19,23 +19,24 @@
 
 namespace LTL {
 
-    bool RandomNDFS::isSatisfied() {
+    bool RandomNDFS::isSatisfied()
+    {
         dfs();
         return !violation;
     }
 
-    void RandomNDFS::dfs() {
+    void RandomNDFS::dfs()
+    {
         std::stack<size_t> call_stack;
 
-        PetriEngine::Structures::StateSet states{net, 0, (int) net.numberOfPlaces() + 1};
+        PetriEngine::Structures::StateSet states{*net, 0, (int) net->numberOfPlaces() + 1};
         PetriEngine::Structures::RDFSQueue todo{&states};
 
         State working = factory.newState();
-        PetriEngine::PQL::DistanceContext ctx{&net, working.marking()};
+        PetriEngine::PQL::DistanceContext ctx{net, working.marking()};
         State curState = factory.newState();
         {
-            std::vector<State> initial_states;
-            successorGenerator->makeInitialState(initial_states);
+            std::vector<State> initial_states = successorGenerator->makeInitialState();
             for (auto &state : initial_states) {
                 auto res = states.add(state);
                 assert(res.first);
@@ -70,14 +71,15 @@ namespace LTL {
     }
 
 
-    void RandomNDFS::ndfs(State &state) {
-        PetriEngine::Structures::StateSet states{net, 0, (int) net.numberOfPlaces() + 1};
+    void RandomNDFS::ndfs(State &state)
+    {
+        PetriEngine::Structures::StateSet states{*net, 0, (int) net->numberOfPlaces() + 1};
         PetriEngine::Structures::RDFSQueue todo{&states};
 
         State working = factory.newState();
         State curState = factory.newState();
 
-        PetriEngine::PQL::DistanceContext ctx{&net, state.marking()};
+        PetriEngine::PQL::DistanceContext ctx{net, state.marking()};
 
         todo.push(states.add(state).second, ctx, formula);
 
@@ -100,7 +102,8 @@ namespace LTL {
         }
     }
 
-    void RandomNDFS::printStats(std::ostream &os) {
+    void RandomNDFS::printStats(std::ostream &os)
+    {
         std::cout << "STATS:\n"
                   << "\tdiscovered states:          " << mark1.discovered() << std::endl
                   << "\tmax tokens:                 " << mark1.maxTokens() << std::endl

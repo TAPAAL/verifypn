@@ -413,7 +413,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -s, --search-strategy <strategy>     Search strategy:\n"
                     "                                       - BestFS       Heuristic search (default)\n"
                     "                                       - BFS          Breadth first search\n"
-                    "                                       - DFS          Depth first search (CTL and LTL default)\n"
+                    "                                       - DFS          Depth first search (CTL default)\n"
                     "                                       - RDFS         Random depth first search\n"
                     "                                       - OverApprox   Linear Over Approx\n"
                     "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
@@ -492,7 +492,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Peter Gjøl Jensen <root@petergjoel.dk>\n");
             printf("                        Tobias Skovgaard Jepsen <tobiasj1991@gmail.com>\n");
             printf("                        Mads Johannsen <mads_johannsen@yahoo.com>\n");
-            printf("                        Kenneth Yrke Jørgensen <kenneth.yrke@gmail.com>\n");
+            printf("                        Kenneth Yrke Jørgensen <kenneth@yrke.dk>\n");
             printf("                        Isabella Kaufmann <bellakaufmann93@gmail.com>\n");
             printf("                        Andreas Hairing Klostergaard <kloster92@me.com>\n");
             printf("                        Søren Moss Nielsen <soren_moss@mac.com>\n");

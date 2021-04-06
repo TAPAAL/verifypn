@@ -45,7 +45,7 @@ namespace LTL {
     template<typename SuccessorGen, bool SaveTrace = false>
     class TarjanModelChecker : public ModelChecker<SuccessorGen> {
     public:
-        TarjanModelChecker(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &cond,
+        TarjanModelChecker(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond,
                            const Structures::BuchiAutomaton &buchi,
                            SuccessorGen &&successorGen,
                            const TraceLevel level = TraceLevel::Full,
@@ -54,6 +54,10 @@ namespace LTL {
                   factory(net, this->successorGenerator->initial_buchi_state()),
                   seen(net, 0)
         {
+            if (buchi._buchi->num_states() > 65535) {
+                std::cerr << "Fatal error: cannot handle Büchi automata larger than 2^16 states\n";
+                exit(1);
+            }
             chash.fill(std::numeric_limits<idx_t>::max());
         }
 
@@ -125,8 +129,6 @@ namespace LTL {
         std::stack<DEntry> dstack;
         // cstack positions of accepting states in current search path, for quick access.
         std::stack<idx_t> astack;
-        // tarjan extension; stack of states that were fully expanded in stubborn set
-        std::stack<idx_t> extstack;
 
         bool violation = false;
         size_t loopstate = std::numeric_limits<size_t>::max();

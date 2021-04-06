@@ -63,8 +63,8 @@ namespace LTL::Structures {
     template<uint8_t nbits = 16>
     class BitProductStateSet : public ProductStateSetInterface {
     public:
-        explicit BitProductStateSet(const PetriEngine::PetriNet &net, int kbound = 0)
-                : markings(net, kbound, net.numberOfPlaces())
+        explicit BitProductStateSet(const PetriEngine::PetriNet *net, int kbound = 0)
+                : markings(*net, kbound, net->numberOfPlaces())
         {
         }
 
@@ -84,11 +84,6 @@ namespace LTL::Structures {
         {
             return (buchiState << buchiShift) | (markingMask & markingId);
         }
-
-/*#ifndef NDEBUG
-            std::cerr << "markingMask: " << markingMask << '\n';
-            std::cerr << "buchiMask:   " << buchiMask << std::endl;
-#endif*/
 
         /**
          * Insert a product state into the state set.
@@ -146,7 +141,7 @@ namespace LTL::Structures {
     class TraceableBitProductStateSet : public BitProductStateSet<nbytes> {
         using stateid_t = typename BitProductStateSet<nbytes>::stateid_t;
     public:
-        explicit TraceableBitProductStateSet(const PetriEngine::PetriNet &net, int kbound = 0)
+        explicit TraceableBitProductStateSet(const PetriEngine::PetriNet *net, int kbound = 0)
                 : BitProductStateSet<nbytes>(net, kbound)
         {
         }

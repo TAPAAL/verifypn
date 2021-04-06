@@ -943,7 +943,7 @@ namespace PetriEngine {
                 _left->restrictVars(variableMap);
                 _right->restrictVars(varMapCopy);
 
-                for(uint i = 0; i < variableMap.size(); i++){
+                for(size_t i = 0; i < variableMap.size(); i++){
                     for(auto& varPair : varMapCopy[i]){
                         for(auto& interval : varPair.second._intervals){
                             variableMap[i][varPair.first].addInterval(std::move(interval));
