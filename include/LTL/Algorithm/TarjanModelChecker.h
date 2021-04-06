@@ -21,7 +21,9 @@
 
 #include "LTL/Algorithm/ModelChecker.h"
 #include "LTL/Structures/ProductStateFactory.h"
-#include "PetriEngine/Structures/StateSet.h"
+#include "LTL/Structures/BitProductStateSet.h"
+#include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
+#include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
 
 #include <stack>
 #include <unordered_set>
@@ -40,14 +42,22 @@ namespace LTL {
      * </p>
      * @tparam SaveTrace whether to save and print counter-examples when possible.
      */
-    template<bool SaveTrace>
-    class TarjanModelChecker : public ModelChecker {
+    template<typename SuccessorGen, bool SaveTrace = false>
+    class TarjanModelChecker : public ModelChecker<SuccessorGen> {
     public:
-        TarjanModelChecker(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &cond, const bool shortcircuitweak,
-                           TraceLevel level = TraceLevel::Full)
-                : ModelChecker(net, cond, shortcircuitweak, level), factory(net, successorGenerator->initial_buchi_state()),
-                  seen(net, 0, (int) net.numberOfPlaces() + 1)
+        TarjanModelChecker(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond,
+                           const Structures::BuchiAutomaton &buchi,
+                           SuccessorGen &&successorGen,
+                           const TraceLevel level = TraceLevel::Full,
+                           const bool shortcircuitweak = true)
+                : ModelChecker<SuccessorGen>(net, cond, buchi, std::move(successorGen), level, shortcircuitweak),
+                  factory(net, this->successorGenerator->initial_buchi_state()),
+                  seen(net, 0)
         {
+            if (buchi._buchi->num_states() > 65535) {
+                std::cerr << "Fatal error: cannot handle Büchi automata larger than 2^16 states\n";
+                exit(1);
+            }
             chash.fill(std::numeric_limits<idx_t>::max());
         }
 
@@ -55,7 +65,7 @@ namespace LTL {
 
         void printStats(std::ostream &os) override
         {
-            _printStats(os, seen);
+            this->_printStats(os, seen);
         }
 
     private:
@@ -66,7 +76,8 @@ namespace LTL {
 
         LTL::Structures::ProductStateFactory factory;
 
-        using StateSet = std::conditional_t<SaveTrace, PetriEngine::Structures::TracableStateSet, PetriEngine::Structures::StateSet>;
+        using StateSet = std::conditional_t<SaveTrace, LTL::Structures::TraceableBitProductStateSet<>, LTL::Structures::BitProductStateSet<>>;
+        static constexpr bool IsSpooling = std::is_same_v<SuccessorGen, SpoolingSuccessorGenerator>;
 
         StateSet seen;
         std::unordered_set<idx_t> store;
@@ -100,10 +111,11 @@ namespace LTL {
                 TracableCEntry,
                 PlainCEntry>;
 
-
         struct DEntry {
             idx_t pos; // position in cstack.
-            successor_info sucinfo;
+            typename SuccessorGen::sucinfo sucinfo;
+
+            explicit DEntry(idx_t pos) : pos(pos), sucinfo(SuccessorGen::initial_suc_info()) {}
         };
 
         // master list of state information.
@@ -112,7 +124,9 @@ namespace LTL {
         std::stack<DEntry> dstack;
         // cstack positions of accepting states in current search path, for quick access.
         std::stack<idx_t> astack;
+
         bool violation = false;
+        bool invariant_loop = true;
         size_t loopstate = std::numeric_limits<size_t>::max();
         size_t looptrans = std::numeric_limits<size_t>::max();
 
@@ -131,10 +145,16 @@ namespace LTL {
     };
 
     extern template
-    class TarjanModelChecker<true>;
+    class TarjanModelChecker<LTL::ResumingSuccessorGenerator, true>;
 
     extern template
-    class TarjanModelChecker<false>;
+    class TarjanModelChecker<LTL::ResumingSuccessorGenerator, false>;
+
+    extern template
+    class TarjanModelChecker<LTL::SpoolingSuccessorGenerator, true>;
+
+    extern template
+    class TarjanModelChecker<LTL::SpoolingSuccessorGenerator, false>;
 }
 
 #endif //VERIFYPN_TARJANMODELCHECKER_H

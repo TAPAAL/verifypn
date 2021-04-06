@@ -19,23 +19,24 @@
 
 namespace LTL {
 
-    bool RandomNDFS::isSatisfied() {
+    bool RandomNDFS::isSatisfied()
+    {
         dfs();
         return !violation;
     }
 
-    void RandomNDFS::dfs() {
+    void RandomNDFS::dfs()
+    {
         std::stack<size_t> call_stack;
 
-        PetriEngine::Structures::StateSet states{net, 0, (int) net.numberOfPlaces() + 1};
+        PetriEngine::Structures::StateSet states{*net, 0, (int) net->numberOfPlaces() + 1};
         PetriEngine::Structures::RDFSQueue todo{&states};
 
         State working = factory.newState();
-        PQL::DistanceContext ctx{&net, working.marking()};
+        PetriEngine::PQL::DistanceContext ctx{net, working.marking()};
         State curState = factory.newState();
         {
-            std::vector<State> initial_states;
-            successorGenerator->makeInitialState(initial_states);
+            std::vector<State> initial_states = successorGenerator->makeInitialState();
             for (auto &state : initial_states) {
                 auto res = states.add(state);
                 assert(res.first);
@@ -44,7 +45,6 @@ namespace LTL {
         }
 
         while (todo.top(curState)) {
-
             if (!call_stack.empty() && states.lookup(curState).second == call_stack.top()) {
                 if (successorGenerator->isAccepting(curState)) {
                     seed = &curState;
@@ -55,12 +55,14 @@ namespace LTL {
                 todo.pop(curState);
                 call_stack.pop();
             } else {
+                ++stats.expanded;
                 call_stack.push(states.add(curState).second);
                 if (!mark1.add(curState).first) {
                     continue;
                 }
                 successorGenerator->prepare(&curState);
                 while (successorGenerator->next(working)) {
+                    ++stats.explored;
                     auto r = states.add(working);
                     todo.push(r.second, ctx, formula);
                 }
@@ -69,24 +71,27 @@ namespace LTL {
     }
 
 
-    void RandomNDFS::ndfs(State &state) {
-        PetriEngine::Structures::StateSet states{net, 0, (int) net.numberOfPlaces() + 1};
+    void RandomNDFS::ndfs(State &state)
+    {
+        PetriEngine::Structures::StateSet states{*net, 0, (int) net->numberOfPlaces() + 1};
         PetriEngine::Structures::RDFSQueue todo{&states};
 
         State working = factory.newState();
         State curState = factory.newState();
 
-        PQL::DistanceContext ctx{&net, state.marking()};
+        PetriEngine::PQL::DistanceContext ctx{net, state.marking()};
 
         todo.push(states.add(state).second, ctx, formula);
 
         while (todo.pop(curState)) {
+            ++stats.expanded;
             if (!mark2.add(curState).first) {
                 continue;
             }
 
             successorGenerator->prepare(&curState);
             while (successorGenerator->next(working)) {
+                ++stats.explored;
                 if (working == *seed) {
                     violation = true;
                     return;
@@ -97,11 +102,12 @@ namespace LTL {
         }
     }
 
-    void RandomNDFS::printStats(std::ostream &os) {
+    void RandomNDFS::printStats(std::ostream &os)
+    {
         std::cout << "STATS:\n"
                   << "\tdiscovered states:          " << mark1.discovered() << std::endl
-                  << "\tmax tokens:                 " << mark2.maxTokens() << std::endl
-                  << "\tdiscovered states (nested): " << mark1.discovered() << std::endl
+                  << "\tmax tokens:                 " << mark1.maxTokens() << std::endl
+                  << "\tdiscovered states (nested): " << mark2.discovered() << std::endl
                   << "\tmax tokens (nested):        " << mark2.maxTokens() << std::endl;
     }
 }

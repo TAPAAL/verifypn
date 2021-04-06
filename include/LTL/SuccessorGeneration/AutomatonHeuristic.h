@@ -1,37 +1,41 @@
 /* Copyright (C) 2021  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
  *                     Simon M. Virenfeldt <simon@simwir.dk>
- *
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VERIFYPN_REACHABILITYSTUBBORNSET_H
-#define VERIFYPN_REACHABILITYSTUBBORNSET_H
+#ifndef VERIFYPN_AUTOMATONHEURISTIC_H
+#define VERIFYPN_AUTOMATONHEURISTIC_H
 
+#include "LTL/Structures/BuchiAutomaton.h"
+#include "LTL/SuccessorGeneration/Heuristic.h"
+#include "LTL/Structures/GuardInfo.h"
 
-#include "PetriEngine/Stubborn/StubbornSet.h"
-
-namespace PetriEngine {
-    class ReachabilityStubbornSet : public StubbornSet {
+namespace LTL {
+    class AutomatonHeuristic : public Heuristic {
     public:
-        ReachabilityStubbornSet(const PetriNet &net, const std::vector<PQL::Condition_ptr> &queries)
-                : StubbornSet(net, queries) {}
+        AutomatonHeuristic(const PetriEngine::PetriNet *net, const Structures::BuchiAutomaton &aut);
 
-        ReachabilityStubbornSet(const PetriNet &net)
-                : StubbornSet(net) {}
+        uint32_t eval(const Structures::ProductState &state, uint32_t tid) override;
 
-        bool prepare(const Structures::State *state) override;
+        bool has_heuristic(const Structures::ProductState &state) override;
+
+    private:
+        const PetriEngine::PetriNet *_net;
+        const LTL::Structures::BuchiAutomaton &_aut;
+        std::vector<GuardInfo> _state_guards;
     };
 }
 
-#endif //VERIFYPN_REACHABILITYSTUBBORNSET_H
+#endif //VERIFYPN_AUTOMATONHEURISTIC_H

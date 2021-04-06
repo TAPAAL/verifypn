@@ -86,6 +86,7 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "LTL/LTL.h"
+#include "LTL/LTLMain.h"
 
 #include <atomic>
 
@@ -329,6 +330,23 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         {
             options.model_out_file = std::string(argv[++i]);
         }
+        else if (strcmp(argv[i], "--write-buchi") == 0)
+        {
+            options.buchi_out_file = std::string(argv[++i]);
+            if (argc > i + 1) {
+                if(strcmp(argv[i + 1], "dot") == 0) {
+                    options.buchi_out_type = LTL::BuchiOutType::Dot;
+                } else if (strcmp(argv[i + 1], "hoa") == 0) {
+                    options.buchi_out_type = LTL::BuchiOutType::HOA;
+                } else if (strcmp(argv[i + 1], "spin") == 0) {
+                    options.buchi_out_type = LTL::BuchiOutType::Spin;
+                } else continue;
+                ++i;
+            }
+        }
+        else if (strcmp(argv[i], "--no-compress-buchi") == 0) {
+            options.compress_buchi = false;
+        }
 #ifdef VERIFYPN_MC_Simplification
         else if (strcmp(argv[i], "-z") == 0)
         {
@@ -390,60 +408,68 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "extended with inhibitor arcs.\n"
                     "\n"
                     "Options:\n"
-                    "  -k, --k-bound <number of tokens>   Token bound, 0 to ignore (default)\n"
-                    "  -t, --trace                        Provide XML-trace to stderr\n"
-                    "  -s, --search-strategy <strategy>   Search strategy:\n"
-                    "                                     - BestFS       Heuristic search (default)\n"
-                    "                                     - BFS          Breadth first search\n"
-                    "                                     - DFS          Depth first search (CTL and LTL default)\n"
-                    "                                     - RDFS         Random depth first search\n"
-                    "                                     - OverApprox   Linear Over Approx\n"
-                    "  --seed-offset <number>             Extra noise to add to the seed of the random number generation\n"
-                    "  -e, --state-space-exploration      State-space exploration only (query-file is irrelevant)\n"
-                    "  -x, --xml-query <query index>      Parse XML query file and verify query of a given index\n"
-                    "  -r, --reduction <type>             Change structural net reduction:\n"
-                    "                                     - 0  disabled\n"
-                    "                                     - 1  aggressive reduction (default)\n"
-                    "                                     - 2  reduction preserving k-boundedness\n"
-                    "                                     - 3  user defined reduction sequence, eg -r 3 0,1,2,3 to use rules A,B,C,D only, and in that order\n"
-                    "  -d, --reduction-timeout <timeout>  Timeout for structural reductions in seconds (default 60)\n"
-                    "  -q, --query-reduction <timeout>    Query reduction timeout in seconds (default 30)\n"
-                    "                                     write -q 0 to disable query reduction\n"
+                    "  -k, --k-bound <number of tokens>     Token bound, 0 to ignore (default)\n"
+                    "  -t, --trace                          Provide XML-trace to stderr\n"
+                    "  -s, --search-strategy <strategy>     Search strategy:\n"
+                    "                                       - BestFS       Heuristic search (default)\n"
+                    "                                       - BFS          Breadth first search\n"
+                    "                                       - DFS          Depth first search (CTL default)\n"
+                    "                                       - RDFS         Random depth first search\n"
+                    "                                       - OverApprox   Linear Over Approx\n"
+                    "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
+                    "  -e, --state-space-exploration        State-space exploration only (query-file is irrelevant)\n"
+                    "  -x, --xml-query <query index>        Parse XML query file and verify query of a given index\n"
+                    "  -r, --reduction <type>               Change structural net reduction:\n"
+                    "                                       - 0  disabled\n"
+                    "                                       - 1  aggressive reduction (default)\n"
+                    "                                       - 2  reduction preserving k-boundedness\n"
+                    "                                       - 3  user defined reduction sequence, eg -r 3 0,1,2,3 to use rules A,B,C,D only, and in that order\n"
+                    "  -d, --reduction-timeout <timeout>    Timeout for structural reductions in seconds (default 60)\n"
+                    "  -q, --query-reduction <timeout>      Query reduction timeout in seconds (default 30)\n"
+                    "                                       write -q 0 to disable query reduction\n"
                     "  --interval-timeout <timeout>       Time in seconds before the max intervals is halved (default 10)\n"
                     "                                     write --interval-timeout 0 to disable max interval halving\n"
-                    "  -l, --lpsolve-timeout <timeout>    LPSolve timeout in seconds, default 10\n"
-                    "  -p, --partial-order-reduction      Disable partial order reduction (stubborn sets)\n"
-                    "  -a, --siphon-trap <timeout>        Siphon-Trap analysis timeout in seconds (default 0)\n"
-                    "      --siphon-depth <place count>   Search depth of siphon (default 0, which counts all places)\n"
-                    "  -n, --no-statistics                Do not display any statistics (default is to display it)\n"
-                    "  -h, --help                         Display this help message\n"
-                    "  -v, --version                      Display version information\n"
-                    "  -ctl <type>                        Verify CTL properties\n"
-                    "                                     - local     Liu and Smolka's on-the-fly algorithm\n"
-                    "                                     - czero     local with certain zero extension (default)\n"
-                    "  -ltl [<type>]                      Verify LTL properties (default tarjan). If omitted the queries are assumed to be CTL.\n"
-                    "                                     - ndfs      Nested depth first search algorithm\n"
-                    "                                     - tarjan    On-the-fly Tarjan's algorithm\n"
-                    "                                     - none      Run preprocessing steps only.\n"
-                    "  -noweak                            Disable optimizations for weak Büchi automata when doing \n"
-                    "                                     LTL model checking. Not recommended.\n"
-                    "  -noreach                           Force use of CTL/LTL engine, even when queries are reachability.\n"
-                    "                                     Not recommended since the reachability engine is faster.\n"
-                    "  -c, --cpn-overapproximation        Over approximate query on Colored Petri Nets (CPN only)\n"
+                    "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
+                    "  -p, --partial-order-reduction        Disable partial order reduction (stubborn sets)\n"
+                    "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
+                    "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
+                    "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
+                    "  -h, --help                           Display this help message\n"
+                    "  -v, --version                        Display version information\n"
+                    "  -ctl <type>                          Verify CTL properties\n"
+                    "                                       - local     Liu and Smolka's on-the-fly algorithm\n"
+                    "                                       - czero     local with certain zero extension (default)\n"
+                    "  -ltl [<type>]                        Verify LTL properties (default tarjan). If omitted the queries are assumed to be CTL.\n"
+                    "                                       - ndfs      Nested depth first search algorithm\n"
+                    "                                       - tarjan    On-the-fly Tarjan's algorithm\n"
+                    "                                       - none      Run preprocessing steps only.\n"
+                    "  -noweak                              Disable optimizations for weak Büchi automata when doing \n"
+                    "                                       LTL model checking. Not recommended.\n"
+                    "  -noreach                             Force use of CTL/LTL engine, even when queries are reachability.\n"
+                    "                                       Not recommended since the reachability engine is faster.\n"
+                    "  -c, --cpn-overapproximation          Over approximate query on Colored Petri Nets (CPN only)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
 #ifdef VERIFYPN_MC_Simplification
-                    "  -z <number of cores>               Number of cores to use (currently only query simplification)\n"
+                    "  -z <number of cores>                 Number of cores to use (currently only query simplification)\n"
 #endif
-                    "  -tar                               Enables Trace Abstraction Refinement for reachability properties\n"
+                    "  -tar                                 Enables Trace Abstraction Refinement for reachability properties\n"
                     "  --max-intervals <interval count>   The max amount of intervals kept when computing the color fixpoint\n"
                     "                  <interval count>   Defualt is 255 and then after <interval-timeout> second(s) to 5\n"
-                    "  --write-simplified <filename>      Outputs the queries to the given file after simplification\n"
-                    "  --write-reduced <filename>         Outputs the model to the given file after structural reduction\n"
-                    "  --binary-query-io <0,1,2,3>        Determines the input/output format of the query-file\n"
-                    "                                     - 0 MCC XML format for Input and Output\n"
-                    "                                     - 1 Input is binary, output is XML\n"
-                    "                                     - 2 Output is binary, input is XML\n"
-                    "                                     - 3 Input and Output is binary\n"
+                    "  --write-simplified <filename>        Outputs the queries to the given file after simplification\n"
+                    "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
+                    "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
+                    "                                       - 0 MCC XML format for Input and Output\n"
+                    "                                       - 1 Input is binary, output is XML\n"
+                    "                                       - 2 Output is binary, input is XML\n"
+                    "                                       - 3 Input and Output is binary\n"
+                    "  --write-buchi <filename> [<format>]  Valid for LTL. Write the generated buchi automaton to file. Formats:\n"
+                    "                                       - dot   (default) Write the buchi in GraphViz Dot format\n"
+                    "                                       - hoa   Write the buchi in the Hanoi Omega-Automata Format\n"
+                    "                                       - spin  Write the buchi in the spin model checker format."
+                    "  --no-compress-buchi                  Disable compression of atomic propositions in LTL."
+                    "                                       This compression significantly helps in dealing with massive"
+                    "                                       fireability queries, but sometimes hurts Büchi construction "
+                    "                                       and query simplifation in complex queries."
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -553,15 +579,20 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             std::cerr << "Argument Error: --siphon-depth is not compatible with LTL model checking." << std::endl;
             return ErrorCode;
         }
+        std::array tarjanStrategies { DFS, RDFS, HEUR };
+        std::array ndfsStrategies { DFS, RDFS };
         if (options.strategy != PetriEngine::Reachability::DEFAULT &&
             options.strategy != PetriEngine::Reachability::OverApprox) {
 
-            if (options.ltlalgorithm == LTL::Algorithm::Tarjan && options.strategy != DFS) {
-                std::cerr << "Argument Error: Unsupported search strategy for Tarjan. Supported values are DFS." << std::endl;
+            if (options.ltlalgorithm == LTL::Algorithm::Tarjan &&
+                std::find(std::begin(tarjanStrategies), std::end(tarjanStrategies), options.strategy) ==
+                std::end(tarjanStrategies)) {
+                std::cerr << "Argument Error: Unsupported search strategy for Tarjan. Supported values are DFS, RDFS, and BestFS." << std::endl;
                 return ErrorCode;
             }
-            if (options.strategy != DFS &&
-                !(options.ltlalgorithm == LTL::Algorithm::NDFS && options.strategy == RDFS)) {
+            if (options.ltlalgorithm == LTL::Algorithm::NDFS &&
+                    std::find(std::begin(ndfsStrategies), std::end(ndfsStrategies), options.strategy) ==
+                    std::end(ndfsStrategies)) {
                 std::cerr << "Argument Error: Unsupported search strategy for NDFS. Supported values are DFS and RDFS" << std::endl;
                 return ErrorCode;
             }
@@ -875,7 +906,7 @@ std::mutex spot_mutex;
 #endif
 
 Condition_ptr simplify_ltl_query(Condition_ptr query,
-                                 bool printstats,
+                                 options_t options,
                                  const EvaluationContext &evalContext,
                                  SimplificationContext &simplificationContext,
                                  std::ostream &out = std::cout) {
@@ -893,13 +924,14 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 #ifdef VERIFYPN_MC_Simplification
         std::scoped_lock scopedLock{spot_mutex};
 #endif
-        cond = LTL::simplify(cond);
+        // TODO use heuristic for whether to compress? (e.g. based on formula size).
+        cond = LTL::simplify(cond, options.compress_buchi);
     }
     negstat_t stats;
     cond = Condition::initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true)
             ->pushNegation(stats, evalContext, false, false, true);
 
-    if (printstats) {
+    if (options.printstatistics) {
         out << "RWSTATS PRE:";
         stats.print(out);
         out << std::endl;
@@ -929,7 +961,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
     } else {
         cond = std::make_shared<ECondition>(cond);
     }
-    if (printstats) {
+    if (options.printstatistics) {
         out << "RWSTATS POST:";
         stats.print(out);
         out << std::endl;
@@ -1023,7 +1055,7 @@ int main(int argc, char* argv[]) {
     bool alldone = options.queryReductionTimeout > 0;
     PetriNetBuilder b2(builder);
     std::unique_ptr<PetriNet> qnet(b2.makePetriNet(false));
-    MarkVal* qm0 = qnet->makeInitialMarking();
+    std::unique_ptr<MarkVal[]> qm0(qnet->makeInitialMarking());
     ResultPrinter p2(&b2, &options, querynames);
 
     if(queries.size() == 0 || contextAnalysis(cpnBuilder, b2, qnet.get(), queries) != ContinueCode)
@@ -1070,7 +1102,7 @@ int main(int argc, char* argv[]) {
                     if(!hadTo[i]) continue;
                     hadTo[i] = false;
                     negstat_t stats;
-                    EvaluationContext context(qm0, qnet.get());
+                    EvaluationContext context(qm0.get(), qnet.get());
 
                     if(options.printstatistics && options.queryReductionTimeout > 0)
                     {
@@ -1088,9 +1120,9 @@ int main(int argc, char* argv[]) {
 
                     if (options.logic == TemporalLogic::LTL) {
                         if (options.queryReductionTimeout == 0) continue;
-                        SimplificationContext simplificationContext(qm0, qnet.get(), qt,
+                        SimplificationContext simplificationContext(qm0.get(), qnet.get(), qt,
                                                                     options.lpsolveTimeout, &cache);
-                        queries[i] = simplify_ltl_query(queries[i], options.printstatistics,
+                        queries[i] = simplify_ltl_query(queries[i], options,
                                            context, simplificationContext, out);
                         continue;
                     }
@@ -1107,7 +1139,7 @@ int main(int argc, char* argv[]) {
 
                     if (options.queryReductionTimeout > 0 && qt > 0)
                     {
-                        SimplificationContext simplificationContext(qm0, qnet.get(), qt,
+                        SimplificationContext simplificationContext(qm0.get(), qnet.get(), qt,
                                 options.lpsolveTimeout, &cache);
                         try {
                             negstat_t stats;
@@ -1123,7 +1155,6 @@ int main(int argc, char* argv[]) {
                             std::cerr << "Query reduction failed." << std::endl;
                             std::cerr << "Exception information: " << ba.what() << std::endl;
 
-                            delete[] qm0;
                             std::exit(ErrorCode);
                         }
 
@@ -1206,7 +1237,7 @@ int main(int argc, char* argv[]) {
     }
 
     qnet = nullptr;
-    delete[] qm0;
+    qm0 = nullptr;
 
     if (!options.statespaceexploration){
         for(size_t i = 0; i < queries.size(); ++i)
@@ -1325,42 +1356,8 @@ int main(int argc, char* argv[]) {
         }
 
         for (auto qid : ltl_ids) {
-            bool satisfied = false;
+            LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
 
-            auto[negated_formula, negate_answer] = LTL::to_ltl(queries[qid]);
-            std::unique_ptr<LTL::ModelChecker> modelChecker;
-            switch (options.ltlalgorithm) {
-                case LTL::Algorithm::NDFS:
-                    if (options.strategy == RDFS) {
-                        modelChecker = std::make_unique<LTL::RandomNDFS>(*net, negated_formula);
-                    }
-                    if (options.trace != TraceLevel::None)
-                        modelChecker = std::make_unique<LTL::NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>
-                                (*net, negated_formula, options.ltluseweak, options.trace);
-                    else
-                        modelChecker = std::make_unique<LTL::NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>
-                                (*net, negated_formula, options.ltluseweak);
-                    break;
-                case LTL::Algorithm::Tarjan:
-                    if (options.trace != TraceLevel::None)
-                        modelChecker = std::make_unique<LTL::TarjanModelChecker<true>>(*net, negated_formula, options.ltluseweak, options.trace);
-                    else
-                        modelChecker = std::make_unique<LTL::TarjanModelChecker<false>>(*net, negated_formula, options.ltluseweak);
-                    break;
-                default:
-                    std::cerr << "Wrong LTL engine provided as engine option." << std::endl;
-                    return ErrorCode;
-            }
-            satisfied = negate_answer ^ modelChecker->isSatisfied();
-            if (options.printstatistics) {
-                modelChecker->printStats(std::cout);
-            }
-
-            std::cout << "FORMULA " << querynames[qid] <<
-                      (satisfied ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT " <<
-                      LTL::to_string(options.ltlalgorithm) <<
-                      (modelChecker->isweak() ? " WEAK_SKIP" : "") <<
-                      (queries[qid]->isReachability(0) ? " REACHABILITY" : "") << std::endl;
         }
         if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
             return SuccessCode;

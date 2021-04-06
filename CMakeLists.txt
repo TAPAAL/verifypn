@@ -83,7 +83,7 @@ if (VERIFYPN_GetDependencies)
             URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
             URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
             BUILD_COMMAND make
-            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin
             INSTALL_COMMAND make install
         )
     else ()
@@ -91,7 +91,7 @@ if (VERIFYPN_GetDependencies)
             URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
             URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
             BUILD_COMMAND make 
-            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static CFLAGS=${CMAKE_CXX_FLAGS} LDFLAGS=${CMAKE_LINKER_FLAGS}
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=${CMAKE_CXX_FLAGS} LDFLAGS=${CMAKE_LINKER_FLAGS}
             INSTALL_COMMAND make install
         )
     endif ()

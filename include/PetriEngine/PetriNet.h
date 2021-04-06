@@ -108,6 +108,14 @@ namespace PetriEngine {
             return _initialMarking;
         }
 
+        bool has_inhibitor() const {
+            for (Invariant i : _invariants) {
+                if (i.inhibitor)
+                    return true;
+            }
+            return false;
+        }
+
     private:        
 
         /** Number of x variables

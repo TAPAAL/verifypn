@@ -18,7 +18,7 @@
 #ifndef VERIFYPN_RANDOMNDFS_H
 #define VERIFYPN_RANDOMNDFS_H
 
-#include "ModelChecker.h"
+#include "LTL/Algorithm/ModelChecker.h"
 #include "PetriEngine/Structures/StateSet.h"
 #include "PetriEngine/Structures/State.h"
 #include "PetriEngine/Structures/Queue.h"
@@ -26,14 +26,16 @@
 
 #include <ptrie/ptrie_stable.h>
 
-using namespace PetriEngine;
-
 namespace LTL {
-    class RandomNDFS : public ModelChecker {
+    class RandomNDFS : public ModelChecker<LTL::SpoolingSuccessorGenerator> {
     public:
-        RandomNDFS(const PetriNet &net, PetriEngine::PQL::Condition_ptr ptr)
-                : ModelChecker(net, ptr, false), factory{net, successorGenerator->initial_buchi_state()},
-                  mark1(net, 0, (int) net.numberOfPlaces() + 1), mark2(net, 0, (int) net.numberOfPlaces() + 1) {}
+        RandomNDFS(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond,
+                   const Structures::BuchiAutomaton &buchi,
+                   LTL::SpoolingSuccessorGenerator &&successorGen, TraceLevel level,
+                   bool shortcircuitweak)
+                : ModelChecker(net, cond, buchi, std::move(successorGen), level, shortcircuitweak),
+                  factory{net, successorGenerator->initial_buchi_state()},
+                  mark1(*net, 0, (int) net->numberOfPlaces() + 1), mark2(*net, 0, (int) net->numberOfPlaces() + 1) {}
 
         bool isSatisfied() override;
 
