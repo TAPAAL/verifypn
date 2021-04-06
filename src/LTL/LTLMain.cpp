@@ -136,8 +136,8 @@ namespace LTL {
                 }
                 break;
             case Algorithm::Tarjan:
-                if (options.strategy != PetriEngine::Reachability::DEFAULT && options.strategy != PetriEngine::Reachability::DFS) {
-                    // Use spooling successor generator in case of different search strategy or stubborn set method.
+                if (options.strategy != PetriEngine::Reachability::DFS) {
+                    // Running default or BestFS search strategy so use spooling successor generator to enable heuristics.
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
                     if (options.strategy == PetriEngine::Reachability::RDFS) {

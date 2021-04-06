@@ -229,6 +229,50 @@ namespace PetriEngine {
         (*element)[0]->visit(*this);
     }
 
+    void InterestingTransitionVisitor::_accept(const PQL::EFCondition *condition) {
+        _accept(static_cast<const PQL::SimpleQuantifierCondition*>(condition));
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::EGCondition *condition) {
+        _accept(static_cast<const PQL::SimpleQuantifierCondition*>(condition));
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::AGCondition *condition) {
+        _accept(static_cast<const PQL::SimpleQuantifierCondition*>(condition));
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::AFCondition *condition) {
+        _accept(static_cast<const PQL::SimpleQuantifierCondition*>(condition));
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::EXCondition *condition) {
+        _accept(static_cast<const PQL::SimpleQuantifierCondition*>(condition));
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::AXCondition *condition) {
+        _accept(static_cast<const PQL::SimpleQuantifierCondition*>(condition));
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::ACondition *condition) {
+        _accept(static_cast<const PQL::SimpleQuantifierCondition*>(condition));
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::ECondition *condition) {
+        _accept(static_cast<const PQL::SimpleQuantifierCondition*>(condition));
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::XCondition *condition) {
+        _accept(static_cast<const PQL::SimpleQuantifierCondition*>(condition));
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::AUCondition *condition) {
+        _accept(static_cast<const PQL::UntilCondition*>(condition));
+    }
+
+    void InterestingTransitionVisitor::_accept(const PQL::EUCondition *condition) {
+        _accept(static_cast<const PQL::UntilCondition*>(condition));
+    }
+
     void InterestingTransitionVisitor::IncrVisitor::_accept(const PQL::PlusExpr *element)
     {
         for (auto &i : element->places()) _stubborn.presetOf(i.first, closure);

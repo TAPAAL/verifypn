@@ -413,7 +413,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -s, --search-strategy <strategy>     Search strategy:\n"
                     "                                       - BestFS       Heuristic search (default)\n"
                     "                                       - BFS          Breadth first search\n"
-                    "                                       - DFS          Depth first search (CTL and LTL default)\n"
+                    "                                       - DFS          Depth first search (CTL default)\n"
                     "                                       - RDFS         Random depth first search\n"
                     "                                       - OverApprox   Linear Over Approx\n"
                     "  --seed-offset <number>               Extra noise to add to the seed of the random number generation\n"
