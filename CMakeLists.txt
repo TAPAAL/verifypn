@@ -15,7 +15,7 @@ endif ()
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
-set(VERIFYPN_VERSION 3.1.1)
+set(VERIFYPN_VERSION 4.0.0)
 add_compile_definitions(VERIFYPN_VERSION=\"${VERIFYPN_VERSION}\")
 
 project(verifypn VERSION ${VERIFYPN_VERSION} LANGUAGES CXX C)
@@ -33,8 +33,6 @@ if (VERIFYPN_Static)
     if (NOT APPLE)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
     endif(NOT APPLE)
-else(VERIFYPN_Static)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif (VERIFYPN_Static)
 
 if (VERIFYPN_MC_Simplification)
@@ -45,8 +43,9 @@ if (UNIX AND NOT APPLE)
     set(ARCH_TYPE "linux64")
 elseif(APPLE)
     set(ARCH_TYPE "osx64")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.8 -m64 ")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mmacosx-version-min=10.8 -m64 ")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.8)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 ")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m64 ")
 else()
     set(ARCH_TYPE "win64")
 endif ()
@@ -79,14 +78,23 @@ if (VERIFYPN_GetDependencies)
         CONFIGURE_COMMAND mkdir -p ${CMAKE_BINARY_DIR}/external/include
         INSTALL_COMMAND cd ../rapidxml-ext && ${CMAKE_COMMAND} -E copy rapidxml.hpp rapidxml_iterators.hpp rapidxml_print.hpp rapidxml_utils.hpp ${EXTERNAL_INSTALL_LOCATION}/include    
     )
-
-    ExternalProject_add(spot-ext
-        URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
-	URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
-        BUILD_COMMAND make -j8
-	CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin
-        INSTALL_COMMAND make install
-    )
+    if (UNIX AND NOT APPLE)
+        ExternalProject_add(spot-ext
+            URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
+            URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
+            BUILD_COMMAND make
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=-flto CXXFLAGS=-flto LDFLAGS=-fuse-linker-plugin
+            INSTALL_COMMAND make install
+        )
+    else ()
+        ExternalProject_add(spot-ext
+            URL http://www.lrde.epita.fr/dload/spot/spot-2.9.6.tar.gz
+            URL_HASH SHA512=69ec8a3ce84b2c069bf40b8d2127e5085724c8e4ba88ffdefc3e2225f6334955959afd17bcfcde29fd6826d78d49a7f1303bd07ba756a8695473ff6cc5ade3a2
+            BUILD_COMMAND make 
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} <SOURCE_DIR>/configure --prefix ${EXTERNAL_INSTALL_LOCATION} --disable-python --disable-devel --disable-debug --disable-shared --enable-static --enable-c++17 CFLAGS=${CMAKE_CXX_FLAGS} LDFLAGS=${CMAKE_LINKER_FLAGS}
+            INSTALL_COMMAND make install
+        )
+    endif ()
 
     if (WIN32) #If windows 32 or 64 
       set(GLPK_CFLAGS "-D __WOE__ -O3" )

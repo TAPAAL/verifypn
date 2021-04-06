@@ -7,9 +7,9 @@ add_subdirectory(SuccessorGeneration)
 
 add_library(LTL ${HEADER_FILES} LTLMain.cpp)
 
-if (VERIFYPN_Static AND NOT APPLE)
+if (VERIFYPN_Static OR APPLE)
     target_link_libraries(LTL PRIVATE LTL_algorithm LTL_simplification LTLSuccessorGeneration spot bddx)
 else()
     target_link_libraries(LTL PRIVATE LTL_algorithm LTL_simplification LTLSuccessorGeneration
-                          -Wl,-Bstatic spot bddx -Wl,-Bdynamic)
+                              -Wl,-Bstatic spot bddx -Wl,-Bdynamic)
 endif()
