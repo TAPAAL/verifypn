@@ -28,7 +28,7 @@
 using namespace PetriEngine::PQL;
 using namespace PetriEngine;
 
-#define DEBUG_EXPLORED_STATES
+//#define DEBUG_EXPLORED_STATES
 
 namespace LTL {
     struct Result {
@@ -75,17 +75,6 @@ namespace LTL {
                    const options_t &options)
     {
         Result result;
-
-/*
-        std::unique_ptr<Checker> modelChecker;
-        if constexpr (std::is_same_v<Checker, TarjanModelChecker<SpoolingSuccessorGenerator, true>> ||
-                      std::is_same_v<Checker, TarjanModelChecker<SpoolingSuccessorGenerator, false>>) {
-
-        } else {
-            modelChecker = std::make_unique<Checker>(*net, negatedQuery, options.trace, options.ltluseweak);
-        }
-*/
-
         result.satisfied = checker->isSatisfied();
         result.is_weak = checker->isweak();
 #ifdef DEBUG_EXPLORED_STATES
@@ -137,7 +126,7 @@ namespace LTL {
                 break;
             case Algorithm::Tarjan:
                 if (options.strategy != PetriEngine::Reachability::DFS) {
-                    // Running default or BestFS search strategy so use spooling successor generator to enable heuristics.
+                    // Running default, BestFS, or RDFS search strategy so use spooling successor generator to enable heuristics.
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
                     if (options.strategy == PetriEngine::Reachability::RDFS) {
@@ -204,7 +193,6 @@ namespace LTL {
 #ifdef DEBUG_EXPLORED_STATES
         std::cout << "FORMULA " << queryName << " STATS EXPLORED " << result.explored_states << std::endl;
 #endif
-        /*(queries[qid]->isReachability(0) ? " REACHABILITY" : "") <<*/
 
         return SuccessCode;
     }
