@@ -106,7 +106,8 @@ namespace LTL {
         Condition_ptr negated_formula = res.first;
         bool negate_answer = res.second;
 
-        bool compress = options.compress_buchi && options.buchi_out_file.empty();
+        // force AP compress off for Büchi prints
+        auto compress = options.buchi_out_file.empty() ? options.ltl_compress_aps : APCompression::None;
 
         Structures::BuchiAutomaton automaton = makeBuchiAutomaton(negated_formula, compress);
         if (!options.buchi_out_file.empty()) {

@@ -22,6 +22,12 @@ enum class TraceLevel {
     Full
 };
 
+enum class APCompression {
+    Choose,
+    None,
+    Full
+};
+
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
@@ -58,7 +64,7 @@ struct options_t {
     bool ltluseweak = true;
     std::string buchi_out_file;
     LTL::BuchiOutType buchi_out_type = LTL::BuchiOutType::Dot;
-    bool compress_buchi = true;
+    APCompression ltl_compress_aps = APCompression::None;
 
     std::string query_out_file;
     std::string model_out_file;

@@ -23,6 +23,7 @@
 #include <spot/twa/bddprint.hh>
 #include <sstream>
 #include <spot/twaalgos/dot.hh>
+#include <PetriEngine/options.h>
 
 
 using namespace PetriEngine::PQL;
@@ -129,7 +130,7 @@ namespace LTL {
         (*condition)[0]->visit(*this);
     }
 
-    std::pair<spot::formula, APInfo> to_spot_formula(const PetriEngine::PQL::Condition_ptr& query, bool compress) {
+    std::pair<spot::formula, APInfo> to_spot_formula(const PetriEngine::PQL::Condition_ptr& query, APCompression compress) {
         std::stringstream ss;
         FormulaToSpotSyntax spotConverter{ss, compress};
         query->visit(spotConverter);
@@ -141,14 +142,14 @@ namespace LTL {
         return std::make_pair(spot_formula, spotConverter.apInfo());
     }
 
-    Structures::BuchiAutomaton makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query, bool compress) {
+    Structures::BuchiAutomaton makeBuchiAutomaton(const PetriEngine::PQL::Condition_ptr &query, APCompression compress) {
         auto [formula, apinfo] = to_spot_formula(query, compress);
         formula = spot::formula::Not(formula);
         spot::translator translator;
         // Ask for Büchi acceptance (rather than generalized Büchi) and medium optimizations
         // (default is high which causes many worst case BDD constructions i.e. exponential blow-up)
         translator.set_type(spot::postprocessor::BA);
-        translator.set_level(spot::postprocessor::Medium);
+        translator.set_level(spot::postprocessor::Low);
         //translator.set_pref(spot::postprocessor::Complete);
         spot::twa_graph_ptr automaton = translator.run(formula);
         std::unordered_map<int, AtomicProposition> ap_map;
@@ -162,7 +163,7 @@ namespace LTL {
         return Structures::BuchiAutomaton{automaton, ap_map};
     }
 
-    BuchiSuccessorGenerator makeBuchiSuccessorGenerator(const Condition_ptr &query, bool compress) {
+    BuchiSuccessorGenerator makeBuchiSuccessorGenerator(const Condition_ptr &query, APCompression compress) {
         return BuchiSuccessorGenerator{makeBuchiAutomaton(query, compress)};
     }
 
