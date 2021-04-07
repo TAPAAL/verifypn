@@ -17,6 +17,7 @@
 #include <memory>
 #include <queue>
 #include <stack>
+#include <random>
 
 #include "../PQL/PQL.h"
 #include "StateSet.h"
@@ -25,7 +26,7 @@ namespace PetriEngine {
     namespace Structures {
         class Queue {
         public:
-            Queue(StateSetInterface* states);
+            Queue(StateSetInterface* states, size_t s = 0);
             virtual ~Queue();
             virtual bool pop(Structures::State& state) = 0;
             virtual void push(size_t id, PQL::DistanceContext&,
@@ -41,7 +42,7 @@ namespace PetriEngine {
         
         class BFSQueue : public Queue {
         public:
-            BFSQueue(StateSetInterface* states);
+            BFSQueue(StateSetInterface* states, size_t);
             virtual ~BFSQueue();
             
             virtual bool pop(Structures::State& state);
@@ -54,7 +55,7 @@ namespace PetriEngine {
         
         class DFSQueue : public Queue {
         public:
-            DFSQueue(StateSetInterface* states);
+            DFSQueue(StateSetInterface* states, size_t);
             virtual ~DFSQueue();
             
             virtual bool pop(Structures::State& state);
@@ -67,7 +68,7 @@ namespace PetriEngine {
         
         class RDFSQueue : public Queue {
         public:
-            RDFSQueue(StateSetInterface* states);
+            RDFSQueue(StateSetInterface* states, size_t seed);
             virtual ~RDFSQueue();
             
             virtual bool pop(Structures::State& state);
@@ -77,6 +78,7 @@ namespace PetriEngine {
         private:
             std::stack<uint32_t> _stack;
             std::vector<uint32_t> _cache;
+            std::default_random_engine _rng;
         };
         
         class HeuristicQueue : public Queue {
@@ -92,7 +94,7 @@ namespace PetriEngine {
                 }
             };
 
-            HeuristicQueue(StateSetInterface* states);
+            HeuristicQueue(StateSetInterface* states, size_t);
             virtual ~HeuristicQueue();
             
             virtual bool pop(Structures::State& state);

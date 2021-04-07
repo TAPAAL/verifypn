@@ -89,7 +89,7 @@ namespace LTL {
     ReturnValue LTLMain(const PetriNet *net,
                         const Condition_ptr &query,
                         const std::string &queryName,
-                        const options_t &options)
+                        options_t &options)
     {
         auto res = to_ltl(query);
         Condition_ptr negated_formula = res.first;
@@ -114,7 +114,7 @@ namespace LTL {
                     result = _verify(net, negated_formula,
                                      std::make_unique<RandomNDFS>(net, negated_formula, automaton, std::move(gen),
                                                                   options.trace,
-                                                                  options.ltluseweak),
+                                                                  options.ltluseweak, options.seed()),
                                      options);
                 } else if (options.trace != TraceLevel::None) {
                     result = _verify(net, negated_formula,
@@ -134,7 +134,7 @@ namespace LTL {
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
                     if (options.strategy == PetriEngine::Reachability::RDFS) {
-                        gen.setHeuristic(std::make_unique<RandomHeuristic>(options.seed_offset));
+                        gen.setHeuristic(std::make_unique<RandomHeuristic>(options.seed()));
                     } else if (options.strategy == PetriEngine::Reachability::HEUR
                                || options.strategy == PetriEngine::Reachability::DEFAULT) {
                         gen.setHeuristic(std::make_unique<AutomatonHeuristic>(net, automaton));

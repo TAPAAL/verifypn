@@ -986,7 +986,7 @@ int main(int argc, char* argv[]) {
     ReturnValue v = parseOptions(argc, argv, options);
     if(v != ContinueCode) return v;
     options.print();
-    srand (time(NULL) xor options.seed_offset);
+    options.seed_offset = (time(NULL) xor options.seed_offset);
     ColoredPetriNetBuilder cpnBuilder;
     if(parseModel(cpnBuilder, options) != ContinueCode)
     {
@@ -1427,7 +1427,8 @@ int main(int argc, char* argv[]) {
                            options.stubbornreduction,
                            options.statespaceexploration,
                            options.printstatistics,
-                           options.trace != TraceLevel::None);
+                           options.trace != TraceLevel::None,
+                           options.seed());
     }
 
     return SuccessCode;

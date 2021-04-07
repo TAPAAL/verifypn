@@ -30,7 +30,7 @@ namespace LTL {
         std::stack<size_t> call_stack;
 
         PetriEngine::Structures::StateSet states{*net, 0, (int) net->numberOfPlaces() + 1};
-        PetriEngine::Structures::RDFSQueue todo{&states};
+        PetriEngine::Structures::RDFSQueue todo{&states, ++random_seed};
 
         State working = factory.newState();
         PetriEngine::PQL::DistanceContext ctx{net, working.marking()};
@@ -74,7 +74,7 @@ namespace LTL {
     void RandomNDFS::ndfs(State &state)
     {
         PetriEngine::Structures::StateSet states{*net, 0, (int) net->numberOfPlaces() + 1};
-        PetriEngine::Structures::RDFSQueue todo{&states};
+        PetriEngine::Structures::RDFSQueue todo{&states, ++random_seed};
 
         State working = factory.newState();
         State curState = factory.newState();
