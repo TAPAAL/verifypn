@@ -220,18 +220,18 @@ namespace PetriEngine {
                 }
             }
 
-            //is this still needed?
-            std::set<const PetriEngine::Colored::Variable *> preArcVars;
-            for(auto inArc : transition->input_arcs){
-                inArc.expr->getVariables(preArcVars);
-                for(auto postVar : postArcVars){
-                    if(preArcVars.count(postVar)){
-                        if(diagonalVars.count(postVar)){
-                            _partition[inArc.place].diagonal = true;
-                        }
-                    }
-                }
-            }
+            //is this still needed? does not seem so
+            // std::set<const PetriEngine::Colored::Variable *> preArcVars;
+            // for(auto inArc : transition->input_arcs){
+            //     inArc.expr->getVariables(preArcVars);
+            //     for(auto postVar : postArcVars){
+            //         if(preArcVars.count(postVar)){
+            //             if(diagonalVars.count(postVar)){
+            //                 _partition[inArc.place].diagonal = true;
+            //             }
+            //         }
+            //     }
+            // }
         }
 
         void PartitionBuilder::addToQueue(uint32_t placeId){
