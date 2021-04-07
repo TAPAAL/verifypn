@@ -97,8 +97,6 @@ namespace PetriEngine {
             }
             else
             {
-                std::cerr << "R " << _rng() << std::endl;
-                exit(-1);
                 std::shuffle ( _cache.begin(), _cache.end(), _rng );
 		uint32_t n = _cache.back();
                 _states->decode(state, n);
