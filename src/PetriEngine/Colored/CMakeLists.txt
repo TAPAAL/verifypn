@@ -4,5 +4,6 @@ add_library(Colored ColoredPetriNetBuilder.cpp
 Colors.cpp
 Multiset.cpp
 BindingGenerator.cpp
-PartitionBuilder.cpp)
+PartitionBuilder.cpp
+EquivalenceClass.cpp)
 add_dependencies(Colored rapidxml-ext ptrie-ext glpk-ext)

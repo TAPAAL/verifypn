@@ -62,7 +62,6 @@ namespace PetriEngine {
         Colored::ExpressionContext::BindingMap _bindings;
         ColorTypeMap& _colorTypes;
         Colored::Transition &_transition;
-        std::unordered_map<uint32_t, Colored::EquivalenceVec> &_partition;
         bool _isDone;
         bool _noValidBindings;
         uint32_t _nextIndex = 0;
@@ -71,7 +70,7 @@ namespace PetriEngine {
         
     public:
         FixpointBindingGenerator(Colored::Transition& transition,
-                ColorTypeMap& colorTypes, std::unordered_map<uint32_t, Colored::EquivalenceVec>& partition);
+                ColorTypeMap& colorTypes);
 
         FixpointBindingGenerator(const FixpointBindingGenerator& ) = default;
         

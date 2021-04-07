@@ -13,10 +13,9 @@ namespace PetriEngine {
             //Instantiate partitions
             for(uint32_t i = 0; i < _places->size(); i++){
                 auto place = _places->operator[](i);
-                EquivalenceClass fullClass;
                 interval_t fullInterval = place.type->getFullInterval();
+                EquivalenceClass fullClass = EquivalenceClass(place.type);
                 fullClass._colorIntervals.addInterval(fullInterval); 
-                fullClass._colorType = place.type;
                 _partition[i]._equivalenceClasses.push_back(fullClass);
                 _placeQueue.push_back(i);
                 _inQueue[i] = true;
@@ -35,9 +34,7 @@ namespace PetriEngine {
         }
         
         void PartitionBuilder::partitionNet(){
-            
-            handleLeafTransitions();
-            
+            handleLeafTransitions();            
             
             while(!_placeQueue.empty()){
                 auto placeId = _placeQueue.back();
@@ -54,33 +51,25 @@ namespace PetriEngine {
                     
                     //std::cout << "---------------------------------------------------" << std::endl;
                 }               
-            }
-            
-            assignColorMap();
-            
-
-            std::cout << "Local timer was " << _timer *0.000001 << std::endl;
+            }          
         }
 
-        void PartitionBuilder::assignColorMap(){
-            for(auto& eqVec : _partition){
+        void PartitionBuilder::assignColorMap(std::unordered_map<uint32_t, EquivalenceVec> &partition){
+            for(auto& eqVec : partition){
+                if(eqVec.second.diagonal){
+                    continue;
+                }
                 ColorType *colorType = _places->operator[](eqVec.first).type;
-                for(uint32_t i = 0; i < colorType->size(); i++){
-                    auto start = std::chrono::high_resolution_clock::now(); 
-                    const Color *color = &colorType->operator[](i);
-                    
-                    for(auto eqClass : eqVec.second._equivalenceClasses){
-                        
+                for(uint32_t i = 0; i < colorType->size(); i++){ 
+                    const Color *color = &colorType->operator[](i);                    
+                    for(auto& eqClass : eqVec.second._equivalenceClasses){                        
                         std::vector<uint32_t> colorIds;
                         color->getTupleId(&colorIds);
-                        if(eqClass.constainsColor(colorIds)){
+                        if(eqClass.containsColor(colorIds)){
                             eqVec.second.colorEQClassMap[color] = &eqClass;
                         }
-                        
-                    }
-                    auto end = std::chrono::high_resolution_clock::now();
-                    _timer += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
-                }                
+                    }                    
+                }               
             }
         }
 
@@ -167,7 +156,6 @@ namespace PetriEngine {
                             if(placeVariables.second.count(variable)){
                                 _partition[inArc.place].diagonal = true;
                                 _partition[placeVariables.first].diagonal = true;
-                                
                                 addToQueue(inArc.place);
                                 addToQueue(placeVariables.first);
                                 break;                                
@@ -223,10 +211,7 @@ namespace PetriEngine {
                     auto outIntervals = inArc.expr->getOutputIntervals(varMaps);
                     outIntervals.simplify();
                     EquivalenceVec newEqVec;
-                    EquivalenceClass newEqClass;
-                    newEqClass._colorIntervals = outIntervals;
-                    newEqClass._colorType = _partition[inArc.place]._equivalenceClasses.back()._colorType;
-
+                    EquivalenceClass newEqClass = EquivalenceClass(_partition[inArc.place]._equivalenceClasses.back()._colorType, outIntervals);
                     newEqVec._equivalenceClasses.push_back(newEqClass);
 
                     if((_partition[inArc.place].diagonal || splitPartition(newEqVec, inArc.place))){
@@ -262,18 +247,22 @@ namespace PetriEngine {
             if(_partition.count(placeId) == 0){
                 _partition[placeId] = equivalenceVec;
             } else {
-                EquivalenceClass intersection;
+                EquivalenceClass intersection = EquivalenceClass();
                 uint32_t ecPos1 = 0, ecPos2 = 0;
                 while(findOverlap(equivalenceVec, _partition[placeId],ecPos1, ecPos2, intersection)) {
                     auto ec1 = equivalenceVec._equivalenceClasses[ecPos1];
                     auto ec2 = _partition[placeId]._equivalenceClasses[ecPos2];
-                    auto rightSubtractEc = ec1.subtract(ec2);
-                    auto leftSubtractEc = ec2.subtract(ec1);
-                    // std::cout << "comparing " << ec2.toString() << " to " << ec1.toString() << std::endl;
+                    auto rightSubtractEc = ec1.subtract(ec2, false);
+                    auto leftSubtractEc = ec2.subtract(ec1, false);
+                    // if((_places->operator[](placeId).name == "NB_ATTENTE_A")) {
+                    //     std::cout << "comparing " << ec2.toString() << " to " << ec1.toString() << std::endl;
 
-                    // std::cout << "Intersection: " << intersection.toString() << std::endl;
-                    // std::cout << "Left: " << leftSubtractEc.toString() << std::endl;
-                    // std::cout << "Right: " << rightSubtractEc.toString() << std::endl;
+                        // std::cout << "Intersection: " << intersection.toString() << std::endl;
+                        // std::cout << "Left: " << leftSubtractEc.toString() << std::endl;
+                        // std::cout << "Right: " << rightSubtractEc.toString() << std::endl;
+                    //     ec2.subtract(ec1, true);
+                    // }
+                    
 
                     equivalenceVec._equivalenceClasses.erase(equivalenceVec._equivalenceClasses.begin() + ecPos1);
                     _partition[placeId]._equivalenceClasses.erase(_partition[placeId]._equivalenceClasses.begin() + ecPos2);
@@ -288,7 +277,7 @@ namespace PetriEngine {
                     }
                     if(!rightSubtractEc.isEmpty()){
                         equivalenceVec._equivalenceClasses.push_back(rightSubtractEc);
-                    }                                      
+                    }                                       
                 }
             }
             return split;
