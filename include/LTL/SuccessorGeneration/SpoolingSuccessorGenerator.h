@@ -95,6 +95,7 @@ namespace LTL {
 
                 } else {
                     // list of (transition, weight)
+                    _heuristic->prepare(*state);
                     std::vector<std::pair<uint32_t, uint32_t>> weighted_tids;
                     while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
                         assert(tid <= _net.numberOfTransitions());
