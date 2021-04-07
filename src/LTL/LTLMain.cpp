@@ -123,17 +123,20 @@ namespace LTL {
                     gen.setHeuristic(std::make_unique<RandomHeuristic>());
 
                     result = _verify(net, negated_formula,
-                                     std::make_unique<RandomNDFS>(net, negated_formula, automaton, std::move(gen), options.trace,
+                                     std::make_unique<RandomNDFS>(net, negated_formula, automaton, std::move(gen),
+                                                                  options.trace,
                                                                   options.ltluseweak),
                                      options);
                 } else if (options.trace != TraceLevel::None) {
                     result = _verify(net, negated_formula,
                                      std::make_unique<NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>(
-                                             net, negated_formula, automaton, options.trace, options.ltluseweak), options);
+                                             net, negated_formula, automaton, options.trace, options.ltluseweak),
+                                     options);
                 } else {
                     result = _verify(net, negated_formula,
                                      std::make_unique<NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>(
-                                             net, negated_formula, automaton, options.trace, options.ltluseweak), options);
+                                             net, negated_formula, automaton, options.trace, options.ltluseweak),
+                                     options);
                 }
                 break;
             case Algorithm::Tarjan:
@@ -143,7 +146,8 @@ namespace LTL {
                     gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
                     if (options.strategy == PetriEngine::Reachability::RDFS) {
                         gen.setHeuristic(std::make_unique<RandomHeuristic>(options.seed_offset));
-                    } else if (options.strategy == PetriEngine::Reachability::HEUR) {
+                    } else if (options.strategy == PetriEngine::Reachability::HEUR
+                               || options.strategy == PetriEngine::Reachability::DEFAULT) {
                         gen.setHeuristic(std::make_unique<AutomatonHeuristic>(net, automaton));
                     }
 
