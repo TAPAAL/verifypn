@@ -160,6 +160,7 @@ namespace LTL {
                     } else if (options.strategy == PetriEngine::Reachability::HEUR) {
                         gen.setHeuristic(std::make_unique<ComposedHeuristic<16>>(std::make_unique<AutomatonHeuristic>(net, automaton), std::make_unique<DistanceHeuristic>(net, negated_formula)));
                         //gen.setHeuristic(std::make_unique<AutomatonHeuristic>(net, automaton));
+                        //gen.setHeuristic(std::make_unique<FireCountHeuristic>(net));
                     }
 
                     if (options.trace != TraceLevel::None) {
