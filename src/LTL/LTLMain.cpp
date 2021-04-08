@@ -158,7 +158,7 @@ namespace LTL {
                     if (options.strategy == PetriEngine::Reachability::RDFS) {
                         gen.setHeuristic(std::make_unique<RandomHeuristic>(options.seed_offset));
                     } else if (options.strategy == PetriEngine::Reachability::HEUR) {
-                        gen.setHeuristic(std::make_unique<ComposedHeuristic<16>>(std::make_unique<AutomatonHeuristic>(net, automaton), std::make_unique<DistanceHeuristic>(net, negated_formula)));
+                        gen.setHeuristic(std::make_unique<WeightedComposedHeuristic>(std::make_unique<AutomatonHeuristic>(net, automaton), std::make_unique<FireCountHeuristic>(net), options.weight1, options.weight2));
                         //gen.setHeuristic(std::make_unique<AutomatonHeuristic>(net, automaton));
                         //gen.setHeuristic(std::make_unique<FireCountHeuristic>(net));
                     }
