@@ -6,9 +6,7 @@
 #include "Structures/light_deque.h"
 #include "PQL/PQL.h"
 #include "PetriEngine/Stubborn/StubbornSet.h"
-#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include <memory>
-#include "PetriEngine/Stubborn/StubbornSet.h"
 
 namespace LTL {
     class GuardInfo;

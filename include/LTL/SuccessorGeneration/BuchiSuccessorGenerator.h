@@ -34,7 +34,7 @@ namespace LTL {
     class BuchiSuccessorGenerator {
     public:
         explicit BuchiSuccessorGenerator(Structures::BuchiAutomaton automaton)
-                : aut(std::move(automaton))
+                : aut(std::move(automaton)), self_loops(aut._buchi->num_states(), InvariantSelfLoop::UNKNOWN)
         {
             deleter = SuccIterDeleter{&aut};
         }
@@ -91,10 +91,35 @@ namespace LTL {
             }
         };
 
+
+        bool has_invariant_self_loop(size_t state) {
+            if (self_loops[state] != InvariantSelfLoop::UNKNOWN)
+                return self_loops[state] == InvariantSelfLoop::TRUE;
+            auto it = std::unique_ptr<spot::twa_succ_iterator>{
+                    aut._buchi->succ_iter(aut._buchi->state_from_number(state))};
+            for (it->first(); !it->done(); it->next()) {
+                auto dest_id = aut._buchi->state_number(it->dst());
+                bdd cond = it->cond();
+                if (state == dest_id && cond == bddtrue) {
+                    self_loops[state] = InvariantSelfLoop::TRUE;
+                    return true;
+                }
+            }
+            self_loops[state] = InvariantSelfLoop::FALSE;
+            return false;
+        }
+
+
         SuccIterDeleter deleter{};
 
         using _succ_iter = std::unique_ptr<spot::twa_succ_iterator, SuccIterDeleter>;
         _succ_iter succ = nullptr;
+            private:
+
+        enum class InvariantSelfLoop {
+            TRUE, FALSE, UNKNOWN
+        };
+        std::vector<InvariantSelfLoop> self_loops;
     };
 }
 #endif //VERIFYPN_BUCHISUCCESSORGENERATOR_H

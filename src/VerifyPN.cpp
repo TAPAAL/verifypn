@@ -344,8 +344,15 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 ++i;
             }
         }
-        else if (strcmp(argv[i], "--no-compress-buchi") == 0) {
-            options.compress_buchi = false;
+        else if (strcmp(argv[i], "--compress-aps") == 0) {
+            if (argc <= i + 1 || strcmp(argv[i+1], "1") == 0) {
+                options.ltl_compress_aps = APCompression::Full;
+                ++i;
+            }
+            else if (strcmp(argv[i+1], "0") == 0) {
+                options.ltl_compress_aps = APCompression::None;
+                ++i;
+            }
         }
         else if (strcmp(argv[i], "--weight") == 0) {
             //TODO this is a temporary option to set the weight of the weighted composed heuristic.
@@ -458,8 +465,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -z <number of cores>                 Number of cores to use (currently only query simplification)\n"
 #endif
                     "  -tar                                 Enables Trace Abstraction Refinement for reachability properties\n"
-                    "  --max-intervals <interval count>   The max amount of intervals kept when computing the color fixpoint\n"
-                    "                  <interval count>   Defualt is 255 and then after <interval-timeout> second(s) to 5\n"
+                    "  --max-intervals <interval count>     The max amount of intervals kept when computing the color fixpoint\n"
+                    "                  <interval count>     Default is 255 and then after <interval-timeout> second(s) to 5\n"
                     "  --write-simplified <filename>        Outputs the queries to the given file after simplification\n"
                     "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
                     "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
@@ -470,11 +477,11 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  --write-buchi <filename> [<format>]  Valid for LTL. Write the generated buchi automaton to file. Formats:\n"
                     "                                       - dot   (default) Write the buchi in GraphViz Dot format\n"
                     "                                       - hoa   Write the buchi in the Hanoi Omega-Automata Format\n"
-                    "                                       - spin  Write the buchi in the spin model checker format."
-                    "  --no-compress-buchi                  Disable compression of atomic propositions in LTL."
-                    "                                       This compression significantly helps in dealing with massive"
-                    "                                       fireability queries, but sometimes hurts Büchi construction "
-                    "                                       and query simplifation in complex queries."
+                    "                                       - spin  Write the buchi in the spin model checker format.\n"
+                    "  --compress-aps                       Disable compression of atomic propositions in LTL.\n"
+                    "                                       This compression significantly helps in dealing with massive\n"
+                    "                                       fireability queries, but sometimes hurts Büchi construction \n"
+                    "                                       and query simplifation in complex queries.\n"
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -929,8 +936,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 #ifdef VERIFYPN_MC_Simplification
         std::scoped_lock scopedLock{spot_mutex};
 #endif
-        // TODO use heuristic for whether to compress? (e.g. based on formula size).
-        cond = LTL::simplify(cond, options.compress_buchi);
+        cond = LTL::simplify(cond, options.ltl_compress_aps);
     }
     negstat_t stats;
     cond = Condition::initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true)

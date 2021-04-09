@@ -28,7 +28,7 @@
 using namespace PetriEngine::PQL;
 using namespace PetriEngine;
 
-#define DEBUG_EXPLORED_STATES
+//#define DEBUG_EXPLORED_STATES
 
 namespace LTL {
     struct Result {
@@ -75,17 +75,6 @@ namespace LTL {
                    const options_t &options)
     {
         Result result;
-
-/*
-        std::unique_ptr<Checker> modelChecker;
-        if constexpr (std::is_same_v<Checker, TarjanModelChecker<SpoolingSuccessorGenerator, true>> ||
-                      std::is_same_v<Checker, TarjanModelChecker<SpoolingSuccessorGenerator, false>>) {
-
-        } else {
-            modelChecker = std::make_unique<Checker>(*net, negatedQuery, options.trace, options.ltluseweak);
-        }
-*/
-
         result.satisfied = checker->isSatisfied();
         result.is_weak = checker->isweak();
 #ifdef DEBUG_EXPLORED_STATES
@@ -106,19 +95,13 @@ namespace LTL {
         Condition_ptr negated_formula = res.first;
         bool negate_answer = res.second;
 
-        if (options.stubbornreduction && options.ltlalgorithm != Algorithm::Tarjan) {
-            std::cerr << "Error: Stubborn reductions only supported for Tarjan's algorithm" << std::endl;
-            return ErrorCode;
-        }
-
-        bool compress = options.compress_buchi && options.buchi_out_file.empty();
+        // force AP compress off for Büchi prints
+        auto compress = options.buchi_out_file.empty() ? options.ltl_compress_aps : APCompression::None;
 
         Structures::BuchiAutomaton automaton = makeBuchiAutomaton(negated_formula, compress);
         if (!options.buchi_out_file.empty()) {
             automaton.output_buchi(options.buchi_out_file, options.buchi_out_type);
         }
-
-        bool hasinhib = net->has_inhibitor();
 
         Result result;
         switch (options.ltlalgorithm) {
@@ -129,35 +112,31 @@ namespace LTL {
                     gen.setHeuristic(std::make_unique<RandomHeuristic>());
 
                     result = _verify(net, negated_formula,
-                                     std::make_unique<RandomNDFS>(net, negated_formula, automaton, std::move(gen), options.trace,
+                                     std::make_unique<RandomNDFS>(net, negated_formula, automaton, std::move(gen),
+                                                                  options.trace,
                                                                   options.ltluseweak),
                                      options);
                 } else if (options.trace != TraceLevel::None) {
                     result = _verify(net, negated_formula,
                                      std::make_unique<NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>(
-                                             net, negated_formula, automaton, options.trace, options.ltluseweak), options);
+                                             net, negated_formula, automaton, options.trace, options.ltluseweak),
+                                     options);
                 } else {
                     result = _verify(net, negated_formula,
                                      std::make_unique<NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>(
-                                             net, negated_formula, automaton, options.trace, options.ltluseweak), options);
+                                             net, negated_formula, automaton, options.trace, options.ltluseweak),
+                                     options);
                 }
                 break;
             case Algorithm::Tarjan:
-                if (options.strategy != PetriEngine::Reachability::DFS ||
-                    (!hasinhib && options.stubbornreduction && !negated_formula->containsNext())) {
-                    // Use spooling successor generator in case of different search strategy or stubborn set method.
+                if (options.strategy != PetriEngine::Reachability::DFS) {
+                    // Running default, BestFS, or RDFS search strategy so use spooling successor generator to enable heuristics.
                     SpoolingSuccessorGenerator gen{net, negated_formula};
-                    if (!hasinhib && options.stubbornreduction && !negated_formula->containsNext()) {
-                        std::cout << "Running stubborn version!" << std::endl;
-
-                        gen.setSpooler(std::make_unique<InterestingLTLStubbornSet>(*net, negated_formula));
-                    } else {
-                        gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
-                    }
-
+                    gen.setSpooler(std::make_unique<EnabledSpooler>(net, gen));
                     if (options.strategy == PetriEngine::Reachability::RDFS) {
                         gen.setHeuristic(std::make_unique<RandomHeuristic>(options.seed_offset));
-                    } else if (options.strategy == PetriEngine::Reachability::HEUR) {
+                    } else if (options.strategy == PetriEngine::Reachability::HEUR
+                               || options.strategy == PetriEngine::Reachability::DEFAULT) {
                         gen.setHeuristic(std::make_unique<WeightedComposedHeuristic>(std::make_unique<AutomatonHeuristic>(net, automaton), std::make_unique<FireCountHeuristic>(net), options.weight1, options.weight2));
                         //gen.setHeuristic(std::make_unique<AutomatonHeuristic>(net, automaton));
                         //gen.setHeuristic(std::make_unique<FireCountHeuristic>(net));
@@ -217,12 +196,10 @@ namespace LTL {
                   << (result.satisfied ^ negate_answer ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT "
                   << LTL::to_string(options.ltlalgorithm)
                   << (result.is_weak ? " WEAK_SKIP" : "")
-                  << ((options.stubbornreduction && !negated_formula->containsNext()) ? " STUBBORN" : "")
                   << std::endl;
 #ifdef DEBUG_EXPLORED_STATES
         std::cout << "FORMULA " << queryName << " STATS EXPLORED " << result.explored_states << std::endl;
 #endif
-        /*(queries[qid]->isReachability(0) ? " REACHABILITY" : "") <<*/
 
         return SuccessCode;
     }

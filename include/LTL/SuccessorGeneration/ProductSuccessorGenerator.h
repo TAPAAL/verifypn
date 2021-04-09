@@ -24,7 +24,6 @@
 #include "LTL/Structures/ProductState.h"
 #include "BuchiSuccessorGenerator.h"
 #include "LTL/LTLToBuchi.h"
-#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 #include "LTL/Simplification/SpotToPQL.h"
 #include "LTL/Structures/GuardInfo.h"
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
@@ -234,6 +233,10 @@ namespace LTL {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
                 _successor_generator.pop(sucinfo);
             }
+        }
+
+        bool has_invariant_self_loop(const LTL::Structures::ProductState &state) {
+            return buchi.has_invariant_self_loop(state.getBuchiState());
         }
 
     private:

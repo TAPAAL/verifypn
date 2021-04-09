@@ -106,7 +106,17 @@ namespace PetriEngine {
             }
         }
 
-        bool RDFSQueue::top(State &state) const {
+        bool RDFSQueue::top(State &state) {
+            if (!_cache.empty()) {
+                std::shuffle ( _cache.begin(), _cache.end(), rng );
+                uint32_t n = _cache.back();
+                _states->decode(state, n);
+                for(size_t i = 0; i < _cache.size(); ++i)
+                {
+                    _stack.push(_cache[i]);
+                }
+                _cache.clear();
+            }
             if (_stack.empty()) return false;
             uint32_t n = _stack.top();
             _states->decode(state, n);

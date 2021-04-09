@@ -93,6 +93,11 @@ namespace LTL {
         dstack.push(DEntry{ctop});
         if (this->successorGenerator->isAccepting(state)) {
             astack.push(ctop);
+            if (this->successorGenerator->has_invariant_self_loop(state)){
+                //std::cerr << "Invariant self loop found. Violation is true" << std::endl;
+                violation = true;
+                invariant_loop = true;
+            }
         }
         if constexpr (IsSpooling) {
             this->successorGenerator->push();
