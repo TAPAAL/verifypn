@@ -24,7 +24,6 @@
 
 namespace LTL {
 
-    template<uint8_t S>
     class ComposedHeuristic: public Heuristic {
     public:
 
@@ -36,18 +35,7 @@ namespace LTL {
             _secondary->prepare(state);
         }
 
-        uint32_t eval(const Structures::ProductState &state, uint32_t tid) override {
-            if (_primary_has_heuristic && !_secondary_has_heuristic) {
-                return _primary->eval(state, tid);
-            } else if (!_primary_has_heuristic && _secondary_has_heuristic) {
-                return _secondary->eval(state, tid);
-            } else if (_primary_has_heuristic && _secondary_has_heuristic) {
-                //std::cerr << "Primary: " << _primary->eval(state, tid) << ", S: " << S << ", Secondary: " << _secondary->eval(state, tid) << ", secondary_mask: " << _secondary_mask << " result: " << ((_primary->eval(state, tid) << S) | (_secondary_mask & _secondary->eval(state, tid))) << std::endl;
-                return (_primary->eval(state, tid) << S) | (_secondary_mask & _secondary->eval(state, tid));
-            } else {
-                return 0;
-            }
-        }
+        uint32_t eval(const Structures::ProductState &state, uint32_t tid) override = 0;
 
         bool has_heuristic(const Structures::ProductState &state) override {
             _primary_has_heuristic = _primary->has_heuristic(state);
@@ -55,10 +43,9 @@ namespace LTL {
             return _primary_has_heuristic || _secondary_has_heuristic;
         }
 
-    private:
+    protected:
         std::unique_ptr<Heuristic> _primary, _secondary;
         bool _primary_has_heuristic = false, _secondary_has_heuristic = false;
-        static constexpr uint32_t _secondary_mask = (1 << S) - 1;
     };
 
 }

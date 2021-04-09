@@ -59,6 +59,7 @@ struct options_t {
     std::string buchi_out_file;
     LTL::BuchiOutType buchi_out_type = LTL::BuchiOutType::Dot;
     bool compress_buchi = true;
+    uint32_t weight1, weight2;
 
     std::string query_out_file;
     std::string model_out_file;

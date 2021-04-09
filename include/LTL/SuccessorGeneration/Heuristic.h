@@ -37,6 +37,10 @@ namespace LTL {
             return true;
         }
 
+        virtual void push(uint32_t tid) {};
+
+        virtual void pop(uint32_t tid) {};
+
         virtual ~Heuristic() = default;
     };
 }

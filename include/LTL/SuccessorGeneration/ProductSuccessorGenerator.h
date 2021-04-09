@@ -224,6 +224,18 @@ namespace LTL {
 
         size_t buchiStates() { return buchi.buchiStates(); }
 
+        void push() {
+            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
+                _successor_generator.push();
+            }
+        }
+
+        void pop(const typename SuccessorGen::sucinfo &sucinfo) {
+            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
+                _successor_generator.pop(sucinfo);
+            }
+        }
+
     private:
         SuccessorGen _successor_generator;
         const PetriEngine::PetriNet *_net;

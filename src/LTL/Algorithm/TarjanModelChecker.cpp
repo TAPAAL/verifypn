@@ -121,6 +121,9 @@ namespace LTL {
         if (this->successorGenerator->isAccepting(state)) {
             astack.push(ctop);
         }
+        if constexpr (IsSpooling) {
+            this->successorGenerator->push();
+        }
     }
 
     template<typename S, bool SaveTrace>
@@ -150,6 +153,9 @@ namespace LTL {
         }
         if (!dstack.empty()) {
             update(p);
+            if constexpr (IsSpooling) {
+                this->successorGenerator->pop(dstack.top().sucinfo);
+            }
         }
     }
 

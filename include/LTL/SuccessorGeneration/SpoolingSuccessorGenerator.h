@@ -189,11 +189,23 @@ namespace LTL {
             assert(false);
         }
 
+        void push() {
+            // No transitions have been fired yet. We must be in the initial marking.
+            if (fired() == std::numeric_limits<uint32_t>::max() || !_heuristic) return;
+            _heuristic->push(fired());
+        }
+
+        void pop(const sucinfo &sc) {
+            if (_heuristic && sc.successors.has_consumed())
+                _heuristic->pop(sc.successors.last_pop());
+        }
+
+
     private:
         std::unique_ptr<SuccessorSpooler> _spooler = nullptr;
         std::unique_ptr<Heuristic> _heuristic = nullptr;
 
-        uint32_t _last;
+        uint32_t _last = std::numeric_limits<uint32_t>::max();
         std::unique_ptr<uint32_t[]> _transbuf;   /* buffer for enabled transitions, size is ntransitions. */
         LTL::Structures::ProductState _statebuf;
     };
