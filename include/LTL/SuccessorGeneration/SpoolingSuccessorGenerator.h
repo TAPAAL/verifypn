@@ -133,6 +133,61 @@ namespace LTL {
             write.setBuchiState(parent.getBuchiState());
         }
 
+        void generate_all(sucinfo &sucinfo)
+        {
+            assert(_spooler != nullptr);
+            assert(sucinfo.successors != nullptr);
+            _spooler->prepare(static_cast<const LTL::Structures::ProductState*>(_parent));
+            _spooler->generateAll();
+
+            uint32_t tid;
+            if (!_heuristic) {
+                uint32_t nsuc = 0;
+                // generate list of transitions that generate a successor.
+                while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
+                    assert(tid <= _net.numberOfTransitions());
+                    _transbuf[nsuc++] = tid;
+                    assert(nsuc <= _net.numberOfTransitions());
+                }
+                sucinfo.successors.extend_to(_transbuf.get(), nsuc);
+
+            } else {
+                // list of (transition, weight)
+                std::vector<std::pair<uint32_t, uint32_t>> weighted_tids;
+                while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
+                    assert(tid <= _net.numberOfTransitions());
+                    SuccessorGenerator::_fire(_statebuf, tid);
+                    _statebuf.setBuchiState(sucinfo.buchi_state);
+                    weighted_tids.emplace_back(tid, _heuristic->eval(_statebuf, tid));
+                }
+                // sort by least distance first.
+                std::sort(std::begin(weighted_tids), std::end(weighted_tids),
+                          [](auto &l, auto &r) { return l.second < r.second; });
+                // TODO can be specialized version in SuccessorQueue for efficiency, but this approaches being super bloated.
+                std::transform(std::begin(weighted_tids), std::end(weighted_tids),
+                               _transbuf.get(),
+                               [](auto &p) { return p.first; });
+                sucinfo.successors.extend_to(_transbuf.get(), weighted_tids.size());
+            }
+        }
+
+        std::size_t nenabled()
+        {
+            //TODO
+            assert(false);
+        }
+
+        bool enabled()
+        {
+            //TODO
+            assert(false);
+        }
+
+        void stubborn()
+        {
+            //TODO
+            assert(false);
+        }
 
     private:
         std::unique_ptr<SuccessorSpooler> _spooler = nullptr;

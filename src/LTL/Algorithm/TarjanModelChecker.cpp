@@ -19,6 +19,16 @@
 
 namespace LTL {
 
+    inline void _dump_state(const LTL::Structures::ProductState &state)
+    {
+        std::cerr << "marking: ";
+        std::cerr << state.marking()[0];
+        for (size_t i = 1; i < state.size(); ++i) {
+            std::cerr << ", " << state.marking()[i];
+        }
+        std::cerr << std::endl;
+    }
+
     template<typename S, bool SaveTrace>
     bool TarjanModelChecker<S, SaveTrace>::isSatisfied()
     {
@@ -51,10 +61,27 @@ namespace LTL {
 
                 // lookup successor in 'hash' table
                 auto suc_pos = chash[hash(stateid)];
+                auto marking = seen.getMarkingId(stateid);
                 while (suc_pos != std::numeric_limits<idx_t>::max() && cstack[suc_pos].stateid != stateid) {
+                    if constexpr (IsSpooling) {
+                        if (seen.getMarkingId(cstack[suc_pos].stateid) == marking) {
+                            if (extstack.empty() || suc_pos > extstack.top()) {
+                                this->successorGenerator->prepare(&parent, dtop.sucinfo);
+                                this->successorGenerator->generateAll(dtop.sucinfo);
+                                extstack.push(cstack.size() - 1);
+                            }
+                        }
+                    }
                     suc_pos = cstack[suc_pos].next;
                 }
                 if (suc_pos != std::numeric_limits<idx_t>::max()) {
+                    if constexpr (IsSpooling) {
+                        if (extstack.empty() || suc_pos > extstack.top()) {
+                            this->successorGenerator->prepare(&parent, dtop.sucinfo);
+                            this->successorGenerator->generateAll(dtop.sucinfo);
+                            extstack.push(cstack.size() - 1);
+                        }
+                    }
                     // we found the successor, i.e. there's a loop!
                     // now update lowlinks and check whether the loop contains an accepting state
                     update(suc_pos);
@@ -114,6 +141,12 @@ namespace LTL {
         }
         if (!astack.empty() && p == astack.top()) {
             astack.pop();
+        }
+        if (!extstack.empty() && p == extstack.top()) {
+            extstack.pop();
+        }
+        if (!extstack.empty() && p == extstack.top()) {
+            extstack.pop();
         }
         if (!dstack.empty()) {
             update(p);

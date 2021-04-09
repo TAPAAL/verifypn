@@ -103,8 +103,8 @@ namespace LTL {
         for (; finv < linv; ++finv) {
             auto inv = invariants()[finv];
             // TODO correct?
-            presetOf(inv.place, true);
-            postsetOf(inv.place, false);
+            //presetOf(inv.place, true);
+            postsetOf(inv.place, true);
         }
     }
 
@@ -122,12 +122,12 @@ namespace LTL {
         }
         if (!visibleStubborn) return;
         else {
-            for (uint32_t tid=0; tid < _net.numberOfTransitions(); ++tid) {
-                _stubborn[tid] = true;
-            }
+            memset(_stubborn.get(), true, _net.numberOfTransitions());
         }
         // following block would implement rule V
-        /*for (uint32_t tid = 0; tid < _net.numberOfTransitions(); ++tid) {
+        /*
+        static_assert(!isRuleVPrime);
+        for (uint32_t tid = 0; tid < _net.numberOfTransitions(); ++tid) {
             if (_visible[tid]) addToStub(tid);
         }
         closure();*/

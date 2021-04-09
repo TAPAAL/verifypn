@@ -130,6 +130,8 @@ namespace LTL {
         // cstack positions of accepting states in current search path, for quick access.
         std::stack<idx_t> astack;
 
+        std::stack<idx_t> extstack;
+
         bool violation = false;
         size_t loopstate = std::numeric_limits<size_t>::max();
         size_t looptrans = std::numeric_limits<size_t>::max();
