@@ -9,10 +9,17 @@
 
 echo $BK_TOOL
 
+if [ -z "BK_BIN_PATH" ] ; then
+	BK_BIN_PATH="/home/mcc/BenchKit/"
+	echo "Setting BK_BIN_PATH=$BK_BIN_PATH" 
+else
+	echo "Got BK_BIN_PATH=$BK_BIN_PATH"
+fi
+
 case "$BK_TOOL" in
     tapaal)
         echo "---> " $BK_TOOL " --- TAPAAL"
-        /home/mcc/BenchKit/tapaal.sh
+        "$BK_BIN_PATH"tapaal.sh
                 ;;
     *)
         echo "---> Error: Unrecognized BK_TOOL name !!!"  
