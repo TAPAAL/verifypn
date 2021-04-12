@@ -480,7 +480,7 @@ case "$BK_EXAMINATION" in
         STRATEGIES_PAR[2]="-ltl tarjan -s RDFS -q 0 -l 0 -d $SHORTRED"
         STRATEGIES_PAR[3]="-ltl ndfs -q 0 -l 0 -d $SHORTRED"
         unset STRATEGIES_SEQ
-        STRATEGIES_SEQ[0]="-ltl tarjan -q 0 -l 0 -d $SHORTRED"
+        STRATEGIES_SEQ[0]="-ltl tarjan -q 20 -l 5 -d $SHORTRED"
         unset STRATEGIES_RAND
         STRATEGIES_RAND[0]="-ltl tarjan -s RDFS --seed-offset 0 -q 0 -l 0 -d $SHORTRED"
         STRATEGIES_RAND[1]="-ltl tarjan -s RDFS --seed-offset 1337 -q 0 -l 0 -d $SHORTRED"
@@ -504,7 +504,7 @@ case "$BK_EXAMINATION" in
         STRATEGIES_PAR[2]="-ltl tarjan -s RDFS -q 0 -l 0 -d $SHORTRED"
         STRATEGIES_PAR[3]="-ltl ndfs -q 0 -l 0 -d $SHORTRED"
         unset STRATEGIES_SEQ
-        STRATEGIES_SEQ[0]="-ltl tarjan -q 0 -l 0 -d $SHORTRED"
+        STRATEGIES_SEQ[0]="-ltl tarjan -q 20 -l 5 -d $SHORTRED"
         unset STRATEGIES_RAND
         STRATEGIES_RAND[0]="-ltl tarjan -s RDFS --seed-offset 0 -q 0 -l 0 -d $SHORTRED"
         STRATEGIES_RAND[1]="-ltl tarjan -s RDFS --seed-offset 1337 -q 0 -l 0 -d $SHORTRED"
