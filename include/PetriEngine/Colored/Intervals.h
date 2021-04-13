@@ -545,8 +545,8 @@ namespace PetriEngine {
                     }
                     
                     _intervals.erase(_intervals.begin() + closestInterval.intervalId2);
-                    
                 }
+                simplify();
             }
 
             closestIntervals getClosestIntervals(){
@@ -560,7 +560,13 @@ namespace PetriEngine {
                             for(uint32_t k = 0; k < interval->size(); k++) {
                                 int32_t val1 = otherInterval->operator[](k)._lower - interval->operator[](k)._upper;
                                 int32_t val2 = interval->operator[](k)._lower - otherInterval->operator[](k)._upper;
-                                dist += std::max(0, std::max(val1, val2));
+                                int32_t lowerDist = interval->operator[](k)._lower > otherInterval->operator[](k)._lower? 
+                                    interval->operator[](k)._lower - otherInterval->operator[](k)._lower : 
+                                    otherInterval->operator[](k)._lower - interval->operator[](k)._lower;
+                                int32_t upperDist = interval->operator[](k)._upper > otherInterval->operator[](k)._upper? 
+                                    interval->operator[](k)._upper - otherInterval->operator[](k)._upper : 
+                                    otherInterval->operator[](k)._upper - interval->operator[](k)._upper;
+                                dist += std::max(upperDist + lowerDist, upperDist + lowerDist + std::max(val1, val2));
                                 if(dist >= currentBest.distance){
                                     break;
                                 }
