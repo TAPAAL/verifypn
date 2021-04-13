@@ -3,17 +3,25 @@
 # This is the initialization script for the participation of TAPAAL
 # untimed engine verifypn in the Petri net competition 2018.
 # BK_EXAMINATION: it is a string that identifies your "examination"
-#UNCOMMENT FOR THE VIRTUAL MACHINE AND COMMENT OUT NEXT TWO LINES
-#MODEL_PATH=.
-#VERIFYPN=/home/mcc/BenchKit/bin/verifypn
-#TIMEOUT_TOTAL=$(echo "$BK_TIME_CONFINEMENT-10" | bc) 
-#TEMPDIR="/home/mcc/tmp"
-# DIR=$(dirname "${VERIFYPN}")
 
+#uncomment for running locally
+#BK_TIME_CONFINEMENT=3600
+
+MODEL_PATH=.
 DIR=$(dirname "${BASH_SOURCE[0]}")
+VERIFYPN="$DIR"/bin/verifypn
 
-TEMPDIR="/scratch/pgj/"
-TIMEOUT_TOTAL="3590"
+if [ -z "$BK_TIME_CONFINEMENT" ] ; then
+	BK_TIME_CONFINEMENT=3600
+	echo "Setting BK_TIME_CONFINEMENT=$BK_TIME_CONFINEMENT"
+else
+	echo "Got BK_TIME_CONFINEMENT=$BK_TIME_CONFINEMENT"
+fi
+TIMEOUT_TOTAL=$(echo "$BK_TIME_CONFINEMENT-10" | bc) 
+TEMPDIR="$DIR/tmp"
+
+#uncomment for running locally
+#TEMPDIR="/scratch/pgj/"
 
 TIMEOUT_CMD=timeout
 TIME_CMD="/usr/bin/time -f \"@@@%e,%M@@@\" "
@@ -22,8 +30,17 @@ START_TIME=$(date +"%s")
 SECONDS=0
 
 #Allowed memory in kB
-MEM="15000000"
+if [ -z "$BK_MEMORY_CONFINEMENT" ] ; then
+	BK_MEMORY_CONFINEMENT="16000"
+	echo "Setting BK_MEMORY_CONFINEMENT=$BK_MEMORY_CONFINEMENT"
+else
+	echo "Got BK_MEMORY_CONFINEMENT=$BK_MEMORY_CONFINEMENT"
+fi
+MEM=$(echo "$BK_MEMORY_CONFINEMENT-500" | bc)
+MEM=$(echo "$MEM*1024" | bc)
+echo "Limiting to $MEM kB"
 ulimit -v $MEM
+
 
 PAR_CMD=parallel
 
@@ -42,7 +59,7 @@ SIPHONTRAP=$(echo "$TIMEOUT_TOTAL/12" | bc)
 SHORTRED=$(echo "$TIMEOUT_TOTAL/30" | bc)
 EXTENDED=$(echo "$TIMEOUT_TOTAL/25" | bc)
 
-STRATEGIES_SEQ[0]="-s RDFS -q 20 -l 5 -d $SHORTRED"
+STRATEGIES_SEQ[0]="-s RDFS -q 40 -l 5 -d $SHORTRED"
 STRATEGIES_SEQ[1]="-tar -q 0 -d $SHORTRED"
 
 
@@ -122,13 +139,14 @@ function verifyparallel {
     echo "Doing parallel simplification ($NUMBER in total)"
     echo "Total simplification timout is $TIMEOUT_SIMP -- reduction timeout is $TIMEOUT_RED"
 
-    echo "$TIMEOUT_CMD $SECONDS $VERIFYPN -n $PARALLEL_SIMPLIFICATION_OPTIONS -q $TIMEOUT_SIMP -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -s OverApprox --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY"
 
     if [[ $BK_EXAMINATION == "LTL"* ]]; then
         PAR_SIMP_TIMEOUT=$(echo "$TIMEOUT_SIMP + $TIMEOUT_RED" | bc)
     else
         PAR_SIMP_TIMEOUT=$SECONDS
     fi
+
+    echo "$TIMEOUT_CMD $PAR_SIMP_TIMEOUT $VERIFYPN -n $PARALLEL_SIMPLIFICATION_OPTIONS -q $TIMEOUT_SIMP -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -s OverApprox --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY"
 
     TMP=$($TIMEOUT_CMD $PAR_SIMP_TIMEOUT $VERIFYPN -n $PARALLEL_SIMPLIFICATION_OPTIONS -q $TIMEOUT_SIMP -l $TIMEOUT_LP -d $TIMEOUT_RED -z 4 -s OverApprox --binary-query-io 2 --write-simplified $QF --write-reduced $MF -x $MULTIQUERY_INPUT $MODEL_PATH/model.pnml $CATEGORY)
 
@@ -480,7 +498,7 @@ case "$BK_EXAMINATION" in
         STRATEGIES_PAR[2]="-ltl tarjan -s RDFS -q 0 -l 0 -d $SHORTRED"
         STRATEGIES_PAR[3]="-ltl ndfs -q 0 -l 0 -d $SHORTRED"
         unset STRATEGIES_SEQ
-        STRATEGIES_SEQ[0]="-ltl tarjan -q 20 -l 5 -d $SHORTRED"
+        STRATEGIES_SEQ[0]="-ltl tarjan -q 40 -l 5 -d $SHORTRED"
         unset STRATEGIES_RAND
         STRATEGIES_RAND[0]="-ltl tarjan -s RDFS --seed-offset 0 -q 0 -l 0 -d $SHORTRED"
         STRATEGIES_RAND[1]="-ltl tarjan -s RDFS --seed-offset 1337 -q 0 -l 0 -d $SHORTRED"
@@ -504,7 +522,7 @@ case "$BK_EXAMINATION" in
         STRATEGIES_PAR[2]="-ltl tarjan -s RDFS -q 0 -l 0 -d $SHORTRED"
         STRATEGIES_PAR[3]="-ltl ndfs -q 0 -l 0 -d $SHORTRED"
         unset STRATEGIES_SEQ
-        STRATEGIES_SEQ[0]="-ltl tarjan -q 20 -l 5 -d $SHORTRED"
+        STRATEGIES_SEQ[0]="-ltl tarjan -q 40 -l 5 -d $SHORTRED"
         unset STRATEGIES_RAND
         STRATEGIES_RAND[0]="-ltl tarjan -s RDFS --seed-offset 0 -q 0 -l 0 -d $SHORTRED"
         STRATEGIES_RAND[1]="-ltl tarjan -s RDFS --seed-offset 1337 -q 0 -l 0 -d $SHORTRED"
