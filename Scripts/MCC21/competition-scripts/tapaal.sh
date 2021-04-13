@@ -4,12 +4,21 @@
 # untimed engine verifypn in the Petri net competition 2018.
 # BK_EXAMINATION: it is a string that identifies your "examination"
 
-#uncomment for running locally
-#BK_TIME_CONFINEMENT=3600
-
-MODEL_PATH=.
 DIR=$(dirname "${BASH_SOURCE[0]}")
-VERIFYPN="$DIR"/bin/verifypn
+
+if [ -z "$MODEL_PATH" ] ; then
+	MODEL_PATH=.
+	echo "Setting MODEL_PATH=$MODEL_PATH"
+else
+	echo "Got MODEL_PATH=$MODEL_PATH"
+fi
+
+if [ -z "$VERIFYPN" ] ; then
+	VERIFYPN="$DIR"/bin/verifypn
+	echo "Setting VERIFYPN=$VERIFYPN"
+else
+	echo "Got VERIFYPN=$VERIFYPN"
+fi
 
 if [ -z "$BK_TIME_CONFINEMENT" ] ; then
 	BK_TIME_CONFINEMENT=3600
@@ -18,10 +27,13 @@ else
 	echo "Got BK_TIME_CONFINEMENT=$BK_TIME_CONFINEMENT"
 fi
 TIMEOUT_TOTAL=$(echo "$BK_TIME_CONFINEMENT-10" | bc) 
-TEMPDIR="$DIR/tmp"
 
-#uncomment for running locally
-#TEMPDIR="/scratch/pgj/"
+if [ -z "$TEMPDIR" ]; then
+	TEMPDIR="$DIR/tmp"
+	echo "Setting TEMPDIR=$TEMPDIR"
+else
+	echo "Got TEMPDIR=$TEMPDIR"
+fi
 
 TIMEOUT_CMD=timeout
 TIME_CMD="/usr/bin/time -f \"@@@%e,%M@@@\" "
