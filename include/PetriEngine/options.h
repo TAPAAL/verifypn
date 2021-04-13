@@ -43,6 +43,8 @@ struct options_t {
     
     //CPN Specific options
     bool cpnOverApprox = false;
+    bool computeCFP = true;
+    bool computePartition = true;
     bool isCPN = false;
     uint32_t seed_offset = 0;
     int max_intervals = 250; //0 disabled

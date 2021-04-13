@@ -129,6 +129,7 @@ namespace PetriEngine {
         PetriNetBuilder& unfold();
         PetriNetBuilder& stripColors();
         void computePlaceColorFixpoint(uint32_t max_intervals, int32_t timeout);
+        void computePartition();
         
     private:
         std::unordered_map<std::string,uint32_t> _placenames;
@@ -154,6 +155,7 @@ namespace PetriEngine {
         bool _unfolded = false;
         bool _stripped = false;
         bool _fixpointDone = false;
+        bool _partitionComputed = false;
 
         std::vector<uint32_t> _placeFixpointQueue;
         std::unordered_map<uint32_t, Colored::EquivalenceVec> _partition;
@@ -170,6 +172,8 @@ namespace PetriEngine {
 
         void printPlaceTable();
 
+        
+
         std::unordered_map<uint32_t, Colored::ArcIntervals> setupTransitionVars(Colored::Transition transition);
         
         void addArc(const std::string& place,
@@ -185,7 +189,7 @@ namespace PetriEngine {
         void unfoldPlace(Colored::Place& place);
         void unfoldTransition(Colored::Transition& transition);
         void handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> unfoldedPlaceMap);
-        void partitionVariableMap();
+        void createPartionVarmaps();
 
         void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name);
     };

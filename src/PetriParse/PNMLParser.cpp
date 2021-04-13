@@ -234,15 +234,14 @@
 	    } else if (strcmp(element->name(), "tuple") == 0) {	
 	        std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors;	
 	        collectColorsInTuple(element, collectedColors);	
-	        auto expr = constructAddExpressionFromTupleExpression(element, collectedColors);	
-	        std::cout << expr->toString() << std::endl;	
+	        auto expr = constructAddExpressionFromTupleExpression(element, collectedColors, 1);	
 	        return expr;	
 	    }	
 	    printf("Could not parse '%s' as an arc expression\n", element->name());	
 	    assert(false);	
 	    return nullptr;	
 	}	
-	PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors){	
+	PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors, uint32_t numberof){	
 	    auto initCartesianSet = cartesianProduct(collectedColors[0], collectedColors[1]);	
 	    for(uint32_t i = 2; i < collectedColors.size(); i++){	
 	        initCartesianSet = cartesianProduct(initCartesianSet, collectedColors[i]);	
@@ -257,7 +256,7 @@
 	        tupleExpr->setColorType(tupleExpr->getColorType(colorTypes));	
 	        std::vector<PetriEngine::Colored::ColorExpression_ptr> placeholderVector;	
 	        placeholderVector.push_back(tupleExpr);	
-	        numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(placeholderVector),1));	
+	        numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(placeholderVector),numberof));	
 	    }	
 	    std::vector<PetriEngine::Colored::ArcExpression_ptr> constituents;	
 	    for (auto expr : numberOfExpressions) {	
@@ -309,7 +308,7 @@
 	        return;	
 	    } else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {	
 	        collectColorsInTuple(element->first_node(), collectedColors);	
-	    } else if (strcmp(element->name(), "userOperator") == 0 || strcmp(element->name(), "dotconstant") == 0 || strcmp(element->name(), "variable") == 0 	
+	    } else if (strcmp(element->name(), "userOperator") == 0 || strcmp(element->name(), "useroperator") == 0 || strcmp(element->name(), "dotconstant") == 0 || strcmp(element->name(), "variable") == 0 	
 	                    || strcmp(element->name(), "successor") == 0 || strcmp(element->name(), "predecessor") == 0) {	
 	        std::vector<PetriEngine::Colored::ColorExpression_ptr> expressionsToAdd;	
 	        auto color = parseColorExpression(element);	
@@ -317,7 +316,7 @@
 	        collectedColors.push_back(expressionsToAdd);	
 	        return;	
 	    } else{	
-	        printf("Could not parse '%s' as an arc expression\n", element->name());	
+	        printf("Could not collect tuple colors from arc expression '%s'\n", element->name());
 	        return;	
 	    }	
 	}	
@@ -473,7 +472,7 @@
 	    return nullptr;	
 	}	
 		
-	PetriEngine::Colored::NumberOfExpression_ptr PNMLParser::parseNumberOfExpression(rapidxml::xml_node<>* element) {	
+	PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseNumberOfExpression(rapidxml::xml_node<>* element) {	
 	    auto num = element->first_node();	
 	    uint32_t number = parseNumberConstant(num);	
 	    rapidxml::xml_node<>* first;	
@@ -482,7 +481,13 @@
 	    } else {	
 	        number = 1;	
 	        first = num;	
-	    }	
+	    }
+		// if(strcmp(first->first_node()->name(), "tuple") == 0){
+		// 	std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors;	
+		// 	collectColorsInTuple(first->first_node(), collectedColors);	
+		// 	return constructAddExpressionFromTupleExpression(first->first_node(), collectedColors, number);	
+		// }
+
 	    auto allExpr = parseAllExpression(first);	
 	    if (allExpr) {	
 	        return std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(allExpr), number);	

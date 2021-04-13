@@ -89,9 +89,9 @@ private:
     PetriEngine::Colored::ColorExpression_ptr parseColorExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::AllExpression_ptr parseAllExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::ColorType* parseUserSort(rapidxml::xml_node<>* element);
-    PetriEngine::Colored::NumberOfExpression_ptr parseNumberOfExpression(rapidxml::xml_node<>* element);
+    PetriEngine::Colored::ArcExpression_ptr parseNumberOfExpression(rapidxml::xml_node<>* element);
     void collectColorsInTuple(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>>& collectedColors);
-    PetriEngine::Colored::ArcExpression_ptr constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors);
+    PetriEngine::Colored::ArcExpression_ptr constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors, uint32_t numberof);
     void parseTransportArc(rapidxml::xml_node<>* element);
     void parseValue(rapidxml::xml_node<>* element, std::string& text);
     uint32_t parseNumberConstant(rapidxml::xml_node<>* element);

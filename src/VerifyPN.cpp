@@ -328,6 +328,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.gamemode = true;
         } else if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--cpn-overapproximation") == 0) {
             options.cpnOverApprox = true;
+        } else if (strcmp(argv[i], "--disable-cfp") == 0) {
+            options.computeCFP = false;
+        } else if (strcmp(argv[i], "--disable-partitioning") == 0) {
+            options.computePartition = false;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
                     "A tool for answering CTL and reachability queries of place cardinality\n" 
@@ -367,6 +371,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     - local     Liu and Smolka's on-the-fly algorithm\n"
                     "                                     - czero     local with certain zero extension (default)\n"
                     "  -c, --cpn-overapproximation        Over approximate query on Colored Petri Nets (CPN only)\n"
+                    "  --disable-cfp                      Disable the computation of possible colors in the Petri Net (CPN only)\n"
+                    "  --disable-partitioning               Disable the partitioning of colors in the Petri Net (CPN only)\n"
                     //"  -g                                 Enable game mode (CTL Only)" // Feature not yet implemented
 #ifdef VERIFYPN_MC_Simplification
                     "  -z <number of cores>               Number of cores to use (currently only query simplification)\n"
@@ -643,15 +649,6 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
             std::string str = strs.str();
             log <<  str;
         }
-
-        if(!options.output_stats.empty()){
-            std::ofstream log(generated_filename, std::ios_base::app | std::ios_base::out);
-            std::ostringstream strs;
-            strs << filename << "," << builder.getPlaceCount() << "," << builder.getTransitionCount() << "," << builder.getArcCount() << "," << builder.getUnfoldedPlaceCount() << "," << builder.getUnfoldedTransitionCount() << "," << builder.getUnfoldedArcCount() << "," << builder.getUnfoldTime() << "," << builder.getFixpointTime() << "," << builder.getPartitionTime() << "\n";
-            std::string str = strs.str();
-            log <<  str;
-        }
-
     //}
 }
 
@@ -806,7 +803,14 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.intervalTimeout);
+    if(options.computePartition){
+        cpnBuilder.computePartition();
+    }
+    if(options.computeCFP){
+        cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.intervalTimeout);
+    }
+
+    
     
     auto builder = options.cpnOverApprox ? cpnBuilder.stripColors() : cpnBuilder.unfold();
     printUnfoldingStats(cpnBuilder, options);

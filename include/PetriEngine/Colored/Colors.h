@@ -351,7 +351,6 @@ namespace PetriEngine {
         struct ColorFixpoint {
             Colored::intervalTuple_t constraints;
             bool inQueue;
-            uint32_t productSize;
 
             bool constainsColor(std::pair<const PetriEngine::Colored::Color *const, std::vector<uint32_t>> constPair) {
                 std::unordered_map<uint32_t, bool> contained;
