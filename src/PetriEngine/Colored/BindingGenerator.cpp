@@ -170,18 +170,21 @@ namespace PetriEngine {
             arc.expr->getVariables(variables);
         }
 
-        // std::cout << _transition.name << " varmap size " << _transition.variableMaps.size() << std::endl;
-        // for(auto varMap : _transition.variableMaps){
-        //     std::cout << "Var set:" << std::endl;
-        //     for(auto pair : varMap){
-        //         std::cout << pair.first->name << "\t";
-        //         for(auto interval : pair.second._intervals){
-        //             interval.print();
-        //             std::cout << " ";
+        // if(_transition.name == "continueLoop"){
+        //     std::cout << _transition.name << " varmap size " << _transition.variableMaps.size() << std::endl;
+        //     for(auto varMap : _transition.variableMaps){
+        //         std::cout << "Var set:" << std::endl;
+        //         for(auto pair : varMap){
+        //             std::cout << pair.first->name << "\t";
+        //             for(auto interval : pair.second._intervals){
+        //                 interval.print();
+        //                 std::cout << " ";
+        //             }
+        //             std::cout << std::endl;
         //         }
-        //         std::cout << std::endl;
         //     }
         // }
+        
         
         
         
@@ -219,8 +222,6 @@ namespace PetriEngine {
             bool next = true;
 
             for (auto& _binding : _bindings) {
-                
-
                 auto varInterval = _transition.variableMaps[_nextIndex][_binding.first];
                 std::vector<uint32_t> colorIds;
                 _binding.second->getTupleId(&colorIds);

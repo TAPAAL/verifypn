@@ -209,7 +209,7 @@ namespace PetriEngine {
             _fixpointDone = true;
         }
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
-        //printPlaceTable();
+        printPlaceTable();
         _placeColorFixpoints.clear();
     }
 
@@ -369,6 +369,7 @@ namespace PetriEngine {
             for(auto interval : intervals._intervals){
                 placeFixpoint.constraints.addInterval(interval);    
             }
+            placeFixpoint.constraints.simplify();
 
             if (!placeFixpoint.inQueue) {
                 uint32_t colorsAfter = placeFixpoint.constraints.getContainedColors();
@@ -449,7 +450,7 @@ namespace PetriEngine {
             FixpointBindingGenerator gen(transition, _colors);
             size_t i = 0;
             
-            for (auto b : gen) {                  
+            for (auto b : gen) {                 
                 std::string name = transition.name + "_" + std::to_string(i++);
                 _ptBuilder.addTransition(name, 0.0, 0.0);
                 _pttransitionnames[transition.name].push_back(name);
