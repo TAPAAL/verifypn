@@ -64,19 +64,17 @@ namespace LTL {
                 auto marking = seen.getMarkingId(stateid);
                 while (suc_pos != std::numeric_limits<idx_t>::max() && cstack[suc_pos].stateid != stateid) {
                     if constexpr (IsSpooling) {
-                        if (seen.getMarkingId(cstack[suc_pos].stateid) == marking) {
-                            if (extstack.empty() || suc_pos > extstack.top()) {
-                                this->successorGenerator->prepare(&parent, dtop.sucinfo);
-                                this->successorGenerator->generateAll(dtop.sucinfo);
-                                extstack.push(cstack.size() - 1);
-                            }
+                        if (cstack[suc_pos].dstack && seen.getMarkingId(cstack[suc_pos].stateid) == marking) {
+                            this->successorGenerator->prepare(&parent, dtop.sucinfo);
+                            this->successorGenerator->generateAll(dtop.sucinfo);
+                            extstack.push(cstack.size() - 1);
                         }
                     }
                     suc_pos = cstack[suc_pos].next;
                 }
                 if (suc_pos != std::numeric_limits<idx_t>::max()) {
                     if constexpr (IsSpooling) {
-                        if (extstack.empty() || suc_pos > extstack.top()) {
+                        if (cstack[suc_pos].dstack) {
                             this->successorGenerator->prepare(&parent, dtop.sucinfo);
                             this->successorGenerator->generateAll(dtop.sucinfo);
                             extstack.push(cstack.size() - 1);
@@ -131,6 +129,7 @@ namespace LTL {
     {
         const auto p = dstack.top().pos;
         dstack.pop();
+        cstack[p].dstack = false;
         if (cstack[p].lowlink == p) {
             while (cstack.size() > p) {
                 popCStack();
