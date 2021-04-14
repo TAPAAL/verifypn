@@ -21,7 +21,6 @@
 #include "LTL/LTLValidator.h"
 #include "LTL/Algorithm/TarjanModelChecker.h"
 #include "LTL/Algorithm/NestedDepthFirstSearch.h"
-#include "LTL/Algorithm/RandomNDFS.h"
 #include "LTL/Simplification/SpotToPQL.h"
 #include "LTL/LTLToBuchi.h"
 

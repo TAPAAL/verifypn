@@ -119,23 +119,23 @@ namespace LTL {
                 if (options.strategy == PetriEngine::Reachability::RDFS) {
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     spooler = std::make_unique<EnabledSpooler>(net, gen);
-                    heuristic = std::make_unique<RandomHeuristic>();
+                    heuristic = std::make_unique<RandomHeuristic>(options.seed());
                     gen.setSpooler(spooler.get());
                     gen.setHeuristic(heuristic.get());
 
                     result = _verify(net, negated_formula,
-                                     std::make_unique<RandomNDFS>(net, negated_formula, automaton, std::move(gen),
+                                     std::make_unique<NestedDepthFirstSearch<SpoolingSuccessorGenerator, PetriEngine::Structures::StateSet>>(net, negated_formula, automaton, std::move(gen),
                                                                   options.trace,
-                                                                  options.ltluseweak, options.seed()),
+                                                                  options.ltluseweak),
                                      options);
                 } else if (options.trace != TraceLevel::None) {
                     result = _verify(net, negated_formula,
                                      std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>>(
-                                             net, negated_formula, automaton, options.trace, options.ltluseweak), options);
+                                             net, negated_formula, automaton, ResumingSuccessorGenerator{net}, options.trace, options.ltluseweak), options);
                 } else {
                     result = _verify(net, negated_formula,
                                      std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator, PetriEngine::Structures::StateSet>>(
-                                             net, negated_formula, automaton, options.trace, options.ltluseweak), options);
+                                             net, negated_formula, automaton, ResumingSuccessorGenerator{net}, options.trace, options.ltluseweak), options);
                 }
                 break;
 
