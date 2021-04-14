@@ -377,7 +377,7 @@ namespace PetriEngine {
                 }
 
                 if (names.size() == 1) {
-                    _compiled = generateUnfoldedIdentifierExpr(*coloredContext, names, 0);
+                    _compiled = generateUnfoldedIdentifierExpr(*coloredContext, names, names.begin()->first);
                 } else {
                     std::vector<Expr_ptr> identifiers;
                     for (auto& unfoldedName : names) {
