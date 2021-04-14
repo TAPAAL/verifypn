@@ -115,10 +115,6 @@ namespace LTL {
         struct DEntry {
             idx_t pos; // position in cstack.
 
-            /*DEntry(idx_t pos) : pos(pos), sucinfo(SuccessorGen::sucinfo::initial_suc_info),
-                                buchi_state(std::numeric_limits<size_t>::max()),
-                                last_state(std::numeric_limits<size_t>::max()) {}
-*/
             typename SuccessorGen::sucinfo sucinfo;
 
             explicit DEntry(idx_t pos) : pos(pos), sucinfo(SuccessorGen::initial_suc_info()) {}
@@ -131,9 +127,8 @@ namespace LTL {
         // cstack positions of accepting states in current search path, for quick access.
         std::stack<idx_t> astack;
 
-        std::stack<idx_t> extstack;
-
         bool violation = false;
+        bool invariant_loop = true;
         size_t loopstate = std::numeric_limits<size_t>::max();
         size_t looptrans = std::numeric_limits<size_t>::max();
 

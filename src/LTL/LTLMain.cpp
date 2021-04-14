@@ -28,7 +28,7 @@
 using namespace PetriEngine::PQL;
 using namespace PetriEngine;
 
-#define DEBUG_EXPLORED_STATES
+//#define DEBUG_EXPLORED_STATES
 
 namespace LTL {
     struct Result {
@@ -76,16 +76,6 @@ namespace LTL {
     {
         Result result;
 
-/*
-        std::unique_ptr<Checker> modelChecker;
-        if constexpr (std::is_same_v<Checker, TarjanModelChecker<SpoolingSuccessorGenerator, true>> ||
-                      std::is_same_v<Checker, TarjanModelChecker<SpoolingSuccessorGenerator, false>>) {
-
-        } else {
-            modelChecker = std::make_unique<Checker>(*net, negatedQuery, options.trace, options.ltluseweak);
-        }
-*/
-
         result.satisfied = checker->isSatisfied();
         result.is_weak = checker->isweak();
 #ifdef DEBUG_EXPLORED_STATES
@@ -100,18 +90,14 @@ namespace LTL {
     ReturnValue LTLMain(const PetriNet *net,
                         const Condition_ptr &query,
                         const std::string &queryName,
-                        const options_t &options)
+                        options_t &options)
     {
         auto res = to_ltl(query);
         Condition_ptr negated_formula = res.first;
         bool negate_answer = res.second;
 
-        if (options.stubbornreduction && options.ltlalgorithm != Algorithm::Tarjan) {
-            std::cerr << "Error: Stubborn reductions only supported for Tarjan's algorithm" << std::endl;
-            return ErrorCode;
-        }
-
-        bool compress = options.compress_buchi && options.buchi_out_file.empty();
+        // force AP compress off for Büchi prints
+        auto compress = options.buchi_out_file.empty() ? options.ltl_compress_aps : APCompression::None;
 
         Structures::BuchiAutomaton automaton = makeBuchiAutomaton(negated_formula, compress);
         if (!options.buchi_out_file.empty()) {
@@ -129,8 +115,9 @@ namespace LTL {
                     gen.setHeuristic(std::make_unique<RandomHeuristic>());
 
                     result = _verify(net, negated_formula,
-                                     std::make_unique<RandomNDFS>(net, negated_formula, automaton, std::move(gen), options.trace,
-                                                                  options.ltluseweak),
+                                     std::make_unique<RandomNDFS>(net, negated_formula, automaton, std::move(gen),
+                                                                  options.trace,
+                                                                  options.ltluseweak, options.seed()),
                                      options);
                 } else if (options.trace != TraceLevel::None) {
                     result = _verify(net, negated_formula,
@@ -146,6 +133,7 @@ namespace LTL {
                 if (options.strategy != PetriEngine::Reachability::DFS ||
                     (!hasinhib && options.stubbornreduction && !negated_formula->containsNext())) {
                     // Use spooling successor generator in case of different search strategy or stubborn set method.
+                    // Running default, BestFS, or RDFS search strategy so use spooling successor generator to enable heuristics.
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     if (!hasinhib && options.stubbornreduction && !negated_formula->containsNext()) {
                         std::cout << "Running stubborn version!" << std::endl;
@@ -156,11 +144,10 @@ namespace LTL {
                     }
 
                     if (options.strategy == PetriEngine::Reachability::RDFS) {
-                        gen.setHeuristic(std::make_unique<RandomHeuristic>(options.seed_offset));
-                    } else if (options.strategy == PetriEngine::Reachability::HEUR) {
-                        gen.setHeuristic(std::make_unique<WeightedComposedHeuristic>(std::make_unique<AutomatonHeuristic>(net, automaton), std::make_unique<FireCountHeuristic>(net), options.weight1, options.weight2));
-                        //gen.setHeuristic(std::make_unique<AutomatonHeuristic>(net, automaton));
-                        //gen.setHeuristic(std::make_unique<FireCountHeuristic>(net));
+                        gen.setHeuristic(std::make_unique<RandomHeuristic>(options.seed()));
+                    } else if (options.strategy == PetriEngine::Reachability::HEUR
+                               || options.strategy == PetriEngine::Reachability::DEFAULT) {
+                        gen.setHeuristic(std::make_unique<AutomatonHeuristic>(net, automaton));
                     }
 
                     if (options.trace != TraceLevel::None) {
@@ -222,7 +209,6 @@ namespace LTL {
 #ifdef DEBUG_EXPLORED_STATES
         std::cout << "FORMULA " << queryName << " STATS EXPLORED " << result.explored_states << std::endl;
 #endif
-        /*(queries[qid]->isReachability(0) ? " REACHABILITY" : "") <<*/
 
         return SuccessCode;
     }

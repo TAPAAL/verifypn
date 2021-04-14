@@ -26,7 +26,7 @@ namespace LTL {
     ReturnValue LTLMain(const PetriEngine::PetriNet *net,
                         const PetriEngine::PQL::Condition_ptr &query,
                         const std::string &queryName,
-                        const options_t &options);
+                        options_t &options);
 }
 
 #endif //VERIFYPN_LTLMAIN_H

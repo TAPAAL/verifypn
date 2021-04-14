@@ -20,7 +20,8 @@
 
 #include "LTL/Structures/ProductState.h"
 #include "PetriEngine/Structures/SuccessorQueue.h"
-#include "LTL/SuccessorGeneration/DistanceHeuristic.h"
+#include "LTL/SuccessorGeneration/SuccessorSpooler.h"
+#include "LTL/SuccessorGeneration/Heuristics.h"
 
 namespace LTL {
     class SpoolingSuccessorGenerator : public PetriEngine::SuccessorGenerator {
@@ -199,7 +200,6 @@ namespace LTL {
             if (_heuristic && sc.successors.has_consumed())
                 _heuristic->pop(sc.successors.last_pop());
         }
-
 
     private:
         std::unique_ptr<SuccessorSpooler> _spooler = nullptr;

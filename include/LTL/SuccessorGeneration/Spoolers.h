@@ -19,7 +19,5 @@
 #define VERIFYPN_SPOOLERS_H
 
 #include "EnabledSpooler.h"
-#include "LTL/Stubborn/InterestingLTLStubbornSet.h"
-#include "LTL/Stubborn/VisibleLTLStubbornSet.h"
 
 #endif //VERIFYPN_SPOOLERS_H

@@ -361,6 +361,8 @@ namespace PetriEngine {
             int formulaSize() const override{
                 return _cond->formulaSize() + 1;
             }
+
+
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
             Result evalAndSet(const EvaluationContext& context) override;
@@ -409,6 +411,7 @@ namespace PetriEngine {
             int formulaSize() const override{
                 return _cond->formulaSize() + 1;
             }
+
 
             void analyze(AnalysisContext& context) override;
             Result evaluate(const EvaluationContext& context) override;
@@ -826,6 +829,7 @@ namespace PetriEngine {
                 for(auto& c : _conds) i += c->formulaSize();
                 return i;
             }
+
             void analyze(AnalysisContext& context) override;
 
             void toBinary(std::ostream& out) const override;
@@ -1156,7 +1160,6 @@ namespace PetriEngine {
             std::string opTAPAAL() const override;
             std::string sopTAPAAL() const override;
         };
-
 
         /* Bool condition */
         class BooleanCondition : public Condition {

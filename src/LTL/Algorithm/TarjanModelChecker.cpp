@@ -19,15 +19,6 @@
 
 namespace LTL {
 
-    inline void _dump_state(const LTL::Structures::ProductState &state)
-    {
-        std::cerr << "marking: ";
-        std::cerr << state.marking()[0];
-        for (size_t i = 1; i < state.size(); ++i) {
-            std::cerr << ", " << state.marking()[i];
-        }
-        std::cerr << std::endl;
-    }
 
     template<typename S, bool SaveTrace>
     bool TarjanModelChecker<S, SaveTrace>::isSatisfied()
@@ -67,7 +58,6 @@ namespace LTL {
                         if (cstack[suc_pos].dstack && seen.getMarkingId(cstack[suc_pos].stateid) == marking) {
                             this->successorGenerator->prepare(&parent, dtop.sucinfo);
                             this->successorGenerator->generateAll(dtop.sucinfo);
-                            extstack.push(cstack.size() - 1);
                         }
                     }
                     suc_pos = cstack[suc_pos].next;
@@ -77,7 +67,6 @@ namespace LTL {
                         if (cstack[suc_pos].dstack) {
                             this->successorGenerator->prepare(&parent, dtop.sucinfo);
                             this->successorGenerator->generateAll(dtop.sucinfo);
-                            extstack.push(cstack.size() - 1);
                         }
                     }
                     // we found the successor, i.e. there's a loop!
@@ -118,6 +107,11 @@ namespace LTL {
         dstack.push(DEntry{ctop});
         if (this->successorGenerator->isAccepting(state)) {
             astack.push(ctop);
+            if (this->successorGenerator->has_invariant_self_loop(state)){
+                //std::cerr << "Invariant self loop found. Violation is true" << std::endl;
+                violation = true;
+                invariant_loop = true;
+            }
         }
         if constexpr (IsSpooling) {
             this->successorGenerator->push();
@@ -143,12 +137,6 @@ namespace LTL {
         }
         if (!astack.empty() && p == astack.top()) {
             astack.pop();
-        }
-        if (!extstack.empty() && p == extstack.top()) {
-            extstack.pop();
-        }
-        if (!extstack.empty() && p == extstack.top()) {
-            extstack.pop();
         }
         if (!dstack.empty()) {
             update(p);

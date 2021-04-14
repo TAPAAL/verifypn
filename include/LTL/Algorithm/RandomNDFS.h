@@ -32,10 +32,11 @@ namespace LTL {
         RandomNDFS(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond,
                    const Structures::BuchiAutomaton &buchi,
                    LTL::SpoolingSuccessorGenerator &&successorGen, TraceLevel level,
-                   bool shortcircuitweak)
+                   bool shortcircuitweak, size_t random_seed)
                 : ModelChecker(net, cond, buchi, std::move(successorGen), level, shortcircuitweak),
                   factory{net, successorGenerator->initial_buchi_state()},
-                  mark1(*net, 0, (int) net->numberOfPlaces() + 1), mark2(*net, 0, (int) net->numberOfPlaces() + 1) {}
+                  mark1(*net, 0, (int) net->numberOfPlaces() + 1), mark2(*net, 0, (int) net->numberOfPlaces() + 1),
+                  random_seed(random_seed) {}
 
         bool isSatisfied() override;
 
@@ -51,6 +52,7 @@ namespace LTL {
 
         State *seed;
         bool violation = false;
+        size_t random_seed;
 
         void dfs();
 
