@@ -1,3 +1,22 @@
+/* Copyright (C) 2020  Alexander Bilgram <alexander@bilgram.dk>,
+ *                     Peter Haar Taankvist <ptaankvist@gmail.com>,
+ *                     Thomas Pedersen <thomas.pedersen@stofanet.dk>
+ *                     Andreas H. Klostergaard
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "PetriEngine/Colored/BindingGenerator.h"
 
 namespace PetriEngine {
@@ -148,15 +167,6 @@ namespace PetriEngine {
         _nextIndex = 0;
         _expr = _transition.guard;
 
-        //combine varmaps
-        // for(uint i = 1; i < _transition.variableMaps.size(); i++){
-        //     for(auto varPair : transition.variableMaps[i]){
-        //         for(auto interval : varPair.second._intervals){
-        //             transition.variableMaps[0][varPair.first].addInterval(interval);
-        //         }                
-        //     }
-        // }
-
         std::set<const Colored::Variable*> variables;
         if (_expr != nullptr) {
             _expr->getVariables(variables);
@@ -168,24 +178,7 @@ namespace PetriEngine {
         for (auto arc : _transition.output_arcs) {
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
-        }
-
-        // if(_transition.name == "continueLoop"){
-        //     std::cout << _transition.name << " varmap size " << _transition.variableMaps.size() << std::endl;
-        //     for(auto varMap : _transition.variableMaps){
-        //         std::cout << "Var set:" << std::endl;
-        //         for(auto pair : varMap){
-        //             std::cout << pair.first->name << "\t";
-        //             for(auto interval : pair.second._intervals){
-        //                 interval.print();
-        //                 std::cout << " ";
-        //             }
-        //             std::cout << std::endl;
-        //         }
-        //     }
-        // }
-        
-        
+        }       
         
         
         for (auto var : variables) {
@@ -203,11 +196,6 @@ namespace PetriEngine {
 
 
     bool FixpointBindingGenerator::eval() {
-        // std::cout << "testing for " << _transition.name << std::endl;
-        // for (auto test : _bindings){
-        //     std::cout << "Binding '" << test.first->name << "\t" << test.second->getColorName() << "' in bindings." << std::endl;
-        // }
-        // std::cout << std::endl;
         if (_expr == nullptr)
             return true;
 
@@ -221,18 +209,19 @@ namespace PetriEngine {
         while (!test) {
             bool next = true;
 
-            for (auto& _binding : _bindings) {
-                auto varInterval = _transition.variableMaps[_nextIndex][_binding.first];
+            for (auto& _binding : _bindings) {               
+                auto varInterval = _transition.variableMaps[_nextIndex][_binding.first];                
                 std::vector<uint32_t> colorIds;
                 _binding.second->getTupleId(&colorIds);
                 auto nextIntervalBinding = varInterval.isRangeEnd(colorIds);
 
-                if (nextIntervalBinding.size() == 0){
+                if (nextIntervalBinding.size() == 0){                    
                     _binding.second = &_binding.second->operator++();
                     next = false;
                     break;                    
                 } else {
                     _binding.second = _binding.second->getColorType()->getColor(nextIntervalBinding.getLowerIds());
+                    
                     if(!nextIntervalBinding.equals(varInterval.getFirst())){
                         next = false;
                         break;
@@ -248,10 +237,8 @@ namespace PetriEngine {
                 for(auto& _binding : _bindings){
                     _binding.second =  _binding.second->getColorType()->getColor(_transition.variableMaps[_nextIndex][_binding.first].getFirst().getLowerIds());
                 }
-            }
-                 
+            }                 
             test = eval();
-        
         }
         
         return _bindings;

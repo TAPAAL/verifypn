@@ -85,16 +85,6 @@ namespace PetriEngine
             handleCompare<decltype(element)>(element);
         }
         
-        virtual void _accept(const GreaterThanCondition* element) override
-        { 
-            handleCompare<decltype(element)>(element);
-        }
-        
-        virtual void _accept(const GreaterThanOrEqualCondition* element) override
-        { 
-            handleCompare<decltype(element)>(element);
-        }
-        
         virtual void _accept(const NotEqualCondition* element) override
         { 
             handleCompare<decltype(element)>(element);

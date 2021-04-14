@@ -30,6 +30,7 @@
 #include <set>
 #include <cmath>
 #include <numeric>
+#include "PetriEngine/PQL/QueryPrinter.h"
 
 using namespace PetriEngine::Simplification;
 
@@ -123,14 +124,16 @@ namespace PetriEngine {
         template<typename T, bool K>
         Condition_ptr makeLog(const std::vector<Condition_ptr>& conds, bool aggressive)
         {
-            if(conds.size() == 0) return BooleanCondition::getShared(K);
+            if(conds.size() == 0)
+                return BooleanCondition::getShared(K);
             if(conds.size() == 1) return conds[0];
 
             std::vector<Condition_ptr> cnds;
             for(auto& c : conds) tryMerge<T>(cnds, c, aggressive);
             auto res = std::make_shared<T>(cnds);
             if(res->singular()) return *res->begin();
-            if(res->empty()) return BooleanCondition::getShared(K);
+            if(res->empty())
+                return BooleanCondition::getShared(K);
             return res;
         }
         
@@ -165,169 +168,6 @@ namespace PetriEngine {
             {
                 return FALSE_CONSTANT;
             }
-        }
-        
-        /******************** To String ********************/
-
-        void LiteralExpr::toString(std::ostream& out) const {
-            out << _value;
-        }
-
-        void UnfoldedIdentifierExpr::toString(std::ostream& out) const {
-            out << _name;
-        }
-
-        void NaryExpr::toString(std::ostream& ss) const {
-            ss << "(";
-            _exprs[0]->toString(ss);
-            for(size_t i = 1; i < _exprs.size(); ++i)
-            {
-                ss << " " << op() << " ";
-                _exprs[i]->toString(ss);
-            }
-            ss << ")";
-        }
-
-        void CommutativeExpr::toString(std::ostream& ss) const {
-            ss << "( " << _constant;
-            for(auto& i : _ids)
-                ss << " " << op() << " " << i.second;
-            for(auto& e : _exprs)
-            {
-                ss << " " << op() << " ";
-                e->toString(ss);
-            }
-            ss << ")";
-        }
-
-
-        void MinusExpr::toString(std::ostream& out) const {
-            out << "-";
-            _expr->toString(out);
-        }
-
-        void SimpleQuantifierCondition::toString(std::ostream& out) const {
-            out << op() << " ";
-            _cond->toString(out);
-        }
-        
-        void UntilCondition::toString(std::ostream& out) const {
-            out << op() << " (";
-            _cond1->toString(out);
-            out << " U ";
-            _cond2->toString(out);
-            out << ")";
-        }
-        
-        void LogicalCondition::toString(std::ostream& out) const {
-            out << "(";
-            _conds[0]->toString(out);
-            for(size_t i = 1; i < _conds.size(); ++i)
-            {
-                out << " " << op() << " ";
-                _conds[i]->toString(out);
-            }
-            out << ")";
-        }
-        
-        void CompareConjunction::toString(std::ostream& out) const {
-            out << "(";
-            if(_negated) out << "not";
-            bool first = true;
-            for(auto& c : _constraints)
-            {
-                if(!first) out << " and ";
-                if(c._lower != 0) 
-                    out << "(" << c._lower << " <= " << c._name << ")";
-                if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max()) 
-                    out << " and ";
-                if(c._upper != std::numeric_limits<uint32_t>::max()) 
-                    out << "(" << c._upper << " >= " << c._name << ")";
-                first = false;
-            }
-            out << ")";
-        }
-
-        void CompareCondition::toString(std::ostream& out) const {
-            out << "(";
-            _expr1->toString(out);
-            out << " " << op() << " ";
-            _expr2->toString(out);
-            out <<")";
-        }
-
-        void NotCondition::toString(std::ostream& out) const {
-            out << "(not ";
-            _cond->toString(out);
-            out << ")";
-        }
-
-        void BooleanCondition::toString(std::ostream& out) const {
-            if (_value)
-                out << "true";
-            else
-                out << "false";
-        }
-
-        void DeadlockCondition::toString(std::ostream& out) const {
-            out << "deadlock";
-        }
-
-        void StableMarkingCondition::_toString(std::ostream &out) const {
-            if(_compiled) _compiled->toString(out);
-            else out << "stable-marking";
-        }
-
-        void LivenessCondition::_toString(std::ostream &out) const {
-            if(_compiled) _compiled->toString(out);
-            else out << "liveness";
-        }
-
-        void QuasiLivenessCondition::_toString(std::ostream &out) const {
-            if(_compiled) _compiled->toString(out);
-            else out << "liveness";
-        }
-
-        void KSafeCondition::_toString(std::ostream &out) const {
-            if(_compiled) _compiled->toString(out);
-            else
-            {
-                out << "k-safe(";
-                _bound->toString(out);
-                out << ")";
-            }
-        }
-
-        void UpperBoundsCondition::_toString(std::ostream& out) const {
-            if(_compiled) _compiled->toString(out);
-            else
-            {
-                out << "bounds (";
-                for(size_t i = 0; i < _places.size(); ++i)
-                {
-                    if(i != 0) out << ", ";
-                    out << _places[i];
-                }
-                out << ")";            
-            }
-        }
-        
-        void UnfoldedUpperBoundsCondition::toString(std::ostream& out) const {
-            out << "bounds (";
-            for(size_t i = 0; i < _places.size(); ++i)
-            {
-                if(i != 0) out << ", ";
-                out << _places[i]._name;
-            }
-            out << ")";
-        }
-
-        void FireableCondition::_toString(std::ostream &out) const {
-            out << "is-fireable(" << _name << ")";
-        }
-
-        void UnfoldedFireableCondition::_toString(std::ostream &out) const {
-            out << "is-fireable(" << _name << ")";
         }
 
         /******************** To TAPAAL Query ********************/
@@ -376,18 +216,19 @@ namespace PetriEngine {
 
         void CompareCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext& context) const {
             //If <id> <op> <literal>
+            QueryPrinter printer;
             if (_expr1->type() == Expr::IdentifierExpr && _expr2->type() == Expr::LiteralExpr) {
                 out << " ( " << context.netName << ".";
-                _expr1->toString(out);
+                _expr1->visit(printer);
                 out << " " << opTAPAAL() << " ";
-                _expr2->toString(out);
+                _expr2->visit(printer);
                 out << " ) ";
                 //If <literal> <op> <id>
             } else if (_expr2->type() == Expr::IdentifierExpr && _expr1->type() == Expr::LiteralExpr) {
                 out << " ( ";
-                _expr1->toString(out);
+                _expr1->visit(printer);
                 out << " " << sopTAPAAL() << " " << context.netName << ".";
-                _expr2->toString(out);
+                _expr2->visit(printer);
                 out << " ) ";
             } else {
                 context.failed = true;
@@ -408,7 +249,7 @@ namespace PetriEngine {
         }
 
         void BooleanCondition::toTAPAALQuery(std::ostream& out,TAPAALConditionExportContext&) const {
-            if (_value)
+            if (value)
                 out << "true";
             else
                 out << "false";
@@ -446,14 +287,6 @@ namespace PetriEngine {
             return "<=";
         }
 
-        std::string GreaterThanCondition::opTAPAAL() const {
-            return ">";
-        }
-
-        std::string GreaterThanOrEqualCondition::opTAPAAL() const {
-            return ">=";
-        }
-
         std::string EqualCondition::sopTAPAAL() const {
             return "=";
         }
@@ -468,14 +301,6 @@ namespace PetriEngine {
 
         std::string LessThanOrEqualCondition::sopTAPAAL() const {
             return ">";
-        }
-
-        std::string GreaterThanCondition::sopTAPAAL() const {
-            return "<=";
-        }
-
-        std::string GreaterThanOrEqualCondition::sopTAPAAL() const {
-            return "<";
         }
 
         /******************** Context Analysis ********************/
@@ -500,9 +325,9 @@ namespace PetriEngine {
             std::sort(_ids.begin(), _ids.end(), [](auto& a, auto& b){ return a.first < b.first; });
             std::sort(_exprs.begin(), _exprs.end(), [](auto& a, auto& b)
             {
-                auto ida = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(a);
-                auto idb = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(b);
-                if(ida == NULL) return false;
+                auto ida = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(a);
+                auto idb = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(b);
+                if(ida == nullptr) return false;
                 if(ida && !idb) return true;
                 return ida->offset() < idb->offset();
             });
@@ -610,7 +435,7 @@ namespace PetriEngine {
 
                 if(!preset.first->inhibitor)
                 {
-                    conds.emplace_back(std::make_shared<GreaterThanOrEqualCondition>(id, lit));
+                    conds.emplace_back(std::make_shared<LessThanOrEqualCondition>(lit, id));
                 }
                 else if(preset.first->tokens > 0)
                 {
@@ -831,7 +656,7 @@ namespace PetriEngine {
             }
             return r;
         }
-        
+
         int32_t NaryExpr::preOp(const EvaluationContext& context) const {
             return _exprs[0]->evaluate(context);
         }
@@ -847,7 +672,7 @@ namespace PetriEngine {
             if(_exprs.size() == 0) return preOp(context);
             return NaryExpr::evaluate(context);
         }
-        
+
         int MinusExpr::evaluate(const EvaluationContext& context) {
             return -(_expr->evaluate(context));
         }
@@ -870,7 +695,7 @@ namespace PetriEngine {
             return RUNKNOWN;
         }
 
-        Condition::Result AGCondition::evaluate(const EvaluationContext& context) 
+        Condition::Result AGCondition::evaluate(const EvaluationContext& context)
         {
             if(_cond->evaluate(context) == RFALSE) return RFALSE;
             return RUNKNOWN;
@@ -886,7 +711,30 @@ namespace PetriEngine {
             return RUNKNOWN;
         }
 
-        
+        Condition::Result ACondition::evaluate(const EvaluationContext& context) {
+            //if (_cond->evaluate(context) == RFALSE) return RFALSE;
+            return RUNKNOWN;
+        }
+
+        Condition::Result ECondition::evaluate(const EvaluationContext& context) {
+            //if (_cond->evaluate(context) == RTRUE) return RTRUE;
+            return RUNKNOWN;
+        }
+
+        Condition::Result FCondition::evaluate(const EvaluationContext& context) {
+            //if (_cond->evaluate(context) == RTRUE) return RTRUE;
+            return RUNKNOWN;
+        }
+
+        Condition::Result GCondition::evaluate(const EvaluationContext& context) {
+            //if (_cond->evaluate(context) == RFALSE) return RFALSE;
+            return RUNKNOWN;
+        }
+
+/*        Condition::Result XCondition::evaluate(const EvaluationContext& context) {
+            return _cond->evaluate(context);
+        }*/
+
         Condition::Result UntilCondition::evaluate(const EvaluationContext& context) {
             auto r2 = _cond2->evaluate(context);
             if(r2 != RFALSE) return r2;
@@ -897,11 +745,11 @@ namespace PetriEngine {
             }
             return RUNKNOWN;
         }
-        
 
-        
+
+
         Condition::Result AndCondition::evaluate(const EvaluationContext& context) {
-            auto res = RTRUE;            
+            auto res = RTRUE;
             for(auto& c : _conds)
             {
                 auto r = c->evaluate(context);
@@ -912,7 +760,7 @@ namespace PetriEngine {
         }
 
         Condition::Result OrCondition::evaluate(const EvaluationContext& context) {
-            auto res = RFALSE;            
+            auto res = RFALSE;
             for(auto& c : _conds)
             {
                 auto r = c->evaluate(context);
@@ -921,7 +769,7 @@ namespace PetriEngine {
             }
             return res;
         }
-        
+
         Condition::Result CompareConjunction::evaluate(const EvaluationContext& context){
 //            auto rres = _org->evaluate(context);
             bool res = true;
@@ -933,7 +781,7 @@ namespace PetriEngine {
             }
             return (_negated xor res) ? RTRUE : RFALSE;
         }
-        
+
         Condition::Result CompareCondition::evaluate(const EvaluationContext& context) {
             int v1 = _expr1->evaluate(context);
             int v2 = _expr2->evaluate(context);
@@ -947,7 +795,7 @@ namespace PetriEngine {
         }
 
         Condition::Result BooleanCondition::evaluate(const EvaluationContext&) {
-            return _value ? RTRUE : RFALSE;
+            return value ? RTRUE : RFALSE;
         }
 
         Condition::Result DeadlockCondition::evaluate(const EvaluationContext& context) {
@@ -958,7 +806,7 @@ namespace PetriEngine {
             }
             return RTRUE;
         }
-        
+
         size_t UnfoldedUpperBoundsCondition::value(const MarkVal* marking)
         {
             size_t tmp = 0;
@@ -970,7 +818,7 @@ namespace PetriEngine {
             }
             return tmp;
         }
-        
+
         Condition::Result UnfoldedUpperBoundsCondition::evaluate(const EvaluationContext& context) {
             setUpperBound(value(context.marking()));
             return _max <= _bound ? RTRUE : RUNKNOWN;
@@ -1084,8 +932,8 @@ namespace PetriEngine {
         }
 
         Condition::Result BooleanCondition::evalAndSet(const EvaluationContext&) {
-            setSatisfied(_value);
-            return _value ? RTRUE : RFALSE;
+            setSatisfied(value);
+            return value ? RTRUE : RFALSE;
         }
 
         Condition::Result DeadlockCondition::evalAndSet(const EvaluationContext& context) {
@@ -1104,6 +952,10 @@ namespace PetriEngine {
 
         /******************** Range Contexts ********************/
 
+        void UntilCondition::visit(Visitor &ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
 
         void EGCondition::visit(Visitor& ctx) const
         {
@@ -1144,7 +996,32 @@ namespace PetriEngine {
         {
             ctx.accept<decltype(this)>(this);
         }
-        
+
+        void ACondition::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void ECondition::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void GCondition::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void FCondition::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void XCondition::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
         void AndCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
@@ -1175,21 +1052,11 @@ namespace PetriEngine {
             ctx.accept<decltype(this)>(this);
         }
         
-        void GreaterThanOrEqualCondition::visit(Visitor& ctx) const
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
         void LessThanOrEqualCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
         }
         
-        void GreaterThanCondition::visit(Visitor& ctx) const
-        {
-            ctx.accept<decltype(this)>(this);
-        }
-
         void LessThanCondition::visit(Visitor& ctx) const
         {
             ctx.accept<decltype(this)>(this);
@@ -1337,14 +1204,6 @@ namespace PetriEngine {
             return v1 <= v2;
         }
 
-        bool GreaterThanCondition::apply(int v1, int v2) const {
-            return v1 > v2;
-        }
-
-        bool GreaterThanOrEqualCondition::apply(int v1, int v2) const {
-            return v1 >= v2;
-        }
-
         /******************** Op (BinaryExpr subclasses) ********************/
 
         std::string PlusExpr::op() const {
@@ -1360,6 +1219,26 @@ namespace PetriEngine {
         }
         
         /******************** Op (QuantifierCondition subclasses) ********************/
+
+        std::string ACondition::op() const {
+            return "A";
+        }
+
+        std::string ECondition::op() const {
+            return "E";
+        }
+
+        std::string GCondition::op() const {
+            return "G";
+        }
+
+        std::string FCondition::op() const {
+            return "F";
+        }
+
+        std::string XCondition::op() const {
+            return "X";
+        }
         
         std::string EXCondition::op() const {
             return "EX";
@@ -1384,8 +1263,12 @@ namespace PetriEngine {
         std::string AFCondition::op() const {
             return "AF";
         }
-        
+
         /******************** Op (UntilCondition subclasses) ********************/
+
+        std::string UntilCondition::op() const {
+            return "";
+        }
 
         std::string EUCondition::op() const {
             return "E";
@@ -1421,14 +1304,6 @@ namespace PetriEngine {
 
         std::string LessThanOrEqualCondition::op() const {
             return "<=";
-        }
-
-        std::string GreaterThanCondition::op() const {
-            return ">";
-        }
-
-        std::string GreaterThanOrEqualCondition::op() const {
-            return ">=";
         }
 
         /******************** free of places ********************/        
@@ -1480,8 +1355,6 @@ namespace PetriEngine {
 
         /******************** Distance Condition ********************/
 
-#define MAX(v1, v2)  (v1 > v2 ? v1 : v2)
-#define MIN(v1, v2)  (v1 < v2 ? v1 : v2)
 
         template<>
         uint32_t delta<EqualCondition>(int v1, int v2, bool negated) {
@@ -1512,16 +1385,6 @@ namespace PetriEngine {
                 return v1 > v2 ? 0 : v2 - v1 + 1;
         }
 
-        template<>
-        uint32_t delta<GreaterThanCondition>(int v1, int v2, bool negated) {
-            return delta<LessThanOrEqualCondition>(v1, v2, !negated);
-        }
-
-        template<>
-        uint32_t delta<GreaterThanOrEqualCondition>(int v1, int v2, bool negated) {
-            return delta<LessThanCondition>(v1, v2, !negated);
-        }
-
         uint32_t NotCondition::distance(DistanceContext& context) const {
             context.negate();
             uint32_t retval = _cond->distance(context);
@@ -1530,7 +1393,7 @@ namespace PetriEngine {
         }
 
         uint32_t BooleanCondition::distance(DistanceContext& context) const {
-            if (context.negated() != _value)
+            if (context.negated() != value)
                 return 0;
             return std::numeric_limits<uint32_t>::max();
         }
@@ -1563,7 +1426,7 @@ namespace PetriEngine {
         }
 
         uint32_t EUCondition::distance(DistanceContext& context) const {
-	    return _cond2->distance(context);
+            return _cond2->distance(context);
         }
         
         uint32_t AFCondition::distance(DistanceContext& context) const {
@@ -1595,12 +1458,6 @@ namespace PetriEngine {
             return r1 + r2;
         }
         
-        uint32_t LogicalCondition::distance(DistanceContext& context) const {
-            uint32_t d = _conds[0]->distance(context);
-            for(size_t i = 1; i < _conds.size(); ++i) d = delta(d, _conds[i]->distance(context), context);
-            return d;
-        }
-        
         uint32_t CompareConjunction::distance(DistanceContext& context) const {
             uint32_t d = 0;
             auto neg = context.negated() != _negated;
@@ -1610,7 +1467,7 @@ namespace PetriEngine {
                 {
                     auto pv = context.marking()[c._place];
                     d += (c._upper == std::numeric_limits<uint32_t>::max() ? 0 : delta<LessThanOrEqualCondition>(pv, c._upper, neg)) +
-                         (c._lower == 0 ? 0 : delta<GreaterThanOrEqualCondition>(pv, c._lower, neg));
+                         (c._lower == 0 ? 0 : delta<LessThanOrEqualCondition>(c._lower, pv, neg));
                 }
             }
             else
@@ -1623,15 +1480,15 @@ namespace PetriEngine {
                     {
                         auto d2 = delta<LessThanOrEqualCondition>(pv, c._upper, neg);
                         if(first) d = d2;
-                        else      d = MIN(d, d2);
+                        else      d = std::min(d, d2);
                         first = false;
                     }
                     
                     if(c._lower != 0)
                     {
-                        auto d2 = delta<GreaterThanOrEqualCondition>(pv, c._upper, neg);
+                        auto d2 = delta<LessThanOrEqualCondition>(c._upper, pv, neg);
                         if(first) d = d2;
-                        else      d = MIN(d, d2);
+                        else      d = std::min(d, d2);
                         first = false;
                     }
                 }
@@ -1639,20 +1496,36 @@ namespace PetriEngine {
             return d;
         }
 
-        uint32_t AndCondition::delta(uint32_t d1,
-                uint32_t d2,
-                const DistanceContext& context) const {
-                return d1 + d2;
+        uint32_t conjDistance(DistanceContext& context, const std::vector<Condition_ptr>& conds)
+        {
+            uint32_t val = 0;
+            for(auto& c : conds)
+                val += c->distance(context);
+            return val;
         }
 
-        uint32_t OrCondition::delta(uint32_t d1,
-                uint32_t d2,
-                const DistanceContext& context) const {
-            if (context.negated())
-                return MAX(d1, d2);
-            else
-                return MIN(d1, d2);
+        uint32_t disjDistance(DistanceContext& context, const std::vector<Condition_ptr>& conds)
+        {
+            uint32_t val = std::numeric_limits<uint32_t>::max();
+            for(auto& c : conds)
+                val = std::min(c->distance(context), val);
+            return val;
         }
+
+        uint32_t AndCondition::distance(DistanceContext& context) const {
+            if(context.negated())
+                return disjDistance(context, _conds);
+            else
+                return conjDistance(context, _conds);
+        }
+
+        uint32_t OrCondition::distance(DistanceContext& context) const {
+            if(context.negated())
+                return conjDistance(context, _conds);
+            else
+                return disjDistance(context, _conds);
+        }
+
 
         struct S {
             int d;
@@ -1663,16 +1536,8 @@ namespace PetriEngine {
             return _distance(context, delta<LessThanOrEqualCondition>);
         }
         
-        uint32_t GreaterThanOrEqualCondition::distance(DistanceContext& context) const {
-            return _distance(context, delta<GreaterThanOrEqualCondition>);
-        }
-       
         uint32_t LessThanCondition::distance(DistanceContext& context) const {
             return _distance(context, delta<LessThanCondition>);
-        }
-       
-        uint32_t GreaterThanCondition::distance(DistanceContext& context) const {
-            return _distance(context, delta<GreaterThanCondition>);
         }
        
         uint32_t NotEqualCondition::distance(DistanceContext& context) const {
@@ -1735,7 +1600,7 @@ namespace PetriEngine {
             out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
             _cond->toBinary(out);
         }
-        
+
         void UntilCondition::toBinary(std::ostream& out) const
         {
             auto path = getPath();
@@ -1801,7 +1666,7 @@ namespace PetriEngine {
             auto quant = Quantifier::PN_BOOLEAN;
             out.write(reinterpret_cast<const char*>(&path), sizeof(Path));
             out.write(reinterpret_cast<const char*>(&quant), sizeof(Quantifier));
-            out.write(reinterpret_cast<const char*>(&_value), sizeof(bool));
+            out.write(reinterpret_cast<const char*>(&value), sizeof(bool));
         }
         
         void UnfoldedUpperBoundsCondition::toBinary(std::ostream& out) const
@@ -1946,7 +1811,47 @@ namespace PetriEngine {
             _cond2->toXML(out,tabs+3);
             generateTabs(out,tabs+2) << "</reach>\n" ; generateTabs(out,tabs+1) << "</until>\n" ; generateTabs(out,tabs) << "</all-paths>\n";
         }
-        
+
+        void ACondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out, tabs) << "<all-paths>\n";
+            _cond->toXML(out, tabs+1);
+            generateTabs(out, tabs) << "</all-paths>\n";
+        }
+
+        void ECondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out, tabs) << "<exists-path>\n";
+            _cond->toXML(out, tabs+1);
+            generateTabs(out, tabs) << "</exists-path>\n";
+        }
+
+        void FCondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out, tabs) << "<finally>\n";
+            _cond->toXML(out, tabs+1);
+            generateTabs(out, tabs) << "</finally>\n";
+        }
+
+        void GCondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out, tabs) << "<globally>\n";
+            _cond->toXML(out, tabs+1);
+            generateTabs(out, tabs) << "</globally>\n";
+        }
+
+        void XCondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out, tabs) << "<next>\n";
+            _cond->toXML(out, tabs+1);
+            generateTabs(out, tabs) << "</next>\n";
+        }
+
+        void UntilCondition::toXML(std::ostream& out, uint32_t tabs) const {
+            generateTabs(out,tabs) << "<until>\n" ; generateTabs(out,tabs+1) << "<before>\n";
+            _cond1->toXML(out,tabs+2);
+            generateTabs(out,tabs+1) << "</before>\n" ; generateTabs(out,tabs+1) << "<reach>\n";
+            _cond2->toXML(out,tabs+2);
+            generateTabs(out,tabs+1) << "</reach>\n" ; generateTabs(out,tabs) << "</until>\n" ;
+        }
+
+
+
         void AndCondition::toXML(std::ostream& out,uint32_t tabs) const {
             if(_conds.size() == 0)
             {
@@ -2077,21 +1982,6 @@ namespace PetriEngine {
             generateTabs(out,tabs) << "</integer-le>\n";  
         }
         
-        void GreaterThanCondition::toXML(std::ostream& out,uint32_t tabs) const {
-            generateTabs(out,tabs) << "<integer-gt>\n";
-            _expr1->toXML(out,tabs+1);
-            _expr2->toXML(out,tabs+1);
-            generateTabs(out,tabs) << "</integer-gt>\n";  
-        }
-        
-        void GreaterThanOrEqualCondition::toXML(std::ostream& out,uint32_t tabs) const {
-            
-            generateTabs(out,tabs) << "<integer-ge>\n";
-            _expr1->toXML(out,tabs+1);
-            _expr2->toXML(out,tabs+1);
-            generateTabs(out,tabs) << "</integer-ge>\n";  
-        }
-        
         void NotCondition::toXML(std::ostream& out,uint32_t tabs) const {
             
             generateTabs(out,tabs) << "<negation>\n";
@@ -2101,7 +1991,7 @@ namespace PetriEngine {
         
         void BooleanCondition::toXML(std::ostream& out,uint32_t tabs) const {            
             generateTabs(out,tabs) << "<" << 
-                    (_value ? "true" : "false") 
+                    (value ? "true" : "false")
                     << "/>\n"; 
         }
         
@@ -2201,7 +2091,7 @@ namespace PetriEngine {
                 return Retval(std::make_shared<AXCondition>(r.formula));
             }
         }
-        
+
         Retval simplifyEF(Retval& r, SimplificationContext& context){
             if(r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)){
                 return Retval(BooleanCondition::TRUE_CONSTANT);
@@ -2241,7 +2131,20 @@ namespace PetriEngine {
                 return Retval(std::make_shared<AGCondition>(r.formula));
             }
         }
-        
+
+        template <typename Quantifier>
+        Retval simplifySimpleQuant(Retval& r, SimplificationContext& context) {
+            static_assert(std::is_base_of_v<SimpleQuantifierCondition, Quantifier>);
+            if (r.formula->isTriviallyTrue() || !r.neglps->satisfiable(context)) {
+                return Retval(BooleanCondition::TRUE_CONSTANT);
+            } else if (r.formula->isTriviallyFalse() || !r.lps->satisfiable(context)) {
+                return Retval(BooleanCondition::FALSE_CONSTANT);
+            } else {
+                return Retval(std::make_shared<Quantifier>(r.formula));
+            }
+        }
+
+
         Retval EXCondition::simplify(SimplificationContext& context) const {
             Retval r = _cond->simplify(context);
             return context.negated() ? simplifyAX(r, context) : simplifyEX(r, context);
@@ -2332,7 +2235,7 @@ namespace PetriEngine {
                 context.setNegate(neg);
                 return neg ? 
                             Retval(BooleanCondition::TRUE_CONSTANT) :
-                            Retval(BooleanCondition::FALSE_CONSTANT);                
+                            Retval(BooleanCondition::FALSE_CONSTANT);
             }
             Retval r1 = _cond1->simplify(context);
             context.setNegate(neg);
@@ -2357,7 +2260,77 @@ namespace PetriEngine {
                 }
             }
         }
-        
+
+        Retval UntilCondition::simplify(SimplificationContext& context) const {
+            bool neg = context.negated();
+            context.setNegate(false);
+
+            Retval r2 = _cond2->simplify(context);
+            if(r2.formula->isTriviallyTrue() || !r2.neglps->satisfiable(context))
+            {
+                context.setNegate(neg);
+                return neg ?
+                       Retval(BooleanCondition::FALSE_CONSTANT) :
+                       Retval(BooleanCondition::TRUE_CONSTANT);
+            }
+            else if(r2.formula->isTriviallyFalse() || !r2.lps->satisfiable(context))
+            {
+                context.setNegate(neg);
+                return neg ?
+                       Retval(BooleanCondition::TRUE_CONSTANT) :
+                       Retval(BooleanCondition::FALSE_CONSTANT);
+            }
+            Retval r1 = _cond1->simplify(context);
+            context.setNegate(neg);
+
+            if(context.negated()){
+                if(r1.formula->isTriviallyTrue() || !r1.neglps->satisfiable(context)){
+                    return Retval(std::make_shared<NotCondition>(
+                            std::make_shared<FCondition>(r2.formula)));
+                } else if(r1.formula->isTriviallyFalse() || !r1.lps->satisfiable(context)){
+                    return Retval(std::make_shared<NotCondition>(r2.formula));
+                } else {
+                    return Retval(std::make_shared<NotCondition>(
+                            std::make_shared<UntilCondition>(r1.formula, r2.formula)));
+                }
+            } else {
+                if(r1.formula->isTriviallyTrue() || !r1.neglps->satisfiable(context)){
+                    return Retval(std::make_shared<FCondition>(r2.formula));
+                } else if(r1.formula->isTriviallyFalse() || !r1.lps->satisfiable(context)){
+                    return r2;
+                } else {
+                    return Retval(std::make_shared<UntilCondition>(r1.formula, r2.formula));
+                }
+            }
+        }
+
+        Retval ECondition::simplify(SimplificationContext& context) const {
+            assert(false);
+            Retval r = _cond->simplify(context);
+            return context.negated() ? simplifySimpleQuant<ACondition>(r, context) : simplifySimpleQuant<ECondition>(r, context);
+        }
+
+        Retval ACondition::simplify(SimplificationContext& context) const {
+            assert(false);
+            Retval r = _cond->simplify(context);
+            return context.negated() ? simplifySimpleQuant<ECondition>(r, context) : simplifySimpleQuant<ACondition>(r, context);
+        }
+
+        Retval FCondition::simplify(SimplificationContext& context) const {
+            Retval r = _cond->simplify(context);
+            return context.negated() ? simplifySimpleQuant<GCondition>(r, context) : simplifySimpleQuant<FCondition>(r, context);
+        }
+
+        Retval GCondition::simplify(SimplificationContext& context) const {
+            Retval r = _cond->simplify(context);
+            return context.negated() ? simplifySimpleQuant<FCondition>(r, context) : simplifySimpleQuant<GCondition>(r, context);
+        }
+
+        Retval XCondition::simplify(SimplificationContext& context) const {
+            Retval r = _cond->simplify(context);
+            return simplifySimpleQuant<XCondition>(r, context);
+        }
+
         AbstractProgramCollection_ptr mergeLps(std::vector<AbstractProgramCollection_ptr>&& lps)
         {
             if(lps.size() == 0) return nullptr;
@@ -2647,24 +2620,24 @@ namespace PetriEngine {
                             if(neg) return std::make_shared<NotEqualCondition>(id, lu);
                             else    return std::make_shared<EqualCondition>(id, lu);
                         else
-                            if(neg) return std::make_shared<GreaterThanCondition>(id, lu);
+                            if(neg) return std::make_shared<LessThanCondition>(lu, id);
                             else    return std::make_shared<LessThanOrEqualCondition>(id, lu);
                     }
                     else
                     {
                         if(c._lower != 0 && c._upper != std::numeric_limits<uint32_t>::max())
                         {
-                            if(neg) return makeOr(std::make_shared<LessThanCondition>(id, ll),std::make_shared<GreaterThanCondition>(id, lu));
-                            else    return makeAnd(std::make_shared<GreaterThanOrEqualCondition>(id, ll),std::make_shared<LessThanOrEqualCondition>(id, lu));
+                            if(neg) return makeOr(std::make_shared<LessThanCondition>(id, ll),std::make_shared<LessThanCondition>(lu, id));
+                            else    return makeAnd(std::make_shared<LessThanOrEqualCondition>(ll, id),std::make_shared<LessThanOrEqualCondition>(id, lu));
                         }
                         else if(c._lower != 0)
                         {
                             if(neg) return std::make_shared<LessThanCondition>(id, ll);
-                            else    return std::make_shared<GreaterThanOrEqualCondition>(id, ll);                       
+                            else    return std::make_shared<LessThanOrEqualCondition>(ll, id);
                         }
                         else
                         {
-                            if(neg) return std::make_shared<GreaterThanCondition>(id, lu);
+                            if(neg) return std::make_shared<LessThanCondition>(lu, id);
                             else    return std::make_shared<LessThanOrEqualCondition>(id, lu);                        
                         }
                     }
@@ -2806,7 +2779,7 @@ namespace PetriEngine {
             }
             else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
+                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr2, _expr1), std::move(lps), std::move(neglps));
                 } else {
                     return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 }                         
@@ -2844,83 +2817,10 @@ namespace PetriEngine {
                 return Retval(BooleanCondition::FALSE_CONSTANT);
             } else {
                 if (context.negated()) {
-                    return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
+                    return Retval(std::make_shared<LessThanCondition>(_expr2, _expr1), std::move(lps), std::move(neglps));
                 } else {
                     return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), 
                             std::move(lps), std::move(neglps));
-                }                         
-            }
-        }
-        
-        Retval GreaterThanCondition::simplify(SimplificationContext& context) const {
-            Member m1 = _expr1->constraint(context);
-            Member m2 = _expr2->constraint(context);
-            
-            AbstractProgramCollection_ptr lps, neglps;
-            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
-                // test for trivial comparison
-                Trivial eval = context.negated() ? m1 <= m2 : m1 > m2;
-                if(eval != Trivial::Indeterminate) {
-                    return Retval(BooleanCondition::getShared(eval == Trivial::True));
-                } else { // if no trivial case
-                    int constant = m2.constant() - m1.constant();
-                    m1 -= m2;
-                    m2 = m1;
-                    lps = std::make_shared<SingleProgram>(context.cache(), std::move(m1), constant, (context.negated() ? Simplification::OP_LE : Simplification::OP_GT));
-                    neglps = std::make_shared<SingleProgram>(context.cache(), std::move(m2), constant, (context.negated() ? Simplification::OP_GT : Simplification::OP_LE));
-                }
-            } else {
-                lps = std::make_shared<SingleProgram>();
-                neglps = std::make_shared<SingleProgram>();
-            }
-            
-            if(!context.timeout() && !neglps->satisfiable(context)) {
-                return Retval(BooleanCondition::TRUE_CONSTANT);
-            }else if(!context.timeout() && !lps->satisfiable(context)) {
-                return Retval(BooleanCondition::FALSE_CONSTANT);
-            } else {
-                if (context.negated()) {
-                    return Retval(std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
-                } else {
-                    return Retval(std::make_shared<GreaterThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
-                }                         
-            }
-        }
-        
-        Retval GreaterThanOrEqualCondition::simplify(SimplificationContext& context) const {  
-            Member m1 = _expr1->constraint(context);
-            Member m2 = _expr2->constraint(context);
-            
-            AbstractProgramCollection_ptr lps, neglps;
-            if (!context.timeout() && m1.canAnalyze() && m2.canAnalyze()) {
-                // test for trivial comparison
-                Trivial eval = context.negated() ? m1 < m2 : m1 >= m2;
-                if(eval != Trivial::Indeterminate) {
-                    return Retval(BooleanCondition::getShared(eval == Trivial::True));
-                } else { // if no trivial case
-                    int constant = m2.constant() - m1.constant();
-                    m1 -= m2;
-                    m2 = m1;
-                    lps = std::make_shared<SingleProgram>(context.cache(), std::move(m1), constant, (context.negated() ? Simplification::OP_LT : Simplification::OP_GE));
-                    neglps = std::make_shared<SingleProgram>(context.cache(), std::move(m2), constant, (!context.negated() ? Simplification::OP_LT : Simplification::OP_GE));
-                }
-            } else {
-                lps = std::make_shared<SingleProgram>();
-                neglps = std::make_shared<SingleProgram>();
-            }
-            if (!context.timeout() && !lps->satisfiable(context)) 
-            {
-                return Retval(BooleanCondition::FALSE_CONSTANT);
-            } 
-            else if(!context.timeout() && !neglps->satisfiable(context))
-            {
-                return Retval(BooleanCondition::TRUE_CONSTANT);
-            }
-            else {
-                if (context.negated()) {
-                    return Retval(std::make_shared<LessThanCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
-                } else {
-                    return Retval(std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2), std::move(lps), std::move(neglps));
                 }                         
             }
         }
@@ -2934,9 +2834,9 @@ namespace PetriEngine {
         
         Retval BooleanCondition::simplify(SimplificationContext& context) const {
             if (context.negated()) {
-                return Retval(getShared(!_value));
+                return Retval(getShared(!value));
             } else {
-                return Retval(getShared(_value));
+                return Retval(getShared(value));
             }
         }
         
@@ -2997,6 +2897,28 @@ namespace PetriEngine {
         bool AFCondition::isReachability(uint32_t depth) const {
             return false;
         }
+
+        bool ECondition::isReachability(uint32_t depth) const {
+            if (depth != 0) {
+                return false;
+            }
+
+            if (auto cond = dynamic_cast<FCondition*>(_cond.get())) {
+                // EF is a reachability formula so skip checking the F.
+                return (*cond)[0]->isReachability(depth + 1);
+            }
+            return _cond->isReachability(depth + 1);
+        }
+
+        bool ACondition::isReachability(uint32_t depth) const {
+            if (depth != 0) {
+                return false;
+            }
+            if (auto cond = dynamic_cast<GCondition*>(_cond.get())) {
+                return (*cond)[0]->isReachability(depth + 1);
+            }
+            return _cond->isReachability(depth + 1);
+        }
         
         bool UntilCondition::isReachability(uint32_t depth) const {
             return false;
@@ -3036,11 +2958,11 @@ namespace PetriEngine {
         /******************** Prepare Reachability Queries ********************/
         
         Condition_ptr EXCondition::prepareForReachability(bool negated) const {
-            return NULL;
+            return nullptr;
         }
         
         Condition_ptr EGCondition::prepareForReachability(bool negated) const {
-            return NULL;
+            return nullptr;
         }
         
         Condition_ptr EFCondition::prepareForReachability(bool negated) const {
@@ -3049,7 +2971,7 @@ namespace PetriEngine {
         }
         
         Condition_ptr AXCondition::prepareForReachability(bool negated) const {
-            return NULL;
+            return nullptr;
         }
         
         Condition_ptr AGCondition::prepareForReachability(bool negated) const {
@@ -3059,23 +2981,33 @@ namespace PetriEngine {
         }
         
         Condition_ptr AFCondition::prepareForReachability(bool negated) const {
-            return NULL;
+            return nullptr;
         }
-        
+
+        Condition_ptr ACondition::prepareForReachability(bool negated) const {
+            auto g = std::dynamic_pointer_cast<GCondition>(_cond);
+            return g ? AGCondition((*g)[0]).prepareForReachability(negated) : nullptr;
+        }
+
+        Condition_ptr ECondition::prepareForReachability(bool negated) const {
+            auto f = std::dynamic_pointer_cast<FCondition>(_cond);
+            return f ? EFCondition((*f)[0]).prepareForReachability(negated) : nullptr;
+        }
+
         Condition_ptr UntilCondition::prepareForReachability(bool negated) const {
-            return NULL;
+            return nullptr;
         }
         
         Condition_ptr LogicalCondition::prepareForReachability(bool negated) const {
-            return NULL;
+            return nullptr;
         }
 
         Condition_ptr CompareConjunction::prepareForReachability(bool negated) const {
-            return NULL;
+            return nullptr;
         }
         
         Condition_ptr CompareCondition::prepareForReachability(bool negated) const {
-            return NULL;
+            return nullptr;
         }
         
         Condition_ptr NotCondition::prepareForReachability(bool negated) const {
@@ -3083,15 +3015,15 @@ namespace PetriEngine {
         }
         
         Condition_ptr BooleanCondition::prepareForReachability(bool negated) const {
-            return NULL;
+            return nullptr;
         }
         
         Condition_ptr DeadlockCondition::prepareForReachability(bool negated) const {
-            return NULL;
+            return nullptr;
         }
 
         Condition_ptr UnfoldedUpperBoundsCondition::prepareForReachability(bool negated) const {
-            return NULL;
+            return nullptr;
         }
         
 /******************** Prepare CTL Queries ********************/
@@ -3138,7 +3070,7 @@ namespace PetriEngine {
             {
                 if(a == BooleanCondition::TRUE_CONSTANT) 
                 { ++stats[6]; return a;}
-                if(a == BooleanCondition::FALSE_CONSTANT)  
+                if(a == BooleanCondition::FALSE_CONSTANT)
                 { ++stats[7]; return DeadlockCondition::DEADLOCK; }
                 a = std::make_shared<AXCondition>(a);
             }
@@ -3415,6 +3347,96 @@ namespace PetriEngine {
             }, stats, context, nested, negated, initrw);
         }
 
+        Condition_ptr
+        UntilCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                     bool initrw) {
+            return initialMarkingRW([&]() -> Condition_ptr {
+                auto b = _cond2->pushNegation(stats, context, true, false, initrw);
+                auto a = _cond1->pushNegation(stats, context, true, false, initrw);
+
+                if (auto cond = std::dynamic_pointer_cast<FCondition>(b)) {
+                    static_assert(negstat_t::nrules >= 35);
+                    ++stats[34];
+                    if (negated)
+                        return std::make_shared<NotCondition>(b);
+                    return b;
+                }
+
+                auto c = std::make_shared<UntilCondition>(a, b);
+                if(negated) return std::make_shared<NotCondition>(c);
+                return c;
+            }, stats, context, nested, negated, initrw);
+        }
+
+        Condition_ptr XCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return initialMarkingRW([&]() -> Condition_ptr {
+               auto res = _cond->pushNegation(stats, context, true, negated, initrw);
+               if (res == BooleanCondition::TRUE_CONSTANT || res == BooleanCondition::FALSE_CONSTANT) {
+                   return res;
+               }
+               return std::make_shared<XCondition>(res);
+            }, stats, context, nested, negated, initrw);
+        }
+
+        Condition_ptr FCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return initialMarkingRW([&]() -> Condition_ptr {
+                auto a = _cond->pushNegation(stats, context, true, false, initrw);
+                if(!a->isTemporal())
+                {
+                    auto res = std::make_shared<FCondition>(a);
+                    if(negated) return std::make_shared<NotCondition>(res);
+                    return res;
+                }
+
+                if (dynamic_cast<FCondition*>(a.get())) {
+                    ++stats[31];
+                    if (negated) a = std::make_shared<NotCondition>(a);
+                    return a;
+                }
+                else if (auto cond = dynamic_cast<UntilCondition*>(a.get())) {
+                    ++stats[32];
+                    return FCondition((*cond)[1]).pushNegation(stats, context, nested, negated, initrw);
+                }
+                else if (auto cond = dynamic_cast<OrCondition*>(a.get())) {
+                    if(!cond->isTemporal())
+                    {
+                        Condition_ptr b = std::make_shared<FCondition>(a);
+                        if(negated) b = std::make_shared<NotCondition>(b);
+                        return b;
+                    }
+                    ++stats[33];
+                    std::vector<Condition_ptr> distributed;
+                    for (auto& i: *cond) {
+                        distributed.push_back(std::make_shared<FCondition>(i));
+                    }
+                    return makeOr(distributed)->pushNegation(stats, context, nested, negated, initrw);
+                }
+                else {
+                    Condition_ptr b = std::make_shared<FCondition>(a);
+                    if (negated) b = std::make_shared<NotCondition>(b);
+                    return b;
+                }
+            }, stats, context, nested, negated, initrw);
+        }
+
+        Condition_ptr ACondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return ECondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
+        }
+
+
+        Condition_ptr ECondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            auto _sub = _cond->pushNegation(stats, context, nested, !negated, initrw);
+            return negated ? (Condition_ptr)std::make_shared<ACondition>(_sub) : (Condition_ptr)std::make_shared<ECondition>(_sub);
+        }
+
+        Condition_ptr GCondition::pushNegation(negstat_t &stats, const EvaluationContext &context, bool nested, bool negated,
+                                               bool initrw) {
+            return FCondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
+        }
         
         Condition_ptr pushAnd(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children, bool initrw)
         {
@@ -3440,7 +3462,8 @@ namespace PetriEngine {
                     other.emplace_back(n);
                 }
             }         
-            if(nef.size() + other.size() == 0) return BooleanCondition::TRUE_CONSTANT;
+            if(nef.size() + other.size() == 0)
+                return BooleanCondition::TRUE_CONSTANT;
             if(nef.size() + other.size() == 1) 
             { 
                 return nef.size() == 0 ? 
@@ -3476,7 +3499,8 @@ namespace PetriEngine {
                     other.emplace_back(n);
                 }
             }
-            if(nef.size() + other.size() == 0) return BooleanCondition::FALSE_CONSTANT;
+            if(nef.size() + other.size() == 0)
+                return BooleanCondition::FALSE_CONSTANT;
             if(nef.size() + other.size() == 1) { return nef.size() == 0 ? other[0] : std::make_shared<EFCondition>(nef[0]);}
             if(nef.size() != 0) other.push_back(
                     std::make_shared<EFCondition>(
@@ -3560,64 +3584,48 @@ namespace PetriEngine {
                     if(bi == b->_ids.end() || ai == a->_ids.end()) break;
                 }
             };
-            if(auto p1 = dynamic_pointer_cast<PlusExpr>(_expr1))
-                if(auto p2 = dynamic_pointer_cast<PlusExpr>(_expr2))
+            if(auto p1 = std::dynamic_pointer_cast<PlusExpr>(_expr1))
+                if(auto p2 = std::dynamic_pointer_cast<PlusExpr>(_expr2))
                     remdup(p1, p2);
             
-            if(auto m1 = dynamic_pointer_cast<MultiplyExpr>(_expr1))
-                if(auto m2 = dynamic_pointer_cast<MultiplyExpr>(_expr2))
+            if(auto m1 = std::dynamic_pointer_cast<MultiplyExpr>(_expr1))
+                if(auto m2 = std::dynamic_pointer_cast<MultiplyExpr>(_expr2))
                     remdup(m1, m2);                    
             
-            if(auto p1 = dynamic_pointer_cast<CommutativeExpr>(_expr1))
-                if(auto p2 = dynamic_pointer_cast<CommutativeExpr>(_expr2))            
+            if(auto p1 = std::dynamic_pointer_cast<CommutativeExpr>(_expr1))
+                if(auto p2 = std::dynamic_pointer_cast<CommutativeExpr>(_expr2))
                     return p1->_exprs.size() + p1->_ids.size() + p2->_exprs.size() + p2->_ids.size() == 0;
             return _expr1->placeFree() && _expr2->placeFree();
-        }        
-        
+        }
+
         Condition_ptr LessThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
-            if(negated) return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
+            if(isTrivial())
+                return BooleanCondition::getShared(evaluate(context) xor negated);
+            if(negated) return std::make_shared<LessThanOrEqualCondition>(_expr2, _expr1);
             else        return std::make_shared<LessThanCondition>(_expr1, _expr2);
             }, stats, context, nested, negated, initrw);
         }
 
-        
-        Condition_ptr GreaterThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
-            return initialMarkingRW([&]() -> Condition_ptr {
-            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
-            if(negated) return std::make_shared<LessThanCondition>(_expr1, _expr2);
-            else        return std::make_shared<GreaterThanOrEqualCondition>(_expr1, _expr2);
-            }, stats, context, nested, negated, initrw);
-        }
-
-        
         Condition_ptr LessThanOrEqualCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);                
-            if(negated) return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
+            if(isTrivial())
+                return BooleanCondition::getShared(evaluate(context) xor negated);
+            if(negated) return std::make_shared<LessThanCondition>(_expr2, _expr1);
             else        return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
             }, stats, context, nested, negated, initrw);
         }
 
-        
-        Condition_ptr GreaterThanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
-            return initialMarkingRW([&]() -> Condition_ptr {
-            if(isTrivial()) return BooleanCondition::getShared(evaluate(context) xor negated);
-            if(negated) return std::make_shared<LessThanOrEqualCondition>(_expr1, _expr2);
-            else        return std::make_shared<GreaterThanCondition>(_expr1, _expr2);
-            }, stats, context, nested, negated, initrw);
-        }
-                
         Condition_ptr pushEqual(CompareCondition* org, bool negated, bool noteq, const EvaluationContext& context)
         {
-            if(org->isTrivial()) return BooleanCondition::getShared(org->evaluate(context) xor negated);
+            if(org->isTrivial())
+                return BooleanCondition::getShared(org->evaluate(context) xor negated);
             for(auto i : {0,1})
             {
                 if((*org)[i]->placeFree() && (*org)[i]->evaluate(context) == 0)
                 {
                     if(negated == noteq) return std::make_shared<LessThanOrEqualCondition>((*org)[(i + 1) % 2], std::make_shared<LiteralExpr>(0));
-                    else                 return std::make_shared<GreaterThanOrEqualCondition>((*org)[(i + 1) % 2], std::make_shared<LiteralExpr>(1));
+                    else                 return std::make_shared<LessThanOrEqualCondition>(std::make_shared<LiteralExpr>(1), (*org)[(i + 1) % 2]);
                 }
             }
             if(negated == noteq) return std::make_shared<EqualCondition>((*org)[0], (*org)[1]);
@@ -3639,8 +3647,8 @@ namespace PetriEngine {
                 
         Condition_ptr BooleanCondition::pushNegation(negstat_t& stats, const EvaluationContext& context, bool nested, bool negated, bool initrw) {
             return initialMarkingRW([&]() -> Condition_ptr {
-            if(negated) return getShared(!_value);
-            else        return getShared( _value);
+            if(negated) return getShared(!value);
+            else        return getShared(value);
             }, stats, context, nested, negated, initrw);
         }
         
@@ -3659,329 +3667,9 @@ namespace PetriEngine {
             }
             return std::make_shared<UnfoldedUpperBoundsCondition>(_places, _max, _offset);
         }
+        
+        /********************** CONSTRUCTORS *********************************/
 
-        
-        /******************** Stubborn reduction interesting transitions ********************/
-        
-        void PlusExpr::incr(ReducingSuccessorGenerator& generator) const { 
-            for(auto& i : _ids) generator.presetOf(i.first, true);
-            for(auto& e : _exprs) e->incr(generator);
-        }
-        
-        void PlusExpr::decr(ReducingSuccessorGenerator& generator) const {
-            for(auto& i : _ids) generator.postsetOf(i.first, true);
-            for(auto& e : _exprs) e->decr(generator);
-        }
-        
-        void SubtractExpr::incr(ReducingSuccessorGenerator& generator) const {
-            bool first = true;
-            for(auto& e : _exprs)
-            {
-                if(first)
-                    e->incr(generator);
-                else
-                    e->decr(generator);
-                first = false;
-            }
-        }
-        
-        void SubtractExpr::decr(ReducingSuccessorGenerator& generator) const {
-            bool first = true;
-            for(auto& e : _exprs)
-            {
-                if(first)
-                    e->decr(generator);
-                else
-                    e->incr(generator);
-                first = false;
-            }
-        }
-        
-        void MultiplyExpr::incr(ReducingSuccessorGenerator& generator) const {
-            if((_ids.size() + _exprs.size()) == 1)
-            {
-                for(auto& i : _ids) generator.presetOf(i.first, true);
-                for(auto& e : _exprs) e->incr(generator);                
-            }
-            else
-            {
-                for(auto& i : _ids)
-                {
-                    generator.presetOf(i.first, true);
-                    generator.postsetOf(i.first, true);
-                }
-                for(auto& e : _exprs)
-                {
-                    e->incr(generator);
-                    e->decr(generator);
-                }
-            }
-        }
-        
-        void MultiplyExpr::decr(ReducingSuccessorGenerator& generator) const {
-            if((_ids.size() + _exprs.size()) == 1)
-            {
-                for(auto& i : _ids) generator.postsetOf(i.first, true);
-                for(auto& e : _exprs) e->decr(generator);            
-            }
-            else
-                incr(generator);
-        }
-        
-        void MinusExpr::incr(ReducingSuccessorGenerator& generator) const {
-            // TODO not implemented
-        }
-        
-        void MinusExpr::decr(ReducingSuccessorGenerator& generator) const {
-            // TODO not implemented
-        }
-
-        void LiteralExpr::incr(ReducingSuccessorGenerator& generator) const {
-            // Add nothing
-        }
-        
-        void LiteralExpr::decr(ReducingSuccessorGenerator& generator) const {
-            // Add nothing
-        }
-
-        void UnfoldedIdentifierExpr::incr(ReducingSuccessorGenerator& generator) const {
-            generator.presetOf(_offsetInMarking, true);
-        }
-        
-        void UnfoldedIdentifierExpr::decr(ReducingSuccessorGenerator& generator) const {
-             generator.postsetOf(_offsetInMarking, true);
-        }
-        
-        void SimpleQuantifierCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
-            _cond->findInteresting(generator, negated);
-        }
-        
-        void UntilCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
-            _cond1->findInteresting(generator, negated);
-            _cond1->findInteresting(generator, !negated);
-            _cond2->findInteresting(generator, negated);
-        }
-        
-        void AndCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // and
-                for(auto& c : _conds)
-                {
-                    if(!c->isSatisfied())
-                    {
-                        c->findInteresting(generator, negated);
-                        break;
-                    }
-                }
-            } else {                    // or
-                for(auto& c : _conds) c->findInteresting(generator, negated);
-            }
-        }
-        
-        void OrCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // or
-                for(auto& c : _conds) c->findInteresting(generator, negated);
-            } else {                    // and
-                for(auto& c : _conds)
-                {
-                    if(c->isSatisfied())
-                    {
-                        c->findInteresting(generator, negated);
-                        break;
-                    }
-                }
-            }
-        }
-        
-        void CompareConjunction::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const{
-             
-            auto neg = negated != _negated;
-            int32_t cand = std::numeric_limits<int32_t>::max();
-            bool pre = false;
-            for(auto& c : _constraints)
-            {
-                auto val = generator.parent()[c._place];
-                if(c._lower == c._upper)
-                {
-                    if(neg)
-                    {
-                        if(val != c._lower) continue;
-                        generator.postsetOf(c._place, true);
-                        generator.presetOf(c._place, true);
-                    }
-                    else
-                    {
-                        if(val == c._lower) continue;
-                        if(val > c._lower) {
-                            cand = c._place;
-                            pre = false;
-                        } else {
-                            cand = c._place;
-                            pre = true;
-                        }   
-                    }
-                }
-                else
-                {
-                    if(!neg)
-                    {
-                        if(val < c._lower && c._lower != 0)
-                        {
-                            assert(!neg);
-                            cand = c._place;
-                            pre = true;
-                        }
-                        
-                        if(val > c._upper && c._upper != std::numeric_limits<uint32_t>::max())
-                        {
-                            assert(!neg);
-                            cand = c._place;
-                            pre = false;
-                        }
-                    }
-                    else
-                    {
-                        if(val >= c._lower && c._lower != 0)
-                        {
-                            generator.postsetOf(c._place, true);
-                        }
-                        
-                        if(val <= c._upper && c._upper != std::numeric_limits<uint32_t>::max())
-                        {
-                            generator.presetOf(c._place, true);
-                        }
-                    }
-                }
-                if(cand != std::numeric_limits<int32_t>::max())
-                {
-                    if(pre && generator.seenPre(cand))
-                        return;
-                    else if(!pre && generator.seenPost(cand))
-                        return;
-                }
-            }
-            if(cand != std::numeric_limits<int32_t>::max())
-            {
-                if(pre)
-                {
-                    generator.presetOf(cand, true);
-                }
-                else if(!pre)
-                {
-                    generator.postsetOf(cand, true);
-                }
-            }
-        }
-        
-        void EqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // equal
-                if(_expr1->getEval() == _expr2->getEval()) { return; }
-                if(_expr1->getEval() > _expr2->getEval()){
-                    _expr1->decr(generator);
-                    _expr2->incr(generator);
-                } else {
-                    _expr1->incr(generator);
-                    _expr2->decr(generator);
-                }   
-            } else {                    // not equal
-                if(_expr1->getEval() != _expr2->getEval()) { return; }
-                _expr1->incr(generator);
-                _expr1->decr(generator);
-                _expr2->incr(generator);
-                _expr2->decr(generator);
-            }
-        }
-        
-        void NotEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // not equal
-                if(_expr1->getEval() != _expr2->getEval()) { return; }
-                _expr1->incr(generator);
-                _expr1->decr(generator);
-                _expr2->incr(generator);
-                _expr2->decr(generator);
-            } else {                    // equal
-                if(_expr1->getEval() == _expr2->getEval()) { return; }
-                if(_expr1->getEval() > _expr2->getEval()){
-                    _expr1->decr(generator);
-                    _expr2->incr(generator);
-                } else {
-                    _expr1->incr(generator);
-                    _expr2->decr(generator);
-                }   
-            }
-        }
-        
-        void LessThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {                
-            if(!negated){               // less than
-                if(_expr1->getEval() < _expr2->getEval()) { return; }
-                _expr1->decr(generator);
-                _expr2->incr(generator);
-            } else {                    // greater than or equal
-                if(_expr1->getEval() >= _expr2->getEval()) { return; }
-                _expr1->incr(generator);
-                _expr2->decr(generator);
-            }
-        }
-        
-        void LessThanOrEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // less than or equal
-                if(_expr1->getEval() <= _expr2->getEval()) { return; }
-                _expr1->decr(generator);
-                _expr2->incr(generator);
-            } else {                    // greater than
-                if(_expr1->getEval() > _expr2->getEval()) { return; }
-                _expr1->incr(generator);
-                _expr2->decr(generator);
-            }
-        }
-        
-        void GreaterThanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // greater than
-                if(_expr1->getEval() > _expr2->getEval()) { return; }
-                _expr1->incr(generator);
-                _expr2->decr(generator);
-            } else {                    // less than or equal
-                if(_expr1->getEval() <= _expr2->getEval()) { return; }
-                _expr1->decr(generator);
-                _expr2->incr(generator);
-            }
-        }
-        
-        void GreaterThanOrEqualCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!negated){               // greater than or equal
-                if(_expr1->getEval() >= _expr2->getEval()) { return; }
-                _expr1->incr(generator);
-                _expr2->decr(generator); 
-            } else {                    // less than
-                if(_expr1->getEval() < _expr2->getEval()) { return; }
-                _expr1->decr(generator);
-                _expr2->incr(generator);
-            }
-        }
-        
-        void NotCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            _cond->findInteresting(generator, !negated);
-        }
-        
-        void BooleanCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            // Add nothing
-        }
-        
-        void DeadlockCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            if(!isSatisfied()){
-                generator.postPresetOf(generator.leastDependentEnabled(), true);
-            } // else add nothing
-        }
-
-        void UnfoldedUpperBoundsCondition::findInteresting(ReducingSuccessorGenerator& generator, bool negated) const {
-            for(auto& p : _places)
-                if(!p._maxed_out)
-                    generator.presetOf(p._place);
-        }
-        
-        
-/********************** CONSTRUCTORS *********************************/
-
-        template<typename T>
         void postMerge(std::vector<Condition_ptr>& conds) {
             std::sort(std::begin(conds), std::end(conds),
                     [](auto& a, auto& b) {
@@ -3993,14 +3681,14 @@ namespace PetriEngine {
             for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
             for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
-            postMerge<AndCondition>(_conds);
+            postMerge(_conds);
         }
         
         AndCondition::AndCondition(const std::vector<Condition_ptr>& conds) {
             for (auto& c : conds) tryMerge<AndCondition>(_conds, c);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
             for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
-            postMerge<AndCondition>(_conds);
+            postMerge(_conds);
         }
        
         AndCondition::AndCondition(Condition_ptr left, Condition_ptr right) {
@@ -4008,21 +3696,21 @@ namespace PetriEngine {
             tryMerge<AndCondition>(_conds, right);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
             for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
-            postMerge<AndCondition>(_conds);
+            postMerge(_conds);
         }
        
         OrCondition::OrCondition(std::vector<Condition_ptr>&& conds) {
             for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
             for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
-            postMerge<AndCondition>(_conds);
+            postMerge(_conds);
         }
        
         OrCondition::OrCondition(const std::vector<Condition_ptr>& conds) {
             for (auto& c : conds) tryMerge<OrCondition>(_conds, c);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
             for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
-            postMerge<AndCondition>(_conds);
+            postMerge(_conds);
         }
        
         OrCondition::OrCondition(Condition_ptr left, Condition_ptr right) {
@@ -4030,7 +3718,7 @@ namespace PetriEngine {
             tryMerge<OrCondition>(_conds, right);
             for (auto& c : _conds) _temporal = _temporal || c->isTemporal();
             for (auto& c : _conds) _loop_sensitive = _loop_sensitive || c->isLoopSensitive();
-            postMerge<AndCondition>(_conds);
+            postMerge(_conds);
         }
         
 
@@ -4109,12 +3797,6 @@ namespace PetriEngine {
                 else if(dynamic_cast<LessThanCondition*>(c.get()))
                     if(inverted) next._lower = val+1;
                     else         next._upper = val-1;
-                else if(dynamic_cast<GreaterThanOrEqualCondition*>(c.get()))
-                    if(inverted) next._upper = val;
-                    else         next._lower = val;
-                else if(dynamic_cast<GreaterThanCondition*>(c.get()))
-                    if(inverted) next._upper = val-1;
-                    else         next._lower = val+1;
                 else if(dynamic_cast<EqualCondition*>(c.get()))
                 {
                     assert(!negated);
@@ -4159,10 +3841,10 @@ namespace PetriEngine {
                     EvaluationContext c;
                     _constant = apply(_constant, e->evaluate(c));
                 }
-                else if (auto id = dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(e)) {
+                else if (auto id = std::dynamic_pointer_cast<PQL::UnfoldedIdentifierExpr>(e)) {
                     _ids.emplace_back(id->offset(), id->name());
                 } 
-                else if(auto c = dynamic_pointer_cast<CommutativeExpr>(e))
+                else if(auto c = std::dynamic_pointer_cast<CommutativeExpr>(e))
                 {
                     // we should move up plus/multiply here when possible;
                     if(c->_ids.size() == 0 && c->_exprs.size() == 0)
@@ -4203,8 +3885,6 @@ namespace PetriEngine {
             }
             return false;
         }
-
-
     } // PQL
 } // PetriEngine
 

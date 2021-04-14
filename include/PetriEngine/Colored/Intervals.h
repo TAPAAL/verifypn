@@ -1,3 +1,21 @@
+/* Copyright (C) 2020  Alexander Bilgram <alexander@bilgram.dk>,
+ *                     Peter Haar Taankvist <ptaankvist@gmail.com>,
+ *                     Thomas Pedersen <thomas.pedersen@stofanet.dk>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef INTERVALS_H
 #define INTERVALS_H
 
@@ -150,70 +168,6 @@ namespace PetriEngine {
                 }
             }
 
-            std::vector<interval_t> removeInterval(interval_t interval){
-                std::vector<interval_t> res;
-                //The interval should have the same upper and lower ids
-                auto ids = interval.getLowerIds();
-
-                for(uint32_t i = 0; i < size(); i++){
-                    if(_ranges[i]._lower < ids[i] && _ranges[i]._upper > ids[i]){
-                        if(res.empty()){
-                            interval_t newLowerInterval;
-                            interval_t newUpperInterval;
-                            newLowerInterval.addRange(_ranges[i]._lower, ids[i]-1);
-                            newUpperInterval.addRange(ids[i]+1, _ranges[i]._upper);
-
-                            res.push_back(newLowerInterval);
-                            res.push_back(newUpperInterval);
-                        } else {
-                            std::vector<interval_t> newIntervals;
-                            for(auto& interval : res){
-                                interval_t intervalCopy = interval;
-                                interval.addRange(_ranges[i]._lower, ids[i]-1);
-                                intervalCopy.addRange(ids[i]+1, _ranges[i]._upper);
-                                newIntervals.push_back(intervalCopy);
-                            }
-                            res.insert(res.end(), newIntervals.begin(), newIntervals.end());
-                        }
-                    } else if (_ranges[i]._lower < ids[i] && _ranges[i]._upper == ids[i]){
-                        if(res.empty()){
-                            interval_t newInterval;
-                            newInterval.addRange(_ranges[i]._lower, ids[i]-1);
-
-                            res.push_back(newInterval);
-                        } else {
-                            for(auto& interval : res){
-                                interval.addRange(_ranges[i]._lower, ids[i]-1);
-                            }
-                        }
-                    } else if (_ranges[i]._lower == ids[i] && _ranges[i]._upper > ids[i]) {
-                        if(res.empty()){
-                            interval_t newInterval;
-                            newInterval.addRange(ids[i]+1, _ranges[i]._upper);
-
-                            res.push_back(newInterval);
-                        } else {
-                            for(auto& interval : res){
-                                interval.addRange(ids[i]+1, _ranges[i]._upper);
-                            }
-                        }
-                    } else {
-                        if(res.empty()){
-                            interval_t newInterval;
-                            newInterval.addRange(_ranges[i]);
-
-                            res.push_back(newInterval);
-                        } else {
-                            for(auto& interval : res){
-                                interval.addRange(_ranges[i]);
-                            }
-                        }
-                    }
-                }
-
-                return res;
-            }
-
             interval_t getOverlap(interval_t other){
                 interval_t overlapInterval;
                 if(size() != other.size()){
@@ -326,32 +280,6 @@ namespace PetriEngine {
                 int32_t lower_val = ctSize + (lower + modifier);
                 int32_t upper_val = ctSize + (upper + modifier);
                 return std::make_pair(lower_val % ctSize, upper_val % ctSize);
-            }
-
-            void inEquality(intervalTuple_t &other){
-
-                if((size() > 1 || getFirst().intervalCombinations() > 1) && (other.size() > 1 || other.getFirst().intervalCombinations() > 1)){
-                    return;
-                } else if(size() > 1 || getFirst().intervalCombinations() > 1 ) {
-                    std::vector<interval_t> newIntervals;
-                    for(auto& interval : _intervals){
-                        auto remainingIntervals = interval.removeInterval(other.getFirst());
-                        
-                        newIntervals.insert(newIntervals.end(), remainingIntervals.begin(), remainingIntervals.end());
-                    }
-                } else if(other.size() > 1 || other.getFirst().intervalCombinations() > 1 ) {
-                    std::vector<interval_t> newIntervals;
-                    for(auto& interval : other._intervals){
-                        auto remainingIntervals = interval.removeInterval(getFirst());
-                        
-                        newIntervals.insert(newIntervals.end(), remainingIntervals.begin(), remainingIntervals.end());
-                    }
-                } else {
-                    if(getLowerIds() == other.getLowerIds()){
-                        other.getFirst().getFirst().invalidate();
-                        getFirst().getFirst().invalidate();
-                    }
-                }
             }
 
             uint32_t intervalCombinations(){
@@ -620,7 +548,6 @@ namespace PetriEngine {
 
             void applyModifier(int32_t modifier, std::vector<size_t> sizes){
                 std::vector<interval_t> collectedIntervals;
-
                 for(auto& interval : _intervals){
                     std::vector<interval_t> newIntervals;
                     newIntervals.push_back(std::move(interval));
@@ -647,7 +574,7 @@ namespace PetriEngine {
                     }
                     collectedIntervals.insert(collectedIntervals.end(), newIntervals.begin(), newIntervals.end());
                 }
-
+                
                 _intervals = std::move(collectedIntervals);
             }
 
@@ -691,7 +618,6 @@ namespace PetriEngine {
                     }
                     
                     _intervals.erase(_intervals.begin() + closestInterval.intervalId2);
-                    
                 }
                 simplify();
             }

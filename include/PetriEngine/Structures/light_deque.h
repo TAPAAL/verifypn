@@ -9,8 +9,7 @@
 #define LIGHT_DEQUE_H
 
 #include <memory>
-
-using namespace std;
+#include <cstring>
 
 template<typename T>
 class light_deque
@@ -19,7 +18,7 @@ class light_deque
         size_t _front = 0;
         size_t _back = 0;
         size_t _size = 0;
-        unique_ptr<T[]> _data;
+        std::unique_ptr<T[]> _data;
     public:
         light_deque(size_t initial_size = 64)
         {
@@ -35,8 +34,8 @@ class light_deque
             if(_back == _size)
             {
 
-                unique_ptr<T[]> ndata(new T[_size*2]);
-                memcpy(ndata.get(), _data.get(), _size*sizeof(T));
+                std::unique_ptr<T[]> ndata(new T[_size*2]);
+                std::memcpy(ndata.get(), _data.get(), _size*sizeof(T));
                 _size *= 2;
                 _data.swap(ndata);
             }

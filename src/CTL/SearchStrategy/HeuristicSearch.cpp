@@ -21,7 +21,7 @@ namespace SearchStrategy {
 
     DependencyGraph::Edge* HeuristicSearch::popFromW() {
         auto it = std::max_element(W.begin(), W.end(), [](auto a, auto b){
-            return a->targets.size() < b->targets.size();
+            return false; // a->targets.size() < b->targets.size();
         });
         auto edge = *it;
         W.erase(it);

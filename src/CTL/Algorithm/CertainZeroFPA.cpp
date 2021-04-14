@@ -53,29 +53,56 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
         if(e->refcnt == 0) graph->release(e);
         return;
     }
+
+    /*{
+        bool any = false;
+        size_t n = 0;
+        size_t k = 0;
+        for(Edge* deps : e->source->dependency_set)
+        {
+            ++k;
+            if(deps->source->isDone()) continue;
+            any = true;
+            ++n;
+        }
+        if(!any && e->source != vertex) return;
+    }*/
     
     bool allOne = true;
     bool hasCZero = false;
+    //auto pre_empty = e->targets.empty();
     Configuration *lastUndecided = nullptr;
-    for (auto c : e->targets) {
-        if (c->assignment == ONE)
+    {
+        auto it = e->targets.begin();
+        auto pit = e->targets.before_begin();
+        while(it != e->targets.end())
         {
-            continue;
-        }
-        else
-        {
-            allOne = false;
-
-            if (c->assignment == CZERO) {
-                hasCZero = true;
-            }
-            else if(lastUndecided == nullptr)
+            if ((*it)->assignment == ONE)
             {
-                lastUndecided = c;
+                e->targets.erase_after(pit);
+                it = pit;
             }
+            else
+            {
+                allOne = false;
+                if ((*it)->assignment == CZERO) {
+                    hasCZero = true;
+                    //assert(e->assignment == CZERO || only_assign);
+                    break;
+                }
+                else if(lastUndecided == nullptr)
+                {
+                    lastUndecided = *it;
+                }
+            }
+            pit = it;
+            ++it;
         }
-        if(lastUndecided  != nullptr && hasCZero) break;
     }
+    /*if(e->targets.empty())
+    {
+        assert(e->assignment == ONE || e->children == 0);
+    }*/
 
     if (e->is_negated) {
         _processedNegationEdges += 1;
@@ -86,22 +113,22 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
             assert(e->refcnt > 0);
             if(only_assign) --e->refcnt;
             if (e->source->nsuccs == 0) {
-                finalAssign(e->source, CZERO);
+                finalAssign(e, CZERO);
             }
             if(e->refcnt == 0) { graph->release(e);}
         } else if (hasCZero) {
-            finalAssign(e->source, ONE);
+            finalAssign(e, ONE);
         } else {
             assert(lastUndecided != nullptr);
             if(only_assign) return;
             if (lastUndecided->assignment == ZERO && e->processed) {
-                finalAssign(e->source, ONE);
+                finalAssign(e, ONE);
             } else {
                 if(!e->processed)
                 {
                     strategy->pushNegation(e);
                 }
-                addDependency(e, lastUndecided);
+                lastUndecided->addDependency(e);
                 if (lastUndecided->assignment == UNKNOWN) {
                     explore(lastUndecided);
                 }
@@ -111,23 +138,25 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
         _processedEdges += 1;
         //Process hyper edge
         if (allOne) {
-            finalAssign(e->source, ONE);
+            finalAssign(e, ONE);
         } else if (hasCZero) {
             --e->source->nsuccs;
             e->handled = true;
             assert(e->refcnt > 0);
             if(only_assign) --e->refcnt;
             if (e->source->nsuccs == 0) {
-                finalAssign(e->source, CZERO);
+                finalAssign(e, CZERO);
             }
             if(e->refcnt == 0) {graph->release(e);}
 
         } else if (lastUndecided != nullptr) {
             if(only_assign) return;
             if(!e->processed) {
-                for (auto t : e->targets)
-                    if(!lastUndecided->isDone())
-                        addDependency(e, t);
+                if(!lastUndecided->isDone())
+                {
+                    for (auto t : e->targets)
+                        t->addDependency(e);
+                }
             }                 
             if (lastUndecided->assignment == UNKNOWN) {
                 explore(lastUndecided);
@@ -138,6 +167,11 @@ void Algorithm::CertainZeroFPA::checkEdge(Edge* e, bool only_assign)
     if(e->refcnt == 0) graph->release(e);
 }
 
+void Algorithm::CertainZeroFPA::finalAssign(DependencyGraph::Edge *e, DependencyGraph::Assignment a)
+{
+    finalAssign(e->source, a);
+}
+
 void Algorithm::CertainZeroFPA::finalAssign(DependencyGraph::Configuration *c, DependencyGraph::Assignment a)
 {
     assert(a == ONE || a == CZERO);
@@ -145,14 +179,26 @@ void Algorithm::CertainZeroFPA::finalAssign(DependencyGraph::Configuration *c, D
     c->assignment = a;
     c->nsuccs = 0;
     for (DependencyGraph::Edge *e : c->dependency_set) {
-        if(e->source->isDone()) continue;
-        if(!e->is_negated || a == CZERO)
-        {
-            strategy->pushDependency(e);
-        }
-        else
-        {
-            strategy->pushNegation(e);
+        if(!e->source->isDone()) {
+            if(a == CZERO)
+            {
+                /*e->assignment = CZERO;*/
+            }
+            else if(a == ONE)
+            {
+                /*assert(e->children >= 1);
+                --e->children;
+                if(e->children == 0)
+                    e->assignment = ONE;*/
+            }
+            if(!e->is_negated || a == CZERO)
+            {
+                strategy->pushDependency(e);
+            }
+            else
+            {
+                strategy->pushNegation(e);
+            }
         }
         assert(e->refcnt > 0);
         --e->refcnt;
@@ -164,7 +210,6 @@ void Algorithm::CertainZeroFPA::finalAssign(DependencyGraph::Configuration *c, D
 
 void Algorithm::CertainZeroFPA::explore(Configuration *c)
 {
-    
     c->assignment = ZERO;
 
     {
@@ -215,19 +260,4 @@ void Algorithm::CertainZeroFPA::explore(Configuration *c)
         }
     }
     strategy->flush();
-}
-
-void Algorithm::CertainZeroFPA::addDependency(Edge *e, Configuration *target)
-{
-    auto sDist = e->is_negated ? e->source->getDistance() + 1 : e->source->getDistance();
-    auto tDist = target->getDistance();
-
-    target->setDistance(std::max(sDist, tDist));
-    auto lb = std::lower_bound(std::begin(target->dependency_set), std::end(target->dependency_set), e);
-    if(lb == std::end(target->dependency_set) || *lb != e)
-    {
-        target->dependency_set.insert(lb, e);
-        assert(e->refcnt >= 0);
-        ++e->refcnt;
-    }
 }

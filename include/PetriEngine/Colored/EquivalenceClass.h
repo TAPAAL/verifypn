@@ -3,6 +3,7 @@
 
 #include "Intervals.h"
 #include "Colors.h"
+#include "ArcIntervals.h"
 
 namespace PetriEngine {
     namespace Colored {

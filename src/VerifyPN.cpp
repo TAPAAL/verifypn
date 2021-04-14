@@ -20,7 +20,16 @@
  *                          Peter Gjøl Jensen <root@petergjoel.dk>
  *                          Mads Johannsen <mads_johannsen@yahoo.com>
  *                          Jiri Srba <srba.jiri@gmail.com>
+ *
+ * LTL Extension
+ *                          Nikolaj Jensen Ulrik <nikolaj@njulrik.dk>
+ *                          Simon Mejlby Virenfeldt <simon@simwir.dk>
  * 
+ * Color Extension
+ *                          Alexander Bilgram <alexander@bilgram.dk>
+ *                          Peter Haar Taankvist <ptaankvist@gmail.com>
+ *                          Thomas Pedersen <thomas.pedersen@stofanet.dk>
+ *                          Andreas H. Klostergaard
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -44,14 +53,15 @@
 #include <memory>
 #include <utility>
 #include <functional>
-#include <filesystem>
-#include <bits/stdc++.h> 
-#include <iostream> 
-#include <sys/stat.h> 
-#include <sys/types.h> 
+// #include <filesystem>
+// #include <bits/stdc++.h> 
+// #include <iostream> 
+// #include <sys/stat.h> 
+// #include <sys/types.h> 
 #ifdef VERIFYPN_MC_Simplification
 #include <thread>
 #include <iso646.h>
+#include <mutex>
 #endif
 
 #include "PetriEngine/PQL/PQLParser.h"
@@ -64,6 +74,7 @@
 #include "PetriParse/PNMLParser.h"
 #include "PetriEngine/PetriNetBuilder.h"
 #include "PetriEngine/PQL/PQL.h"
+#include "PetriEngine/PQL/CTLVisitor.h"
 #include "PetriEngine/options.h"
 #include "PetriEngine/errorcodes.h"
 #include "PetriEngine/STSolver.h"
@@ -74,8 +85,10 @@
 #include "CTL/CTLEngine.h"
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
+#include "LTL/LTL.h"
 
-using namespace std;
+#include <atomic>
+
 using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 using namespace PetriEngine::Reachability;
@@ -119,7 +132,7 @@ std::vector<std::string> explode(std::string const & s)
 ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 {
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-k") == 0 || strcmp(argv[i], "--k-bound") == 0) {  
+        if (strcmp(argv[i], "-k") == 0 || strcmp(argv[i], "--k-bound") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n", argv[i]);
                 return ErrorCode;
@@ -131,7 +144,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         } else if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--search-strategy") == 0){
 			if (i==argc-1) {
                 fprintf(stderr, "Missing search strategy after \"%s\"\n\n", argv[i]);
-				return ErrorCode;                           
+				return ErrorCode;
             }
             char* s = argv[++i];
             if(strcmp(s, "BestFS") == 0)
@@ -180,7 +193,22 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--no-statistics") == 0) {
             options.printstatistics = false;
         } else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--trace") == 0) {
-            options.trace = true;
+            if (argc > i + 1) {
+                if (strcmp("1", argv[i+1]) == 0) {
+                    options.trace = TraceLevel::Transitions;
+                }
+                else if (strcmp("2", argv[i+1]) == 0) {
+                    options.trace = TraceLevel::Full;
+                }
+                else {
+                    options.trace = TraceLevel::Full;
+                    continue;
+                }
+                ++i;
+            }
+            else {
+                options.trace = TraceLevel::Full;
+            }
         } else if (strcmp(argv[i], "-x") == 0 || strcmp(argv[i], "--xml-queries") == 0) {
             if (i == argc - 1) {
                 fprintf(stderr, "Missing number after \"%s\"\n\n", argv[i]);
@@ -215,7 +243,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 for(auto& qn : q)
                 {
                     int32_t n;
-                    if(sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 9)
+                    if(sscanf(qn.c_str(), "%d", &n) != 1 || n < 0 || n > 10)
                     {
                         std::cerr << "Error in reduction rule choice : " << qn << std::endl;
                         return ErrorCode;
@@ -224,7 +252,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     {
                         options.reductions.push_back(n);
                     }
-                }                
+                }
             }
         } else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--reduction-timeout") == 0) {
             if (i == argc - 1) {
@@ -260,11 +288,11 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 fprintf(stderr, "Argument Error: Invalid siphon-depth count \"%s\"\n", argv[i]);
                 return ErrorCode;
             }
-        } 
+        }
         else if (strcmp(argv[i], "-tar") == 0)
         {
             options.tar = true;
-            
+
         }
         else if (strcmp(argv[i], "--max-intervals") == 0){
             if (i == argc - 1) {
@@ -272,8 +300,14 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 return ErrorCode;
             }
             if (sscanf(argv[++i], "%d", &options.max_intervals) != 1 || options.max_intervals < 0) {
-                fprintf(stderr, "Argument Error: Invalid number of max intervals \"%s\"\n", argv[i]);
+                fprintf(stderr, "Argument Error: Invalid number of max intervals in first argument\"%s\"\n", argv[i]);
                 return ErrorCode;
+            }
+            if (i != argc - 1){
+                if (sscanf(argv[++i], "%d", &options.max_intervals_reduced) != 1 || options.max_intervals_reduced < 0) {
+                    fprintf(stderr, "Argument Error: Invalid number of max intervals in second argument \"%s\"\n", argv[i]);
+                    return ErrorCode;
+                }
             }
         }
         else if (strcmp(argv[i], "--output-stats") == 0)
@@ -308,7 +342,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
         }
 #endif
-        else if (strcmp(argv[i], "-ctl") == 0){
+        else if (strcmp(argv[i], "-noreach") == 0) {
+            options.noreach = true;
+        } else if (strcmp(argv[i], "-ctl") == 0){
+            options.logic = TemporalLogic::CTL;
             if(argc > i + 1){
                 if(strcmp(argv[i + 1], "local") == 0){
                     options.ctlalgorithm = CTL::Local;
@@ -322,8 +359,26 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     return ErrorCode;
                 }
                 i++;
-
             }
+        } else if (strcmp(argv[i], "-ltl") == 0) {
+            options.logic = TemporalLogic::LTL;
+            if (argc > i + 1) {
+                if(strcmp(argv[i + 1], "ndfs") == 0) {
+                    options.ltlalgorithm = LTL::Algorithm::NDFS;
+                }
+                else if(strcmp(argv[i + 1], "tarjan") == 0) {
+                    options.ltlalgorithm = LTL::Algorithm::Tarjan;
+                }
+                else if (strcmp(argv[i + 1], "none") == 0) {
+                    options.ltlalgorithm = LTL::Algorithm::None;
+                }
+                else {
+                    continue;
+                }
+                i++;
+            }
+        } else if (strcmp(argv[i], "-noweak") == 0) {
+            options.ltluseweak = false;
         } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
             options.gamemode = true;
         } else if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--cpn-overapproximation") == 0) {
@@ -334,8 +389,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.computePartition = false;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
-                    "A tool for answering CTL and reachability queries of place cardinality\n" 
-                    "deadlock and transition fireability for weighted P/T Petri nets\n" 
+                    "A tool for answering CTL and reachability queries of place cardinality\n"
+                    "deadlock and transition fireability for weighted P/T Petri nets\n"
                     "extended with inhibitor arcs.\n"
                     "\n"
                     "Options:\n"
@@ -344,7 +399,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -s, --search-strategy <strategy>   Search strategy:\n"
                     "                                     - BestFS       Heuristic search (default)\n"
                     "                                     - BFS          Breadth first search\n"
-                    "                                     - DFS          Depth first search (CTL default)\n"
+                    "                                     - DFS          Depth first search (CTL and LTL default)\n"
                     "                                     - RDFS         Random depth first search\n"
                     "                                     - OverApprox   Linear Over Approx\n"
                     "  --seed-offset <number>             Extra noise to add to the seed of the random number generation\n"
@@ -370,6 +425,14 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -ctl <type>                        Verify CTL properties\n"
                     "                                     - local     Liu and Smolka's on-the-fly algorithm\n"
                     "                                     - czero     local with certain zero extension (default)\n"
+                    "  -ltl [<type>]                      Verify LTL properties (default tarjan). If omitted the queries are assumed to be CTL.\n"
+                    "                                     - ndfs      Nested depth first search algorithm\n"
+                    "                                     - tarjan    On-the-fly Tarjan's algorithm\n"
+                    "                                     - none      Run preprocessing steps only.\n"
+                    "  -noweak                            Disable optimizations for weak Büchi automata when doing \n"
+                    "                                     LTL model checking. Not recommended.\n"
+                    "  -noreach                           Force use of CTL/LTL engine, even when queries are reachability.\n"
+                    "                                     Not recommended since the reachability engine is faster.\n"
                     "  -c, --cpn-overapproximation        Over approximate query on Colored Petri Nets (CPN only)\n"
                     "  --disable-cfp                      Disable the computation of possible colors in the Petri Net (CPN only)\n"
                     "  --disable-partitioning               Disable the partitioning of colors in the Petri Net (CPN only)\n"
@@ -378,7 +441,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -z <number of cores>               Number of cores to use (currently only query simplification)\n"
 #endif
                     "  -tar                               Enables Trace Abstraction Refinement for reachability properties\n"
-                    "  --max-intervals <interval count>   The max amount of intervals kept when computing the color fixpoint (defualt 0, which disables it)\n"
+                    "  --max-intervals <interval count>   The max amount of intervals kept when computing the color fixpoint\n"
+                    "                  <interval count>   Defualt is 255 and then after <interval-timeout> second(s) to 5\n"
                     "  --write-simplified <filename>      Outputs the queries to the given file after simplification\n"
                     "  --write-reduced <filename>         Outputs the model to the given file after structural reduction\n"
                     "  --binary-query-io <0,1,2,3>        Determines the input/output format of the query-file\n"
@@ -399,6 +463,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
             printf("VerifyPN (untimed verification engine for TAPAAL) %s\n", VERIFYPN_VERSION);
             printf("Copyright (C) 2011-2020\n");
+            printf("                        Alexander Bilgram <alexander@bilgram.dk>\n");
             printf("                        Frederik Meyer Boenneland <sadpantz@gmail.com>\n");
             printf("                        Jakob Dyhr <jakobdyhr@gmail.com>\n");
             printf("                        Peter Fogh <peter.f1992@gmail.com>\n");
@@ -412,8 +477,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             printf("                        Søren Moss Nielsen <soren_moss@mac.com>\n");
             printf("                        Thomas Søndersø Nielsen <primogens@gmail.com>\n");
             printf("                        Samuel Pastva <daemontus@gmail.com>\n");
-            printf("                        Thomas Pedersen <thomas.pedersen@stofanet.dk\n");
+            printf("                        Thomas Pedersen <thomas.pedersen@stofanet.dk>\n");
             printf("                        Jiri Srba <srba.jiri@gmail.com>\n");
+            printf("                        Peter Haar Taankvist <ptaankvist@gmail.com>\n");
             printf("                        Lars Kærlund Østergaard <larsko@gmail.com>\n");
             printf("GNU GPLv3 or later <http://gnu.org/licenses/gpl.html>\n");
             return SuccessCode;
@@ -434,7 +500,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         }
         std::cout << std::endl;
     }
-    
+
     if (options.statespaceexploration) {
         // for state-space exploration some options are mandatory
         options.enablereduction = 0;
@@ -461,6 +527,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         return ErrorCode;
     }
 
+    //Create filename for unfolding statistics file
     if(!options.output_stats.empty()){
         filename = options.modelfile;
         
@@ -469,12 +536,46 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         generated_filename += options.queryfile;
         generated_filename.erase(std::remove(generated_filename.begin(), generated_filename.end(), '/'), generated_filename.end());
         for(auto num : options.querynumbers){
-            generated_filename += to_string(num +1);
+            generated_filename += std::to_string(num +1);
         }
         generated_filename = options.output_stats + "/" + generated_filename;
         generated_filename += ".csv";
     }
-    
+
+    //Check for compatibility with LTL model checking
+    if (options.logic == TemporalLogic::LTL) {
+        if (options.tar) {
+            std::cerr << "Argument Error: -tar is not compatible with LTL model checking." << std::endl;
+            return ErrorCode;
+        }
+        if (options.siphontrapTimeout != 0) {
+            std::cerr << "Argument Error: -a/--siphon-trap is not compatible with LTL model checking." << std::endl;
+            return ErrorCode;
+        }
+        if (options.siphonDepth != 0) {
+            std::cerr << "Argument Error: --siphon-depth is not compatible with LTL model checking." << std::endl;
+            return ErrorCode;
+        }
+        if (options.strategy != PetriEngine::Reachability::DEFAULT &&
+            options.strategy != PetriEngine::Reachability::OverApprox) {
+
+            if (options.ltlalgorithm == LTL::Algorithm::Tarjan && options.strategy != DFS) {
+                std::cerr << "Argument Error: Unsupported search strategy for Tarjan. Supported values are DFS." << std::endl;
+                return ErrorCode;
+            }
+            if (options.strategy != DFS &&
+                !(options.ltlalgorithm == LTL::Algorithm::NDFS && options.strategy == RDFS)) {
+                std::cerr << "Argument Error: Unsupported search strategy for NDFS. Supported values are DFS and RDFS" << std::endl;
+                return ErrorCode;
+            }
+            if (options.trace != TraceLevel::None
+                && options.strategy == RDFS
+                && options.ltlalgorithm == LTL::Algorithm::NDFS) {
+                std::cerr << "Argument Error: Random search order NDFS does not support traces" << std::endl;
+                return ErrorCode;
+            }
+        }
+    }
     return ContinueCode;
 }
 
@@ -485,7 +586,7 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
     std::vector<Condition_ptr > conditions;
     if (!options.statespaceexploration) {
         //Open query file
-        ifstream qfile(options.queryfile, ifstream::in);
+        std::ifstream qfile(options.queryfile, std::ifstream::in);
         if (!qfile) {
             fprintf(stderr, "Error: Query file \"%s\" couldn't be opened\n", options.queryfile);
             fprintf(stdout, "CANNOT_COMPUTE\n");
@@ -495,14 +596,14 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
 
         if(options.querynumbers.size() == 0)
         {
-            string querystring; // excluding EF and AG
+            std::string querystring; // excluding EF and AG
 
             //Read everything
-            stringstream buffer;
+            std::stringstream buffer;
             buffer << qfile.rdbuf();
-            string querystr = buffer.str(); // including EF and AG
-            //Parse XML the queries and querystr let be the index of xmlquery 
-        
+            std::string querystr = buffer.str(); // including EF and AG
+            //Parse XML the queries and querystr let be the index of xmlquery
+
             qstrings.push_back(querystring);
             //Validate query type
             if (querystr.substr(0, 2) != "EF" && querystr.substr(0, 2) != "AG") {
@@ -530,7 +631,7 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
                     fprintf(stdout, "DO_NOT_COMPETE\n");
                     conditions.clear();
                     return conditions;
-                }     
+                }
                 queries = std::move(parser.queries);
             }
             else
@@ -569,7 +670,7 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
                     fprintf(stdout, "FORMULA %s CANNOT_COMPUTE\n", q.id.c_str());
                     conditions.pop_back();
                 }
-                
+
                 qstrings.push_back(q.id);
             }
         }
@@ -580,13 +681,13 @@ readQueries(options_t& options, std::vector<std::string>& qstrings)
         std::vector<std::string> empty;
         conditions.push_back(std::make_shared<EFCondition>(ParseQuery(querystring, empty)));
         return conditions;
-    } 
+    }
  }
 
 ReturnValue parseModel(AbstractPetriNetBuilder& builder, options_t& options)
 {
     //Load the model
-    ifstream mfile(options.modelfile, ifstream::in);
+    std::ifstream mfile(options.modelfile, std::ifstream::in);
     if (!mfile) {
         fprintf(stderr, "Error: Model file \"%s\" couldn't be opened\n", options.modelfile);
         fprintf(stdout, "CANNOT_COMPUTE\n");
@@ -611,13 +712,13 @@ void printStats(PetriNetBuilder& builder, options_t& options)
 
             std::cout << "Size of net before structural reductions: " <<
                     builder.numberOfPlaces() << " places, " <<
-                    builder.numberOfTransitions() << " transitions" << std::endl;             
+                    builder.numberOfTransitions() << " transitions" << std::endl;
             std::cout << "Size of net after structural reductions: " <<
                     builder.numberOfPlaces() - builder.RemovedPlaces() << " places, " <<
                     builder.numberOfTransitions() - builder.RemovedTransitions() << " transitions" << std::endl;
             std::cout << "Structural reduction finished after " << builder.getReductionTime() <<
                     " seconds" << std::endl;
-            
+
             std::cout   << "\nNet reduction is enabled.\n";
             builder.printStats(std::cout);
         }
@@ -652,24 +753,22 @@ void printUnfoldingStats(ColoredPetriNetBuilder& builder, options_t& options) {
     //}
 }
 
-
-
-std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
-    bool cont = false;    
+std::string getXMLQueries(std::vector<std::shared_ptr<Condition>> queries, std::vector<std::string> querynames, std::vector<ResultPrinter::Result> results) {
+    bool cont = false;
     for(uint32_t i = 0; i < results.size(); i++) {
         if (results[i] == ResultPrinter::CTL) {
             cont = true;
             break;
         }
     }
-    
+
     if (!cont) {
         return "";
     }
-       
+
     std::stringstream ss;
     ss << "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
-    
+
     for(uint32_t i = 0; i < queries.size(); i++) {
         if (!(results[i] == ResultPrinter::CTL)) {
             continue;
@@ -678,16 +777,17 @@ std::string getXMLQueries(vector<std::shared_ptr<Condition>> queries, vector<std
         queries[i]->toXML(ss, 3);
         ss << "    </formula>\n  </property>\n";
     }
-            
+
     ss << "</property-set>\n";
-    
+
     return ss.str();
 }
- 
-void writeQueries(vector<std::shared_ptr<Condition>>& queries, vector<std::string>& querynames, std::vector<uint32_t>& order, std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names) 
+
+void writeQueries(std::vector<std::shared_ptr<Condition>>& queries, std::vector<std::string>& querynames, std::vector<uint32_t>& order,
+    std::string& filename, bool binary, const std::unordered_map<std::string, uint32_t>& place_names)
 {
-    fstream out;
-    
+    std::fstream out;
+
     if(binary)
     {
         out.open(filename, std::ios::binary | std::ios::out);
@@ -711,7 +811,7 @@ void writeQueries(vector<std::shared_ptr<Condition>>& queries, vector<std::strin
         out.open(filename, std::ios::out);
         out << "<?xml version=\"1.0\"?>\n<property-set xmlns=\"http://mcc.lip6.fr/\">\n";
     }
-    
+
     for(uint32_t j = 0; j < queries.size(); j++) {
         auto i = order[j];
         if(queries[i]->isTriviallyTrue() || queries[i]->isTriviallyFalse()) continue;
@@ -728,7 +828,7 @@ void writeQueries(vector<std::shared_ptr<Condition>>& queries, vector<std::strin
             out << "    </formula>\n  </property>\n";
         }
     }
-        
+
     if(binary == 0)
     {
         out << "</property-set>\n";
@@ -736,16 +836,116 @@ void writeQueries(vector<std::shared_ptr<Condition>>& queries, vector<std::strin
     out.close();
 }
 
+std::vector<Condition_ptr> getCTLQueries(const std::vector<Condition_ptr>& ctlStarQueries) {
+    std::vector<Condition_ptr> ctlQueries;
+    for (const auto &ctlStarQuery : ctlStarQueries) {
+        IsCTLVisitor isCtlVisitor;
+        ctlStarQuery->visit(isCtlVisitor);
+        if (isCtlVisitor.isCTL) {
+            AsCTL asCtl;
+            ctlStarQuery->visit(asCtl);
+            ctlQueries.push_back(asCtl._ctl_query);
+        } else {
+            ctlQueries.push_back(nullptr);
+        }
+
+    }
+    return ctlQueries;
+}
+std::vector<Condition_ptr> getLTLQueries(const std::vector<Condition_ptr>& ctlStarQueries) {
+    std::vector<Condition_ptr> ltlQueries;
+    for (const auto &ctlStarQuery : ctlStarQueries) {
+        LTL::LTLValidator isLtl;
+        if (isLtl.isLTL(ctlStarQuery)) {
+            ltlQueries.push_back(ctlStarQuery);
+        } else {
+            ltlQueries.push_back(nullptr);
+        }
+    }
+    return ltlQueries;
+}
+
+#ifdef VERIFYPN_MC_Simplification
+std::mutex spot_mutex;
+#endif
+
+Condition_ptr simplify_ltl_query(Condition_ptr query,
+                                 bool printstats,
+                                 const EvaluationContext &evalContext,
+                                 SimplificationContext &simplificationContext,
+                                 std::ostream &out = std::cout) {
+    Condition_ptr cond;
+    bool wasACond;
+    if (std::dynamic_pointer_cast<SimpleQuantifierCondition>(query) != nullptr) {
+        wasACond = std::dynamic_pointer_cast<ACondition>(query) != nullptr;
+        cond = (*std::dynamic_pointer_cast<SimpleQuantifierCondition>(query))[0];
+    } else {
+        wasACond = true;
+        cond = query;
+    }
+
+    {
+#ifdef VERIFYPN_MC_Simplification
+        std::scoped_lock scopedLock{spot_mutex};
+#endif
+        cond = LTL::simplify(cond);
+    }
+    negstat_t stats;
+    cond = Condition::initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true)
+            ->pushNegation(stats, evalContext, false, false, true);
+
+    if (printstats) {
+        out << "RWSTATS PRE:";
+        stats.print(out);
+        out << std::endl;
+    }
+
+    try {
+        cond = (cond->simplify(simplificationContext)).formula->pushNegation(stats, evalContext, false, false, true);
+    }
+    catch (std::bad_alloc &ba) {
+        std::cerr << "Query reduction failed." << std::endl;
+        std::cerr << "Exception information: " << ba.what() << std::endl;
+
+        std::exit(ErrorCode);
+    }
+
+    cond = Condition::initialMarkingRW([&]() {
+#ifdef VERIFYPN_MC_Simplification
+        std::scoped_lock scopedLock{spot_mutex};
+#endif
+        return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true));
+    }, stats, evalContext, false, false, true);
+
+    if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
+        // nothing
+    } else if (wasACond) {
+        cond = std::make_shared<ACondition>(cond);
+    } else {
+        cond = std::make_shared<ECondition>(cond);
+    }
+    if (printstats) {
+        out << "RWSTATS POST:";
+        stats.print(out);
+        out << std::endl;
+        out << "Query after reduction: ";
+        cond->toString(out);
+        out << std::endl;
+    }
+    return cond;
+}
+
+
 int main(int argc, char* argv[]) {
 
     options_t options;
-    
+
     ReturnValue v = parseOptions(argc, argv, options);
     if(v != ContinueCode) return v;
     options.print();
-    srand (time(NULL) xor options.seed_offset);  
+    srand (time(NULL) xor options.seed_offset);
     ColoredPetriNetBuilder cpnBuilder;
-    if(parseModel(cpnBuilder, options) != ContinueCode) 
+    if(parseModel(cpnBuilder, options) != ContinueCode)
     {
         std::cerr << "Error parsing the model" << std::endl;
         return ErrorCode;
@@ -761,19 +961,22 @@ int main(int argc, char* argv[]) {
 
     //----------------------- Parse Query -----------------------//
     std::vector<std::string> querynames;
-    auto queries = readQueries(options, querynames);
-    
+    auto ctlStarQueries = readQueries(options, querynames);
+    auto queries = options.logic == TemporalLogic::CTL
+            ? getCTLQueries(ctlStarQueries)
+            : getLTLQueries(ctlStarQueries);
+
     if(options.printstatistics && options.queryReductionTimeout > 0)
     {
-        negstat_t stats;            
+        negstat_t stats;
         std::cout << "RWSTATS LEGEND:";
-        stats.printRules(std::cout);            
+        stats.printRules(std::cout);
         std::cout << std::endl;
     }
 
     if(cpnBuilder.isColored())
     {
-        negstat_t stats;            
+        negstat_t stats;
         EvaluationContext context(nullptr, nullptr);
         for (ssize_t qid = queries.size() - 1; qid >= 0; --qid) {
             queries[qid] = queries[qid]->pushNegation(stats, context, false, false, false);
@@ -792,7 +995,7 @@ int main(int argc, char* argv[]) {
 
     if (options.cpnOverApprox) {
         for (ssize_t qid = queries.size() - 1; qid >= 0; --qid) {
-            negstat_t stats;            
+            negstat_t stats;
             EvaluationContext context(nullptr, nullptr);
             auto q = queries[qid]->pushNegation(stats, context, false, false, false);
             if (!q->isReachability() || q->isLoopSensitive() || stats.negated_fireability) {
@@ -807,7 +1010,7 @@ int main(int argc, char* argv[]) {
         cpnBuilder.computePartition();
     }
     if(options.computeCFP){
-        cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.intervalTimeout);
+        cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.max_intervals_reduced, options.intervalTimeout);
     }
 
     
@@ -817,7 +1020,7 @@ int main(int argc, char* argv[]) {
     builder.sort();
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
-    
+
     //----------------------- Query Simplification -----------------------//
     bool alldone = options.queryReductionTimeout > 0;
     PetriNetBuilder b2(builder);
@@ -840,7 +1043,6 @@ int main(int argc, char* argv[]) {
         auto end = std::chrono::high_resolution_clock::now();
         std::vector<bool> hadTo(queries.size(), true);
 
-        
         do
         {
             auto qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / ( 1 + (to_handle / options.cores));
@@ -856,20 +1058,22 @@ int main(int argc, char* argv[]) {
             for(size_t c = 0; c < std::min<uint32_t>(options.cores, old); ++c)
             {
 #ifdef VERIFYPN_MC_Simplification
-                threads.push_back(std::thread([&,c](){ 
+                threads.push_back(std::thread([&,c](){
 #else
-                auto simplify = [&,c](){ 
+                auto simplify = [&,c](){
 #endif
                     auto& out = tstream[c];
                     auto& cache = caches[c];
+                    LTL::FormulaToSpotSyntax printer{out};
                     while(true)
                     {
                     auto i = cnt++;
-                    if(i >= queries.size()) return;                
+                    if(i >= queries.size()) return;
                     if(!hadTo[i]) continue;
                     hadTo[i] = false;
-                    negstat_t stats;            
+                    negstat_t stats;
                     EvaluationContext context(qm0, qnet.get());
+
                     if(options.printstatistics && options.queryReductionTimeout > 0)
                     {
                         out << "\nQuery before reduction: ";
@@ -878,28 +1082,37 @@ int main(int argc, char* argv[]) {
                     }
 
 #ifndef VERIFYPN_MC_Simplification
-                    qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);              
+                    qt = (options.queryReductionTimeout - std::chrono::duration_cast<std::chrono::seconds>(end - begin).count()) / (queries.size() - i);
 #endif
                     // this is used later, we already know that this is a plain reachability (or AG)
                     bool wasAGCPNApprox = dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
-                    int preSize=queries[i]->formulaSize(); 
+                    int preSize=queries[i]->formulaSize();
+
+                    if (options.logic == TemporalLogic::LTL) {
+                        if (options.queryReductionTimeout == 0) continue;
+                        SimplificationContext simplificationContext(qm0, qnet.get(), qt,
+                                                                    options.lpsolveTimeout, &cache);
+                        queries[i] = simplify_ltl_query(queries[i], options.printstatistics,
+                                           context, simplificationContext, out);
+                        continue;
+                    }
                     queries[i] = Condition::initialMarkingRW([&](){ return queries[i]; }, stats,  context, false, false, true)
                                             ->pushNegation(stats, context, false, false, true);
                     wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
 
-                    if(options.queryReductionTimeout > 0 && options.printstatistics)
-                    {
+                    if(options.queryReductionTimeout > 0 && options.printstatistics) {
                         out << "RWSTATS PRE:";
                         stats.print(out);
                         out << std::endl;
                     }
+
 
                     if (options.queryReductionTimeout > 0 && qt > 0)
                     {
                         SimplificationContext simplificationContext(qm0, qnet.get(), qt,
                                 options.lpsolveTimeout, &cache);
                         try {
-                            negstat_t stats;            
+                            negstat_t stats;
                             queries[i] = (queries[i]->simplify(simplificationContext)).formula->pushNegation(stats, context, false, false, true);
                             wasAGCPNApprox |= dynamic_cast<NotCondition*>(queries[i].get()) != nullptr;
                             if(options.printstatistics)
@@ -944,7 +1157,7 @@ int main(int argc, char* argv[]) {
                             queries[i] = std::make_shared<BooleanCondition>(true);
                         queries[i]->setInvariant(wasAGCPNApprox);
                     }
-                   
+
 
                     if(options.printstatistics)
                     {
@@ -975,13 +1188,13 @@ int main(int argc, char* argv[]) {
             end = std::chrono::high_resolution_clock::now();
 
         } while(std::any_of(hadTo.begin(), hadTo.end(), [](auto a) { return a;}) && std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() < options.queryReductionTimeout && to_handle > 0);
-    } 
-    
+    }
+
     if(options.query_out_file.size() > 0)
     {
         std::vector<uint32_t> reorder(queries.size());
         for(uint32_t i = 0; i < queries.size(); ++i) reorder[i] = i;
-        std::sort(reorder.begin(), reorder.end(), [&queries](auto a, auto b){
+        std::sort(reorder.begin(), reorder.end(), [&](auto a, auto b){
 
             if(queries[a]->isReachability() != queries[b]->isReachability())
                 return queries[a]->isReachability() > queries[b]->isReachability();
@@ -993,7 +1206,7 @@ int main(int argc, char* argv[]) {
         });
         writeQueries(queries, querynames, reorder, options.query_out_file, options.binary_query_io & 2, builder.getPlaceNames());
     }
-    
+
     qnet = nullptr;
     delete[] qm0;
 
@@ -1023,8 +1236,8 @@ int main(int argc, char* argv[]) {
                 if (options.printstatistics) {
                     std::cout << "Unable to decide if query is satisfied." << std::endl << std::endl;
                 }
-            } else if (!queries[i]->isReachability()) {
-                results[i] = ResultPrinter::CTL;
+            } else if (options.noreach || !queries[i]->isReachability()) {
+                results[i] = options.logic == TemporalLogic::CTL ? ResultPrinter::CTL : ResultPrinter::LTL;
                 alldone = false;
             } else {
                 queries[i] = queries[i]->prepareForReachability();
@@ -1034,47 +1247,51 @@ int main(int argc, char* argv[]) {
 
         if(alldone && options.model_out_file.size() == 0) return SuccessCode;
     }
-    
+
     options.queryReductionTimeout = 0;
-    
+
     //--------------------- Apply Net Reduction ---------------//
-        
+
     if (options.enablereduction > 0) {
         // Compute how many times each place appears in the query
         builder.startTimer();
-        builder.reduce(queries, results, options.enablereduction, options.trace, nullptr, options.reductionTimeout, options.reductions);
-        printer.setReducer(builder.getReducer());        
+        builder.reduce(queries, results, options.enablereduction, options.trace != TraceLevel::None, nullptr, options.reductionTimeout, options.reductions);
+        printer.setReducer(builder.getReducer());
     }
-    
+
     printStats(builder, options);
-    
+
     auto net = std::unique_ptr<PetriNet>(builder.makePetriNet());
-    
+
     if(options.model_out_file.size() > 0)
     {
-        fstream file;
+        std::fstream file;
         file.open(options.model_out_file, std::ios::out);
         net->toXML(file);
     }
-    
+
     if(alldone) return SuccessCode;
-    
+
     //----------------------- Verify CTL queries -----------------------//
     std::vector<size_t> ctl_ids;
+    std::vector<size_t> ltl_ids;
     for(size_t i = 0; i < queries.size(); ++i)
     {
         if(results[i] == ResultPrinter::CTL)
         {
             ctl_ids.push_back(i);
         }
+        else if (results[i] == ResultPrinter::LTL) {
+            ltl_ids.push_back(i);
+        }
     }
-    
-    if (ctl_ids.size() > 0) {
-        options.isctl=true;
+
+    if (!ctl_ids.empty()) {
+        options.usedctl=true;
         PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
 
         // Assign indexes
-        if(queries.size() == 0 || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)
+        if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)
         {
             std::cerr << "An error occurred while assigning indexes" << std::endl;
             return ErrorCode;
@@ -1098,15 +1315,67 @@ int main(int argc, char* argv[]) {
         // go back to previous strategy if the program continues
         options.strategy=reachabilityStrategy;
     }
-    options.isctl=false;
-    
+    options.usedctl=false;
+
+    //----------------------- Verify LTL queries -----------------------//
+
+    if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
+        options.usedltl = true;
+        if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode) {
+            std::cerr << "Error performing context analysis" << std::endl;
+            return v;
+        }
+
+        for (auto qid : ltl_ids) {
+            bool satisfied = false;
+
+            auto[negated_formula, negate_answer] = LTL::to_ltl(queries[qid]);
+            std::unique_ptr<LTL::ModelChecker> modelChecker;
+            switch (options.ltlalgorithm) {
+                case LTL::Algorithm::NDFS:
+                    if (options.strategy == RDFS) {
+                        modelChecker = std::make_unique<LTL::RandomNDFS>(*net, negated_formula);
+                    }
+                    if (options.trace != TraceLevel::None)
+                        modelChecker = std::make_unique<LTL::NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>>
+                                (*net, negated_formula, options.ltluseweak, options.trace);
+                    else
+                        modelChecker = std::make_unique<LTL::NestedDepthFirstSearch<PetriEngine::Structures::StateSet>>
+                                (*net, negated_formula, options.ltluseweak);
+                    break;
+                case LTL::Algorithm::Tarjan:
+                    if (options.trace != TraceLevel::None)
+                        modelChecker = std::make_unique<LTL::TarjanModelChecker<true>>(*net, negated_formula, options.ltluseweak, options.trace);
+                    else
+                        modelChecker = std::make_unique<LTL::TarjanModelChecker<false>>(*net, negated_formula, options.ltluseweak);
+                    break;
+                default:
+                    std::cerr << "Wrong LTL engine provided as engine option." << std::endl;
+                    return ErrorCode;
+            }
+            satisfied = negate_answer ^ modelChecker->isSatisfied();
+            if (options.printstatistics) {
+                modelChecker->printStats(std::cout);
+            }
+
+            std::cout << "FORMULA " << querynames[qid] <<
+                      (satisfied ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT " <<
+                      LTL::to_string(options.ltlalgorithm) <<
+                      (modelChecker->isweak() ? " WEAK_SKIP" : "") <<
+                      (queries[qid]->isReachability(0) ? " REACHABILITY" : "") << std::endl;
+        }
+        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+            return SuccessCode;
+        }
+    }
+
     //----------------------- Siphon Trap ------------------------//
-    
+
     if(options.siphontrapTimeout > 0){
         for (uint32_t i = 0; i < results.size(); i ++) {
             bool isDeadlockQuery = std::dynamic_pointer_cast<DeadlockCondition>(queries[i]) != nullptr;
- 
-            if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {    
+
+            if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {
                 STSolver stSolver(printer, *net, queries[i].get(), options.siphonDepth);
                 stSolver.solve(options.siphontrapTimeout);
                 results[i] = stSolver.printResult();
@@ -1115,13 +1384,13 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
-        
+
         if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
             return SuccessCode;
         }
     }
     options.siphontrapTimeout = 0;
-    
+
     //----------------------- Reachability -----------------------//
 
     //Analyse context again to reindex query
@@ -1129,7 +1398,7 @@ int main(int argc, char* argv[]) {
 
     // Change default place-holder to default strategy
     if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
-    
+
     if(options.tar && net->numberOfPlaces() > 0)
     {
         //Create reachability search strategy
@@ -1140,9 +1409,9 @@ int main(int argc, char* argv[]) {
         options.strategy = PetriEngine::Reachability::DFS;
 
         //Reachability search
-        strategy.reachable(queries, results, 
+        strategy.reachable(queries, results,
                 options.printstatistics,
-                options.trace);
+                options.trace != TraceLevel::None);
     }
     else
     {
@@ -1157,9 +1426,9 @@ int main(int argc, char* argv[]) {
                            options.stubbornreduction,
                            options.statespaceexploration,
                            options.printstatistics,
-                           options.trace);
+                           options.trace != TraceLevel::None);
     }
-       
+
     return SuccessCode;
 }
 

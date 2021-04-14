@@ -251,7 +251,7 @@ namespace ptrie
          * @return 
          */
 
-        inline uchar operator[](int i) const
+        inline uchar operator[](unsigned int i) const
         {
             if (i >= _nbytes) {
                  return 0x0;
@@ -394,7 +394,7 @@ namespace ptrie
         uchar* _blob = nullptr;
             
         // number of bytes allocated on heap
-        uint16_t _nbytes = 0;
+        size_t _nbytes = 0;
                
         // masks for single-bit access
      } __attribute__((packed));

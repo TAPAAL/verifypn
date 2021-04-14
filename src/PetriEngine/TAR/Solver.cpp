@@ -580,7 +580,7 @@ namespace PetriEngine {
                     if(computeHoare(trace, ranges, fail-1))
                     {
                         interpolants.addTrace(ranges);                        
-                        if(fail != trace.size() - 1)
+                        if(fail != (int)(trace.size() - 1))
                             break;
                     }
                     bool some = false;

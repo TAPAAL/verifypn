@@ -325,7 +325,6 @@ namespace PetriEngine {
             for(uint32_t i = 0; i < _transitions->size(); i++){
                 auto transition = _transitions->operator[](i);
                 if(transition.output_arcs.empty() && !transition.input_arcs.empty()){
-                    std::cout << "Handling leaf transition" << std::endl;
                     handleTransition(&transition, transition.input_arcs.back().place, &transition.input_arcs.back());
                 }
             }
