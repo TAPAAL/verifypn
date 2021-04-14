@@ -28,6 +28,7 @@
 #include "LTL/Simplification/SpotToPQL.h"
 #include "LTL/Structures/GuardInfo.h"
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
+#include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
 
 #include <spot/twa/formula2bdd.hh>
 #include <spot/tl/formula.hh>
@@ -49,12 +50,21 @@ namespace LTL {
 
         [[nodiscard]] size_t initial_buchi_state() const { return buchi.initial_state_number(); };
 
-        auto prepare(const LTL::Structures::ProductState *state)
+        /**
+         * @deprecated This function is deprecated use void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::sucinfo &sucinfo) instead.
+         * @see void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::sucinfo &sucinfo)
+         */
+         __attribute__((__deprecated__))
+        virtual bool prepare(const LTL::Structures::ProductState *state)
         {
             buchi.prepare(state->getBuchiState());
             buchi_parent = state->getBuchiState();
             fresh_marking = true;
-            return _successor_generator.prepare(state);
+            if constexpr (!std::is_base_of_v<ResumingSuccessorGenerator, SuccessorGen>) { //TODO what do we d
+                return _successor_generator.prepare(state);
+            } else {
+                assert(false);
+            }
         }
 
         bool next(LTL::Structures::ProductState &state)
@@ -119,7 +129,7 @@ namespace LTL {
          * @param state the source state to generate successors from
          * @param sucinfo the point in the iteration to start from, as returned by `next`.
          */
-        void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::sucinfo &sucinfo)
+        virtual void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::sucinfo &sucinfo)
         {
             _successor_generator.prepare(state, sucinfo);
             fresh_marking = sucinfo.fresh();
@@ -188,7 +198,7 @@ namespace LTL {
 
         size_t fired() const { return _successor_generator.fired(); }
 
-        //template<typename T = std::enable_if_t<std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>, void>>
+        //template<typename T = std::enable_if_t<std::is_same_v<S, PetriEngine::ReducingSuccessorGenerator>, void>>
         void generateAll(typename SuccessorGen::sucinfo &sucinfo)
         {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
@@ -239,18 +249,19 @@ namespace LTL {
         bool has_invariant_self_loop(const LTL::Structures::ProductState &state) {
             return buchi.has_invariant_self_loop(state.getBuchiState());
         }
-    private:
+
+        virtual ~ProductSuccessorGenerator() = default;
+    protected:
         SuccessorGen _successor_generator;
         const PetriEngine::PetriNet *_net;
 
         BuchiSuccessorGenerator buchi;
+
         const LTL::Structures::BuchiAutomaton &aut;
         bdd cond;
         size_t buchi_parent;
         bool fresh_marking = true;
-
         std::vector<GuardInfo> stateToGuards;
-
         /**
          * Evaluate binary decision diagram (BDD) representation of transition guard in given state.
          */
@@ -280,6 +291,9 @@ namespace LTL {
             }
             return bdd == bddtrue;
         }
+
+
+    private:
 
         bool next_buchi_succ(LTL::Structures::ProductState &state)
         {

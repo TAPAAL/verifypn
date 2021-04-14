@@ -28,6 +28,12 @@ enum class APCompression {
     Full
 };
 
+enum class LTLPartialOrder {
+    None,
+    Visible,
+    AutomatonReach
+};
+
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
@@ -65,6 +71,7 @@ struct options_t {
     std::string buchi_out_file;
     LTL::BuchiOutType buchi_out_type = LTL::BuchiOutType::Dot;
     APCompression ltl_compress_aps = APCompression::None;
+    LTLPartialOrder ltl_por = LTLPartialOrder::AutomatonReach;
 
     std::string query_out_file;
     std::string model_out_file;

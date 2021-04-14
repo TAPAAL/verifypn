@@ -56,56 +56,8 @@ namespace LTL {
             memset(_stubborn.get(), 1, _net.numberOfTransitions());
         }
         _nenabled = _ordering.size();
-/*#ifndef NDEBUG
-        std::cout << "Stubborn: ";
-        for (auto t = 0; t < _net.numberOfTransitions(); ++t) {
-            if (_stubborn[t]) {
-                std::cerr << _net.transitionNames()[t] << ' ';
-            }
-        }
-        std::cerr << std::endl;
-#endif*/
-/*
-#ifndef NDEBUG
-        float num_stubborn = 0;
-        float num_enabled = 0;
-        float num_enabled_stubborn = 0;
-        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
-            if (_stubborn[i]) ++num_stubborn;
-            if (_enabled[i]) ++num_enabled;
-            if (_stubborn[i] && _enabled[i]) ++num_enabled_stubborn;
-        }
-        std::cerr << "Enabled: " << num_enabled << "/" << _net.numberOfTransitions() << " (" << num_enabled/_net.numberOfTransitions()*100.0 << "%),\t "
-                  << "Stubborn: " << num_stubborn << "/" << _net.numberOfTransitions() << " (" << num_stubborn/_net.numberOfTransitions()*100.0 << "%),\t "
-                  << "Enabled stubborn: " << num_enabled_stubborn << "/" << num_enabled << " (" << num_enabled_stubborn/num_enabled*100.0 << "%)" << std::endl;
 
-        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
-            std::cerr << (_enabled[i] ? '1' : '0');
-        } std::cerr << std::endl;
-
-#endif
-*/
         return true;
-
-//#ifndef NDEBUG
-        /*std::vector<size_t> stubs;
-        size_t nenabled = 0;
-        for (auto i = 0; i < _net.numberOfTransitions(); ++i) {
-            if (_stubborn[i] && _enabled[i]) {
-                stubs.push_back(i);
-            }
-            if (_enabled[i]) {
-                ++nenabled;
-            }
-        }
-        if (stubs.empty()) return;
-        std::cerr << "#stub: " << stubs.size() << "\t#enabled: " << nenabled << std::endl;
-        std::cerr << "Stubborn set is: \n  ";
-        for (auto i : stubs) {
-            std::cerr << _net.transitionNames()[i] << " ";
-        }
-        std::cerr << std::endl;*/
-//#endif
     }
 
     uint32_t InterestingLTLStubbornSet::next() {

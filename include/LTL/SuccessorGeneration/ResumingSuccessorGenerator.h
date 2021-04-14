@@ -81,14 +81,14 @@ namespace LTL {
     class ResumingSuccessorGenerator : public PetriEngine::SuccessorGenerator {
     public:
 
-        ResumingSuccessorGenerator(const PetriEngine::PetriNet &net);
+        ResumingSuccessorGenerator(const PetriEngine::PetriNet *net);
 
-        ResumingSuccessorGenerator(const PetriEngine::PetriNet &net, const std::shared_ptr<PetriEngine::StubbornSet> &);
+        ResumingSuccessorGenerator(const PetriEngine::PetriNet *net, const std::shared_ptr<PetriEngine::StubbornSet> &);
 
-        ResumingSuccessorGenerator(const PetriEngine::PetriNet &net,
+        ResumingSuccessorGenerator(const PetriEngine::PetriNet *net,
                                    std::vector<std::shared_ptr<PetriEngine::PQL::Condition> > &queries);
 
-        ResumingSuccessorGenerator(const PetriEngine::PetriNet &net,
+        ResumingSuccessorGenerator(const PetriEngine::PetriNet *net,
                                    const std::shared_ptr<PetriEngine::PQL::Condition> &query);
 
         ~ResumingSuccessorGenerator() override = default;
