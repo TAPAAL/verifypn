@@ -38,7 +38,7 @@ namespace LTL {
                 }
             }
             if (!state_guards.back().retarding) {
-                state_guards.back().retarding = std::make_shared<BooleanCondition>(false);
+                state_guards.back().retarding = std::make_shared<PetriEngine::PQL::BooleanCondition>(false);
             }
         }
         return state_guards;

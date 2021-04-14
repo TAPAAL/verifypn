@@ -407,7 +407,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 std::cerr << "Missing argument to --ltl-por\n";
                 return ErrorCode;
             }
-            else if (strcmp(argv[i+1], "visible") == 0) {
+            else if (strcmp(argv[i+1], "visible") == 0 || strcmp(argv[i+1], "valmari") == 0) {
                 options.ltl_por = LTLPartialOrder::Visible;
             }
             else if (strcmp(argv[i+1], "aut-reach") == 0) {
@@ -457,6 +457,13 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                     write --interval-timeout 0 to disable max interval halving\n"
                     "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction        Disable partial order reduction (stubborn sets)\n"
+                    "  --ltl-por <type>                     Select partial order method to use with LTL engine.\n"
+                    "                                       - aut-reach   apply reachability stubborn sets in Büchi states\n"
+                    "                                                     that represent reachability subproblems,\n"
+                    "                                       - valmari     apply classic method due to Valmari\n"
+                    "                                                     Will not apply in formulae that contain the\n"
+                    "                                                     next-step operator. (Valmari, 1990 & 1992)\n"
+                    "                                       - none        disable stubborn reductions (equivalent to -p).\n"
                     "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
                     "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
@@ -465,7 +472,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -ctl <type>                          Verify CTL properties\n"
                     "                                       - local     Liu and Smolka's on-the-fly algorithm\n"
                     "                                       - czero     local with certain zero extension (default)\n"
-                    "  -ltl [<type>]                        Verify LTL properties (default tarjan). If omitted the queries are assumed to be CTL.\n"
+                    "  -ltl [<type>]                        Verify LTL properties (default tarjan). \n"
+                    "                                       If omitted the queries are assumed to be CTL.\n"
                     "                                       - ndfs      Nested depth first search algorithm\n"
                     "                                       - tarjan    On-the-fly Tarjan's algorithm\n"
                     "                                       - none      Run preprocessing steps only.\n"
