@@ -428,13 +428,19 @@ namespace PetriEngine {
                 }
 
                 for (auto& localInterval : _intervals) {
-                    bool overlap = true;
+                    bool extendsInterval = true;
                     enum FoundPlace {undecided, greater, lower};
                     FoundPlace foundPlace = undecided;
 
+                    //uint32_t allowedDist = 1;
+
                     for(uint32_t k = 0; k < interval.size(); k++){
                         if(interval[k]._lower > localInterval[k]._upper  || localInterval[k]._lower > interval[k]._upper){
-                            overlap = false;
+                            //if(interval[k]._lower > localInterval[k]._upper + allowedDist  || localInterval[k]._lower > interval[k]._upper + allowedDist){
+                                extendsInterval = false;
+                            // } else {
+                            //     allowedDist = 0;
+                            // }
                         }
                         if(interval[k]._lower < localInterval[k]._lower){
                             if(foundPlace == undecided){
@@ -445,12 +451,12 @@ namespace PetriEngine {
                                 foundPlace = greater;
                             }                            
                         }
-                        if(!overlap && foundPlace != undecided){
+                        if(!extendsInterval && foundPlace != undecided){
                             break;
                         }
                     }
 
-                    if(overlap) {
+                    if(extendsInterval) {
                         for(uint32_t k = 0; k < interval.size(); k++){
                             localInterval[k] |= interval[k];
                         }
@@ -701,13 +707,14 @@ namespace PetriEngine {
                             for(uint32_t k = 0; k < interval->size(); k++) {
                                 int32_t val1 = otherInterval->operator[](k)._lower - interval->operator[](k)._upper;
                                 int32_t val2 = interval->operator[](k)._lower - otherInterval->operator[](k)._upper;
-                                int32_t lowerDist = interval->operator[](k)._lower > otherInterval->operator[](k)._lower? 
-                                    interval->operator[](k)._lower - otherInterval->operator[](k)._lower : 
-                                    otherInterval->operator[](k)._lower - interval->operator[](k)._lower;
-                                int32_t upperDist = interval->operator[](k)._upper > otherInterval->operator[](k)._upper? 
-                                    interval->operator[](k)._upper - otherInterval->operator[](k)._upper : 
-                                    otherInterval->operator[](k)._upper - interval->operator[](k)._upper;
-                                dist += std::max(upperDist + lowerDist, upperDist + lowerDist + std::max(val1, val2));
+                                // int32_t lowerDist = interval->operator[](k)._lower > otherInterval->operator[](k)._lower? 
+                                //     interval->operator[](k)._lower - otherInterval->operator[](k)._lower : 
+                                //     otherInterval->operator[](k)._lower - interval->operator[](k)._lower;
+                                // int32_t upperDist = interval->operator[](k)._upper > otherInterval->operator[](k)._upper? 
+                                //     interval->operator[](k)._upper - otherInterval->operator[](k)._upper : 
+                                //     otherInterval->operator[](k)._upper - interval->operator[](k)._upper;
+                                dist += std::max(0, std::max(val1, val2));
+                                //dist += std::max(upperDist + lowerDist, upperDist + lowerDist + std::max(val1, val2));
                                 if(dist >= currentBest.distance){
                                     break;
                                 }
