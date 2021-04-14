@@ -17,26 +17,30 @@
 #include "PetriNet.h"
 #include "Structures/State.h"
 #include <memory>
+#include "Stubborn/StubbornSet.h"
 
 namespace PetriEngine {
-class SuccessorGenerator {
+
+    class SuccessorGenerator {
 public:
     SuccessorGenerator(const PetriNet& net);
+    SuccessorGenerator(const PetriNet& net, const std::shared_ptr<StubbornSet>&);
     SuccessorGenerator(const PetriNet& net, std::vector<std::shared_ptr<PQL::Condition> >& queries);
+    SuccessorGenerator(const PetriNet& net, const std::shared_ptr<PQL::Condition> &query);
     virtual ~SuccessorGenerator();
-    void prepare(const Structures::State* state);
-    bool next(Structures::State& write);
-    uint32_t fired()
+    virtual bool prepare(const Structures::State* state);
+    virtual bool next(Structures::State& write);
+    uint32_t fired() const
     {
         return _suc_tcounter -1;
     }
-        
-    const MarkVal* parent() const {
+
+    const MarkVal* getParent() const {
         return _parent->marking();
     }
 
     void reset();
-    
+
     /**
      * Checks if the conditions are met for fireing t, if write != NULL,
      * then also consumes tokens from write while checking
@@ -66,6 +70,8 @@ protected:
     const PetriNet& _net;
 
     bool next(Structures::State &write, uint32_t &tindex);
+
+    void _fire(Structures::State &write, uint32_t tid);
 
     const Structures::State* _parent;
 

@@ -10,7 +10,7 @@
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
 #include "PetriEngine/PQL/Expressions.h"
 #include "CTL/SearchStrategy/SearchStrategy.h"
-
+#include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
 
 using namespace PetriEngine::PQL;
 using namespace DependencyGraph;

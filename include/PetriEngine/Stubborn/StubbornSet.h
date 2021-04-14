@@ -50,9 +50,14 @@ namespace PetriEngine {
             }
         }
 
-        virtual void prepare(const Structures::State *marking) = 0;
+        StubbornSet(const PetriEngine::PetriNet &net, const PQL::Condition_ptr &query)
+                : StubbornSet(net) {
+            _queries.push_back(query.get());
+        }
 
-        uint32_t next();
+        virtual bool prepare(const Structures::State *marking) = 0;
+
+        virtual uint32_t next();
 
         virtual ~StubbornSet() = default;
 
@@ -62,7 +67,7 @@ namespace PetriEngine {
             return _parent->marking();
         }
 
-        uint32_t _current;
+        uint32_t _current = 0;
 
         void presetOf(uint32_t place, bool make_closure = false);
 
@@ -87,6 +92,11 @@ namespace PetriEngine {
             _queries = {ptr};
         }
 
+        [[nodiscard]] size_t nenabled() const { return _nenabled; }
+
+        [[nodiscard]] bool *enabled() const { return _enabled.get(); };
+        [[nodiscard]] bool *stubborn() const { return _stubborn.get(); };
+
     protected:
         const PetriEngine::PetriNet &_net;
         const Structures::State *_parent;
@@ -108,8 +118,6 @@ namespace PetriEngine {
             }
         };
 
-        size_t _tid = 0;
-
         const std::vector<TransPtr> &transitions() { return _net._transitions; }
 
         const std::vector<Invariant> &invariants() { return _net._invariants; }
@@ -118,11 +126,14 @@ namespace PetriEngine {
 
         bool checkPreset(uint32_t t);
 
-        inline void addToStub(uint32_t t);
+        virtual void addToStub(uint32_t t);
 
         void closure();
 
         std::unique_ptr<bool[]> _enabled, _stubborn;
+        size_t _nenabled;
+
+    protected:
         std::unique_ptr<uint8_t[]> _places_seen;
         std::unique_ptr<place_t[]> _places;
         std::unique_ptr<trans_t[]> _transitions;

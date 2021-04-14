@@ -42,13 +42,12 @@ namespace PetriEngine {
                 _maxPlaceBound = std::vector<uint32_t>(net.numberOfPlaces(), 0);
                 _sp = binarywrapper_t(sizeof(uint32_t) * _nplaces * 8);
             }
-
 	    virtual ~StateSetInterface()
 	    {
 		_sp.release();
 	    }
             
-            virtual std::pair<bool, size_t> add(State& state) = 0;
+            virtual std::pair<bool, size_t> add(const State& state) = 0;
             
             virtual void decode(State& state, size_t id) = 0;
 
@@ -88,7 +87,7 @@ namespace PetriEngine {
             }             
             
             template<typename T>
-            std::pair<bool, size_t> _add(State& state, T& _trie) {
+            std::pair<bool, size_t> _add(const State& state, T& _trie) {
                 _discovered++;
                 
 #ifdef DEBUG
@@ -213,7 +212,7 @@ namespace PetriEngine {
         public:
             using StateSetInterface::StateSetInterface;
              
-            virtual std::pair<bool, size_t> add(State& state) override
+            virtual std::pair<bool, size_t> add(const State& state) override
             {
                 return _add(state, _trie);
             }
@@ -265,7 +264,7 @@ namespace PetriEngine {
         public:
             using StateSetInterface::StateSetInterface;
 
-            virtual std::pair<bool, size_t> add(State& state) override
+            virtual std::pair<bool, size_t> add(const State& state) override
             {
 #ifdef DEBUG
                 size_t tmppar = _parent; // we might change this while debugging.
