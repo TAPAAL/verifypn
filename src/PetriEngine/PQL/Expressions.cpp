@@ -21,6 +21,7 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/errorcodes.h"
 #include "PetriEngine/PQL/Visitor.h"
+#include "PetriEngine/PQL/MutatingVisitor.h"
 
 #include <sstream>
 #include <assert.h>
@@ -30,6 +31,7 @@
 #include <set>
 #include <cmath>
 #include <numeric>
+#include <PetriEngine/Stubborn/StubbornSet.h>
 #include "PetriEngine/PQL/QueryPrinter.h"
 
 using namespace PetriEngine::Simplification;
@@ -829,6 +831,20 @@ namespace PetriEngine {
 	    return RUNKNOWN;
         }
 
+        Condition::Result GCondition::evalAndSet(const EvaluationContext &context) {
+            auto res = _cond->evalAndSet(context);
+            if(res != RFALSE) res = RUNKNOWN;
+            setSatisfied(res);
+            return res;
+        }
+
+        Condition::Result FCondition::evalAndSet(const EvaluationContext &context) {
+            auto res = _cond->evalAndSet(context);
+            if(res != RTRUE) res = RUNKNOWN;
+            setSatisfied(res);
+            return res;
+        }
+
         Condition::Result EGCondition::evalAndSet(const EvaluationContext& context) {
             auto res = _cond->evalAndSet(context);
             if(res != RFALSE) res = RUNKNOWN;
@@ -1168,6 +1184,190 @@ namespace PetriEngine {
         }
 
         void MultiplyExpr::visit(Visitor& ctx) const
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        /******************** Mutating visitor **********************************/
+
+        void UntilCondition::visit(MutatingVisitor &ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void EGCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void EUCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void EXCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void EFCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void AUCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void AXCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void AFCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void AGCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void ACondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void ECondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void GCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void FCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void XCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void AndCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void OrCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void NotCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void EqualCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void NotEqualCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void CompareConjunction::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void LessThanOrEqualCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void LessThanCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void BooleanCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void DeadlockCondition::visit(MutatingVisitor& ctx)
+        {
+            ctx.accept<decltype(this)>(this);
+        }
+
+        void StableMarkingCondition::visit(MutatingVisitor& ctx)
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+        void QuasiLivenessCondition::visit(MutatingVisitor& ctx)
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+        void KSafeCondition::visit(MutatingVisitor& ctx)
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+        void LivenessCondition::visit(MutatingVisitor& ctx)
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+        void FireableCondition::visit(MutatingVisitor& ctx)
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+        void UpperBoundsCondition::visit(MutatingVisitor& ctx)
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+        void UnfoldedFireableCondition::visit(MutatingVisitor& ctx)
+        {
+            if(_compiled)
+                _compiled->visit(ctx);
+            else
+                ctx.accept<decltype(this)>(this);
+        }
+
+
+        void UnfoldedUpperBoundsCondition::visit(MutatingVisitor& ctx)
         {
             ctx.accept<decltype(this)>(this);
         }
@@ -3437,7 +3637,7 @@ namespace PetriEngine {
                                                bool initrw) {
             return FCondition(std::make_shared<NotCondition>(_cond)).pushNegation(stats, context, nested, !negated, initrw);
         }
-        
+
         Condition_ptr pushAnd(const std::vector<Condition_ptr>& _conds, negstat_t& stats, const EvaluationContext& context, bool nested, bool negate_children, bool initrw)
         {
             std::vector<Condition_ptr> nef, other;            
@@ -3667,7 +3867,8 @@ namespace PetriEngine {
             }
             return std::make_shared<UnfoldedUpperBoundsCondition>(_places, _max, _offset);
         }
-        
+
+
         /********************** CONSTRUCTORS *********************************/
 
         void postMerge(std::vector<Condition_ptr>& conds) {
@@ -3885,6 +4086,7 @@ namespace PetriEngine {
             }
             return false;
         }
+
     } // PQL
 } // PetriEngine
 

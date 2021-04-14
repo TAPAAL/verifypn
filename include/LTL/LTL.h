@@ -26,9 +26,7 @@
 #include "LTL/LTLToBuchi.h"
 
 namespace LTL {
-
-
-    std::pair<Condition_ptr, bool> to_ltl(const Condition_ptr &formula);
+    std::pair<PetriEngine::PQL::Condition_ptr, bool> to_ltl(const PetriEngine::PQL::Condition_ptr &formula);
 }
 
 #endif

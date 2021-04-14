@@ -206,6 +206,7 @@ namespace PetriEngine {
             end = std::chrono::high_resolution_clock::now();
         }
 
+        _fixpointDone = true;
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
 
         //printPlaceTable();
@@ -393,7 +394,7 @@ namespace PetriEngine {
     PetriNetBuilder& ColoredPetriNetBuilder::unfold() {
         if (_stripped) assert(false);
         if (_isColored && !_unfolded) {
-            std::cout << "Unfolding" << std::endl;
+            std::cout << "Unfolding " << _fixpointDone << _partitionComputed << std::endl;
             auto start = std::chrono::high_resolution_clock::now();
 
             if(!_fixpointDone && _partitionComputed){
@@ -478,8 +479,7 @@ namespace PetriEngine {
                 for (auto& arc : transition.output_arcs) {
                     unfoldArc(arc, b, name);
                 }                
-            }
-            
+            }            
         } else {
             std::cout << "Entered naive" << std::endl;
             NaiveBindingGenerator gen(transition, _colors);
@@ -526,8 +526,7 @@ namespace PetriEngine {
                 _ptBuilder.addOutputArc(tName, pName, color.second);
             }
             ++_nptarcs;
-        }
-        
+        }        
     }
 
     //----------------------- Strip Colors -----------------------//

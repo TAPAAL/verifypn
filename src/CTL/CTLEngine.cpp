@@ -168,7 +168,8 @@ bool solveLogicalCondition(LogicalCondition* query, bool is_conj, PetriNet* net,
                                         options.stubbornreduction,
                                         false,
                                         false,
-                                        false);
+                                        false,
+                                        options.seed());
         }
         else
         {
@@ -257,7 +258,8 @@ bool recursiveSolve(const Condition_ptr& query, PetriEngine::PetriNet* net,
                            options.stubbornreduction,
                            false,
                            false,
-                           false);
+                           false,
+                           options.seed());
         }
         return (res.back() == AbstractHandler::Satisfied) xor query->isInvariant();
     }

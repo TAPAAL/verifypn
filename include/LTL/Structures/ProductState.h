@@ -21,6 +21,7 @@
 #include "PetriEngine/Structures/State.h"
 
 namespace LTL {
+    template <class SuccessorGen>
     class ProductSuccessorGenerator;
 }
 namespace LTL::Structures {
@@ -41,11 +42,11 @@ namespace LTL::Structures {
         }
 
         //TODO override equality operators to handle both marking and NBA state
-        size_t getBuchiState() const {
+        uint32_t getBuchiState() const {
             return marking()[buchi_state_idx];
         }
 
-        void setBuchiState(size_t state) {
+        void setBuchiState(uint32_t state) {
             marking()[buchi_state_idx] = state;
         }
 
@@ -67,12 +68,15 @@ namespace LTL::Structures {
             return true;
         }
 
+
         size_t size() const { return buchi_state_idx + 1; }
+
 
         bool operator!=(const ProductState &rhs) const {
             return !(rhs == *this);
         }
     private:
+        template <typename T>
         friend class LTL::ProductSuccessorGenerator;
         size_t buchi_state_idx;
     };

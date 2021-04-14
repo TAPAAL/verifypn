@@ -23,13 +23,13 @@
 
 namespace PetriEngine {
     namespace Structures {
-        Queue::Queue(StateSetInterface* states) : _states(states) {} 
+        Queue::Queue(StateSetInterface* states, size_t) : _states(states) {}
 
         Queue::~Queue() {
         }
         
         
-        BFSQueue::BFSQueue(StateSetInterface* states) : Queue(states), _cnt(0), _nstates(0) {}
+        BFSQueue::BFSQueue(StateSetInterface* states, size_t) : Queue(states), _cnt(0), _nstates(0) {}
         BFSQueue::~BFSQueue(){}
                 
         bool BFSQueue::pop(Structures::State& state)
@@ -53,7 +53,7 @@ namespace PetriEngine {
             // nothing
         }
         
-        DFSQueue::DFSQueue(StateSetInterface* states) : Queue(states) {}
+        DFSQueue::DFSQueue(StateSetInterface* states, size_t) : Queue(states) {}
         DFSQueue::~DFSQueue(){}
                 
         bool DFSQueue::pop(Structures::State& state)
@@ -78,10 +78,13 @@ namespace PetriEngine {
             return true;
         }
 
-        RDFSQueue::RDFSQueue(StateSetInterface* states) : Queue(states) {}
-        RDFSQueue::~RDFSQueue(){}
+        RDFSQueue::RDFSQueue(StateSetInterface* states, size_t seed) : Queue(states) 
+        {
+            _rng.seed(seed);
+        }
 
-        auto rng = std::default_random_engine {};
+        RDFSQueue::~RDFSQueue(){}
+        
         bool RDFSQueue::pop(Structures::State& state)
         {
             if(_cache.empty())
@@ -94,7 +97,7 @@ namespace PetriEngine {
             }
             else
             {
-                std::shuffle ( _cache.begin(), _cache.end(), rng );
+                std::shuffle ( _cache.begin(), _cache.end(), _rng );
 		uint32_t n = _cache.back();
                 _states->decode(state, n);
                 for(size_t i = 0; i < (_cache.size() - 1); ++i)
@@ -106,7 +109,17 @@ namespace PetriEngine {
             }
         }
 
-        bool RDFSQueue::top(State &state) const {
+        bool RDFSQueue::top(State &state) {
+            if (!_cache.empty()) {
+                std::shuffle ( _cache.begin(), _cache.end(), _rng );
+                uint32_t n = _cache.back();
+                _states->decode(state, n);
+                for(size_t i = 0; i < _cache.size(); ++i)
+                {
+                    _stack.push(_cache[i]);
+                }
+                _cache.clear();
+            }
             if (_stack.empty()) return false;
             uint32_t n = _stack.top();
             _states->decode(state, n);
@@ -119,7 +132,7 @@ namespace PetriEngine {
             _cache.push_back(id);
         }
         
-        HeuristicQueue::HeuristicQueue(StateSetInterface* states) : Queue(states) {}
+        HeuristicQueue::HeuristicQueue(StateSetInterface* states, size_t) : Queue(states) {}
         HeuristicQueue::~HeuristicQueue(){}
                 
         bool HeuristicQueue::pop(Structures::State& state)
