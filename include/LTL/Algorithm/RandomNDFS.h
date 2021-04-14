@@ -26,13 +26,10 @@
 
 #include <ptrie/ptrie_stable.h>
 
-// TODO >:(
-using namespace PetriEngine;
-
 namespace LTL {
-    class RandomNDFS : public ModelChecker<LTL::SpoolingSuccessorGenerator> {
+    class RandomNDFS : public ModelChecker<ProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator> {
     public:
-        RandomNDFS(const PetriNet &net, const PetriEngine::PQL::Condition_ptr &cond,
+        RandomNDFS(const PetriEngine::PetriNet &net, const PetriEngine::PQL::Condition_ptr &cond,
                    const Structures::BuchiAutomaton &buchi,
                    LTL::SpoolingSuccessorGenerator &&successorGen, TraceLevel level,
                    bool shortcircuitweak)

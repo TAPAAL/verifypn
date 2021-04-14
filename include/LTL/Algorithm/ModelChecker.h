@@ -29,7 +29,7 @@
 #include "LTL/SuccessorGeneration/ReachStubProductSuccessorGenerator.h"
 
 namespace LTL {
-    template<typename SuccessorGen>
+    template<template <typename> typename ProductSucGen, typename SuccessorGen>
     class ModelChecker {
     public:
         ModelChecker(const PetriEngine::PetriNet &net,
@@ -40,7 +40,7 @@ namespace LTL {
                      bool shortcircuitweak = true)
                 : net(net), formula(condition), traceLevel(level), shortcircuitweak(shortcircuitweak)
         {
-            successorGenerator = std::make_unique<ReachStubProductSuccessorGenerator<SuccessorGen>>(net, buchi,
+            successorGenerator = std::make_unique<ProductSucGen<SuccessorGen>>(net, buchi,
                                                                                            std::move(successorGen));
         }
 
@@ -76,8 +76,7 @@ namespace LTL {
                       << "\tmax tokens:        " << stateSet.max_tokens() << std::endl;
         }
 
-        //std::unique_ptr<ProductSuccessorGenerator<SuccessorGen>> successorGenerator;
-        std::unique_ptr<ReachStubProductSuccessorGenerator<SuccessorGen>> successorGenerator;
+        std::unique_ptr<ProductSucGen<SuccessorGen>> successorGenerator;
 
         const PetriEngine::PetriNet &net;
         PetriEngine::PQL::Condition_ptr formula;
@@ -126,14 +125,6 @@ namespace LTL {
 
     };
 
-    extern template
-    class ModelChecker<LTL::ResumingSuccessorGenerator>;
-
-    extern template
-    class ModelChecker<LTL::SpoolingSuccessorGenerator>;
-
-    extern template
-    class ModelChecker<PetriEngine::ReducingSuccessorGenerator>;
 }
 
 #endif //VERIFYPN_MODELCHECKER_H

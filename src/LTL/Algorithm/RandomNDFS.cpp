@@ -31,7 +31,7 @@ namespace LTL {
         PetriEngine::Structures::RDFSQueue todo{&states};
 
         State working = factory.newState();
-        PQL::DistanceContext ctx{&net, working.marking()};
+        PetriEngine::PQL::DistanceContext ctx{&net, working.marking()};
         State curState = factory.newState();
         {
             std::vector<State> initial_states;
@@ -77,7 +77,7 @@ namespace LTL {
         State working = factory.newState();
         State curState = factory.newState();
 
-        PQL::DistanceContext ctx{&net, state.marking()};
+        PetriEngine::PQL::DistanceContext ctx{&net, state.marking()};
 
         todo.push(states.add(state).second, ctx, formula);
 

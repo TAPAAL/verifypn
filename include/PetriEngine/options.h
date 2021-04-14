@@ -22,6 +22,12 @@ enum class TraceLevel {
     Full
 };
 
+enum class LTLPartialOrder {
+    None,
+    Visible,
+    AutomatonReach
+};
+
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
@@ -55,6 +61,7 @@ struct options_t {
     bool usedltl = false;
     LTL::Algorithm ltlalgorithm = LTL::Algorithm::Tarjan;
     bool ltluseweak = true;
+    LTLPartialOrder ltl_por = LTLPartialOrder::AutomatonReach;
 
     std::string query_out_file;
     std::string model_out_file;
