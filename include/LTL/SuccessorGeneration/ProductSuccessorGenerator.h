@@ -64,6 +64,9 @@ namespace LTL {
                 return _successor_generator.prepare(state);
             } else {
                 assert(false);
+                std::cerr << "Invalid call to prepare(ProductState), requires not ResumingSuccessorGenerator\n";
+                exit(1);
+
             }
         }
 

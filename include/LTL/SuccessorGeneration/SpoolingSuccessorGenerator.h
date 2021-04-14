@@ -172,24 +172,6 @@ namespace LTL {
             }
         }
 
-        std::size_t nenabled()
-        {
-            //TODO
-            assert(false);
-        }
-
-        bool enabled()
-        {
-            //TODO
-            assert(false);
-        }
-
-        void stubborn()
-        {
-            //TODO
-            assert(false);
-        }
-
         void push() {
             // No transitions have been fired yet. We must be in the initial marking.
             if (fired() == std::numeric_limits<uint32_t>::max() || !_heuristic) return;

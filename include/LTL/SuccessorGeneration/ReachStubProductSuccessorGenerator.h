@@ -96,10 +96,12 @@ namespace LTL {
 #endif
         }
 
+/*
         bool prepare(const LTL::Structures::ProductState *state) override {
             //FIXME For some reason RandomNDFS is not able to call this directly on the super class.
             ProductSuccessorGenerator<S>::prepare(state);
         }
+*/
 
         void prepare(const LTL::Structures::ProductState *state, typename S::sucinfo &sucinfo) override
         {
