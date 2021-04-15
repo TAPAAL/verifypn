@@ -407,7 +407,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 std::cerr << "Missing argument to --ltl-por\n";
                 return ErrorCode;
             }
-            else if (strcmp(argv[i+1], "visible") == 0 || strcmp(argv[i+1], "valmari") == 0) {
+            else if (strcmp(argv[i+1], "classic") == 0) {
                 options.ltl_por = LTLPartialOrder::Visible;
             }
             else if (strcmp(argv[i+1], "aut-reach") == 0) {
