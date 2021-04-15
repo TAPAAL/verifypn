@@ -106,8 +106,7 @@ namespace LTL {
                     // sort by least distance first.
                     std::sort(std::begin(weighted_tids), std::end(weighted_tids),
                               [](auto &l, auto &r) { return l.second < r.second; });
-                    sucinfo.successors = SuccessorQueue(weighted_tids.data(), weighted_tids.size(),
-                                                        [](auto &p) { return p.first; });
+                    sucinfo.successors = SuccessorQueue(weighted_tids, [](auto &p) { return p.first; });
                 }
             }
         }

@@ -39,11 +39,11 @@ public:
 
     // construct from array of different type, using fn as transformation function.
     template <typename U, typename Fn>
-    SuccessorQueue(U *src, uint32_t nelem, Fn&& fn)
-            : _front(0), _size(nelem)
+    SuccessorQueue(std::vector<U> &src, Fn&& fn)
+            : _front(0), _size(src.size())
     {
-        _data = std::make_unique<T[]>(nelem);
-        std::transform(src, src + nelem, _data.get(), fn);
+        _data = std::make_unique<T[]>(src.size());
+        std::transform(std::begin(src), std::end(src), _data.get(), fn);
     }
 
     SuccessorQueue() noexcept :_front(0), _size(0), _data(nullptr) {}

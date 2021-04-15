@@ -61,6 +61,10 @@ struct options_t {
     bool compress_buchi = true;
     uint32_t weight1, weight2;
 
+    bool replay = false;
+    std::string replay_file;
+
+
     std::string query_out_file;
     std::string model_out_file;
 
