@@ -410,7 +410,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             else if (strcmp(argv[i+1], "classic") == 0) {
                 options.ltl_por = LTLPartialOrder::Visible;
             }
-            else if (strcmp(argv[i+1], "aut-reach") == 0) {
+            else if (strcmp(argv[i+1], "reach") == 0) {
                 options.ltl_por = LTLPartialOrder::AutomatonReach;
             }
             else if (strcmp(argv[i+1], "none") == 0) {
