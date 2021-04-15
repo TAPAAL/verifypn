@@ -21,5 +21,6 @@
 #include "EnabledSpooler.h"
 #include "LTL/Stubborn/InterestingLTLStubbornSet.h"
 #include "LTL/Stubborn/VisibleLTLStubbornSet.h"
+#include "LTL/Stubborn/AutomatonStubbornSet.h"
 
 #endif //VERIFYPN_SPOOLERS_H

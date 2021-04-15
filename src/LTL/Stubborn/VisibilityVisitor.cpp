@@ -16,7 +16,7 @@
  */
 
 #include "LTL/Stubborn/VisibilityVisitor.h"
-
+/*
 namespace LTL {
     void VisibilityVisitor::_accept(const PetriEngine::PQL::CompareConjunction *element)
     {
@@ -64,4 +64,4 @@ namespace LTL {
             }
         }
     }
-}
+}*/

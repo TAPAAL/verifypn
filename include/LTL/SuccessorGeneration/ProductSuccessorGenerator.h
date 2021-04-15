@@ -254,28 +254,7 @@ namespace LTL {
         bool guard_valid(const PetriEngine::Structures::State &state, bdd bdd)
         {
             PetriEngine::PQL::EvaluationContext ctx{state.marking(), _net};
-            // IDs 0 and 1 are false and true atoms, respectively
-            // More details in buddy manual ( http://buddy.sourceforge.net/manual/main.html )
-            while (bdd.id() > 1) {
-                // find variable to test, and test it
-                size_t var = bdd_var(bdd);
-                using PetriEngine::PQL::Condition;
-                Condition::Result res = buchi.getExpression(var)->evaluate(ctx);
-                switch (res) {
-                    case Condition::RUNKNOWN:
-                        std::cerr << "Unexpected unknown answer from evaluating query!\n";
-                        assert(false);
-                        exit(1);
-                        break;
-                    case Condition::RFALSE:
-                        bdd = bdd_low(bdd);
-                        break;
-                    case Condition::RTRUE:
-                        bdd = bdd_high(bdd);
-                        break;
-                }
-            }
-            return bdd == bddtrue;
+            return buchi.aut.guard_valid(ctx, bdd);
         }
 
         bool next_buchi_succ(LTL::Structures::ProductState &state)

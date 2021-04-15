@@ -26,23 +26,7 @@ namespace LTL {
     AutomatonHeuristic::AutomatonHeuristic(const PetriEngine::PetriNet *net, const Structures::BuchiAutomaton &aut)
             : _net(net), _aut(aut)
     {
-        std::vector<AtomicProposition> aps(_aut.ap_info.size());
-        std::transform(std::begin(_aut.ap_info), std::end(_aut.ap_info), std::begin(aps),
-                       [](const std::pair<int, AtomicProposition> &pair) { return pair.second; });
-        for (unsigned state = 0; state < _aut._buchi->num_states(); ++state) {
-            _state_guards.emplace_back(state, _aut._buchi->state_is_accepting(state));
-            for (auto &e : _aut._buchi->out(state)) {
-                auto formula = spot::bdd_to_formula(e.cond, _aut.dict);
-                if (e.dst == state) {
-                    _state_guards.back().retarding = toPQL(formula, aps);
-                } else {
-                    _state_guards.back().progressing.push_back(toPQL(formula, aps));
-                }
-            }
-            if (!_state_guards.back().retarding) {
-                _state_guards.back().retarding = std::make_shared<PetriEngine::PQL::BooleanCondition>(false);
-            }
-        }
+        _state_guards = std::move(GuardInfo::from_automaton(_aut));
     }
 
     bool AutomatonHeuristic::has_heuristic(const Structures::ProductState &state)
@@ -58,8 +42,8 @@ namespace LTL {
         if (guardInfo.is_accepting) return 0;
         uint32_t min_dist = std::numeric_limits<uint32_t>::max();
         PetriEngine::PQL::DistanceContext context{_net, state.marking()};
-        for (const auto &condition : guardInfo.progressing) {
-            uint32_t dist = condition->distance(context);
+        for (const auto &guard : guardInfo.progressing) {
+            uint32_t dist = guard.condition->distance(context);
             if (dist < min_dist) min_dist = dist;
         }
         return min_dist;

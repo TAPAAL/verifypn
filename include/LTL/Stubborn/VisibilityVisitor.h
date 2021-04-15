@@ -20,7 +20,7 @@
 
 #include "PetriEngine/PQL/PQL.h"
 #include "PetriEngine/PQL/Visitor.h"
-#include "LTL/SuccessorGeneration/AutomatonStubbornSet.h"
+#include "AutomatonStubbornSet.h"
 
 namespace LTL {
     class VisibilityVisitor : public PetriEngine::PQL::BaseVisitor {

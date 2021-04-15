@@ -16,7 +16,7 @@
  */
 
 #include "LTL/Structures/GuardInfo.h"
-#include "LTL/SuccessorGeneration/AutomatonStubbornSet.h"
+#include "LTL/Stubborn/AutomatonStubbornSet.h"
 #include "LTL/Stubborn/EvalAndSetVisitor.h"
 #include "LTL/Stubborn/VisibilityVisitor.h"
 #include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
@@ -25,146 +25,85 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 
 namespace LTL {
-    bool AutomatonStubbornSet::prepare(const PetriEngine::Structures::State *state, const GuardInfo &info)
-    {
+    bool AutomatonStubbornSet::prepare(const LTL::Structures::ProductState *state) {
         reset();
         _parent = state;
         memset(_places_seen.get(), 0, _net.numberOfPlaces());
         constructEnabled();
-        if (_ordering.empty()) return false;
+        if (_ordering.empty())
+            return false;
         if (_ordering.size() == 1) {
             _stubborn[_ordering.front()] = true;
             return true;
         }
-        PQL::EvaluationContext evalCtx(_parent->marking(), &_net);
-        EvalAndSetVisitor evalVisitor{evalCtx};
-        info.retarding->visit(evalVisitor);
-        for (auto &cond : info.progressing) {
-            cond->visit(evalVisitor);
+
+        _nenabled = _ordering.size();
+
+        GuardInfo buchi_state = _state_guards[state->getBuchiState()];
+
+        //Interesting on each progressing formula should give NLG
+        PQL::EvaluationContext evaluationContext{_parent->marking(), &_net};
+        for (auto &q : buchi_state.progressing) {
+            EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
+            q.condition->visit(evalAndSetVisitor);
+
+            InterestingLTLTransitionVisitor interesting{*this, false};
+            q.condition->visit(interesting);
         }
-        if (!info.is_accepting) {
-            prepare_nonaccepting(state, info);
-        } else {
-            prepare_accepting(state, info);
-        }
-        if (!_ordering.empty()) {
-            for (auto t = 0; t < _net.numberOfTransitions(); ++t) {
-                if (_stubborn[t] && _enabled[t]) {
-                    hasStubborn = true;
+        //Closure should ensure COM
+        closure();
+
+        // Ensure we have a key transition in accepting buchi states.
+        if (!_has_enabled_stubborn && buchi_state.is_accepting) {
+            for (int i = 0; i < _net.numberOfTransitions(); ++i) {
+                if (!_stubborn[i] && _enabled[i]) {
+                    addToStub(i);
+                    closure();
                     break;
                 }
             }
-            if (!hasStubborn) {
-                // if there are enabled transitions, ensure we have some stubborn transition (all)
-                //std::cerr << "expanding all!" << std::endl;
-                memset(_stubborn.get(), true, sizeof(bool) * _net.numberOfTransitions());
-            }
         }
-#ifndef NDEBUG
-        float num_stubborn = 0;
-        float num_enabled = 0;
-        float num_enabled_stubborn = 0;
-        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
-            if (_stubborn[i]) ++num_stubborn;
-            if (_enabled[i]) ++num_enabled;
-            if (_stubborn[i] && _enabled[i]) ++num_enabled_stubborn;
+
+        // Check condition 3
+        if (!_aut.guard_valid(evaluationContext, buchi_state.retarding.decision_diagram)) {
+            memset(_stubborn.get(), 1, _net.numberOfTransitions());
+            return true;
         }
-        std::cerr << "Enabled: " << num_enabled << "/" << _net.numberOfTransitions() << " ("
-                  << num_enabled / _net.numberOfTransitions() * 100.0 << "%),\t "
-                  << "Stubborn: " << num_stubborn << "/" << _net.numberOfTransitions() << " ("
-                  << num_stubborn / _net.numberOfTransitions() * 100.0 << "%),\t "
-                  << "Enabled stubborn: " << num_enabled_stubborn << "/" << num_enabled << " ("
-                  << num_enabled_stubborn / num_enabled * 100.0 << "%)" << std::endl;
-        if (num_enabled_stubborn != num_enabled) {
-            _net.print(getParent());
-            std::cout << "Buchi: " << info.buchi_state << std::endl;
+
+        EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
+        buchi_state.retarding.condition->visit(evalAndSetVisitor);
+        InterestingLTLTransitionVisitor interesting{_retarding_stubborn_set, false};
+        buchi_state.retarding.condition->visit(interesting);
+
+        //Check that S-INV is satisfied
+        if (has_shared_mark(_stubborn.get(), _retarding_stubborn_set.stubborn(), _net.numberOfTransitions())){
+            memset(_stubborn.get(), 1, _net.numberOfTransitions());
+            return true;
         }
-#endif
         return true;
     }
 
-    void AutomatonStubbornSet::prepare_accepting(const PetriEngine::Structures::State *state, const GuardInfo &info)
-    {
-        bool sat = info.retarding->isSatisfied();
-        InterestingTransitionVisitor interesting{*this, false};
-        std::vector<Condition_ptr> satQueries;
-        for (const auto &cond : info.progressing) {
-            if (cond->isSatisfied()) {
-                satQueries.push_back(cond);
-            } else {
-                cond->visit(interesting);
+    uint32_t AutomatonStubbornSet::next() {
+        while (!_ordering.empty()) {
+            _current = _ordering.front();
+            _ordering.pop_front();
+            if (_stubborn[_current] && _enabled[_current]) {
+                return _current;
             }
         }
-        if (!sat) {
-            info.retarding->visit(interesting);
-            if (!satQueries.empty()) {
-                negated.prepare(state, satQueries, false);
-                copyNegated();
-            }
-        } else {
-            if (!satQueries.empty()) {
-                negated.prepare(state, satQueries, true);
-                negated.extend(info.retarding, false);
-                copyNegated();
-                closure();
-            } else {
-                negated.prepare(state, {info.retarding}, false);
-                copyNegated();
-                closure();
-            }
-        }
+        reset();
+        return std::numeric_limits<uint32_t>::max();
     }
 
-    void AutomatonStubbornSet::prepare_nonaccepting(const PetriEngine::Structures::State *state, const GuardInfo &info)
-    {
-        // Treat each outgoing guard as reachability query.
-        // If no out guard satisfied, skip closure computation.
-        InterestingTransitionVisitor interesting{*this, false};
-        std::vector<Condition_ptr> satQueries;
-        for (const auto &cond : info.progressing) {
-            if (cond->isSatisfied()) {
-                satQueries.push_back(cond);
-            } else {
-                cond->visit(interesting);
-            }
-        }
-        if (info.retarding->isSatisfied()) {
-            /*closure();
-            VisibilityVisitor visible{*this};
-            info.retarding->visit(visible);
-            if (visible.foundVisible()) {
-                //std::cerr << "Found visible!\n";
-                memset(_stubborn.get(), true, _net.numberOfTransitions());
-                return;
-            }
-            else {
-                closure();
-                return;
-            }*/
-            satQueries.push_back(info.retarding);
-        }
-        if (!satQueries.empty()) {
-            negated.prepare(state, satQueries, false);
-            // exists satisfying queries, thus add all interesting transitions
-            closure();
-            copyNegated();
-        } else {
-            info.retarding->visit(interesting);
-        }
-    }
-
-    void AutomatonStubbornSet::reset()
-    {
-        hasStubborn = false;
+    void AutomatonStubbornSet::reset() {
         StubbornSet::reset();
-        negated.reset();
+        _retarding_stubborn_set.reset();
+        _has_enabled_stubborn = false;
     }
 
-    void AutomatonStubbornSet::copyNegated() {
-        for (size_t t = 0; t < _net.numberOfTransitions(); ++t) {
-            if (negated.isStubborn(t)) {
-                addToStub(t);
-            }
-        }
+    void AutomatonStubbornSet::addToStub(uint32_t t) {
+        if (_enabled[t])
+            _has_enabled_stubborn = true;
+        StubbornSet::addToStub(t);
     }
 }
