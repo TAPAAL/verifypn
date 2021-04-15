@@ -21,15 +21,14 @@
 #include "LTL/Structures/BuchiAutomaton.h"
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
 #include "PetriEngine/PQL/PQL.h"
-#include "PetriEngine/Stubborn/NegatedStubbornSet.h"
 #include "LTL/Structures/GuardInfo.h"
 #include "LTL/SuccessorGeneration/SuccessorSpooler.h"
 
 namespace LTL {
     class AutomatonStubbornSet : public PetriEngine::StubbornSet, public SuccessorSpooler {
     public:
-        explicit AutomatonStubbornSet(const PetriEngine::PetriNet &net, const Structures::BuchiAutomaton &aut) : PetriEngine::StubbornSet(net),
-            _retarding_stubborn_set(net),
+        explicit AutomatonStubbornSet(const PetriEngine::PetriNet &net, const Structures::BuchiAutomaton &aut)
+        : PetriEngine::StubbornSet(net), _retarding_stubborn_set(net,false),
             _state_guards(std::move(GuardInfo::from_automaton(aut))),
             _aut(aut)
         {}

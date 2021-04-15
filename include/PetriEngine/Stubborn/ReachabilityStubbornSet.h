@@ -24,13 +24,16 @@
 namespace PetriEngine {
     class ReachabilityStubbornSet : public StubbornSet {
     public:
-        ReachabilityStubbornSet(const PetriNet &net, const std::vector<PQL::Condition_ptr> &queries)
-                : StubbornSet(net, queries) {}
+        ReachabilityStubbornSet(const PetriNet &net, const std::vector<PQL::Condition_ptr> &queries, bool closure = true)
+                : StubbornSet(net, queries), _closure(closure) {}
 
-        ReachabilityStubbornSet(const PetriNet &net)
-                : StubbornSet(net) {}
+        ReachabilityStubbornSet(const PetriNet &net, bool closure = true)
+                : StubbornSet(net) , _closure(closure) {}
 
         bool prepare(const Structures::State *state) override;
+
+    private:
+        bool _closure;
     };
 }
 

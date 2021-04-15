@@ -28,7 +28,7 @@ namespace LTL {
     bool AutomatonStubbornSet::prepare(const LTL::Structures::ProductState *state) {
         reset();
         _parent = state;
-        memset(_places_seen.get(), 0, _net.numberOfPlaces());
+        memset(_places_seen.get(), 0, sizeof(uint8_t) * _net.numberOfPlaces());
         constructEnabled();
         if (_ordering.empty())
             return false;
@@ -66,18 +66,18 @@ namespace LTL {
 
         // Check condition 3
         if (!_aut.guard_valid(evaluationContext, buchi_state.retarding.decision_diagram)) {
-            memset(_stubborn.get(), 1, _net.numberOfTransitions());
+            memset(_stubborn.get(), true,  sizeof(bool) * _net.numberOfTransitions());
             return true;
         }
 
-        EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
-        buchi_state.retarding.condition->visit(evalAndSetVisitor);
-        InterestingLTLTransitionVisitor interesting{_retarding_stubborn_set, false};
-        buchi_state.retarding.condition->visit(interesting);
+        auto negated_retarding = std::make_unique<NotCondition>(buchi_state.retarding.condition);
+        _retarding_stubborn_set.setQuery(negated_retarding.get());
+        _retarding_stubborn_set.prepare(state);
+
 
         //Check that S-INV is satisfied
         if (has_shared_mark(_stubborn.get(), _retarding_stubborn_set.stubborn(), _net.numberOfTransitions())){
-            memset(_stubborn.get(), 1, _net.numberOfTransitions());
+            memset(_stubborn.get(), true,  sizeof(bool) * _net.numberOfTransitions());
             return true;
         }
         return true;

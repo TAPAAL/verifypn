@@ -21,6 +21,7 @@
 #include "LTL/Structures/ProductState.h"
 #include "PetriEngine/Structures/SuccessorQueue.h"
 #include "LTL/SuccessorGeneration/DistanceHeuristic.h"
+#include "LTL/SuccessorGeneration/SuccessorSpooler.h"
 
 namespace LTL {
     class SpoolingSuccessorGenerator : public PetriEngine::SuccessorGenerator {

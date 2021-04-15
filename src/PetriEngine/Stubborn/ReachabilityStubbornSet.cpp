@@ -32,7 +32,7 @@ namespace PetriEngine {
         }
         for (auto &q : _queries) {
             q->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
-            InterestingTransitionVisitor interesting{*this, true};
+            InterestingTransitionVisitor interesting{*this, _closure};
 
             q->visit(interesting);
         }
