@@ -414,9 +414,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.computePartition = false;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
-                    "A tool for answering CTL and reachability queries of place cardinality\n"
-                    "deadlock and transition fireability for weighted P/T Petri nets\n"
-                    "extended with inhibitor arcs.\n"
+                    "A tool for answering CTL, LTL and reachability queries\n"
+                    "for weighted P/T Petri nets extended with inhibitor arcs.\n"
                     "\n"
                     "Options:\n"
                     "  -k, --k-bound <number of tokens>     Token bound, 0 to ignore (default)\n"
