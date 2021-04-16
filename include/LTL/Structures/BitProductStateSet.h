@@ -126,7 +126,7 @@ namespace LTL::Structures {
         size_t max_tokens() const override { return markings.maxTokens(); }
 
     protected:
-        static constexpr auto markingMask = (1L << (64 - nbits)) - 1;
+        static constexpr auto markingMask = (1LL << (64 - nbits)) - 1;
         static constexpr auto buchiMask = std::numeric_limits<size_t>::max() ^markingMask;
         static constexpr auto buchiShift = 64 - nbits;
 
