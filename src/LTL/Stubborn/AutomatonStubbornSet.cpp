@@ -55,7 +55,7 @@ namespace LTL {
 
         // Ensure we have a key transition in accepting buchi states.
         if (!_has_enabled_stubborn && buchi_state.is_accepting) {
-            for (int i = 0; i < _net.numberOfTransitions(); ++i) {
+            for (uint32_t i = 0; i < _net.numberOfTransitions(); ++i) {
                 if (!_stubborn[i] && _enabled[i]) {
                     addToStub(i);
                     closure();
