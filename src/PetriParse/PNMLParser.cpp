@@ -231,7 +231,7 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml:
     } else if (strcmp(element->name(), "tuple") == 0) {	
 		std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors;	
 		collectColorsInTuple(element, collectedColors);	
-		auto expr = constructAddExpressionFromTupleExpression(element, collectedColors);	
+		auto expr = constructAddExpressionFromTupleExpression(element, collectedColors, 1);	
 		std::cout << expr->toString() << std::endl;	
 		return expr;	
 	}
@@ -240,7 +240,7 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml:
     return nullptr;
 }
 
-PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors){	
+PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTupleExpression(rapidxml::xml_node<>* element,std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors, uint32_t numberof){	
 	auto initCartesianSet = cartesianProduct(collectedColors[0], collectedColors[1]);	
 	for(uint32_t i = 2; i < collectedColors.size(); i++){	
 		initCartesianSet = cartesianProduct(initCartesianSet, collectedColors[i]);	
@@ -255,7 +255,7 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::constructAddExpressionFromTu
 		tupleExpr->setColorType(tupleExpr->getColorType(colorTypes));	
 		std::vector<PetriEngine::Colored::ColorExpression_ptr> placeholderVector;	
 		placeholderVector.push_back(tupleExpr);	
-		numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(placeholderVector),1));	
+		numberOfExpressions.push_back(std::make_shared<PetriEngine::Colored::NumberOfExpression>(std::move(placeholderVector),numberof));	
 	}	
 	std::vector<PetriEngine::Colored::ArcExpression_ptr> constituents;	
 	for (auto expr : numberOfExpressions) {	
@@ -471,7 +471,7 @@ PetriEngine::Colored::ColorType* PNMLParser::parseUserSort(rapidxml::xml_node<>*
     return nullptr;
 }
 
-PetriEngine::Colored::NumberOfExpression_ptr PNMLParser::parseNumberOfExpression(rapidxml::xml_node<>* element) {
+PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseNumberOfExpression(rapidxml::xml_node<>* element) {
     auto num = element->first_node();
     uint32_t number = parseNumberConstant(num);
     rapidxml::xml_node<>* first;
@@ -561,7 +561,8 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
             initialMarking = atoll(text.c_str());
         } else if (strcmp(it->name(),"hlinitialMarking") == 0) {
             std::unordered_map<const PetriEngine::Colored::Variable*, const PetriEngine::Colored::Color*> binding;
-            PetriEngine::Colored::ExpressionContext context {binding, colorTypes};
+            PetriEngine::Colored::EquivalenceVec placePartition;
+			PetriEngine::Colored::ExpressionContext context {binding, colorTypes, placePartition};
             hlinitialMarking = parseArcExpression(it->first_node("structure"))->eval(context);
         } else if (strcmp(it->name(), "type") == 0) {
             type = parseUserSort(it);

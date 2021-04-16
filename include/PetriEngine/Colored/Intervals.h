@@ -23,6 +23,11 @@
 #include <set>
 #include <unordered_map>
 #include <chrono>
+#include <string>
+#include <string.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 
 namespace PetriEngine {
@@ -116,6 +121,14 @@ namespace PetriEngine {
                 return ids;
             }
 
+            interval_t getSingleColorInterval(){
+                interval_t newInterval;
+                for(auto id : getLowerIds()){
+                    newInterval.addRange(id,id);
+                }
+                return newInterval;
+            }
+
             bool equals(interval_t other){
                 if(other.size() != size()){
                     return false;
@@ -169,10 +182,54 @@ namespace PetriEngine {
                 return overlapInterval;
             }
 
+            std::vector<interval_t> getSubtracted(interval_t other, uint32_t ctSize){
+                std::vector<interval_t> result;
+                
+                if(size() != other.size()){
+                    return result;
+                }
+                
+                for(uint32_t i = 0; i < size(); i++){
+                    interval_t newInterval = *this;
+                    
+                    int32_t newMinUpper = std::min(((int) other[i]._lower) -1, (int)_ranges[i]._upper);
+                    //uint32_t otherUpper = (other[i]._upper +1) >= ctSize? ctSize-1: other[i]._upper +1;
+                    uint32_t newMaxLower = std::max(other[i]._upper +1, _ranges[i]._lower);
+
+                    if(((int32_t) _ranges[i]._lower) <= newMinUpper && newMaxLower <= _ranges[i]._upper){
+                        auto intervalCopy = *this;
+                        auto lowerRange = Reachability::range_t(_ranges[i]._lower, newMinUpper);
+                        auto upperRange = Reachability::range_t(newMaxLower, _ranges[i]._upper);
+                        newInterval._ranges[i] = lowerRange;
+                        intervalCopy._ranges[i] = upperRange;
+                        result.push_back(std::move(intervalCopy));
+                        result.push_back(std::move(newInterval));
+                        
+                    } else if (((int32_t) _ranges[i]._lower)  <= newMinUpper){
+                        auto lowerRange = Reachability::range_t(_ranges[i]._lower, newMinUpper);
+                        newInterval._ranges[i] = lowerRange;
+                        result.push_back(std::move(newInterval));
+                    } else if (newMaxLower <= _ranges[i]._upper) {
+                        auto upperRange = Reachability::range_t(newMaxLower, _ranges[i]._upper);
+                        newInterval._ranges[i] = upperRange;
+                        result.push_back(std::move(newInterval));
+                    }                    
+                }                
+                return result;
+            }
+
             void print() {
                 for(auto range : _ranges){
                     std::cout << " " << range._lower << "-" << range._upper << " ";
                 }
+            }
+
+            std::string toString() {
+                std::ostringstream strs;
+                for(auto range : _ranges){
+                    strs << " " << range._lower << "-" << range._upper << " ";
+                }
+                return strs.str();
             }
         };
 
@@ -299,13 +356,19 @@ namespace PetriEngine {
                 }
 
                 for (auto& localInterval : _intervals) {
-                    bool overlap = true;
+                    bool extendsInterval = true;
                     enum FoundPlace {undecided, greater, lower};
                     FoundPlace foundPlace = undecided;
 
+                    //uint32_t allowedDist = 1;
+
                     for(uint32_t k = 0; k < interval.size(); k++){
                         if(interval[k]._lower > localInterval[k]._upper  || localInterval[k]._lower > interval[k]._upper){
-                            overlap = false;
+                            //if(interval[k]._lower > localInterval[k]._upper + allowedDist  || localInterval[k]._lower > interval[k]._upper + allowedDist){
+                                extendsInterval = false;
+                            // } else {
+                            //     allowedDist = 0;
+                            // }
                         }
                         if(interval[k]._lower < localInterval[k]._lower){
                             if(foundPlace == undecided){
@@ -316,12 +379,12 @@ namespace PetriEngine {
                                 foundPlace = greater;
                             }                            
                         }
-                        if(!overlap && foundPlace != undecided){
+                        if(!extendsInterval && foundPlace != undecided){
                             break;
                         }
                     }
 
-                    if(overlap) {
+                    if(extendsInterval) {
                         for(uint32_t k = 0; k < interval.size(); k++){
                             localInterval[k] |= interval[k];
                         }
@@ -381,6 +444,16 @@ namespace PetriEngine {
                     interval.print();
                     std::cout << "]" << std::endl;
                 }
+            }
+
+            std::string toString() {
+                std::string out;
+                for (auto interval : _intervals){
+                    out += "[";
+                    out += interval.toString();
+                    out += "]\n";
+                }
+                return out;
             }
 
             std::vector<uint32_t> getLowerIds(){
@@ -545,8 +618,8 @@ namespace PetriEngine {
                     }
                     
                     _intervals.erase(_intervals.begin() + closestInterval.intervalId2);
-                    
                 }
+                simplify();
             }
 
             closestIntervals getClosestIntervals(){
@@ -560,7 +633,14 @@ namespace PetriEngine {
                             for(uint32_t k = 0; k < interval->size(); k++) {
                                 int32_t val1 = otherInterval->operator[](k)._lower - interval->operator[](k)._upper;
                                 int32_t val2 = interval->operator[](k)._lower - otherInterval->operator[](k)._upper;
+                                // int32_t lowerDist = interval->operator[](k)._lower > otherInterval->operator[](k)._lower? 
+                                //     interval->operator[](k)._lower - otherInterval->operator[](k)._lower : 
+                                //     otherInterval->operator[](k)._lower - interval->operator[](k)._lower;
+                                // int32_t upperDist = interval->operator[](k)._upper > otherInterval->operator[](k)._upper? 
+                                //     interval->operator[](k)._upper - otherInterval->operator[](k)._upper : 
+                                //     otherInterval->operator[](k)._upper - interval->operator[](k)._upper;
                                 dist += std::max(0, std::max(val1, val2));
+                                //dist += std::max(upperDist + lowerDist, upperDist + lowerDist + std::max(val1, val2));
                                 if(dist >= currentBest.distance){
                                     break;
                                 }
@@ -606,6 +686,54 @@ namespace PetriEngine {
                                 if(interval->operator[](k)._lower > otherInterval->operator[](k)._upper  || otherInterval->operator[](k)._lower > interval->operator[](k)._upper) {
                                     overlap = false;
                                     break;
+                                }
+                            }
+                        }
+                        
+                        if(overlap) {
+                            for(uint32_t l = 0; l < interval->size(); l++) {
+                                interval->operator[](l) |= otherInterval->operator[](l);
+                            }
+                            rangesToRemove.insert(j);
+                        }  
+                    }
+                }
+                for (auto i = rangesToRemove.rbegin(); i != rangesToRemove.rend(); ++i) {
+                    _intervals.erase(_intervals.begin() + *i);
+                }
+            }
+
+            void combineNeighbours() {
+                std::set<uint32_t> rangesToRemove;
+                if(_intervals.empty()){
+                    return;
+                }
+
+                for (uint32_t i = 0; i < _intervals.size(); i++) {
+                    auto interval = &_intervals[i];
+                    if(!interval->isSound()){
+                        rangesToRemove.insert(i);
+                        continue;
+                    }   
+                    for(uint32_t j = i+1; j < _intervals.size(); j++){
+                        auto otherInterval = &_intervals[j];
+
+                        if(!otherInterval->isSound()){
+                            continue;
+                        }   
+                        bool overlap = true;
+
+                        uint32_t dist = 1;
+
+                        if(overlap){
+                            for(uint32_t k = 0; k < interval->size(); k++) {                            
+                                if(interval->operator[](k)._lower > otherInterval->operator[](k)._upper  || otherInterval->operator[](k)._lower > interval->operator[](k)._upper) {
+                                    if(interval->operator[](k)._lower > otherInterval->operator[](k)._upper + dist  || otherInterval->operator[](k)._lower > interval->operator[](k)._upper + dist) {
+                                        overlap = false;
+                                        break;
+                                    } else {
+                                        dist = 0;
+                                    }                                    
                                 }
                             }
                         }

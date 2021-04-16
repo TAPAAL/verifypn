@@ -21,17 +21,16 @@
 #include "PetriEngine/PQL/Visitor.h"
 
 namespace LTL {
-    using namespace PetriEngine::PQL;
     class LTLValidator : public PetriEngine::PQL::Visitor {
     public:
         bool bad() const { return _bad; }
 
         operator bool() const { return !bad(); }
 
-        bool isLTL(const Condition_ptr& condition) {
-            std::shared_ptr<SimpleQuantifierCondition> quantifierCondition;
-            if ((quantifierCondition = std::dynamic_pointer_cast<ACondition>(condition)) != nullptr ||
-                (quantifierCondition = std::dynamic_pointer_cast<ECondition>(condition)) != nullptr ){
+        bool isLTL(const PetriEngine::PQL::Condition_ptr& condition) {
+            std::shared_ptr<PetriEngine::PQL::SimpleQuantifierCondition> quantifierCondition;
+            if ((quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ACondition>(condition)) != nullptr ||
+                (quantifierCondition = std::dynamic_pointer_cast<PetriEngine::PQL::ECondition>(condition)) != nullptr ){
                 (*quantifierCondition)[0]->visit(*this);
             } else {
                 condition->visit(*this);
@@ -41,7 +40,7 @@ namespace LTL {
 
     protected:
 
-        void _visitNary(const LogicalCondition *condition) {
+        void _visitNary(const PetriEngine::PQL::LogicalCondition *condition) {
             for (const auto &cond : *condition) {
                 cond->visit(*this);
             }

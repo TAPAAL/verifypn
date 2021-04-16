@@ -22,6 +22,12 @@ enum class TraceLevel {
     Full
 };
 
+enum class APCompression {
+    Choose,
+    None,
+    Full
+};
+
 struct options_t {
 //    bool outputtrace = false;
     int kbound = 0;
@@ -56,6 +62,9 @@ struct options_t {
     bool usedltl = false;
     LTL::Algorithm ltlalgorithm = LTL::Algorithm::Tarjan;
     bool ltluseweak = true;
+    std::string buchi_out_file;
+    LTL::BuchiOutType buchi_out_type = LTL::BuchiOutType::Dot;
+    APCompression ltl_compress_aps = APCompression::None;
 
     std::string query_out_file;
     std::string model_out_file;
@@ -63,10 +72,14 @@ struct options_t {
     
     //CPN Specific options
     bool cpnOverApprox = false;
+    bool computeCFP = true;
+    bool computePartition = true;
     bool isCPN = false;
     uint32_t seed_offset = 0;
-    int max_intervals = 250;
+    int max_intervals = 250; //0 disabled
     int max_intervals_reduced = 5;
+    
+    size_t seed() { return ++seed_offset; }
 
     void print() {
         if (!printstatistics) {

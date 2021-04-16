@@ -30,10 +30,7 @@ namespace PetriEngine {
         ReachabilityStubbornSet(const PetriNet &net)
                 : StubbornSet(net) {}
 
-        void prepare(const Structures::State *state) override;
-
-
-    private:
+        bool prepare(const Structures::State *state) override;
     };
 }
 
