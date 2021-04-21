@@ -44,7 +44,7 @@ namespace LTL {
             --_fireCount[tid];
         }
 
-    private:
+    protected:
         std::vector<uint32_t> _fireCount;
     };
 }

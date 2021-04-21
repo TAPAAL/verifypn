@@ -137,9 +137,9 @@ namespace LTL {
                         gen.setHeuristic(std::make_unique<RandomHeuristic>(options.seed_offset));
                     } else if (options.strategy == PetriEngine::Reachability::HEUR
                                || options.strategy == PetriEngine::Reachability::DEFAULT) {
-                        gen.setHeuristic(std::make_unique<WeightedComposedHeuristic>(std::make_unique<AutomatonHeuristic>(net, automaton), std::make_unique<FireCountHeuristic>(net), options.weight1, options.weight2));
+                        //gen.setHeuristic(std::make_unique<WeightedComposedHeuristic>(std::make_unique<AutomatonHeuristic>(net, automaton), std::make_unique<FireCountHeuristic>(net), options.weight1, options.weight2));
                         //gen.setHeuristic(std::make_unique<AutomatonHeuristic>(net, automaton));
-                        //gen.setHeuristic(std::make_unique<FireCountHeuristic>(net));
+                        gen.setHeuristic(std::make_unique<LogFireCountHeuristic<>>(net));
                     }
 
                     if (options.trace != TraceLevel::None) {
