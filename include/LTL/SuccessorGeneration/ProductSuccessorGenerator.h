@@ -189,10 +189,10 @@ namespace LTL {
         size_t fired() const { return _successor_generator.fired(); }
 
         //template<typename T = std::enable_if_t<std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>, void>>
-        void generateAll(typename SuccessorGen::sucinfo &sucinfo)
+        void generateAll(LTL::Structures::ProductState *parent, typename SuccessorGen::sucinfo &sucinfo)
         {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                _successor_generator.generate_all(sucinfo);
+                _successor_generator.generate_all(parent, sucinfo);
             }
         }
 

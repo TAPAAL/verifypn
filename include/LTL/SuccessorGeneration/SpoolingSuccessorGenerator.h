@@ -18,6 +18,7 @@
 #ifndef VERIFYPN_SPOOLINGSUCCESSORGENERATOR_H
 #define VERIFYPN_SPOOLINGSUCCESSORGENERATOR_H
 
+#include "LTL/Stubborn/AutomatonStubbornSet.h"
 #include "LTL/Structures/ProductState.h"
 #include "PetriEngine/Structures/SuccessorQueue.h"
 #include "LTL/SuccessorGeneration/DistanceHeuristic.h"
@@ -116,10 +117,16 @@ namespace LTL {
         {
             assert(sucinfo.successors != nullptr);
             if (sucinfo.successors.empty()) {
+#ifndef NDEBUG
+                std::cerr << "Not Firing: " << (sucinfo.successors.has_consumed() ? "deadlock" : "done") << std::endl;
+#endif
                 _last = std::numeric_limits<uint32_t>::max();
                 return false;
             }
             _last = sucinfo.successors.front();
+#ifndef NDEBUG
+            std::cerr << "Firing " << _net.transitionNames()[_last] << std::endl;
+#endif
             sucinfo.successors.pop();
             SuccessorGenerator::_fire(state, _last);
             return true;
@@ -133,11 +140,13 @@ namespace LTL {
             write.setBuchiState(parent.getBuchiState());
         }
 
-        void generate_all(sucinfo &sucinfo)
+        void generate_all(LTL::Structures::ProductState *parent, sucinfo &sucinfo)
         {
             assert(_spooler != nullptr);
             assert(sucinfo.successors != nullptr);
-            _spooler->prepare(static_cast<const LTL::Structures::ProductState*>(_parent));
+            if (dynamic_cast<AutomatonStubbornSet*>(_spooler.get()))
+                return;
+            _spooler->prepare(parent);
             _spooler->generateAll();
 
             uint32_t tid;

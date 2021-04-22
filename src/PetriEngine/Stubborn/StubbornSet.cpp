@@ -120,6 +120,7 @@ namespace PetriEngine {
                     }
                     _enabled[t] = true;
                     _ordering.push_back(t);
+                    ++_nenabled;
                 }
             }
         }
@@ -227,8 +228,12 @@ namespace PetriEngine {
         }
     }
 
-    void StubbornSet::closure() {
+    /*template <typename T>
+    void StubbornSet::closure(T callback) {
         while (!_unprocessed.empty()) {
+            if constexpr (!std::is_same_v<T, bool>) {
+                if (!callback()) return;
+            }
             uint32_t tr = _unprocessed.front();
             _unprocessed.pop_front();
             const TransPtr &ptr = transitions()[tr];
@@ -280,7 +285,7 @@ namespace PetriEngine {
                 }
             }
         }
-    }
+    }*/
 
     /*bool StubbornSet::next(Structures::State &write) {
         while (!_ordering.empty()) {
@@ -320,6 +325,7 @@ namespace PetriEngine {
         memset(_enabled.get(), false, sizeof(bool) * _net.numberOfTransitions());
         memset(_stubborn.get(), false, sizeof(bool) * _net.numberOfTransitions());
         _ordering.clear();
+        _nenabled = 0;
         //_tid = 0;
     }
 }

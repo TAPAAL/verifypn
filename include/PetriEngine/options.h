@@ -58,7 +58,7 @@ struct options_t {
     bool ltluseweak = true;
     std::string buchi_out_file;
     LTL::BuchiOutType buchi_out_type = LTL::BuchiOutType::Dot;
-    bool compress_buchi = true;
+    bool compress_buchi = false;
     uint32_t weight1, weight2;
 
     bool replay = false;

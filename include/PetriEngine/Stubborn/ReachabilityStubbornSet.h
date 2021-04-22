@@ -20,6 +20,7 @@
 
 
 #include "PetriEngine/Stubborn/StubbornSet.h"
+#include "InterestingTransitionVisitor.h"
 
 namespace PetriEngine {
     class ReachabilityStubbornSet : public StubbornSet {
@@ -32,7 +33,15 @@ namespace PetriEngine {
 
         bool prepare(const Structures::State *state) override;
 
+        template <typename TVisitor>
+        void setInterestingVisitor()
+        {
+            _interesting = std::make_unique<TVisitor>(*this, _closure);
+        }
+
     private:
+        std::unique_ptr<InterestingTransitionVisitor> _interesting;
+
         bool _closure;
     };
 }

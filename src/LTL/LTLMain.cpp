@@ -144,10 +144,10 @@ namespace LTL {
                 break;
             case Algorithm::Tarjan:
                 if (options.strategy != PetriEngine::Reachability::DFS ||
-                    (!hasinhib && options.stubbornreduction && !negated_formula->containsNext())) {
+                    (!hasinhib && options.stubbornreduction)) {
                     // Use spooling successor generator in case of different search strategy or stubborn set method.
                     SpoolingSuccessorGenerator gen{net, negated_formula};
-                    if (!hasinhib && options.stubbornreduction && !negated_formula->containsNext()) {
+                    if (!hasinhib && options.stubbornreduction) {
                         std::cout << "Running stubborn version!" << std::endl;
 
                         gen.setSpooler(std::make_unique<AutomatonStubbornSet>(*net, automaton));

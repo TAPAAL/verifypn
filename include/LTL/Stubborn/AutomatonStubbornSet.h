@@ -25,13 +25,16 @@
 #include "LTL/SuccessorGeneration/SuccessorSpooler.h"
 
 namespace LTL {
+    class NondeterministicConjunctionVisitor;
     class AutomatonStubbornSet : public PetriEngine::StubbornSet, public SuccessorSpooler {
     public:
         explicit AutomatonStubbornSet(const PetriEngine::PetriNet &net, const Structures::BuchiAutomaton &aut)
         : PetriEngine::StubbornSet(net), _retarding_stubborn_set(net,false),
             _state_guards(std::move(GuardInfo::from_automaton(aut))),
             _aut(aut)
-        {}
+        {
+            _retarding_stubborn_set.setInterestingVisitor<PetriEngine::AutomatonInterestingTransitionVisitor>();
+        }
 
         bool prepare(const PetriEngine::Structures::State *marking) override {
             return prepare(dynamic_cast<const LTL::Structures::ProductState*>(marking));
@@ -45,7 +48,7 @@ namespace LTL {
 
 
     private:
-        bool has_shared_mark(const bool* a, const bool* b, size_t size) {
+        static bool has_shared_mark(const bool* a, const bool* b, size_t size) {
             for (size_t i = 0; i < size; ++i) {
                 if (a[i] && b[i]) return true;
             }
@@ -61,6 +64,24 @@ namespace LTL {
         const std::vector<GuardInfo> _state_guards;
         const Structures::BuchiAutomaton &_aut;
         bool _has_enabled_stubborn = false;
+        bool _bad = false;
+        bool _done = false;
+        bool _track_changes = false;
+
+        std::unordered_set<uint32_t> _pending_stubborn;
+
+
+        void _reset_pending();
+
+        void _apply_pending();
+
+        void __print_debug();
+
+        void set_all_stubborn();
+
+        bool _closure();
+
+        friend class NondeterministicConjunctionVisitor;
     };
 
 }

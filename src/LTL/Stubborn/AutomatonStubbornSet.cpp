@@ -1,16 +1,16 @@
 /* Copyright (C) 2021  Nikolaj J. Ulrik <nikolaj@njulrik.dk>,
  *                     Simon M. Virenfeldt <simon@simwir.dk>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -25,7 +25,140 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 
 namespace LTL {
-    bool AutomatonStubbornSet::prepare(const LTL::Structures::ProductState *state) {
+
+    class NondeterministicConjunctionVisitor : public InterestingLTLTransitionVisitor {
+    public:
+        NondeterministicConjunctionVisitor(AutomatonStubbornSet &stubbornSet) :
+                InterestingLTLTransitionVisitor(stubbornSet, false),
+                _stubborn(stubbornSet), _net(stubbornSet._net) {}
+
+    protected:
+        /*void _accept(const PQL::AndCondition *element) override
+        {
+            if (negated) {
+                InterestingTransitionVisitor::_accept(element);
+                return; // TODO correct?
+            }
+            for (auto cond : *element) {
+                auto prev = _stubborn.stubborn();
+                InterestingTransitionVisitor::accept(cond);
+                if (_stubborn._bad) {
+                    memset(_stubborn.stubborn(), 0, _net.numberOfTransitions());
+
+                }
+            }
+        }
+
+        void _accept(const PQL::OrCondition *element) override
+        {
+            if (negated) {
+
+            } else {
+                InterestingTransitionVisitor::_accept(element);
+                return;
+            }
+        }*/
+
+        void _accept(const PQL::CompareConjunction *element) override
+        {
+            if (_stubborn._track_changes) {
+                InterestingLTLTransitionVisitor::accept(element);
+                return;
+            }
+            _stubborn._track_changes = true;
+            _accept_conjunction(element);
+            _stubborn._track_changes = false;
+        }
+
+        void _accept_conjunction(const PQL::CompareConjunction *element) {
+            assert(_stubborn._track_changes);
+            assert(_stubborn._pending_stubborn.empty());
+            std::vector<std::pair<uint32_t, bool>> cands; // Transition id, Preset
+            if (element->isNegated() != negated) {
+                // cond is negated thus actually disjunction, simply proceed as normal
+                InterestingLTLTransitionVisitor::_accept(element);
+                return;
+            }
+
+            for (auto &cons : *element) {
+                uint32_t tokens = _stubborn.getParent()[cons._place];
+
+                if (cons._lower == cons._upper) {
+                    //Compare is equality
+                    if (cons._place == tokens) {
+                        continue;
+                    } else if (tokens < cons._place) {
+                        // Valid candidate, explore preset
+                        cands.emplace_back(cons._place, true);
+                    } else {
+                        // Valid candidate, explore postset
+                        cands.emplace_back(cons._place, false);
+                    }
+                } else {
+                    if (tokens < cons._lower) {
+                        // explore preset
+                        cands.emplace_back(cons._place, true);
+                    }
+
+                    if (tokens > cons._upper) {
+                        // explore postset
+                        cands.emplace_back(cons._place, false);
+                    }
+                }
+
+                // explore cand if available
+                // if cand seen previously, return do not add additional (good case)
+                // else add cand to candidate list
+                auto &[cand, pre] = cands.back();
+                if (!cands.empty() && cand == cons._place) {
+                    assert(_stubborn._pending_stubborn.empty());
+                    // this constraint was a candidate previously, thus we are happy
+                    if ((pre && _stubborn.seenPre(cand)) || (!pre && _stubborn.seenPost(cand)))
+                        return;
+                }
+            }
+
+            // Run through candidate list and find first candidate not violating s-inv and add it to stub, then return.
+            for (auto &[cand, pre] : cands) {
+                if (pre) {
+                    //explore pre
+                    _stubborn.presetOf(cand, false);
+                } else {
+                    //explore post
+                    _stubborn.postsetOf(cand, false);
+                }
+
+                if (_stubborn._bad) {
+#ifndef NDEBUG
+                    std::cerr << "Bad pre/post and reset" << std::endl;
+#endif
+                    _stubborn._reset_pending();
+                    continue;
+                }
+
+                if (_stubborn._closure()) {
+                    // success, return this stubborn set
+                    _stubborn._apply_pending();
+                    return;
+                } else {
+#ifndef NDEBUG
+                    std::cerr << "Bad closure and reset" << std::endl;
+#endif
+                    _stubborn._reset_pending();
+                }
+            }
+
+            // If no candidate not violating s-inv set St=T.
+            _stubborn.set_all_stubborn();
+        }
+
+        const PetriEngine::PetriNet &_net;
+        AutomatonStubbornSet &_stubborn;
+
+    };
+
+    bool AutomatonStubbornSet::prepare(const LTL::Structures::ProductState *state)
+    {
         reset();
         _parent = state;
         memset(_places_seen.get(), 0, sizeof(uint8_t) * _net.numberOfPlaces());
@@ -34,39 +167,21 @@ namespace LTL {
             return false;
         if (_ordering.size() == 1) {
             _stubborn[_ordering.front()] = true;
+#ifndef NDEBUG
+            std::cerr << "Lone successor " << _net.transitionNames()[_ordering.front()] << std::endl;
+#endif
             return true;
         }
 
-        _nenabled = _ordering.size();
 
         GuardInfo buchi_state = _state_guards[state->getBuchiState()];
 
-        //Interesting on each progressing formula should give NLG
         PQL::EvaluationContext evaluationContext{_parent->marking(), &_net};
-        for (auto &q : buchi_state.progressing) {
-            EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
-            q.condition->visit(evalAndSetVisitor);
-
-            InterestingLTLTransitionVisitor interesting{*this, false};
-            q.condition->visit(interesting);
-        }
-        //Closure should ensure COM
-        closure();
-
-        // Ensure we have a key transition in accepting buchi states.
-        if (!_has_enabled_stubborn && buchi_state.is_accepting) {
-            for (uint32_t i = 0; i < _net.numberOfTransitions(); ++i) {
-                if (!_stubborn[i] && _enabled[i]) {
-                    addToStub(i);
-                    closure();
-                    break;
-                }
-            }
-        }
 
         // Check condition 3
         if (!_aut.guard_valid(evaluationContext, buchi_state.retarding.decision_diagram)) {
-            memset(_stubborn.get(), true,  sizeof(bool) * _net.numberOfTransitions());
+            set_all_stubborn();
+            __print_debug();
             return true;
         }
 
@@ -75,15 +190,75 @@ namespace LTL {
         _retarding_stubborn_set.prepare(state);
 
 
-        //Check that S-INV is satisfied
-        if (has_shared_mark(_stubborn.get(), _retarding_stubborn_set.stubborn(), _net.numberOfTransitions())){
-            memset(_stubborn.get(), true,  sizeof(bool) * _net.numberOfTransitions());
-            return true;
+        _nenabled = _ordering.size();
+
+        //Interesting on each progressing formula should give NLG
+        for (auto &q : buchi_state.progressing) {
+            // TODO call smarter closure
+            if (_aut.guard_valid(evaluationContext, q.decision_diagram)) {
+                set_all_stubborn();
+                __print_debug();
+                return true;
+            }
         }
+
+        for (auto &q : buchi_state.progressing) {
+            EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
+            q.condition->visit(evalAndSetVisitor);
+
+            NondeterministicConjunctionVisitor interesting{*this};
+            q.condition->visit(interesting);
+            if (_done) return true;
+            else {
+                assert(!_track_changes);
+                assert(_pending_stubborn.empty());
+                _closure();
+                if (_bad) {
+                    set_all_stubborn();
+                    return true;
+                }
+            }
+        }
+
+        //Closure should ensure COM
+        assert(_unprocessed.empty());
+        assert(_pending_stubborn.empty());
+        assert(!_bad);
+        assert(!_done);
+
+
+
+        /*//Check that S-INV is satisfied
+        if (has_shared_mark(_stubborn.get(), _retarding_stubborn_set.stubborn(), _net.numberOfTransitions())) {
+            memset(_stubborn.get(), true, sizeof(bool) * _net.numberOfTransitions());
+            //return true;
+        }*/
+
+        // Ensure we have a key transition in accepting buchi states.
+        if (!_has_enabled_stubborn && buchi_state.is_accepting) {
+            for (uint32_t i = 0; i < _net.numberOfTransitions(); ++i) {
+                if (!_stubborn[i] && _enabled[i]) {
+                    addToStub(i);
+                    _closure();
+                    if (_bad) {
+                        set_all_stubborn();
+                        return true;
+                    }
+                    break;
+                }
+            }
+        }
+
+        assert(!has_shared_mark(_stubborn.get(), _retarding_stubborn_set.stubborn(), _net.numberOfTransitions()));
+
+        __print_debug();
+
         return true;
     }
 
-    uint32_t AutomatonStubbornSet::next() {
+
+    uint32_t AutomatonStubbornSet::next()
+    {
         while (!_ordering.empty()) {
             _current = _ordering.front();
             _ordering.pop_front();
@@ -95,15 +270,78 @@ namespace LTL {
         return std::numeric_limits<uint32_t>::max();
     }
 
-    void AutomatonStubbornSet::reset() {
+    void AutomatonStubbornSet::__print_debug()
+    {
+#ifndef NDEBUG
+        std::cout << "Enabled: ";
+        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
+            if (_enabled[i]) {
+                std::cout << _net.transitionNames()[i] << ' ';
+            }
+        }
+        std::cout << "\nStubborn: ";
+        for (int i = 0; i < _net.numberOfTransitions(); ++i) {
+            if (_stubborn[i]) {
+                std::cout << _net.transitionNames()[i] << ' ';
+            }
+        }
+        std::cout << std::endl;
+#endif
+    }
+
+    void AutomatonStubbornSet::reset()
+    {
         StubbornSet::reset();
         _retarding_stubborn_set.reset();
         _has_enabled_stubborn = false;
+        _bad = false;
+        _done = false;
+        _track_changes = false;
+        _pending_stubborn.clear();
     }
 
-    void AutomatonStubbornSet::addToStub(uint32_t t) {
-        if (_enabled[t])
-            _has_enabled_stubborn = true;
-        StubbornSet::addToStub(t);
+    void AutomatonStubbornSet::addToStub(uint32_t t)
+    {
+        // TODO refine bad transitions
+        if (_retarding_stubborn_set.stubborn()[t]) {
+            _bad = true;
+            return;
+        }
+        if (_track_changes) {
+            if (_enabled[t])
+                _has_enabled_stubborn = true;
+            // TODO is check necessary?
+            if (_pending_stubborn.insert(t).second) {
+                _unprocessed.push_back(t);
+            }
+        } else {
+            StubbornSet::addToStub(t);
+        }
+    }
+
+    void AutomatonStubbornSet::_reset_pending()
+    {
+        _bad = false;
+        _pending_stubborn.clear();
+    }
+
+    void AutomatonStubbornSet::_apply_pending()
+    {
+        assert(!_bad);
+        for (auto t : _pending_stubborn) {
+            _stubborn[t] = true;
+        }
+        _pending_stubborn.clear();
+    }
+
+    void AutomatonStubbornSet::set_all_stubborn()
+    {
+        memset(_stubborn.get(), true, sizeof(bool) * _net.numberOfTransitions());
+        _done = true;
+    }
+
+    bool AutomatonStubbornSet::_closure() {
+        StubbornSet::closure([&](){ return !_bad; });
+        return !_bad;
     }
 }
