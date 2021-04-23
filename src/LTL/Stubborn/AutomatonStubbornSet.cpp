@@ -61,17 +61,19 @@ namespace LTL {
 
         void _accept(const PQL::CompareConjunction *element) override
         {
-            if (_stubborn._track_changes && element->isNegated() != negated) {
+            if (_stubborn._track_changes || element->isNegated() != negated) {
                 InterestingLTLTransitionVisitor::accept(element);
                 return;
             }
             _stubborn._track_changes = true;
+            memcpy(_stubborn._place_checkpoint.get(), _stubborn._places_seen.get(), _net.numberOfPlaces());
             _accept_conjunction(element);
             _stubborn._track_changes = false;
             assert(_stubborn._pending_stubborn.empty());
         }
 
-        void _accept_conjunction(const PQL::CompareConjunction *element) {
+        void _accept_conjunction(const PQL::CompareConjunction *element)
+        {
             assert(_stubborn._track_changes);
             assert(_stubborn._pending_stubborn.empty());
             assert(element->isNegated() == negated);
@@ -108,6 +110,11 @@ namespace LTL {
                 auto &[cand, pre] = cands.back();
                 if (!cands.empty() && cand == cons._place) {
                     assert(_stubborn._pending_stubborn.empty());
+                    if ((pre && _stubborn._places_seen[cand] & PresetBad) ||
+                        (!pre && _stubborn._places_seen[cand] & PostsetBad)) {
+                        cands.pop_back();
+                        continue;
+                    }
                     // this constraint was a candidate previously, thus we are happy
                     if ((pre && _stubborn.seenPre(cand)) || (!pre && _stubborn.seenPost(cand)))
                         return;
@@ -119,13 +126,16 @@ namespace LTL {
                 auto &[cand, pre] = cands[i - 1];
                 if (pre) {
                     //explore pre
+                    assert(!(_stubborn._places_seen[cand] & PresetBad));
                     _stubborn.presetOf(cand, false);
                 } else {
                     //explore post
+                    assert(!(_stubborn._places_seen[cand] & PostsetBad));
                     _stubborn.postsetOf(cand, false);
                 }
 
                 if (_stubborn._bad) {
+                    _stubborn._places_seen[cand] |= pre ? PresetBad : PostsetBad;
 #ifndef NDEBUG
                     std::cerr << "Bad pre/post and reset" << std::endl;
 #endif
@@ -141,6 +151,7 @@ namespace LTL {
 #ifndef NDEBUG
                     std::cerr << "Bad closure and reset" << std::endl;
 #endif
+                    _stubborn._places_seen[cand] |= pre ? PresetBad : PostsetBad;
                     _stubborn._reset_pending();
                 }
             }
@@ -152,6 +163,8 @@ namespace LTL {
         const PetriEngine::PetriNet &_net;
         AutomatonStubbornSet &_stubborn;
 
+        static constexpr auto PresetBad = 4;
+        static constexpr auto PostsetBad = 8;
     };
 
     bool AutomatonStubbornSet::prepare(const LTL::Structures::ProductState *state)
@@ -289,6 +302,7 @@ namespace LTL {
     void AutomatonStubbornSet::reset()
     {
         StubbornSet::reset();
+        memset(_place_checkpoint.get(), 0, _net.numberOfPlaces());
         _retarding_stubborn_set.reset();
         _has_enabled_stubborn = false;
         _bad = false;
@@ -320,6 +334,8 @@ namespace LTL {
     {
         _bad = false;
         _pending_stubborn.clear();
+        _unprocessed.clear();
+        memcpy(_places_seen.get(), _place_checkpoint.get(), _net.numberOfPlaces());
     }
 
     void AutomatonStubbornSet::_apply_pending()
@@ -329,6 +345,7 @@ namespace LTL {
             _stubborn[t] = true;
         }
         _pending_stubborn.clear();
+        assert(_unprocessed.empty());
     }
 
     void AutomatonStubbornSet::set_all_stubborn()
@@ -337,8 +354,9 @@ namespace LTL {
         _done = true;
     }
 
-    bool AutomatonStubbornSet::_closure() {
-        StubbornSet::closure([&](){ return !_bad; });
+    bool AutomatonStubbornSet::_closure()
+    {
+        StubbornSet::closure([&]() { return !_bad; });
         return !_bad;
     }
 }

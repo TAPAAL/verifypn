@@ -31,7 +31,8 @@ namespace LTL {
         explicit AutomatonStubbornSet(const PetriEngine::PetriNet &net, const Structures::BuchiAutomaton &aut)
         : PetriEngine::StubbornSet(net), _retarding_stubborn_set(net,false),
             _state_guards(std::move(GuardInfo::from_automaton(aut))),
-            _aut(aut)
+            _aut(aut),
+            _place_checkpoint(new bool[net.numberOfPlaces()])
         {
             _retarding_stubborn_set.setInterestingVisitor<PetriEngine::AutomatonInterestingTransitionVisitor>();
         }
@@ -60,6 +61,7 @@ namespace LTL {
 
     private:
 
+        std::unique_ptr<bool[]> _place_checkpoint;
         PetriEngine::ReachabilityStubbornSet _retarding_stubborn_set;
         const std::vector<GuardInfo> _state_guards;
         const Structures::BuchiAutomaton &_aut;
