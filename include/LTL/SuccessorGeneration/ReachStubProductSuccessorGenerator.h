@@ -61,31 +61,39 @@ namespace LTL {
                 _reach_states.insert(std::make_pair(state, BuchiEdge{progressing, toPQL(spot::bdd_to_formula(progressing, buchi.dict), aps)}));
             }
 
-            for (auto it = std::begin(_reach_states); it != std::end(_reach_states);) {
-                auto &state = it->first;
-                bool has_erased = false;
-                for (auto &e: buchi._buchi->out(state)) {
-                    if (e.dst != state) {
-                        auto suc = e.dst;
-                        // test self-loop of successor for universal satisfaction
-                        for (auto &suc_edge: buchi._buchi->out(suc)) {
-                            if (suc_edge.dst == suc && suc_edge.cond != bddtrue) {
-                                it = _reach_states.erase(it);
-                                has_erased = true;
-                                break;
+            size_t prev_sz;
+            do {
+                prev_sz = _reach_states.size();
+                for (auto it = std::begin(_reach_states); it != std::end(_reach_states);) {
+                    auto &state = it->first;
+                    bool has_erased = false;
+                    for (auto &e: buchi._buchi->out(state)) {
+                        if (e.dst != state) {
+                            auto suc = e.dst;
+                            if (_reach_states.find(suc) != _reach_states.end()) {
+                                continue; // successor is still potentially reachability state
+                            }
+                            // test self-loop of successor for universal satisfaction
+                            for (auto &suc_edge: buchi._buchi->out(suc)) {
+                                if (suc_edge.dst == suc && suc_edge.cond != bddtrue) {
+                                    it = _reach_states.erase(it);
+                                    has_erased = true;
+                                    break;
+                                }
                             }
                         }
-                    }
-                    if (has_erased) break;
+                        if (has_erased) break;
 /*                    if (e.dst == state && e.cond != bddtrue) {
                         it = _reach_states.erase(it);
                         has_erased = true;
                         break;
                     }*/
-                }
-                if (!has_erased) ++it;
+                    }
+                    if (!has_erased) ++it;
 
-            }
+                }
+            } while (prev_sz != _reach_states.size());
+
             std::cout << "Size of _reach_states: " << _reach_states.size() << std::endl;
 #ifdef REACH_STUB_DEBUG
             if (_reach_states.empty()) {
