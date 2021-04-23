@@ -214,7 +214,7 @@ namespace PetriEngine {
         _fixpointDone = true;
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
 
-        printPlaceTable();
+        //printPlaceTable();
         _placeColorFixpoints.clear();
     }
 

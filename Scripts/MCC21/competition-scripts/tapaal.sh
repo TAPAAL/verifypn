@@ -446,7 +446,7 @@ case "$BK_EXAMINATION" in
         verifyparallel 
         ;;
 
-    One-Safe)
+    OneSafe)
         echo        
         echo "**********************************************"
         echo "*  TAPAAL checking for One-Safe              *"

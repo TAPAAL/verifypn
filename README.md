@@ -17,7 +17,7 @@ bison >= 3.0.5
 gmp-static (required only for model checking competition)
 
 sudo apt update
-sudo apt install build-essential cmake flex bison brz
+sudo apt install build-essential cmake flex bison git brz
 
 ```
 
