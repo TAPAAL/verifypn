@@ -61,33 +61,29 @@ namespace LTL {
 
         void _accept(const PQL::CompareConjunction *element) override
         {
-            if (_stubborn._track_changes) {
+            if (_stubborn._track_changes && element->isNegated() != negated) {
                 InterestingLTLTransitionVisitor::accept(element);
                 return;
             }
             _stubborn._track_changes = true;
             _accept_conjunction(element);
             _stubborn._track_changes = false;
+            assert(_stubborn._pending_stubborn.empty());
         }
 
         void _accept_conjunction(const PQL::CompareConjunction *element) {
             assert(_stubborn._track_changes);
             assert(_stubborn._pending_stubborn.empty());
+            assert(element->isNegated() == negated);
             std::vector<std::pair<uint32_t, bool>> cands; // Transition id, Preset
-            if (element->isNegated() != negated) {
-                // cond is negated thus actually disjunction, simply proceed as normal
-                InterestingLTLTransitionVisitor::_accept(element);
-                return;
-            }
-
             for (auto &cons : *element) {
                 uint32_t tokens = _stubborn.getParent()[cons._place];
 
                 if (cons._lower == cons._upper) {
                     //Compare is equality
-                    if (cons._place == tokens) {
+                    if (cons._lower == tokens) {
                         continue;
-                    } else if (tokens < cons._place) {
+                    } else if (tokens < cons._lower) {
                         // Valid candidate, explore preset
                         cands.emplace_back(cons._place, true);
                     } else {
@@ -95,12 +91,12 @@ namespace LTL {
                         cands.emplace_back(cons._place, false);
                     }
                 } else {
-                    if (tokens < cons._lower) {
+                    if (tokens < cons._lower && cons._lower != 0) {
                         // explore preset
                         cands.emplace_back(cons._place, true);
                     }
 
-                    if (tokens > cons._upper) {
+                    if (tokens > cons._upper && cons._upper != std::numeric_limits<uint32_t>::max()) {
                         // explore postset
                         cands.emplace_back(cons._place, false);
                     }
@@ -119,7 +115,8 @@ namespace LTL {
             }
 
             // Run through candidate list and find first candidate not violating s-inv and add it to stub, then return.
-            for (auto &[cand, pre] : cands) {
+            for (size_t i = cands.size(); i > 0; --i) {
+                auto &[cand, pre] = cands[i - 1];
                 if (pre) {
                     //explore pre
                     _stubborn.presetOf(cand, false);
