@@ -339,7 +339,6 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::processOutputArcs(Colored::Transition& transition) {
         bool transitionHasVarOutArcs = false;
-
         for (auto& arc : transition.output_arcs) {
             Colored::ColorFixpoint& placeFixpoint = _placeColorFixpoints[arc.place];
             //used to check if colors are added to the place. The total distance between upper and
@@ -356,7 +355,7 @@ namespace PetriEngine {
 
             //Apply partitioning to unbound outgoing variables such that 
             // bindings are only created for colors used in the rest of the net
-            if(!_partition[arc.place].diagonal){
+            if(_partitionComputed && !_partition[arc.place].diagonal){
                 for(auto outVar : variables){
                     for(auto& varMap : transition.variableMaps){
                         if(varMap.count(outVar) == 0){
