@@ -191,6 +191,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
         } else if (strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--state-space-exploration") == 0) {
             options.statespaceexploration = true;
+            options.computePartition = false;
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--no-statistics") == 0) {
             options.printstatistics = false;
         } else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--trace") == 0) {
