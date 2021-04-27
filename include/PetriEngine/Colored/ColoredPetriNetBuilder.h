@@ -64,7 +64,8 @@ namespace PetriEngine {
                 int) override;
         void addInputArc(const std::string& place,
                 const std::string& transition,
-                const Colored::ArcExpression_ptr& expr) override;
+                const Colored::ArcExpression_ptr& expr,
+                bool inhibitor, int weight) override;
         void addOutputArc(const std::string& transition,
                 const std::string& place,
                 int weight = 1) override;
@@ -162,7 +163,9 @@ namespace PetriEngine {
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
         std::vector<Colored::Arc> _arcs;
+        std::vector<Colored::Arc> _inhibitorArcs;
         std::vector<Colored::ColorFixpoint> _placeColorFixpoints;
+        std::unordered_map<uint32_t, std::string> _sumPlacesNames;
         ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
         bool _unfolded = false;
@@ -191,7 +194,7 @@ namespace PetriEngine {
         void addArc(const std::string& place,
                 const std::string& transition,
                 const Colored::ArcExpression_ptr& expr,
-                bool input);
+                bool input, bool inhibitor, int weight);
 
 
         void getArcIntervals(Colored::Transition& transition, bool &transitionActivated, uint32_t max_intervals, uint32_t transitionId);      
@@ -202,6 +205,7 @@ namespace PetriEngine {
         void unfoldTransition(Colored::Transition& transition);
         void handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> unfoldedPlaceMap);
         void createPartionVarmaps();
+        void unfoldInhibitorArc(std::string &oldname, std::string &newname);
 
         void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name);
     };

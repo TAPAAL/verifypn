@@ -39,6 +39,7 @@ class PNMLParser {
         std::string source,
         target;
         int weight;
+        bool inhib;
         PetriEngine::Colored::ArcExpression_ptr expr;
     };
     typedef std::vector<Arc> ArcList;
@@ -104,7 +105,6 @@ private:
     PetriEngine::AbstractPetriNetBuilder* builder;
     NodeNameMap id2name;
     ArcList arcs;
-    ArcList inhibarcs;
     TransitionList transitions;
     ColorTypeMap colorTypes;
     VariableMap variables;

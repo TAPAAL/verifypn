@@ -19,12 +19,16 @@
 
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include <chrono>
-
+#include <tuple>
+using std::get;
 namespace PetriEngine {
     ColoredPetriNetBuilder::ColoredPetriNetBuilder() {
     }
 
-    ColoredPetriNetBuilder::ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig) {
+    ColoredPetriNetBuilder::ColoredPetriNetBuilder(const ColoredPetriNetBuilder& orig) 
+    : _placenames(orig._placenames), _transitionnames(orig._transitionnames),
+       _transitions(orig._transitions), _places(orig._places)
+    {
     }
 
     ColoredPetriNetBuilder::~ColoredPetriNetBuilder() {
@@ -89,8 +93,8 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr) {
-        addArc(place, transition, expr, true);
+    void ColoredPetriNetBuilder::addInputArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool inhibitor, int weight) {
+        addArc(place, transition, expr, true, inhibitor, weight);
     }
 
     void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, int weight) {
@@ -100,10 +104,10 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::addOutputArc(const std::string& transition, const std::string& place, const Colored::ArcExpression_ptr& expr) {
-        addArc(place, transition, expr, false);
+        addArc(place, transition, expr, false, false, 1);
     }
 
-    void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input) {
+    void ColoredPetriNetBuilder::addArc(const std::string& place, const std::string& transition, const Colored::ArcExpression_ptr& expr, bool input, bool inhibitor, int weight) {
         if(_transitionnames.count(transition) == 0)
         {
             std::cout << "Transition '" << transition << "' not found. Adding it." << std::endl;
@@ -125,10 +129,18 @@ namespace PetriEngine {
         Colored::Arc arc;
         arc.place = p;
         arc.transition = t;
-        assert(expr != nullptr);
+        _places[p].inhibitor |= inhibitor;
+        if(!inhibitor)
+            assert(expr != nullptr);
         arc.expr = std::move(expr);
         arc.input = input;
-        input? _transitions[t].input_arcs.push_back(std::move(arc)): _transitions[t].output_arcs.push_back(std::move(arc));
+        arc.weight = weight;
+        if(inhibitor){
+            _inhibitorArcs.push_back(std::move(arc));
+        } else {
+            input? _transitions[t].input_arcs.push_back(std::move(arc)): _transitions[t].output_arcs.push_back(std::move(arc));
+        }
+        
     }
 
     void ColoredPetriNetBuilder::addColorType(const std::string& id, Colored::ColorType* type) {
@@ -425,7 +437,7 @@ namespace PetriEngine {
             std::string name = place.name + "_orphan";
             _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
             _ptplacenames[place.name][0] = std::move(name);
-        } else {
+        } /*else {
             uint32_t usedTokens = 0;
             
             for(std::pair<const uint32_t, std::string> unfoldedPlace : _ptplacenames[place.name]){
@@ -439,7 +451,7 @@ namespace PetriEngine {
                 _ptBuilder.addPlace(name, place.marking.size() - usedTokens, 0.0, 0.0);
                 _ptplacenames[place.name][UINT32_MAX] = std::move(name);
             }
-        }
+        }*/
         
         //++_nptplaces;        
     }
@@ -495,20 +507,34 @@ namespace PetriEngine {
                 for (auto& arc : transition.output_arcs) {
                     unfoldArc(arc, b, name);
                 }
+                unfoldInhibitorArc(transition.name, name);
+
+                
             }
         }        
     }
 
+    void ColoredPetriNetBuilder::unfoldInhibitorArc(std::string &oldname, std::string &newname) {
+        for (uint32_t i = 0; i < _inhibitorArcs.size(); ++i) {
+            if (_transitions[_inhibitorArcs[i].transition].name.compare(oldname) == 0) {
+                Colored::Arc inhibArc = _inhibitorArcs[i];
+                std::string place = _sumPlacesNames[inhibArc.place];
+                _ptBuilder.addInputArc(place, newname, true, inhibArc.weight);
+            }
+        }
+    }
+
     void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName) {
         Colored::ExpressionContext context {binding, _colors, _partition[arc.place]};
-        auto ms = arc.expr->eval(context);       
+        auto ms = arc.expr->eval(context);   
+        const PetriEngine::Colored::Place& place = _places[arc.place];    
         
         for (const auto& color : ms) {
             if (color.second == 0) {
                 continue;
             }
             
-            const PetriEngine::Colored::Place& place = _places[arc.place];
+            
             uint32_t id;
             if(!_partitionComputed || _partition[arc.place].diagonal){
                 id = color.first->getId();
@@ -526,7 +552,16 @@ namespace PetriEngine {
                 _ptBuilder.addOutputArc(tName, pName, color.second);
             }
             ++_nptarcs;
-        }        
+        }
+
+        if(place.inhibitor){
+            std::string sumPlaceName = place.name + "Sum";
+            _ptBuilder.addPlace(sumPlaceName, place.marking.size(),0.0,0.0);
+            //_ptplacenames[place.name][color.getId()] = std::move(placeName);
+            _sumPlacesNames[arc.place] = std::move(sumPlaceName);
+            ++_nptplaces;
+        }
+                
     }
 
     //----------------------- Strip Colors -----------------------//
