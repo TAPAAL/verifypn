@@ -138,6 +138,21 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::sort() {
     }
 
+    //----------------------- Partitioning -----------------------//
+
+    void ColoredPetriNetBuilder::computePartition(){
+        auto partitionStart = std::chrono::high_resolution_clock::now();
+        Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
+        
+        pBuilder.partitionNet();
+        //pBuilder.printPartion();
+        _partition = pBuilder.getPartition();
+        pBuilder.assignColorMap(_partition);
+        _partitionComputed = true;
+        auto partitionEnd = std::chrono::high_resolution_clock::now();
+        _partitionTimer = (std::chrono::duration_cast<std::chrono::microseconds>(partitionEnd - partitionStart).count())*0.000001;
+    }
+
     //----------------------- Color fixpoint -----------------------//
 
     void ColoredPetriNetBuilder::printPlaceTable() {
@@ -157,17 +172,7 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::computePartition(){
-        auto partitionStart = std::chrono::high_resolution_clock::now();
-        Colored::PartitionBuilder pBuilder = Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
-        pBuilder.partitionNet();
-        //pBuilder.printPartion();
-        _partition = pBuilder.getPartition();
-        pBuilder.assignColorMap(_partition);
-        _partitionComputed = true;
-        auto partitionEnd = std::chrono::high_resolution_clock::now();
-        _partitionTimer = (std::chrono::duration_cast<std::chrono::microseconds>(partitionEnd - partitionStart).count())*0.000001;
-    }
+
       
     void ColoredPetriNetBuilder::computePlaceColorFixpoint(uint32_t maxIntervals, uint32_t maxIntervalsReduced, int32_t timeout) {
         //Start timers for timing color fixpoint creation and max interval reduction steps
@@ -334,7 +339,6 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::processOutputArcs(Colored::Transition& transition) {
         bool transitionHasVarOutArcs = false;
-
         for (auto& arc : transition.output_arcs) {
             Colored::ColorFixpoint& placeFixpoint = _placeColorFixpoints[arc.place];
             //used to check if colors are added to the place. The total distance between upper and
@@ -351,7 +355,7 @@ namespace PetriEngine {
 
             //Apply partitioning to unbound outgoing variables such that 
             // bindings are only created for colors used in the rest of the net
-            if(!_partition[arc.place].diagonal){
+            if(_partitionComputed && !_partition[arc.place].diagonal){
                 for(auto outVar : variables){
                     for(auto& varMap : transition.variableMaps){
                         if(varMap.count(outVar) == 0){

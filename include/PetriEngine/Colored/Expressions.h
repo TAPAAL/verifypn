@@ -62,6 +62,7 @@ namespace PetriEngine {
             ProductType* findProductColorType(const std::vector<const ColorType*>& types) const {
                 for (auto& elem : colorTypes) {
                     auto* pt = dynamic_cast<ProductType*>(elem.second);
+
                     if (pt && pt->containsTypes(types)) {
                         return pt;
                     }
@@ -490,7 +491,7 @@ namespace PetriEngine {
                     types.push_back(colors.back()->getColorType());
                 }
                 ProductType* pt = context.findProductColorType(types);
-
+                assert(pt != nullptr);
                 const Color* col = pt->getColor(colors);
                 assert(col != nullptr);
                 return col;
@@ -548,17 +549,24 @@ namespace PetriEngine {
             }
 
             ColorType* getColorType(std::unordered_map<std::string, Colored::ColorType*>& colorTypes) const override{
+                
                 std::vector<const ColorType*> types;
+                if(_colorType != nullptr){
+                    return _colorType;
+                }
+
                 for (auto color : _colors) {
                     types.push_back(color->getColorType(colorTypes));
                 }
-                for (auto& elem : colorTypes) {
+                
+                for (auto elem : colorTypes) {
                     auto* pt = dynamic_cast<ProductType*>(elem.second);
                     if (pt && pt->containsTypes(types)) {
                         return pt;
                     }
                 }
                 std::cout << "COULD NOT FIND PRODUCT TYPE" << std::endl;
+                assert(false);
                 return nullptr;
             }
 
@@ -1160,7 +1168,6 @@ namespace PetriEngine {
                 for (auto elem : _color) {
                     //TODO: can there be more than one element in a number of expression?
                     elem->getVariables(variables, varPositions, varModifierMap, index);
-                    //(*index)++;
                 }
             }
 
@@ -1168,13 +1175,13 @@ namespace PetriEngine {
                 if (_all != nullptr) {
                     return _all->getArcIntervals(arcIntervals, cfp, index, modifier);
                 }
-                uint32_t i = 0;
+                //uint32_t i = 0;
                 for (auto elem : _color) {
-                    (*index) += i;
+                    //(*index) += i;
                     if(!elem->getArcIntervals(arcIntervals, cfp, index, modifier)){
                         return false;
                     }
-                    i++;
+                    //i++;
                 }
                 return true;
             }
@@ -1210,7 +1217,6 @@ namespace PetriEngine {
                     for(auto pair : elemMap){
                         constantMap[pair.first].push_back(pair.second);
                     }
-                    index++;//not sure if index should be increased here, but no number expression have multiple elements
                 }
             }
 

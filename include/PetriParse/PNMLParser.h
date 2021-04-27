@@ -83,6 +83,7 @@ private:
     void parseArc(rapidxml::xml_node<>* element, bool inhibitor = false);
     void parseTransition(rapidxml::xml_node<>* element);
     void parseDeclarations(rapidxml::xml_node<>* element);
+    void parsePartitions(rapidxml::xml_node<>* element);
     void parseNamedSort(rapidxml::xml_node<>* element);
     PetriEngine::Colored::ArcExpression_ptr parseArcExpression(rapidxml::xml_node<>* element);
     PetriEngine::Colored::GuardExpression_ptr parseGuardExpression(rapidxml::xml_node<>* element, bool notFlag);
@@ -99,6 +100,7 @@ private:
     void parseQueries(rapidxml::xml_node<>* element);
     const PetriEngine::Colored::Color* findColor(const char* name) const;
     const PetriEngine::Colored::Color* findColorForIntRange(const char* value, uint32_t start, uint32_t end) const;
+    std::vector<PetriEngine::Colored::ColorExpression_ptr> findPartitionColors(rapidxml::xml_node<>* element) const;
     std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> cartesianProduct(std::vector<PetriEngine::Colored::ColorExpression_ptr> rightVector, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftVector);
     std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> cartesianProduct(std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> rightVector, std::vector<PetriEngine::Colored::ColorExpression_ptr> leftVector);
     PetriEngine::AbstractPetriNetBuilder* builder;
@@ -110,6 +112,8 @@ private:
     VariableMap variables;
     bool isColored;
     std::vector<Query> queries;
+    std::vector<PetriEngine::Colored::ColorTypePartition> partitions;
+    std::vector<std::pair<char *, PetriEngine::Colored::ProductType*>> missingCTs;
 };
 
 #endif // PNMLPARSER_H

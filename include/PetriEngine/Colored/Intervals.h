@@ -360,15 +360,9 @@ namespace PetriEngine {
                     enum FoundPlace {undecided, greater, lower};
                     FoundPlace foundPlace = undecided;
 
-                    //uint32_t allowedDist = 1;
-
                     for(uint32_t k = 0; k < interval.size(); k++){
                         if(interval[k]._lower > localInterval[k]._upper  || localInterval[k]._lower > interval[k]._upper){
-                            //if(interval[k]._lower > localInterval[k]._upper + allowedDist  || localInterval[k]._lower > interval[k]._upper + allowedDist){
-                                extendsInterval = false;
-                            // } else {
-                            //     allowedDist = 0;
-                            // }
+                            extendsInterval = false;
                         }
                         if(interval[k]._lower < localInterval[k]._lower){
                             if(foundPlace == undecided){
