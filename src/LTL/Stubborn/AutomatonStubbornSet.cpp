@@ -62,7 +62,7 @@ namespace LTL {
         void _accept(const PQL::CompareConjunction *element) override
         {
             if (_stubborn._track_changes || element->isNegated() != negated) {
-                InterestingLTLTransitionVisitor::accept(element);
+                InterestingLTLTransitionVisitor::_accept(element);
                 return;
             }
             _stubborn._track_changes = true;
