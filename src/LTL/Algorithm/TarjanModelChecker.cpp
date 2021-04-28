@@ -19,8 +19,20 @@
 
 namespace LTL {
 
-    template<typename S, bool SaveTrace>
-    bool TarjanModelChecker<S, SaveTrace>::isSatisfied()
+    inline void _dump_state(const LTL::Structures::ProductState &state)
+    {
+        std::cerr << "marking: ";
+        std::cerr << state.marking()[0];
+        for (size_t i = 1; i < state.size(); ++i) {
+            std::cerr << ", " << state.marking()[i];
+        }
+        std::cerr << std::endl;
+    }
+
+//#define TARJAN_RUNTIME_TRACE
+
+    template<template<typename> typename S, typename G, bool SaveTrace>
+    bool TarjanModelChecker<S, G, SaveTrace>::isSatisfied()
     {
         this->is_weak = this->successorGenerator->is_weak() && this->shortcircuitweak;
         std::vector<State> initial_states = this->successorGenerator->makeInitialState();
@@ -37,8 +49,14 @@ namespace LTL {
                 if (!nexttrans(working, parent, dtop)) {
                     ++this->stats.expanded;
                     pop();
+#ifdef TARJAN_RUNTIME_TRACE
+                    std::cout << "<-" << std::endl;
+#endif
                     continue;
                 }
+#ifdef TARJAN_RUNTIME_TRACE
+                std::cout << "-> " << this->net.transitionNames()[this->successorGenerator->fired()] << ", " << working.getBuchiState() << std::endl;
+#endif
                 ++this->stats.explored;
                 const auto[isnew, stateid] = seen.add(working);
 
@@ -84,8 +102,8 @@ namespace LTL {
      * Push a state to the various stacks.
      * @param state
      */
-    template<typename S, bool SaveTrace>
-    void TarjanModelChecker<S, SaveTrace>::push(State &state, size_t stateid) {
+    template<template<typename> typename S, typename G, bool SaveTrace>
+    void TarjanModelChecker<S, G, SaveTrace>::push(State &state, size_t stateid) {
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(stateid);
         cstack.emplace_back(ctop, stateid, chash[h]);
@@ -101,8 +119,8 @@ namespace LTL {
         }
     }
 
-    template<typename S, bool SaveTrace>
-    void TarjanModelChecker<S, SaveTrace>::pop()
+    template<template<typename> typename S, typename G, bool SaveTrace>
+    void TarjanModelChecker<S, G, SaveTrace>::pop()
     {
         const auto p = dstack.top().pos;
         dstack.pop();
@@ -125,8 +143,8 @@ namespace LTL {
         }
     }
 
-    template<typename S, bool SaveTrace>
-    void TarjanModelChecker<S, SaveTrace>::popCStack()
+    template<template<typename> typename S, typename G, bool SaveTrace>
+    void TarjanModelChecker<S, G, SaveTrace>::popCStack()
     {
         auto h = hash(cstack.back().stateid);
         store.insert(cstack.back().stateid);
@@ -134,8 +152,8 @@ namespace LTL {
         cstack.pop_back();
     }
 
-    template<typename S, bool SaveTrace>
-    void TarjanModelChecker<S, SaveTrace>::update(idx_t to)
+    template<template<typename> typename S, typename G, bool SaveTrace>
+    void TarjanModelChecker<S, G, SaveTrace>::update(idx_t to)
     {
         const auto from = dstack.top().pos;
         if (cstack[to].lowlink <= cstack[from].lowlink) {
@@ -154,8 +172,8 @@ namespace LTL {
         }
     }
 
-    template<typename S, bool SaveTrace>
-    bool TarjanModelChecker<S, SaveTrace>::nexttrans(State &state, State &parent, TarjanModelChecker::DEntry &delem)
+    template<template<typename> typename S, typename G, bool SaveTrace>
+    bool TarjanModelChecker<S, G, SaveTrace>::nexttrans(State &state, State &parent, TarjanModelChecker::DEntry &delem)
     {
         seen.decode(parent, cstack[delem.pos].stateid);
         this->successorGenerator->prepare(&parent, delem.sucinfo);
@@ -167,8 +185,8 @@ namespace LTL {
         return res;
     }
 
-    template<typename S, bool SaveTrace>
-    void TarjanModelChecker<S, SaveTrace>::printTrace(std::stack<DEntry> &&dstack, std::ostream &os)
+    template<template<typename> typename S, typename G, bool SaveTrace>
+    void TarjanModelChecker<S, G, SaveTrace>::printTrace(std::stack<DEntry> &&dstack, std::ostream &os)
     {
         if constexpr (!SaveTrace) {
             return;
@@ -211,14 +229,20 @@ namespace LTL {
     }
 
     template
-    class TarjanModelChecker<LTL::ResumingSuccessorGenerator, true>;
+    class TarjanModelChecker<ProductSuccessorGenerator, LTL::ResumingSuccessorGenerator, true>;
 
     template
-    class TarjanModelChecker<LTL::ResumingSuccessorGenerator, false>;
+    class TarjanModelChecker<ProductSuccessorGenerator, LTL::ResumingSuccessorGenerator, false>;
 
     template
-    class TarjanModelChecker<LTL::SpoolingSuccessorGenerator, true>;
+    class TarjanModelChecker<ProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true>;
 
     template
-    class TarjanModelChecker<LTL::SpoolingSuccessorGenerator, false>;
+    class TarjanModelChecker<ProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false>;
+
+    template
+    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true>;
+
+    template
+    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false>;
 }

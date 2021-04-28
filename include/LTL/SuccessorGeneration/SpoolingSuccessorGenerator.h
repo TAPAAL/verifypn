@@ -50,14 +50,14 @@ namespace LTL {
             static constexpr auto NoLastState = std::numeric_limits<size_t>::max();
         };
 
-        void setSpooler(std::unique_ptr<SuccessorSpooler> &&spooler)
+        void setSpooler(SuccessorSpooler *const spooler)
         {
-            _spooler.swap(spooler);
+            _spooler = spooler;
         }
 
-        void setHeuristic(std::unique_ptr<Heuristic> &&heuristic)
+        void setHeuristic(Heuristic *const heuristic)
         {
-            _heuristic.swap(heuristic);
+            _heuristic = heuristic;
         }
 
         [[nodiscard]] static sucinfo initial_suc_info()
@@ -127,6 +127,61 @@ namespace LTL {
 
         [[nodiscard]] uint32_t fired() const { return _last; }
 
+        void generate_all(sucinfo &sucinfo)
+        {
+            assert(_spooler != nullptr);
+            assert(sucinfo.successors != nullptr);
+            _spooler->generateAll();
+
+            uint32_t tid;
+            if (!_heuristic) {
+                uint32_t nsuc = 0;
+                // generate list of transitions that generate a successor.
+                while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
+                    assert(tid <= _net.numberOfTransitions());
+                    _transbuf[nsuc++] = tid;
+                    assert(nsuc <= _net.numberOfTransitions());
+                }
+                sucinfo.successors.extend_to(_transbuf.get(), nsuc);
+
+            } else {
+                // list of (transition, weight)
+                std::vector<std::pair<uint32_t, uint32_t>> weighted_tids;
+                while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
+                    assert(tid <= _net.numberOfTransitions());
+                    SuccessorGenerator::_fire(_statebuf, tid);
+                    _statebuf.setBuchiState(sucinfo.buchi_state);
+                    weighted_tids.emplace_back(tid, _heuristic->eval(_statebuf, tid));
+                }
+                // sort by least distance first.
+                std::sort(std::begin(weighted_tids), std::end(weighted_tids),
+                          [](auto &l, auto &r) { return l.second < r.second; });
+                // TODO can be specialized version in SuccessorQueue for efficiency, but this approaches being super bloated.
+                std::transform(std::begin(weighted_tids), std::end(weighted_tids),
+                               _transbuf.get(),
+                               [](auto &p) { return p.first; });
+                sucinfo.successors.extend_to(_transbuf.get(), weighted_tids.size());
+            }
+        }
+
+        std::size_t nenabled()
+        {
+            //TODO
+            assert(false);
+        }
+
+        bool enabled()
+        {
+            //TODO
+            assert(false);
+        }
+
+        void stubborn()
+        {
+            //TODO
+            assert(false);
+        }
+
         void _fire(Structures::ProductState &parent, Structures::ProductState &write, uint32_t tid)
         {
             PetriEngine::SuccessorGenerator::_fire(write, tid);
@@ -135,8 +190,8 @@ namespace LTL {
 
 
     private:
-        std::unique_ptr<SuccessorSpooler> _spooler = nullptr;
-        std::unique_ptr<Heuristic> _heuristic = nullptr;
+        SuccessorSpooler *_spooler = nullptr;
+        Heuristic *_heuristic = nullptr;
 
         uint32_t _last;
         std::unique_ptr<uint32_t[]> _transbuf;   /* buffer for enabled transitions, size is ntransitions. */

@@ -18,16 +18,16 @@
 #include "LTL/Algorithm/NestedDepthFirstSearch.h"
 
 namespace LTL {
-    template<typename W>
-    bool NestedDepthFirstSearch<W>::isSatisfied()
+    template<typename S, typename W>
+    bool NestedDepthFirstSearch<S, W>::isSatisfied()
     {
-        is_weak = successorGenerator->is_weak() && shortcircuitweak;
+        this->is_weak = this->successorGenerator->is_weak() && this->shortcircuitweak;
         dfs();
         return !violation;
     }
 
-    template<typename W>
-    void NestedDepthFirstSearch<W>::dfs()
+    template<typename S, typename W>
+    void NestedDepthFirstSearch<S, W>::dfs()
     {
         std::stack<size_t> call_stack;
         std::stack<StackEntry> todo;
@@ -36,26 +36,26 @@ namespace LTL {
         State curState = factory.newState();
 
         {
-            std::vector<State> initial_states = successorGenerator->makeInitialState();
+            std::vector<State> initial_states = this->successorGenerator->makeInitialState();
             for (auto &state : initial_states) {
                 auto res = states.add(state);
                 assert(res.first);
-                todo.push(StackEntry{res.second, LTL::ResumingSuccessorGenerator::initial_suc_info()});
-                _discovered++;
+                todo.push(StackEntry{res.second, S::initial_suc_info()});
+                this->_discovered++;
             }
         }
 
         while (!todo.empty()) {
             auto &top = todo.top();
             states.decode(curState, top.id);
-            successorGenerator->prepare(&curState, top.sucinfo);
+            this->successorGenerator->prepare(&curState, top.sucinfo);
             if (top.sucinfo.has_prev_state()) {
                 states.decode(working, top.sucinfo.last_state);
             }
-            if (!successorGenerator->next(working, top.sucinfo)) {
+            if (!this->successorGenerator->next(working, top.sucinfo)) {
                 // no successor
                 todo.pop();
-                if (successorGenerator->isAccepting(curState)) {
+                if (this->successorGenerator->isAccepting(curState)) {
                     seed = &curState;
                     ndfs(curState);
                     if (violation) {
@@ -63,7 +63,7 @@ namespace LTL {
                             std::stack<std::pair<size_t, size_t>> transitions;
                             size_t next = top.id;
                             states.decode(working, next);
-                            while (!successorGenerator->isInitialState(working)) {
+                            while (!this->successorGenerator->isInitialState(working)) {
                                 auto[parent, transition] = states.getHistory(next);
                                 transitions.push(std::make_pair(next, transition));
                                 next = parent;
@@ -81,36 +81,36 @@ namespace LTL {
                 if (is_new) {
                     if constexpr (SaveTrace) {
                         states.setParent(top.id);
-                        states.setHistory(stateid, successorGenerator->fired());
+                        states.setHistory(stateid, this->successorGenerator->fired());
                     }
-                    _discovered++;
-                    todo.push(StackEntry{stateid, LTL::ResumingSuccessorGenerator::initial_suc_info()});
+                    this->_discovered++;
+                    todo.push(StackEntry{stateid, S::initial_suc_info()});
                 }
             }
         }
     }
 
-    template<typename W>
-    void NestedDepthFirstSearch<W>::ndfs(State &state)
+    template<typename S, typename W>
+    void NestedDepthFirstSearch<S, W>::ndfs(State &state)
     {
         std::stack<StackEntry> todo;
 
         State working = factory.newState();
         State curState = factory.newState();
 
-        todo.push(StackEntry{states.add(state).second, LTL::ResumingSuccessorGenerator::initial_suc_info()});
+        todo.push(StackEntry{states.add(state).second, S::initial_suc_info()});
 
         while (!todo.empty()) {
             auto &top = todo.top();
             states.decode(curState, top.id);
-            successorGenerator->prepare(&curState, top.sucinfo);
+            this->successorGenerator->prepare(&curState, top.sucinfo);
             if (top.sucinfo.has_prev_state()) {
                 states.decode(working, top.sucinfo.last_state);
             }
-            if (!successorGenerator->next(working, top.sucinfo)) {
+            if (!this->successorGenerator->next(working, top.sucinfo)) {
                 todo.pop();
             } else {
-                if (is_weak && !successorGenerator->isAccepting(working)) {
+                if (this->is_weak && !this->successorGenerator->isAccepting(working)) {
                     continue;
                 }
                 if (working == *seed) {
@@ -118,7 +118,7 @@ namespace LTL {
                     if constexpr (SaveTrace) {
                         auto[_, stateid] = states.add(working);
                         auto seedId = stateid;
-                        states.setHistory2(stateid, successorGenerator->fired());
+                        states.setHistory2(stateid, this->successorGenerator->fired());
                         size_t next = stateid;
                         // follow trace until back at seed state.
                         do {
@@ -135,18 +135,18 @@ namespace LTL {
                 if (is_new) {
                     if constexpr (SaveTrace) {
                         states.setParent(top.id);
-                        states.setHistory2(stateid, successorGenerator->fired());
+                        states.setHistory2(stateid, this->successorGenerator->fired());
                     }
-                    _discovered++;
-                    todo.push(StackEntry{stateid, LTL::ResumingSuccessorGenerator::initial_suc_info()});
+                    this->_discovered++;
+                    todo.push(StackEntry{stateid, S::initial_suc_info()});
                 }
 
             }
         }
     }
 
-    template<typename W>
-    void NestedDepthFirstSearch<W>::printStats(std::ostream &os)
+    template<typename S, typename W>
+    void NestedDepthFirstSearch<S, W>::printStats(std::ostream &os)
     {
         std::cout << "STATS:\n"
                   << "\tdiscovered states:          " << states.discovered() << std::endl
@@ -156,8 +156,8 @@ namespace LTL {
     }
 
 
-    template<typename W>
-    void NestedDepthFirstSearch<W>::printTrace(std::stack<std::pair<size_t, size_t>> &transitions, std::ostream &os)
+    template<typename S, typename W>
+    void NestedDepthFirstSearch<S, W>::printTrace(std::stack<std::pair<size_t, size_t>> &transitions, std::ostream &os)
     {
         State state = factory.newState();
         os << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
@@ -165,23 +165,29 @@ namespace LTL {
         while (!transitions.empty()) {
             auto[stateid, transition] = transitions.top();
             states.decode(state, stateid);
-            printTransition(transition, state, os) << std::endl;
+            this->printTransition(transition, state, os) << std::endl;
             transitions.pop();
         }
-        printLoop(os);
+        this->printLoop(os);
         while (!nested_transitions.empty()) {
             auto[stateid, transition] = nested_transitions.top();
             states.decode(state, stateid);
 
-            printTransition(transition, state, os) << std::endl;
+            this->printTransition(transition, state, os) << std::endl;
             nested_transitions.pop();
         }
         os << std::endl << "</trace>" << std::endl;
     }
 
     template
-    class NestedDepthFirstSearch<PetriEngine::Structures::StateSet>;
+    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, PetriEngine::Structures::StateSet>;
 
     template
-    class NestedDepthFirstSearch<PetriEngine::Structures::TracableStateSet>;
+    class NestedDepthFirstSearch<LTL::ResumingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
+
+    template
+    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, PetriEngine::Structures::StateSet>;
+
+    template
+    class NestedDepthFirstSearch<LTL::SpoolingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>;
 }

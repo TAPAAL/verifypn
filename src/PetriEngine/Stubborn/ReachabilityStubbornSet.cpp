@@ -30,6 +30,7 @@ namespace PetriEngine {
             _stubborn[_ordering.front()] = true;
             return true;
         }
+        assert(!_queries.empty());
         for (auto &q : _queries) {
             q->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
             InterestingTransitionVisitor interesting{*this, true};

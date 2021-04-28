@@ -403,6 +403,25 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 }
                 i++;
             }
+        } else if (strcmp(argv[i], "--ltl-por") == 0) {
+            if (argc == i + 1) {
+                std::cerr << "Missing argument to --ltl-por\n";
+                return ErrorCode;
+            }
+            else if (strcmp(argv[i+1], "visible") == 0) {
+                options.ltl_por = LTLPartialOrder::Visible;
+            }
+            else if (strcmp(argv[i+1], "aut-reach") == 0) {
+                options.ltl_por = LTLPartialOrder::AutomatonReach;
+            }
+            else if (strcmp(argv[i+1], "none") == 0) {
+                options.ltl_por = LTLPartialOrder::None;
+            }
+            else {
+                std::cerr << "Unrecognized argument " << argv[i+1] << " to --ltl-por\n";
+                return ErrorCode;
+            }
+            ++i;
         } else if (strcmp(argv[i], "-noweak") == 0) {
             options.ltluseweak = false;
         } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){

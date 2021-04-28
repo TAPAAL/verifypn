@@ -42,15 +42,15 @@ namespace LTL {
      * </p>
      * @tparam SaveTrace whether to save and print counter-examples when possible.
      */
-    template<typename SuccessorGen, bool SaveTrace = false>
-    class TarjanModelChecker : public ModelChecker<SuccessorGen> {
+    template<template <typename> typename ProductSucGen, typename SuccessorGen, bool SaveTrace = false>
+    class TarjanModelChecker : public ModelChecker<ProductSucGen, SuccessorGen> {
     public:
         TarjanModelChecker(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond,
                            const Structures::BuchiAutomaton &buchi,
                            SuccessorGen &&successorGen,
                            const TraceLevel level = TraceLevel::Full,
                            const bool shortcircuitweak = true)
-                : ModelChecker<SuccessorGen>(net, cond, buchi, std::move(successorGen), level, shortcircuitweak),
+                : ModelChecker<ProductSucGen, SuccessorGen>(net, cond, buchi, std::move(successorGen), level, shortcircuitweak),
                   factory(net, this->successorGenerator->initial_buchi_state()),
                   seen(net, 0)
         {
@@ -113,6 +113,7 @@ namespace LTL {
 
         struct DEntry {
             idx_t pos; // position in cstack.
+
             typename SuccessorGen::sucinfo sucinfo;
 
             explicit DEntry(idx_t pos) : pos(pos), sucinfo(SuccessorGen::initial_suc_info()) {}
@@ -143,18 +144,23 @@ namespace LTL {
         void printTrace(std::stack<DEntry> &&dstack, std::ostream &os = std::cout);
 
     };
+    extern template
+    class TarjanModelChecker<ProductSuccessorGenerator, LTL::ResumingSuccessorGenerator, true>;
 
     extern template
-    class TarjanModelChecker<LTL::ResumingSuccessorGenerator, true>;
+    class TarjanModelChecker<ProductSuccessorGenerator, LTL::ResumingSuccessorGenerator, false>;
 
     extern template
-    class TarjanModelChecker<LTL::ResumingSuccessorGenerator, false>;
+    class TarjanModelChecker<ProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true>;
 
     extern template
-    class TarjanModelChecker<LTL::SpoolingSuccessorGenerator, true>;
+    class TarjanModelChecker<ProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false>;
 
     extern template
-    class TarjanModelChecker<LTL::SpoolingSuccessorGenerator, false>;
+    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true>;
+
+    extern template
+    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false>;
 }
 
 #endif //VERIFYPN_TARJANMODELCHECKER_H
