@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # This is the initialization script for the participation of TAPAAL
-# untimed engine verifypn in the Petri net competition 2018.
-# BK_EXAMINATION: it is a string that identifies your "examination"
+# untimed engine verifypn in the Petri net competition 2021.
 
 DIR=$(dirname "${BASH_SOURCE[0]}")
 
@@ -14,7 +13,7 @@ else
 fi
 
 if [ -z "$VERIFYPN" ] ; then
-	VERIFYPN="$DIR"/bin/verifypn
+	VERIFYPN="$DIR"/verifypn
 	echo "Setting VERIFYPN=$VERIFYPN"
 else
 	echo "Got VERIFYPN=$VERIFYPN"
@@ -375,7 +374,7 @@ case "$BK_EXAMINATION" in
         echo "*****************************************"
         echo "*  TAPAAL performing StateSpace search  *"
         echo "*****************************************"
-        $TIME_CMD $TIMEOUT_CMD $TIMEOUT_TOTAL $VERIFYPN -n -p -q 0 -e -s BFS $MODEL_PATH/model.pnml 
+        $TIME_CMD $TIMEOUT_CMD $TIMEOUT_TOTAL $VERIFYPN -n -p -q 0 -e --disable-partitioning -s BFS $MODEL_PATH/model.pnml 
         time_left
         ;;
 

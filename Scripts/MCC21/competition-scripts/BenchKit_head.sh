@@ -10,7 +10,7 @@
 echo $BK_TOOL
 
 if [ -z "BK_BIN_PATH" ] ; then
-	BK_BIN_PATH="/home/mcc/BenchKit/"
+	BK_BIN_PATH="/home/mcc/BenchKit/bin/"
 	echo "Setting BK_BIN_PATH=$BK_BIN_PATH" 
 else
 	echo "Got BK_BIN_PATH=$BK_BIN_PATH"
