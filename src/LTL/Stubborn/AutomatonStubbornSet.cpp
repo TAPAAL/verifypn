@@ -25,7 +25,6 @@ using namespace PetriEngine;
 using namespace PetriEngine::PQL;
 
 namespace LTL {
-
     class NondeterministicConjunctionVisitor : public InterestingLTLTransitionVisitor {
     public:
         NondeterministicConjunctionVisitor(AutomatonStubbornSet &stubbornSet) :
@@ -33,6 +32,8 @@ namespace LTL {
                 _stubborn(stubbornSet), _net(stubbornSet._net) {}
 
     protected:
+        static constexpr auto PresetBad = StubbornSet::PresetBad;
+        static constexpr auto PostsetBad = StubbornSet::PostsetBad;
         /*void _accept(const PQL::AndCondition *element) override
         {
             if (negated) {
@@ -70,6 +71,7 @@ namespace LTL {
             _accept_conjunction(element);
             _stubborn._track_changes = false;
             assert(_stubborn._pending_stubborn.empty());
+
         }
 
         void _accept_conjunction(const PQL::CompareConjunction *element)
@@ -163,14 +165,13 @@ namespace LTL {
         const PetriEngine::PetriNet &_net;
         AutomatonStubbornSet &_stubborn;
 
-        static constexpr auto PresetBad = 4;
-        static constexpr auto PostsetBad = 8;
     };
 
     bool AutomatonStubbornSet::prepare(const LTL::Structures::ProductState *state)
     {
         reset();
         _parent = state;
+        _gen.prepare(state);
         memset(_places_seen.get(), 0, sizeof(uint8_t) * _net.numberOfPlaces());
         constructEnabled();
         if (_ordering.empty())
@@ -188,13 +189,16 @@ namespace LTL {
 
         PQL::EvaluationContext evaluationContext{_parent->marking(), &_net};
 
-        // Check condition 3
+        // Check if retarding is satisfied for condition 3.
+        _retarding_satisfied = _aut.guard_valid(evaluationContext, buchi_state.retarding.decision_diagram);
+        /*
         if (!_aut.guard_valid(evaluationContext, buchi_state.retarding.decision_diagram)) {
             set_all_stubborn();
             __print_debug();
             return true;
-        }
+        }*/
 
+        // Calculate retarding subborn set to ensure S-INV.
         auto negated_retarding = std::make_unique<NotCondition>(buchi_state.retarding.condition);
         _retarding_stubborn_set.setQuery(negated_retarding.get());
         _retarding_stubborn_set.prepare(state);
@@ -202,9 +206,8 @@ namespace LTL {
 
         _nenabled = _ordering.size();
 
-        //Interesting on each progressing formula should give NLG
+        // If a progressing formula satisfies the guard St=T is the only way to ensure NLG.
         for (auto &q : buchi_state.progressing) {
-            // TODO call smarter closure
             if (_aut.guard_valid(evaluationContext, q.decision_diagram)) {
                 set_all_stubborn();
                 __print_debug();
@@ -212,6 +215,7 @@ namespace LTL {
             }
         }
 
+        //Interesting on each progressing formula gives NLG.
         for (auto &q : buchi_state.progressing) {
             EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
             q.condition->visit(evalAndSetVisitor);
@@ -222,6 +226,7 @@ namespace LTL {
             else {
                 assert(!_track_changes);
                 assert(_pending_stubborn.empty());
+                // Closure to ensure COM.
                 _closure();
                 if (_bad) {
                     set_all_stubborn();
@@ -230,7 +235,6 @@ namespace LTL {
             }
         }
 
-        //Closure should ensure COM
         assert(_unprocessed.empty());
         assert(_pending_stubborn.empty());
         assert(!_bad);
@@ -309,12 +313,13 @@ namespace LTL {
         _done = false;
         _track_changes = false;
         _pending_stubborn.clear();
+        _unprocessed.clear();
     }
 
     void AutomatonStubbornSet::addToStub(uint32_t t)
     {
         // TODO refine bad transitions
-        if (_retarding_stubborn_set.stubborn()[t]) {
+        if (_retarding_stubborn_set.stubborn()[t] || !_cond3_valid(t)) {
             _bad = true;
             return;
         }
@@ -327,6 +332,21 @@ namespace LTL {
             }
         } else {
             StubbornSet::addToStub(t);
+        }
+    }
+
+    bool AutomatonStubbornSet::_cond3_valid(uint32_t t)
+    {
+        EvaluationContext ctx{_markbuf.marking(), &_net};
+        if (_retarding_satisfied || !_enabled[t]) return true;
+        else {
+            assert(_gen.checkPreset(t));
+            assert(dynamic_cast<const LTL::Structures::ProductState *>(_parent) != nullptr);
+            memcpy(_markbuf.marking(), (*_parent).marking(), _net.numberOfPlaces() * sizeof(MarkVal));
+            _gen.consumePreset(_markbuf, t);
+            _gen.producePostset(_markbuf, t);
+            return _aut.guard_valid(ctx,
+                                    _state_guards[static_cast<const LTL::Structures::ProductState *>(_parent)->getBuchiState()].retarding.decision_diagram);
         }
     }
 

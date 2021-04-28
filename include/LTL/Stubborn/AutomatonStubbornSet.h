@@ -23,6 +23,7 @@
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/Structures/GuardInfo.h"
 #include "LTL/SuccessorGeneration/SuccessorSpooler.h"
+#include "PetriEngine/SuccessorGenerator.h"
 
 namespace LTL {
     class NondeterministicConjunctionVisitor;
@@ -32,8 +33,10 @@ namespace LTL {
         : PetriEngine::StubbornSet(net), _retarding_stubborn_set(net,false),
             _state_guards(std::move(GuardInfo::from_automaton(aut))),
             _aut(aut),
-            _place_checkpoint(new bool[net.numberOfPlaces()])
+            _place_checkpoint(new bool[net.numberOfPlaces()]),
+            _gen(_net)
         {
+            _markbuf.setMarking(net.makeInitialMarking());
             _retarding_stubborn_set.setInterestingVisitor<PetriEngine::AutomatonInterestingTransitionVisitor>();
         }
 
@@ -65,10 +68,13 @@ namespace LTL {
         PetriEngine::ReachabilityStubbornSet _retarding_stubborn_set;
         const std::vector<GuardInfo> _state_guards;
         const Structures::BuchiAutomaton &_aut;
+        PetriEngine::SuccessorGenerator _gen;
+        PetriEngine::Structures::State _markbuf;
         bool _has_enabled_stubborn = false;
         bool _bad = false;
         bool _done = false;
         bool _track_changes = false;
+        bool _retarding_satisfied;
 
         std::unordered_set<uint32_t> _pending_stubborn;
 
@@ -82,6 +88,8 @@ namespace LTL {
         void set_all_stubborn();
 
         bool _closure();
+
+        bool _cond3_valid(uint32_t t);
 
         friend class NondeterministicConjunctionVisitor;
     };

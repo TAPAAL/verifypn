@@ -112,7 +112,6 @@ namespace LTL {
                 }
             }
         }
-
         bool next(Structures::ProductState &state, sucinfo &sucinfo)
         {
             assert(sucinfo.successors != nullptr);

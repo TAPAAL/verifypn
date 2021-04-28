@@ -98,6 +98,13 @@ namespace PetriEngine {
         [[nodiscard]] bool *stubborn() const { return _stubborn.get(); };
 
         const PetriEngine::PetriNet &_net;
+
+        // Bit flags for _places_seen array.
+        static constexpr auto PresetSeen = 1;
+        static constexpr auto PostsetSeen = 2;
+        static constexpr auto InhibPostsetSeen = 4;
+        static constexpr auto PresetBad = 8;
+        static constexpr auto PostsetBad = 16;
     protected:
         const Structures::State *_parent;
 
@@ -189,8 +196,6 @@ namespace PetriEngine {
 
         std::unique_ptr<bool[]> _enabled, _stubborn;
         size_t _nenabled;
-
-    protected:
         std::unique_ptr<uint8_t[]> _places_seen;
         std::unique_ptr<place_t[]> _places;
         std::unique_ptr<trans_t[]> _transitions;
