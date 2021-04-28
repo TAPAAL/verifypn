@@ -117,6 +117,9 @@ namespace LTL {
                 invariant_loop = true;
             }
         }
+        if constexpr (IsSpooling) {
+            this->successorGenerator->push();
+        }
     }
 
     template<template<typename> typename S, typename G, bool SaveTrace>
@@ -140,6 +143,9 @@ namespace LTL {
         }
         if (!dstack.empty()) {
             update(p);
+            if constexpr (IsSpooling) {
+                this->successorGenerator->pop(dstack.top().sucinfo);
+            }
         }
     }
 

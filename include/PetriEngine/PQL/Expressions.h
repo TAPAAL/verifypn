@@ -1161,6 +1161,7 @@ namespace PetriEngine {
             std::string sopTAPAAL() const override;
         };
 
+
         /* Bool condition */
         class BooleanCondition : public Condition {
         public:

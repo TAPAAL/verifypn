@@ -60,7 +60,7 @@ public:
         ++_front;
     }
 
-    [[nodiscard]] T size() const
+    [[nodiscard]] size_t size() const
     {
         return _size - _front;
     }
@@ -73,6 +73,11 @@ public:
     [[nodiscard]] bool valid() const { return _data != nullptr; }
 
     [[nodiscard]] bool has_consumed() const { return _front > 0; }
+
+    T last_pop() const {
+        assert(has_consumed());
+        return _data[_front - 1];
+    }
 
     bool operator==(std::nullptr_t) { return _data == nullptr; }
     bool operator!=(std::nullptr_t) { return _data != nullptr; }

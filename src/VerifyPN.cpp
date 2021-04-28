@@ -355,6 +355,11 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 ++i;
             }
         }
+        else if (strcmp(argv[i], "--weight") == 0) {
+            //TODO this is a temporary option to set the weight of the weighted composed heuristic.
+            options.weight1 = atoi(argv[++i]);
+            options.weight2 = atoi(argv[++i]);
+        }
 #ifdef VERIFYPN_MC_Simplification
         else if (strcmp(argv[i], "-z") == 0)
         {

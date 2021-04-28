@@ -237,10 +237,23 @@ namespace LTL {
 
         size_t buchiStates() { return buchi.buchiStates(); }
 
+        void push() {
+            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
+                _successor_generator.push();
+            }
+        }
+
+        void pop(const typename SuccessorGen::sucinfo &sucinfo) {
+            if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
+                _successor_generator.pop(sucinfo);
+            }
+        }
+
         bool has_invariant_self_loop(const LTL::Structures::ProductState &state) {
             return buchi.has_invariant_self_loop(state.getBuchiState());
         }
         virtual ~ProductSuccessorGenerator() = default;
+
     protected:
         SuccessorGen _successor_generator;
         const PetriEngine::PetriNet *_net;

@@ -70,6 +70,7 @@ struct options_t {
     bool ltluseweak = true;
     std::string buchi_out_file;
     LTL::BuchiOutType buchi_out_type = LTL::BuchiOutType::Dot;
+    uint32_t weight1, weight2;
     APCompression ltl_compress_aps = APCompression::None;
     LTLPartialOrder ltl_por = LTLPartialOrder::AutomatonReach;
 

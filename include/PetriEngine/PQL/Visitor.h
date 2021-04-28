@@ -30,27 +30,17 @@ namespace PetriEngine {
 
         protected:
 
-            virtual void _accept(const NotCondition *element) = 0;
+            virtual void _accept(const NotCondition* element) = 0;
+            virtual void _accept(const AndCondition* element) = 0;
+            virtual void _accept(const OrCondition* element) = 0;
+            virtual void _accept(const LessThanCondition* element) = 0;
+            virtual void _accept(const LessThanOrEqualCondition* element) = 0;
+            virtual void _accept(const EqualCondition* element) = 0;
+            virtual void _accept(const NotEqualCondition* element) = 0;
 
-            virtual void _accept(const AndCondition *element) = 0;
-
-            virtual void _accept(const OrCondition *element) = 0;
-
-            virtual void _accept(const LessThanCondition *element) = 0;
-
-            virtual void _accept(const LessThanOrEqualCondition *element) = 0;
-
-
-
-            virtual void _accept(const EqualCondition *element) = 0;
-
-            virtual void _accept(const NotEqualCondition *element) = 0;
-
-            virtual void _accept(const DeadlockCondition *element) = 0;
-
-            virtual void _accept(const CompareConjunction *element) = 0;
-
-            virtual void _accept(const UnfoldedUpperBoundsCondition *element) = 0;
+            virtual void _accept(const DeadlockCondition* element) = 0;
+            virtual void _accept(const CompareConjunction* element) = 0;
+            virtual void _accept(const UnfoldedUpperBoundsCondition* element) = 0;
 
             // Quantifiers, most uses of the visitor will not use the quantifiers - so we give a default implementation.
             // default behaviour is error

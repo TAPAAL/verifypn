@@ -150,8 +150,10 @@ namespace LTL {
                         spooler = std::make_unique<EnabledSpooler>(net, gen);
                     }
                     if (options.strategy == PetriEngine::Reachability::RDFS) {
-                        heuristic = std::make_unique<RandomHeuristic>();
-                    } else if (options.strategy == PetriEngine::Reachability::HEUR) {
+                        heuristic = std::make_unique<RandomHeuristic>(options.seed_offset);
+                    } else if (options.strategy == PetriEngine::Reachability::HEUR
+                               || options.strategy == PetriEngine::Reachability::DEFAULT) {
+                        //TODO ability to select other heuristics
                         heuristic = std::make_unique<AutomatonHeuristic>(net, automaton);
                     }
                     assert(spooler);
