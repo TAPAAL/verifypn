@@ -50,6 +50,7 @@ namespace PetriEngine {
             std::string name;
             ColorType* type;
             Multiset marking;
+            bool stable = true;
         };
     }
 }

@@ -161,7 +161,6 @@ namespace PetriEngine {
         
         std::vector<Colored::Place> _places;
         std::vector<Colored::Transition> _transitions;
-        std::vector<Colored::Arc> _arcs;
         std::vector<Colored::ColorFixpoint> _placeColorFixpoints;
         ColorTypeMap _colors;
         PetriNetBuilder _ptBuilder;
@@ -193,6 +192,7 @@ namespace PetriEngine {
                 const Colored::ArcExpression_ptr& expr,
                 bool input);
 
+        void findStablePlaces();
 
         void getArcIntervals(Colored::Transition& transition, bool &transitionActivated, uint32_t max_intervals, uint32_t transitionId);      
         void processInputArcs(Colored::Transition& transition, uint32_t currentPlaceId, uint32_t transitionId, bool &transitionActivated, uint32_t max_intervals);
