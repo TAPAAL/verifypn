@@ -70,10 +70,6 @@ namespace LTL {
             return state_guards;
         }
     };
-
-    std::vector<GuardInfo> getGuardInfo(const Structures::BuchiAutomaton &buchi);
-
-
 }
 
 #endif //VERIFYPN_GUARDINFO_H
