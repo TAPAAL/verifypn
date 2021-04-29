@@ -38,6 +38,14 @@ namespace LTL {
             }
         }
 
+
+        std::ostream &output(std::ostream &os) {
+            os << "WEIGHTED(" << _primary_weight << "*";
+            _primary->output(os) << ",";
+            os << _secondary_weight << "*";
+            _secondary->output(os) << ")";
+            return os;
+        }
     private:
         uint32_t _primary_weight, _secondary_weight;
     };

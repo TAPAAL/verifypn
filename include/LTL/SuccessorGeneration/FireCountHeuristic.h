@@ -44,6 +44,11 @@ namespace LTL {
             --_fireCount[tid];
         }
 
+        std::ostream &output(std::ostream &os) {
+            return os << "FIRECOUNT_HEUR";
+        }
+
+
     protected:
         std::vector<uint32_t> _fireCount;
     };

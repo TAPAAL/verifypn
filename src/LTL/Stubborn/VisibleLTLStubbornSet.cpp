@@ -145,12 +145,7 @@ namespace LTL {
     }
 
     bool VisibleLTLStubbornSet::generateAll(const LTL::Structures::ProductState *parent) {
-        reset();
-        _parent = parent;
-        PQL::EvaluationContext evaluationContext{_parent->marking(), &_net};
-        memset(_places_seen.get(), 0, _net.numberOfPlaces());
-        constructEnabled();
-
+        prepare(parent);
         // Ensure rule L2, forcing all visible transitions into the stubborn set when closing cycle.
         for (uint32_t i = 0; i < _net.numberOfTransitions(); ++i) {
             if (_visible[i]) {

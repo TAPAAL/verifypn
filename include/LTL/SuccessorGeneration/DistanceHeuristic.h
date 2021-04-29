@@ -34,6 +34,9 @@ namespace LTL {
             return _cond->distance(context);
         }
 
+        std::ostream &output(std::ostream &os) {
+            return os << "DIST_HEUR";
+        }
     private:
         const PetriEngine::PetriNet *_net;
         const PetriEngine::PQL::Condition_ptr _cond;

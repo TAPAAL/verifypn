@@ -89,6 +89,7 @@ public:
      */
     void extend_to(T *src, uint32_t nelem)
     {
+        assert(nelem >= _size); // Cannot extend to fewer elements.
         auto newdata = std::make_unique<T[]>(nelem);
         if (_front != 0) {
             //Add previously fired transitions to start of array.
@@ -110,6 +111,18 @@ public:
         _size = sz;
         assert(_size == nelem);
         _data.swap(newdata);
+    }
+
+    void append(T *src, uint32_t nelem) {
+        auto newdata = std::make_unique<T[]>(nelem + _size);
+        memcpy(newdata.get(), _data.get(), sizeof(T) * _size);
+        memcpy(newdata.get() + _size, src, sizeof(T) * nelem);
+        _size = nelem + _size;
+        _data.swap(newdata);
+    }
+
+    std::pair<T*, T*> all_successors() {
+        return std::make_pair(_data.get(), &_data[_size]);
     }
 
 private:

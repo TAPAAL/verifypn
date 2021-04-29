@@ -48,6 +48,10 @@ namespace LTL {
             return _fireCount[tid] - _approx_log(tid);
         }
 
+        std::ostream &output(std::ostream &os) {
+            return os << "LOGFIRECOUNT_HEUR";
+        }
+
     private:
 
         // compile-time sanity checks, feel free to remove if problematic

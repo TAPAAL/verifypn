@@ -31,6 +31,10 @@ namespace LTL {
 
         bool has_heuristic(const Structures::ProductState &state) override;
 
+        std::ostream &output(std::ostream &os) {
+            return os << "AUTOMATON_HEUR";
+        }
+
     private:
         const PetriEngine::PetriNet *_net;
         const LTL::Structures::BuchiAutomaton &_aut;

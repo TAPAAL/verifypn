@@ -29,7 +29,7 @@
 using namespace PetriEngine::PQL;
 using namespace PetriEngine;
 
-//#define DEBUG_EXPLORED_STATES
+#define DEBUG_EXPLORED_STATES
 
 namespace LTL {
     struct Result {
@@ -117,7 +117,7 @@ namespace LTL {
                 && options.ltl_por == LTLPartialOrder::FullAutomaton
                 && !net->has_inhibitor();
 
-        //TODO Is Torsten stub
+        bool is_stubborn = is_visible_stub || is_autreach_stub || is_buchi_stub;
 
         std::unique_ptr<SuccessorSpooler> spooler;
         std::unique_ptr<Heuristic> heuristic = nullptr;
@@ -153,24 +153,18 @@ namespace LTL {
                 break;
 
             case Algorithm::Tarjan:
-                //TODO Is Torsten stub
-                if (options.strategy != PetriEngine::Reachability::DFS || is_visible_stub || is_autreach_stub) {
+                if (options.strategy != PetriEngine::Reachability::DFS || is_stubborn) {
                     // Use spooling successor generator in case of different search strategy or stubborn set method.
                     // Running default, BestFS, or RDFS search strategy so use spooling successor generator to enable heuristics.
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     if (is_visible_stub) {
                         std::cout << "Running stubborn version!" << std::endl;
                         spooler = std::make_unique<VisibleLTLStubbornSet>(*net, negated_formula);
-                    } else {
-                        spooler = std::make_unique<EnabledSpooler>(net, gen);
+                    } else if (is_buchi_stub) {
+                        spooler = std::make_unique<AutomatonStubbornSet>(*net, automaton);
                     }
-                    std::unique_ptr<SuccessorSpooler> fallbackSpooler = nullptr;
-                    if (is_autreach_stub) {
-                        if (is_visible_stub) {
-                            fallbackSpooler = std::make_unique<VisibleLTLStubbornSet>(*net, negated_formula);
-                        } else {
-                            fallbackSpooler = std::make_unique<EnabledSpooler>(net, gen);
-                        }
+                    else {
+                        spooler = std::make_unique<EnabledSpooler>(net, gen);
                     }
 
                     if (options.strategy == PetriEngine::Reachability::RDFS) {
@@ -278,8 +272,15 @@ namespace LTL {
                   << (result.satisfied ^ negate_answer ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT "
                   << LTL::to_string(options.ltlalgorithm)
                   << (result.is_weak ? " WEAK_SKIP" : "")
-                  << ((options.stubbornreduction && !negated_formula->containsNext()) ? " STUBBORN" : "")
-                  << std::endl;
+                  << (is_stubborn ? " STUBBORN" : "")
+                  << (is_visible_stub ? " CLASSIC_STUB" : "")
+                  << (is_autreach_stub ? " REACH_STUB" : "")
+                  << (is_buchi_stub ? " BUCHI_STUB" : "");
+        if (heuristic != nullptr) {
+            std::cout << " HEURISTIC ";
+            heuristic->output(std::cout);
+        }
+        std::cout << std::endl;
 #ifdef DEBUG_EXPLORED_STATES
         std::cout << "FORMULA " << queryName << " STATS EXPLORED " << result.explored_states << std::endl;
 #endif

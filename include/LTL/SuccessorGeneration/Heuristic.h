@@ -20,6 +20,7 @@
 
 #include "PetriEngine/PetriNet.h"
 #include "LTL/Structures/ProductState.h"
+#include <iostream>
 
 namespace LTL {
     class Heuristic {
@@ -42,6 +43,8 @@ namespace LTL {
         virtual void pop(uint32_t tid) {};
 
         virtual ~Heuristic() = default;
+
+        virtual std::ostream &output(std::ostream &os) = 0;
     };
 }
 

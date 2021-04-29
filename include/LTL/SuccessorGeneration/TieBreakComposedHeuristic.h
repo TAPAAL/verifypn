@@ -42,6 +42,12 @@ namespace LTL {
             }
         }
 
+        std::ostream &output(std::ostream &os) {
+            os << "TIEBREAK(";
+            _primary->output(os) << ",";
+            _secondary->output(os) << ")";
+            return os;
+        }
     private:
         static constexpr uint32_t _secondary_mask = (1 << S) - 1;
     };

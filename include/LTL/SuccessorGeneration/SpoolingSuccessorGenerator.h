@@ -139,6 +139,7 @@ namespace LTL {
             assert(_spooler != nullptr);
             assert(sucinfo.successors != nullptr);
             if (!_spooler->generateAll(parent)) return;
+            assert(dynamic_cast<VisibleLTLStubbornSet*>(_spooler) != nullptr);
 
             uint32_t tid;
             if (!_heuristic) {
@@ -149,21 +150,36 @@ namespace LTL {
                     _transbuf[nsuc++] = tid;
                     assert(nsuc <= _net.numberOfTransitions());
                 }
-                sucinfo.successors.extend_to(_transbuf.get(), nsuc);
+                sucinfo.successors.append(_transbuf.get(), nsuc);
 
             } else {
-                // list of (transition, weight)
-                std::vector<std::pair<uint32_t, uint32_t>> weighted_tids;
-                while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
-                    assert(tid <= _net.numberOfTransitions());
+                auto evaluate_heuristic = [&] (uint32_t tid) {
                     SuccessorGenerator::_fire(_statebuf, tid);
                     _statebuf.setBuchiState(sucinfo.buchi_state);
-                    weighted_tids.emplace_back(tid, _heuristic->eval(_statebuf, tid));
+                    return _heuristic->eval(_statebuf, tid);
+                };
+
+                // list of (transition, weight)
+                std::vector<std::pair<uint32_t, uint32_t>> weighted_tids;
+                // grab previous stubborn transitions
+                auto [first, last] = sucinfo.successors.all_successors();
+                for (; first < last; ++first) {
+                    tid = *first;
+                    if (!static_cast<VisibleLTLStubbornSet*>(_spooler)->stubborn()[tid]) {
+                        weighted_tids.emplace_back(tid, evaluate_heuristic(tid));
+                    }
+                }
+
+                // add new stubborn transitions
+                while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
+                    assert(tid <= _net.numberOfTransitions());
+                    weighted_tids.emplace_back(tid, evaluate_heuristic(tid));
                 }
                 // sort by least distance first.
                 std::sort(std::begin(weighted_tids), std::end(weighted_tids),
                           [](auto &l, auto &r) { return l.second < r.second; });
                 // TODO can be specialized version in SuccessorQueue for efficiency, but this approaches being super bloated.
+                assert(weighted_tids.size() <= _net.numberOfTransitions());
                 std::transform(std::begin(weighted_tids), std::end(weighted_tids),
                                _transbuf.get(),
                                [](auto &p) { return p.first; });

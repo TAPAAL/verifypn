@@ -24,7 +24,7 @@
 
 namespace LTL {
 
-    class ComposedHeuristic: public Heuristic {
+    class ComposedHeuristic : public Heuristic {
     public:
 
         ComposedHeuristic(std::unique_ptr<Heuristic> primary, std::unique_ptr<Heuristic> secondary)
