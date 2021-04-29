@@ -16,6 +16,7 @@ enum class TemporalLogic {
     CTL, LTL
 };
 
+//TODO can be moved to LTL/AlgorithmTypes.h?
 enum class TraceLevel {
     None,
     Transitions,
@@ -34,6 +35,19 @@ enum class LTLPartialOrder {
     AutomatonReach,
     VisibleReach,
     FullAutomaton
+};
+
+enum class BuchiOptimization {
+    Low = 1,
+    Medium = 2,
+    High = 3
+};
+
+enum class LTLHeuristic {
+    Distance,
+    Automaton,
+    FireCount,
+    LogFireCount
 };
 
 struct options_t {
@@ -75,6 +89,8 @@ struct options_t {
     uint32_t weight1, weight2;
     APCompression ltl_compress_aps = APCompression::None;
     LTLPartialOrder ltl_por = LTLPartialOrder::AutomatonReach;
+    BuchiOptimization buchiOptimization = BuchiOptimization::Low;
+    LTLHeuristic ltlHeuristic = LTLHeuristic::Automaton;
 
     bool replay = false;
     std::string replay_file;

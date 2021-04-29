@@ -75,33 +75,6 @@ namespace LTL {
         return std::numeric_limits<uint32_t>::max();
     }
 
-    void InterestingLTLStubbornSet::findKeyTransition() {
-        // try to find invisible key transition first
-        assert(!_ordering.empty());
-        auto tkey = _ordering.front();
-        if (_visible[tkey]) {
-            for (uint32_t tid = 0; tid < _net.numberOfTransitions(); ++tid) {
-                if (_enabled[tid] && !_visible[tid]) {
-                    tkey = tid;
-                    break;
-                }
-            }
-        }
-        addToStub(tkey);
-
-        // include relevant transitions
-        auto ptr = transitions()[tkey];
-        uint32_t finv = ptr.inputs;
-        uint32_t linv = ptr.outputs;
-
-        for (; finv < linv; ++finv) {
-            auto inv = invariants()[finv];
-            // TODO correct?
-            presetOf(inv.place, true);
-            postsetOf(inv.place, false);
-        }
-    }
-
     constexpr bool isRuleVPrime = true;
     void InterestingLTLStubbornSet::ensureRuleV() {
         // Rule V: If there is an enabled, visible transition in the stubborn set,

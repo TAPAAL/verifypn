@@ -146,10 +146,9 @@ namespace LTL {
         }
     }
 
-    bool Replay::replay(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond, APCompression ap_compression)
+    bool Replay::replay(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond, const options_t &options)
     {
-        // TODO respect command line switch
-        BuchiSuccessorGenerator buchiGenerator = makeBuchiSuccessorGenerator(cond, ap_compression);
+        BuchiSuccessorGenerator buchiGenerator = makeBuchiSuccessorGenerator(cond, options);
         //spot::print_dot(std::cerr, buchiGenerator.aut._buchi);
         PetriEngine::Structures::State state;
         state.setMarking(net->makeInitialMarking());

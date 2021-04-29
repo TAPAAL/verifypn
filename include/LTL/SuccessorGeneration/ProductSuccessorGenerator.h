@@ -50,26 +50,6 @@ namespace LTL {
 
         [[nodiscard]] size_t initial_buchi_state() const { return buchi.initial_state_number(); };
 
-        /**
-         * @deprecated This function is deprecated use void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::sucinfo &sucinfo) instead.
-         * @see void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::sucinfo &sucinfo)
-         */
-         __attribute__((__deprecated__))
-        virtual bool prepare(const LTL::Structures::ProductState *state)
-        {
-            buchi.prepare(state->getBuchiState());
-            buchi_parent = state->getBuchiState();
-            fresh_marking = true;
-            if constexpr (!std::is_base_of_v<ResumingSuccessorGenerator, SuccessorGen>) { //TODO what do we d
-                assert(false); //return _successor_generator->prepare(state);
-            } else {
-                assert(false);
-                std::cerr << "Invalid call to prepare(ProductState), requires not ResumingSuccessorGenerator\n";
-                exit(1);
-
-            }
-        }
-
         bool next(LTL::Structures::ProductState &state)
         {
             if (fresh_marking) {
@@ -217,8 +197,7 @@ namespace LTL {
             return -1;
         }
 
-        // FIXME const if possible?
-        bool *enabled() const
+        const bool *enabled() const
         {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
                 return _successor_generator->enabled();
@@ -226,8 +205,7 @@ namespace LTL {
             return nullptr;
         };
 
-        // FIXME const if possible?
-        bool *stubborn() const
+        const bool *stubborn() const
         {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
                 return _successor_generator->stubborn();

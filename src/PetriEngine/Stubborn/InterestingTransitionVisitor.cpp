@@ -393,7 +393,6 @@ namespace PetriEngine {
     template<typename Condition>
     void InterestingLTLTransitionVisitor::negate_if_satisfied(const Condition *element)
     {
-        // TODO: There may be leftover information in isSatisfied that has not been updated in this marking. It is most like needed to evalAndSet the entire tree everytime instead of as now where it may gain a result in a node and therefore not explore the remaining children.
         auto isSatisfied = element->getSatisfied();
         assert(isSatisfied != PQL::Condition::RUNKNOWN);
         if ((isSatisfied == PQL::Condition::RTRUE) != negated) {

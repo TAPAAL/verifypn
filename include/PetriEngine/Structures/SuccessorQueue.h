@@ -98,7 +98,6 @@ public:
         uint32_t sz = _front;
         // copy over extended successor list, excluding previously popped elements.
         for (uint32_t i = 0; i < nelem; ++i) {
-            // FIXME potential optimization target if poor performance is found.
             auto begin = _data.get(), end = _data.get() + _front;
             auto it = std::find(begin, end, src[i]);
 

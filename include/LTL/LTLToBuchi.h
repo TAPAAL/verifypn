@@ -39,7 +39,7 @@ namespace LTL {
     void toSpotFormat(const QueryItem &query, std::ostream &os);
 
     std::pair<spot::formula, APInfo>
-    to_spot_formula(const PetriEngine::PQL::Condition_ptr &query, APCompression compress_aps);
+    to_spot_formula(const PetriEngine::PQL::Condition_ptr &query, const options_t &options);
 
     class BuchiSuccessorGenerator;
     namespace Structures {
@@ -48,10 +48,10 @@ namespace LTL {
 
     Structures::BuchiAutomaton makeBuchiAutomaton(
             const PetriEngine::PQL::Condition_ptr &query,
-            APCompression compress_aps = APCompression::Choose);
+            const options_t &options);
 
     BuchiSuccessorGenerator
-    makeBuchiSuccessorGenerator(const PetriEngine::PQL::Condition_ptr &query, APCompression compress_aps = APCompression::Choose);
+    makeBuchiSuccessorGenerator(const PetriEngine::PQL::Condition_ptr &query, const options_t &options);
 
     class FormulaToSpotSyntax : public PetriEngine::PQL::QueryPrinter {
     protected:

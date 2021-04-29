@@ -103,8 +103,6 @@ namespace LTL {
 
         for (; finv < linv; ++finv) {
             auto inv = invariants()[finv];
-            // TODO correct?
-            //presetOf(inv.place, true);
             postsetOf(inv.place, true);
         }
     }

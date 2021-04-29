@@ -178,37 +178,12 @@ namespace LTL {
                 // sort by least distance first.
                 std::sort(std::begin(weighted_tids), std::end(weighted_tids),
                           [](auto &l, auto &r) { return l.second < r.second; });
-                // TODO can be specialized version in SuccessorQueue for efficiency, but this approaches being super bloated.
                 assert(weighted_tids.size() <= _net.numberOfTransitions());
                 std::transform(std::begin(weighted_tids), std::end(weighted_tids),
                                _transbuf.get(),
                                [](auto &p) { return p.first; });
                 sucinfo.successors.extend_to(_transbuf.get(), weighted_tids.size());
             }
-        }
-
-        std::size_t nenabled()
-        {
-            //TODO
-            assert(false);
-        }
-
-        bool enabled()
-        {
-            //TODO
-            assert(false);
-        }
-
-        void stubborn()
-        {
-            //TODO
-            assert(false);
-        }
-
-        void _fire(Structures::ProductState &parent, Structures::ProductState &write, uint32_t tid)
-        {
-            PetriEngine::SuccessorGenerator::_fire(write, tid);
-            write.setBuchiState(parent.getBuchiState());
         }
 
         void push() {

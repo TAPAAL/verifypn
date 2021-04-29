@@ -43,7 +43,7 @@ namespace LTL {
 
         void parse(std::istream &xml, const PetriEngine::PetriNet *net);
 
-        bool replay(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond, APCompression compression = APCompression::None);
+        bool replay(const PetriEngine::PetriNet *net, const PetriEngine::PQL::Condition_ptr &cond, const options_t &options);
 
         std::vector<Transition> trace;
     private:

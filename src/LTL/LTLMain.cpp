@@ -98,9 +98,9 @@ namespace LTL {
         bool negate_answer = res.second;
 
         // force AP compress off for Büchi prints
-        auto compress = options.buchi_out_file.empty() ? options.ltl_compress_aps : APCompression::None;
+        options.ltl_compress_aps = options.buchi_out_file.empty() ? options.ltl_compress_aps : APCompression::None;
 
-        Structures::BuchiAutomaton automaton = makeBuchiAutomaton(negated_formula, compress);
+        Structures::BuchiAutomaton automaton = makeBuchiAutomaton(negated_formula, options);
         if (!options.buchi_out_file.empty()) {
             automaton.output_buchi(options.buchi_out_file, options.buchi_out_type);
         }
@@ -171,8 +171,20 @@ namespace LTL {
                         heuristic = std::make_unique<RandomHeuristic>(options.seed());
                     } else if (options.strategy == PetriEngine::Reachability::HEUR
                                || options.strategy == PetriEngine::Reachability::DEFAULT) {
-                        //TODO ability to select other heuristics
-                        heuristic = std::make_unique<AutomatonHeuristic>(net, automaton);
+                        switch (options.ltlHeuristic) {
+                            case LTLHeuristic::Distance:
+                                heuristic = std::make_unique<DistanceHeuristic>(net, negated_formula);
+                                break;
+                            case LTLHeuristic::Automaton:
+                                heuristic = std::make_unique<AutomatonHeuristic>(net, automaton);
+                                break;
+                            case LTLHeuristic::FireCount:
+                                heuristic = std::make_unique<FireCountHeuristic>(net);
+                                break;
+                            case LTLHeuristic::LogFireCount:
+                                heuristic = std::make_unique<LogFireCountHeuristic<>>(net);
+                                break;
+                        }
                     }
                     assert(spooler);
                     gen.setSpooler(spooler.get());
@@ -280,7 +292,7 @@ namespace LTL {
             std::cout << " HEURISTIC ";
             heuristic->output(std::cout);
         }
-        std::cout << std::endl;
+        std::cout << " OPTIM-" << static_cast<int>(options.buchiOptimization) << std::endl;
 #ifdef DEBUG_EXPLORED_STATES
         std::cout << "FORMULA " << queryName << " STATS EXPLORED " << result.explored_states << std::endl;
 #endif

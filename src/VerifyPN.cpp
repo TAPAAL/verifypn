@@ -356,6 +356,26 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 ++i;
             }
         }
+        else if (strcmp(argv[i], "--spot-optimization") == 0) {
+            if (argc == i + 1) {
+                std::cerr << "Missing argument to --spot-optimization\n";
+                return ErrorCode;
+            }
+            else if (strcmp(argv[i + 1], "1") == 0) {
+                options.buchiOptimization = BuchiOptimization::Low;
+            }
+            else if (strcmp(argv[i + 1], "2") == 0) {
+                options.buchiOptimization = BuchiOptimization::Medium;
+            }
+            else if (strcmp(argv[i + 1], "3") == 0) {
+                options.buchiOptimization = BuchiOptimization::High;
+            }
+            else {
+                std::cerr << "Invalid argument " << argv[i] << " to --spot-optimization\n";
+                return ErrorCode;
+            }
+            ++i;
+        }
         else if (strcmp(argv[i], "--replay") == 0) {
             options.replay = true;
             options.replay_file = std::string(argv[++i]);
@@ -438,7 +458,31 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 return ErrorCode;
             }
             ++i;
-        } else if (strcmp(argv[i], "-noweak") == 0) {
+        }
+        else if (strcmp(argv[i], "--ltl-heur") == 0) {
+            if (argc == i + 1) {
+                std::cerr << "Missing argument to --ltl-heur\n";
+                return ErrorCode;
+            }
+            else if (strcmp(argv[i+1], "dist") == 0) {
+                options.ltlHeuristic = LTLHeuristic::Distance;
+            }
+            else if (strcmp(argv[i+1], "aut") == 0) {
+                options.ltlHeuristic = LTLHeuristic::Automaton;
+            }
+            else if (strcmp(argv[i+1], "fire-count") == 0) {
+                options.ltlHeuristic = LTLHeuristic::FireCount;
+            }
+            else if (strcmp(argv[i+1], "log-fire-count") == 0) {
+                options.ltlHeuristic = LTLHeuristic::LogFireCount;
+            }
+            else {
+                std::cerr << "Unrecognized argument " << argv[i+1] << " to --ltl-heur\n";
+                return ErrorCode;
+            }
+            ++i;
+        }
+        else if (strcmp(argv[i], "-noweak") == 0) {
             options.ltluseweak = false;
         } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--game-mode") == 0){
             options.gamemode = true;
@@ -487,6 +531,13 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                                    classic otherwise.\n"
                     "                                       - automaton  apply fully Büchi-guided stubborn set method.\n"
                     "                                       - none       disable stubborn reductions (equivalent to -p).\n"
+                    "  --ltl-heur <type>                    Select distance metric for LTL heuristic search\n"
+                    "                                       - dist           Same distance metric as reachability engine.\n"
+                    "                                       - aut            Same distance metric as reachability engine, but\n"
+                    "                                                        only applied to neighbouring Büchi states.\n"
+                    "                                       - fire-count     Add penalty for number of times the transition was fired.\n"
+                    "                                       - log-fire-count Add logarithmic penalty for number of times the transition was fired\n"
+                    "                                                        after it has been fired 200 times.\n"
                     "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
                     "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
@@ -530,6 +581,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                       results since there is less opportunity for optimizations.\n"
                     "  --replay <file>                      Replays an LTL trace output by the --trace option.\n"
                     "                                       The trace is verified against the provided model and query.\n"
+                    "  --spot-optimization <1,2,3>          The optimization level passed to Spot for büchi creation. 1: Low (default), 2: Medium, 3: High\n"
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -982,7 +1034,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 #ifdef VERIFYPN_MC_Simplification
         std::scoped_lock scopedLock{spot_mutex};
 #endif
-        cond = LTL::simplify(cond, options.ltl_compress_aps);
+        cond = LTL::simplify(cond, options);
     }
     negstat_t stats;
     cond = Condition::initialMarkingRW([&]() { return cond; }, stats, evalContext, false, false, true)
@@ -1008,7 +1060,7 @@ Condition_ptr simplify_ltl_query(Condition_ptr query,
 #ifdef VERIFYPN_MC_Simplification
         std::scoped_lock scopedLock{spot_mutex};
 #endif
-        return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true));
+        return LTL::simplify(cond->pushNegation(stats, evalContext, false, false, true), options);
     }, stats, evalContext, false, false, true);
 
     if (cond->isTriviallyTrue() || cond->isTriviallyFalse()) {
@@ -1387,7 +1439,7 @@ int main(int argc, char* argv[]) {
         std::ifstream replay_file(options.replay_file, std::ifstream::in);
         LTL::Replay replay{replay_file, net.get()};
         for (int i : ltl_ids) {
-            replay.replay(net.get(), queries[i], options.ltl_compress_aps);
+            replay.replay(net.get(), queries[i], options);
         }
         return SuccessCode;
     }

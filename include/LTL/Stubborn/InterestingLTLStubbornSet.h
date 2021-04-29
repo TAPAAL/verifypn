@@ -97,8 +97,6 @@ namespace LTL {
         uint32_t _key;
         bool _has_enabled_stubborn;
 
-        void findKeyTransition();
-
         void ensureRuleV();
 
         void ensureRulesL();

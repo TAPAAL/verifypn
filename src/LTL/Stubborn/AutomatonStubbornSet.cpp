@@ -33,31 +33,6 @@ namespace LTL {
     protected:
         static constexpr auto PresetBad = StubbornSet::PresetBad;
         static constexpr auto PostsetBad = StubbornSet::PostsetBad;
-        /*void _accept(const PQL::AndCondition *element) override
-        {
-            if (negated) {
-                InterestingTransitionVisitor::_accept(element);
-                return; // TODO correct?
-            }
-            for (auto cond : *element) {
-                auto prev = _stubborn.stubborn();
-                InterestingTransitionVisitor::accept(cond);
-                if (_stubborn._bad) {
-                    memset(_stubborn.stubborn(), 0, _net.numberOfTransitions());
-
-                }
-            }
-        }
-
-        void _accept(const PQL::OrCondition *element) override
-        {
-            if (negated) {
-
-            } else {
-                InterestingTransitionVisitor::_accept(element);
-                return;
-            }
-        }*/
 
         void _accept(const PQL::CompareConjunction *element) override
         {
@@ -318,7 +293,6 @@ namespace LTL {
 
     void AutomatonStubbornSet::addToStub(uint32_t t)
     {
-        // TODO refine bad transitions
         if (_retarding_stubborn_set.stubborn()[t] || !_cond3_valid(t)) {
             _bad = true;
             return;
@@ -326,7 +300,6 @@ namespace LTL {
         if (_track_changes) {
             if (_enabled[t])
                 _has_enabled_stubborn = true;
-            // TODO is check necessary?
             if (_pending_stubborn.insert(t).second) {
                 _unprocessed.push_back(t);
             }
