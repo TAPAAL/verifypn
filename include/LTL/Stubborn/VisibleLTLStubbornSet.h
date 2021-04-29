@@ -84,7 +84,7 @@ namespace LTL {
 
         void reset();
 
-        void generateAll();
+        bool generateAll(const LTL::Structures::ProductState *parent);
 
     protected:
         void addToStub(uint32_t t) override;

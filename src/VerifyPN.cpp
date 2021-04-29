@@ -86,6 +86,7 @@
 #include "PetriEngine/PQL/Expressions.h"
 #include "PetriEngine/Colored/ColoredPetriNetBuilder.h"
 #include "LTL/LTL.h"
+#include "LTL/Replay.h"
 #include "LTL/LTLMain.h"
 
 #include <atomic>
@@ -355,6 +356,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 ++i;
             }
         }
+        else if (strcmp(argv[i], "--replay") == 0) {
+            options.replay = true;
+            options.replay_file = std::string(argv[++i]);
+        }
         else if (strcmp(argv[i], "--weight") == 0) {
             //TODO this is a temporary option to set the weight of the weighted composed heuristic.
             options.weight1 = atoi(argv[++i]);
@@ -419,6 +424,12 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             else if (strcmp(argv[i+1], "reach") == 0) {
                 options.ltl_por = LTLPartialOrder::AutomatonReach;
             }
+            else if (strcmp(argv[i+1], "mix") == 0) {
+                options.ltl_por = LTLPartialOrder::VisibleReach;
+            }
+            else if (strcmp(argv[i+1], "automaton") == 0) {
+                options.ltl_por = LTLPartialOrder::FullAutomaton;
+            }
             else if (strcmp(argv[i+1], "none") == 0) {
                 options.ltl_por = LTLPartialOrder::None;
             }
@@ -472,6 +483,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                       - classic    classic stubborn set method.\n"
                     "                                                    Only applicable with formulae that do not \n"
                     "                                                    contain the next-step operator.\n"
+                    "                                       - mix        mix of reach and classic - use reach when applicable,\n"
+                    "                                                    classic otherwise.\n"
+                    "                                       - automaton  apply fully Büchi-guided stubborn set method.\n"
                     "                                       - none       disable stubborn reductions (equivalent to -p).\n"
                     "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
@@ -514,6 +528,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                       For some queries this helps reduce the overhead of query\n"
                     "                                       simplification and Büchi construction, but gives worse\n"
                     "                                       results since there is less opportunity for optimizations.\n"
+                    "  --replay <file>                      Replays an LTL trace output by the --trace option.\n"
+                    "                                       The trace is verified against the provided model and query.\n"
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -648,6 +664,12 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             }
         }
     }
+
+    if (options.replay && options.logic != TemporalLogic::LTL) {
+        std::cerr << "Argument Error: Trace replay is only supported for LTL model checking." << std::endl;
+        return ErrorCode;
+    }
+
     return ContinueCode;
 }
 
@@ -1341,6 +1363,8 @@ int main(int argc, char* argv[]) {
 
     if(alldone) return SuccessCode;
 
+
+
     //----------------------- Verify CTL queries -----------------------//
     std::vector<size_t> ctl_ids;
     std::vector<size_t> ltl_ids;
@@ -1353,6 +1377,19 @@ int main(int argc, char* argv[]) {
         else if (results[i] == ResultPrinter::LTL) {
             ltl_ids.push_back(i);
         }
+    }
+
+    if (options.replay) {
+        if (contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode) {
+            std::cerr << "Fatal error assigning indexes" << std::endl;
+            exit(1);
+        }
+        std::ifstream replay_file(options.replay_file, std::ifstream::in);
+        LTL::Replay replay{replay_file, net.get()};
+        for (int i : ltl_ids) {
+            replay.replay(net.get(), queries[i], options.ltl_compress_aps);
+        }
+        return SuccessCode;
     }
 
     if (!ctl_ids.empty()) {

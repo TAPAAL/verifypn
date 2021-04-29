@@ -33,9 +33,9 @@ namespace PetriEngine {
         assert(!_queries.empty());
         for (auto &q : _queries) {
             q->evalAndSet(PQL::EvaluationContext((*_parent).marking(), &_net));
-            InterestingTransitionVisitor interesting{*this, true};
 
-            q->visit(interesting);
+            assert(_interesting->get_negated() == false);
+            q->visit(*_interesting);
         }
 
         closure();

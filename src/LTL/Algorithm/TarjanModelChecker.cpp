@@ -62,18 +62,19 @@ namespace LTL {
                 auto marking = seen.getMarkingId(stateid);
                 while (suc_pos != std::numeric_limits<idx_t>::max() && cstack[suc_pos].stateid != stateid) {
                     if constexpr (IsSpooling) {
+                        // TODO How do we ensure both automata stub and textbook?
                         if (cstack[suc_pos].dstack && seen.getMarkingId(cstack[suc_pos].stateid) == marking) {
-                            this->successorGenerator->prepare(&parent, dtop.sucinfo);
-                            this->successorGenerator->generateAll(dtop.sucinfo);
+                            //this->successorGenerator->prepare(&parent, dtop.sucinfo);
+                            this->successorGenerator->generateAll(&parent, dtop.sucinfo);
                         }
                     }
                     suc_pos = cstack[suc_pos].next;
                 }
                 if (suc_pos != std::numeric_limits<idx_t>::max()) {
                     if constexpr (IsSpooling) {
+                        // TODO How do we ensure both automata stub and textbook?
                         if (cstack[suc_pos].dstack) {
-                            this->successorGenerator->prepare(&parent, dtop.sucinfo);
-                            this->successorGenerator->generateAll(dtop.sucinfo);
+                            this->successorGenerator->generateAll(&parent, dtop.sucinfo);
                         }
                     }
                     // we found the successor, i.e. there's a loop!

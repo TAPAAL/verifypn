@@ -34,6 +34,7 @@ namespace LTL {
             _stubborn[_ordering.front()] = true;
             return true;
         }
+        //TODO needed? We do not run Interesting visitor so we do not immediately need it, but is is needed by closure?
         for (auto &q : _queries) {
             EvalAndSetVisitor evalAndSetVisitor{evaluationContext};
             q->visit(evalAndSetVisitor);
@@ -143,7 +144,13 @@ namespace LTL {
         _has_enabled_stubborn = false;
     }
 
-    void VisibleLTLStubbornSet::generateAll() {
+    bool VisibleLTLStubbornSet::generateAll(const LTL::Structures::ProductState *parent) {
+        reset();
+        _parent = parent;
+        PQL::EvaluationContext evaluationContext{_parent->marking(), &_net};
+        memset(_places_seen.get(), 0, _net.numberOfPlaces());
+        constructEnabled();
+
         // Ensure rule L2, forcing all visible transitions into the stubborn set when closing cycle.
         for (uint32_t i = 0; i < _net.numberOfTransitions(); ++i) {
             if (_visible[i]) {
@@ -152,7 +159,11 @@ namespace LTL {
         }
         // recompute entire set
         closure();
-/*
+        if (!_has_enabled_stubborn) {
+            memset(_stubborn.get(), 1, _net.numberOfTransitions());
+        }
+        return true;
+        /*
         // re-add previously non-stubborn, enabled transitions to order if they are now stubborn.
         while (!_skipped.empty()) {
             auto tid = _skipped.front();

@@ -108,7 +108,9 @@ namespace LTL {
                                && options.ltl_por == LTLPartialOrder::Visible
                                && !net->has_inhibitor()
                                && !negated_formula->containsNext();
-        bool is_autreach_stub = options.stubbornreduction && options.ltl_por == LTLPartialOrder::AutomatonReach;
+        bool is_autreach_stub = options.stubbornreduction && options.ltl_por == LTLPartialOrder::AutomatonReach &&
+                                !net->has_inhibitor();
+        //TODO Is Torsten stub
 
         std::unique_ptr<SuccessorSpooler> spooler;
         std::unique_ptr<Heuristic> heuristic = nullptr;
@@ -140,6 +142,7 @@ namespace LTL {
                 break;
 
             case Algorithm::Tarjan:
+                //TODO Is Torsten stub
                 if (options.strategy != PetriEngine::Reachability::DFS || is_visible_stub || is_autreach_stub) {
                     // Use spooling successor generator in case of different search strategy or stubborn set method.
                     // Running default, BestFS, or RDFS search strategy so use spooling successor generator to enable heuristics.

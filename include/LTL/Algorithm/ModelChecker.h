@@ -104,23 +104,21 @@ namespace LTL {
                 os << indent << "<deadlock buchi=\"" << state.getBuchiState() << "\"/>";
                 return os;
             }
-            std::string tname = net->transitionNames()[transition];
+                os << indent << "<transition id="
+                   << std::setw(maxTransName + 1 + 2) << std::left
+                   << std::quoted(net->transitionNames()[transition]) << " " << "buchi=\"" << state.getBuchiState();
             if (traceLevel == TraceLevel::Full) {
-                os << indent << "<transition id=\"" << tname << "\">\n";
+                os << "\">";
+                os << std::endl;
                 for (size_t i = 0; i < net->numberOfPlaces(); ++i) {
                     for (size_t j = 0; j < state.marking()[i]; ++j) {
                         os << tokenIndent << R"(<token age="0" place=")" << net->placeNames()[i] << "\"/>\n";
                     }
                 }
-#ifndef NDEBUG
-                os << '\n' << tokenIndent << "<buchi state=\"" << state.getBuchiState() << "\"/>\n";
-#endif
                 os << indent << "</transition>";
-            } else {
-                os << indent << "<transition id="
-                   << std::setw(maxTransName + 1 + 2) << std::left
-                   << std::quoted(tname) << " " << "buchisucc=\""
-                   << state.getBuchiState() << "\"/>";
+            }
+            else {
+                os << "\"/>";
             }
             return os;
         }

@@ -18,8 +18,10 @@
 #ifndef VERIFYPN_SPOOLINGSUCCESSORGENERATOR_H
 #define VERIFYPN_SPOOLINGSUCCESSORGENERATOR_H
 
+#include "LTL/Stubborn/AutomatonStubbornSet.h"
 #include "LTL/Structures/ProductState.h"
 #include "PetriEngine/Structures/SuccessorQueue.h"
+#include "LTL/SuccessorGeneration/DistanceHeuristic.h"
 #include "LTL/SuccessorGeneration/SuccessorSpooler.h"
 #include "LTL/SuccessorGeneration/Heuristics.h"
 
@@ -107,20 +109,24 @@ namespace LTL {
                     // sort by least distance first.
                     std::sort(std::begin(weighted_tids), std::end(weighted_tids),
                               [](auto &l, auto &r) { return l.second < r.second; });
-                    sucinfo.successors = SuccessorQueue(weighted_tids.data(), weighted_tids.size(),
-                                                        [](auto &p) { return p.first; });
+                    sucinfo.successors = SuccessorQueue(weighted_tids, [](auto &p) { return p.first; });
                 }
             }
         }
-
         bool next(Structures::ProductState &state, sucinfo &sucinfo)
         {
             assert(sucinfo.successors != nullptr);
             if (sucinfo.successors.empty()) {
+#ifndef NDEBUG
+                //std::cerr << "Not Firing: " << (sucinfo.successors.has_consumed() ? "deadlock" : "done") << std::endl;
+#endif
                 _last = std::numeric_limits<uint32_t>::max();
                 return false;
             }
             _last = sucinfo.successors.front();
+#ifndef NDEBUG
+            //std::cerr << "Firing " << _net.transitionNames()[_last] << std::endl;
+#endif
             sucinfo.successors.pop();
             SuccessorGenerator::_fire(state, _last);
             return true;
@@ -128,12 +134,11 @@ namespace LTL {
 
         [[nodiscard]] uint32_t fired() const { return _last; }
 
-        void generate_all(sucinfo &sucinfo)
+        void generate_all(LTL::Structures::ProductState *parent, sucinfo &sucinfo)
         {
             assert(_spooler != nullptr);
             assert(sucinfo.successors != nullptr);
-            _spooler->prepare(static_cast<const LTL::Structures::ProductState*>(_parent));
-            _spooler->generateAll();
+            if (!_spooler->generateAll(parent)) return;
 
             uint32_t tid;
             if (!_heuristic) {

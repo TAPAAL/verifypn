@@ -55,16 +55,16 @@ namespace PetriEngine {
     }
 
     bool StubbornSet::seenPre(uint32_t place) const {
-        return (_places_seen.get()[place] & 1) != 0;
+        return (_places_seen.get()[place] & PresetSeen) != 0;
     }
 
     bool StubbornSet::seenPost(uint32_t place) const {
-        return (_places_seen.get()[place] & 2) != 0;
+        return (_places_seen.get()[place] & PostsetSeen) != 0;
     }
 
     void StubbornSet::presetOf(uint32_t place, bool make_closure) {
-        if ((_places_seen.get()[place] & 1) != 0) return;
-        _places_seen.get()[place] = _places_seen.get()[place] | 1;
+        if ((_places_seen.get()[place] & PresetSeen) != 0) return;
+        _places_seen.get()[place] = _places_seen.get()[place] | PresetSeen;
         for (uint32_t t = _places.get()[place].pre; t < _places.get()[place].post; t++) {
             auto &tr = _transitions.get()[t];
             addToStub(tr.index);
@@ -73,8 +73,8 @@ namespace PetriEngine {
     }
 
     void StubbornSet::postsetOf(uint32_t place, bool make_closure) {
-        if ((_places_seen.get()[place] & 2) != 0) return;
-        _places_seen.get()[place] = _places_seen.get()[place] | 2;
+        if ((_places_seen.get()[place] & PostsetSeen) != 0) return;
+        _places_seen.get()[place] = _places_seen.get()[place] | PostsetSeen;
         for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++) {
             auto tr = _transitions.get()[t];
             if (tr.direction < 0)
@@ -84,8 +84,8 @@ namespace PetriEngine {
     }
 
     void StubbornSet::inhibitorPostsetOf(uint32_t place) {
-        if ((_places_seen.get()[place] & 4) != 0) return;
-        _places_seen.get()[place] = _places_seen.get()[place] | 4;
+        if ((_places_seen.get()[place] & InhibPostsetSeen) != 0) return;
+        _places_seen.get()[place] = _places_seen.get()[place] | InhibPostsetSeen;
         for (uint32_t &newstub : _inhibpost[place])
             addToStub(newstub);
     }
@@ -119,6 +119,7 @@ namespace PetriEngine {
                     }
                     _enabled[t] = true;
                     _ordering.push_back(t);
+                    ++_nenabled;
                 }
             }
         }
@@ -226,61 +227,6 @@ namespace PetriEngine {
         }
     }
 
-    void StubbornSet::closure() {
-        while (!_unprocessed.empty()) {
-            uint32_t tr = _unprocessed.front();
-            _unprocessed.pop_front();
-            const TransPtr &ptr = transitions()[tr];
-            uint32_t finv = ptr.inputs;
-            uint32_t linv = ptr.outputs;
-            if (_enabled[tr]) {
-                for (; finv < linv; finv++) {
-                    if (invariants()[finv].direction < 0) {
-                        auto place = invariants()[finv].place;
-                        for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++)
-                            addToStub(_transitions.get()[t].index);
-                    }
-                }
-                if (_netContainsInhibitorArcs) {
-                    uint32_t next_finv = transitions()[tr + 1].inputs;
-                    for (; linv < next_finv; linv++) {
-                        if (invariants()[linv].direction > 0)
-                            inhibitorPostsetOf(invariants()[linv].place);
-                    }
-                }
-            } else {
-                bool ok = false;
-                bool inhib = false;
-                uint32_t cand = std::numeric_limits<uint32_t>::max();
-
-                // Lets try to see if we havent already added sufficient pre/post
-                // for this transition.
-                for (; finv < linv; ++finv) {
-                    const Invariant &inv = invariants()[finv];
-                    if ((*_parent).marking()[inv.place] < inv.tokens && !inv.inhibitor) {
-                        inhib = false;
-                        ok = (_places_seen.get()[inv.place] & 1) != 0;
-                        cand = inv.place;
-                    } else if ((*_parent).marking()[inv.place] >= inv.tokens && inv.inhibitor) {
-                        inhib = true;
-                        ok = (_places_seen.get()[inv.place] & 2) != 0;
-                        cand = inv.place;
-                    }
-                    if (ok) break;
-
-                }
-
-                // OK, we didnt have sufficient, we just pick whatever is left
-                // in cand.
-                assert(cand != std::numeric_limits<uint32_t>::max());
-                if (!ok && cand != std::numeric_limits<uint32_t>::max()) {
-                    if (!inhib) presetOf(cand);
-                    else postsetOf(cand);
-                }
-            }
-        }
-    }
-
     uint32_t StubbornSet::leastDependentEnabled() {
         uint32_t tLeast = -1;
         bool foundLeast = false;
@@ -303,5 +249,7 @@ namespace PetriEngine {
         memset(_enabled.get(), false, sizeof(bool) * _net.numberOfTransitions());
         memset(_stubborn.get(), false, sizeof(bool) * _net.numberOfTransitions());
         _ordering.clear();
+        _nenabled = 0;
+        //_tid = 0;
     }
 }

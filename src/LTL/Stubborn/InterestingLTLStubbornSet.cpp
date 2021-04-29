@@ -138,7 +138,7 @@ namespace LTL {
         _has_enabled_stubborn = false;
     }
 
-    void InterestingLTLStubbornSet::generateAll() {
+    bool InterestingLTLStubbornSet::generateAll(const LTL::Structures::ProductState *parent) {
         // Ensure rule L2, forcing all visible transitions into the stubborn set when closing cycle.
         for (uint32_t i = 0; i < _net.numberOfTransitions(); ++i) {
             if (_visible[i]) {

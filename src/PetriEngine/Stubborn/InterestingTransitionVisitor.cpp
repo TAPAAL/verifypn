@@ -404,4 +404,60 @@ namespace PetriEngine {
             InterestingTransitionVisitor::_accept(element);
     }
 
+    void AutomatonInterestingTransitionVisitor::_accept(const PQL::CompareConjunction *element)
+    {
+        auto neg = negated != element->isNegated();
+        for (auto &c : *element) {
+            int32_t cand = std::numeric_limits<int32_t>::max();
+            bool pre = false;
+            auto val = _stubborn.getParent()[c._place];
+            if (c._lower == c._upper) {
+                if (neg) {
+                    if (val != c._lower) continue;
+                    _stubborn.postsetOf(c._place, closure);
+                    _stubborn.presetOf(c._place, closure);
+                } else {
+                    if (val == c._lower) continue;
+                    if (val > c._lower) {
+                        cand = c._place;
+                        pre = false;
+                    } else {
+                        cand = c._place;
+                        pre = true;
+                    }
+                }
+            } else {
+                if (!neg) {
+                    if (val < c._lower && c._lower != 0) {
+                        assert(!neg);
+                        cand = c._place;
+                        pre = true;
+                    }
+
+                    if (val > c._upper && c._upper != std::numeric_limits<uint32_t>::max()) {
+                        assert(!neg);
+                        cand = c._place;
+                        pre = false;
+                    }
+                } else {
+                    if (val >= c._lower && c._lower != 0) {
+                        _stubborn.postsetOf(c._place, closure);
+                    }
+
+                    if (val <= c._upper && c._upper != std::numeric_limits<uint32_t>::max()) {
+                        _stubborn.presetOf(c._place, closure);
+                    }
+                }
+            }
+            if (cand != std::numeric_limits<int32_t>::max()) {
+                if (pre) {
+                    _stubborn.presetOf(cand, closure);
+                } else if (!pre) {
+                    _stubborn.postsetOf(cand, closure);
+                }
+                cand = std::numeric_limits<int32_t>::max();
+            }
+        }
+
+    }
 }

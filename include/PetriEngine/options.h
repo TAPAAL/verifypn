@@ -31,7 +31,9 @@ enum class APCompression {
 enum class LTLPartialOrder {
     None,
     Visible,
-    AutomatonReach
+    AutomatonReach,
+    VisibleReach,
+    FullAutomaton
 };
 
 struct options_t {
@@ -73,6 +75,10 @@ struct options_t {
     uint32_t weight1, weight2;
     APCompression ltl_compress_aps = APCompression::None;
     LTLPartialOrder ltl_por = LTLPartialOrder::AutomatonReach;
+
+    bool replay = false;
+    std::string replay_file;
+
 
     std::string query_out_file;
     std::string model_out_file;

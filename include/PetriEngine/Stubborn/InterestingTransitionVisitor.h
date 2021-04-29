@@ -33,12 +33,13 @@ namespace PetriEngine {
 
         void negate() { negated = !negated; }
 
-    private:
+        bool get_negated() const { return negated; }
+
+    protected:
         PetriEngine::StubbornSet &_stubborn;
 
         bool closure;
 
-    protected:
         void _accept(const PQL::NotCondition *element) override;
 
         void _accept(const PQL::AndCondition *element) override;
@@ -222,6 +223,13 @@ namespace PetriEngine {
         void negate_if_satisfied(const Condition *element);
     };
 
+    class AutomatonInterestingTransitionVisitor : public InterestingTransitionVisitor {
+    public:
+        explicit AutomatonInterestingTransitionVisitor(StubbornSet &stubbornSet, bool closure) : InterestingTransitionVisitor(stubbornSet, closure) {}
+
+    protected:
+        void _accept(const PQL::CompareConjunction *element) override;
+    };
 }
 
 

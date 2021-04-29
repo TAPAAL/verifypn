@@ -97,8 +97,15 @@ namespace PetriEngine {
         [[nodiscard]] bool *enabled() const { return _enabled.get(); };
         [[nodiscard]] bool *stubborn() const { return _stubborn.get(); };
 
-    protected:
         const PetriEngine::PetriNet &_net;
+
+        // Bit flags for _places_seen array.
+        static constexpr auto PresetSeen = 1;
+        static constexpr auto PostsetSeen = 2;
+        static constexpr auto InhibPostsetSeen = 4;
+        static constexpr auto PresetBad = 8;
+        static constexpr auto PostsetBad = 16;
+    protected:
         const Structures::State *_parent;
 
         struct place_t {
@@ -128,12 +135,67 @@ namespace PetriEngine {
 
         virtual void addToStub(uint32_t t);
 
-        void closure();
+        template <typename T = std::nullptr_t>
+        void closure(T callback = nullptr) {
+            while (!_unprocessed.empty()) {
+                if constexpr (!std::is_null_pointer_v<T>) {
+                    if (!callback()) return;
+                }
+                uint32_t tr = _unprocessed.front();
+                _unprocessed.pop_front();
+                const TransPtr &ptr = transitions()[tr];
+                uint32_t finv = ptr.inputs;
+                uint32_t linv = ptr.outputs;
+                if (_enabled[tr]) {
+                    for (; finv < linv; finv++) {
+                        if (invariants()[finv].direction < 0) {
+                            auto place = invariants()[finv].place;
+                            for (uint32_t t = _places.get()[place].post; t < _places.get()[place + 1].pre; t++)
+                                addToStub(_transitions.get()[t].index);
+                        }
+                    }
+                    if (_netContainsInhibitorArcs) {
+                        uint32_t next_finv = transitions()[tr + 1].inputs;
+                        for (; linv < next_finv; linv++) {
+                            if (invariants()[linv].direction > 0)
+                                inhibitorPostsetOf(invariants()[linv].place);
+                        }
+                    }
+                } else {
+                    bool ok = false;
+                    bool inhib = false;
+                    uint32_t cand = std::numeric_limits<uint32_t>::max();
+
+                    // Lets try to see if we havent already added sufficient pre/post
+                    // for this transition.
+                    for (; finv < linv; ++finv) {
+                        const Invariant &inv = invariants()[finv];
+                        if ((*_parent).marking()[inv.place] < inv.tokens && !inv.inhibitor) {
+                            inhib = false;
+                            ok = (_places_seen.get()[inv.place] & 1) != 0;
+                            cand = inv.place;
+                        } else if ((*_parent).marking()[inv.place] >= inv.tokens && inv.inhibitor) {
+                            inhib = true;
+                            ok = (_places_seen.get()[inv.place] & 2) != 0;
+                            cand = inv.place;
+                        }
+                        if (ok) break;
+
+                    }
+
+                    // OK, we didnt have sufficient, we just pick whatever is left
+                    // in cand.
+                    assert(cand != std::numeric_limits<uint32_t>::max());
+                    if (!ok && cand != std::numeric_limits<uint32_t>::max()) {
+                        if (!inhib) presetOf(cand);
+                        else postsetOf(cand);
+                    }
+                }
+            }
+        }
 
         std::unique_ptr<bool[]> _enabled, _stubborn;
         size_t _nenabled;
-
-    protected:
         std::unique_ptr<uint8_t[]> _places_seen;
         std::unique_ptr<place_t[]> _places;
         std::unique_ptr<trans_t[]> _transitions;
