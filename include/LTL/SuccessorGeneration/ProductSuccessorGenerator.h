@@ -41,8 +41,8 @@ namespace LTL {
 
         ProductSuccessorGenerator(const PetriEngine::PetriNet *net,
                                   const Structures::BuchiAutomaton &buchi,
-                                  SuccessorGen &&successorGen)
-                : _successor_generator(std::move(successorGen)), _net(net),
+                                  SuccessorGen *successorGen)
+                : _successor_generator(successorGen), _net(net),
                   buchi(buchi), aut(buchi)
         {
 
@@ -61,7 +61,7 @@ namespace LTL {
             buchi_parent = state->getBuchiState();
             fresh_marking = true;
             if constexpr (!std::is_base_of_v<ResumingSuccessorGenerator, SuccessorGen>) { //TODO what do we d
-                assert(false); //return _successor_generator.prepare(state);
+                assert(false); //return _successor_generator->prepare(state);
             } else {
                 assert(false);
                 std::cerr << "Invalid call to prepare(ProductState), requires not ResumingSuccessorGenerator\n";
@@ -74,10 +74,10 @@ namespace LTL {
         {
             if (fresh_marking) {
                 fresh_marking = false;
-                if (!_successor_generator.next(state)) {
+                if (!_successor_generator->next(state)) {
                     // This is a fresh marking, so if there is no more successors for the state the state is deadlocked.
                     // The semantics for deadlock is to just loop the marking so return true without changing the value of state.
-                    std::copy(_successor_generator.getParent(), _successor_generator.getParent() + state.buchi_state_idx + 1,
+                    std::copy(_successor_generator->getParent(), _successor_generator->getParent() + state.buchi_state_idx + 1,
                               state.marking());
                 }
             }
@@ -87,7 +87,7 @@ namespace LTL {
                 // No valid transition in Büchi automaton for current marking;
                 // Try next marking(s) and see if we find a successor.
             else {
-                while (_successor_generator.next(state)) {
+                while (_successor_generator->next(state)) {
                     // reset buchi successors
                     buchi.prepare(buchi_parent);
                     if (next_buchi_succ(state)) {
@@ -134,7 +134,7 @@ namespace LTL {
          */
         virtual void prepare(const LTL::Structures::ProductState *state, typename SuccessorGen::sucinfo &sucinfo)
         {
-            _successor_generator.prepare(state, sucinfo);
+            _successor_generator->prepare(state, sucinfo);
             fresh_marking = sucinfo.fresh();
             buchi.prepare(state->getBuchiState());
             buchi_parent = state->getBuchiState();
@@ -163,26 +163,26 @@ namespace LTL {
         {
             if (fresh_marking) {
                 fresh_marking = false;
-                if (!_successor_generator.next(state, sucinfo)) {
+                if (!_successor_generator->next(state, sucinfo)) {
                     // This is a fresh marking, so if there are no more successors for the state the state is deadlocked.
                     // The semantics for deadlock is to just loop the marking so return true without changing the value of state.
-                    std::copy(_successor_generator.getParent(), _successor_generator.getParent() + state.buchi_state_idx + 1,
+                    std::copy(_successor_generator->getParent(), _successor_generator->getParent() + state.buchi_state_idx + 1,
                               state.marking());
                 }
             }
             if (next_buchi_succ(state)) {
-                //_successor_generator.getSuccInfo(sucinfo);
+                //_successor_generator->getSuccInfo(sucinfo);
                 sucinfo.buchi_state = state.getBuchiState();
                 return true;
             }
                 // No valid transition in Büchi automaton for current marking;
                 // Try next marking(s) and see if we find a successor.
             else {
-                while (_successor_generator.next(state, sucinfo)) {
+                while (_successor_generator->next(state, sucinfo)) {
                     // reset buchi successors
                     buchi.prepare(buchi_parent);
                     if (next_buchi_succ(state)) {
-                        //_successor_generator.getSuccInfo(sucinfo);
+                        //_successor_generator->getSuccInfo(sucinfo);
                         sucinfo.buchi_state = state.getBuchiState();
                         return true;
                     }
@@ -197,22 +197,22 @@ namespace LTL {
             return buchi.is_weak();
         }
 
-        size_t last_transition() const { return _successor_generator.last_transition(); }
+        size_t last_transition() const { return _successor_generator->last_transition(); }
 
-        size_t fired() const { return _successor_generator.fired(); }
+        size_t fired() const { return _successor_generator->fired(); }
 
         //template<typename T = std::enable_if_t<std::is_same_v<SuccessorGen, PetriEngine::ReducingSuccessorGenerator>, void>>
         void generateAll(LTL::Structures::ProductState *parent, typename SuccessorGen::sucinfo &sucinfo)
         {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                _successor_generator.generate_all(parent, sucinfo);
+                _successor_generator->generate_all(parent, sucinfo);
             }
         }
 
         size_t numEnabled()
         {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                return _successor_generator.nenabled();
+                return _successor_generator->nenabled();
             }
             return -1;
         }
@@ -221,7 +221,7 @@ namespace LTL {
         bool *enabled() const
         {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                return _successor_generator.enabled();
+                return _successor_generator->enabled();
             }
             return nullptr;
         };
@@ -230,7 +230,7 @@ namespace LTL {
         bool *stubborn() const
         {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                return _successor_generator.stubborn();
+                return _successor_generator->stubborn();
             }
             return nullptr;
         };
@@ -239,13 +239,13 @@ namespace LTL {
 
         void push() {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                _successor_generator.push();
+                _successor_generator->push();
             }
         }
 
         void pop(const typename SuccessorGen::sucinfo &sucinfo) {
             if constexpr (std::is_same_v<SuccessorGen, LTL::SpoolingSuccessorGenerator>) {
-                _successor_generator.pop(sucinfo);
+                _successor_generator->pop(sucinfo);
             }
         }
 
@@ -256,7 +256,7 @@ namespace LTL {
         virtual ~ProductSuccessorGenerator() = default;
 
     protected:
-        SuccessorGen _successor_generator;
+        SuccessorGen *_successor_generator;
         const PetriEngine::PetriNet *_net;
         BuchiSuccessorGenerator buchi;
 

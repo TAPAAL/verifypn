@@ -147,6 +147,7 @@ namespace LTL {
         }
         // recompute entire set
         closure();
+        return true;
 
        /* // re-add previously non-stubborn, enabled transitions to order if they are now stubborn.
         while (!_skipped.empty()) {

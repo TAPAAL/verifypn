@@ -21,8 +21,8 @@ namespace LTL {
 
 //#define TARJAN_RUNTIME_TRACE
 
-    template<template<typename> typename S, typename G, bool SaveTrace>
-    bool TarjanModelChecker<S, G, SaveTrace>::isSatisfied()
+    template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
+    bool TarjanModelChecker<S, G, SaveTrace, Spooler...>::isSatisfied()
     {
         this->is_weak = this->successorGenerator->is_weak() && this->shortcircuitweak;
         std::vector<State> initial_states = this->successorGenerator->makeInitialState();
@@ -106,8 +106,8 @@ namespace LTL {
      * Push a state to the various stacks.
      * @param state
      */
-    template<template<typename> typename S, typename G, bool SaveTrace>
-    void TarjanModelChecker<S, G, SaveTrace>::push(State &state, size_t stateid) {
+    template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
+    void TarjanModelChecker<S, G, SaveTrace, Spooler...>::push(State &state, size_t stateid) {
         const auto ctop = static_cast<idx_t>(cstack.size());
         const auto h = hash(stateid);
         cstack.emplace_back(ctop, stateid, chash[h]);
@@ -126,8 +126,8 @@ namespace LTL {
         }
     }
 
-    template<template<typename> typename S, typename G, bool SaveTrace>
-    void TarjanModelChecker<S, G, SaveTrace>::pop()
+    template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
+    void TarjanModelChecker<S, G, SaveTrace, Spooler...>::pop()
     {
         const auto p = dstack.top().pos;
         dstack.pop();
@@ -154,8 +154,8 @@ namespace LTL {
         }
     }
 
-    template<template<typename> typename S, typename G, bool SaveTrace>
-    void TarjanModelChecker<S, G, SaveTrace>::popCStack()
+    template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
+    void TarjanModelChecker<S, G, SaveTrace, Spooler...>::popCStack()
     {
         auto h = hash(cstack.back().stateid);
         store.insert(cstack.back().stateid);
@@ -163,8 +163,8 @@ namespace LTL {
         cstack.pop_back();
     }
 
-    template<template<typename> typename S, typename G, bool SaveTrace>
-    void TarjanModelChecker<S, G, SaveTrace>::update(idx_t to)
+    template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
+    void TarjanModelChecker<S, G, SaveTrace, Spooler...>::update(idx_t to)
     {
         const auto from = dstack.top().pos;
         if (cstack[to].lowlink <= cstack[from].lowlink) {
@@ -183,8 +183,8 @@ namespace LTL {
         }
     }
 
-    template<template<typename> typename S, typename G, bool SaveTrace>
-    bool TarjanModelChecker<S, G, SaveTrace>::nexttrans(State &state, State &parent, TarjanModelChecker::DEntry &delem)
+    template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
+    bool TarjanModelChecker<S, G, SaveTrace, Spooler...>::nexttrans(State &state, State &parent, TarjanModelChecker::DEntry &delem)
     {
         seen.decode(parent, cstack[delem.pos].stateid);
         this->successorGenerator->prepare(&parent, delem.sucinfo);
@@ -196,8 +196,8 @@ namespace LTL {
         return res;
     }
 
-    template<template<typename> typename S, typename G, bool SaveTrace>
-    void TarjanModelChecker<S, G, SaveTrace>::printTrace(std::stack<DEntry> &&dstack, std::ostream &os)
+    template<template<typename, typename...> typename S, typename G, bool SaveTrace, typename... Spooler>
+    void TarjanModelChecker<S, G, SaveTrace, Spooler...>::printTrace(std::stack<DEntry> &&dstack, std::ostream &os)
     {
         if constexpr (!SaveTrace) {
             return;
@@ -252,8 +252,14 @@ namespace LTL {
     class TarjanModelChecker<ProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false>;
 
     template
-    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true>;
+    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true, VisibleLTLStubbornSet>;
 
     template
-    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false>;
+    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false, VisibleLTLStubbornSet>;
+
+    template
+    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, true, EnabledSpooler>;
+
+    template
+    class TarjanModelChecker<ReachStubProductSuccessorGenerator, LTL::SpoolingSuccessorGenerator, false, EnabledSpooler>;
 }

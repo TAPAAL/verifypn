@@ -25,15 +25,20 @@
 //#define REACH_STUB_DEBUG
 
 namespace LTL {
-    template<typename S>
+    template<typename S, typename Spooler>
     class ReachStubProductSuccessorGenerator : public ProductSuccessorGenerator<S> {
     public:
         ReachStubProductSuccessorGenerator(const PetriEngine::PetriNet *net, const Structures::BuchiAutomaton &buchi,
-                                           S &&successorGen)
-                : ProductSuccessorGenerator<S>(net, buchi, std::move(successorGen))
-
+                                           S *successorGen, std::unique_ptr<Spooler> &&fallbackSpooler)
+                : ProductSuccessorGenerator<S>(net, buchi, successorGen), _fallback_spooler(std::move(fallbackSpooler))
         {
-            _enabled = std::make_unique<EnabledSpooler>(net, static_cast<PetriEngine::SuccessorGenerator&>(this->_successor_generator));
+            //_fallback_spooler = std::make_unique<Spooler>(fallbackSpooler);
+/*            if constexpr (std::is_same_v<Spooler, EnabledSpooler>) {
+                _fallback_spooler = std::make_unique<Spooler>(net, static_cast<PetriEngine::SuccessorGenerator&>(this->_successor_generator));
+            }
+            else {
+                _fallback_spooler = std::make_unique<Spooler>(net);
+            }*/
             _reach = std::make_unique<ReachabilityStubbornSpooler>(*net);
             // Create the set of büchi states from which we can use reachability stubborn sets.
             std::vector<AtomicProposition> aps(buchi.ap_info.size());
@@ -130,7 +135,7 @@ namespace LTL {
                     _reach_active = false;
                 }
 #endif
-                set_spooler(_enabled.get());
+                set_spooler(_fallback_spooler.get());
             }
             ProductSuccessorGenerator<S>::prepare(state, sucinfo);
         }
@@ -139,7 +144,7 @@ namespace LTL {
         void set_spooler(SuccessorSpooler *spooler)
         {
             if constexpr (std::is_same_v<S, LTL::SpoolingSuccessorGenerator>)
-                this->_successor_generator.setSpooler(spooler);
+                this->_successor_generator->setSpooler(spooler);
             else {
                 assert(false);
                 std::cerr << "Fatal error\n"; exit(1);
@@ -151,7 +156,7 @@ namespace LTL {
             PetriEngine::PQL::Condition_ptr cond;
         };
 
-        std::unique_ptr<EnabledSpooler> _enabled;
+        std::unique_ptr<Spooler> _fallback_spooler;
         std::unique_ptr<ReachabilityStubbornSpooler> _reach;
         std::unordered_map<size_t, BuchiEdge> _reach_states;
 #ifdef REACH_STUB_DEBUG
