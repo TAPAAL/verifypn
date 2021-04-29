@@ -413,10 +413,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 std::cerr << "Missing argument to --ltl-por\n";
                 return ErrorCode;
             }
-            else if (strcmp(argv[i+1], "visible") == 0) {
+            else if (strcmp(argv[i+1], "classic") == 0) {
                 options.ltl_por = LTLPartialOrder::Visible;
             }
-            else if (strcmp(argv[i+1], "aut-reach") == 0) {
+            else if (strcmp(argv[i+1], "reach") == 0) {
                 options.ltl_por = LTLPartialOrder::AutomatonReach;
             }
             else if (strcmp(argv[i+1], "none") == 0) {
@@ -462,10 +462,17 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "  -d, --reduction-timeout <timeout>    Timeout for structural reductions in seconds (default 60)\n"
                     "  -q, --query-reduction <timeout>      Query reduction timeout in seconds (default 30)\n"
                     "                                       write -q 0 to disable query reduction\n"
-                    "  --interval-timeout <timeout>       Time in seconds before the max intervals is halved (default 10)\n"
-                    "                                     write --interval-timeout 0 to disable max interval halving\n"
+                    "  --interval-timeout <timeout>         Time in seconds before the max intervals is halved (default 10)\n"
+                    "                                       write --interval-timeout 0 to disable max interval halving\n"
                     "  -l, --lpsolve-timeout <timeout>      LPSolve timeout in seconds, default 10\n"
                     "  -p, --partial-order-reduction        Disable partial order reduction (stubborn sets)\n"
+                    "  --ltl-por <type>                     Select partial order method to use with LTL engine (default reach).\n"
+                    "                                       - reach      apply reachability stubborn sets in Büchi states\n"
+                    "                                                    that represent reachability subproblems,\n"
+                    "                                       - classic    classic stubborn set method.\n"
+                    "                                                    Only applicable with formulae that do not \n"
+                    "                                                    contain the next-step operator.\n"
+                    "                                       - none       disable stubborn reductions (equivalent to -p).\n"
                     "  -a, --siphon-trap <timeout>          Siphon-Trap analysis timeout in seconds (default 0)\n"
                     "      --siphon-depth <place count>     Search depth of siphon (default 0, which counts all places)\n"
                     "  -n, --no-statistics                  Do not display any statistics (default is to display it)\n"
@@ -1078,8 +1085,6 @@ int main(int argc, char* argv[]) {
         cpnBuilder.computePlaceColorFixpoint(options.max_intervals, options.max_intervals_reduced, options.intervalTimeout);
     }
 
-    
-    
     auto builder = options.cpnOverApprox ? cpnBuilder.stripColors() : cpnBuilder.unfold();
     printUnfoldingStats(cpnBuilder, options);
     builder.sort();

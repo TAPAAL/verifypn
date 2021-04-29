@@ -86,7 +86,6 @@ struct options_t {
     uint32_t seed_offset = 0;
     int max_intervals = 250; //0 disabled
     int max_intervals_reduced = 5;
-    
     size_t seed() { return ++seed_offset; }
 
     void print() {

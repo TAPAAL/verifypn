@@ -36,6 +36,7 @@ namespace LTL {
         State curState = factory.newState();
 
         {
+
             std::vector<State> initial_states = this->successorGenerator->makeInitialState();
             for (auto &state : initial_states) {
                 auto res = states.add(state);

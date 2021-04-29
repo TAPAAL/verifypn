@@ -26,7 +26,6 @@
 #include <string>
 
 #include <spot/tl/formula.hh>
-
 namespace LTL {
     struct AtomicProposition {
         PetriEngine::PQL::Condition_ptr expression;

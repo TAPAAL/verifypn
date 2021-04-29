@@ -20,11 +20,13 @@
 
 #include "PetriEngine/PQL/PQL.h"
 #include "LTL/SuccessorGeneration/ProductSuccessorGenerator.h"
+#include "LTL/SuccessorGeneration/ReachStubProductSuccessorGenerator.h"
 #include "LTL/SuccessorGeneration/ResumingSuccessorGenerator.h"
 #include "LTL/SuccessorGeneration/SpoolingSuccessorGenerator.h"
 #include "LTL/Structures/BitProductStateSet.h"
 #include "LTL/SuccessorGeneration/ReachStubProductSuccessorGenerator.h"
 #include "PetriEngine/options.h"
+
 #include <iomanip>
 #include <algorithm>
 
@@ -40,8 +42,7 @@ namespace LTL {
                      bool shortcircuitweak = true)
                 : net(net), formula(condition), traceLevel(level), shortcircuitweak(shortcircuitweak)
         {
-            successorGenerator = std::make_unique<ProductSucGen<SuccessorGen>>(net, buchi,
-                                                                                           std::move(successorGen));
+            successorGenerator = std::make_unique<ProductSucGen<SuccessorGen>>(net, buchi, std::move(successorGen));
             if (level != TraceLevel::None) {
                 maxTransName = 0;
                 for (const auto &transname : net->transitionNames()) {

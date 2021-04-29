@@ -96,6 +96,7 @@ namespace LTL {
             idx_t lowlink;
             idx_t stateid;
             idx_t next = std::numeric_limits<idx_t>::max();
+            bool dstack = true;
 
             PlainCEntry(idx_t lowlink, idx_t stateid, idx_t next) : lowlink(lowlink), stateid(stateid), next(next) {}
         };

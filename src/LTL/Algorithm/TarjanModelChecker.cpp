@@ -19,16 +19,6 @@
 
 namespace LTL {
 
-    inline void _dump_state(const LTL::Structures::ProductState &state)
-    {
-        std::cerr << "marking: ";
-        std::cerr << state.marking()[0];
-        for (size_t i = 1; i < state.size(); ++i) {
-            std::cerr << ", " << state.marking()[i];
-        }
-        std::cerr << std::endl;
-    }
-
 //#define TARJAN_RUNTIME_TRACE
 
     template<template<typename> typename S, typename G, bool SaveTrace>
@@ -69,10 +59,23 @@ namespace LTL {
 
                 // lookup successor in 'hash' table
                 auto suc_pos = chash[hash(stateid)];
+                auto marking = seen.getMarkingId(stateid);
                 while (suc_pos != std::numeric_limits<idx_t>::max() && cstack[suc_pos].stateid != stateid) {
+                    if constexpr (IsSpooling) {
+                        if (cstack[suc_pos].dstack && seen.getMarkingId(cstack[suc_pos].stateid) == marking) {
+                            this->successorGenerator->prepare(&parent, dtop.sucinfo);
+                            this->successorGenerator->generateAll(dtop.sucinfo);
+                        }
+                    }
                     suc_pos = cstack[suc_pos].next;
                 }
                 if (suc_pos != std::numeric_limits<idx_t>::max()) {
+                    if constexpr (IsSpooling) {
+                        if (cstack[suc_pos].dstack) {
+                            this->successorGenerator->prepare(&parent, dtop.sucinfo);
+                            this->successorGenerator->generateAll(dtop.sucinfo);
+                        }
+                    }
                     // we found the successor, i.e. there's a loop!
                     // now update lowlinks and check whether the loop contains an accepting state
                     update(suc_pos);
@@ -127,6 +130,7 @@ namespace LTL {
     {
         const auto p = dstack.top().pos;
         dstack.pop();
+        cstack[p].dstack = false;
         if (cstack[p].lowlink == p) {
             while (cstack.size() > p) {
                 popCStack();

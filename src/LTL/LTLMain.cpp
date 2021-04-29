@@ -119,38 +119,40 @@ namespace LTL {
                 if (options.strategy == PetriEngine::Reachability::RDFS) {
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     spooler = std::make_unique<EnabledSpooler>(net, gen);
-                    heuristic =std::make_unique<RandomHeuristic>();
+                    heuristic = std::make_unique<RandomHeuristic>(options.seed());
                     gen.setSpooler(spooler.get());
                     gen.setHeuristic(heuristic.get());
 
                     result = _verify(net, negated_formula,
-                                     std::make_unique<RandomNDFS>(net, negated_formula, automaton, std::move(gen),
+                                     std::make_unique<NestedDepthFirstSearch<SpoolingSuccessorGenerator, PetriEngine::Structures::StateSet>>(net, negated_formula, automaton, std::move(gen),
                                                                   options.trace,
-                                                                  options.ltluseweak, options.seed()),
+                                                                  options.ltluseweak),
                                      options);
                 } else if (options.trace != TraceLevel::None) {
                     result = _verify(net, negated_formula,
                                      std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator, PetriEngine::Structures::TracableStateSet>>(
-                                             net, negated_formula, automaton, options.trace, options.ltluseweak), options);
+                                             net, negated_formula, automaton, ResumingSuccessorGenerator{net}, options.trace, options.ltluseweak), options);
                 } else {
                     result = _verify(net, negated_formula,
                                      std::make_unique<NestedDepthFirstSearch<ResumingSuccessorGenerator, PetriEngine::Structures::StateSet>>(
-                                             net, negated_formula, automaton, options.trace, options.ltluseweak), options);
+                                             net, negated_formula, automaton, ResumingSuccessorGenerator{net}, options.trace, options.ltluseweak), options);
                 }
                 break;
+
             case Algorithm::Tarjan:
-                if (options.strategy != PetriEngine::Reachability::DEFAULT || is_visible_stub || is_autreach_stub) {
+                if (options.strategy != PetriEngine::Reachability::DFS || is_visible_stub || is_autreach_stub) {
                     // Use spooling successor generator in case of different search strategy or stubborn set method.
+                    // Running default, BestFS, or RDFS search strategy so use spooling successor generator to enable heuristics.
                     SpoolingSuccessorGenerator gen{net, negated_formula};
                     if (is_visible_stub) {
                         std::cout << "Running stubborn version!" << std::endl;
-                        spooler = std::make_unique<InterestingLTLStubbornSet>(*net, negated_formula);
-                    }
-                    else {
+                        spooler = std::make_unique<VisibleLTLStubbornSet>(*net, negated_formula);
+                    } else {
                         spooler = std::make_unique<EnabledSpooler>(net, gen);
                     }
+
                     if (options.strategy == PetriEngine::Reachability::RDFS) {
-                        heuristic = std::make_unique<RandomHeuristic>(options.seed_offset);
+                        heuristic = std::make_unique<RandomHeuristic>(options.seed());
                     } else if (options.strategy == PetriEngine::Reachability::HEUR
                                || options.strategy == PetriEngine::Reachability::DEFAULT) {
                         //TODO ability to select other heuristics
@@ -163,6 +165,7 @@ namespace LTL {
                     }
 
                     if (options.trace != TraceLevel::None) {
+
                         if (is_autreach_stub) {
                             result = _verify(net, negated_formula,
                                              std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, true>>(
@@ -186,6 +189,7 @@ namespace LTL {
                                              options);
                         }
                     } else {
+
                         if (is_autreach_stub) {
                             result = _verify(net, negated_formula,
                                              std::make_unique<TarjanModelChecker<ReachStubProductSuccessorGenerator, SpoolingSuccessorGenerator, false>>(
@@ -242,11 +246,11 @@ namespace LTL {
                   << (result.satisfied ^ negate_answer ? " TRUE" : " FALSE") << " TECHNIQUES EXPLICIT "
                   << LTL::to_string(options.ltlalgorithm)
                   << (result.is_weak ? " WEAK_SKIP" : "")
+                  << ((options.stubbornreduction && !negated_formula->containsNext()) ? " STUBBORN" : "")
                   << std::endl;
 #ifdef DEBUG_EXPLORED_STATES
         std::cout << "FORMULA " << queryName << " STATS EXPLORED " << result.explored_states << std::endl;
 #endif
-
         return SuccessCode;
     }
 }

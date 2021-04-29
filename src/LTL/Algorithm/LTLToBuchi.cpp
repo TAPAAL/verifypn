@@ -17,14 +17,13 @@
 
 #include "LTL/LTLToBuchi.h"
 #include "LTL/SuccessorGeneration/BuchiSuccessorGenerator.h"
+#include "PetriEngine/options.h"
 
 #include <spot/twaalgos/translate.hh>
 #include <spot/tl/parse.hh>
 #include <spot/twa/bddprint.hh>
 #include <sstream>
 #include <spot/twaalgos/dot.hh>
-#include <PetriEngine/options.h>
-
 
 using namespace PetriEngine::PQL;
 

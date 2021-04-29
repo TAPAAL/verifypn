@@ -114,7 +114,7 @@ namespace LTL {
 
         using _succ_iter = std::unique_ptr<spot::twa_succ_iterator, SuccIterDeleter>;
         _succ_iter succ = nullptr;
-            private:
+    private:
 
         enum class InvariantSelfLoop {
             TRUE, FALSE, UNKNOWN

@@ -16,7 +16,7 @@
  */
 
 #include "LTL/Structures/GuardInfo.h"
-#include "LTL/SpotToPQL.h"
+#include "LTL/Simplification/SpotToPQL.h"
 #include <spot/twa/formula2bdd.hh>
 #include <spot/tl/formula.hh>
 
@@ -38,7 +38,7 @@ namespace LTL {
                 }
             }
             if (!state_guards.back().retarding) {
-                state_guards.back().retarding = std::make_shared<BooleanCondition>(false);
+                state_guards.back().retarding = std::make_shared<PetriEngine::PQL::BooleanCondition>(false);
             }
         }
         return state_guards;

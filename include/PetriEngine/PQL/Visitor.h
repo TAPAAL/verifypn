@@ -29,7 +29,6 @@ namespace PetriEngine {
             //virtual ~Visitor() = default;
 
         protected:
-
             virtual void _accept(const NotCondition* element) = 0;
             virtual void _accept(const AndCondition* element) = 0;
             virtual void _accept(const OrCondition* element) = 0;

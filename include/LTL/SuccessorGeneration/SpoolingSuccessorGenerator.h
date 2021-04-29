@@ -132,6 +132,7 @@ namespace LTL {
         {
             assert(_spooler != nullptr);
             assert(sucinfo.successors != nullptr);
+            _spooler->prepare(static_cast<const LTL::Structures::ProductState*>(_parent));
             _spooler->generateAll();
 
             uint32_t tid;
@@ -199,7 +200,6 @@ namespace LTL {
             if (_heuristic && sc.successors.has_consumed())
                 _heuristic->pop(sc.successors.last_pop());
         }
-
 
     private:
         SuccessorSpooler *_spooler = nullptr;

@@ -64,10 +64,10 @@ namespace LTL {
                 assert(false); //return _successor_generator.prepare(state);
             } else {
                 assert(false);
+                std::cerr << "Invalid call to prepare(ProductState), requires not ResumingSuccessorGenerator\n";
+                exit(1);
+
             }
-            /*else {
-                return _successor_generator.prepare(state, stateToGuards.at(state->getBuchiState()));
-            }*/
         }
 
         bool next(LTL::Structures::ProductState &state)
@@ -252,6 +252,7 @@ namespace LTL {
         bool has_invariant_self_loop(const LTL::Structures::ProductState &state) {
             return buchi.has_invariant_self_loop(state.getBuchiState());
         }
+
         virtual ~ProductSuccessorGenerator() = default;
 
     protected:
