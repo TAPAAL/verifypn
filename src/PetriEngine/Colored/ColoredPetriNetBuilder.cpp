@@ -129,6 +129,7 @@ namespace PetriEngine {
         arc.expr = std::move(expr);
         arc.input = input;
         input? _transitions[t].input_arcs.push_back(std::move(arc)): _transitions[t].output_arcs.push_back(std::move(arc));
+        
     }
 
     void ColoredPetriNetBuilder::addColorType(const std::string& id, Colored::ColorType* type) {
@@ -393,6 +394,33 @@ namespace PetriEngine {
         }
     }
 
+    void ColoredPetriNetBuilder::findStablePlaces(){
+        for(auto ptPair : _placePostTransitionMap){
+            for(auto transitionId : ptPair.second){
+                Colored::Arc *inArc;
+                for(auto &arc : _transitions[transitionId].input_arcs){
+                    if(arc.place == ptPair.first){
+                        inArc = &arc;
+                        break;
+                    }
+                }
+                bool mirroredArcs = false;
+                for(auto arc : _transitions[transitionId].output_arcs){
+                    if(arc.place == ptPair.first){
+                        if(arc.expr->toString() == inArc->expr->toString()){
+                            mirroredArcs = true;
+                        }
+                        break;
+                    }
+                }
+                if(!mirroredArcs){
+                    _places[ptPair.first].stable = false;
+                    break;
+                }
+            }
+        }
+    }
+
     //----------------------- Unfolding -----------------------//
 
     PetriNetBuilder& ColoredPetriNetBuilder::unfold() {
@@ -400,6 +428,8 @@ namespace PetriEngine {
         if (_isColored && !_unfolded) {
             std::cout << "Unfolding " << _fixpointDone << _partitionComputed << std::endl;
             auto start = std::chrono::high_resolution_clock::now();
+
+            findStablePlaces();
 
             if(!_fixpointDone && _partitionComputed){
                 createPartionVarmaps();
@@ -504,15 +534,20 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName) {
-        Colored::ExpressionContext context {binding, _colors, _partition[arc.place]};
-        auto ms = arc.expr->eval(context);       
+        const PetriEngine::Colored::Place& place = _places[arc.place];
+        //If the place is stable, the arc does not need to be unfolded
+        if(place.stable){
+            return;
+        } 
         
+        Colored::ExpressionContext context {binding, _colors, _partition[arc.place]};
+        auto ms = arc.expr->eval(context);  
+            
         for (const auto& color : ms) {
             if (color.second == 0) {
                 continue;
             }
             
-            const PetriEngine::Colored::Place& place = _places[arc.place];
             uint32_t id;
             if(!_partitionComputed || _partition[arc.place].diagonal){
                 id = color.first->getId();
