@@ -395,28 +395,32 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::findStablePlaces(){
-        for(auto ptPair : _placePostTransitionMap){
-            for(auto transitionId : ptPair.second){
-                Colored::Arc *inArc;
-                for(auto &arc : _transitions[transitionId].input_arcs){
-                    if(arc.place == ptPair.first){
-                        inArc = &arc;
-                        break;
-                    }
-                }
-                bool mirroredArcs = false;
-                for(auto arc : _transitions[transitionId].output_arcs){
-                    if(arc.place == ptPair.first){
-                        if(arc.expr->toString() == inArc->expr->toString()){
-                            mirroredArcs = true;
+        for(uint32_t placeId = 0; placeId < _places.size(); placeId++){
+            if(_placePostTransitionMap.count(placeId) != 0 && !_placePostTransitionMap[placeId].empty()){
+                for(auto transitionId : _placePostTransitionMap[placeId]){
+                    Colored::Arc *inArc;
+                    for(auto &arc : _transitions[transitionId].input_arcs){
+                        if(arc.place == placeId){
+                            inArc = &arc;
+                            break;
                         }
+                    }
+                    bool mirroredArcs = false;
+                    for(auto arc : _transitions[transitionId].output_arcs){
+                        if(arc.place == placeId){
+                            if(arc.expr->toString() == inArc->expr->toString()){
+                                mirroredArcs = true;
+                            }
+                            break;
+                        }
+                    }
+                    if(!mirroredArcs){
+                        _places[placeId].stable = false;
                         break;
                     }
                 }
-                if(!mirroredArcs){
-                    _places[ptPair.first].stable = false;
-                    break;
-                }
+            } else {
+                _places[placeId].stable = false;
             }
         }
     }
