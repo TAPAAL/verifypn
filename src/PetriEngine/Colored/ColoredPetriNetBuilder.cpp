@@ -555,7 +555,6 @@ namespace PetriEngine {
         const PetriEngine::Colored::Place& place = _places[arc.place];
         //If the place is stable, the arc does not need to be unfolded
         if(place.stable){
-            std::cout << "Stable place " << place.name << std::endl;
             return;
         } 
         
