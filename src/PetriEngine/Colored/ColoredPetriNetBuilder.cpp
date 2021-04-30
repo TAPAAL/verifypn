@@ -396,8 +396,22 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::findStablePlaces(){
         for(uint32_t placeId = 0; placeId < _places.size(); placeId++){
-            if(_placePostTransitionMap.count(placeId) != 0 && !_placePostTransitionMap[placeId].empty()){
+            if(_placePostTransitionMap.count(placeId) != 0 && 
+                !_placePostTransitionMap[placeId].empty() && 
+                _placePostTransitionMap[placeId].size() == _placePreTransitionMap[placeId].size()){
+
                 for(auto transitionId : _placePostTransitionMap[placeId]){
+                    bool matched = false;
+                    for(auto transitionId2 : _placePreTransitionMap[placeId]){
+                        if(transitionId == transitionId2){
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if(!matched){
+                        _places[placeId].stable = false;
+                        break;
+                    }
                     Colored::Arc *inArc;
                     for(auto &arc : _transitions[transitionId].input_arcs){
                         if(arc.place == placeId){
@@ -541,6 +555,7 @@ namespace PetriEngine {
         const PetriEngine::Colored::Place& place = _places[arc.place];
         //If the place is stable, the arc does not need to be unfolded
         if(place.stable){
+            std::cout << "Stable place " << place.name << std::endl;
             return;
         } 
         
