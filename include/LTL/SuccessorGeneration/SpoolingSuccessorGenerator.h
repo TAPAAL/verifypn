@@ -145,12 +145,20 @@ namespace LTL {
             if (!_heuristic) {
                 uint32_t nsuc = 0;
                 // generate list of transitions that generate a successor.
+                auto [first, last] = sucinfo.successors.all_successors();
+                for (; first < last; ++first) {
+                    tid = *first;
+                    // avoiding duplicates
+                    if (!static_cast<VisibleLTLStubbornSet*>(_spooler)->stubborn()[tid]) {
+                        _transbuf[nsuc++] = tid;
+                    }
+                }
                 while ((tid = _spooler->next()) != SuccessorSpooler::NoTransition) {
                     assert(tid <= _net.numberOfTransitions());
                     _transbuf[nsuc++] = tid;
                     assert(nsuc <= _net.numberOfTransitions());
                 }
-                sucinfo.successors.append(_transbuf.get(), nsuc);
+                sucinfo.successors.extend_to(_transbuf.get(), nsuc);
 
             } else {
                 auto evaluate_heuristic = [&] (uint32_t tid) {
