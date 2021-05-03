@@ -420,9 +420,9 @@ namespace PetriEngine {
                         }
                     }
                     bool mirroredArcs = false;
-                    for(auto arc : _transitions[transitionId].output_arcs){
+                    for(auto& arc : _transitions[transitionId].output_arcs){
                         if(arc.place == placeId){
-                            if(arc.expr->toString() == inArc->expr->toString()){
+                            if(arc.expr->equals(inArc->expr.get())){
                                 mirroredArcs = true;
                             }
                             break;
@@ -447,7 +447,11 @@ namespace PetriEngine {
             std::cout << "Unfolding " << _fixpointDone << _partitionComputed << std::endl;
             auto start = std::chrono::high_resolution_clock::now();
 
+            auto startStable = std::chrono::high_resolution_clock::now();
             findStablePlaces();
+            auto endStable = std::chrono::high_resolution_clock::now();
+            std::cout << "Stable places took " << (std::chrono::duration_cast<std::chrono::microseconds>(endStable - startStable).count())*0.000001 << " seconds" << std::endl;
+            
 
             if(!_fixpointDone && _partitionComputed){
                 createPartionVarmaps();

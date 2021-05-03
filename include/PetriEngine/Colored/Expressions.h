@@ -81,6 +81,11 @@ namespace PetriEngine {
                 return ("Undefined weight: " + _message).c_str();
             }
         };
+
+        template<typename Base, typename T>
+        inline bool instanceof(const T*) {
+            return std::is_base_of<Base, T>::value;
+        }
         
         class Expression {
         public:
@@ -102,6 +107,8 @@ namespace PetriEngine {
             virtual bool isTuple() const {
                 return false;
             }
+
+            
 
             virtual void getVariables(std::set<const Colored::Variable*>& variables) const {
                 std::unordered_map<uint32_t, const Colored::Variable *> varPositions;
@@ -126,6 +133,10 @@ namespace PetriEngine {
             
             virtual const Color* eval(ExpressionContext& context) const = 0;
 
+            virtual const bool equals(ColorExpression *other) {
+                return false;
+            }
+
             virtual void getConstants(std::unordered_map<uint32_t, const Color*> &constantMap, uint32_t &index) const = 0;
 
             virtual bool getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index, int32_t modifier) const = 0;
@@ -142,6 +153,10 @@ namespace PetriEngine {
         public:
             const Color* eval(ExpressionContext& context) const override {
                 return DotConstant::dotConstant(nullptr);
+            }
+
+            const bool equals(ColorExpression *other) override {
+                return instanceof<DotConstantExpression>(other);
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index, int32_t modifier) const override {
@@ -186,6 +201,15 @@ namespace PetriEngine {
         public:
             const Color* eval(ExpressionContext& context) const override {
                 return context.binding[_variable];
+            }
+
+            const bool equals(ColorExpression *other) override {
+                if(instanceof<VariableExpression>(other)){
+                    std::set<const Colored::Variable*> variables;
+                    other->getVariables(variables);
+                    return variables.size() == 1 && variables.begin().operator*() == _variable;
+                }
+                return false;
             }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
@@ -264,6 +288,16 @@ namespace PetriEngine {
         public:
             const Color* eval(ExpressionContext& context) const override {
                 return _userOperator;
+            }
+
+            const bool equals(ColorExpression *other) override {
+                if(instanceof<UserOperatorExpression>(other)){
+                    std::unordered_map<uint32_t, const Color*> constantMap;
+                    uint32_t index = 0;
+                    other->getConstants(constantMap, index);
+                    return constantMap.size() == 1 && constantMap[index] == _userOperator;
+                }
+                return false;
             }
 
             bool getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index, int32_t modifier) const override {
@@ -373,6 +407,13 @@ namespace PetriEngine {
             bool isTuple() const override {
                 return _color->isTuple();
             }
+
+            const bool equals(ColorExpression *other) override {
+                if(instanceof<SuccessorExpression>(other)){
+                    return _color->equals(static_cast<SuccessorExpression*>(other)->_color.get());
+                }
+                return false;
+            }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
@@ -430,6 +471,13 @@ namespace PetriEngine {
 
             bool isTuple() const override {
                 return _color->isTuple();
+            }
+
+            const bool equals(ColorExpression *other) override {
+                if(instanceof<PredecessorExpression>(other)){
+                    return _color->equals(static_cast<PredecessorExpression*>(other)->_color.get());
+                }
+                return false;
             }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
@@ -499,6 +547,19 @@ namespace PetriEngine {
 
             bool isTuple() const override {
                 return true;
+            }
+
+            const bool equals(ColorExpression *other) override {
+                if(instanceof<TupleExpression>(other)){
+                    auto otherTuple = static_cast<TupleExpression*>(other);
+                    for(uint32_t i = 0; i < _colors.size(); i++){
+                       if(!_colors[i]->equals(otherTuple->_colors[i].get())){
+                           return false;
+                       }
+                    }                    
+                    return true;
+                }
+                return false;
             }
 
             Colored::intervalTuple_t getOutputIntervals(std::unordered_map<const PetriEngine::Colored::Variable *, PetriEngine::Colored::intervalTuple_t>& varMap, std::vector<const Colored::ColorType *> *colortypes) const override {
@@ -601,6 +662,10 @@ namespace PetriEngine {
             
             virtual bool eval(ExpressionContext& context) const = 0;
 
+            virtual const bool equals(GuardExpression *other) {
+                return false;
+            }
+
             virtual void restrictVars(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap, std::set<const Colored::Variable*> &diagonalVars) const = 0;
 
             virtual void restrictVars(std::vector<std::unordered_map<const Colored::Variable *, Colored::intervalTuple_t>>& variableMap) const {
@@ -619,6 +684,14 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) < _right->eval(context);
+            }
+
+            const bool equals(GuardExpression *other) override {
+                if(instanceof<LessThanExpression>(other)){
+                    auto castedOther = static_cast<LessThanExpression*>(other);                   
+                    return _left->equals(castedOther->_left.get()) && _right->equals(castedOther->_right.get());
+                }
+                return false;
             }
 
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
@@ -673,6 +746,14 @@ namespace PetriEngine {
                 return _left->eval(context) > _right->eval(context);
             }
 
+            const bool equals(GuardExpression *other) override {
+                if(instanceof<GreaterThanExpression>(other)){
+                    auto castedOther = static_cast<GreaterThanExpression*>(other);                   
+                    return _left->equals(castedOther->_left.get()) && _right->equals(castedOther->_right.get());
+                }
+                return false;
+            }
+
             bool isTuple() const override {
                 return _left->isTuple() || _right->isTuple();
             }
@@ -723,6 +804,14 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) <= _right->eval(context);
+            }
+
+            const bool equals(GuardExpression *other) override {
+                if(instanceof<LessThanEqExpression>(other)){
+                    auto castedOther = static_cast<LessThanEqExpression*>(other);                   
+                    return _left->equals(castedOther->_left.get()) && _right->equals(castedOther->_right.get());
+                }
+                return false;
             }
 
             bool isTuple() const override {
@@ -778,6 +867,14 @@ namespace PetriEngine {
                 return _left->eval(context) >= _right->eval(context);
             }
 
+            const bool equals(GuardExpression *other) override {
+                if(instanceof<GreaterThanEqExpression>(other)){
+                    auto castedOther = static_cast<GreaterThanEqExpression*>(other);                   
+                    return _left->equals(castedOther->_left.get()) && _right->equals(castedOther->_right.get());
+                }
+                return false;
+            }
+
             bool isTuple() const override {
                 return _left->isTuple() || _right->isTuple();
             }
@@ -828,6 +925,14 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) == _right->eval(context);
+            }
+
+            const bool equals(GuardExpression *other) override {
+                if(instanceof<EqualityExpression>(other)){
+                    auto castedOther = static_cast<EqualityExpression*>(other);                   
+                    return _left->equals(castedOther->_left.get()) && _right->equals(castedOther->_right.get());
+                }
+                return false;
             }
             
             bool isTuple() const override {
@@ -883,6 +988,14 @@ namespace PetriEngine {
                 return _left->eval(context) != _right->eval(context);
             }
 
+            const bool equals(GuardExpression *other) override {
+                if(instanceof<InequalityExpression>(other)){
+                    auto castedOther = static_cast<InequalityExpression*>(other);                   
+                    return _left->equals(castedOther->_left.get()) && _right->equals(castedOther->_right.get());
+                }
+                return false;
+            }
+
             bool isTuple() const override {
                 return _left->isTuple() || _right->isTuple();
             }
@@ -912,6 +1025,13 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return !_expr->eval(context);
+            }
+
+            const bool equals(GuardExpression *other) override {
+                if(instanceof<NotExpression>(other)){
+                    return _expr->equals(static_cast<NotExpression*>(other)->_expr.get());
+                }
+                return false;
             }
 
             bool isTuple() const override {
@@ -955,6 +1075,14 @@ namespace PetriEngine {
                 return _left->eval(context) && _right->eval(context);
             }
 
+            const bool equals(GuardExpression *other) override {
+                if(instanceof<AndExpression>(other)){
+                    auto castedOther = static_cast<AndExpression*>(other);                   
+                    return _left->equals(castedOther->_left.get()) && _right->equals(castedOther->_right.get());
+                }
+                return false;
+            }
+
             bool isTuple() const override {
                 return _left->isTuple() || _right->isTuple();
             }
@@ -986,6 +1114,14 @@ namespace PetriEngine {
         public:
             bool eval(ExpressionContext& context) const override {
                 return _left->eval(context) || _right->eval(context);
+            }
+
+            const bool equals(GuardExpression *other) override {
+                if(instanceof<OrExpression>(other)){
+                    auto castedOther = static_cast<OrExpression*>(other);                   
+                    return _left->equals(castedOther->_left.get()) && _right->equals(castedOther->_right.get());
+                }
+                return false;
             }
 
             bool isTuple() const override {
@@ -1030,6 +1166,10 @@ namespace PetriEngine {
             virtual void expressionType() override {
                 std::cout << "ArcExpression" << std::endl;
             }
+
+            virtual const bool equals(ArcExpression *other) {
+                return false;
+            }
             virtual void getConstants(std::unordered_map<uint32_t, std::vector<const Color*>> &constantMap, uint32_t &index) const = 0;
 
             virtual bool getArcIntervals(Colored::ArcIntervals& arcIntervals, PetriEngine::Colored::ColorFixpoint& cfp, uint32_t *index, int32_t modifier) const = 0;
@@ -1073,6 +1213,10 @@ namespace PetriEngine {
 
             bool isTuple() const override {
                 return _sort->productSize() > 1;
+            }
+
+            const bool equals(AllExpression *other) {
+                return _sort->getId() == other->_sort->getId();                  
             }
 
             void getConstants(std::unordered_map<uint32_t, std::vector<const Color*>> &constantMap, uint32_t &index) const {
@@ -1151,6 +1295,20 @@ namespace PetriEngine {
                 }               
                 
                 return Multiset(col);
+            }
+
+            const bool equals(ArcExpression *other) override {
+                if(instanceof<NumberOfExpression>(other)){
+                    auto castedOther = static_cast<NumberOfExpression*>(other); 
+                    if(_all != nullptr && castedOther->_all != nullptr){
+                        return _all->equals(castedOther->_all.get());                           
+                    } else if(castedOther->_color.size() == _color.size()) {
+                        for (uint32_t i = 0; i < _color.size(); i++) {                            
+                            _color[i]->equals(castedOther->_color[i].get());
+                        }
+                    }                  
+                }
+                return false;
             }
 
             bool isTuple() const override {
@@ -1270,6 +1428,21 @@ namespace PetriEngine {
                 }
                 return ms;
             }
+
+            const bool equals(ArcExpression *other) override {
+                if(instanceof<AddExpression>(other)){
+                    auto castedOther = static_cast<AddExpression*>(other); 
+                    if(_constituents.size() == castedOther->_constituents.size()){
+                        for(uint32_t i = 0; i < _constituents.size(); i++){
+                            if(!_constituents[i]->equals(castedOther->_constituents[i].get())){
+                                return false;
+                            }
+                        }
+                        return true;
+                    }                  
+                }
+                return false;
+            }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 for (auto elem : _constituents) {
@@ -1363,6 +1536,14 @@ namespace PetriEngine {
             Multiset eval(ExpressionContext& context) const override {
                 return _left->eval(context) - _right->eval(context);
             }
+
+            const bool equals(ArcExpression *other) override {
+                if(instanceof<SubtractExpression>(other)){
+                    auto castedOther = static_cast<SubtractExpression*>(other); 
+                    return _left->equals(castedOther->_left.get()) && _right->equals(castedOther->_right.get());                  
+                }
+                return false;
+            }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {
                 _left->getVariables(variables, varPositions, varModifierMap);
@@ -1423,6 +1604,14 @@ namespace PetriEngine {
         public:
             Multiset eval(ExpressionContext& context) const override {
                 return _expr->eval(context) * _scalar;
+            }
+
+            const bool equals(ArcExpression *other) override {
+                if(instanceof<ScalarProductExpression>(other)){
+                    auto castedOther = static_cast<ScalarProductExpression*>(other); 
+                    return _expr->equals(castedOther->_expr.get());                  
+                }
+                return false;
             }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, uint32_t *index) const override {

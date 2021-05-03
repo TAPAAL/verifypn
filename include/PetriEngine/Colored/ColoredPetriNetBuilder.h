@@ -178,6 +178,8 @@ namespace PetriEngine {
         double _partitionTimer = 0;
 
         double _partitionVarMapTimer = 0;
+        double testTimer = 0;
+        double _stablePlacesTimer = 0;
 
         std::string arcToString(Colored::Arc& arc) const ;
 
