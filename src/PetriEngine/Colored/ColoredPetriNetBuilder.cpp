@@ -454,20 +454,31 @@ namespace PetriEngine {
             
 
             if(!_fixpointDone && _partitionComputed){
+                auto startPart = std::chrono::high_resolution_clock::now();
                 createPartionVarmaps();
+                auto endPart = std::chrono::high_resolution_clock::now();
+                std::cout << "Partition varmaps took " << (std::chrono::duration_cast<std::chrono::microseconds>(endPart - startPart).count())*0.000001 << " seconds" << std::endl;
             }
             
             for (auto& transition : _transitions) {
                 unfoldTransition(transition);
             }
             auto unfoldedPlaceMap = _ptBuilder.getPlaceNames();
+            auto start2 = std::chrono::high_resolution_clock::now();
             for (auto& place : _places) {
                handleOrphanPlace(place, unfoldedPlaceMap);
             }
+            auto end2 = std::chrono::high_resolution_clock::now();
+            std::cout << "Unfolding transitions and orphans took " <<  (std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2).count())*0.000001 << std::endl;
             
             _unfolded = true;
             auto end = std::chrono::high_resolution_clock::now();
             _time = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
+            std::cout << "Unfold transition time: " << _unfoldTransitionTime*0.000001 << std::endl;
+            std::cout << "binding time: " << _bindingTime << std::endl;
+            std::cout << "Unfold arc time: " << _unfoldArcTime*0.000001 << std::endl;
+            std::cout << "Unfold place time: " << _unfoldPlaceTime*0.000001 << std::endl;
+            std::cout << "Unfold orphan time: " << _unfoldOrphanTime*0.000001 << std::endl;
         }
         return _ptBuilder;
     }
@@ -476,7 +487,8 @@ namespace PetriEngine {
     //However, in queries asking about orphan places it cannot find these, as they have not been unfolded
     //so we make a placeholder place which just has tokens equal to the number of colored tokens
     //Ideally, orphan places should just be translated to a constant in the query
-    void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> unfoldedPlaceMap) {
+    void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap) {
+        auto start = std::chrono::high_resolution_clock::now();
         if(_ptplacenames.count(place.name) <= 0){
             std::string name = place.name + "_orphan";
             _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
@@ -496,11 +508,13 @@ namespace PetriEngine {
                 _ptplacenames[place.name][UINT32_MAX] = std::move(name);
             }
         }
-        
+        auto end = std::chrono::high_resolution_clock::now();
+        _unfoldOrphanTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
         //++_nptplaces;        
     }
     
     void ColoredPetriNetBuilder::unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t placeId, uint32_t id) {        
+        auto start = std::chrono::high_resolution_clock::now();
         size_t tokenSize = 0;
         if(!_partitionComputed || _partition[placeId].diagonal){
             tokenSize = place->marking[color];
@@ -516,9 +530,12 @@ namespace PetriEngine {
         _ptBuilder.addPlace(name, tokenSize, 0.0, 0.0);
         _ptplacenames[place->name][id] = std::move(name);
         ++_nptplaces;
+        auto end = std::chrono::high_resolution_clock::now();
+        _unfoldPlaceTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
     }
 
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
+        auto start = std::chrono::high_resolution_clock::now();
         if(_fixpointDone || _partitionComputed){            
             FixpointBindingGenerator gen(transition, _colors);
             size_t i = 0;
@@ -535,7 +552,8 @@ namespace PetriEngine {
                 for (auto& arc : transition.output_arcs) {
                     unfoldArc(arc, b, name);
                 }                
-            }            
+            }
+            _bindingTime += gen.getTime();            
         } else {
             std::cout << "Entered naive" << std::endl;
             NaiveBindingGenerator gen(transition, _colors);
@@ -552,13 +570,18 @@ namespace PetriEngine {
                     unfoldArc(arc, b, name);
                 }
             }
-        }        
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        _unfoldTransitionTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());        
     }
 
     void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName) {
+        auto start = std::chrono::high_resolution_clock::now();
         const PetriEngine::Colored::Place& place = _places[arc.place];
         //If the place is stable, the arc does not need to be unfolded
         if(place.stable){
+            auto end = std::chrono::high_resolution_clock::now();
+            _unfoldArcTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
             return;
         } 
         
@@ -587,7 +610,10 @@ namespace PetriEngine {
                 _ptBuilder.addOutputArc(tName, pName, color.second);
             }
             ++_nptarcs;
-        }        
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        _unfoldArcTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());        
     }
 
     //----------------------- Strip Colors -----------------------//

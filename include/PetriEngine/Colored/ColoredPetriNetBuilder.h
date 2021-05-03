@@ -178,7 +178,11 @@ namespace PetriEngine {
         double _partitionTimer = 0;
 
         double _partitionVarMapTimer = 0;
-        double testTimer = 0;
+        double _unfoldArcTime = 0;
+        double _unfoldTransitionTime = 0;
+        double _unfoldPlaceTime = 0;
+        double _unfoldOrphanTime = 0;
+        double _bindingTime = 0;
         double _stablePlacesTimer = 0;
 
         std::string arcToString(Colored::Arc& arc) const ;
@@ -202,7 +206,7 @@ namespace PetriEngine {
         
         void unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t unfoldPlace, uint32_t id);
         void unfoldTransition(Colored::Transition& transition);
-        void handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> unfoldedPlaceMap);
+        void handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap);
         void createPartionVarmaps();
 
         void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name);
