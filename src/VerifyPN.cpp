@@ -413,6 +413,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             options.computeCFP = false;
         } else if (strcmp(argv[i], "--disable-partitioning") == 0) {
             options.computePartition = false;
+        }else if (strcmp(argv[i], "--noverify") == 0) {
+            options.doVerification = false;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             printf("Usage: verifypn [options] model-file query-file\n"
                     "A tool for answering CTL, LTL and reachability queries\n"
@@ -483,6 +485,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                       For some queries this helps reduce the overhead of query\n"
                     "                                       simplification and Büchi construction, but gives worse\n"
                     "                                       results since there is less opportunity for optimizations.\n"
+                    "  --noverify                           Disable verification e.g. for getting unfolded net\n"
                     "\n"
                     "Return Values:\n"
                     "  0   Successful, query satisfiable\n"
@@ -1312,128 +1315,130 @@ int main(int argc, char* argv[]) {
 
     if(alldone) return SuccessCode;
 
+    if(options.doVerification){
     //----------------------- Verify CTL queries -----------------------//
-    std::vector<size_t> ctl_ids;
-    std::vector<size_t> ltl_ids;
-    for(size_t i = 0; i < queries.size(); ++i)
-    {
-        if(results[i] == ResultPrinter::CTL)
+        std::vector<size_t> ctl_ids;
+        std::vector<size_t> ltl_ids;
+        for(size_t i = 0; i < queries.size(); ++i)
         {
-            ctl_ids.push_back(i);
-        }
-        else if (results[i] == ResultPrinter::LTL) {
-            ltl_ids.push_back(i);
-        }
-    }
-
-    if (!ctl_ids.empty()) {
-        options.usedctl=true;
-        PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
-
-        // Assign indexes
-        if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)
-        {
-            std::cerr << "An error occurred while assigning indexes" << std::endl;
-            return ErrorCode;
-        }
-        if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
-        v = CTLMain(net.get(),
-            options.ctlalgorithm,
-            options.strategy,
-            options.gamemode,
-            options.printstatistics,
-            true,
-            options.stubbornreduction,
-            querynames,
-            queries,
-            ctl_ids,
-            options);
-
-        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-            return v;
-        }
-        // go back to previous strategy if the program continues
-        options.strategy=reachabilityStrategy;
-    }
-    options.usedctl=false;
-
-    //----------------------- Verify LTL queries -----------------------//
-
-    if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
-        options.usedltl = true;
-        if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode) {
-            std::cerr << "Error performing context analysis" << std::endl;
-            return v;
-        }
-
-        for (auto qid : ltl_ids) {
-            LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
-
-        }
-        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-            return SuccessCode;
-        }
-    }
-
-    //----------------------- Siphon Trap ------------------------//
-
-    if(options.siphontrapTimeout > 0){
-        for (uint32_t i = 0; i < results.size(); i ++) {
-            bool isDeadlockQuery = std::dynamic_pointer_cast<DeadlockCondition>(queries[i]) != nullptr;
-
-            if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {
-                STSolver stSolver(printer, *net, queries[i].get(), options.siphonDepth);
-                stSolver.solve(options.siphontrapTimeout);
-                results[i] = stSolver.printResult();
-                if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics) {
-                    std::cout << "Query solved by Siphon-Trap Analysis." << std::endl << std::endl;
-                }
+            if(results[i] == ResultPrinter::CTL)
+            {
+                ctl_ids.push_back(i);
+            }
+            else if (results[i] == ResultPrinter::LTL) {
+                ltl_ids.push_back(i);
             }
         }
 
-        if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
-            return SuccessCode;
-        }
-    }
-    options.siphontrapTimeout = 0;
+        if (!ctl_ids.empty()) {
+            options.usedctl=true;
+            PetriEngine::Reachability::Strategy reachabilityStrategy=options.strategy;
 
-    //----------------------- Reachability -----------------------//
-
-    //Analyse context again to reindex query
-    contextAnalysis(cpnBuilder, builder, net.get(), queries);
-
-    // Change default place-holder to default strategy
-    if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
-
-    if(options.tar && net->numberOfPlaces() > 0)
-    {
-        //Create reachability search strategy
-        TARReachabilitySearch strategy(printer, *net, builder.getReducer(), options.kbound);
-
-        // Change default place-holder to default strategy
-        fprintf(stdout, "Search strategy option was ignored as the TAR engine is called.\n");
-        options.strategy = PetriEngine::Reachability::DFS;
-
-        //Reachability search
-        strategy.reachable(queries, results,
+            // Assign indexes
+            if(queries.empty() || contextAnalysis(cpnBuilder, builder, net.get(), queries) != ContinueCode)
+            {
+                std::cerr << "An error occurred while assigning indexes" << std::endl;
+                return ErrorCode;
+            }
+            if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::DFS;
+            v = CTLMain(net.get(),
+                options.ctlalgorithm,
+                options.strategy,
+                options.gamemode,
                 options.printstatistics,
-                options.trace != TraceLevel::None);
-    }
-    else
-    {
-        ReachabilitySearch strategy(*net, printer, options.kbound);
+                true,
+                options.stubbornreduction,
+                querynames,
+                queries,
+                ctl_ids,
+                options);
+
+            if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+                return v;
+            }
+            // go back to previous strategy if the program continues
+            options.strategy=reachabilityStrategy;
+        }
+        options.usedctl=false;
+
+        //----------------------- Verify LTL queries -----------------------//
+
+        if (!ltl_ids.empty() && options.ltlalgorithm != LTL::Algorithm::None) {
+            options.usedltl = true;
+            if ((v = contextAnalysis(cpnBuilder, builder, net.get(), queries)) != ContinueCode) {
+                std::cerr << "Error performing context analysis" << std::endl;
+                return v;
+            }
+
+            for (auto qid : ltl_ids) {
+                LTL::LTLMain(net.get(), queries[qid], querynames[qid], options);
+
+            }
+            if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+                return SuccessCode;
+            }
+        }
+
+        //----------------------- Siphon Trap ------------------------//
+
+        if(options.siphontrapTimeout > 0){
+            for (uint32_t i = 0; i < results.size(); i ++) {
+                bool isDeadlockQuery = std::dynamic_pointer_cast<DeadlockCondition>(queries[i]) != nullptr;
+
+                if (results[i] == ResultPrinter::Unknown && isDeadlockQuery) {
+                    STSolver stSolver(printer, *net, queries[i].get(), options.siphonDepth);
+                    stSolver.solve(options.siphontrapTimeout);
+                    results[i] = stSolver.printResult();
+                    if (results[i] == Reachability::ResultPrinter::NotSatisfied && options.printstatistics) {
+                        std::cout << "Query solved by Siphon-Trap Analysis." << std::endl << std::endl;
+                    }
+                }
+            }
+
+            if (std::find(results.begin(), results.end(), ResultPrinter::Unknown) == results.end()) {
+                return SuccessCode;
+            }
+        }
+        options.siphontrapTimeout = 0;
+
+        //----------------------- Reachability -----------------------//
+
+        //Analyse context again to reindex query
+        contextAnalysis(cpnBuilder, builder, net.get(), queries);
 
         // Change default place-holder to default strategy
         if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
 
-        //Reachability search
-        strategy.reachable(queries, results,
-                           options.strategy,
-                           options.stubbornreduction,
-                           options.statespaceexploration,
-                           options.printstatistics,
-                           options.trace != TraceLevel::None,
-                           options.seed());
+        if(options.tar && net->numberOfPlaces() > 0)
+        {
+            //Create reachability search strategy
+            TARReachabilitySearch strategy(printer, *net, builder.getReducer(), options.kbound);
+
+            // Change default place-holder to default strategy
+            fprintf(stdout, "Search strategy option was ignored as the TAR engine is called.\n");
+            options.strategy = PetriEngine::Reachability::DFS;
+
+            //Reachability search
+            strategy.reachable(queries, results,
+                    options.printstatistics,
+                    options.trace != TraceLevel::None);
+        }
+        else
+        {
+            ReachabilitySearch strategy(*net, printer, options.kbound);
+
+            // Change default place-holder to default strategy
+            if(options.strategy == DEFAULT) options.strategy = PetriEngine::Reachability::HEUR;
+
+            //Reachability search
+            strategy.reachable(queries, results,
+                            options.strategy,
+                            options.stubbornreduction,
+                            options.statespaceexploration,
+                            options.printstatistics,
+                            options.trace != TraceLevel::None,
+                            options.seed());
+        }
     }
 
     return SuccessCode;
