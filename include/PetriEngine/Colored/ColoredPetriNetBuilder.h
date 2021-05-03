@@ -34,7 +34,7 @@ namespace PetriEngine {
 
     class ColoredPetriNetBuilder : public AbstractPetriNetBuilder {
     public:
-        typedef std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>> PTPlaceMap;
+        typedef std::unordered_map<uint32_t, std::unordered_map<uint32_t , std::string>> PTPlaceMap;
         typedef std::unordered_map<std::string, std::vector<std::string>> PTTransitionMap;
         
     public:
@@ -206,7 +206,7 @@ namespace PetriEngine {
         
         void unfoldPlace(const Colored::Place* place, const PetriEngine::Colored::Color *color, uint32_t unfoldPlace, uint32_t id);
         void unfoldTransition(Colored::Transition& transition);
-        void handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap);
+        void handleOrphanPlace(uint32_t placeId, std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap);
         void createPartionVarmaps();
 
         void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name);
