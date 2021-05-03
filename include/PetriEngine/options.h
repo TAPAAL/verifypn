@@ -48,6 +48,7 @@ struct options_t {
     uint32_t siphonDepth = 0;
     uint32_t cores = 1;
     std::string output_stats;
+    bool doVerification = true;
 
     TemporalLogic logic = TemporalLogic::CTL;
     bool noreach = false;
