@@ -11,16 +11,7 @@ namespace PetriEngine {
        
         bool ColoredAnalysisContext::resolvePlace(const std::string& place, std::unordered_map<uint32_t, std::string>& out)
         {
-            auto placeIt = _placeNames.find(place);
-            if(placeIt != _placeNames.end()){   
-                return resolvePlace(placeIt->second, out);
-            }
-            return false;
-        }
-
-        bool ColoredAnalysisContext::resolvePlace(uint32_t placeId, std::unordered_map<uint32_t, std::string>& out)
-        {
-            auto it = _coloredPlaceNames.find(placeId);
+            auto it = _coloredPlaceNames.find(place);
             if (it != _coloredPlaceNames.end()) {
                 out = it->second;
                 return true;

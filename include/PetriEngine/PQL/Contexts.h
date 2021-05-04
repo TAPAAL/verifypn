@@ -83,7 +83,7 @@ namespace PetriEngine {
 
         class ColoredAnalysisContext : public AnalysisContext {
         protected:
-            const std::unordered_map<uint32_t, std::unordered_map<uint32_t , std::string>>& _coloredPlaceNames;
+            const std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>>& _coloredPlaceNames;
             const std::unordered_map<std::string, std::vector<std::string>>& _coloredTransitionNames;
 
             bool _colored;
@@ -92,7 +92,7 @@ namespace PetriEngine {
             ColoredAnalysisContext(const std::unordered_map<std::string, uint32_t>& places,
                                    const std::unordered_map<std::string, uint32_t>& tnames,
                                    const PetriNet* net,
-                                   const std::unordered_map<uint32_t, std::unordered_map<uint32_t , std::string>>& cplaces,
+                                   const std::unordered_map<std::string, std::unordered_map<uint32_t , std::string>>& cplaces,
                                    const std::unordered_map<std::string, std::vector<std::string>>& ctnames,
                                    bool colored)
                     : AnalysisContext(places, tnames, net),
@@ -102,7 +102,6 @@ namespace PetriEngine {
             {}
 
             bool resolvePlace(const std::string& place, std::unordered_map<uint32_t,std::string>& out);
-            bool resolvePlace(uint32_t placeId, std::unordered_map<uint32_t,std::string>& out);
 
             bool resolveTransition(const std::string& transition, std::vector<std::string>& out);
 

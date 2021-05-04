@@ -506,7 +506,7 @@ namespace PetriEngine {
             std::vector<Condition_ptr> k_safe;
             if(coloredContext != nullptr && coloredContext->isColored())
             {
-                for(auto& p : coloredContext->allPlaceNames())
+                for(auto& p : coloredContext->allColoredPlaceNames())
                     k_safe.emplace_back(std::make_shared<LessThanOrEqualCondition>(std::make_shared<IdentifierExpr>(p.first), _bound));
             }
             else
