@@ -24,6 +24,8 @@
 
 //#define REACH_STUB_DEBUG
 
+#define F_IN_FIX
+
 namespace LTL {
     template<typename S, typename Spooler>
     class ReachStubProductSuccessorGenerator : public ProductSuccessorGenerator<S> {
@@ -41,11 +43,26 @@ namespace LTL {
             }*/
             _reach = std::make_unique<ReachabilityStubbornSpooler>(*net);
             // Create the set of büchi states from which we can use reachability stubborn sets.
+            calc_reach_states(buchi);
+
+            std::cout << "Size of _reach_states: " << _reach_states.size() << std::endl;
+#ifdef REACH_STUB_DEBUG
+            if (_reach_states.empty()) {
+                //exit(0);
+            } else {
+                std::cerr << "Size of _reach_states: " << _reach_states.size() << std::endl;
+            }
+#endif
+        }
+
+        void calc_reach_states(const Structures::BuchiAutomaton &buchi) {
             std::vector<AtomicProposition> aps(buchi.ap_info.size());
             std::transform(std::begin(buchi.ap_info), std::end(buchi.ap_info), std::begin(aps),
                            [](const std::pair<int, AtomicProposition> &pair) { return pair.second; });
             for (unsigned state = 0; state < buchi._buchi->num_states(); ++state) {
+#ifndef F_IN_FIX
                 if (buchi._buchi->state_is_accepting(state)) continue;
+#endif
                 bdd retarding = bddfalse;
                 bdd progressing = bddfalse;
                 for (auto &e : buchi._buchi->out(state)) {
@@ -98,13 +115,14 @@ namespace LTL {
 
                 }
             } while (prev_sz != _reach_states.size());
-
-            std::cout << "Size of _reach_states: " << _reach_states.size() << std::endl;
-#ifdef REACH_STUB_DEBUG
-            if (_reach_states.empty()) {
-                //exit(0);
-            } else {
-                std::cerr << "Size of _reach_states: " << _reach_states.size() << std::endl;
+#ifdef F_IN_FIX
+            // Prune accepting states from reach states
+            for (auto it = std::begin(_reach_states); it != std::end(_reach_states);) {
+                if (buchi._buchi->state_is_accepting(it->first)) {
+                    it = _reach_states.erase(it);
+                } else {
+                    ++it;
+                }
             }
 #endif
         }
