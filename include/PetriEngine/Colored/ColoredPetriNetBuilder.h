@@ -209,7 +209,7 @@ namespace PetriEngine {
         void handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap);
         void createPartionVarmaps();
 
-        void unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& name);
+        void unfoldArc(const Colored::Arc& arc, const Colored::ExpressionContext::BindingMap& binding, const std::string& name);
     };
     
     //Used for checking if a variable is inside either a succ or pred expression

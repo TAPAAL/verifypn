@@ -526,7 +526,7 @@ namespace PetriEngine {
             }
         }
             
-        std::string name = place->name + "_" + std::to_string(color->getId());
+        const std::string &name = place->name + "_" + std::to_string(color->getId());
         _ptBuilder.addPlace(name, tokenSize, 0.0, 0.0);
         _ptplacenames[place->name][id] = std::move(name);
         ++_nptplaces;
@@ -541,41 +541,43 @@ namespace PetriEngine {
             size_t i = 0;
             
             for (auto b : gen) {                 
-                std::string name = transition.name + "_" + std::to_string(i++);
+                const std::string &name = transition.name + "_" + std::to_string(i++);
                 _ptBuilder.addTransition(name, 0.0, 0.0);
-                _pttransitionnames[transition.name].push_back(name);
-                ++_npttransitions;
+                
                 
                 for (auto& arc : transition.input_arcs) {
                     unfoldArc(arc, b, name );
                 }
                 for (auto& arc : transition.output_arcs) {
                     unfoldArc(arc, b, name);
-                }                
+                }
+                _pttransitionnames[transition.name].push_back(std::move(name));
+                ++_npttransitions;                
             }
             _bindingTime += gen.getTime();            
         } else {
             std::cout << "Entered naive" << std::endl;
             NaiveBindingGenerator gen(transition, _colors);
             size_t i = 0;
-            for (auto b : gen) {              
-                std::string name = transition.name + "_" + std::to_string(i++);
+            for (const auto &b : gen) {              
+                const std::string &name = transition.name + "_" + std::to_string(i++);
                 _ptBuilder.addTransition(name, 0.0, 0.0);
-                _pttransitionnames[transition.name].push_back(name);
+                
+                for (const auto& arc : transition.input_arcs) {
+                    unfoldArc(arc, b, name);
+                }
+                for (const auto& arc : transition.output_arcs) {
+                    unfoldArc(arc, b, name);
+                }
+                _pttransitionnames[transition.name].push_back(std::move(name));
                 ++_npttransitions;
-                for (auto& arc : transition.input_arcs) {
-                    unfoldArc(arc, b, name);
-                }
-                for (auto& arc : transition.output_arcs) {
-                    unfoldArc(arc, b, name);
-                }
             }
         }
         auto end = std::chrono::high_resolution_clock::now();
         _unfoldTransitionTime += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());        
     }
 
-    void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName) {
+    void ColoredPetriNetBuilder::unfoldArc(const Colored::Arc& arc, const Colored::ExpressionContext::BindingMap& binding, const std::string& tName) {
         auto start = std::chrono::high_resolution_clock::now();
         const PetriEngine::Colored::Place& place = _places[arc.place];
         //If the place is stable, the arc does not need to be unfolded

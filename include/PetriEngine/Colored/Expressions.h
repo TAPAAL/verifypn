@@ -43,9 +43,9 @@ namespace PetriEngine {
         struct ExpressionContext {
             typedef std::unordered_map<const Colored::Variable *, const PetriEngine::Colored::Color *> BindingMap;
 
-            BindingMap& binding;
-            std::unordered_map<std::string, ColorType*>& colorTypes;
-            Colored::EquivalenceVec& placePartition;
+            const BindingMap& binding;
+            const std::unordered_map<std::string, ColorType*>& colorTypes;
+            const Colored::EquivalenceVec& placePartition;
             
             const Color* findColor(const std::string& color) const {
                 if (color.compare("dot") == 0)
@@ -200,7 +200,7 @@ namespace PetriEngine {
             
         public:
             const Color* eval(ExpressionContext& context) const override {
-                return context.binding[_variable];
+                return context.binding.find(_variable)->second;
             }
 
             const bool equals(ColorExpression *other) override {

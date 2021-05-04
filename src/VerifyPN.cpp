@@ -469,7 +469,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
 #endif
                     "  -tar                                 Enables Trace Abstraction Refinement for reachability properties\n"
                     "  --max-intervals <interval count>     The max amount of intervals kept when computing the color fixpoint\n"
-                    "                  <interval count>     Default is 255 and then after <interval-timeout> second(s) to 5\n"
+                    "                  <interval count>     Default is 250 and then after <interval-timeout> second(s) to 5\n"
                     "  --write-simplified <filename>        Outputs the queries to the given file after simplification\n"
                     "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
                     "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
