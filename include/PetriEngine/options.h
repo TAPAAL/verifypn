@@ -47,7 +47,13 @@ enum class LTLHeuristic {
     Distance,
     Automaton,
     FireCount,
-    LogFireCount
+    LogFireCount,
+    SumComposed
+};
+
+struct LTLHeuristicOptions {
+    LTLHeuristic heuristic;
+    uint32_t fire_count_threshold = 200;
 };
 
 struct options_t {
@@ -90,7 +96,8 @@ struct options_t {
     APCompression ltl_compress_aps = APCompression::None;
     LTLPartialOrder ltl_por = LTLPartialOrder::VisibleReach;//AutomatonReach;
     BuchiOptimization buchiOptimization = BuchiOptimization::Low;
-    LTLHeuristic ltlHeuristic = LTLHeuristic::Automaton;
+    //LTLHeuristic ltlHeuristic = LTLHeuristic::Automaton;
+    LTLHeuristicOptions ltlHeuristic = LTLHeuristicOptions{LTLHeuristic::Automaton};
 
     bool replay = false;
     std::string replay_file;

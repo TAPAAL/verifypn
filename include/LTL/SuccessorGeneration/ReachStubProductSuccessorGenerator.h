@@ -45,7 +45,6 @@ namespace LTL {
             // Create the set of büchi states from which we can use reachability stubborn sets.
             calc_reach_states(buchi);
 
-            std::cout << "Size of _reach_states: " << _reach_states.size() << std::endl;
 #ifdef REACH_STUB_DEBUG
             if (_reach_states.empty()) {
                 //exit(0);
@@ -115,6 +114,9 @@ namespace LTL {
 
                 }
             } while (prev_sz != _reach_states.size());
+
+            std::cout << "Size of _reach_states: " << _reach_states.size()
+                      << "/ " << buchi._buchi->num_states() << std::endl;
 #ifdef F_IN_FIX
             // Prune accepting states from reach states
             for (auto it = std::begin(_reach_states); it != std::end(_reach_states);) {
@@ -125,6 +127,7 @@ namespace LTL {
                 }
             }
 #endif
+            std::cout << "After pruning " << _reach_states.size() << std::endl;
         }
 
         void prepare(const LTL::Structures::ProductState *state, typename S::sucinfo &sucinfo) override

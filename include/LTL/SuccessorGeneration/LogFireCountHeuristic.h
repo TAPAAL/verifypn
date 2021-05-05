@@ -37,22 +37,23 @@ namespace LTL {
      * Piece-wise zero/logarithmic fire count heuristic, switching to log at threshold defined by parameter
      * (default 200). Intent is to avoid firing the same transition excessively in models with massive token counts.
      */
-    template<uint32_t Threshold = 200>
     class LogFireCountHeuristic : public FireCountHeuristic {
     public:
-        explicit LogFireCountHeuristic(const PetriEngine::PetriNet *net) : FireCountHeuristic(net) {}
+        explicit LogFireCountHeuristic(const PetriEngine::PetriNet *net, uint32_t threshold = 200)
+                : FireCountHeuristic(net), _threshold(threshold) {}
 
         uint32_t eval(const Structures::ProductState &state, uint32_t tid) override
         {
-            if (_fireCount[tid] < Threshold) return 0;
+            if (_fireCount[tid] < _threshold) return 0;
             return _fireCount[tid] - _approx_log(tid);
         }
 
         std::ostream &output(std::ostream &os) {
-            return os << "LOGFIRECOUNT_HEUR";
+            return os << "LOGFIRECOUNT_HEUR(" << _threshold << ")";
         }
 
     private:
+        uint32_t _threshold;
 
         // compile-time sanity checks, feel free to remove if problematic
         static_assert(_approx_log(1) == 0);
