@@ -125,6 +125,10 @@ namespace LTL {
                 }
             }
 #endif
+            for (auto it = _reach_states.begin(); it != _reach_states.end(); ++it) {
+                _progressing_formulae.push_back(it->second.cond.get());
+            }
+            _reach->set_queries(_progressing_formulae);
         }
 
         void prepare(const LTL::Structures::ProductState *state, typename S::sucinfo &sucinfo) override
@@ -136,7 +140,7 @@ namespace LTL {
                     _reach_active = true;
                 }
 #endif
-                _reach->set_query(suc->second.cond);
+                //_reach->set_query(suc->second.cond);
                 set_spooler(_reach.get());
             }
             else {
@@ -170,6 +174,7 @@ namespace LTL {
         std::unique_ptr<Spooler> _fallback_spooler;
         std::unique_ptr<ReachabilityStubbornSpooler> _reach;
         std::unordered_map<size_t, BuchiEdge> _reach_states;
+        std::vector<PetriEngine::PQL::Condition *> _progressing_formulae;
 #ifdef REACH_STUB_DEBUG
         bool _reach_active = false;
 #endif

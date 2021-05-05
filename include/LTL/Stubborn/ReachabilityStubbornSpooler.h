@@ -45,6 +45,10 @@ namespace LTL {
         void set_query(PetriEngine::PQL::Condition_ptr cond) {
             _stubborn.setQuery(cond.get());
         }
+
+        void set_queries(std::vector<PetriEngine::PQL::Condition *> conds) {
+            _stubborn.setQueries(conds);
+        }
     private:
         PetriEngine::ReachabilityStubbornSet _stubborn;
     };

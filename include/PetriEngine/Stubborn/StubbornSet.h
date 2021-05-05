@@ -92,6 +92,10 @@ namespace PetriEngine {
             _queries = {ptr};
         }
 
+        void setQueries(std::vector<PQL::Condition*> conds) {
+            _queries = conds;
+        }
+
         [[nodiscard]] size_t nenabled() const { return _nenabled; }
 
         [[nodiscard]] bool *enabled() const { return _enabled.get(); };
