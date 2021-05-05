@@ -171,7 +171,7 @@ namespace LTL {
                         heuristic = std::make_unique<RandomHeuristic>(options.seed());
                     } else if (options.strategy == PetriEngine::Reachability::HEUR
                                || options.strategy == PetriEngine::Reachability::DEFAULT) {
-                        switch (options.ltlHeuristic) {
+                        switch (options.ltlHeuristic.heuristic) {
                             case LTLHeuristic::Distance:
                                 heuristic = std::make_unique<DistanceHeuristic>(net, negated_formula);
                                 break;
@@ -182,8 +182,15 @@ namespace LTL {
                                 heuristic = std::make_unique<FireCountHeuristic>(net);
                                 break;
                             case LTLHeuristic::LogFireCount:
-                                heuristic = std::make_unique<LogFireCountHeuristic<>>(net);
+                                heuristic = std::make_unique<LogFireCountHeuristic>(net, options.ltlHeuristic.fire_count_threshold);
                                 break;
+
+                            case LTLHeuristic::SumComposed:
+                                heuristic = std::make_unique<SumComposedHeuristic>(std::make_unique<AutomatonHeuristic>(net, automaton), std::make_unique<LogFireCountHeuristic>(net, options.ltlHeuristic.fire_count_threshold));
+                                break;
+                            default:
+                                std::cerr << "Error unhandled heuristic type. This is a bug!" << std::endl;
+                                exit(1);
                         }
                     }
                     assert(spooler);

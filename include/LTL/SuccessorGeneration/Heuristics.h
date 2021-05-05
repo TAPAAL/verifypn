@@ -26,5 +26,6 @@
 #include "WeightedComposedHeuristic.h"
 #include "FireCountHeuristic.h"
 #include "LogFireCountHeuristic.h"
+#include "SumComposedHeuristic.h"
 
 #endif //VERIFYPN_HEURISTICS_H

@@ -315,7 +315,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         }
         else if (strcmp(argv[i], "--output-stats") == 0)
         {
-            options.output_stats = std::string(argv[++i]);            
+            options.output_stats = std::string(argv[++i]);
         }
         else if (strcmp(argv[i], "--write-simplified") == 0)
         {
@@ -384,6 +384,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             //TODO this is a temporary option to set the weight of the weighted composed heuristic.
             options.weight1 = atoi(argv[++i]);
             options.weight2 = atoi(argv[++i]);
+        }
+        else if (strcmp(argv[i], "--log-fire-count-threshold") == 0) {
+            //TODO this is a temporary option to set the threshold of log-fire-count heuristic
+            options.ltlHeuristic.fire_count_threshold = atoi(argv[++i]);
         }
 #ifdef VERIFYPN_MC_Simplification
         else if (strcmp(argv[i], "-z") == 0)
@@ -465,16 +469,20 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                 return ErrorCode;
             }
             else if (strcmp(argv[i+1], "dist") == 0) {
-                options.ltlHeuristic = LTLHeuristic::Distance;
+                options.ltlHeuristic.heuristic = LTLHeuristic::Distance;
             }
             else if (strcmp(argv[i+1], "aut") == 0) {
-                options.ltlHeuristic = LTLHeuristic::Automaton;
+                options.ltlHeuristic.heuristic = LTLHeuristic::Automaton;
             }
             else if (strcmp(argv[i+1], "fire-count") == 0) {
-                options.ltlHeuristic = LTLHeuristic::FireCount;
+                options.ltlHeuristic.heuristic = LTLHeuristic::FireCount;
             }
             else if (strcmp(argv[i+1], "log-fire-count") == 0) {
-                options.ltlHeuristic = LTLHeuristic::LogFireCount;
+                options.ltlHeuristic.heuristic = LTLHeuristic::LogFireCount;
+            }
+            else if (strcmp(argv[i+1], "sum-composed") == 0) {
+                //TODO This option is currently undocumented. It should either be removed or get a proper interface.
+                options.ltlHeuristic.heuristic = LTLHeuristic::SumComposed;
             }
             else {
                 std::cerr << "Unrecognized argument " << argv[i+1] << " to --ltl-heur\n";
