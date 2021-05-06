@@ -41,7 +41,7 @@ namespace PetriEngine {
                 bool splitPartition(EquivalenceVec equivalenceVec, uint32_t placeId);
 
                 void handleTransition(uint32_t transitionId, uint32_t postPlaceId);
-                void handleTransition(Transition *transitionId, uint32_t postPlaceId, Arc *postArc);
+                void handleTransition(const Transition &transitionId, const uint32_t postPlaceId, const Arc *postArc);
 
                 void handleLeafTransitions();
                 
@@ -49,7 +49,7 @@ namespace PetriEngine {
 
                 std::vector<std::unordered_map<const Variable *, intervalTuple_t>> prepareVariables(
                             std::unordered_map<const Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap, 
-                            EquivalenceClass *eqClass , Arc *postArc, uint32_t placeId);
+                            EquivalenceClass *eqClass , const Arc *postArc, uint32_t placeId);
 
                 bool findOverlap(EquivalenceVec equivalenceVec1, EquivalenceVec equivalenceVec2, uint32_t &overlap1, uint32_t &overlap2, EquivalenceClass &intersection);
 

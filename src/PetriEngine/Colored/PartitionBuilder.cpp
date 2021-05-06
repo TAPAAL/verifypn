@@ -88,7 +88,7 @@ namespace PetriEngine {
         }
 
         void PartitionBuilder::handleTransition(uint32_t transitionId, uint32_t postPlaceId){
-            auto transition = _transitions->operator[](transitionId);
+            const PetriEngine::Colored::Transition &transition = _transitions->operator[](transitionId);
             Arc postArc;
             bool arcFound = false;
             for(auto& outArc : transition.output_arcs){
@@ -103,10 +103,10 @@ namespace PetriEngine {
                 return;
             }           
                         
-            handleTransition(&transition, postPlaceId, &postArc);
+            handleTransition(transition, postPlaceId, &postArc);
         }
 
-        void PartitionBuilder::handleTransition(Transition *transition, uint32_t postPlaceId, Arc *postArc) {
+        void PartitionBuilder::handleTransition(const Transition &transition, const uint32_t postPlaceId, const Arc *postArc) {
             std::unordered_map<const PetriEngine::Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap;
             std::unordered_map<uint32_t, const PetriEngine::Colored::Variable *> varPositionMap;
             std::set<const PetriEngine::Colored::Variable *> postArcVars;
@@ -129,8 +129,8 @@ namespace PetriEngine {
                 }
             }
 
-            if(transition->guard != nullptr){
-                transition->guard->getVariables(guardVars);
+            if(transition.guard != nullptr){
+                transition.guard->getVariables(guardVars);
             }
 
             auto placePartition = _partition[postPlaceId]._equivalenceClasses;
@@ -146,12 +146,12 @@ namespace PetriEngine {
                     }
                 }
 
-                if(transition->guard != nullptr){
-                    transition->guard->restrictVars(varMaps, diagonalVars);
+                if(transition.guard != nullptr){
+                    transition.guard->restrictVars(varMaps, diagonalVars);
                 }
 
                 std::unordered_map<uint32_t, std::set<const Colored::Variable *>> placeVariableMap;
-                for(auto inArc : transition->input_arcs){
+                for(auto inArc : transition.input_arcs){
                     //Hack to avoid considering dot places and dealing with retrieving the correct dot pointer
                     if(_places->operator[](inArc.place).type->getName() == "Dot" || _places->operator[](inArc.place).type->getName() == "dot"){
                         _partition[inArc.place].diagonal = true;
@@ -228,24 +228,11 @@ namespace PetriEngine {
                     EquivalenceClass newEqClass = EquivalenceClass(_partition[inArc.place]._equivalenceClasses.back()._colorType, outIntervals);
                     newEqVec._equivalenceClasses.push_back(newEqClass);
 
-                    if((_partition[inArc.place].diagonal || splitPartition(newEqVec, inArc.place))){
+                    if((_partition[inArc.place].diagonal || splitPartition(std::move(newEqVec), inArc.place))){
                         addToQueue(inArc.place);
                     }
                 }
             }
-
-            //is this still needed? does not seem so
-            // std::set<const PetriEngine::Colored::Variable *> preArcVars;
-            // for(auto inArc : transition->input_arcs){
-            //     inArc.expr->getVariables(preArcVars);
-            //     for(auto postVar : postArcVars){
-            //         if(preArcVars.count(postVar)){
-            //             if(diagonalVars.count(postVar)){
-            //                 _partition[inArc.place].diagonal = true;
-            //             }
-            //         }
-            //     }
-            // }
         }
 
         void PartitionBuilder::addToQueue(uint32_t placeId){
@@ -268,14 +255,15 @@ namespace PetriEngine {
                     auto ec2 = _partition[placeId]._equivalenceClasses[ecPos2];
                     auto rightSubtractEc = ec1.subtract(ec2, false);
                     auto leftSubtractEc = ec2.subtract(ec1, false);
-                    // if((_places->operator[](placeId).name == "NB_ATTENTE_A")) {
-                    //     std::cout << "comparing " << ec2.toString() << " to " << ec1.toString() << std::endl;
+                    if((_places->operator[](placeId).name == "NB_ATTENTE_A") || (_places->operator[](placeId).name == "COMPTEUR") || (_places->operator[](placeId).name == "NB_ATTENTE_B")) {
+                        // std::cout << _places->operator[](placeId).name << std::endl;
+                        // std::cout << "comparing " << ec2.toString() << " to " << ec1.toString() << std::endl;
 
                         // std::cout << "Intersection: " << intersection.toString() << std::endl;
                         // std::cout << "Left: " << leftSubtractEc.toString() << std::endl;
                         // std::cout << "Right: " << rightSubtractEc.toString() << std::endl;
-                    //     ec2.subtract(ec1, true);
-                    // }
+                        //ec2.subtract(ec1, true);
+                    }
                     
 
                     equivalenceVec._equivalenceClasses.erase(equivalenceVec._equivalenceClasses.begin() + ecPos1);
@@ -291,7 +279,11 @@ namespace PetriEngine {
                     }
                     if(!rightSubtractEc.isEmpty()){
                         equivalenceVec._equivalenceClasses.push_back(rightSubtractEc);
-                    }                                       
+                    }
+                    // std::cout << "Partition is now: " << std::endl;
+                    // for(auto eqClass : _partition[placeId]._equivalenceClasses){
+                    //     std::cout << eqClass.toString() << std::endl;
+                    // }                                       
                 }
             }
             return split;
@@ -318,7 +310,7 @@ namespace PetriEngine {
         std::vector<std::unordered_map<const Variable *, intervalTuple_t>> 
         PartitionBuilder::prepareVariables(
                     std::unordered_map<const Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap, 
-                    EquivalenceClass *eqClass , Arc *arc, uint32_t placeId){
+                    EquivalenceClass *eqClass , const Arc *arc, uint32_t placeId){
             std::vector<std::unordered_map<const Variable *, intervalTuple_t>> varMaps;
             std::unordered_map<const Variable *, intervalTuple_t> varMap;
             varMaps.push_back(varMap);
@@ -337,9 +329,9 @@ namespace PetriEngine {
 
         void PartitionBuilder::handleLeafTransitions(){
             for(uint32_t i = 0; i < _transitions->size(); i++){
-                auto transition = _transitions->operator[](i);
+                const Transition &transition = _transitions->operator[](i);
                 if(transition.output_arcs.empty() && !transition.input_arcs.empty()){
-                    handleTransition(&transition, transition.input_arcs.back().place, &transition.input_arcs.back());
+                    handleTransition(transition, transition.input_arcs.back().place, &transition.input_arcs.back());
                 }
             }
         }

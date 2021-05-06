@@ -290,7 +290,7 @@ namespace PetriEngine {
             }
             
             if(_partitionComputed){
-                _partition[arc.place].applyPartition(arcInterval);  
+                _partition[arc.place].applyPartition(arcInterval);
             }                  
         }
     }

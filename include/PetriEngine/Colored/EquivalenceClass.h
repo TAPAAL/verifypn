@@ -14,7 +14,6 @@ namespace PetriEngine {
                 EquivalenceClass(ColorType *colorType, intervalTuple_t colorIntervals);
                 ~EquivalenceClass() {}
                 std::string toString(){
-                    std::cout << "Id: " << _id << std::endl;
                     return _colorIntervals.toString();
                 }
 
@@ -49,7 +48,8 @@ namespace PetriEngine {
             bool diagonal = false;
 
             void applyPartition(Colored::ArcIntervals& arcInterval){
-                if(diagonal){
+                if(diagonal || _equivalenceClasses.size() == _equivalenceClasses.back()._colorType->size()){
+                    diagonal = true;
                     return;
                 }
                 std::vector<Colored::intervalTuple_t> newTupleVec;
