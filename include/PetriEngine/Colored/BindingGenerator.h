@@ -79,8 +79,8 @@ namespace PetriEngine {
     private:
         Colored::GuardExpression_ptr _expr;
         Colored::ExpressionContext::BindingMap _bindings;
-        ColorTypeMap& _colorTypes;
-        Colored::Transition &_transition;
+        const ColorTypeMap& _colorTypes;
+        Colored::Transition *_transition;
         bool _isDone;
         bool _noValidBindings;
         uint32_t _nextIndex = 0;
@@ -89,8 +89,8 @@ namespace PetriEngine {
         bool eval();
         
     public:
-        FixpointBindingGenerator(Colored::Transition& transition,
-                ColorTypeMap& colorTypes);
+        FixpointBindingGenerator(Colored::Transition *transition,
+                const ColorTypeMap& colorTypes);
 
         FixpointBindingGenerator(const FixpointBindingGenerator& ) = default;
         

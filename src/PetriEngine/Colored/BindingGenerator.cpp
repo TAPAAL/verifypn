@@ -161,35 +161,35 @@ namespace PetriEngine {
         return _generator->currentBinding();
     }
 
-    FixpointBindingGenerator::FixpointBindingGenerator(Colored::Transition& transition,
-        ColorTypeMap& colorTypes)
+    FixpointBindingGenerator::FixpointBindingGenerator(Colored::Transition* transition,
+        const ColorTypeMap& colorTypes)
     : _colorTypes(colorTypes), _transition(transition)
     {
         _isDone = false;
         _noValidBindings = false;
         _nextIndex = 0;
-        _expr = _transition.guard;
+        _expr = _transition->guard;
 
         std::set<const Colored::Variable*> variables;
         if (_expr != nullptr) {
             _expr->getVariables(variables);
         }
-        for (auto arc : _transition.input_arcs) {
+        for (auto arc : _transition->input_arcs) {
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
         }
-        for (auto arc : _transition.output_arcs) {
+        for (auto arc : _transition->output_arcs) {
             assert(arc.expr != nullptr);
             arc.expr->getVariables(variables);
         }       
         
         
         for (auto var : variables) {
-            if(_transition.variableMaps.empty() || _transition.variableMaps[_nextIndex][var]._intervals.empty()){
+            if(_transition->variableMaps.empty() || _transition->variableMaps[_nextIndex][var]._intervals.empty()){
                 _noValidBindings = true;
                 break;
             }
-            auto color = var->colorType->getColor(_transition.variableMaps[_nextIndex][var].getFirst().getLowerIds());
+            auto color = var->colorType->getColor(_transition->variableMaps[_nextIndex][var].getFirst().getLowerIds());
             _bindings[var] = color;
         }
         
@@ -213,7 +213,7 @@ namespace PetriEngine {
             bool next = true;
 
             for (auto& _binding : _bindings) {               
-                auto varInterval = _transition.variableMaps[_nextIndex][_binding.first];                
+                auto varInterval = _transition->variableMaps[_nextIndex][_binding.first];                
                 std::vector<uint32_t> colorIds;
                 _binding.second->getTupleId(&colorIds);
                 auto nextIntervalBinding = varInterval.isRangeEnd(colorIds);
@@ -238,7 +238,7 @@ namespace PetriEngine {
                     break;
                 }
                 for(auto& _binding : _bindings){
-                    _binding.second =  _binding.second->getColorType()->getColor(_transition.variableMaps[_nextIndex][_binding.first].getFirst().getLowerIds());
+                    _binding.second =  _binding.second->getColorType()->getColor(_transition->variableMaps[_nextIndex][_binding.first].getFirst().getLowerIds());
                 }
             }                 
             test = eval();
@@ -252,7 +252,7 @@ namespace PetriEngine {
     }
 
     bool FixpointBindingGenerator::isInitial() const{        
-        return _nextIndex >= _transition.variableMaps.size();
+        return _nextIndex >= _transition->variableMaps.size();
     }
 
     FixpointBindingGenerator::Iterator FixpointBindingGenerator::begin() {

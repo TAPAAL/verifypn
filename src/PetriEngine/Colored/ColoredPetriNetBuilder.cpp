@@ -447,12 +447,8 @@ namespace PetriEngine {
             std::cout << "Unfolding " << _fixpointDone << _partitionComputed << std::endl;
             auto start = std::chrono::high_resolution_clock::now();
 
-            auto startStable = std::chrono::high_resolution_clock::now();
             findStablePlaces();
-            auto endStable = std::chrono::high_resolution_clock::now();
-            std::cout << "Stable places took " << (std::chrono::duration_cast<std::chrono::microseconds>(endStable - startStable).count())*0.000001 << " seconds" << std::endl;
             
-
             if(!_fixpointDone && _partitionComputed){
                 auto startPart = std::chrono::high_resolution_clock::now();
                 createPartionVarmaps();
@@ -463,7 +459,7 @@ namespace PetriEngine {
             for (auto& transition : _transitions) {
                 unfoldTransition(transition);
             }
-            auto unfoldedPlaceMap = _ptBuilder.getPlaceNames();
+            auto& unfoldedPlaceMap = _ptBuilder.getPlaceNames();
             auto start2 = std::chrono::high_resolution_clock::now();
             for (auto& place : _places) {
                handleOrphanPlace(place, unfoldedPlaceMap);
@@ -475,6 +471,7 @@ namespace PetriEngine {
             auto end = std::chrono::high_resolution_clock::now();
             _time = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
             std::cout << "Unfold transition time: " << _unfoldTransitionTime*0.000001 << std::endl;
+            std::cout << "Unfold transition inner time: " << _unfoldTransitionTime2*0.000001 << std::endl;
             std::cout << "binding time: " << _bindingTime << std::endl;
             std::cout << "Unfold arc time: " << _unfoldArcTime*0.000001 << std::endl;
             std::cout << "Unfold place time: " << _unfoldPlaceTime*0.000001 << std::endl;
@@ -487,23 +484,22 @@ namespace PetriEngine {
     //However, in queries asking about orphan places it cannot find these, as they have not been unfolded
     //so we make a placeholder place which just has tokens equal to the number of colored tokens
     //Ideally, orphan places should just be translated to a constant in the query
-    void ColoredPetriNetBuilder::handleOrphanPlace(Colored::Place& place, std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap) {
+    void ColoredPetriNetBuilder::handleOrphanPlace(const Colored::Place& place, const std::unordered_map<std::string, uint32_t> &unfoldedPlaceMap) {
         auto start = std::chrono::high_resolution_clock::now();
         if(_ptplacenames.count(place.name) <= 0){
-            std::string name = place.name + "_orphan";
+            const std::string &name = place.name + "_orphan";
             _ptBuilder.addPlace(name, place.marking.size(), 0.0, 0.0);
             _ptplacenames[place.name][0] = std::move(name);
         } else {
             uint32_t usedTokens = 0;
             
-            for(std::pair<const uint32_t, std::string> unfoldedPlace : _ptplacenames[place.name]){
+            for(const std::pair<const uint32_t, std::string> &unfoldedPlace : _ptplacenames[place.name]){
                 auto unfoldedMarking = _ptBuilder.initMarking();
-                auto unfoldedPlaceId = unfoldedPlaceMap[unfoldedPlace.second];
-                usedTokens += unfoldedMarking[unfoldedPlaceId];
+                usedTokens += unfoldedMarking[unfoldedPlaceMap.find(unfoldedPlace.second)->second];
             }
             
             if(place.marking.size() > usedTokens){
-                std::string name = place.name + "_orphan";
+                const std::string &name = place.name + "_orphan";
                 _ptBuilder.addPlace(name, place.marking.size() - usedTokens, 0.0, 0.0);
                 _ptplacenames[place.name][UINT32_MAX] = std::move(name);
             }
@@ -519,7 +515,7 @@ namespace PetriEngine {
         if(!_partitionComputed || _partition[placeId].diagonal){
             tokenSize = place->marking[color];
         }else {
-            for(auto colorEqClassPair : _partition[placeId].colorEQClassMap){
+            for(const auto &colorEqClassPair : _partition[placeId].colorEQClassMap){
                 if(colorEqClassPair.second->_id == _partition[placeId].colorEQClassMap[color]->_id){
                     tokenSize += place->marking[colorEqClassPair.first];
                 }                    
@@ -536,27 +532,34 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::unfoldTransition(Colored::Transition& transition) {
         auto start = std::chrono::high_resolution_clock::now();
-        if(_fixpointDone || _partitionComputed){            
-            FixpointBindingGenerator gen(transition, _colors);
+        
+        if(_fixpointDone || _partitionComputed){ 
+            auto start2 = std::chrono::high_resolution_clock::now();           
+            FixpointBindingGenerator gen(&transition, _colors);
             size_t i = 0;
-            
-            for (auto b : gen) {                 
+            auto end = std::chrono::high_resolution_clock::now();
+            _unfoldTransitionTime2 += (std::chrono::duration_cast<std::chrono::microseconds>(end - start2).count());   
+            for (auto b : gen) {  
+                             
                 const std::string &name = transition.name + "_" + std::to_string(i++);
+                  
                 _ptBuilder.addTransition(name, 0.0, 0.0);
                 
                 
+                
                 for (auto& arc : transition.input_arcs) {
-                    unfoldArc(arc, b, name );
+                    unfoldArc(arc, b, name);
                 }
                 for (auto& arc : transition.output_arcs) {
                     unfoldArc(arc, b, name);
                 }
+                
                 _pttransitionnames[transition.name].push_back(std::move(name));
-                ++_npttransitions;                
+                ++_npttransitions;
+                           
             }
             _bindingTime += gen.getTime();            
         } else {
-            std::cout << "Entered naive" << std::endl;
             NaiveBindingGenerator gen(transition, _colors);
             size_t i = 0;
             for (const auto &b : gen) {              

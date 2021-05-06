@@ -256,6 +256,10 @@ namespace PetriEngine {
                 return _intervals[0];
             }
 
+            const interval_t& getFirstConst(){
+                return _intervals[0];
+            }
+
             interval_t& back() {
                 return _intervals.back();
             }
