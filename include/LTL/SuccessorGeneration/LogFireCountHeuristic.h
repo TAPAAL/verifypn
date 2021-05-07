@@ -19,6 +19,7 @@
 #define VERIFYPN_LOGFIRECOUNTHEURISTIC_H
 
 #include "Heuristic.h"
+#include "FireCountHeuristic.h"
 
 namespace LTL {
     constexpr int _approx_log(uint32_t i)
@@ -45,7 +46,7 @@ namespace LTL {
         uint32_t eval(const Structures::ProductState &state, uint32_t tid) override
         {
             if (_fireCount[tid] < _threshold) return 0;
-            return _fireCount[tid] - _approx_log(tid);
+            return _approx_log(_fireCount[tid] - _threshold);
         }
 
         std::ostream &output(std::ostream &os) {
