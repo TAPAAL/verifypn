@@ -85,10 +85,6 @@ namespace PetriEngine {
             return _partitionTimer;
         }
 
-        double getPartitionVarMapTime() const {
-            return _partitionVarMapTimer;
-        }
-
         double getFixpointTime() const {
             return _fixPointCreationTime;
         }
@@ -176,15 +172,6 @@ namespace PetriEngine {
         double _fixPointCreationTime;
 
         double _partitionTimer = 0;
-
-        double _partitionVarMapTimer = 0;
-        double _unfoldArcTime = 0;
-        double _unfoldTransitionTime = 0;
-        double _unfoldTransitionTime2 = 0;
-        double _unfoldPlaceTime = 0;
-        double _unfoldOrphanTime = 0;
-        double _bindingTime = 0;
-        double _stablePlacesTimer = 0;
 
         std::string arcToString(Colored::Arc& arc) const ;
 

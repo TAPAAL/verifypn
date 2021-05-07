@@ -84,7 +84,6 @@ namespace PetriEngine {
         bool _isDone;
         bool _noValidBindings;
         uint32_t _nextIndex = 0;
-        double _time = 0;
         
         bool eval();
         
@@ -96,10 +95,6 @@ namespace PetriEngine {
         
         FixpointBindingGenerator operator= (const FixpointBindingGenerator& b) {
             return FixpointBindingGenerator(b);
-        }
-
-        double getTime(){
-            return _time*0.000001;
         }
 
         Colored::ExpressionContext::BindingMap& nextBinding();

@@ -140,10 +140,7 @@ namespace PetriEngine {
         if (_generator->_isDone) {
             _generator = nullptr;
         } else {
-            auto start = std::chrono::high_resolution_clock::now();
             _generator->nextBinding();
-            auto end = std::chrono::high_resolution_clock::now();
-            _generator->_time += (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
             if (_generator->_isDone) {
                 _generator = nullptr;
             }
