@@ -41,9 +41,9 @@ namespace LTL {
             else {
                 _fallback_spooler = std::make_unique<Spooler>(net);
             }*/
-            _reach = std::make_unique<ReachabilityStubbornSpooler>(*net);
             // Create the set of büchi states from which we can use reachability stubborn sets.
             calc_reach_states(buchi);
+            _reach = std::make_unique<ReachabilityStubbornSpooler>(*net, _progressing_formulae);
 
 #ifdef REACH_STUB_DEBUG
             if (_reach_states.empty()) {
@@ -115,6 +115,9 @@ namespace LTL {
                 }
             } while (prev_sz != _reach_states.size());
 
+            for (auto it = _reach_states.begin(); it != _reach_states.end(); ++it) {
+                _progressing_formulae.push_back(it->second.cond);
+            }
 #ifdef F_IN_FIX
             // Prune accepting states from reach states
             for (auto it = std::begin(_reach_states); it != std::end(_reach_states);) {
@@ -126,11 +129,7 @@ namespace LTL {
             }
 #endif
             std::cout << "Size of _reach_states: " << _reach_states.size() << std::endl;
-            for (auto it = _reach_states.begin(); it != _reach_states.end(); ++it) {
-                _progressing_formulae.push_back(it->second.cond.get());
-            }
-            _reach->set_queries(_progressing_formulae);
-        }
+       }
 
         void prepare(const LTL::Structures::ProductState *state, typename S::sucinfo &sucinfo) override
         {
@@ -175,7 +174,7 @@ namespace LTL {
         std::unique_ptr<Spooler> _fallback_spooler;
         std::unique_ptr<ReachabilityStubbornSpooler> _reach;
         std::unordered_map<size_t, BuchiEdge> _reach_states;
-        std::vector<PetriEngine::PQL::Condition *> _progressing_formulae;
+        std::vector<PetriEngine::PQL::Condition_ptr> _progressing_formulae;
 #ifdef REACH_STUB_DEBUG
         bool _reach_active = false;
 #endif

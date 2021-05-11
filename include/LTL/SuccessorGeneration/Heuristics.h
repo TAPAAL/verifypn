@@ -21,6 +21,7 @@
 #include "DistanceHeuristic.h"
 #include "RandomHeuristic.h"
 #include "AutomatonHeuristic.h"
+#include "WeightedAutomatonHeuristic.h"
 #include "ComposedHeuristic.h"
 #include "TieBreakComposedHeuristic.h"
 #include "WeightedComposedHeuristic.h"

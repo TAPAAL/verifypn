@@ -35,7 +35,7 @@ namespace LTL {
             return os << "AUTOMATON_HEUR";
         }
 
-    private:
+    protected:
         const PetriEngine::PetriNet *_net;
         const LTL::Structures::BuchiAutomaton &_aut;
         std::vector<GuardInfo> _state_guards;

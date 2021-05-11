@@ -46,6 +46,7 @@ enum class BuchiOptimization {
 enum class LTLHeuristic {
     Distance,
     Automaton,
+    WeightedAutomaton,
     FireCount,
     LogFireCount,
     SumComposed

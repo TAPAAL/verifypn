@@ -34,6 +34,7 @@ namespace LTL {
         struct Guard {
             PetriEngine::PQL::Condition_ptr condition;
             bdd decision_diagram;
+            uint32_t dest;
 
             explicit operator bool () {
                 return bool(condition);
@@ -58,13 +59,13 @@ namespace LTL {
                 for (auto &e : aut._buchi->out(state)) {
                     auto formula = spot::bdd_to_formula(e.cond, aut.dict);
                     if (e.dst == state) {
-                        state_guards.back().retarding = Guard{toPQL(formula, aps), e.cond};
+                        state_guards.back().retarding = Guard{toPQL(formula, aps), e.cond, state};
                     } else {
-                        state_guards.back().progressing.push_back(Guard{toPQL(formula, aps), e.cond});
+                        state_guards.back().progressing.push_back(Guard{toPQL(formula, aps), e.cond, e.dst});
                     }
                 }
                 if (!state_guards.back().retarding) {
-                    state_guards.back().retarding = Guard{std::make_shared<PetriEngine::PQL::BooleanCondition>(false), bddfalse};
+                    state_guards.back().retarding = Guard{std::make_shared<PetriEngine::PQL::BooleanCondition>(false), bddfalse, state};
                 }
             }
             return state_guards;

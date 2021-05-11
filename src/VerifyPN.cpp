@@ -474,6 +474,9 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
             else if (strcmp(argv[i+1], "aut") == 0) {
                 options.ltlHeuristic.heuristic = LTLHeuristic::Automaton;
             }
+            else if (strcmp(argv[i+1], "weight-aut") == 0) {
+                options.ltlHeuristic.heuristic = LTLHeuristic::WeightedAutomaton;
+            }
             else if (strcmp(argv[i+1], "fire-count") == 0) {
                 options.ltlHeuristic.heuristic = LTLHeuristic::FireCount;
             }
@@ -543,6 +546,8 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                                       - dist           Same distance metric as reachability engine.\n"
                     "                                       - aut            Same distance metric as reachability engine, but\n"
                     "                                                        only applied to neighbouring Büchi states.\n"
+                    "                                       - weight-aut     Same as --ltl-heur aut, except the distance is weighted\n"
+                    "                                                        is weighed by distance to any accepting Büchi state.\n"
                     "                                       - fire-count     Add penalty for number of times the transition was fired.\n"
                     "                                       - log-fire-count Add logarithmic penalty for number of times the transition was fired\n"
                     "                                                        after it has been fired 200 times.\n"

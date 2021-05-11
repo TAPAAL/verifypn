@@ -20,12 +20,15 @@
 
 #include "LTL/SuccessorGeneration/SuccessorSpooler.h"
 #include "PetriEngine/Stubborn/ReachabilityStubbornSet.h"
+#include "PetriEngine/Stubborn/InterestingTransitionVisitor.h"
 
 namespace LTL {
     class ReachabilityStubbornSpooler : public SuccessorSpooler {
     public:
-        ReachabilityStubbornSpooler(const PetriEngine::PetriNet &net)
-                : _stubborn(net) {}
+        ReachabilityStubbornSpooler(const PetriEngine::PetriNet &net, const std::vector<PetriEngine::PQL::Condition_ptr> &conds)
+                : _stubborn(net, conds) {
+            _stubborn.setInterestingVisitor<PetriEngine::InterestingLTLTransitionVisitor>();
+        }
 
         bool prepare(const LTL::Structures::ProductState *state) override
         {
@@ -42,13 +45,6 @@ namespace LTL {
             _stubborn.reset();
         }
 
-        void set_query(PetriEngine::PQL::Condition_ptr cond) {
-            _stubborn.setQuery(cond.get());
-        }
-
-        void set_queries(std::vector<PetriEngine::PQL::Condition *> conds) {
-            _stubborn.setQueries(conds);
-        }
     private:
         PetriEngine::ReachabilityStubbornSet _stubborn;
     };

@@ -178,6 +178,9 @@ namespace LTL {
                             case LTLHeuristic::Automaton:
                                 heuristic = std::make_unique<AutomatonHeuristic>(net, automaton);
                                 break;
+                            case LTLHeuristic::WeightedAutomaton:
+                                heuristic = std::make_unique<WeightedAutomatonHeuristic>(net, automaton);
+                                break;
                             case LTLHeuristic::FireCount:
                                 heuristic = std::make_unique<FireCountHeuristic>(net);
                                 break;
