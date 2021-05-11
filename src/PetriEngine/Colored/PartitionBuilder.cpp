@@ -147,7 +147,6 @@ namespace PetriEngine {
                             diagonalVars.insert(varModMap.first);
                             for(auto pos : positions){
                                 _partition[postPlaceId].diagonalTuplePositions[pos] = true;
-                                _partition[postPlaceId].diagonalTuplePos = true;
                             }
                         }
                     } 
@@ -200,17 +199,18 @@ namespace PetriEngine {
                                     } else {
                                         diagonalVars.insert(variable.second);
                                         _partition[inArc.place].diagonalTuplePositions[variable.first] = true;
-                                        _partition[inArc.place].diagonalTuplePos = true;
                                     } 
 
                                     if(_partition[placeVariables.first]._equivalenceClasses.back()._colorType->productSize() == 1){
                                         _partition[placeVariables.first].diagonal = true;
+                                        addToQueue(placeVariables.first);
                                     } else {
-                                        //_partition[placeVariables.first].setDiagonal(varPosition.first, variable.second->colorType->size());
-                                        _partition[placeVariables.first].diagonalTuplePositions[varPosition.first] = true;
-                                        _partition[placeVariables.first].diagonalTuplePos = true;
+                                        if(!_partition[placeVariables.first].diagonalTuplePositions[varPosition.first]){
+                                            addToQueue(placeVariables.first);
+                                            _partition[placeVariables.first].diagonalTuplePositions[varPosition.first] = true;
+                                        }                                        
                                     } 
-                                    addToQueue(placeVariables.first);
+                                    
                                     break;                                
                                 }
                             }
@@ -239,7 +239,6 @@ namespace PetriEngine {
                                     } else {
                                         diagonalVars.insert(preVar.second);
                                         _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
-                                        _partition[inArc.place].diagonalTuplePos = true;
                                     }
                                 }
                             }
@@ -271,7 +270,6 @@ namespace PetriEngine {
                                     diagonalVars.insert(varModMap.first);
                                     for(auto pos : positions){
                                         _partition[inArc.place].diagonalTuplePositions[pos] = true;
-                                        _partition[inArc.place].diagonalTuplePos = true;
                                     }
                                 }
                                 
@@ -301,9 +299,7 @@ namespace PetriEngine {
                                 addToQueue(inArc.place);
                                 break;
                             } else {
-                                //_partition[inArc.place].setDiagonal(preVar.first, preVar.second->colorType->size());
                                 _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
-                                _partition[inArc.place].diagonalTuplePos = true;
                             }                           
                         }
                     }

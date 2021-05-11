@@ -47,9 +47,8 @@ namespace PetriEngine {
             std::unordered_map<const Colored::Color *, EquivalenceClass *> colorEQClassMap;
             std::vector<bool> diagonalTuplePositions;
             bool diagonal = false;
-            bool diagonalTuplePos = false;
 
-            void applyPartition(Colored::ArcIntervals& arcInterval){
+            void applyPartition(Colored::ArcIntervals& arcInterval, bool print){
                 if(diagonal || _equivalenceClasses.size() == _equivalenceClasses.back()._colorType->size()){
                     diagonal = true;
                     return;
@@ -59,15 +58,25 @@ namespace PetriEngine {
                     intervalTuple.combineNeighbours();
                     intervalTuple_t newIntervalTuple;
                     for(auto interval : intervalTuple._intervals){
+                        if(print){
+                            std::cout <<"Interval: " << interval.toString() << std::endl;
+                        }
                         for(auto EQClass : _equivalenceClasses){
+                            if(print){
+                                std::cout <<"Eqclass: " << EQClass.toString() << std::endl;
+                            }
                             for(auto EQinterval : EQClass._colorIntervals._intervals){
-                                auto overlap = interval.getOverlap(EQinterval);
+                                auto overlap = interval.getOverlap(EQinterval, diagonalTuplePositions);
                                 if(overlap.isSound()){
                                     auto singleInterval = EQinterval.getSingleColorInterval(); 
                                     for(uint32_t i = 0; i < diagonalTuplePositions.size(); i++){
                                         if(diagonalTuplePositions[i]){
                                             singleInterval[i] = interval[i];
                                         }
+                                    }
+                                    if(print)
+                                    {
+                                        std::cout << "Adding interval: " << singleInterval.toString() << std::endl;
                                     }
                                     newIntervalTuple.addInterval(std::move(singleInterval));
                                     continue;
@@ -80,26 +89,26 @@ namespace PetriEngine {
                 arcInterval._intervalTupleVec = std::move(newTupleVec);               
             }
 
-            void setDiagonal(uint32_t position, uint32_t numColors){
-                std::vector<EquivalenceClass> newEqClasses;
-                for(auto eqClass : _equivalenceClasses){
-                    for(uint i = 0; i < numColors; i++){
-                        auto newEqClass = EquivalenceClass(eqClass._colorType);
-                        for(auto interval : eqClass._colorIntervals._intervals){
-                            if(interval[position].contains(i)){
-                                interval_t newInterval = interval;
-                                newInterval[position]._lower = i;
-                                newInterval[position]._upper = i;
-                                newEqClass._colorIntervals.addInterval(newInterval);
-                            }                          
-                        }
-                        if(!newEqClass._colorIntervals._intervals.empty()){
-                            newEqClasses.push_back(std::move(newEqClass));
-                        }
-                    }
-                }
-                _equivalenceClasses = std::move(newEqClasses);
-            }
+            // void setDiagonal(uint32_t position, uint32_t numColors){
+            //     std::vector<EquivalenceClass> newEqClasses;
+            //     for(auto eqClass : _equivalenceClasses){
+            //         for(uint i = 0; i < numColors; i++){
+            //             auto newEqClass = EquivalenceClass(eqClass._colorType);
+            //             for(auto interval : eqClass._colorIntervals._intervals){
+            //                 if(interval[position].contains(i)){
+            //                     interval_t newInterval = interval;
+            //                     newInterval[position]._lower = i;
+            //                     newInterval[position]._upper = i;
+            //                     newEqClass._colorIntervals.addInterval(newInterval);
+            //                 }                          
+            //             }
+            //             if(!newEqClass._colorIntervals._intervals.empty()){
+            //                 newEqClasses.push_back(std::move(newEqClass));
+            //             }
+            //         }
+            //     }
+            //     _equivalenceClasses = std::move(newEqClasses);
+            // }
         };
 
     }

@@ -194,6 +194,24 @@ namespace PetriEngine {
                 return overlapInterval;
             }
 
+            interval_t getOverlap(interval_t other, const std::vector<bool> &diagonalPositions){
+                interval_t overlapInterval;
+                if(size() != other.size()){
+                    return overlapInterval;
+                }
+
+                for(uint32_t i = 0; i < size(); i++){
+                    if(diagonalPositions[i]){
+                        overlapInterval.addRange(_ranges[i]);
+                    } else {
+                        auto rangeCopy = _ranges[i];
+                        overlapInterval.addRange(rangeCopy &= other[i]);
+                    }                    
+                }
+
+                return overlapInterval;
+            }
+
             std::vector<interval_t> getSubtracted(interval_t other, const std::vector<bool> &diagonalPositions,  uint32_t ctSize){
                 std::vector<interval_t> result;
                 

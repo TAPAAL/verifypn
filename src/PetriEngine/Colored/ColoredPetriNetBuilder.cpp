@@ -144,10 +144,8 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::computePartition(){
         auto partitionStart = std::chrono::high_resolution_clock::now();
         Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
-        std::cout << "Start partition" << std::endl;
         pBuilder.partitionNet();
-        std::cout << "End partition " << std::endl;
-        pBuilder.printPartion();
+        //pBuilder.printPartion();
         _partition = pBuilder.getPartition();
         pBuilder.assignColorMap(_partition);
         _partitionComputed = true;
@@ -252,7 +250,8 @@ namespace PetriEngine {
                 cfp.constraints = intervalTuple;                              
 
                 inArc.expr->getArcIntervals(arcInterval, cfp, &index, 0);
-                _partition[inArc.place].applyPartition(arcInterval);
+
+                _partition[inArc.place].applyPartition(arcInterval, false);
             }
 
             intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId]);
@@ -291,7 +290,16 @@ namespace PetriEngine {
             }
             
             if(_partitionComputed){
-                _partition[arc.place].applyPartition(arcInterval);
+                if(false && _places[arc.place].name == "TrainState"){
+                    std::cout << "Arc interval before partition: " << std::endl;
+                    arcInterval.print();
+                    _partition[arc.place].applyPartition(arcInterval, false);
+                    std::cout << "Arc interval after partition: " << std::endl;
+                    arcInterval.print();
+                } else {
+                    _partition[arc.place].applyPartition(arcInterval, false);
+                }
+                
             }                  
         }
     }
