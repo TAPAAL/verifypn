@@ -24,13 +24,13 @@ namespace PetriEngine {
                     return false;
                 }
 
-                bool containsColor(std::vector<uint32_t> ids);
+                bool containsColor(std::vector<uint32_t> ids, const std::vector<bool> &diagonalPositions);
 
                 size_t size();
 
                 EquivalenceClass intersect(EquivalenceClass other);
 
-                EquivalenceClass subtract(EquivalenceClass other, bool print);
+                EquivalenceClass subtract(EquivalenceClass other, const std::vector<bool> &diagonalPositions,  bool print);
 
                 static uint32_t idCounter;
                 uint32_t _id;
@@ -45,7 +45,9 @@ namespace PetriEngine {
         struct EquivalenceVec{
             std::vector<EquivalenceClass> _equivalenceClasses;
             std::unordered_map<const Colored::Color *, EquivalenceClass *> colorEQClassMap;
+            std::vector<bool> diagonalTuplePositions;
             bool diagonal = false;
+            bool diagonalTuplePos = false;
 
             void applyPartition(Colored::ArcIntervals& arcInterval){
                 if(diagonal || _equivalenceClasses.size() == _equivalenceClasses.back()._colorType->size()){
@@ -61,7 +63,13 @@ namespace PetriEngine {
                             for(auto EQinterval : EQClass._colorIntervals._intervals){
                                 auto overlap = interval.getOverlap(EQinterval);
                                 if(overlap.isSound()){
-                                    newIntervalTuple.addInterval(EQinterval.getSingleColorInterval());
+                                    auto singleInterval = EQinterval.getSingleColorInterval(); 
+                                    for(uint32_t i = 0; i < diagonalTuplePositions.size(); i++){
+                                        if(diagonalTuplePositions[i]){
+                                            singleInterval[i] = interval[i];
+                                        }
+                                    }
+                                    newIntervalTuple.addInterval(std::move(singleInterval));
                                     continue;
                                 }
                             }
@@ -70,6 +78,27 @@ namespace PetriEngine {
                    newTupleVec.push_back(std::move(newIntervalTuple));
                 }
                 arcInterval._intervalTupleVec = std::move(newTupleVec);               
+            }
+
+            void setDiagonal(uint32_t position, uint32_t numColors){
+                std::vector<EquivalenceClass> newEqClasses;
+                for(auto eqClass : _equivalenceClasses){
+                    for(uint i = 0; i < numColors; i++){
+                        auto newEqClass = EquivalenceClass(eqClass._colorType);
+                        for(auto interval : eqClass._colorIntervals._intervals){
+                            if(interval[position].contains(i)){
+                                interval_t newInterval = interval;
+                                newInterval[position]._lower = i;
+                                newInterval[position]._upper = i;
+                                newEqClass._colorIntervals.addInterval(newInterval);
+                            }                          
+                        }
+                        if(!newEqClass._colorIntervals._intervals.empty()){
+                            newEqClasses.push_back(std::move(newEqClass));
+                        }
+                    }
+                }
+                _equivalenceClasses = std::move(newEqClasses);
             }
         };
 

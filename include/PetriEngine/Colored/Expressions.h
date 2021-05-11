@@ -27,6 +27,7 @@
 #include <iostream>
 #include <cassert>
 #include <memory>
+#include <typeinfo>
 
 
 #include "Colors.h"
@@ -205,10 +206,11 @@ namespace PetriEngine {
 
             const bool equals(ColorExpression *other) override {
                 if(instanceof<VariableExpression>(other)){
-                    std::set<const Colored::Variable*> variables;
-                    other->getVariables(variables);
-                    return variables.size() == 1 && variables.begin().operator*() == _variable;
+                    auto castedOther = static_cast<VariableExpression*>(other); 
+                    std::cout << "mumumumumu" << std::endl;
+                    return castedOther->_variable == _variable;
                 }
+                std::cout << "asfafdsfadsf" << std::endl;
                 return false;
             }
             

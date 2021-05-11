@@ -57,7 +57,7 @@ namespace PetriEngine {
 
             void getColorConstraints(Colored::interval_t *constraintsVector, uint32_t *index) const;
             
-            std::vector<const Color*> getTupleColors() const {
+            const std::vector<const Color*>& getTupleColors() const {
                 return _tuple;
             }
 

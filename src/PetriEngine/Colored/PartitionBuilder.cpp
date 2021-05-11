@@ -12,11 +12,14 @@ namespace PetriEngine {
 
             //Instantiate partitions
             for(uint32_t i = 0; i < _places->size(); i++){
-                auto place = _places->operator[](i);
+                const PetriEngine::Colored::Place& place = _places->operator[](i);
                 interval_t fullInterval = place.type->getFullInterval();
                 EquivalenceClass fullClass = EquivalenceClass(place.type);
                 fullClass._colorIntervals.addInterval(fullInterval); 
                 _partition[i]._equivalenceClasses.push_back(fullClass);
+                for(uint32_t j = 0; j < place.type->productSize(); j++){
+                    _partition[i].diagonalTuplePositions.push_back(false);
+                }
                 _placeQueue.push_back(i);
                 _inQueue[i] = true;
             }
@@ -27,10 +30,13 @@ namespace PetriEngine {
 
             //Instantiate partitions
             for(uint32_t i = 0; i < _places->size(); i++){
-                auto place = _places->operator[](i);
+                const PetriEngine::Colored::Place& place = _places->operator[](i);
                 EquivalenceClass fullClass = EquivalenceClass(place.type);
                 fullClass._colorIntervals = placeColorFixpoints->operator[](i).constraints;
                 _partition[i]._equivalenceClasses.push_back(fullClass);
+                for(uint32_t j = 0; j < place.type->productSize(); j++){
+                    _partition[i].diagonalTuplePositions.push_back(false);
+                }
                 _placeQueue.push_back(i);
                 _inQueue[i] = true;
             }
@@ -39,6 +45,11 @@ namespace PetriEngine {
         void PartitionBuilder::printPartion() {
             for(auto equivalenceVec : _partition){
                 std::cout << "Partition for place " << _places->operator[](equivalenceVec.first).name << std::endl;
+                std::cout << "Diag variables: (";
+                for(auto daigPos : equivalenceVec.second.diagonalTuplePositions){
+                    std::cout << daigPos << ",";
+                }
+                std::cout << ")" << std::endl;
                 for (auto equivalenceClass : equivalenceVec.second._equivalenceClasses){
                     std::cout << equivalenceClass.toString() << std::endl;
                     
@@ -75,12 +86,14 @@ namespace PetriEngine {
                 }
                 ColorType *colorType = _places->operator[](eqVec.first).type;
                 for(uint32_t i = 0; i < colorType->size(); i++){ 
-                    const Color *color = &colorType->operator[](i);                    
-                    for(auto& eqClass : eqVec.second._equivalenceClasses){                        
+                    const Color *color = &colorType->operator[](i);
+                    uint32_t colorAdded = 0;                    
+                    for(auto& eqClass : eqVec.second._equivalenceClasses){   
                         std::vector<uint32_t> colorIds;
                         color->getTupleId(&colorIds);
-                        if(eqClass.containsColor(colorIds)){
+                        if(eqClass.containsColor(colorIds, eqVec.second.diagonalTuplePositions)){
                             eqVec.second.colorEQClassMap[color] = &eqClass;
+                            colorAdded++;
                         }
                     }                    
                 }               
@@ -118,13 +131,25 @@ namespace PetriEngine {
             for(auto varModMap : varModifierMap){
                 if(varModMap.second.size() > 1){
                     uint32_t actualSize = 0;
+                    std::vector<uint32_t> positions;
                     for(auto map : varModMap.second){
                         if(!map.empty()){
+                            for(auto position : map){
+                                positions.push_back(position.first);
+                            }                            
                             actualSize++;
                         }
                     }
                     if(actualSize > 1) {
-                        _partition[postPlaceId].diagonal = true;
+                        if(_partition[postPlaceId]._equivalenceClasses.back()._colorType->productSize() == 1){
+                            _partition[postPlaceId].diagonal = true;
+                        } else {
+                            diagonalVars.insert(varModMap.first);
+                            for(auto pos : positions){
+                                _partition[postPlaceId].diagonalTuplePositions[pos] = true;
+                                _partition[postPlaceId].diagonalTuplePos = true;
+                            }
+                        }
                     } 
                 }
             }
@@ -150,7 +175,7 @@ namespace PetriEngine {
                     transition.guard->restrictVars(varMaps, diagonalVars);
                 }
 
-                std::unordered_map<uint32_t, std::set<const Colored::Variable *>> placeVariableMap;
+                std::unordered_map<uint32_t, std::unordered_map<uint32_t, const PetriEngine::Colored::Variable *>> placeVariableMap;
                 for(auto inArc : transition.input_arcs){
                     //Hack to avoid considering dot places and dealing with retrieving the correct dot pointer
                     if(_places->operator[](inArc.place).type->getName() == "Dot" || _places->operator[](inArc.place).type->getName() == "dot"){
@@ -166,35 +191,61 @@ namespace PetriEngine {
                     std::set<const PetriEngine::Colored::Variable *> preArcVars;
                     inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap);
                     for(auto placeVariables : placeVariableMap){
-                        for(auto variable : preArcVars){
-                            if(placeVariables.second.count(variable)){
-                                _partition[inArc.place].diagonal = true;
-                                _partition[placeVariables.first].diagonal = true;
-                                addToQueue(inArc.place);
-                                addToQueue(placeVariables.first);
-                                break;                                
+                        for(auto variable : preVarPositionMap){
+                            for(auto varPosition : placeVariables.second){
+                                if(varPosition.second == variable.second){
+                                    if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
+                                        _partition[inArc.place].diagonal = true;
+                                        addToQueue(inArc.place);
+                                    } else {
+                                        diagonalVars.insert(variable.second);
+                                        _partition[inArc.place].diagonalTuplePositions[variable.first] = true;
+                                        _partition[inArc.place].diagonalTuplePos = true;
+                                    } 
+
+                                    if(_partition[placeVariables.first]._equivalenceClasses.back()._colorType->productSize() == 1){
+                                        _partition[placeVariables.first].diagonal = true;
+                                    } else {
+                                        //_partition[placeVariables.first].setDiagonal(varPosition.first, variable.second->colorType->size());
+                                        _partition[placeVariables.first].diagonalTuplePositions[varPosition.first] = true;
+                                        _partition[placeVariables.first].diagonalTuplePos = true;
+                                    } 
+                                    addToQueue(placeVariables.first);
+                                    break;                                
+                                }
                             }
+                            if(_partition[inArc.place].diagonal){
+                                break;
+                            }                            
                         }
-                        if(_partition[inArc.place].diagonal) {
+                        if(_partition[inArc.place].diagonal){
                             break;
                         }
                     }
-                    placeVariableMap[inArc.place] = preArcVars;
+                    placeVariableMap[inArc.place] = preVarPositionMap;
 
-                    if(_partition[inArc.place].diagonal){                        
+                    if(_partition[inArc.place].diagonal){
+                        addToQueue(inArc.place);
                         continue;
                     }
 
-                    if(_partition[postPlaceId].diagonal){
-                        for(auto preVar : preArcVars){
-                            if(postArcVars.count(preVar)){
-                                //maybe something different should happen for tuples
-                                // --(x,y)-->[]--(z,y)-->
-                                _partition[inArc.place].diagonal = true;
-                                break;
+                    
+                    for(auto preVar : preVarPositionMap){
+                        for(auto postVar : varPositionMap){
+                            if(preVar.second == postVar.second){
+                                if(_partition[postPlaceId].diagonal || _partition[postPlaceId].diagonalTuplePositions[postVar.first]){
+                                    if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
+                                        _partition[inArc.place].diagonal = true;
+                                    } else {
+                                        diagonalVars.insert(preVar.second);
+                                        _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
+                                        _partition[inArc.place].diagonalTuplePos = true;
+                                    }
+                                }
                             }
                         }
                     }
+                    
 
                     if(_partition[inArc.place].diagonal){
                         addToQueue(inArc.place);
@@ -204,21 +255,56 @@ namespace PetriEngine {
                     for(auto varModMap : preVarModifierMap){
                         if(varModMap.second.size() > 1){
                             uint32_t actualSize = 0;
+                            std::vector<uint32_t> positions;
                             for(auto map : varModMap.second){
                                 if(!map.empty()){
+                                    for(auto position : map){
+                                        positions.push_back(position.first);
+                                    }
                                     actualSize++;
                                 }
                             }
                             if(actualSize > 1) {
-                                _partition[inArc.place].diagonal = true;
+                                if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
+                                    _partition[inArc.place].diagonal = true;
+                                } else {
+                                    diagonalVars.insert(varModMap.first);
+                                    for(auto pos : positions){
+                                        _partition[inArc.place].diagonalTuplePositions[pos] = true;
+                                        _partition[inArc.place].diagonalTuplePos = true;
+                                    }
+                                }
+                                
                             }                            
                         }
                     }
-                    for(auto preVar : preArcVars){
-                        if(diagonalVars.count(preVar)){
-                            //should only happen if the variable is not in a tuple 
-                            _partition[inArc.place].diagonal = true;
+
+                    bool allPositionsDiagonal = true;
+                    for(auto diag : _partition[inArc.place].diagonalTuplePositions){
+                        if(!diag){
+                            allPositionsDiagonal = false;
                             break;
+                        }
+                    }
+
+                    if(allPositionsDiagonal){
+                        _partition[inArc.place].diagonal = true;
+                        addToQueue(inArc.place);
+                        continue;
+                    }
+
+
+                    for(auto preVar : preVarPositionMap){
+                        if(diagonalVars.count(preVar.second)){
+                            if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
+                                _partition[inArc.place].diagonal = true;
+                                addToQueue(inArc.place);
+                                break;
+                            } else {
+                                //_partition[inArc.place].setDiagonal(preVar.first, preVar.second->colorType->size());
+                                _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
+                                _partition[inArc.place].diagonalTuplePos = true;
+                            }                           
                         }
                     }
 
@@ -227,6 +313,20 @@ namespace PetriEngine {
                     EquivalenceVec newEqVec;
                     EquivalenceClass newEqClass = EquivalenceClass(_partition[inArc.place]._equivalenceClasses.back()._colorType, outIntervals);
                     newEqVec._equivalenceClasses.push_back(newEqClass);
+                    newEqVec.diagonalTuplePositions = _partition[inArc.place].diagonalTuplePositions;
+
+                    allPositionsDiagonal = true;
+                    for(auto diag : _partition[inArc.place].diagonalTuplePositions){
+                        if(!diag){
+                            allPositionsDiagonal = false;
+                            break;
+                        }
+                    }
+
+
+                    if(allPositionsDiagonal || _partition[inArc.place]._equivalenceClasses.size() == _partition[inArc.place]._equivalenceClasses.back()._colorType->size()){
+                        _partition[inArc.place].diagonal = true;
+                    }
 
                     if((_partition[inArc.place].diagonal || splitPartition(std::move(newEqVec), inArc.place))){
                         addToQueue(inArc.place);
@@ -253,9 +353,9 @@ namespace PetriEngine {
                 while(findOverlap(equivalenceVec, _partition[placeId],ecPos1, ecPos2, intersection)) {
                     auto ec1 = equivalenceVec._equivalenceClasses[ecPos1];
                     auto ec2 = _partition[placeId]._equivalenceClasses[ecPos2];
-                    auto rightSubtractEc = ec1.subtract(ec2, false);
-                    auto leftSubtractEc = ec2.subtract(ec1, false);
-                    if((_places->operator[](placeId).name == "NB_ATTENTE_A") || (_places->operator[](placeId).name == "COMPTEUR") || (_places->operator[](placeId).name == "NB_ATTENTE_B")) {
+                    auto rightSubtractEc = ec1.subtract(ec2, equivalenceVec.diagonalTuplePositions, false);
+                    auto leftSubtractEc = ec2.subtract(ec1, _partition[placeId].diagonalTuplePositions, false);
+                    //if((_places->operator[](placeId).name == "NB_ATTENTE_A") || (_places->operator[](placeId).name == "COMPTEUR") || (_places->operator[](placeId).name == "NB_ATTENTE_B")) {
                         // std::cout << _places->operator[](placeId).name << std::endl;
                         // std::cout << "comparing " << ec2.toString() << " to " << ec1.toString() << std::endl;
 
@@ -263,7 +363,7 @@ namespace PetriEngine {
                         // std::cout << "Left: " << leftSubtractEc.toString() << std::endl;
                         // std::cout << "Right: " << rightSubtractEc.toString() << std::endl;
                         //ec2.subtract(ec1, true);
-                    }
+                    //}
                     
 
                     equivalenceVec._equivalenceClasses.erase(equivalenceVec._equivalenceClasses.begin() + ecPos1);

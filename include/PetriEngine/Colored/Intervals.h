@@ -162,6 +162,18 @@ namespace PetriEngine {
                 return true;
             }
 
+            bool contains(interval_t other, const std::vector<bool> &diagonalPositions){
+                if(other.size() != size()){
+                    return false;
+                }
+                for(uint32_t i = 0; i < size(); i++){
+                    if(!diagonalPositions[i] && !_ranges[i].compare(other[i]).first){
+                        return false;
+                    }
+                }
+                return true;
+            }
+
             void constrain(interval_t other){
                 for(uint32_t i = 0; i < _ranges.size(); i++){
                     _ranges[i] &= other._ranges[i];
@@ -182,7 +194,7 @@ namespace PetriEngine {
                 return overlapInterval;
             }
 
-            std::vector<interval_t> getSubtracted(interval_t other, uint32_t ctSize){
+            std::vector<interval_t> getSubtracted(interval_t other, const std::vector<bool> &diagonalPositions,  uint32_t ctSize){
                 std::vector<interval_t> result;
                 
                 if(size() != other.size()){
@@ -191,6 +203,9 @@ namespace PetriEngine {
                 
                 for(uint32_t i = 0; i < size(); i++){
                     interval_t newInterval = *this;
+                    if(diagonalPositions[i]){
+                        continue;
+                    }
                     
                     int32_t newMinUpper = std::min(((int) other[i]._lower) -1, (int)_ranges[i]._upper);
                     //uint32_t otherUpper = (other[i]._upper +1) >= ctSize? ctSize-1: other[i]._upper +1;
@@ -579,6 +594,15 @@ namespace PetriEngine {
             bool contains(interval_t interval){
                 for(auto localInterval : _intervals){
                     if(localInterval.contains(interval)){
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            bool contains(interval_t interval, const std::vector<bool> &diagonalPositions){
+                for(auto localInterval : _intervals){
+                    if(localInterval.contains(interval, diagonalPositions)){
                         return true;
                     }
                 }
