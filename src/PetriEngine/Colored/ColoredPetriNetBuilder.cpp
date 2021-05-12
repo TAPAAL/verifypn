@@ -251,7 +251,7 @@ namespace PetriEngine {
 
                 inArc.expr->getArcIntervals(arcInterval, cfp, &index, 0);
 
-                _partition[inArc.place].applyPartition(arcInterval, false);
+                _partition[inArc.place].applyPartition(arcInterval);
             }
 
             intervalGenerator.getVarIntervals(transition.variableMaps, _arcIntervals[transitionId]);
@@ -290,16 +290,7 @@ namespace PetriEngine {
             }
             
             if(_partitionComputed){
-                if(false && _places[arc.place].name == "TrainState"){
-                    std::cout << "Arc interval before partition: " << std::endl;
-                    arcInterval.print();
-                    _partition[arc.place].applyPartition(arcInterval, false);
-                    std::cout << "Arc interval after partition: " << std::endl;
-                    arcInterval.print();
-                } else {
-                    _partition[arc.place].applyPartition(arcInterval, false);
-                }
-                
+                _partition[arc.place].applyPartition(arcInterval);
             }                  
         }
     }
@@ -469,12 +460,9 @@ namespace PetriEngine {
                 unfoldTransition(transition);
             }
             auto& unfoldedPlaceMap = _ptBuilder.getPlaceNames();
-            auto start2 = std::chrono::high_resolution_clock::now();
             for (auto& place : _places) {
                handleOrphanPlace(place, unfoldedPlaceMap);
             }
-            auto end2 = std::chrono::high_resolution_clock::now();
-            std::cout << "Unfolding transitions and orphans took " <<  (std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2).count())*0.000001 << std::endl;
             
             _unfolded = true;
             auto end = std::chrono::high_resolution_clock::now();
@@ -587,21 +575,29 @@ namespace PetriEngine {
         
         Colored::ExpressionContext context {binding, _colors, _partition[arc.place]};
         auto ms = arc.expr->eval(context);  
-            
+
+        // ++ arcs can cause places to be unfolded that are in the same partition
+
         for (const auto& color : ms) {
             if (color.second == 0) {
                 continue;
             }
-            
+
+            std::vector<uint32_t> tupleIds;
+            color.first->getTupleId(&tupleIds);
+
+            _partition[arc.place].applyPartition(&tupleIds);
+            auto newColor = place.type->getColor(tupleIds);
+
             uint32_t id;
             if(!_partitionComputed || _partition[arc.place].diagonal){
-                id = color.first->getId();
+                id = newColor->getId();
             } else {
-                id = _partition[arc.place].colorEQClassMap[color.first]->_id + color.first->getId();
+                id = _partition[arc.place].colorEQClassMap[newColor]->_id + newColor->getId();
             }
             const std::string& pName = _ptplacenames[place.name][id];
             if (pName.empty()) {                               
-                unfoldPlace(&place, color.first, arc.place, id);               
+                unfoldPlace(&place, newColor, arc.place, id);               
             }
             
             if (arc.input) {

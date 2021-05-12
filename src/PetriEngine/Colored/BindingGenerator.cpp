@@ -167,6 +167,20 @@ namespace PetriEngine {
         _nextIndex = 0;
         _expr = _transition->guard;
 
+        // std::cout << _transition->name << " varmap size " << _transition->variableMaps.size() << std::endl;
+        // for(auto varMap : _transition->variableMaps){
+        //     std::cout << "Var set:" << std::endl;
+        //     for(auto pair : varMap){
+        //         std::cout << pair.first->name << "\t";
+        //         for(auto interval : pair.second._intervals){
+        //             interval.print();
+        //             std::cout << " ";
+        //         }
+        //         std::cout << std::endl;
+        //     }
+        // }
+        
+
         std::set<const Colored::Variable*> variables;
         if (_expr != nullptr) {
             _expr->getVariables(variables);

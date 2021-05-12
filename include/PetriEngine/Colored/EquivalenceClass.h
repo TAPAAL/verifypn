@@ -48,7 +48,7 @@ namespace PetriEngine {
             std::vector<bool> diagonalTuplePositions;
             bool diagonal = false;
 
-            void applyPartition(Colored::ArcIntervals& arcInterval, bool print){
+            void applyPartition(Colored::ArcIntervals& arcInterval){
                 if(diagonal || _equivalenceClasses.size() == _equivalenceClasses.back()._colorType->size()){
                     diagonal = true;
                     return;
@@ -58,13 +58,7 @@ namespace PetriEngine {
                     intervalTuple.combineNeighbours();
                     intervalTuple_t newIntervalTuple;
                     for(auto interval : intervalTuple._intervals){
-                        if(print){
-                            std::cout <<"Interval: " << interval.toString() << std::endl;
-                        }
                         for(auto EQClass : _equivalenceClasses){
-                            if(print){
-                                std::cout <<"Eqclass: " << EQClass.toString() << std::endl;
-                            }
                             for(auto EQinterval : EQClass._colorIntervals._intervals){
                                 auto overlap = interval.getOverlap(EQinterval, diagonalTuplePositions);
                                 if(overlap.isSound()){
@@ -73,10 +67,6 @@ namespace PetriEngine {
                                         if(diagonalTuplePositions[i]){
                                             singleInterval[i] = interval[i];
                                         }
-                                    }
-                                    if(print)
-                                    {
-                                        std::cout << "Adding interval: " << singleInterval.toString() << std::endl;
                                     }
                                     newIntervalTuple.addInterval(std::move(singleInterval));
                                     continue;
@@ -87,6 +77,29 @@ namespace PetriEngine {
                    newTupleVec.push_back(std::move(newIntervalTuple));
                 }
                 arcInterval._intervalTupleVec = std::move(newTupleVec);               
+            }
+
+            void applyPartition(std::vector<uint32_t> *colorIds){
+                if(diagonal || _equivalenceClasses.size() == _equivalenceClasses.back()._colorType->size()){
+                    diagonal = true;
+                    return;
+                }
+
+                interval_t interval; 
+                for(auto colorId : *colorIds){
+                    interval.addRange(colorId, colorId);
+                }
+
+                for(auto EqClass : _equivalenceClasses){
+                    for(auto EqInterval : EqClass._colorIntervals._intervals){
+                        if(EqInterval.contains(interval, diagonalTuplePositions)){
+                            auto singleInterval = EqInterval.getSingleColorInterval(); 
+                            for(uint32_t i = 0; i < singleInterval.size(); i++){
+                                colorIds->operator[](i) = diagonalTuplePositions[i]? interval[i]._lower: singleInterval[i]._lower;
+                            }
+                        }
+                    }
+                }
             }
 
             // void setDiagonal(uint32_t position, uint32_t numColors){
