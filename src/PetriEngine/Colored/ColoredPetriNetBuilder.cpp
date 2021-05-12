@@ -145,7 +145,7 @@ namespace PetriEngine {
         auto partitionStart = std::chrono::high_resolution_clock::now();
         Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
         pBuilder.partitionNet();
-        //pBuilder.printPartion();
+        pBuilder.printPartion();
         _partition = pBuilder.getPartition();
         pBuilder.assignColorMap(_partition);
         _partitionComputed = true;
@@ -214,7 +214,7 @@ namespace PetriEngine {
         _fixpointDone = true;
         _fixPointCreationTime = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())*0.000001;
 
-        //printPlaceTable();
+        printPlaceTable();
         _placeColorFixpoints.clear();
     }
 
@@ -576,18 +576,22 @@ namespace PetriEngine {
         Colored::ExpressionContext context {binding, _colors, _partition[arc.place]};
         auto ms = arc.expr->eval(context);  
 
-        // ++ arcs can cause places to be unfolded that are in the same partition
-
+        const Colored::Color *newColor;
         for (const auto& color : ms) {
             if (color.second == 0) {
                 continue;
             }
 
-            std::vector<uint32_t> tupleIds;
-            color.first->getTupleId(&tupleIds);
+            if(!_partition[arc.place].diagonal){
+                std::vector<uint32_t> tupleIds;
+                color.first->getTupleId(&tupleIds);
 
-            _partition[arc.place].applyPartition(&tupleIds);
-            auto newColor = place.type->getColor(tupleIds);
+                _partition[arc.place].applyPartition(&tupleIds);
+                newColor = place.type->getColor(tupleIds);
+            } else {
+                newColor = color.first;
+            }
+            
 
             uint32_t id;
             if(!_partitionComputed || _partition[arc.place].diagonal){

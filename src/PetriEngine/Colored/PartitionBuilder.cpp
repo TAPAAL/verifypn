@@ -319,8 +319,7 @@ namespace PetriEngine {
                         }
                     }
 
-
-                    if(allPositionsDiagonal || _partition[inArc.place]._equivalenceClasses.size() == _partition[inArc.place]._equivalenceClasses.back()._colorType->size()){
+                    if(allPositionsDiagonal || _partition[inArc.place]._equivalenceClasses.size() >= _partition[inArc.place]._equivalenceClasses.back()._colorType->size(&_partition[inArc.place].diagonalTuplePositions)){
                         _partition[inArc.place].diagonal = true;
                     }
 

@@ -187,6 +187,10 @@ namespace PetriEngine {
                 return _colors.size();
             }
 
+            virtual size_t size(std::vector<bool> *excludedFields) const {
+                return _colors.size();
+            }
+
             virtual size_t productSize() {
                 return 1;
             }
@@ -280,6 +284,16 @@ namespace PetriEngine {
                 size_t product = 1;
                 for (auto ct : constituents) {
                     product *= ct->size();
+                }
+                return product;
+            }
+
+            size_t size(std::vector<bool> *excludedFields) const override {
+                size_t product = 1;
+                for (uint32_t i = 0; i < constituents.size(); i++) {
+                    if(!excludedFields->operator[](i)){
+                        product *= constituents[i]->size();
+                    }                    
                 }
                 return product;
             }

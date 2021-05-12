@@ -49,7 +49,7 @@ namespace PetriEngine {
             bool diagonal = false;
 
             void applyPartition(Colored::ArcIntervals& arcInterval){
-                if(diagonal || _equivalenceClasses.size() == _equivalenceClasses.back()._colorType->size()){
+                if(diagonal || _equivalenceClasses.size() >= _equivalenceClasses.back()._colorType->size(&diagonalTuplePositions)){
                     diagonal = true;
                     return;
                 }
@@ -80,7 +80,7 @@ namespace PetriEngine {
             }
 
             void applyPartition(std::vector<uint32_t> *colorIds){
-                if(diagonal || _equivalenceClasses.size() == _equivalenceClasses.back()._colorType->size()){
+                if(diagonal || _equivalenceClasses.size() >= _equivalenceClasses.back()._colorType->size(&diagonalTuplePositions)){
                     diagonal = true;
                     return;
                 }
