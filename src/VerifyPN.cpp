@@ -330,6 +330,10 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
         {
             options.model_out_file = std::string(argv[++i]);
         }
+        else if (strcmp(argv[i], "--write-unfolded") == 0)
+        {
+            options.unfolded_out_file = std::string(argv[++i]);
+        }
         else if (strcmp(argv[i], "--write-buchi") == 0)
         {
             options.buchi_out_file = std::string(argv[++i]);
@@ -469,6 +473,7 @@ ReturnValue parseOptions(int argc, char* argv[], options_t& options)
                     "                  <interval count>     Default is 255 and then after <interval-timeout> second(s) to 5\n"
                     "  --write-simplified <filename>        Outputs the queries to the given file after simplification\n"
                     "  --write-reduced <filename>           Outputs the model to the given file after structural reduction\n"
+                    "  --write-unfolded <filename>          Outputs the model to the given file before structural reduction but after unfolding\n"
                     "  --binary-query-io <0,1,2,3>          Determines the input/output format of the query-file\n"
                     "                                       - 0 MCC XML format for Input and Output\n"
                     "                                       - 1 Input is binary, output is XML\n"
@@ -1061,6 +1066,8 @@ int main(int argc, char* argv[]) {
     std::vector<ResultPrinter::Result> results(queries.size(), ResultPrinter::Result::Unknown);
     ResultPrinter printer(&builder, &options, querynames);
 
+    
+
     //----------------------- Query Simplification -----------------------//
     bool alldone = options.queryReductionTimeout > 0;
     PetriNetBuilder b2(builder);
@@ -1288,6 +1295,15 @@ int main(int argc, char* argv[]) {
     }
 
     options.queryReductionTimeout = 0;
+
+    auto unfoldedNet = std::unique_ptr<PetriNet>(builder.makePetriNet());
+
+    if(options.model_out_file.size() > 0)
+    {
+        std::fstream file;
+        file.open(options.unfolded_out_file, std::ios::out);
+        unfoldedNet->toXML(file);
+    }
 
     //--------------------- Apply Net Reduction ---------------//
 

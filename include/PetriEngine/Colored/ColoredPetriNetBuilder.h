@@ -154,8 +154,6 @@ namespace PetriEngine {
         std::unordered_map<uint32_t,FixpointBindingGenerator> _bindings;
         PTPlaceMap _ptplacenames;
         PTTransitionMap _pttransitionnames;
-        uint32_t _nptplaces = 0;
-        uint32_t _npttransitions = 0;
         uint32_t _nptarcs = 0;
         uint32_t _maxIntervals = 0;
         PetriEngine::IntervalGenerator intervalGenerator;

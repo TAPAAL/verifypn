@@ -68,6 +68,7 @@ struct options_t {
 
     std::string query_out_file;
     std::string model_out_file;
+    std::string unfolded_out_file;
 
     
     //CPN Specific options
