@@ -25,6 +25,10 @@
 #include "LTL/Stubborn/VisibleTransitionVisitor.h"
 #include "LTL/SuccessorGeneration/SuccessorSpooler.h"
 
+// TODO LTL Stubborn sets should be subclassing just PetriEngine::StubbornSet, then a class
+// LTL::StubbornSuccessorSpooler : LTL::SuccessorSpooler has a stubborn set via simple wrapping.
+// This way we can avoid the super ugly multiple inheritance caused by both base classes
+// each having prepare, next, reset methods.q
 namespace LTL {
     class VisibleLTLStubbornSet : public PetriEngine::StubbornSet, public SuccessorSpooler {
     public:

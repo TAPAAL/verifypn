@@ -251,5 +251,6 @@ namespace PetriEngine {
         _ordering.clear();
         _nenabled = 0;
         //_tid = 0;
+        _done = false;
     }
 }

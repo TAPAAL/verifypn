@@ -205,7 +205,7 @@ namespace PetriEngine {
         std::unique_ptr<trans_t[]> _transitions;
         light_deque<uint32_t> _unprocessed, _ordering;
         std::unique_ptr<uint32_t[]> _dependency;
-        bool _netContainsInhibitorArcs;
+        bool _netContainsInhibitorArcs, _done;
         std::vector<std::vector<uint32_t>> _inhibpost;
 
         std::vector<PQL::Condition *> _queries;
@@ -217,6 +217,11 @@ namespace PetriEngine {
         void constructDependency();
 
         void checkForInhibitor();
+
+        void set_all_stubborn() {
+            memset(_stubborn.get(), true, _net.numberOfTransitions());
+            _done = true;
+        }
     };
 }
 
