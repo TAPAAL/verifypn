@@ -6,7 +6,17 @@ namespace PetriEngine {
     namespace Colored {
         class PartitionBuilder {
             public:
-                PartitionBuilder(std::vector<Transition> *transitions, std::vector<Place> *places, std::unordered_map<uint32_t,std::vector<uint32_t>> *placePostTransitionMap, std::unordered_map<uint32_t,std::vector<uint32_t>> *placePreTransitionMap);
+                PartitionBuilder(std::vector<Transition> *transitions, 
+                                std::vector<Place> *places, 
+                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePostTransitionMap, 
+                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePreTransitionMap);
+
+                PartitionBuilder(std::vector<Transition> *transitions, 
+                                std::vector<Place> *places, 
+                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePostTransitionMap, 
+                                std::unordered_map<uint32_t,std::vector<uint32_t>> *placePreTransitionMap,
+                                std::vector<Colored::ColorFixpoint> *placeColorFixpoints);
+                
                 ~PartitionBuilder() {}
 
                 //void initPartition();

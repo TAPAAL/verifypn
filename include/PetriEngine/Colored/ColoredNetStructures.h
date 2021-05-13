@@ -52,6 +52,7 @@ namespace PetriEngine {
             ColorType* type;
             Multiset marking;
             bool inhibitor;
+            bool stable = true;
         };
     }
 }

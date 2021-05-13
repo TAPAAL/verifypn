@@ -164,8 +164,33 @@ void PNMLParser::parseDeclarations(rapidxml::xml_node<>* element) {
                 parseUserSort(it)
             };
             variables[it->first_attribute("id")->value()] = var;
+        } else if (strcmp(it->name(), "partition") == 0) {
+            parsePartitions(it);
         } else {
-            parseDeclarations(element->first_node());
+            parseDeclarations(it);
+        }
+    }
+
+    for(auto missingCTPair : missingCTs){
+        if(colorTypes.count(missingCTPair.first) == 0){
+            std::cerr << "Unable to find colortype " << missingCTPair.first << " used in product type " << missingCTPair.second->getName() << std::endl;
+            exit(ErrorCode);
+        }
+        missingCTPair.second->addType(colorTypes[missingCTPair.first]);
+    }
+    missingCTs.clear();
+}
+
+void PNMLParser::parsePartitions(rapidxml::xml_node<>* element){
+    auto partitionCT = parseUserSort(element);
+    for (auto it = element->first_node(); it; it = it->next_sibling()) {
+        if (strcmp(it->name(), "partitionelement") == 0) {
+            auto id = it->first_attribute("id")->value();
+            std::vector<const PetriEngine::Colored::Color *> colors;
+            for(auto partitionElement = it->first_node(); partitionElement; partitionElement = partitionElement->next_sibling()){
+                colors.push_back(partitionCT->operator[](partitionElement->first_attribute("declaration")->value()));
+            }
+            partitions.push_back({colors, id});
         }
     }
 }
@@ -187,9 +212,16 @@ void PNMLParser::parseNamedSort(rapidxml::xml_node<>* element) {
     if (strcmp(type->name(), "dot") == 0) {
         ct->addDot();
     } else if (strcmp(type->name(), "productsort") == 0) {
+        bool missingType = false;
         for (auto it = type->first_node(); it; it = it->next_sibling()) {
             if (strcmp(it->name(), "usersort") == 0) {
-                ((PetriEngine::Colored::ProductType*)ct)->addType(colorTypes[it->first_attribute("declaration")->value()]);
+                auto ctName = it->first_attribute("declaration")->value();
+                if(!missingType && colorTypes.count(ctName)){
+                    ((PetriEngine::Colored::ProductType*)ct)->addType(colorTypes[ctName]);
+                } else {
+                    missingType = true;
+                    missingCTs.push_back(std::make_pair(ctName, (PetriEngine::Colored::ProductType*)ct));
+                }                
             }
         }
     } else if (strcmp(type->name(), "finiteintrange") == 0) {	
@@ -242,7 +274,6 @@ PetriEngine::Colored::ArcExpression_ptr PNMLParser::parseArcExpression(rapidxml:
 		std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> collectedColors;	
 		collectColorsInTuple(element, collectedColors);	
 		auto expr = constructAddExpressionFromTupleExpression(element, collectedColors, 1);	
-		std::cout << expr->toString() << std::endl;	
 		return expr;	
 	}
     printf("Could not parse '%s' as an arc expression\n", element->name());
@@ -290,8 +321,9 @@ std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> PNMLParser::
 	std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> returnSet;	
 	for(auto set : rightSet){	
 		for(auto expr2 : leftSet){	
-			set.push_back(expr2);	
-			returnSet.push_back(set);	
+            auto setCopy = set;
+			setCopy.push_back(expr2);	
+			returnSet.push_back(std::move(setCopy));	
 		}	
 	}	
 	return returnSet;	
@@ -314,19 +346,43 @@ void PNMLParser::collectColorsInTuple(rapidxml::xml_node<>* element, std::vector
 			}            	
 		}	
 		collectedColors.push_back(expressionsToAdd);	
-		return;	
+	} else if (strcmp(element->name(), "add") == 0) {
+        std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> intermediateColors;	
+        std::vector<std::vector<PetriEngine::Colored::ColorExpression_ptr>> intermediateColors2;
+        for(auto it = element->first_node(); it; it = it->next_sibling()){
+            collectColorsInTuple(it, intermediateColors2);
+            if(intermediateColors.empty()){
+                intermediateColors = intermediateColors2;
+            } else {
+                for(uint32_t i = 0; i < intermediateColors.size(); i++){
+                    intermediateColors[i].insert(intermediateColors[i].end(), intermediateColors2[i].begin(), intermediateColors2[i].end());
+                }
+            }
+            
+        }
+        for(auto &colorVec : intermediateColors){
+            collectedColors.push_back(std::move(colorVec));
+        }		
 	} else if (strcmp(element->name(), "subterm") == 0 || strcmp(element->name(), "structure") == 0) {	
 		collectColorsInTuple(element->first_node(), collectedColors);	
+	} else if (strcmp(element->name(), "finiteintrangeconstant") == 0){	
+        std::vector<PetriEngine::Colored::ColorExpression_ptr> expressionsToAdd;
+		auto value = element->first_attribute("value")->value();	
+		auto intRangeElement = element->first_node("finiteintrange");	
+		uint32_t start = (uint32_t)atoll(intRangeElement->first_attribute("start")->value());	
+		uint32_t end = (uint32_t)atoll(intRangeElement->first_attribute("end")->value());	
+		expressionsToAdd.push_back(std::make_shared<PetriEngine::Colored::UserOperatorExpression>(findColorForIntRange(value, start,end)));	
+        collectedColors.push_back(expressionsToAdd);
 	} else if (strcmp(element->name(), "useroperator") == 0 || strcmp(element->name(), "dotconstant") == 0 || strcmp(element->name(), "variable") == 0 	
 					|| strcmp(element->name(), "successor") == 0 || strcmp(element->name(), "predecessor") == 0) {	
-		std::vector<PetriEngine::Colored::ColorExpression_ptr> expressionsToAdd;	
-		auto color = parseColorExpression(element);	
-		expressionsToAdd.push_back(color);	
+		std::vector<PetriEngine::Colored::ColorExpression_ptr> expressionsToAdd = findPartitionColors(element);
+        if(expressionsToAdd.empty()){
+            auto color = parseColorExpression(element);	
+            expressionsToAdd.push_back(color);	
+        }
 		collectedColors.push_back(expressionsToAdd);	
-		return;	
 	} else{	
-		printf("Could not parse '%s' as an arc expression\n", element->name());	
-		return;	
+		printf("Could not parse '%s' as an arc expression when collecting tuple colors\n", element->name());	
 	}	
 }	
 	
@@ -580,6 +636,8 @@ void PNMLParser::parsePlace(rapidxml::xml_node<>* element) {
             std::unordered_map<const PetriEngine::Colored::Variable*, const PetriEngine::Colored::Color*> binding;
             PetriEngine::Colored::EquivalenceVec placePartition;
 			PetriEngine::Colored::ExpressionContext context {binding, colorTypes, placePartition};
+            for(auto ct : colorTypes){
+            }
             hlinitialMarking = parseArcExpression(it->first_node("structure"))->eval(context);
         } else if (strcmp(it->name(), "type") == 0) {
             type = parseUserSort(it);
@@ -780,6 +838,42 @@ const PetriEngine::Colored::Color* PNMLParser::findColor(const char* name) const
     }
     printf("Could not find color: %s\nCANNOT_COMPUTE\n", name);
     exit(ErrorCode);
+}
+
+std::vector<PetriEngine::Colored::ColorExpression_ptr> PNMLParser::findPartitionColors(rapidxml::xml_node<>* element) const {
+    std::vector<PetriEngine::Colored::ColorExpression_ptr> colorExpressions;
+    char *name;
+    if (strcmp(element->name(), "useroperator") == 0) {
+         name = element->first_attribute("declaration")->value();
+    } else if (strcmp(element->name(), "successor") == 0) {
+        auto colorExpressionVec = findPartitionColors(element->first_node());
+        for(auto &colorExpression : colorExpressionVec){
+            colorExpressions.push_back(std::make_shared<PetriEngine::Colored::SuccessorExpression>(std::move(colorExpression)));
+        }
+        return colorExpressions;
+    } else if (strcmp(element->name(), "predecessor") == 0) {
+        auto colorExpressionVec = findPartitionColors(element->first_node());
+        for(auto &colorExpression : colorExpressionVec){
+            colorExpressions.push_back(std::make_shared<PetriEngine::Colored::PredecessorExpression>(std::move(colorExpression)));
+        }
+        return colorExpressions;
+    } else if (strcmp(element->name(), "variable") == 0 || strcmp(element->name(), "dotconstant") == 0 || strcmp(element->name(), "finiteintrangeconstant") == 0) {
+        return colorExpressions;
+    } else if (strcmp(element->name(), "subterm") == 0) {
+        return findPartitionColors(element->first_node());
+    } else {
+        printf("Could not find color expression in expression: %s\nCANNOT_COMPUTE\n", element->name());	
+	    exit(ErrorCode);
+    }
+
+    for (auto partition : partitions) {
+        if (strcmp(partition.name.c_str(), name) == 0){
+            for(auto color : partition.colors){
+                colorExpressions.push_back(std::make_shared<PetriEngine::Colored::UserOperatorExpression>(color));
+            }
+        }   
+    }
+    return colorExpressions;
 }
 
 const PetriEngine::Colored::Color* PNMLParser::findColorForIntRange(const char* value, uint32_t start, uint32_t end) const{	

@@ -207,6 +207,10 @@ namespace PetriEngine {
             virtual void getColortypes(std::vector<ColorType *> &colorTypes){
                 colorTypes.push_back(this);
             }
+
+            virtual void printConstituents(){
+                std::cout << _name << std::endl;
+            }
             
             virtual const Color& operator[] (size_t index) {
                 return _colors[index];
@@ -322,6 +326,12 @@ namespace PetriEngine {
                 return true;
             }
 
+            void printConstituents() override{
+                for(auto ct : constituents){
+                   ct->printConstituents();
+                }
+            }
+
             const ColorType* getNestedColorType(size_t index) {
                 return constituents[index];
             }
@@ -376,6 +386,11 @@ namespace PetriEngine {
                 }
                 return true;
             }
+        };
+
+        struct ColorTypePartition {
+            std::vector<const Color *> colors;
+            std::string name;
         };
     }
 }

@@ -22,6 +22,20 @@ namespace PetriEngine {
             }
         }
 
+        PartitionBuilder::PartitionBuilder(std::vector<Transition> *transitions, std::vector<Place> *places, std::unordered_map<uint32_t,std::vector<uint32_t>> *placePostTransitionMap, std::unordered_map<uint32_t,std::vector<uint32_t>> *placePreTransitionMap, std::vector<Colored::ColorFixpoint> *placeColorFixpoints) 
+        : _transitions(transitions), _places(places), _placePostTransitionMap(placePostTransitionMap), _placePreTransitionMap(placePreTransitionMap) {
+
+            //Instantiate partitions
+            for(uint32_t i = 0; i < _places->size(); i++){
+                auto place = _places->operator[](i);
+                EquivalenceClass fullClass = EquivalenceClass(place.type);
+                fullClass._colorIntervals = placeColorFixpoints->operator[](i).constraints;
+                _partition[i]._equivalenceClasses.push_back(fullClass);
+                _placeQueue.push_back(i);
+                _inQueue[i] = true;
+            }
+        }
+
         void PartitionBuilder::printPartion() {
             for(auto equivalenceVec : _partition){
                 std::cout << "Partition for place " << _places->operator[](equivalenceVec.first).name << std::endl;

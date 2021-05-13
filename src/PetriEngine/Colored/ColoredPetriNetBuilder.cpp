@@ -150,6 +150,21 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::sort() {
     }
 
+    //----------------------- Partitioning -----------------------//
+
+    void ColoredPetriNetBuilder::computePartition(){
+        auto partitionStart = std::chrono::high_resolution_clock::now();
+        Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
+        
+        pBuilder.partitionNet();
+        //pBuilder.printPartion();
+        _partition = pBuilder.getPartition();
+        pBuilder.assignColorMap(_partition);
+        _partitionComputed = true;
+        auto partitionEnd = std::chrono::high_resolution_clock::now();
+        _partitionTimer = (std::chrono::duration_cast<std::chrono::microseconds>(partitionEnd - partitionStart).count())*0.000001;
+    }
+
     //----------------------- Color fixpoint -----------------------//
 
     void ColoredPetriNetBuilder::printPlaceTable() {
@@ -169,17 +184,7 @@ namespace PetriEngine {
         }
     }
 
-    void ColoredPetriNetBuilder::computePartition(){
-        auto partitionStart = std::chrono::high_resolution_clock::now();
-        Colored::PartitionBuilder pBuilder = Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
-        pBuilder.partitionNet();
-        //pBuilder.printPartion();
-        _partition = pBuilder.getPartition();
-        pBuilder.assignColorMap(_partition);
-        _partitionComputed = true;
-        auto partitionEnd = std::chrono::high_resolution_clock::now();
-        _partitionTimer = (std::chrono::duration_cast<std::chrono::microseconds>(partitionEnd - partitionStart).count())*0.000001;
-    }
+
       
     void ColoredPetriNetBuilder::computePlaceColorFixpoint(uint32_t maxIntervals, uint32_t maxIntervalsReduced, int32_t timeout) {
         //Start timers for timing color fixpoint creation and max interval reduction steps
@@ -346,7 +351,6 @@ namespace PetriEngine {
 
     void ColoredPetriNetBuilder::processOutputArcs(Colored::Transition& transition) {
         bool transitionHasVarOutArcs = false;
-
         for (auto& arc : transition.output_arcs) {
             Colored::ColorFixpoint& placeFixpoint = _placeColorFixpoints[arc.place];
             //used to check if colors are added to the place. The total distance between upper and
@@ -363,7 +367,7 @@ namespace PetriEngine {
 
             //Apply partitioning to unbound outgoing variables such that 
             // bindings are only created for colors used in the rest of the net
-            if(!_partition[arc.place].diagonal){
+            if(_partitionComputed && !_partition[arc.place].diagonal){
                 for(auto outVar : variables){
                     for(auto& varMap : transition.variableMaps){
                         if(varMap.count(outVar) == 0){
@@ -401,6 +405,51 @@ namespace PetriEngine {
         }
     }
 
+    void ColoredPetriNetBuilder::findStablePlaces(){
+        for(uint32_t placeId = 0; placeId < _places.size(); placeId++){
+            if(_placePostTransitionMap.count(placeId) != 0 && 
+                !_placePostTransitionMap[placeId].empty() && 
+                _placePostTransitionMap[placeId].size() == _placePreTransitionMap[placeId].size()){
+
+                for(auto transitionId : _placePostTransitionMap[placeId]){
+                    bool matched = false;
+                    for(auto transitionId2 : _placePreTransitionMap[placeId]){
+                        if(transitionId == transitionId2){
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if(!matched){
+                        _places[placeId].stable = false;
+                        break;
+                    }
+                    Colored::Arc *inArc;
+                    for(auto &arc : _transitions[transitionId].input_arcs){
+                        if(arc.place == placeId){
+                            inArc = &arc;
+                            break;
+                        }
+                    }
+                    bool mirroredArcs = false;
+                    for(auto arc : _transitions[transitionId].output_arcs){
+                        if(arc.place == placeId){
+                            if(arc.expr->toString() == inArc->expr->toString()){
+                                mirroredArcs = true;
+                            }
+                            break;
+                        }
+                    }
+                    if(!mirroredArcs){
+                        _places[placeId].stable = false;
+                        break;
+                    }
+                }
+            } else {
+                _places[placeId].stable = false;
+            }
+        }
+    }
+
     //----------------------- Unfolding -----------------------//
 
     PetriNetBuilder& ColoredPetriNetBuilder::unfold() {
@@ -408,6 +457,8 @@ namespace PetriEngine {
         if (_isColored && !_unfolded) {
             std::cout << "Unfolding " << _fixpointDone << _partitionComputed << std::endl;
             auto start = std::chrono::high_resolution_clock::now();
+
+            findStablePlaces();
 
             if(!_fixpointDone && _partitionComputed){
                 createPartionVarmaps();
@@ -532,6 +583,12 @@ namespace PetriEngine {
     }
 
     void ColoredPetriNetBuilder::unfoldArc(Colored::Arc& arc, Colored::ExpressionContext::BindingMap& binding, std::string& tName) {
+        const PetriEngine::Colored::Place& place = _places[arc.place];
+        //If the place is stable, the arc does not need to be unfolded
+        if(place.stable){
+            return;
+        } 
+        
         Colored::ExpressionContext context {binding, _colors, _partition[arc.place]};
         auto ms = arc.expr->eval(context);   
         const PetriEngine::Colored::Place& place = _places[arc.place];    
