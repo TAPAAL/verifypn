@@ -90,7 +90,7 @@ namespace PetriEngine {
         }
 
         void Multiset::operator *=(uint32_t scalar) {
-            for (auto c : _set) {
+            for (auto& c : _set) {
                 c.second *= scalar;
             }
         }

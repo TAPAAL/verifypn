@@ -618,11 +618,15 @@ namespace PetriEngine {
             ++_nptarcs;
         }
 
-        if(place.inhibitor && _sumPlacesNames.count(arc.place) == 0){
-            std::string sumPlaceName = place.name + "Sum";
-            _ptBuilder.addPlace(sumPlaceName, place.marking.size(),0.0,0.0);
-            //_ptplacenames[place.name][color.getId()] = std::move(placeName);
-            _sumPlacesNames[arc.place] = std::move(sumPlaceName);
+        if(place.inhibitor){
+            const std::string &sumPlaceName = _sumPlacesNames[arc.place];
+            if(sumPlaceName.empty()){
+                const std::string &newSumPlaceName = place.name + "Sum";
+                _ptBuilder.addPlace(newSumPlaceName, place.marking.size(),0.0,0.0);
+                //_ptplacenames[place.name][color.getId()] = std::move(placeName);
+                _sumPlacesNames[arc.place] = std::move(newSumPlaceName);
+            }
+            
 
             if(shadowWeight > 0) {
                 if (!arc.input) {
