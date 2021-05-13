@@ -591,7 +591,6 @@ namespace PetriEngine {
         
         Colored::ExpressionContext context {binding, _colors, _partition[arc.place]};
         auto ms = arc.expr->eval(context);   
-        const PetriEngine::Colored::Place& place = _places[arc.place];    
         int shadowWeight = 0;
 
         for (const auto& color : ms) {
