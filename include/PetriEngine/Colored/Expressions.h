@@ -114,8 +114,9 @@ namespace PetriEngine {
             virtual void getVariables(std::set<const Colored::Variable*>& variables) const {
                 std::unordered_map<uint32_t, const Colored::Variable *> varPositions;
                 std::unordered_map<const Variable *,std::vector<std::unordered_map<uint32_t, int32_t>>> varModifierMap;
+                uint32_t index = 0;
 
-                getVariables(variables, varPositions, varModifierMap, false);
+                getVariables(variables, varPositions, varModifierMap, false, &index);
             }
             
             virtual void expressionType() {
@@ -420,7 +421,7 @@ namespace PetriEngine {
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = *index;
-                _color->getVariables(variables, varPositions, varModifierMap, index);
+                _color->getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
                 for(auto& varModifierPair : varModifierMap){
                     for(auto& idModPair : varModifierPair.second.back()){
                         if(idModPair.first <= *index && idModPair.first >= indexBefore){
@@ -485,7 +486,7 @@ namespace PetriEngine {
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
                 //save index before evaluating nested expression to decrease all the correct modifiers
                 uint32_t indexBefore = *index;
-                _color->getVariables(variables, varPositions, varModifierMap, index);
+                _color->getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
                 for(auto& varModifierPair : varModifierMap){
                     for(auto& idModPair : varModifierPair.second.back()){
                         if(idModPair.first <= *index && idModPair.first >= indexBefore){
@@ -606,7 +607,7 @@ namespace PetriEngine {
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
                 for (auto elem : _colors) {
-                    elem->getVariables(variables, varPositions, varModifierMap, index);
+                    elem->getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
                     (*index)++;
                 }
             }
@@ -1041,7 +1042,7 @@ namespace PetriEngine {
             }
             
             void getVariables(std::set<const Colored::Variable*>& variables, std::unordered_map<uint32_t, const Colored::Variable *>& varPositions, std::unordered_map<const Colored::Variable *, std::vector<std::unordered_map<uint32_t, int32_t>>>& varModifierMap, bool includeSubtracts, uint32_t *index) const override {
-                _expr->getVariables(variables, varPositions, varModifierMap, index);
+                _expr->getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
             }
 
             std::string toString() const override {
@@ -1327,7 +1328,7 @@ namespace PetriEngine {
                     return;
                 for (auto elem : _color) {
                     //TODO: can there be more than one element in a number of expression?
-                    elem->getVariables(variables, varPositions, varModifierMap, index);
+                    elem->getVariables(variables, varPositions, varModifierMap, includeSubtracts, index);
                 }
             }
 

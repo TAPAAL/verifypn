@@ -144,7 +144,9 @@ namespace PetriEngine {
     void ColoredPetriNetBuilder::computePartition(){
         auto partitionStart = std::chrono::high_resolution_clock::now();
         Colored::PartitionBuilder pBuilder = _fixpointDone? Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap, &_placeColorFixpoints) : Colored::PartitionBuilder(&_transitions, &_places, &_placePostTransitionMap, &_placePreTransitionMap);
+        std::cout << "Start partitioning" << std::endl;
         pBuilder.partitionNet();
+        std::cout << "End partitioning " << std::endl;
         pBuilder.printPartion();
         _partition = pBuilder.getPartition();
         pBuilder.assignColorMap(_partition);

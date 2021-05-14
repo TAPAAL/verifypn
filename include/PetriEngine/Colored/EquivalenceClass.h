@@ -79,6 +79,28 @@ namespace PetriEngine {
                 arcInterval._intervalTupleVec = std::move(newTupleVec);               
             }
 
+            void mergeEqClasses(){
+                std::set<uint32_t> indexesForRemoval;
+                for(uint32_t i = 0; i < _equivalenceClasses.size()-1; i++){
+                    for(uint32_t j = i+1; j < _equivalenceClasses.size(); j++){
+                        bool fullyContained = true;
+                        for(auto interval : _equivalenceClasses[j]._colorIntervals._intervals){
+                            if(!_equivalenceClasses[i]._colorIntervals.contains(interval, diagonalTuplePositions)){
+                                fullyContained = false;
+                                break;
+                            }
+                        }
+                        if(fullyContained){
+                            indexesForRemoval.insert(j);
+                        }
+                    } 
+                }
+
+                for(auto index = indexesForRemoval.rbegin(); index != indexesForRemoval.rend(); ++index){
+                    _equivalenceClasses.erase(_equivalenceClasses.begin() + *index);
+                }
+            }
+
             void applyPartition(std::vector<uint32_t> *colorIds){
                 if(diagonal || _equivalenceClasses.size() >= _equivalenceClasses.back()._colorType->size(&diagonalTuplePositions)){
                     diagonal = true;

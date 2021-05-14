@@ -69,12 +69,12 @@ namespace PetriEngine {
                 auto place = _places->operator[](placeId);
 
                 for(uint32_t transitionId : _placePreTransitionMap->operator[](placeId)){
-                    std::cout << "For transition " << _transitions->operator[](transitionId).name << " and place " << _places->operator[](placeId).name << std::endl;
-                    printPartion(); 
+                    // std::cout << "For transition " << _transitions->operator[](transitionId).name << " and place " << _places->operator[](placeId).name << std::endl;
+                    // printPartion(); 
                                       
                     handleTransition(transitionId, placeId);
                     
-                    //std::cout << "---------------------------------------------------" << std::endl;
+                    // std::cout << "---------------------------------------------------" << std::endl;
                 }               
             }          
         }
@@ -141,10 +141,10 @@ namespace PetriEngine {
                         }
                     }
                     if(actualSize > 1) {
+                        diagonalVars.insert(varModMap.first);
                         if(_partition[postPlaceId]._equivalenceClasses.back()._colorType->productSize() == 1){
                             _partition[postPlaceId].diagonal = true;
-                        } else {
-                            diagonalVars.insert(varModMap.first);
+                        } else {                            
                             for(auto pos : positions){
                                 _partition[postPlaceId].diagonalTuplePositions[pos] = true;
                             }
@@ -189,32 +189,27 @@ namespace PetriEngine {
                     std::unordered_map<uint32_t, const PetriEngine::Colored::Variable *> preVarPositionMap;
                     std::set<const PetriEngine::Colored::Variable *> preArcVars;
                     inArc.expr->getVariables(preArcVars, preVarPositionMap, preVarModifierMap, true);
+
                     for(auto placeVariables : placeVariableMap){
                         for(auto variable : preVarPositionMap){
                             for(auto varPosition : placeVariables.second){
                                 if(varPosition.second == variable.second){
+                                    diagonalVars.insert(variable.second);
                                     if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
                                         _partition[inArc.place].diagonal = true;
                                         addToQueue(inArc.place);
-                                    } else {
-                                        diagonalVars.insert(variable.second);
-                                        
-                                        if(!_partition[inArc.place].diagonalTuplePositions[variable.first]){
-                                            addToQueue(placeVariables.first);
-                                            _partition[inArc.place].diagonalTuplePositions[variable.first] = true;
-                                        }
+                                    } else if(!_partition[inArc.place].diagonalTuplePositions[variable.first]) {                                      
+                                        addToQueue(inArc.place);
+                                        _partition[inArc.place].diagonalTuplePositions[variable.first] = true;                            
                                     } 
 
                                     if(_partition[placeVariables.first]._equivalenceClasses.back()._colorType->productSize() == 1){
                                         _partition[placeVariables.first].diagonal = true;
                                         addToQueue(placeVariables.first);
-                                    } else {
-                                        if(!_partition[placeVariables.first].diagonalTuplePositions[varPosition.first]){
-                                            addToQueue(placeVariables.first);
-                                            _partition[placeVariables.first].diagonalTuplePositions[varPosition.first] = true;
-                                        }                                        
-                                    } 
-                                    
+                                    } else if(!_partition[placeVariables.first].diagonalTuplePositions[varPosition.first]) {
+                                        addToQueue(placeVariables.first);
+                                        _partition[placeVariables.first].diagonalTuplePositions[varPosition.first] = true;
+                                    }                                     
                                     break;                                
                                 }
                             }
@@ -240,19 +235,15 @@ namespace PetriEngine {
                                 if(_partition[postPlaceId].diagonal || _partition[postPlaceId].diagonalTuplePositions[postVar.first]){
                                     if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
                                         _partition[inArc.place].diagonal = true;
-                                    } else {
-                                        diagonalVars.insert(preVar.second);
-                                        if(!_partition[inArc.place].diagonalTuplePositions[preVar.first]){
-                                            addToQueue(inArc.place);
-                                            _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
-                                        }
+                                    } else if(!_partition[inArc.place].diagonalTuplePositions[preVar.first]) {
+                                        addToQueue(inArc.place);
+                                        _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
                                     }
                                 }
                             }
                         }
                     }
                     
-
                     if(_partition[inArc.place].diagonal){
                         addToQueue(inArc.place);
                         continue;
@@ -271,10 +262,10 @@ namespace PetriEngine {
                                 }
                             }
                             if(actualSize > 1) {
+                                diagonalVars.insert(varModMap.first);
                                 if(_partition[inArc.place]._equivalenceClasses.back()._colorType->productSize() == 1){
                                     _partition[inArc.place].diagonal = true;
-                                } else {
-                                    diagonalVars.insert(varModMap.first);
+                                } else {                                    
                                     for(auto pos : positions){
                                         if(!_partition[inArc.place].diagonalTuplePositions[pos]){
                                             addToQueue(inArc.place);
@@ -308,11 +299,9 @@ namespace PetriEngine {
                                 _partition[inArc.place].diagonal = true;
                                 addToQueue(inArc.place);
                                 break;
-                            } else {
-                                if(!_partition[inArc.place].diagonalTuplePositions[preVar.first]){
-                                    addToQueue(inArc.place);
-                                    _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
-                                }
+                            } else if(!_partition[inArc.place].diagonalTuplePositions[preVar.first]) {
+                                addToQueue(inArc.place);
+                                _partition[inArc.place].diagonalTuplePositions[preVar.first] = true;
                             }                           
                         }
                     }
@@ -331,6 +320,10 @@ namespace PetriEngine {
                             break;
                         }
                     }
+                    
+                    _partition[inArc.place].mergeEqClasses();
+                    //We could also check if there are more or equal eqclasses than there are color combinations that are not marked diagonal
+                    //but requires that we merge partitions after we have marked things as diagonal;
 
                     if(allPositionsDiagonal || _partition[inArc.place]._equivalenceClasses.size() >= _partition[inArc.place]._equivalenceClasses.back()._colorType->size(&_partition[inArc.place].diagonalTuplePositions)){
                         _partition[inArc.place].diagonal = true;
@@ -339,6 +332,7 @@ namespace PetriEngine {
                     if((_partition[inArc.place].diagonal || splitPartition(std::move(newEqVec), inArc.place))){
                         addToQueue(inArc.place);
                     }
+                    _partition[inArc.place].mergeEqClasses();
                 }
             }
         }
